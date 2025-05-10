@@ -28,7 +28,8 @@ const PolicyTabs: React.FC<PolicyTabsProps> = ({
   const activePolicies = policies.filter(p => p.status === 'active' && !p.isArchived).length;
   const expiredPolicies = policies.filter(p => p.status === 'expired' && !p.isArchived).length;
   const pendingPolicies = policies.filter(p => p.status === 'pending' && !p.isArchived).length;
-  const reviewPolicies = policies.filter(p => p.status === 'review' && !p.isArchived).length;
+  // Since 'review' is not in the status type, we're setting it to 0 or you might want to use a different condition
+  const reviewPolicies = 0; // policies.filter(p => p.status === 'review' && !p.isArchived).length;
   const nonArchivedPolicies = policies.filter(p => !p.isArchived).length;
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {

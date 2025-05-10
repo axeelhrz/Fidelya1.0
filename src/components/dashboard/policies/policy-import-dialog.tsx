@@ -45,8 +45,12 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { Customer } from '@/types/customer';
-import { Policy, PolicyStatus, PaymentFrequency } from '@/types/policy';
+import { Policy } from '@/types/policy';
 import { Timestamp } from 'firebase/firestore';
+
+// Define local enum types as they're not exported from '@/types/policy'
+type PolicyStatus = 'active' | 'pending' | 'expired' | 'review' | 'cancelled';
+type PaymentFrequency = 'monthly' | 'quarterly' | 'semi-annual' | 'annual' | 'single';
 import * as XLSX from 'xlsx';
 import { parse as parseCsv } from 'papaparse';
 
@@ -371,8 +375,8 @@ const PolicyImportDialog: React.FC<PolicyImportDialogProps> = ({
           'mensual': 'monthly',
           'quarterly': 'quarterly',
           'trimestral': 'quarterly',
-          'biannual': 'biannual',
-          'semestral': 'biannual',
+          'biannual': 'semi-annual',
+          'semestral': 'semi-annual',
           'annual': 'annual',
           'anual': 'annual',
           'single': 'single',
@@ -491,24 +495,41 @@ const PolicyImportDialog: React.FC<PolicyImportDialogProps> = ({
       // Filtrar solo las pólizas válidas
       const validPolicies = parsedData.filter(item => item.isValid);
       // Convertir las pólizas al formato requerido por la función savePolicy
-      const policiesToImport = validPolicies.map(item => ({
-        policyNumber: item.policyNumber,
-        customerName: item.customerName,
-        type: item.type,
-        company: item.company,
-        premium: item.premium,
-        coverage: item.coverage,
-        paymentFrequency: item.paymentFrequency,
-        startDate: Timestamp.fromDate(item.startDate),
-        endDate: Timestamp.fromDate(item.endDate),
-        status: item.status,
-        notes: item.notes,
-        isStarred: false,
-        isArchived: false,
-        isRenewal: false,
-        customerId: '',
-        errors: [],
-      }));
+      const policiesToImport = validPolicies.map(item => {
+        // Garantizar que status es uno de los valores permitidos
+        const validStatus = item.status === 'active' || 
+                           item.status === 'pending' || 
+                           item.status === 'expired' || 
+                           item.status === 'cancelled' ? 
+                           item.status as 'active' | 'pending' | 'expired' | 'cancelled' : 
+                           'active';
+        
+        // Convert paymentFrequency to the correct type
+        const validPaymentFrequency = (item.paymentFrequency === 'monthly' || 
+                                      item.paymentFrequency === 'quarterly' || 
+                                      item.paymentFrequency === 'semi-annual' || 
+                                      item.paymentFrequency === 'annual') ? 
+                                      item.paymentFrequency as 'monthly' | 'quarterly' | 'semi-annual' | 'annual' : 
+                                      'annual';
+        
+        return {
+          policyNumber: item.policyNumber,
+          customerName: item.customerName,
+          type: item.type,
+          company: item.company,
+          premium: item.premium,
+          coverage: item.coverage,
+          paymentFrequency: validPaymentFrequency,
+          startDate: Timestamp.fromDate(item.startDate),
+          endDate: Timestamp.fromDate(item.endDate),
+          status: validStatus,
+          notes: item.notes,
+          isStarred: false,
+          isArchived: false,
+          isRenewal: false,
+          customerId: '',
+        };
+      });
       // Importar las pólizas
       const successCount = await onImportPolicies(policiesToImport);
       // Actualizar el resultado de la importación

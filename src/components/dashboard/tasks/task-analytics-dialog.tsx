@@ -87,8 +87,11 @@ export const TaskAnalyticsDialog: React.FC<TaskAnalyticsDialogProps> = ({
       let date: Date;
       if ('toDate' in task.dueDate && typeof task.dueDate.toDate === 'function') {
         date = task.dueDate.toDate();
+      } else if (task.dueDate instanceof Date) {
+        date = task.dueDate;
       } else {
-        date = task.dueDate as Date;
+        // Handle Timestamp by assuming it has a toDate method
+        date = (task.dueDate as unknown as { toDate(): Date }).toDate();
       }
       return date.getDay() === index;
     }).length,

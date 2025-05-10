@@ -674,7 +674,7 @@ export default function SignInPage() {
                             fontFamily: '"Inter", sans-serif',
                           }}
                         >
-                          ¿No tienes cuenta?{' '}
+                          ¿No tienes una cuenta?{' '}
                           <Link href="/auth/sign-up" passHref>
                             <Typography
                               component="span"

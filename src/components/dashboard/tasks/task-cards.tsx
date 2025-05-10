@@ -27,7 +27,11 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, isBefore, isToday } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Task, TaskPriority, TaskStatus } from '../../../types/tasks';
+import { Task } from '../../../types/tasks';
+
+// Define the missing types 
+type TaskPriority = 'alta' | 'media' | 'baja' | 'normal';
+type TaskStatus = 'pendiente' | 'en_progreso' | 'completada';
 
 interface TaskCardsProps {
   tasks: Task[];

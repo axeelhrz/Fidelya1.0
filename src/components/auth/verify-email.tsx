@@ -784,7 +784,7 @@ export default function VerifyEmail() {
                 >
                   Verifica tu correo electrónico
                 </Typography>
-                
+   
                 <Typography 
                   variant="body1" 
                   sx={{ 
@@ -824,8 +824,6 @@ export default function VerifyEmail() {
                         '& .MuiAlert-icon': {
                           fontSize: '1.25rem',
                         },
-              
-
                         fontFamily: '"Inter", sans-serif',
                       }}
                     >

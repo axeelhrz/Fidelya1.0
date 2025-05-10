@@ -1,44 +1,16 @@
-'use client';
+import { Metadata } from 'next';
+import SignUpForm from '@/components/auth/sign-up-form';
+import GuestGuard from '@/components/auth/guest-guard';
 
-import React, { Suspense } from 'react';
-import dynamic from 'next/dynamic';
-import { CircularProgress, Box } from '@mui/material';
+export const metadata: Metadata = {
+  title: 'Crear cuenta | Assuriva',
+  description: 'Regístrate en Assuriva para comenzar a gestionar tus seguros de manera eficiente.',
+};
 
-// Importaciones dinámicas
-
-
-const GuestGuard = dynamic(() => import('@/components/auth/guest-guard'), {
-  loading: () => <LoadingSpinner />,
-  ssr: false
-});
-
-const SignUpForm = dynamic(() => import('@/components/auth/sign-up-form'), {
-  loading: () => <LoadingSpinner />,
-  ssr: false
-});
-
-// Componente de carga
-function LoadingSpinner(): React.JSX.Element {
+export default function SignUpPage() {
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh'
-      }}
-    >
-      <CircularProgress />
-    </Box>
-  );
-}
-
-export default function Page(): React.JSX.Element {
-  return (
-    <Suspense fallback={<LoadingSpinner />}>
-        <GuestGuard>
-          <SignUpForm />
-        </GuestGuard>
-    </Suspense>
+    <GuestGuard>
+      <SignUpForm />
+    </GuestGuard>
   );
 }

@@ -32,6 +32,7 @@ import {
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 import LoadingScreen from '@/components/core/loadingScreen';
+import AuthGuard from '@/components/auth/auth-guard';
 
 // Configurar locale para dayjs
 dayjs.locale('es');
@@ -234,7 +235,9 @@ export default function Layout({ children }: LayoutProps): React.JSX.Element {
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
-  const { loading, user } = useAuth();
+  const auth = useAuth();
+  const loading = auth?.loading || false;
+  const user = auth?.user || null;
   
   // Estado para controlar si el backdrop está abierto
   const [isBackdropOpen, setBackdropOpen] = React.useState(false);
@@ -303,6 +306,7 @@ export default function Layout({ children }: LayoutProps): React.JSX.Element {
   }
 
   return (
+    <AuthGuard>
     <ThemeContextProvider>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <GlobalStyle />
@@ -417,5 +421,6 @@ export default function Layout({ children }: LayoutProps): React.JSX.Element {
         </MainWrapper>
       </LocalizationProvider>
     </ThemeContextProvider>
+    </AuthGuard>
   );
 }

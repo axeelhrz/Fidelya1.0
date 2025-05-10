@@ -27,7 +27,7 @@ export const TaskStats: React.FC = () => {
   
   // Use KPIs if available, otherwise calculate from tasks
   const stats = {
-    total: kpis ? kpis.total : tasks.length,
+    total: kpis ? (kpis.completed + kpis.pending + kpis.inProgress) : tasks.length,
     completed: kpis ? kpis.completed : tasks.filter(task => task.status === 'completada').length,
     pending: kpis ? kpis.pending : tasks.filter(task => task.status === 'pendiente').length,
     inProgress: kpis ? kpis.inProgress : tasks.filter(task => task.status === 'en_progreso').length,

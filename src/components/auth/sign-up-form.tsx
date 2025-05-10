@@ -598,7 +598,7 @@ export default function SignUpPage() {
         trialDays: 0,
         paypalPlanId: ''
       };
-      
+
       // Guardar datos en Firestore
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         uid: userCredential.user.uid,

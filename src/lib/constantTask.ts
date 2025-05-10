@@ -1,30 +1,32 @@
-import { TaskStatus, TaskPriority, TaskTag } from '@/types/tasks';
-
-// Constantes para planes
+/**
+ * Plan values
+ */
 export const PlanValue = {
   BASIC: 'basic',
   PRO: 'pro',
   ENTERPRISE: 'enterprise'
 } as const;
 
-// Límites según plan
+/**
+ * Plan limits for different features
+ */
 export const PLAN_LIMITS = {
   [PlanValue.BASIC]: {
-    activeTasks: 25,
+    activeTasks: 10,
     kanbanView: false,
     export: false,
     import: false,
     intelligentDueDate: false
   },
   [PlanValue.PRO]: {
-    activeTasks: Infinity,
+    activeTasks: 100,
     kanbanView: true,
     export: true,
     import: true,
     intelligentDueDate: true
   },
   [PlanValue.ENTERPRISE]: {
-    activeTasks: Infinity,
+    activeTasks: 'unlimited',
     kanbanView: true,
     export: true,
     import: true,
@@ -32,31 +34,39 @@ export const PLAN_LIMITS = {
   }
 };
 
-// Estados de tareas
-export const TASK_STATUS: { value: TaskStatus; label: string; color: string }[] = [
+/**
+ * Task statuses with labels and colors
+ */
+export const TASK_STATUS = [
   { value: 'pendiente', label: 'Pendiente', color: '#F59E0B' },
   { value: 'en_progreso', label: 'En Proceso', color: '#3B82F6' },
   { value: 'completada', label: 'Completada', color: '#10B981' }
 ];
 
-// Prioridades de tareas
-export const TASK_PRIORITIES: { value: TaskPriority; label: string; color: string }[] = [
+/**
+ * Task priorities with labels and colors
+ */
+export const TASK_PRIORITIES = [
   { value: 'baja', label: 'Baja', color: '#9CA3AF' },
   { value: 'media', label: 'Media', color: '#60A5FA' },
-  { value: 'alta', label: 'Alta', color: '#F59E0B' },
+  { value: 'alta', label: 'Alta', color: '#F59E0B' }
 ];
 
-// Etiquetas predefinidas
-export const TASK_TAGS: TaskTag[] = [
+/**
+ * Predefined task tags
+ */
+export const TASK_TAGS = [
   { id: '1', name: 'Renovación', color: '#3B82F6' },
   { id: '2', name: 'Seguimiento', color: '#10B981' },
-  { id: '3', name: 'Reclamación', color: '#EF4444' },
-  { id: '4', name: 'Cotización', color: '#F59E0B' },
-  { id: '5', name: 'Administrativa', color: '#8B5CF6' },
-  { id: '6', name: 'Comercial', color: '#EC4899' }
+  { id: '3', name: 'Reclamación', color: '#F59E0B' },
+  { id: '4', name: 'Cotización', color: '#8B5CF6' },
+  { id: '5', name: 'Administrativa', color: '#EC4899' },
+  { id: '6', name: 'Comercial', color: '#6366F1' }
 ];
 
-// Tipos de recordatorios
+/**
+ * Reminder types for tasks
+ */
 export const REMINDER_TYPES = [
   { value: 'none', label: 'Sin recordatorio' },
   { value: '30min', label: '30 minutos antes' },
@@ -67,5 +77,7 @@ export const REMINDER_TYPES = [
   { value: '1week', label: '1 semana antes' }
 ];
 
-// Ítems por página
+/**
+ * Number of items to display per page
+ */
 export const ITEMS_PER_PAGE = 10;

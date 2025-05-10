@@ -28,7 +28,10 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, isBefore, isToday } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Task, TaskPriority } from '../../../types/tasks';
+import { Task } from '../../../types/tasks';
+
+// Define TaskPriority type locally
+type TaskPriority = 'alta' | 'media' | 'baja' | 'normal';
 
 interface TaskBoardViewProps {
   tasks: Task[];

@@ -10,6 +10,22 @@ import { useProfile } from '@/hooks/use-profile';
 import { useSubscription } from '@/hooks/use-subscription';
 
 // Tipos
+
+// This is what useAuth() actually returns
+interface AuthHookReturn {
+  user?: {
+    uid?: string;
+    email?: string;
+    emailVerified?: boolean;
+  } | null;
+  userData?: {
+    role?: string;
+    [key: string]: unknown;
+  }; // Defined structure with optional properties and index signature
+  loading?: boolean;
+}
+
+
 interface AuthGuardProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
@@ -152,10 +168,12 @@ export default function AuthGuard({
   children, 
   fallback,
   requiredRoles = [] 
-}: AuthGuardProps): React.ReactNode {
-  const { user, userData, loading: authLoading } = useAuth();
+}: AuthGuardProps) {
+  const auth = useAuth() || {};
+  const { user = null, userData = {}, loading: authLoading = false } = auth as unknown as AuthHookReturn;
   const { profile, isLoading: profileLoading } = useProfile();
-  const { subscription, loading: subscriptionLoading } = useSubscription();
+  const subscriptionResult = useSubscription();
+  const { subscription = null, loading: subscriptionLoading = false } = subscriptionResult !== undefined ? subscriptionResult : { subscription: null, loading: false };
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -237,7 +255,7 @@ export default function AuthGuard({
         }
         
         // Verificar estado de la suscripción
-        if (subscription.status !== 'active' && !subscription.trialEnd) {
+        if (subscription && subscription.status !== 'active' && !subscription.trialEnd) {
           // Si es plan pro o enterprise y no está activo
           if (subscription.planId === 'pro' || subscription.planId === 'enterprise') {
             setRedirectReason({

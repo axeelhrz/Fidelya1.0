@@ -85,7 +85,6 @@ const PolicyAnalyticsDialog: React.FC<PolicyAnalyticsDialogProps> = ({
     active: activePolicies,
     expired: expiredPolicies,
     pending: pendingPolicies,
-    review: policies.filter(p => p.status === 'review').length,
     cancelled: policies.filter(p => p.status === 'cancelled').length,
   };
 

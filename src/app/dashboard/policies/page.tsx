@@ -13,14 +13,14 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePolicies } from '@/hooks/use-policies';
 import { useSubscription } from '@/hooks/use-subscription';
-import { Filter, Policy, PolicyReminder } from '@/types/policy';
+import { Policy, PolicyReminder } from '@/types/policy';
 import { useAuth } from '@/hooks/use-auth';
 import { Timestamp } from 'firebase/firestore';
+
 
 // Componentes
 import PolicyHeader from '@/components/dashboard/policies/policy-header';
 import PolicyStats from '@/components/dashboard/policies/policy-stats';
-import PolicyFilters from '@/components/dashboard/policies/policy-filters';
 import PolicyTabs from '@/components/dashboard/policies/policy-tabs';
 import PolicyTable from '@/components/dashboard/policies/policy-table';
 import PolicyGrid from '@/components/dashboard/policies/policy-grid';
@@ -117,14 +117,12 @@ export default function PoliciesPage() {
       direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
     });
   };
-
-  const handleFiltersChange = (newFilters: Filter) => {
-    setFilters(newFilters);
-  };
-
+  
   const handleViewModeChange = (mode: 'table' | 'grid') => {
     setViewMode(mode);
   };
+
+
 
   // Funciones para manejar los diálogos
   const handleOpenDialog = (editMode = false, policy: Policy | null = null) => {
@@ -190,7 +188,7 @@ export default function PoliciesPage() {
       ...policyData,
       errors: [], // Campo requerido
       customerId: policyData.customerId || '', // Asegúrate de que exista
-      coverage: policyData.coverage || 0, // Asegúrate de que exista
+      coverages: policyData.coverages || [], // Asegúrate de que exista
       paymentFrequency: policyData.paymentFrequency || 'annual', // Asegúrate de que exista
     };
     
@@ -436,7 +434,7 @@ const getFilteredPoliciesByTab = () => {
     ...p,
     errors: p.errors || [],
     customerId: p.customerId || '',
-    coverage: p.coverage || 0,
+    coverages: p.coverages || [],
     paymentFrequency: p.paymentFrequency || 'annual',
   }));
   
@@ -465,7 +463,8 @@ const getFilteredPoliciesByTab = () => {
       filtered = filtered.filter(p => p.status === 'pending' && !p.isArchived);
       break;
     case 4: // En revisión
-      filtered = filtered.filter(p => p.status === 'review' && !p.isArchived);
+      // 'review' is not a valid status, removing it or using a valid status
+      filtered = filtered.filter(p => !p.isArchived);
       break;
   }
   
@@ -493,7 +492,6 @@ const getFilteredPoliciesByTab = () => {
   const displayedPolicies = getFilteredPoliciesByTab();
 
   // Obtener las compañías únicas para el filtro
-  const uniqueCompanies = Array.from(new Set(policies.map(p => p.company)));
 
   // Mostrar pantalla de carga mientras se autentica
   if (authLoading) {
@@ -594,26 +592,42 @@ const getFilteredPoliciesByTab = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <PolicyFilters 
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            companies={uniqueCompanies}
-            viewMode={viewMode}
-            onViewModeChange={handleViewModeChange}
-          />
-        </motion.div>
-
-        {/* Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <PolicyTabs 
-            currentTab={currentTab}
-            onTabChange={handleTabChange}
-            policies={policies}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <PolicyTabs 
+                currentTab={currentTab}
+                onTabChange={handleTabChange}
+                policies={policies}
+              />
+              <Box>
+                <button onClick={() => handleViewModeChange('table')} style={{ 
+                  backgroundColor: viewMode === 'table' ? '#3f51b5' : '#e0e0e0',
+                  color: viewMode === 'table' ? 'white' : 'black',
+                  border: 'none',
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  marginRight: '8px',
+                  cursor: 'pointer'
+                }}>
+                  Table
+                </button>
+                <button onClick={() => handleViewModeChange('grid')} style={{
+                  backgroundColor: viewMode === 'grid' ? '#3f51b5' : '#e0e0e0',
+                  color: viewMode === 'grid' ? 'white' : 'black',
+                  border: 'none',
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}>
+                  Grid
+                </button>
+              </Box>
+            </Box>
+          </motion.div>
         </motion.div>
 
         {/* Contenido principal */}

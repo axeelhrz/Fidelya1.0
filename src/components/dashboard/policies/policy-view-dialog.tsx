@@ -157,6 +157,7 @@ const PolicyViewDialog: React.FC<PolicyViewDialogProps> = ({
     setLoading('addReminder');
     try {
       await onAddReminder(policy.id, {
+        title: newReminder.description, // Add the required title field
         description: newReminder.description,
         date: Timestamp.fromDate(newReminder.date!),
         dueDate: Timestamp.fromDate(newReminder.date!),
@@ -1004,7 +1005,7 @@ const PolicyViewDialog: React.FC<PolicyViewDialogProps> = ({
                     border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                     overflow: 'hidden',
                   }}>
-                    {policy.documents.map((document) => (
+                    {policy.documents.map((document: PolicyDocument) => (
                       <ListItem
                         key={document.id}
                         sx={{

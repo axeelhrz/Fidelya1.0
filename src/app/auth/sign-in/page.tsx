@@ -1,16 +1,16 @@
-import * as React from 'react';
-import type { Metadata } from 'next';
-
-import { config } from '@/config';
-import GuestGuard from '@/components/auth/guest-guard';
+import { Metadata } from 'next';
 import SignInForm from '@/components/auth/sign-in-form';
+import GuestGuard from '@/components/auth/guest-guard';
 
-export const metadata = { title: `Iniciar sesión | Auth | ${config.site.name}` } satisfies Metadata;
+export const metadata: Metadata = {
+  title: 'Iniciar sesión | Assuriva',
+  description: 'Inicia sesión en tu cuenta de Assuriva para acceder a todas las funcionalidades.',
+};
 
-export default function Page(): React.JSX.Element {
+export default function SignInPage() {
   return (
-      <GuestGuard>
-        <SignInForm />
-      </GuestGuard>
+    <GuestGuard>
+      <SignInForm />
+    </GuestGuard>
   );
 }

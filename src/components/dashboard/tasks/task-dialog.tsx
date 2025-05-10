@@ -30,8 +30,12 @@ import {
   Title as TitleIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { Task, TaskPriority, TaskStatus } from '../../../types/tasks';
+import { Task } from '../../../types/tasks';
 import { Timestamp } from 'firebase/firestore';
+
+// Define the missing types locally
+type TaskPriority = 'alta' | 'media' | 'baja';
+type TaskStatus = 'pendiente' | 'en_progreso' | 'completada';
 
 interface AddTaskModalProps {
   open: boolean;

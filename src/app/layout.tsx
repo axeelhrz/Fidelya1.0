@@ -5,6 +5,8 @@ import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Plus_Jakarta_Sans, Work_Sans, Inter, Sora } from 'next/font/google'
 import { PlanProvider } from '@/context/planContext'
 import ThemeContextProvider from '@/context/themeContext'
+import { AuthProvider } from '@/context/auth-context'
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Assuriva',
@@ -59,8 +61,10 @@ export default function RootLayout({
         <ThemeContextProvider>
         <PlanProvider>
           <Analytics />
+          <AuthProvider>
           {process.env.NODE_ENV === 'production' && <SpeedInsights />}
           {children}
+          </AuthProvider>
         </PlanProvider>
         </ThemeContextProvider>
         </div>

@@ -1,11 +1,17 @@
 import { Timestamp } from 'firebase/firestore';
 
+/**
+ * Interface for customer tags
+ */
 export interface CustomerTag {
   id: string;
   name: string;
   color: string;
 }
 
+/**
+ * Interface for customer reminders
+ */
 export interface CustomerReminder {
   id: string;
   title: string;
@@ -16,16 +22,22 @@ export interface CustomerReminder {
   createdAt: Timestamp;
 }
 
+/**
+ * Interface for linking customers to policies
+ */
 export interface CustomerPolicyLink {
   policyId: string;
   policyNumber: string;
   type: string;
-  company: string; 
+  company: string;
   status: string;
   startDate: Timestamp;
   endDate: Timestamp;
 }
 
+/**
+ * Interface for customer data
+ */
 export interface Customer {
   id: string;
   userId: string;
@@ -61,6 +73,9 @@ export interface Customer {
   }[];
 }
 
+/**
+ * Props for customer dialog component
+ */
 export interface CustomerDialogProps {
   open: boolean;
   onClose: () => void;
@@ -69,6 +84,9 @@ export interface CustomerDialogProps {
   onSuccess?: (customer: Partial<Customer>) => Promise<boolean>;
 }
 
+/**
+ * Props for customer table component
+ */
 export interface CustomerTableProps {
   customers: Customer[];
   loading: boolean;
@@ -85,6 +103,9 @@ export interface CustomerTableProps {
   onPageChange: (page: number) => void;
 }
 
+/**
+ * Interface for customer statistics
+ */
 export interface CustomerStats {
   totalCustomers: number;
   activeCustomers: number;
@@ -97,10 +118,138 @@ export interface CustomerStats {
   customersWithRenewingPolicies: number;
 }
 
+
+/**
+ * Props for customer header component
+ */
 export interface CustomerHeaderProps {
   onAddCustomer: () => void;
   onImportCustomers: () => void;
   onExportCustomers: () => void;
-  onRefreshKpis: () => Promise<boolean>;
-  lastUpdated: Date | null;
+  onRefreshKpis: () => Promise<void>;
+  onViewAnalytics: () => void;
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  viewMode: 'grid' | 'table';
+  onViewModeChange: (mode: 'grid' | 'table') => void;
+  totalCustomers: number;
+}
+
+/**
+ * Props for customer grid component
+ */
+export interface CustomerGridProps {
+  customers: Customer[];
+  loading: boolean;
+  onViewCustomer: (customer: Customer) => void;
+  onEditCustomer: (customer: Customer) => void;
+  onDeleteCustomer: (customer: Customer) => void;
+  onEmailCustomer: (customer: Customer) => void;
+  onScheduleMeeting: (customer: Customer) => void;
+  onToggleStarred: (customer: Customer) => void;
+  page: number;
+  onPageChange: (page: number) => void;
+}
+
+/**
+ * Props for customer view dialog component
+ */
+export interface CustomerViewDialogProps {
+  open: boolean;
+  onClose: () => void;
+  customer: Customer | null;
+  onEdit: (customer: Customer) => void;
+  onDelete: (customer: Customer) => void;
+  onEmailCustomer: (customer: Customer) => void;
+  onScheduleMeeting: (customer: Customer) => void;
+}
+
+/**
+ * Props for customer delete dialog component
+ */
+export interface CustomerDeleteDialogProps {
+  open: boolean;
+  onClose: () => void;
+  customer: Customer | null;
+  onConfirm: (customer: Customer) => Promise<void>;
+  loading: boolean;
+}
+
+/**
+ * Props for customer import dialog component
+ */
+export interface CustomerImportDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onImport: (file: File) => Promise<void>;
+  loading: boolean;
+}
+
+/**
+ * Props for customer export dialog component
+ */
+export interface CustomerExportDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onExport: (format: 'csv' | 'excel' | 'pdf') => Promise<void>;
+  loading: boolean;
+}
+
+/**
+ * Props for customer analytics dialog component
+ */
+export interface CustomerAnalyticsDialogProps {
+  open: boolean;
+  onClose: () => void;
+  stats: CustomerStats;
+  loading: boolean;
+}
+
+/**
+ * Props for customer filters component
+ */
+export interface CustomerFiltersProps {
+  filters: CustomerFilters;
+  onFilterChange: (filters: CustomerFilters) => void;
+  onClearFilters: () => void;
+  loading: boolean;
+  tags: CustomerTag[];
+}
+
+/**
+ * Interface for customer filters
+ */
+export interface CustomerFilters {
+  status: string[];
+  type: string[];
+  tags: string[];
+  createdDateRange: {
+    start: Date | null;
+    end: Date | null;
+  };
+  riskLevel: string[];
+  hasActivePolicies: boolean | null;
+  isStarred: boolean | null;
+}
+
+/**
+ * Props for customer tabs component
+ */
+export interface CustomerTabsProps {
+  currentTab: string;
+  onTabChange: (tab: string) => void;
+  tabs: {
+    value: string;
+    label: string;
+    count?: number;
+  }[];
+}
+
+/**
+ * Props for customer stats component
+ */
+export interface CustomerStatsProps {
+  stats: CustomerStats;
+  loading: boolean;
+  onRefresh: () => Promise<void>;
 }

@@ -41,7 +41,13 @@ import { TaskViewDialog } from '../../../components/dashboard/tasks/task-view-di
 import TaskImportDialog from '../../../components/dashboard/tasks/task-import-dialog';
 import { TaskHeader } from '../../../components/dashboard/tasks/task-header';
 import { useTasks } from '../../../hooks/use-tasks';
-import { Task, TaskStatus } from '../../../types/tasks';
+import { Task } from '../../../types/tasks';
+// Define TaskStatus enum since it's not exported from types/tasks
+enum TaskStatus {
+  PENDING = 'pendiente',
+  IN_PROGRESS = 'en_progreso',
+  COMPLETED = 'completada'
+}
 import { useAuth } from '../../../hooks/use-auth';
 import { useSubscription } from '../../../hooks/use-subscription';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -164,7 +170,7 @@ export default function TasksPage() {
 
   // Verificar si el usuario ha alcanzado el límite de tareas del plan
   const planLimits = subscription?.plan ? PLAN_LIMITS[subscription.plan as keyof typeof PLAN_LIMITS] : PLAN_LIMITS[PlanValue.BASIC];
-  const hasReachedTaskLimit = stats.total >= (planLimits?.activeTasks || 25);
+  const hasReachedTaskLimit = stats.total >= (Number(planLimits?.activeTasks) || 25);
   const canUseKanbanView = planLimits?.kanbanView || false;
   const canExportTasks = planLimits?.export || false;
   const canImportTasks = planLimits?.import || false;
