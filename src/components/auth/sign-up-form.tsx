@@ -3,21 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, FormProvider, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  createUserWithEmailAndPassword, 
-  sendEmailVerification, 
-  updateProfile, 
-  signInWithPopup, 
-  GoogleAuthProvider,
-  fetchSignInMethodsForEmail
-} from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { FirebaseError } from 'firebase/app';
-import { auth, db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/use-auth';
 import Logo from '@/components/ui/logo';
 import {
   Box,
@@ -42,7 +32,8 @@ import {
   CircularProgress,
   Tooltip,
   Chip,
-  alpha
+  alpha,
+  Paper
 } from '@mui/material';
 import {
   Visibility,
@@ -59,33 +50,48 @@ import {
   Fingerprint,
   Refresh,
   Info,
-  ErrorOutline
+  ErrorOutline,
+  Business,
+  Phone
 } from '@mui/icons-material';
 
 // Esquema de validación con Zod
+const emailSchema = z.object({
+  email: z.string().email('Correo electrónico inválido').min(1, 'El correo electrónico es requerido'),
+});
+
+const personalInfoSchema = z.object({
+  firstName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+  lastName: z.string().min(2, 'El apellido debe tener al menos 2 caracteres'),
+  company: z.string().optional(),
+  phone: z.string().optional(),
+});
+
+const passwordSchema = z.object({
+  password: z.string()
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .regex(/[A-Z]/, 'La contraseña debe contener al menos una letra mayúscula')
+    .regex(/[a-z]/, 'La contraseña debe contener al menos una letra minúscula')
+    .regex(/[0-9]/, 'La contraseña debe contener al menos un número')
+    .regex(/[^A-Za-z0-9]/, 'La contraseña debe contener al menos un carácter especial'),
+  confirmPassword: z.string().min(1, 'Confirma tu contraseña'),
+  termsAccepted: z.boolean().refine(val => val === true, {
+    message: 'Debes aceptar los términos y condiciones',
+  }),
+});
+
 const registerSchema = z.object({
-  step1: z.object({
-    email: z.string().email('Correo electrónico inválido').min(1, 'El correo electrónico es requerido'),
-  }),
-  step2: z.object({
-    firstName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-    lastName: z.string().min(2, 'El apellido debe tener al menos 2 caracteres'),
-  }),
-  step3: z.object({
-    password: z.string()
-      .min(8, 'La contraseña debe tener al menos 8 caracteres')
-      .regex(/[A-Z]/, 'La contraseña debe contener al menos una letra mayúscula')
-      .regex(/[a-z]/, 'La contraseña debe contener al menos una letra minúscula')
-      .regex(/[0-9]/, 'La contraseña debe contener al menos un número')
-      .regex(/[^A-Za-z0-9]/, 'La contraseña debe contener al menos un carácter especial'),
-    confirmPassword: z.string().min(1, 'Confirma tu contraseña'),
-    termsAccepted: z.boolean().refine(val => val === true, {
-      message: 'Debes aceptar los términos y condiciones',
-    }),
-  }),
-}).refine(data => data.step3.password === data.step3.confirmPassword, {
+  email: emailSchema.shape.email,
+  firstName: personalInfoSchema.shape.firstName,
+  lastName: personalInfoSchema.shape.lastName,
+  company: personalInfoSchema.shape.company,
+  phone: personalInfoSchema.shape.phone,
+  password: passwordSchema.shape.password,
+  confirmPassword: passwordSchema.shape.confirmPassword,
+  termsAccepted: passwordSchema.shape.termsAccepted,
+}).refine(data => data.password === data.confirmPassword, {
   message: 'Las contraseñas no coinciden',
-  path: ['step3', 'confirmPassword'],
+  path: ['confirmPassword'],
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -465,12 +471,462 @@ const BenefitsSection = () => {
   );
 };
 
+// Componente para el paso 1: Email
+const Step1Email = ({ emailAvailable, emailCheckLoading }: { emailAvailable: boolean | null, emailCheckLoading: boolean }) => {
+  const { control, formState: { errors } } = useFormContext<RegisterFormData>();
+  
+  return (
+    <Stack spacing={3}>
+      <Controller
+        name="email"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Correo electrónico"
+            variant="outlined"
+            fullWidth
+            error={!!errors.email}
+            helperText={errors.email?.message}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Email color="primary" />
+                </InputAdornment>
+              ),
+              endAdornment: emailCheckLoading ? (
+                <InputAdornment position="end">
+                  <CircularProgress size={20} />
+                </InputAdornment>
+              ) : emailAvailable === true ? (
+                <InputAdornment position="end">
+                  <Tooltip title="Email disponible">
+                    <CheckCircle color="success" />
+                  </Tooltip>
+                </InputAdornment>
+              ) : emailAvailable === false ? (
+                <InputAdornment position="end">
+                  <Tooltip title="Email no disponible">
+                    <Info color="error" />
+                  </Tooltip>
+                </InputAdornment>
+              ) : null,
+              sx: {
+                borderRadius: 2,
+                fontFamily: '"Inter", sans-serif',
+                fontSize: '1rem',
+                transition: 'all 0.3s ease',
+                '&:focus-within': {
+                  boxShadow: (theme) => `0 0 0 3px ${theme.palette.mode === 'dark' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
+                },
+              }
+            }}
+            InputLabelProps={{
+              sx: {
+                fontFamily: '"Inter", sans-serif',
+              }
+            }}
+          />
+        )}
+      />
+      
+      {emailAvailable === true && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Alert
+            severity="success"
+            sx={{
+              borderRadius: 2,
+              '& .MuiAlert-message': {
+                fontFamily: '"Inter", sans-serif',
+              }
+            }}
+          >
+            Email disponible para registro
+          </Alert>
+        </motion.div>
+      )}
+      
+      {emailAvailable === false && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Alert
+            severity="error"
+            sx={{
+              borderRadius: 2,
+              '& .MuiAlert-message': {
+                fontFamily: '"Inter", sans-serif',
+              }
+            }}
+          >
+            Este email ya está registrado
+          </Alert>
+        </motion.div>
+      )}
+    </Stack>
+  );
+};
+
+// Componente para el paso 2: Información personal
+const Step2PersonalInfo = () => {
+  const { control, formState: { errors } } = useFormContext<RegisterFormData>();
+  
+  return (
+    <Stack spacing={3}>
+      <Controller
+        name="firstName"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Nombre"
+            variant="outlined"
+            fullWidth
+            error={!!errors.firstName}
+            helperText={errors.firstName?.message}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Person color="primary" />
+                </InputAdornment>
+              ),
+              sx: {
+                borderRadius: 2,
+                fontFamily: '"Inter", sans-serif',
+                fontSize: '1rem',
+                transition: 'all 0.3s ease',
+                '&:focus-within': {
+                  boxShadow: (theme) => `0 0 0 3px ${theme.palette.mode === 'dark' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
+                },
+              }
+            }}
+            InputLabelProps={{
+              sx: {
+                fontFamily: '"Inter", sans-serif',
+              }
+            }}
+          />
+        )}
+      />
+      
+      <Controller
+        name="lastName"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Apellido"
+            variant="outlined"
+            fullWidth
+            error={!!errors.lastName}
+            helperText={errors.lastName?.message}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Person color="primary" />
+                </InputAdornment>
+              ),
+              sx: {
+                borderRadius: 2,
+                fontFamily: '"Inter", sans-serif',
+                fontSize: '1rem',
+                transition: 'all 0.3s ease',
+                '&:focus-within': {
+                  boxShadow: (theme) => `0 0 0 3px ${theme.palette.mode === 'dark' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
+                },
+              }
+            }}
+            InputLabelProps={{
+              sx: {
+                fontFamily: '"Inter", sans-serif',
+              }
+            }}
+          />
+        )}
+      />
+      
+      <Controller
+        name="company"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Empresa (opcional)"
+            variant="outlined"
+            fullWidth
+            error={!!errors.company}
+            helperText={errors.company?.message}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Business color="primary" />
+                </InputAdornment>
+              ),
+              sx: {
+                borderRadius: 2,
+                fontFamily: '"Inter", sans-serif',
+                fontSize: '1rem',
+                transition: 'all 0.3s ease',
+                '&:focus-within': {
+                  boxShadow: (theme) => `0 0 0 3px ${theme.palette.mode === 'dark' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
+                },
+              }
+            }}
+            InputLabelProps={{
+              sx: {
+                fontFamily: '"Inter", sans-serif',
+              }
+            }}
+          />
+        )}
+      />
+      
+      <Controller
+        name="phone"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Teléfono (opcional)"
+            variant="outlined"
+            fullWidth
+            error={!!errors.phone}
+            helperText={errors.phone?.message}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Phone color="primary" />
+                </InputAdornment>
+              ),
+              sx: {
+                borderRadius: 2,
+                fontFamily: '"Inter", sans-serif',
+                fontSize: '1rem',
+                transition: 'all 0.3s ease',
+                '&:focus-within': {
+                  boxShadow: (theme) => `0 0 0 3px ${theme.palette.mode === 'dark' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
+                },
+              }
+            }}
+            InputLabelProps={{
+              sx: {
+                fontFamily: '"Inter", sans-serif',
+              }
+            }}
+          />
+        )}
+      />
+    </Stack>
+  );
+};
+
+// Componente para el paso 3: Contraseña y términos
+const Step3Password = ({ showPassword, togglePasswordVisibility, handleGeneratePassword }: { 
+  showPassword: boolean, 
+  togglePasswordVisibility: () => void,
+  handleGeneratePassword: (password: string) => void
+}) => {
+  const { control, watch, formState: { errors } } = useFormContext<RegisterFormData>();
+  const watchPassword = watch('password', '');
+  
+  return (
+    <Stack spacing={3}>
+      <Controller
+        name="password"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Contraseña"
+            type={showPassword ? 'text' : 'password'}
+            variant="outlined"
+            fullWidth
+            error={!!errors.password}
+            helperText={errors.password?.message}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Lock color="primary" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={togglePasswordVisibility}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+              sx: {
+                borderRadius: 2,
+                fontFamily: '"Inter", sans-serif',
+                fontSize: '1rem',
+                transition: 'all 0.3s ease',
+                '&:focus-within': {
+                  boxShadow: (theme) => `0 0 0 3px ${theme.palette.mode === 'dark' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
+                },
+              }
+            }}
+            InputLabelProps={{
+              sx: {
+                fontFamily: '"Inter", sans-serif',
+              }
+            }}
+          />
+        )}
+      />
+      
+      {/* Generador de contraseña */}
+      <PasswordGenerator onGenerate={handleGeneratePassword} />
+      
+      {/* Indicador de fortaleza de contraseña */}
+      {watchPassword && <PasswordStrengthIndicator password={watchPassword} />}
+      
+      <Controller
+        name="confirmPassword"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Confirmar contraseña"
+            type={showPassword ? 'text' : 'password'}
+            variant="outlined"
+            fullWidth
+            error={!!errors.confirmPassword}
+            helperText={errors.confirmPassword?.message}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Lock color="primary" />
+                </InputAdornment>
+              ),
+              sx: {
+                borderRadius: 2,
+                fontFamily: '"Inter", sans-serif',
+                fontSize: '1rem',
+                transition: 'all 0.3s ease',
+                '&:focus-within': {
+                  boxShadow: (theme) => `0 0 0 3px ${theme.palette.mode === 'dark' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
+                },
+              }
+            }}
+            InputLabelProps={{
+              sx: {
+                fontFamily: '"Inter", sans-serif',
+              }
+            }}
+          />
+        )}
+      />
+      
+      <Controller
+        name="termsAccepted"
+        control={control}
+        render={({ field }) => (
+          <FormControlLabel
+            control={
+              <Checkbox
+                {...field}
+                checked={field.value}
+                color="primary"
+                sx={{
+                  '&.Mui-checked': {
+                    color: '#3B82F6',
+                  }
+                }}
+              />
+            }
+            label={
+              <Typography
+                variant="body2"
+                sx={{
+                  fontFamily: '"Inter", sans-serif',
+                  fontSize: '0.875rem',
+                }}
+              >
+                Acepto los{' '}
+                <Link href="/terminos" passHref>
+                  <Typography
+                    component="span"
+                    sx={{
+                      fontFamily: '"Inter", sans-serif',
+                      color: 'primary.main',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textDecoration: 'none',
+                      '&:hover': {
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    términos y condiciones
+                  </Typography>
+                </Link>{' '}
+                y la{' '}
+                <Link href="/privacidad" passHref>
+                  <Typography
+                    component="span"
+                    sx={{
+                      fontFamily: '"Inter", sans-serif',
+                      color: 'primary.main',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textDecoration: 'none',
+                      '&:hover': {
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    política de privacidad
+                  </Typography>
+                </Link>
+              </Typography>
+            }
+            sx={{
+              alignItems: 'flex-start',
+              '.MuiFormControlLabel-label': {
+                mt: 0.5
+              }
+            }}
+          />
+        )}
+      />
+      
+      {errors.termsAccepted && (
+        <Typography
+          variant="caption"
+          color="error"
+          sx={{
+            fontFamily: '"Inter", sans-serif',
+            mt: -2,
+            ml: 2
+          }}
+        >
+          {errors.termsAccepted.message}
+        </Typography>
+      )}
+    </Stack>
+  );
+};
+
 // Componente principal de la página
-export default function SignUpPage() {
+export default function SignUpForm() {
   const theme = useTheme();
   const router = useRouter();
   const isDark = theme.palette.mode === 'dark';
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const { signUp, signInWithGoogle, error: authError, clearError } = useAuth();
+  
+  type PlanId = 'basic' | 'pro' | 'enterprise';
   
   interface Plan {
     id: string;
@@ -489,19 +945,24 @@ export default function SignUpPage() {
   const [emailCheckLoading, setEmailCheckLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   
-  const initialFormData: RegisterFormData = {
-    step1: { email: '' },
-    step2: { firstName: '', lastName: '' },
-    step3: { password: '', confirmPassword: '', termsAccepted: false }
-  };
-  
-  const { control, handleSubmit, watch, setValue, trigger, formState: { errors } } = useForm<RegisterFormData>({
+  const methods = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: initialFormData
+    defaultValues: {
+      email: '',
+      firstName: '',
+      lastName: '',
+      company: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      termsAccepted: false
+    },
+    mode: 'onChange'
   });
   
-  const watchPassword = watch('step3.password', '');
-  const watchEmail = watch('step1.email', '');
+  const { handleSubmit, watch, setValue, trigger } = methods;
+  
+  const watchEmail = watch('email', '');
   
   // Cargar plan seleccionado desde localStorage
   useEffect(() => {
@@ -516,6 +977,13 @@ export default function SignUpPage() {
     }
   }, []);
   
+  // Limpiar errores de autenticación al desmontar
+  useEffect(() => {
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
+  
   // Verificar disponibilidad de email
   useEffect(() => {
     const checkEmailAvailability = async () => {
@@ -528,8 +996,8 @@ export default function SignUpPage() {
       
       try {
         // Verificar si el email ya está en uso en Firebase
-        const methods = await fetchSignInMethodsForEmail(auth, watchEmail);
-        setEmailAvailable(methods.length === 0);
+        const isInUse = await fetch(`/api/auth/check-email?email=${encodeURIComponent(watchEmail)}`).then(res => res.json()).then(data => data.exists);
+        setEmailAvailable(!isInUse);
       } catch (error) {
         console.error('Error al verificar email:', error);
         setEmailAvailable(true); // Asumimos disponible en caso de error
@@ -542,16 +1010,23 @@ export default function SignUpPage() {
     return () => clearTimeout(debounceTimer);
   }, [watchEmail]);
   
+  // Manejar errores de autenticación
+  useEffect(() => {
+    if (authError) {
+      setError(authError.message);
+    }
+  }, [authError]);
+  
   const handleNext = async () => {
     let isValid = false;
     
     if (activeStep === 0) {
-      isValid = await trigger('step1');
+      isValid = await trigger('email');
       if (isValid && emailAvailable) {
         setActiveStep(1);
       }
     } else if (activeStep === 1) {
-      isValid = await trigger('step2');
+      isValid = await trigger(['firstName', 'lastName', 'company', 'phone']);
       if (isValid) {
         setActiveStep(2);
       }
@@ -567,142 +1042,28 @@ export default function SignUpPage() {
     setError(null);
     
     try {
-      // Crear usuario en Firebase
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        data.step1.email,
-        data.step3.password
-      );
-      
-      // Actualizar perfil con nombre y apellido
-      await updateProfile(userCredential.user, {
-        displayName: `${data.step2.firstName} ${data.step2.lastName}`
+      // Registrar usuario
+      const response = await signUp({
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        plan: (selectedPlan?.id as PlanId) || 'basic' as PlanId,
+        termsAccepted: data.termsAccepted
       });
       
-      // Enviar email de verificación
-      await sendEmailVerification(userCredential.user);
-      
-      // Determinar el plan a guardar
-      const planToSave = selectedPlan ? {
-        id: selectedPlan.id || 'basic',
-        name: selectedPlan.name || 'Básico',
-        price: selectedPlan.price || 0,
-        period: selectedPlan.billingPeriod || 'month',
-        trialDays: selectedPlan.trialDays || 0,
-        paypalPlanId: selectedPlan.paypalPlanId || ''
-      } : {
-        id: 'basic',
-        name: 'Básico',
-        price: 0,
-        period: 'month',
-        trialDays: 0,
-        paypalPlanId: ''
-      };
-  
-      // Guardar datos en Firestore
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
-        uid: userCredential.user.uid,
-        email: data.step1.email,
-        displayName: `${data.step2.firstName} ${data.step2.lastName}`,
-        firstName: data.step2.firstName,
-        lastName: data.step2.lastName,
-        role: 'user',
-        phoneNumber: '',
-        photoURL: '',
-        emailVerified: false,
-        twoFactorEnabled: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        plan: planToSave.id,
-        planName: planToSave.name,
-        planStatus: planToSave.id === 'basic' ? 'active' : 'pending',
-        verified: false,
-        subscription: {
-          status: planToSave.id === 'basic' ? 'active' : 'pending',
-          planId: planToSave.id,
-          planDetails: {
-            name: planToSave.name,
-            price: planToSave.price,
-            period: planToSave.period,
-            trialDays: planToSave.trialDays
-          },
-          paypalPlanId: planToSave.paypalPlanId
-        },
-        notifications: {
-          email: true,
-          push: true,
-          sms: true,
-          emailExpiration: true,
-          emailNewPolicy: true,
-          emailPayment: true
-        },
-        appearance: {
-          theme: 'light',
-          primaryColor: '#3B82F6',
-          sidebarCollapsed: false,
-          denseMode: false,
-          language: 'es'
-        },
-        stats: {
-          lastActive: new Date(),
-          lastLoginAt: serverTimestamp(),
-          totalPolicies: 0,
-          activePolicies: 0,
-          totalClients: 0,
-          activeClients: 0,
-          totalInvoices: 0,
-          totalPayments: 0,
-          totalClaims: 0,
-          totalIncome: 0,
-          pendingClaims: 0
-        },
-        permissions: {
-          canCreatePolicies: true,
-          canDeletePolicies: false,
-          canManageClients: true,
-          canAccessReports: true,
-          canManageUsers: false,
-          canManageRoles: false,
-          canManageSettings: true,
-          canViewDashboard: true
-        }
-      }, { merge: true });
-      
-      // Si el plan es básico (gratuito), activarlo automáticamente
-      if (planToSave.id === 'basic') {
-        // Activar plan gratuito directamente desde el cliente
-        try {
-          const token = await userCredential.user.getIdToken();
-          await fetch('/api/activate-free-plan', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          });
-        } catch (activationError) {
-          console.error('Error al activar plan básico:', activationError);
-          // No bloqueamos el flujo si falla la activación, se puede intentar más tarde
-        }
+      if (response.error) {
+        setError(response.error.message);
+        setLoading(false);
+        return;
       }
       
       // Redirigir a la página de verificación de email
       router.push('/auth/verify-email');
       
     } catch (error) {
-      let errorMessage = 'Ha ocurrido un error al registrarse';
-      
-      if (error instanceof FirebaseError) {
-        if (error.code === 'auth/email-already-in-use') {
-          errorMessage = 'Este correo electrónico ya está en uso';
-        } else if (error.code === 'auth/invalid-email') {
-          errorMessage = 'Formato de correo electrónico inválido';
-        } else if (error.code === 'auth/weak-password') {
-          errorMessage = 'La contraseña es demasiado débil';
-        }
-      }
-      
-      setError(errorMessage);
+      console.error('Error al registrarse:', error);
+      setError('Ha ocurrido un error al registrarse. Por favor, inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -713,84 +1074,19 @@ export default function SignUpPage() {
     setError(null);
     
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+      const response = await signInWithGoogle();
       
-      // Determinar el plan a guardar
-      const planToSave = selectedPlan ? {
-        id: selectedPlan.id || 'basic',
-        name: selectedPlan.name || 'Básico',
-        price: selectedPlan.price || 0,
-        period: selectedPlan.billingPeriod || 'month',
-        trialDays: selectedPlan.trialDays || 0,
-        paypalPlanId: selectedPlan.paypalPlanId || ''
-      } : {
-        id: 'basic',
-        name: 'Básico',
-        price: 0,
-        period: 'month',
-        trialDays: 0,
-        paypalPlanId: ''
-      };
-      
-      // Guardar datos en Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        email: user.email,
-        displayName: user.displayName,
-        firstName: user.displayName?.split(' ')[0] || '',
-        lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
-        plan: planToSave.id,
-        planName: planToSave.name,
-        planStatus: planToSave.id === 'basic' ? 'active' : 'pending',
-        verified: user.emailVerified,
-        createdAt: serverTimestamp(),
-        subscription: {
-          status: planToSave.id === 'basic' ? 'active' : 'pending',
-          planId: planToSave.id,
-          planDetails: {
-            name: planToSave.name,
-            price: planToSave.price,
-            period: planToSave.period,
-            trialDays: planToSave.trialDays
-          },
-          paypalPlanId: planToSave.paypalPlanId
-        },
-        authProvider: 'google'
-      }, { merge: true });
-      
-      // Si el plan es básico (gratuito), activarlo automáticamente
-      if (planToSave.id === 'basic') {
-        try {
-          const token = await user.getIdToken();
-          await fetch('/api/activate-free-plan', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          
-          // Redirigir según el estado de verificación
-          if (user.emailVerified) {
-            router.push('/dashboard');
-          } else {
-            router.push('/auth/verify-email');
-          }
-          return;
-        } catch (activationError) {
-          console.error('Error al activar plan básico:', activationError);
-          // No bloqueamos el flujo si falla la activación
-        }
+      if (response.error) {
+        setError(response.error.message);
+        setLoading(false);
+        return;
       }
       
-      // Redirigir según el plan y estado de verificación
-      if (user.emailVerified) {
-        if (planToSave.id === 'basic') {
-          router.push('/dashboard');
-        } else {
-          router.push('/subscribe');
-        }
+      const user = response.user;
+      
+      // Redirigir según el estado de verificación
+      if (user?.emailVerified) {
+        router.push('/dashboard');
       } else {
         router.push('/auth/verify-email');
       }
@@ -808,8 +1104,8 @@ export default function SignUpPage() {
   };
   
   const handleGeneratePassword = (password: string) => {
-    setValue('step3.password', password);
-    setValue('step3.confirmPassword', password);
+    setValue('password', password);
+    setValue('confirmPassword', password);
   };
   
   // Animaciones para los elementos del formulario
@@ -965,7 +1261,8 @@ export default function SignUpPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <Box
+                    <Paper
+                      elevation={0}
                       sx={{
                         mb: 3,
                         p: 2,
@@ -993,7 +1290,7 @@ export default function SignUpPage() {
                         color="primary"
                         sx={{ fontWeight: 600 }}
                       />
-                    </Box>
+                    </Paper>
                   </motion.div>
                 )}
                 
@@ -1053,110 +1350,22 @@ export default function SignUpPage() {
                   )}
                 </AnimatePresence>
                 
-                <form onSubmit={handleSubmit(handleRegister)}>
-                  <AnimatePresence mode="wait">
-                    {/* Paso 1: Email */}
-                    {activeStep === 0 && (
-                      <motion.div
-                        key="step1"
-                        variants={stepVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        <Stack spacing={3}>
-                          <Controller
-                            name="step1.email"
-                            control={control}
-                            render={({ field }) => (
-                              <TextField
-                                {...field}
-                                label="Correo electrónico"
-                                variant="outlined"
-                                fullWidth
-                                error={!!errors.step1?.email}
-                                helperText={errors.step1?.email?.message}
-                                InputProps={{
-                                  startAdornment: (
-                                    <InputAdornment position="start">
-                                      <Email color="primary" />
-                                    </InputAdornment>
-                                  ),
-                                  endAdornment: emailCheckLoading ? (
-                                    <InputAdornment position="end">
-                                      <CircularProgress size={20} />
-                                    </InputAdornment>
-                                  ) : emailAvailable === true ? (
-                                    <InputAdornment position="end">
-                                      <Tooltip title="Email disponible">
-                                        <CheckCircle color="success" />
-                                      </Tooltip>
-                                    </InputAdornment>
-                                  ) : emailAvailable === false ? (
-                                    <InputAdornment position="end">
-                                      <Tooltip title="Email no disponible">
-                                        <Info color="error" />
-                                      </Tooltip>
-                                    </InputAdornment>
-                                  ) : null,
-                                  sx: {
-                                    borderRadius: 2,
-                                    fontFamily: '"Inter", sans-serif',
-                                    fontSize: '1rem',
-                                    transition: 'all 0.3s ease',
-                                    '&:focus-within': {
-                                      boxShadow: `0 0 0 3px ${isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
-                                    },
-                                  }
-                                }}
-                                InputLabelProps={{
-                                  sx: {
-                                    fontFamily: '"Inter", sans-serif',
-                                  }
-                                }}
-                              />
-                            )}
+                <FormProvider {...methods}>
+                  <form onSubmit={handleSubmit(handleRegister)}>
+                    <AnimatePresence mode="wait">
+                      {/* Paso 1: Email */}
+                      {activeStep === 0 && (
+                        <motion.div
+                          key="step1"
+                          variants={stepVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                        >
+                          <Step1Email 
+                            emailAvailable={emailAvailable} 
+                            emailCheckLoading={emailCheckLoading} 
                           />
-                          
-                          {emailAvailable === true && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <Alert
-                                severity="success"
-                                sx={{
-                                  borderRadius: 2,
-                                  '& .MuiAlert-message': {
-                                    fontFamily: '"Inter", sans-serif',
-                                  }
-                                }}
-                              >
-                                Email disponible para registro
-                              </Alert>
-                            </motion.div>
-                          )}
-                          
-                          {emailAvailable === false && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <Alert
-                                severity="error"
-                                sx={{
-                                  borderRadius: 2,
-                                  '& .MuiAlert-message': {
-                                    fontFamily: '"Inter", sans-serif',
-                                  }
-                                }}
-                              >
-                                Este email ya está registrado
-                              </Alert>
-                            </motion.div>
-                          )}
                           
                           <Button
                             variant="contained"
@@ -1166,7 +1375,7 @@ export default function SignUpPage() {
                             onClick={handleNext}
                             disabled={loading || !emailAvailable}
                             sx={{
-                              mt: 2,
+                              mt: 3,
                               py: 1.5,
                               borderRadius: 2,
                               fontFamily: '"Inter", sans-serif',
@@ -1182,93 +1391,21 @@ export default function SignUpPage() {
                           >
                             Continuar
                           </Button>
-                        </Stack>
-                      </motion.div>
-                    )}
-                    
-                    {/* Paso 2: Información personal */}
-                    {activeStep === 1 && (
-                      <motion.div
-                        key="step2"
-                        variants={stepVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        <Stack spacing={3}>
-                          <Controller
-                            name="step2.firstName"
-                            control={control}
-                            render={({ field }) => (
-                              <TextField
-                                {...field}
-                                label="Nombre"
-                                variant="outlined"
-                                fullWidth
-                                error={!!errors.step2?.firstName}
-                                helperText={errors.step2?.firstName?.message}
-                                InputProps={{
-                                  startAdornment: (
-                                    <InputAdornment position="start">
-                                      <Person color="primary" />
-                                    </InputAdornment>
-                                  ),
-                                  sx: {
-                                    borderRadius: 2,
-                                    fontFamily: '"Inter", sans-serif',
-                                    fontSize: '1rem',
-                                    transition: 'all 0.3s ease',
-                                    '&:focus-within': {
-                                      boxShadow: `0 0 0 3px ${isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
-                                    },
-                                  }
-                                }}
-                                InputLabelProps={{
-                                  sx: {
-                                    fontFamily: '"Inter", sans-serif',
-                                  }
-                                }}
-                              />
-                            )}
-                          />
+                        </motion.div>
+                      )}
+
+                      {/* Paso 2: Información personal */}
+                      {activeStep === 1 && (
+                        <motion.div
+                          key="step2"
+                          variants={stepVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                        >
+                          <Step2PersonalInfo />
                           
-                          <Controller
-                            name="step2.lastName"
-                            control={control}
-                            render={({ field }) => (
-                              <TextField
-                                {...field}
-                                label="Apellido"
-                                variant="outlined"
-                                fullWidth
-                                error={!!errors.step2?.lastName}
-                                helperText={errors.step2?.lastName?.message}
-                                InputProps={{
-                                  startAdornment: (
-                                    <InputAdornment position="start">
-                                      <Person color="primary" />
-                                    </InputAdornment>
-                                  ),
-                                  sx: {
-                                    borderRadius: 2,
-                                    fontFamily: '"Inter", sans-serif',
-                                    fontSize: '1rem',
-                                    transition: 'all 0.3s ease',
-                                    '&:focus-within': {
-                                      boxShadow: `0 0 0 3px ${isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
-                                    },
-                                  }
-                                }}
-                                InputLabelProps={{
-                                  sx: {
-                                    fontFamily: '"Inter", sans-serif',
-                                  }
-                                }}
-                              />
-                            )}
-                          />
-                          
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
                             <Button
                               variant="outlined"
                               size="large"
@@ -1312,199 +1449,25 @@ export default function SignUpPage() {
                               Continuar
                             </Button>
                           </Box>
-                        </Stack>
-                      </motion.div>
-                    )}
-                    
-                    {/* Paso 3: Contraseña y términos */}
-                    {activeStep === 2 && (
-                      <motion.div
-                        key="step3"
-                        variants={stepVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        <Stack spacing={3}>
-                          <Controller
-                            name="step3.password"
-                            control={control}
-                            render={({ field }) => (
-                              <TextField
-                                {...field}
-                                label="Contraseña"
-                                type={showPassword ? 'text' : 'password'}
-                                variant="outlined"
-                                fullWidth
-                                error={!!errors.step3?.password}
-                                helperText={errors.step3?.password?.message}
-                                InputProps={{
-                                  startAdornment: (
-                                    <InputAdornment position="start">
-                                      <Lock color="primary" />
-                                    </InputAdornment>
-                                  ),
-                                  endAdornment: (
-                                    <InputAdornment position="end">
-                                      <IconButton
-                                        aria-label="toggle password visibility"
-                                        onClick={togglePasswordVisibility}
-                                        edge="end"
-                                      >
-                                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                                      </IconButton>
-                                    </InputAdornment>
-                                  ),
-                                  sx: {
-                                    borderRadius: 2,
-                                    fontFamily: '"Inter", sans-serif',
-                                    fontSize: '1rem',
-                                    transition: 'all 0.3s ease',
-                                    '&:focus-within': {
-                                      boxShadow: `0 0 0 3px ${isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
-                                    },
-                                  }
-                                }}
-                                InputLabelProps={{
-                                  sx: {
-                                    fontFamily: '"Inter", sans-serif',
-                                  }
-                                }}
-                              />
-                            )}
+                        </motion.div>
+                      )}
+                      
+                      {/* Paso 3: Contraseña y términos */}
+                      {activeStep === 2 && (
+                        <motion.div
+                          key="step3"
+                          variants={stepVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                        >
+                          <Step3Password 
+                            showPassword={showPassword}
+                            togglePasswordVisibility={togglePasswordVisibility}
+                            handleGeneratePassword={handleGeneratePassword}
                           />
                           
-                          {/* Generador de contraseña */}
-                          <PasswordGenerator onGenerate={handleGeneratePassword} />
-                          
-                          {/* Indicador de fortaleza de contraseña */}
-                          {watchPassword && <PasswordStrengthIndicator password={watchPassword} />}
-                          
-                          <Controller
-                            name="step3.confirmPassword"
-                            control={control}
-                            render={({ field }) => (
-                              <TextField
-                                {...field}
-                                label="Confirmar contraseña"
-                                type={showPassword ? 'text' : 'password'}
-                                variant="outlined"
-                                fullWidth
-                                error={!!errors.step3?.confirmPassword}
-                                helperText={errors.step3?.confirmPassword?.message}
-                                InputProps={{
-                                  startAdornment: (
-                                    <InputAdornment position="start">
-                                      <Lock color="primary" />
-                                    </InputAdornment>
-                                  ),
-                                  sx: {
-                                    borderRadius: 2,
-                                    fontFamily: '"Inter", sans-serif',
-                                    fontSize: '1rem',
-                                    transition: 'all 0.3s ease',
-                                    '&:focus-within': {
-                                      boxShadow: `0 0 0 3px ${isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
-                                    },
-                                  }
-                                }}
-                                InputLabelProps={{
-                                  sx: {
-                                    fontFamily: '"Inter", sans-serif',
-                                  }
-                                }}
-                              />
-                            )}
-                          />
-                          
-                          <Controller
-                            name="step3.termsAccepted"
-                            control={control}
-                            render={({ field }) => (
-                              <FormControlLabel
-                                control={
-                                  <Checkbox
-                                    {...field}
-                                    checked={field.value}
-                                    color="primary"
-                                    sx={{
-                                      '&.Mui-checked': {
-                                        color: '#3B82F6',
-                                      }
-                                    }}
-                                  />
-                                }
-                                label={
-                                  <Typography
-                                    variant="body2"
-                                    sx={{
-                                      fontFamily: '"Inter", sans-serif',
-                                      fontSize: '0.875rem',
-                                    }}
-                                  >
-                                    Acepto los{' '}
-                                    <Link href="/terminos" passHref>
-                                      <Typography
-                                        component="span"
-                                        sx={{
-                                          fontFamily: '"Inter", sans-serif',
-                                          color: 'primary.main',
-                                          fontWeight: 600,
-                                          cursor: 'pointer',
-                                          textDecoration: 'none',
-                                          '&:hover': {
-                                            textDecoration: 'underline',
-                                          },
-                                        }}
-                                      >
-                                        términos y condiciones
-                                      </Typography>
-                                    </Link>{' '}
-                                    y la{' '}
-                                    <Link href="/privacidad" passHref>
-                                      <Typography
-                                        component="span"
-                                        sx={{
-                                          fontFamily: '"Inter", sans-serif',
-                                          color: 'primary.main',
-                                          fontWeight: 600,
-                                          cursor: 'pointer',
-                                          textDecoration: 'none',
-                                          '&:hover': {
-                                            textDecoration: 'underline',
-                                          },
-                                        }}
-                                      >
-                                        política de privacidad
-                                      </Typography>
-                                    </Link>
-                                  </Typography>
-                                }
-                                sx={{
-                                  alignItems: 'flex-start',
-                                  '.MuiFormControlLabel-label': {
-                                    mt: 0.5
-                                  }
-                                }}
-                              />
-                            )}
-                          />
-                          
-                          {errors.step3?.termsAccepted && (
-                            <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{
-                                fontFamily: '"Inter", sans-serif',
-                                mt: -2,
-                                ml: 2
-                              }}
-                            >
-                              {errors.step3.termsAccepted.message}
-                            </Typography>
-                          )}
-                          
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
                             <Button
                               variant="outlined"
                               size="large"
@@ -1552,87 +1515,87 @@ export default function SignUpPage() {
                               )}
                             </Button>
                           </Box>
-                        </Stack>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  
-                  {/* Separador y botón de Google */}
-                  {activeStep === 0 && (
-                    <>
-                      <motion.div variants={itemVariants}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', my: 3 }}>
-                          <Divider sx={{ flex: 1 }} />
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontFamily: '"Inter", sans-serif',
-                              mx: 2,
-                              color: 'text.secondary',
-                            }}
-                          >
-                            o regístrate con
-                          </Typography>
-                          <Divider sx={{ flex: 1 }} />
-                        </Box>
-                      </motion.div>
-                      
-                      <motion.div variants={itemVariants}>
-                        <Button
-                          variant="outlined"
-                          fullWidth
-                          size="large"
-                          startIcon={<Google />}
-                          onClick={handleGoogleSignUp}
-                          disabled={loading}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </form>
+                </FormProvider>
+                
+                {/* Separador y botón de Google */}
+                {activeStep === 0 && (
+                  <>
+                    <motion.div variants={itemVariants}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', my: 3 }}>
+                        <Divider sx={{ flex: 1 }} />
+                        <Typography
+                          variant="body2"
                           sx={{
-                            py: 1.5,
-                            borderRadius: 2,
                             fontFamily: '"Inter", sans-serif',
-                            fontSize: '1rem',
-                            fontWeight: 600,
-                            textTransform: 'none',
-                            borderWidth: '2px',
-                            transition: 'all 0.3s ease',
+                            mx: 2,
+                            color: 'text.secondary',
                           }}
                         >
-                          Registrarse con Google
-                        </Button>
-                      </motion.div>
-                    </>
-                  )}
-                  
-                  {/* Enlace para iniciar sesión */}
-                  <motion.div variants={itemVariants}>
-                    <Box sx={{ textAlign: 'center', mt: 3 }}>
-                      <Typography
-                        variant="body2"
+                          o regístrate con
+                        </Typography>
+                        <Divider sx={{ flex: 1 }} />
+                      </Box>
+                    </motion.div>
+                    
+                    <motion.div variants={itemVariants}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        size="large"
+                        startIcon={<Google />}
+                        onClick={handleGoogleSignUp}
+                        disabled={loading}
                         sx={{
+                          py: 1.5,
+                          borderRadius: 2,
                           fontFamily: '"Inter", sans-serif',
+                          fontSize: '1rem',
+                          fontWeight: 600,
+                          textTransform: 'none',
+                          borderWidth: '2px',
+                          transition: 'all 0.3s ease',
                         }}
                       >
-                        ¿Ya tienes cuenta?{' '}
-                        <Link href="/auth/sign-in" passHref>
-                          <Typography
-                            component="span"
-                            sx={{
-                              fontFamily: '"Inter", sans-serif',
-                              color: 'primary.main',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              textDecoration: 'none',
-                              '&:hover': {
-                                textDecoration: 'underline',
-                              },
-                            }}
-                          >
-                            Inicia sesión
-                          </Typography>
-                        </Link>
-                      </Typography>
-                    </Box>
-                  </motion.div>
-                </form>
+                        Registrarse con Google
+                      </Button>
+                    </motion.div>
+                  </>
+                )}
+                
+                {/* Enlace para iniciar sesión */}
+                <motion.div variants={itemVariants}>
+                  <Box sx={{ textAlign: 'center', mt: 3 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontFamily: '"Inter", sans-serif',
+                      }}
+                    >
+                      ¿Ya tienes cuenta?{' '}
+                      <Link href="/auth/sign-in" passHref>
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontFamily: '"Inter", sans-serif',
+                            color: 'primary.main',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            textDecoration: 'none',
+                            '&:hover': {
+                              textDecoration: 'underline',
+                            },
+                          }}
+                        >
+                          Inicia sesión
+                        </Typography>
+                      </Link>
+                    </Typography>
+                  </Box>
+                </motion.div>
               </Card>
             </motion.div>
           </Box>
