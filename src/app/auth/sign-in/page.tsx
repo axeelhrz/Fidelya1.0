@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
-import SignInForm from '@/components/auth/sign-in-form';
-import GuestGuard from '@/components/auth/guest-guard';
+import ClientOnly from '@/app/clientOnly';
+import SignInContent from './SignInContent';
 
 export const metadata: Metadata = {
   title: 'Iniciar sesión | Assuriva',
@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 
 export default function SignInPage() {
   return (
-    <GuestGuard>
-      <SignInForm />
-    </GuestGuard>
+    <ClientOnly>
+      <SignInContent />
+    </ClientOnly>
   );
 }
