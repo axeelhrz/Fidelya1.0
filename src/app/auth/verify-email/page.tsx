@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import ClientOnly from '@/app/clientOnly';
 import VerifyEmail from '@/components/auth/verify-email';
 
 export const metadata: Metadata = {
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function VerifyEmailPage() {
-  return <VerifyEmail />;
+  return (
+    <ClientOnly>
+      <VerifyEmail />
+    </ClientOnly>
+  );
 }
