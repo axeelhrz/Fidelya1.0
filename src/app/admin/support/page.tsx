@@ -4,7 +4,7 @@ import { AuthProvider } from '@/context/auth-context'
 export default function SupportDashboardPage() {
   return (
     <AuthProvider>
-     <SupportDashboard />;
+      <SupportDashboard />;
     </AuthProvider>
   )
 }
