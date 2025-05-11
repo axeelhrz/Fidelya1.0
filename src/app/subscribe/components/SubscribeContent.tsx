@@ -176,6 +176,7 @@ export default function SubscribeContent() {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (!userDoc.exists()) {
           setError('No se encontró información del usuario');
+          setLoading(false);
           return;
         }
         
@@ -185,7 +186,10 @@ export default function SubscribeContent() {
         
         // Si el plan ya está activo, redirigir al dashboard
         if (currentPlanStatus === 'active') {
-          router.push('/dashboard');
+          console.log('Plan activo, redirigiendo al dashboard...');
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 100);
           return;
         }
         

@@ -252,25 +252,36 @@ export async function activateFreePlan(userId: string) {
     const userDocRef = doc(db, 'users', userId);
     const userDoc = await getDoc(userDocRef);
     
-    // Datos de suscripción para el usuario
-    const subscriptionData = {
-      planStatus: 'active',
-      'subscription.status': 'active',
-      'subscription.currentPeriodStart': now,
-      'subscription.currentPeriodEnd': currentPeriodEnd,
-      updatedAt: serverTimestamp()
-    };
-    
     // Si el documento existe, actualizarlo; si no, crearlo
     if (userDoc.exists()) {
-      await updateDoc(userDocRef, subscriptionData);
+      // Actualizar documento del usuario
+      await updateDoc(userDocRef, {
+        planStatus: 'active',
+        planName: 'Básico',
+        plan: 'basic',
+        'subscription.status': 'active',
+        'subscription.planId': 'basic',
+        'subscription.plan': 'Básico',
+        'subscription.currentPeriodStart': now,
+        'subscription.currentPeriodEnd': currentPeriodEnd,
+        updatedAt: serverTimestamp()
+      });
     } else {
       // Crear un nuevo documento de usuario con datos básicos
       await setDoc(userDocRef, {
         uid: userId,
+        email: '',  // Se actualizará cuando tengamos la información del usuario
+        displayName: '',
+        emailVerified: false,
         planStatus: 'active',
+        planName: 'Básico',
+        plan: 'basic',
+        verified: false,
+        role: 'user',
         subscription: {
           status: 'active',
+          planId: 'basic',
+          plan: 'Básico',
           currentPeriodStart: now,
           currentPeriodEnd: currentPeriodEnd,
         },
@@ -283,6 +294,7 @@ export async function activateFreePlan(userId: string) {
     await setDoc(doc(db, 'subscriptions', userId), {
       userId,
       planId: 'basic',
+      plan: 'Básico',
       status: 'active',
       paypalSubscriptionId: null,
       orderId: null,
