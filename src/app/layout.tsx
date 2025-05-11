@@ -58,15 +58,16 @@ export default function RootLayout({
       </head>
       <body>
         <div className="flex flex-col min-h-screen">
+        <AuthProvider>
+
         <ThemeContextProvider>
         <PlanProvider>
           <Analytics />
-          <AuthProvider>
           {process.env.NODE_ENV === 'production' && <SpeedInsights />}
           {children}
-          </AuthProvider>
         </PlanProvider>
         </ThemeContextProvider>
+        </AuthProvider>
         </div>
       </body>
     </html>

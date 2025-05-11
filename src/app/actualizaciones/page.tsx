@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import {
@@ -26,6 +27,7 @@ import {
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AuthProvider } from '@/context/auth-context';
 
 // Tipos
 type UpdateType = 'new' | 'improvement' | 'fix';
@@ -172,6 +174,8 @@ export default function UpdatesPage() {
   };
 
   return (
+    <AuthProvider>
+
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header />
 
@@ -452,5 +456,6 @@ export default function UpdatesPage() {
         </Alert>
       </Snackbar>
     </Box>
+    </AuthProvider>
   );
 }
