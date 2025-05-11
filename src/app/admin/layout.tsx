@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import AuthGuard from '@/components/auth/auth-guard';
+import { AuthProvider } from '@/context/auth-context';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -7,7 +7,7 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <AuthGuard requiredRoles={['admin', 'superadmin']}>
+    <AuthProvider>
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
         <header className="bg-white dark:bg-gray-800 shadow">
           <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
@@ -20,6 +20,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {children}
         </main>
       </div>
-    </AuthGuard>
+    </AuthProvider>
   );
 }

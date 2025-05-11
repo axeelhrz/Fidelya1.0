@@ -29,6 +29,8 @@ import {
 } from '@mui/icons-material';
 import Logo from '@/components/ui/logo';
 import { AfterCheckoutContent } from './AfterCheckoutContent';
+import { AuthProvider } from '@/context/auth-context';
+
 
 // Componente de partículas animadas
 const ParticlesBackground = () => {
@@ -168,6 +170,7 @@ export default function AfterCheckoutPage() {
   }
   
   return (
+    <AuthProvider>
     <Box
       sx={{
         minHeight: '100vh',
@@ -459,5 +462,6 @@ export default function AfterCheckoutPage() {
         </Box>
       </Container>
     </Box>
+    </AuthProvider>
   );
 }

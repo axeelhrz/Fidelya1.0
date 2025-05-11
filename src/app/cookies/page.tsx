@@ -23,6 +23,8 @@ import {
 import { motion } from 'framer-motion';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
+import { AuthProvider } from '@/context/auth-context';
+
 
 // Componentes estilizados
 const Section = styled(motion.div)(({ theme }) => ({
@@ -117,6 +119,7 @@ export default function CookiePolicyPage() {
   const theme = useTheme();
 
   return (
+    <AuthProvider>
     <Box sx={{ 
       minHeight: '100vh',
       display: 'flex',
@@ -446,5 +449,6 @@ export default function CookiePolicyPage() {
 
       <Footer />
     </Box>
+  </AuthProvider>
   );
 }
