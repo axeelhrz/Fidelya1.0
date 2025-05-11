@@ -32,7 +32,7 @@ import {
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 import LoadingScreen from '@/components/core/loadingScreen';
-import AuthGuard from '@/components/auth/auth-guard';
+import { AuthProvider } from '@/context/auth-context'; // ✅ Asegurate de importar
 
 // Configurar locale para dayjs
 dayjs.locale('es');
@@ -306,7 +306,7 @@ export default function Layout({ children }: LayoutProps): React.JSX.Element {
   }
 
   return (
-    <AuthGuard>
+    <AuthProvider>
     <ThemeContextProvider>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <GlobalStyle />
@@ -421,6 +421,6 @@ export default function Layout({ children }: LayoutProps): React.JSX.Element {
         </MainWrapper>
       </LocalizationProvider>
     </ThemeContextProvider>
-    </AuthGuard>
+    </AuthProvider>
   );
 }

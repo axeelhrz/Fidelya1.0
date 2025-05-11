@@ -27,12 +27,12 @@ export default function EmailVerificationHandler() {
 
     const verifyEmail = async () => {
       try {
-        const auth = getAuth();
-        await applyActionCode(auth, oobCode);
+        const firebaseAuth = getAuth();
+        await applyActionCode(firebaseAuth, oobCode);
 
         // Actualizar el estado de verificación en Firestore
-        if (auth.currentUser) {
-          const userDocRef = doc(db, 'users', auth.currentUser.uid);
+        if (firebaseAuth.currentUser) {
+          const userDocRef = doc(db, 'users', firebaseAuth.currentUser.uid);
           await updateDoc(userDocRef, {
             emailVerified: true,
             verified: true,
