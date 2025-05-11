@@ -1,15 +1,9 @@
-import dynamic from 'next/dynamic';
 import ClientOnly from '@/app/clientOnly';
-import LoadingScreen from '@/components/core/loadingScreen';
+import EmailVerificationWrapper from '@/components/auth/email-verification-handler';
+
 
 // Use dynamic import with SSR disabled to ensure client-side only rendering
-const EmailVerificationHandler = dynamic(
-  () => import('@/components/auth/email-verification-handler'),
-  { 
-    ssr: false,
-    loading: () => <LoadingScreen />
-  }
-);
+
 
 export const metadata = {
   title: 'Verificación de correo | Assuriva',
@@ -17,9 +11,9 @@ export const metadata = {
 };
 
 export default function ActionPage() {
-  return (
-    <ClientOnly>
-      <EmailVerificationHandler />
-    </ClientOnly>
-  );
-}
+    return (
+      <ClientOnly>
+        <EmailVerificationWrapper />
+      </ClientOnly>
+    );
+  }
