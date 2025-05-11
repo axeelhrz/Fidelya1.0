@@ -29,6 +29,7 @@ import {
   Close as CloseIcon,
   ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material'
+import { AuthProvider } from '@/context/auth-context';
 
 // Mock data para los posts
 const MOCK_POSTS = [
@@ -188,6 +189,7 @@ export default function BlogPage() {
   })
 
   return (
+    <AuthProvider>
     <>
       <Header />
       
@@ -670,5 +672,6 @@ export default function BlogPage() {
 
       <Footer />
     </>
+  </AuthProvider>
   )
 }

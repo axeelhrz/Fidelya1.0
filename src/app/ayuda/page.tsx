@@ -31,6 +31,8 @@ import {
 import { motion } from 'framer-motion';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
+import { AuthProvider } from '@/context/auth-context';
+
 
 // Componentes estilizados
 const StyledAccordion = styled(Accordion)(({ theme }) => ({
@@ -125,6 +127,7 @@ export default function HelpCenterPage() {
   };
 
   return (
+    <AuthProvider>
     <Box sx={{ 
       minHeight: '100vh',
       display: 'flex',
@@ -427,5 +430,6 @@ export default function HelpCenterPage() {
 
       <Footer />
     </Box>
+    </AuthProvider>
   );
 }
