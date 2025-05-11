@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { doc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { getSiteUrl } from './get-site-url';
 
 // Configuración de PayPal
@@ -248,14 +248,36 @@ export async function activateFreePlan(userId: string) {
     const currentPeriodEnd = new Date(now);
     currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 100); // Plan básico "para siempre"
     
-    // Actualizar documento del usuario
-    await updateDoc(doc(db, 'users', userId), {
+    // Verificar si el documento del usuario existe
+    const userDocRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userDocRef);
+    
+    // Datos de suscripción para el usuario
+    const subscriptionData = {
       planStatus: 'active',
       'subscription.status': 'active',
       'subscription.currentPeriodStart': now,
       'subscription.currentPeriodEnd': currentPeriodEnd,
       updatedAt: serverTimestamp()
-    });
+    };
+    
+    // Si el documento existe, actualizarlo; si no, crearlo
+    if (userDoc.exists()) {
+      await updateDoc(userDocRef, subscriptionData);
+    } else {
+      // Crear un nuevo documento de usuario con datos básicos
+      await setDoc(userDocRef, {
+        uid: userId,
+        planStatus: 'active',
+        subscription: {
+          status: 'active',
+          currentPeriodStart: now,
+          currentPeriodEnd: currentPeriodEnd,
+        },
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    }
     
     // Crear documento en la colección subscriptions
     await setDoc(doc(db, 'subscriptions', userId), {
