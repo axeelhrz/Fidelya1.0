@@ -22,6 +22,9 @@ import {
 import { motion } from 'framer-motion';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
+import { AuthProvider } from '@/context/auth-context'
+
+
 
 // Componentes estilizados
 const Section = styled(Box)(({ theme }) => ({
@@ -150,6 +153,7 @@ export default function TermsPage() {
   const theme = useTheme();
 
   return (
+    <AuthProvider>
     <Box sx={{ 
       minHeight: '100vh',
       display: 'flex',
@@ -226,5 +230,6 @@ export default function TermsPage() {
 
       <Footer />
     </Box>
+  </AuthProvider>
   );
 }
