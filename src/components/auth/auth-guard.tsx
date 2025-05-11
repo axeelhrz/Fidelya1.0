@@ -245,7 +245,13 @@ export default function AuthGuard({
         }
         
         // Verificar suscripción
+        console.log('Auth check - User:', user);
+        console.log('Auth check - Subscription:', subscription);
+        console.log('Auth check - Profile:', profile);
+        
+        // Verificar suscripción
         if (!subscription) {
+          console.log('Subscription check failed - subscription is null');
           setRedirectReason({
             type: 'plan',
             message: 'Debes seleccionar un plan para acceder a esta página'
@@ -253,6 +259,11 @@ export default function AuthGuard({
           setTimeout(() => router.push('/pricing'), 1500);
           return;
         }
+        
+        // Add more detailed logging for subscription status
+        console.log('Subscription status:', subscription.status);
+        console.log('Subscription planId:', subscription.planId);
+        console.log('Subscription period end:', subscription.currentPeriodEnd);
         
         // Verificar estado de la suscripción
         if (subscription && subscription.status !== 'active' && !subscription.trialEnd) {
