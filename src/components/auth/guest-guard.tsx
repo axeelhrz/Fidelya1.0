@@ -1,12 +1,10 @@
 'use client';
 
 import React from 'react';
-import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Componente GuestGuard modificado para permitir acceso sin restricciones
 export default function GuestGuard({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   
   // Renderizar contenido sin verificaciones
   return (

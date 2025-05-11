@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
 // Middleware modificado para permitir acceso a todas las rutas sin autenticación
-export function middleware(request: NextRequest) {
+export function middleware() {
   // Permitir acceso a todas las rutas
   return NextResponse.next();
 }

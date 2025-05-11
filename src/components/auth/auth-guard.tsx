@@ -7,8 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 // Componente AuthGuard modificado para permitir acceso sin restricciones
 export default function AuthGuard({ 
   children, 
-  fallback,
-  requiredRoles = [] 
 }: { 
   children: React.ReactNode;
   fallback?: React.ReactNode;
