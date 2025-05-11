@@ -115,7 +115,8 @@ const ParticlesBackground = () => {
   );
 };
 
-export default function GuestGuard({ children }: { children: React.ReactNode }): React.ReactNode {
+// Modificado: Eliminado el tipo de retorno React.ReactNode
+export default function GuestGuard({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [redirecting, setRedirecting] = useState(false);
   const router = useRouter();
