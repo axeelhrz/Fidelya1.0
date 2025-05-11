@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import ClientOnly from '@/app/clientOnly';
 import SignUpForm from '@/components/auth/sign-up-form';
 import GuestGuard from '@/components/auth/guest-guard';
 
@@ -9,8 +10,10 @@ export const metadata: Metadata = {
 
 export default function SignUpPage() {
   return (
-    <GuestGuard>
-      <SignUpForm />
-    </GuestGuard>
+    <ClientOnly>
+      <GuestGuard>
+        <SignUpForm />
+      </GuestGuard>
+    </ClientOnly>
   );
 }
