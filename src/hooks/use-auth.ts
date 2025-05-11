@@ -2,8 +2,8 @@
 
 import { useContext } from 'react';
 import { AuthContext } from '@/context/auth-context';
-import type { User } from 'firebase/auth';
-import type { UserData, AuthError } from '@/components/services/auth.services';
+import { User } from 'firebase/auth';
+import { UserData, AuthError } from '@/types/auth';
 
 /**
  * Hook personalizado para acceder al contexto de autenticación
@@ -27,6 +27,10 @@ export function useAuth() {
     loading: context.loading,
     error: context.error,
     
+    // Estado calculado
+    isAuthenticated: context.isAuthenticated,
+    isEmailVerified: context.isEmailVerified,
+    
     // Métodos de autenticación
     signIn: context.signIn,
     signInWithGoogle: context.signInWithGoogle,
@@ -44,11 +48,34 @@ export function useAuth() {
     uploadAvatar: context.uploadAvatar,
     updateUserData: context.updateUserData,
     
-    // Método de utilidad para verificar si el usuario está autenticado
-    isAuthenticated: !!context.user,
+    // Métodos de suscripción
+    activateFreePlan: context.activateFreePlan,
     
-    // Método de utilidad para verificar si el email está verificado
-    isEmailVerified: context.user?.emailVerified ?? false,
+    // Utilidades
+    clearError: context.clearError,
+    
+    // Métodos de utilidad para verificar roles y permisos
+    hasRole: (role: string): boolean => {
+      return context.userData?.role === role;
+    },
+    
+    hasPermission: (permission: string): boolean => {
+      if (!context.userData?.permissions) return false;
+      return (context.userData.permissions as unknown as Record<string, boolean>)[permission] === true;
+    },
+    
+    // Métodos de utilidad para verificar estado de suscripción
+    hasPlan: (planId: string): boolean => {
+      return context.userData?.plan === planId;
+    },
+    
+    isPlanActive: (): boolean => {
+      return context.userData?.planStatus === 'active';
+    },
+    
+    // Métodos de utilidad para preferencias
+    getAppearance: () => context.userData?.appearance,
+    getNotificationPreferences: () => context.userData?.notifications,
   };
 }
 

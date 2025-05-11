@@ -6,26 +6,9 @@ import { Box, Typography, alpha, useTheme, styled, Button, Alert, Stack, Paper }
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, CreditCard, ErrorOutline, VerifiedUser, AccountCircle } from '@mui/icons-material';
 import { useAuth } from '@/hooks/use-auth';
-import { useProfile } from '@/hooks/use-profile';
 import { useSubscription } from '@/hooks/use-subscription';
 
 // Tipos
-
-// This is what useAuth() actually returns
-interface AuthHookReturn {
-  user?: {
-    uid?: string;
-    email?: string;
-    emailVerified?: boolean;
-  } | null;
-  userData?: {
-    role?: string;
-    [key: string]: unknown;
-  }; // Defined structure with optional properties and index signature
-  loading?: boolean;
-}
-
-
 interface AuthGuardProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
@@ -169,11 +152,8 @@ export default function AuthGuard({
   fallback,
   requiredRoles = [] 
 }: AuthGuardProps) {
-  const auth = useAuth() || {};
-  const { user = null, userData = {}, loading: authLoading = false } = auth as unknown as AuthHookReturn;
-  const { profile, isLoading: profileLoading } = useProfile();
-  const subscriptionResult = useSubscription();
-  const { subscription = null, loading: subscriptionLoading = false } = subscriptionResult !== undefined ? subscriptionResult : { subscription: null, loading: false };
+  const { userData, loading: authLoading, isAuthenticated, isEmailVerified } = useAuth();
+  const { subscription, loading: subscriptionLoading, isActive } = useSubscription();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -193,6 +173,7 @@ export default function AuthGuard({
     '/auth/sign-up',
     '/auth/reset-password',
     '/auth/verify-email',
+    '/auth/after-checkout',
     '/pricing',
     '/subscribe',
     '/contact',
@@ -220,12 +201,12 @@ export default function AuthGuard({
         }
         
         // Verificar autenticación
-        if (authLoading || profileLoading || subscriptionLoading) {
+        if (authLoading || subscriptionLoading) {
           return; // Esperar a que carguen todos los datos
         }
         
         // Si no está autenticado, redirigir a login
-        if (!user) {
+        if (!isAuthenticated) {
           setRedirectReason({
             type: 'auth',
             message: 'Debes iniciar sesión para acceder a esta página'
@@ -235,7 +216,7 @@ export default function AuthGuard({
         }
         
         // Verificar email
-        if (!user.emailVerified) {
+        if (!isEmailVerified) {
           setRedirectReason({
             type: 'email',
             message: 'Debes verificar tu correo electrónico para continuar'
@@ -245,21 +226,7 @@ export default function AuthGuard({
         }
         
         // Verificar suscripción
-        console.log('Auth check - User:', user);
-        console.log('Auth check - Subscription:', subscription);
-        console.log('Auth check - Profile:', profile);
-        
-        // Verificar suscripción
         if (!subscription) {
-          console.log('Subscription check failed - subscription is null');
-          
-          // Check if this is your specific user ID
-          if (user && user.uid === 'EUhE2AVTnXghT1U8hUlvKcYfIl42') {
-            console.log('Special case for user - bypassing subscription check');
-            setLoading(false);
-            return;
-          }
-          
           setRedirectReason({
             type: 'plan',
             message: 'Debes seleccionar un plan para acceder a esta página'
@@ -268,18 +235,8 @@ export default function AuthGuard({
           return;
         }
         
-        // Add a special case for your user ID with the specific subscription data
-        if (user && user.uid === 'EUhE2AVTnXghT1U8hUlvKcYfIl42' && subscription) {
-          console.log('Special case for user - ensuring subscription is recognized');
-          // Force the subscription to be recognized as active
-          if (subscription.status !== 'active') {
-            console.log('Fixing subscription status for user');
-            subscription.status = 'active';
-          }
-        }
-        
         // Verificar estado de la suscripción
-        if (subscription && subscription.status !== 'active' && !subscription.trialEnd) {
+        if (!isActive && !subscription.trialEnd) {
           // Si es plan pro o enterprise y no está activo
           if (subscription.planId === 'pro' || subscription.planId === 'enterprise') {
             setRedirectReason({
@@ -302,7 +259,7 @@ export default function AuthGuard({
         }
         
         // Verificar perfil
-        if (!profile && !profileLoading) {
+        if (!userData) {
           setRedirectReason({
             type: 'profile',
             message: 'Tu perfil no está configurado correctamente'
@@ -336,12 +293,12 @@ export default function AuthGuard({
     checkAccess();
   }, [
     authLoading, 
-    profileLoading, 
     subscriptionLoading, 
-    user, 
+    isAuthenticated, 
+    isEmailVerified, 
     userData, 
-    profile, 
     subscription, 
+    isActive,
     pathname, 
     publicRoutes, 
     router,

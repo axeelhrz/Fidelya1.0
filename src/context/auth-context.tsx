@@ -1,30 +1,32 @@
 'use client';
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { User } from 'firebase/auth';
-import { auth } from '@/lib/firebase-config';
-import { authService, UserData, AuthError } from '@/components/services/auth.services';
-import { onAuthStateChanged } from 'firebase/auth';
+import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { User, onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase-config';
+import { auth, db } from '@/lib/firebase-config';
+import { authService, UserData, AuthError, AuthResponse, SignUpData } from '@/components/services/auth.services';
 
-// Tipos
+// Tipo para el contexto de autenticación
 interface AuthContextType {
   user: User | null;
   userData: UserData | null;
   loading: boolean;
   error: AuthError | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  isAuthenticated: boolean;
+  isEmailVerified: boolean;
+  signIn: (email: string, password: string) => Promise<AuthResponse>;
+  signInWithGoogle: () => Promise<AuthResponse>;
+  signUp: (data: SignUpData) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  sendVerificationEmail: () => Promise<void>;
-  updateProfile: (displayName?: string, photoURL?: string) => Promise<void>;
-  updateEmail: (newEmail: string, password: string) => Promise<void>;
-  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-  uploadAvatar: (file: File) => Promise<string | undefined>;
-  updateUserData: (data: Partial<UserData>) => Promise<void>;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: AuthError }>;
+  sendVerificationEmail: () => Promise<{ success: boolean; error?: AuthError }>;
+  updateProfile: (displayName?: string, photoURL?: string) => Promise<{ success: boolean; error?: AuthError }>;
+  updateEmail: (newEmail: string, password: string) => Promise<{ success: boolean; error?: AuthError }>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: AuthError }>;
+  uploadAvatar: (file: File) => Promise<{ success: boolean; url?: string; error?: AuthError }>;
+  updateUserData: (data: Partial<UserData>) => Promise<{ success: boolean; error?: AuthError }>;
+  activateFreePlan: () => Promise<{ success: boolean; error?: AuthError }>;
+  clearError: () => void;
 }
 
 // Crear contexto
@@ -36,6 +38,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<AuthError | null>(null);
+
+  // Limpiar error
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
   // Escuchar cambios en el estado de autenticación
   useEffect(() => {
@@ -76,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Iniciar sesión con email y contraseña
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<AuthResponse> => {
     setLoading(true);
     setError(null);
     
@@ -86,18 +93,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.error) {
         setError(response.error);
       }
+      
+      return response;
     } catch {
-      setError({
+      const error = {
         code: 'auth/unknown-error',
         message: 'Error desconocido al iniciar sesión'
-      });
+      };
+      setError(error);
+      return { user: null, error };
     } finally {
       setLoading(false);
     }
   };
 
   // Iniciar sesión con Google
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (): Promise<AuthResponse> => {
     setLoading(true);
     setError(null);
     
@@ -107,44 +118,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.error) {
         setError(response.error);
       }
+      
+      return response;
     } catch {
-      setError({
+      const error = {
         code: 'auth/unknown-error',
         message: 'Error desconocido al iniciar sesión con Google'
-      });
+      };
+      setError(error);
+      return { user: null, error };
     } finally {
       setLoading(false);
     }
   };
 
   // Registrar nuevo usuario
-  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+  const signUp = async (data: SignUpData): Promise<AuthResponse> => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await authService.signUp({
-        email,
-        password,
-        firstName,
-        lastName
-      });
+      const response = await authService.signUp(data);
       
       if (response.error) {
         setError(response.error);
       }
-    } catch {
-      setError({
+      
+      return response;
+    } catch  {
+      const error = {
         code: 'auth/unknown-error',
         message: 'Error desconocido al registrarse'
-      });
+      };
+      setError(error);
+      return { user: null, error };
     } finally {
       setLoading(false);
     }
   };
 
   // Cerrar sesión
-  const signOut = async () => {
+  const signOut = async (): Promise<void> => {
     setLoading(true);
     setError(null);
     
@@ -161,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Restablecer contraseña
-  const resetPassword = async (email: string) => {
+  const resetPassword = async (email: string): Promise<{ success: boolean; error?: AuthError }> => {
     setLoading(true);
     setError(null);
     
@@ -171,18 +185,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.success && response.error) {
         setError(response.error);
       }
+      
+      return response;
     } catch {
-      setError({
+      const error = {
         code: 'auth/unknown-error',
         message: 'Error desconocido al restablecer contraseña'
-      });
+      };
+      setError(error);
+      return { success: false, error };
     } finally {
       setLoading(false);
     }
   };
 
   // Enviar email de verificación
-  const sendVerificationEmail = async () => {
+  const sendVerificationEmail = async (): Promise<{ success: boolean; error?: AuthError }> => {
     setLoading(true);
     setError(null);
     
@@ -192,18 +210,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.success && response.error) {
         setError(response.error);
       }
+      
+      return response;
     } catch {
-      setError({
+      const error = {
         code: 'auth/unknown-error',
         message: 'Error desconocido al enviar email de verificación'
-      });
+      };
+      setError(error);
+      return { success: false, error };
     } finally {
       setLoading(false);
     }
   };
 
   // Actualizar perfil
-  const updateProfile = async (displayName?: string, photoURL?: string) => {
+  const updateProfile = async (displayName?: string, photoURL?: string): Promise<{ success: boolean; error?: AuthError }> => {
     setLoading(true);
     setError(null);
     
@@ -213,18 +235,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.success && response.error) {
         setError(response.error);
       }
+      
+      return response;
     } catch {
-      setError({
+      const error = {
         code: 'auth/unknown-error',
         message: 'Error desconocido al actualizar perfil'
-      });
+      };
+      setError(error);
+      return { success: false, error };
     } finally {
       setLoading(false);
     }
   };
 
   // Actualizar email
-  const updateEmail = async (newEmail: string, password: string) => {
+  const updateEmail = async (newEmail: string, password: string): Promise<{ success: boolean; error?: AuthError }> => {
     setLoading(true);
     setError(null);
     
@@ -234,18 +260,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.success && response.error) {
         setError(response.error);
       }
-    } catch {
-      setError({
+      
+      return response;
+    } catch  {
+      const error = {
         code: 'auth/unknown-error',
         message: 'Error desconocido al actualizar email'
-      });
+      };
+      setError(error);
+      return { success: false, error };
     } finally {
       setLoading(false);
     }
   };
 
   // Actualizar contraseña
-  const updatePassword = async (currentPassword: string, newPassword: string) => {
+  const updatePassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: AuthError }> => {
     setLoading(true);
     setError(null);
     
@@ -255,18 +285,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.success && response.error) {
         setError(response.error);
       }
+      
+      return response;
     } catch {
-      setError({
+      const error = {
         code: 'auth/unknown-error',
         message: 'Error desconocido al actualizar contraseña'
-      });
+      };
+      setError(error);
+      return { success: false, error };
     } finally {
       setLoading(false);
     }
   };
 
   // Subir avatar
-  const uploadAvatar = async (file: File) => {
+  const uploadAvatar = async (file: File): Promise<{ success: boolean; url?: string; error?: AuthError }> => {
     setLoading(true);
     setError(null);
     
@@ -275,23 +309,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (!response.success && response.error) {
         setError(response.error);
-        return undefined;
+        return { success: false, error: response.error };
       }
       
-      return response.url;
+      return response;
     } catch {
-      setError({
+      const error = {
         code: 'auth/unknown-error',
         message: 'Error desconocido al subir avatar'
-      });
-      return undefined;
+      };
+      setError(error);
+      return { success: false, error };
     } finally {
       setLoading(false);
     }
   };
 
   // Actualizar datos del usuario
-  const updateUserData = async (data: Partial<UserData>) => {
+  const updateUserData = async (data: Partial<UserData>): Promise<{ success: boolean; error?: AuthError }> => {
     setLoading(true);
     setError(null);
     
@@ -301,21 +336,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.success && response.error) {
         setError(response.error);
       }
+      
+      return response;
     } catch {
-      setError({
+      const error = {
         code: 'auth/unknown-error',
         message: 'Error desconocido al actualizar datos del usuario'
-      });
+      };
+      setError(error);
+      return { success: false, error };
     } finally {
       setLoading(false);
     }
   };
 
-  const value = {
+  // Activar plan gratuito
+  const activateFreePlan = async (): Promise<{ success: boolean; error?: AuthError }> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      if (!user) {
+        throw new Error('No hay usuario autenticado');
+      }
+      
+      const response = await authService.activateFreePlan(user.uid);
+      
+      if (!response.success && response.error) {
+        setError(response.error);
+      }
+      
+      return response;
+    } catch {
+      const error = {
+        code: 'auth/unknown-error',
+        message: 'Error desconocido al activar plan gratuito'
+      };
+      setError(error);
+      return { success: false, error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Valores calculados
+  const isAuthenticated = !!user;
+  const isEmailVerified = user?.emailVerified ?? false;
+
+  const value: AuthContextType = {
     user,
     userData,
     loading,
     error,
+    isAuthenticated,
+    isEmailVerified,
     signIn,
     signInWithGoogle,
     signUp,
@@ -326,12 +400,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updateEmail,
     updatePassword,
     uploadAvatar,
-    updateUserData
+    updateUserData,
+    activateFreePlan,
+    clearError
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Remove the duplicate hook definition here
-// and export only the context
+// Exportar contexto
 export { AuthContext };
