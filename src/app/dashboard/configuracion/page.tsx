@@ -3,7 +3,6 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 import { Box, CircularProgress, Container, Typography } from '@mui/material';
-import { AuthProvider } from '@/context/auth-context';
 
 // Importar el componente de forma dinámica para evitar problemas de SSR
 const SettingsPage = dynamic(
@@ -31,9 +30,5 @@ const SettingsPage = dynamic(
 );
 
 export default function ConfiguracionPage() {
-  return (
-    <AuthProvider>
-      <SettingsPage />
-    </AuthProvider>
-  );
+  return <SettingsPage />;
 }
