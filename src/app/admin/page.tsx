@@ -1,5 +1,11 @@
 import AdminClientContent from './AdminClientContent';
+import { AuthProvider } from '@/context/auth-context'
+
 
 export default function AdminPage() {
-  return <AdminClientContent />;
+  return (
+    <AuthProvider>
+      <AdminClientContent />;\
+    </AuthProvider>
+  )
 }
