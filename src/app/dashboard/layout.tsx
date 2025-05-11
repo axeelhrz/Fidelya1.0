@@ -25,14 +25,14 @@ import { MainNav } from '@/components/dashboard/layout/main-nav';
 import SideNav from '@/components/dashboard/layout/side-nav';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeContextProvider from '@/context/themeContext';
-import { useAuth } from '@/hooks/use-auth';
 import { 
   Menu as MenuIcon, 
   ArrowBack as ArrowBackIcon,
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 import LoadingScreen from '@/components/core/loadingScreen';
-import { AuthProvider } from '@/context/auth-context'; // ✅ Asegurate de importar
+import { AuthProvider } from '@/context/auth-context';
+import { useAuth } from '@/hooks/use-auth';
 
 // Configurar locale para dayjs
 dayjs.locale('es');
@@ -228,7 +228,8 @@ const PageLoadingIndicator = styled(Box)(({ theme }) => ({
   gap: theme.spacing(2),
 }));
 
-export default function Layout({ children }: LayoutProps): React.JSX.Element {
+// Componente interno que utiliza el hook useAuth
+function DashboardContent({ children }: { children: React.ReactNode }) {
   // Estado para controlar si el sidebar está abierto
   const [isSidebarOpen, setSidebarOpen] = React.useState(true);
   const pathname = usePathname();
@@ -306,121 +307,130 @@ export default function Layout({ children }: LayoutProps): React.JSX.Element {
   }
 
   return (
-    <AuthProvider>
-    <ThemeContextProvider>
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <GlobalStyle />
-        <MainWrapper
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <GlobalStyle />
+      <MainWrapper
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {/* Sidebar - Actualizado para usar el nuevo componente */}
+        <SideNav isOpen={isSidebarOpen} onToggle={toggleSidebar} />
+        
+        {/* Contenido principal */}
+        <ContentWrapper
+          issidebaropen={isSidebarOpen.toString()}
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
         >
-          {/* Sidebar - Actualizado para usar el nuevo componente */}
-          <SideNav isOpen={isSidebarOpen} onToggle={toggleSidebar} />
-          
-          {/* Contenido principal */}
-          <ContentWrapper
-            issidebaropen={isSidebarOpen.toString()}
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-          >
-            {/* Barra de navegación superior */}
-            <MainNav
-              isSidebarOpen={isSidebarOpen}
-              onToggleSidebar={toggleSidebar}
-            />
-            
-            {/* Contenedor principal */}
-            <MainContainer maxWidth={false}>
-              {/* Botones de navegación y acciones en móvil */}
-              {isMobile && pathname !== '/dashboard' && (
-                <Box 
-                  sx={{ 
-                    mb: 2, 
-                    display: 'flex', 
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}
-                >
-                  <BackButton onClick={handleGoBack}>
-                    <ArrowBackIcon />
-                  </BackButton>
-                  
-                  <Tooltip title="Refrescar datos" arrow>
-                    <IconButton
-                      onClick={handleRefresh}
-                      disabled={isRefreshing}
-                      sx={{
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                        borderRadius: 3,
-                        '&:hover': {
-                          bgcolor: alpha(theme.palette.primary.main, 0.2),
-                        },
-                      }}
-                    >
-                      <motion.div
-                        animate={isRefreshing ? { rotate: 360 } : {}}
-                        transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: "linear" }}
-                      >
-                        <RefreshIcon />
-                      </motion.div>
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              )}
-              
-              {/* Contenido de la página con animación */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={pathname}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  style={{ flex: 1, width: '100%', overflow: 'hidden' }}
-                >
-                  {/* Indicador de carga de página */}
-                  <Fade in={isPageLoading} unmountOnExit>
-                    <PageLoadingIndicator>
-                      <CircularProgress color="primary" size={40} thickness={4} />
-                      <Typography variant="body2" color="text.secondary" fontFamily="Sora">
-                        Cargando...
-                      </Typography>
-                    </PageLoadingIndicator>
-                  </Fade>
-                  
-                  {/* Contenido real de la página */}
-                  <Fade in={!isPageLoading}>
-                    <Box sx={{ width: '100%', overflow: 'auto' }}>
-                      {children}
-                    </Box>
-                  </Fade>
-                </motion.div>
-              </AnimatePresence>
-            </MainContainer>
-          </ContentWrapper>
-          
-          {/* Botón de navegación móvil */}
-          {isMobile && !isSidebarOpen && (
-            <MobileNavButton
-              color="inherit"
-              aria-label="abrir menú"
-              onClick={toggleSidebar}
-            >
-              <MenuIcon />
-            </MobileNavButton>
-          )}
-          
-          {/* Backdrop para móvil */}
-          <StyledBackdrop
-            open={isBackdropOpen}
-            onClick={() => setSidebarOpen(false)}
+          {/* Barra de navegación superior */}
+          <MainNav
+            isSidebarOpen={isSidebarOpen}
+            onToggleSidebar={toggleSidebar}
           />
-        </MainWrapper>
-      </LocalizationProvider>
+          
+          {/* Contenedor principal */}
+          <MainContainer maxWidth={false}>
+            {/* Botones de navegación y acciones en móvil */}
+            {isMobile && pathname !== '/dashboard' && (
+              <Box 
+                sx={{ 
+                  mb: 2, 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <BackButton onClick={handleGoBack}>
+                  <ArrowBackIcon />
+                </BackButton>
+                
+                <Tooltip title="Refrescar datos" arrow>
+                  <IconButton
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    sx={{
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      borderRadius: 3,
+                      '&:hover': {
+                        bgcolor: alpha(theme.palette.primary.main, 0.2),
+                      },
+                    }}
+                  >
+                    <motion.div
+                      animate={isRefreshing ? { rotate: 360 } : {}}
+                      transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: "linear" }}
+                    >
+                      <RefreshIcon />
+                    </motion.div>
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            )}
+            
+            {/* Contenido de la página con animación */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                style={{ flex: 1, width: '100%', overflow: 'hidden' }}
+              >
+                {/* Indicador de carga de página */}
+                <Fade in={isPageLoading} unmountOnExit>
+                  <PageLoadingIndicator>
+                    <CircularProgress color="primary" size={40} thickness={4} />
+                    <Typography variant="body2" color="text.secondary" fontFamily="Sora">
+                      Cargando...
+                    </Typography>
+                  </PageLoadingIndicator>
+                </Fade>
+                
+                {/* Contenido real de la página */}
+                <Fade in={!isPageLoading}>
+                  <Box sx={{ width: '100%', overflow: 'auto' }}>
+                    {children}
+                  </Box>
+                </Fade>
+              </motion.div>
+            </AnimatePresence>
+          </MainContainer>
+        </ContentWrapper>
+        
+        {/* Botón de navegación móvil */}
+        {isMobile && !isSidebarOpen && (
+          <MobileNavButton
+            color="inherit"
+            aria-label="abrir menú"
+            onClick={toggleSidebar}
+          >
+            <MenuIcon />
+          </MobileNavButton>
+        )}
+        
+        {/* Backdrop para móvil */}
+        <StyledBackdrop
+          open={isBackdropOpen}
+          onClick={() => setSidebarOpen(false)}
+        />
+      </MainWrapper>
+    </LocalizationProvider>
+  );
+}
+
+// Componente principal que proporciona el AuthProvider
+export default function Layout({ children }: LayoutProps): React.JSX.Element {
+  return (
+    <ThemeContextProvider>
+      <AuthProvider>
+        <DashboardContent>
+          {children}
+        </DashboardContent>
+      </AuthProvider>
     </ThemeContextProvider>
-    </AuthProvider>
   );
 }
