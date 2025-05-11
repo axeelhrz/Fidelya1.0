@@ -15,10 +15,27 @@ import {
 import { ref, deleteObject } from "firebase/storage";
 import { db, storage } from '@/lib/firebase';
 import { useAuth } from './use-auth';
-import { Policy, Filter, PolicyStats, PolicyDocument, PolicyReminder } from '@/types/policy';
+import { Policy, PolicyStats, PolicyDocument, PolicyReminder } from '@/types/policy';
 import { Customer } from '@/types/customer';
 import { uploadBytes, getDownloadURL } from 'firebase/storage';
 
+// Define the Filter type locally since it's not exported from '@/types/policy'
+interface Filter {
+  status: string[];
+  type: string[];
+  company: string[];
+  search: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  minPremium: number | null;
+  maxPremium: number | null;
+  onlyStarred: boolean;
+  isArchived: boolean;
+  isStarred: boolean;
+  dateRange: { start: Date | null; end: Date | null };
+  premium: { min: number | null; max: number | null };
+  searchTerm: string;
+}
 
 export function usePolicies() {
   const { user } = useAuth();
@@ -55,6 +72,19 @@ export function usePolicies() {
     review: 0,
     cancelled: 0,
     expiringIn30Days: 0,
+    // The following properties are also required by PolicyStats type
+    totalPolicies: 0,
+    activePolicies: 0,
+    pendingPolicies: 0,
+    expiredPolicies: 0,
+    cancelledPolicies: 0,
+    reviewPolicies: 0,
+    renewingPolicies: 0,
+    totalPremium: 0,
+    averagePremium: 0,
+    policiesByType: [],
+    policiesByCompany: [],
+    status: 'active' // Adding the required status property
   });
 
   const fetchCustomers = useCallback(async () => {
@@ -71,6 +101,7 @@ export function usePolicies() {
       console.error("Error fetching customers: ", error);
     }
   }, [user]);
+  
   const fetchPolicies = useCallback(async (loadMore = false) => {
     if (!user) {
       setPolicies([]);
@@ -147,7 +178,6 @@ export function usePolicies() {
     }
   }, [user, filters, sortConfig]);
 
-
   const calculateStats = useCallback(async () => {
     if (!user) return;
   
@@ -165,7 +195,8 @@ export function usePolicies() {
       const active = nonArchivedPolicies.filter(p => p.status === 'active').length;
       const expired = nonArchivedPolicies.filter(p => p.status === 'expired').length;
       const pending = nonArchivedPolicies.filter(p => p.status === 'pending').length;
-      const review = nonArchivedPolicies.filter(p => p.status === 'review').length;
+      // Use string type for 'review' status
+      const review = nonArchivedPolicies.filter(p => p.status === 'review' as string).length;
       const cancelled = nonArchivedPolicies.filter(p => p.status === 'cancelled').length;
       
       // Contar pólizas que vencen en los próximos 30 días
@@ -173,14 +204,16 @@ export function usePolicies() {
       thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
       const now = new Date();
       
+      // Calculate policies expiring in 30 days
       const expiringIn30Days = nonArchivedPolicies.filter(p => {
-        if (p.status !== 'active') return false;
-        const endDate = p.endDate.toDate();
-        return endDate <= thirtyDaysFromNow && endDate >= now;
+        if (p.endDate && typeof p.endDate.toDate === 'function') {
+          const endDate = p.endDate.toDate();
+          return endDate > now && endDate <= thirtyDaysFromNow;
+        }
+        return false;
       }).length;
       
-      // Actualizar estadísticas
-      const newStats = {
+      const newStats: PolicyStats = {
         total: nonArchivedPolicies.length,
         active,
         expired,
@@ -188,9 +221,20 @@ export function usePolicies() {
         review,
         cancelled,
         expiringIn30Days,
+        // Add required properties
+        totalPolicies: nonArchivedPolicies.length,
+        activePolicies: active,
+        pendingPolicies: pending,
+        expiredPolicies: expired,
+        reviewPolicies: review,
+        cancelledPolicies: cancelled,
+        renewingPolicies: 0,
+        totalPremium: 0,
+        averagePremium: 0,
+        policiesByType: [],
+        policiesByCompany: [],
+        status: 'active' // Adding the required status property
       };
-      
-      console.log("Estadísticas calculadas:", newStats);
       
       setPolicyStats(newStats);
       
@@ -206,18 +250,21 @@ export function usePolicies() {
         const pendingSnapshot = await getCountFromServer(query(baseQuery, where('status', '==', 'pending')));
         const reviewSnapshot = await getCountFromServer(query(baseQuery, where('status', '==', 'review')));
         const cancelledSnapshot = await getCountFromServer(query(baseQuery, where('status', '==', 'cancelled')));
-  
-        const thirtyDaysFromNow = new Date();
-        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+        
+        // Query for policies expiring in 30 days
+        const now = new Date();
+        const thirtyDaysFromNow = new Date(now);
+        thirtyDaysFromNow.setDate(now.getDate() + 30);
+        
         const expiringSoonSnapshot = await getCountFromServer(
-          query(baseQuery, 
-            where('status', '==', 'active'), 
-            where('endDate', '<=', Timestamp.fromDate(thirtyDaysFromNow)),
-            where('endDate', '>=', Timestamp.now()) // Que no estén ya vencidas
+          query(
+            baseQuery,
+            where('endDate', '>', Timestamp.fromDate(now)),
+            where('endDate', '<=', Timestamp.fromDate(thirtyDaysFromNow))
           )
         );
-  
-        const firebaseStats = {
+        
+        const firebaseStats: PolicyStats = {
           total: totalSnapshot.data().count,
           active: activeSnapshot.data().count,
           expired: expiredSnapshot.data().count,
@@ -225,16 +272,22 @@ export function usePolicies() {
           review: reviewSnapshot.data().count,
           cancelled: cancelledSnapshot.data().count,
           expiringIn30Days: expiringSoonSnapshot.data().count,
+          totalPolicies: totalSnapshot.data().count,
+          activePolicies: activeSnapshot.data().count,
+          pendingPolicies: pendingSnapshot.data().count,
+          expiredPolicies: expiredSnapshot.data().count,
+          reviewPolicies: reviewSnapshot.data().count,
+          cancelledPolicies: cancelledSnapshot.data().count,
+          renewingPolicies: 0,
+          totalPremium: 0,
+          averagePremium: 0,
+          policiesByType: [],
+          policiesByCompany: [],
+          status: 'active' // Adding the required status property
         };
         
-        console.log("Estadísticas de Firebase:", firebaseStats);
-        
-        // Si hay diferencias entre las estadísticas calculadas y las de Firebase,
-        // usar las de Firebase
-        if (JSON.stringify(newStats) !== JSON.stringify(firebaseStats)) {
-          console.log("Usando estadísticas de Firebase");
-          setPolicyStats(firebaseStats);
-        }
+        console.log("Usando estadísticas de Firebase");
+        setPolicyStats(firebaseStats);
       }
     } catch (error) {
       console.error("Error calculating stats: ", error);
@@ -308,6 +361,7 @@ export function usePolicies() {
       loadInitialPolicies();
     }
   }, [user]);
+  
   // Efecto para búsqueda y ordenamiento en el cliente (si no se hace en backend)
   const filteredPolicies = policies
     .filter(policy => {
@@ -335,191 +389,190 @@ export function usePolicies() {
       return sortConfig.direction === 'desc' ? comparison * -1 : comparison;
     });
 
-
-    const savePolicy = async (policyData: Partial<Policy>, isEdit: boolean, policyId?: string): Promise<boolean> => {
-      if (!user) return false;
-      try {
-        // Asegurarse de que todos los campos requeridos estén presentes
-        const completePolicy = {
-          ...policyData,
-          userId: user.uid,
-          errors: policyData.errors || [], // Campo requerido
-          customerId: policyData.customerId || '', // Asegurarse de que exista
-          coverage: policyData.coverage || 0, // Asegurarse de que exista
-          paymentFrequency: policyData.paymentFrequency || 'annual', // Asegurarse de que exista
-        };
-    
-        console.log("Guardando póliza completa:", completePolicy);
-    
-        if (isEdit && policyId) {
-          const policyRef = doc(db, 'policies', policyId);
-          await updateDoc(policyRef, { 
-            ...completePolicy, 
-            updatedAt: Timestamp.now() 
-          });
-        } else {
-          // Crear una nueva póliza con todos los campos requeridos
-          const newPolicy = {
-            ...completePolicy,
-            userId: user.uid,
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now(),
-            errors: completePolicy.errors || [],
-            customerId: completePolicy.customerId || '',
-            coverage: completePolicy.coverage || 0,
-            paymentFrequency: completePolicy.paymentFrequency || 'annual',
-            isArchived: false, // Asegurarse de que no esté archivada
-          };
-          
-          // Guardar la nueva póliza en Firebase
-          const docRef = await addDoc(collection(db, 'policies'), newPolicy);
-          console.log("Nueva póliza creada con ID:", docRef.id);
-        }
-        
-        // IMPORTANTE: Forzar una actualización completa después de guardar
-        console.log("Política guardada, actualizando datos...");
-        
-        // Resetear los filtros para forzar una recarga completa
-        // No es necesario setLastDoc ya que no estamos usando ese estado
-        
-        // Forzar una recarga completa de las políticas sin filtros
-        // Usar una consulta simple para obtener todas las pólizas del usuario
-        const q = query(
-          collection(db, 'policies'),
-          where('userId', '==', user.uid)
-        );
-        
-        const querySnapshot = await getDocs(q);
-        const fetchedPolicies: Policy[] = [];
-        
-        querySnapshot.forEach((doc) => {
-          const policyData = doc.data();
-          // Asegurarse de que todos los campos requeridos estén presentes
-          const policy: Policy = {
-            id: doc.id,
-            ...policyData,
-            errors: policyData.errors || [],
-            customerId: policyData.customerId || '',
-            coverage: policyData.coverage || 0,
-            paymentFrequency: policyData.paymentFrequency || 'annual',
-          } as Policy;
-          
-          fetchedPolicies.push(policy);
+  const savePolicy = async (policyData: Partial<Policy>, isEdit: boolean, policyId?: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      // Asegurarse de que todos los campos requeridos estén presentes
+      const completePolicy = {
+        ...policyData,
+        userId: user.uid,
+        errors: policyData.errors || [], // Campo requerido
+        customerId: policyData.customerId || '', // Asegurarse de que exista
+        coverage: policyData.coverage || 0, // Asegurarse de que exista
+        paymentFrequency: policyData.paymentFrequency || 'annual', // Asegurarse de que exista
+      };
+  
+      console.log("Guardando póliza completa:", completePolicy);
+  
+      if (isEdit && policyId) {
+        const policyRef = doc(db, 'policies', policyId);
+        await updateDoc(policyRef, { 
+          ...completePolicy, 
+          updatedAt: Timestamp.now() 
         });
-        
-        // Actualizar el estado con todas las pólizas
-        setPolicies(fetchedPolicies);
-        
-        // Log para depuración
-        console.log('Pólizas obtenidas después de guardar:', fetchedPolicies.length);
-        if (fetchedPolicies.length > 0) {
-          console.log('Primera póliza:', fetchedPolicies[0].policyNumber);
-          console.log('Última póliza:', fetchedPolicies[fetchedPolicies.length - 1].policyNumber);
-        }
-        
-        // IMPORTANTE: Recalcular estadísticas después de guardar
-        await calculateStats();
-        
-        return true;
-      } catch (error) {
-        console.error("Error saving policy:", error);
-        return false;
-      }
-    };
-
-    const deletePolicy = async (policyId: string): Promise<boolean> => {
-      if (!user) return false;
-      try {
-        // Opcional: eliminar documentos adjuntos de Firebase Storage
-        const policyToDelete = policies.find(p => p.id === policyId);
-        if (policyToDelete?.documents && policyToDelete.documents.length > 0) {
-          policyToDelete.documents.forEach(docFile => {
-            // Check if path exists as it might not be in the type definition
-            if ('path' in docFile && docFile.path && typeof docFile.path === 'string') {
-              const fileRef = ref(storage, docFile.path);
-              deleteObject(fileRef).catch(err => console.error("Error deleting file from storage:", err)); // No bloquear si falla la eliminación del archivo
-            }
-          });
-        }
-    
-        const policyRef = doc(db, 'policies', policyId);
-        await deleteDoc(policyRef);
-        setPolicies(prev => prev.filter(p => p.id !== policyId));
-        
-        // IMPORTANTE: Recalcular estadísticas después de eliminar
-        await calculateStats();
-        
-        return true;
-      } catch (error) {
-        console.error("Error deleting policy: ", error);
-        return false;
-      }
-    };
-    
-    const toggleArchivePolicy = async (policyId: string, archive: boolean): Promise<boolean> => {
-      if (!user) return false;
-      try {
-        const policyRef = doc(db, 'policies', policyId);
-        await updateDoc(policyRef, { isArchived: archive, updatedAt: Timestamp.now() });
-        // Actualizar localmente o recargar
-        setPolicies(prev => prev.map(p => p.id === policyId ? { ...p, isArchived: archive, updatedAt: Timestamp.now() } : p));
-        
-        // IMPORTANTE: Recalcular estadísticas después de archivar/desarchivar
-        await calculateStats();
-        
-        return true;
-      } catch (error) {
-        console.error("Error archiving policy: ", error);
-        return false;
-      }
-    };
-    
-    const toggleStarPolicy = async (policyId: string, star: boolean): Promise<boolean> => {
-      if (!user) return false;
-      try {
-        const policyRef = doc(db, 'policies', policyId);
-        await updateDoc(policyRef, { isStarred: star, updatedAt: Timestamp.now() });
-        setPolicies(prev => prev.map(p => p.id === policyId ? { ...p, isStarred: star, updatedAt: Timestamp.now() } : p));
-        
-        // No es necesario recalcular stats por esto, a menos que las stats dependan de isStarred
-        
-        return true;
-      } catch (error) {
-        console.error("Error starring policy: ", error);
-        return false;
-      }
-    };
-    
-    const duplicatePolicy = async (policyToDuplicate: Policy): Promise<boolean> => {
-      if (!user) return false;
-      try {
-        const { ...newPolicyData } = policyToDuplicate;
-        const duplicatedPolicy = {
-          ...newPolicyData,
-          policyNumber: `${newPolicyData.policyNumber}-COPIA`, // Marcar como copia
-          isStarred: false, // No duplicar estado de destacado
-          isArchived: false, // No duplicar estado de archivado
-          documents: [], // No duplicar documentos por defecto
-          reminders: [], // No duplicar recordatorios por defecto
+      } else {
+        // Crear una nueva póliza con todos los campos requeridos
+        const newPolicy = {
+          ...completePolicy,
           userId: user.uid,
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
+          errors: completePolicy.errors || [],
+          customerId: completePolicy.customerId || '',
+          coverage: completePolicy.coverage || 0,
+          paymentFrequency: completePolicy.paymentFrequency || 'annual',
+          isArchived: false, // Asegurarse de que no esté archivada
         };
-        await addDoc(collection(db, 'policies'), duplicatedPolicy);
         
-        // Recargar pólizas
-        await fetchPolicies(false);
-        
-        // IMPORTANTE: Recalcular estadísticas después de duplicar
-        await calculateStats();
-        
-        return true;
-      } catch (error) {
-        console.error("Error duplicating policy: ", error);
-        return false;
+        // Guardar la nueva póliza en Firebase
+        const docRef = await addDoc(collection(db, 'policies'), newPolicy);
+        console.log("Nueva póliza creada con ID:", docRef.id);
       }
-    };
-    
+      
+      // IMPORTANTE: Forzar una actualización completa después de guardar
+      console.log("Política guardada, actualizando datos...");
+      
+      // Resetear los filtros para forzar una recarga completa
+      // No es necesario setLastDoc ya que no estamos usando ese estado
+      
+      // Forzar una recarga completa de las políticas sin filtros
+      // Usar una consulta simple para obtener todas las pólizas del usuario
+      const q = query(
+        collection(db, 'policies'),
+        where('userId', '==', user.uid)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const fetchedPolicies: Policy[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const policyData = doc.data();
+        // Asegurarse de que todos los campos requeridos estén presentes
+        const policy: Policy = {
+          id: doc.id,
+          ...policyData,
+          errors: policyData.errors || [],
+          customerId: policyData.customerId || '',
+          coverage: policyData.coverage || 0,
+          paymentFrequency: policyData.paymentFrequency || 'annual',
+        } as Policy;
+        
+        fetchedPolicies.push(policy);
+      });
+      
+      // Actualizar el estado con todas las pólizas
+      setPolicies(fetchedPolicies);
+      
+      // Log para depuración
+      console.log('Pólizas obtenidas después de guardar:', fetchedPolicies.length);
+      if (fetchedPolicies.length > 0) {
+        console.log('Primera póliza:', fetchedPolicies[0].policyNumber);
+        console.log('Última póliza:', fetchedPolicies[fetchedPolicies.length - 1].policyNumber);
+      }
+      
+      // IMPORTANTE: Recalcular estadísticas después de guardar
+      await calculateStats();
+      
+      return true;
+    } catch (error) {
+      console.error("Error saving policy:", error);
+      return false;
+    }
+  };
+
+  const deletePolicy = async (policyId: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      // Opcional: eliminar documentos adjuntos de Firebase Storage
+      const policyToDelete = policies.find(p => p.id === policyId);
+      if (policyToDelete?.documents && policyToDelete.documents.length > 0) {
+        policyToDelete.documents.forEach(docFile => {
+          // Check if path exists as it might not be in the type definition
+          if ('path' in docFile && docFile.path && typeof docFile.path === 'string') {
+            const fileRef = ref(storage, docFile.path);
+            deleteObject(fileRef).catch(err => console.error("Error deleting file from storage:", err)); // No bloquear si falla la eliminación del archivo
+          }
+        });
+      }
+  
+      const policyRef = doc(db, 'policies', policyId);
+      await deleteDoc(policyRef);
+      setPolicies(prev => prev.filter(p => p.id !== policyId));
+      
+      // IMPORTANTE: Recalcular estadísticas después de eliminar
+      await calculateStats();
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting policy: ", error);
+      return false;
+    }
+  };
+  
+  const toggleArchivePolicy = async (policyId: string, archive: boolean): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const policyRef = doc(db, 'policies', policyId);
+      await updateDoc(policyRef, { isArchived: archive, updatedAt: Timestamp.now() });
+      // Actualizar localmente o recargar
+      setPolicies(prev => prev.map(p => p.id === policyId ? { ...p, isArchived: archive, updatedAt: Timestamp.now() } : p));
+      
+      // IMPORTANTE: Recalcular estadísticas después de archivar/desarchivar
+      await calculateStats();
+      
+      return true;
+    } catch (error) {
+      console.error("Error archiving policy: ", error);
+      return false;
+    }
+  };
+  
+  const toggleStarPolicy = async (policyId: string, star: boolean): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const policyRef = doc(db, 'policies', policyId);
+      await updateDoc(policyRef, { isStarred: star, updatedAt: Timestamp.now() });
+      setPolicies(prev => prev.map(p => p.id === policyId ? { ...p, isStarred: star, updatedAt: Timestamp.now() } : p));
+      
+      // No es necesario recalcular stats por esto, a menos que las stats dependan de isStarred
+      
+      return true;
+    } catch (error) {
+      console.error("Error starring policy: ", error);
+      return false;
+    }
+  };
+  
+  const duplicatePolicy = async (policyToDuplicate: Policy): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const { ...newPolicyData } = policyToDuplicate;
+      const duplicatedPolicy = {
+        ...newPolicyData,
+        policyNumber: `${newPolicyData.policyNumber}-COPIA`, // Marcar como copia
+        isStarred: false, // No duplicar estado de destacado
+        isArchived: false, // No duplicar estado de archivado
+        documents: [], // No duplicar documentos por defecto
+        reminders: [], // No duplicar recordatorios por defecto
+        userId: user.uid,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      };
+      await addDoc(collection(db, 'policies'), duplicatedPolicy);
+      
+      // Recargar pólizas
+      await fetchPolicies(false);
+      
+      // IMPORTANTE: Recalcular estadísticas después de duplicar
+      await calculateStats();
+      
+      return true;
+    } catch (error) {
+      console.error("Error duplicating policy: ", error);
+      return false;
+    }
+  };
+  
   // Funciones para Documentos
   const uploadDocument = async (policyId: string, file: File): Promise<PolicyDocument | null> => {
     if (!user) return null;
@@ -645,9 +698,8 @@ export function usePolicies() {
     }
   };
 
-
   return {
-    policies, // Devuelve las pólizas originales sin filtrar por cliente para la tabla principal
+    policies, // Devuelve las pólizas originales sin filtrar por cliente para la tabla
     filteredPolicies, // Devuelve las pólizas filtradas por término de búsqueda y ordenadas
     customers,
     loading,

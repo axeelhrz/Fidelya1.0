@@ -1,7 +1,15 @@
 import * as React from 'react';
 import { DirectionsCar, HealthAndSafety, Favorite, Home, FlightTakeoff, Gavel, MoreHoriz, Business } from '@mui/icons-material';
 
-import { PolicyType, PolicyStatus, PaymentFrequency, Tag } from '@/types/policy';
+// Define the types here instead of importing them
+export type PolicyType = 'auto' | 'health' | 'life' | 'home' | 'business' | 'travel' | 'liability' | 'other';
+export type PolicyStatus = 'active' | 'expired' | 'pending' | 'review' | 'cancelled';
+export type PaymentFrequency = 'monthly' | 'quarterly' | 'biannual' | 'annual' | 'single';
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
 
 // No need for custom icon components as we use React.createElement directly in the arrays below
 

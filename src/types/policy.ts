@@ -95,7 +95,9 @@ export type PolicyDocument = {
   id: string;
   name: string;
   url: string;
-  uploadedAt: Timestamp; // Using the Firestore Timestamp type that's already imported
+  uploadedAt: Timestamp;
+  path?: string; // Add path property as optional
+  // Using the Firestore Timestamp type that's already imported
 };
 
 /**
@@ -157,6 +159,8 @@ export interface PolicyStats {
   review: number;
   cancelled: number;
   expiringIn30Days: number;
+  reviewPolicies: number;
+  status: 'active' | 'pending' | 'expired' | 'cancelled' | 'review';
 }
 
 /**
