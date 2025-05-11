@@ -1,6 +1,5 @@
-'use client';
-import AdminContent from './components/AdminContent';
+import AdminClientContent from './AdminClientContent';
 
 export default function AdminPage() {
-  return <AdminContent />;
+  return <AdminClientContent />;
 }
