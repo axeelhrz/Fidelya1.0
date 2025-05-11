@@ -1,16 +1,20 @@
-'use client';
-
-import React from 'react';
+import { Metadata } from 'next';
 import { AuthProvider } from '@/context/auth-context';
+import AuthLayout from '@/components/auth/layout';
 
-export default function AuthLayout({
+export const metadata: Metadata = {
+  title: 'Autenticación | Assuriva',
+  description: 'Accede a tu cuenta de Assuriva o crea una nueva cuenta.',
+};
+
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
     <AuthProvider>
-      {children}
+      <AuthLayout>{children}</AuthLayout>
     </AuthProvider>
   );
 }

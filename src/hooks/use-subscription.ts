@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './use-auth';
 import { Subscription } from '@/types/subscription';
@@ -5,7 +7,7 @@ import { SubscriptionService } from '@/components/services/subscription.services
 import { PLAN_FEATURES, Plan } from '@/lib/subscription';
 
 export function useSubscription() {
-  const { user } = useAuth() || { user: null };
+  const { user } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,15 +97,15 @@ export function useSubscription() {
   }, [subscription]);
 
   // Verificar si una característica está incluida en el plan actual
-  const hasFeature = useCallback((feature: keyof typeof PLAN_FEATURES[Plan]) => {
-    if (!subscription) return false;
+  const hasFeature = useCallback(async (feature: keyof typeof PLAN_FEATURES[Plan]) => {
+    if (!user || !subscription) return false;
     
     // Si la suscripción no está activa, no tiene acceso a características premium
     if (subscription.status !== 'active' && !isInTrialPeriod()) {
       return false;
     }
     
-    return SubscriptionService.hasFeature(user?.uid || '', feature);
+    return SubscriptionService.hasFeature(user.uid, feature);
   }, [subscription, isInTrialPeriod, user]);
 
   // Cancelar suscripción
@@ -144,17 +146,40 @@ export function useSubscription() {
     setError(null);
 
     try {
-      const freeSubscription = await SubscriptionService.activateFreePlan(user.uid);
+      // Llamar a la API para activar el plan gratuito
+      const token = await user.getIdToken();
+      const response = await fetch('/api/activate-free-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al activar el plan gratuito');
+      }
+      
+      // Recargar la suscripción
+      const freeSubscription = await SubscriptionService.getSubscription(user.uid);
       setSubscription(freeSubscription);
+      
       return true;
     } catch (err) {
       console.error('Error al activar plan gratuito:', err);
-      setError('Error al activar el plan gratuito');
+      setError(err instanceof Error ? err.message : 'Error al activar el plan gratuito');
       return false;
     } finally {
       setLoading(false);
     }
   };
+
+  // Verificar si el usuario tiene un plan premium
+  const hasPremiumPlan = useCallback(async (): Promise<boolean> => {
+    if (!user) return false;
+    return SubscriptionService.hasPremiumPlan(user.uid);
+  }, [user]);
 
   return {
     subscription,
@@ -166,6 +191,7 @@ export function useSubscription() {
     isExpiringSoon,
     getFormattedRenewalDate,
     hasFeature,
+    hasPremiumPlan,
     cancelSubscription,
     activateFreePlan
   };
