@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Box, Typography, Tabs, Tab, useTheme, Paper, Container, alpha } from '@mui/material';
+import { Box, Typography, Tabs, Tab, useTheme, Paper, Container, alpha, CircularProgress } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Palette, 
@@ -23,6 +23,7 @@ import AISettingTab from '@/components/dashboard/settings/aiSettingTab';
 import GeneralPreferencesTab from '@/components/dashboard/settings/generalPreferencesTab';
 import DeleteAccountTab from '@/components/dashboard/settings/deleteAccounTab';
 import { useProfile } from '@/hooks/use-profile';
+import { useAuth } from '@/hooks/use-auth';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -68,7 +69,10 @@ function a11yProps(index: number) {
 export default function SettingsPage() {
   const [value, setValue] = useState(0);
   const theme = useTheme();
-  const { profile, isLoading } = useProfile();
+  const { loading: authLoading } = useAuth();
+  const { profile, isLoading: profileLoading } = useProfile();
+  
+  const isLoading = authLoading || profileLoading;
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -77,8 +81,16 @@ export default function SettingsPage() {
   if (isLoading) {
     return (
       <Container maxWidth="lg">
-        <Box sx={{ py: 4 }}>
-          <Typography variant="h4" sx={{ mb: 4, fontFamily: 'Sora' }}>
+        <Box sx={{ 
+          py: 4, 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          flexDirection: 'column',
+          minHeight: '50vh'
+        }}>
+          <CircularProgress size={40} />
+          <Typography variant="h6" sx={{ mt: 2, fontFamily: 'Sora' }}>
             Cargando configuración...
           </Typography>
         </Box>
