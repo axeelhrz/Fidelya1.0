@@ -58,7 +58,7 @@ export default function RootLayout({
       </head>
       <body>
         <div className="flex flex-col min-h-screen">
-        <AuthProvider>
+                    <AuthProvider>
 
         <ThemeContextProvider>
         <PlanProvider>

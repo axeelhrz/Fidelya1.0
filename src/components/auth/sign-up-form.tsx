@@ -598,7 +598,7 @@ export default function SignUpPage() {
         trialDays: 0,
         paypalPlanId: ''
       };
-
+  
       // Guardar datos en Firestore
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         uid: userCredential.user.uid,
@@ -668,6 +668,23 @@ export default function SignUpPage() {
         }
       }, { merge: true });
       
+      // Si el plan es básico (gratuito), activarlo automáticamente
+      if (planToSave.id === 'basic') {
+        // Activar plan gratuito directamente desde el cliente
+        try {
+          const token = await userCredential.user.getIdToken();
+          await fetch('/api/activate-free-plan', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+        } catch (activationError) {
+          console.error('Error al activar plan básico:', activationError);
+          // No bloqueamos el flujo si falla la activación, se puede intentar más tarde
+        }
+      }
       
       // Redirigir a la página de verificación de email
       router.push('/auth/verify-email');
@@ -690,7 +707,7 @@ export default function SignUpPage() {
       setLoading(false);
     }
   };
-  
+
   const handleGoogleSignUp = async () => {
     setLoading(true);
     setError(null);
@@ -725,11 +742,11 @@ export default function SignUpPage() {
         lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
         plan: planToSave.id,
         planName: planToSave.name,
-        planStatus: 'pending',
+        planStatus: planToSave.id === 'basic' ? 'active' : 'pending',
         verified: user.emailVerified,
         createdAt: serverTimestamp(),
         subscription: {
-          status: 'pending',
+          status: planToSave.id === 'basic' ? 'active' : 'pending',
           planId: planToSave.id,
           planDetails: {
             name: planToSave.name,
@@ -741,6 +758,31 @@ export default function SignUpPage() {
         },
         authProvider: 'google'
       }, { merge: true });
+      
+      // Si el plan es básico (gratuito), activarlo automáticamente
+      if (planToSave.id === 'basic') {
+        try {
+          const token = await user.getIdToken();
+          await fetch('/api/activate-free-plan', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          // Redirigir según el estado de verificación
+          if (user.emailVerified) {
+            router.push('/dashboard');
+          } else {
+            router.push('/auth/verify-email');
+          }
+          return;
+        } catch (activationError) {
+          console.error('Error al activar plan básico:', activationError);
+          // No bloqueamos el flujo si falla la activación
+        }
+      }
       
       // Redirigir según el plan y estado de verificación
       if (user.emailVerified) {

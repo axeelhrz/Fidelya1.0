@@ -31,7 +31,6 @@ import {
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 import LoadingScreen from '@/components/core/loadingScreen';
-import { AuthProvider } from '@/context/auth-context';
 import { useAuth } from '@/hooks/use-auth';
 
 // Configurar locale para dayjs
@@ -426,11 +425,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 export default function Layout({ children }: LayoutProps): React.JSX.Element {
   return (
     <ThemeContextProvider>
-      <AuthProvider>
         <DashboardContent>
           {children}
         </DashboardContent>
-      </AuthProvider>
     </ThemeContextProvider>
   );
 }

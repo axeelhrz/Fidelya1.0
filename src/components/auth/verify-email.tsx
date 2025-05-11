@@ -569,8 +569,20 @@ export default function VerifyEmail() {
   // Función para verificar el estado de la suscripción
   const checkSubscriptionAndRedirect = useCallback(async (userId: string) => {
     try {
-      const userDoc = await getDoc(doc(db, 'subscriptions', userId));
-      const subscription = userDoc.data() as UserSubscription | undefined;
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      const userData = userDoc.exists() ? userDoc.data() : null;
+      
+      // Verificar si el usuario tiene un plan básico activo
+      if (userData?.planStatus === 'active' || 
+          (userData?.subscription?.status === 'active' && userData?.subscription?.planId === 'basic')) {
+        setSuccess('¡Verificado! Redirigiendo al dashboard...');
+        setTimeout(() => router.replace('/dashboard'), 1500);
+        return;
+      }
+      
+      // Verificar si hay una suscripción activa
+      const subscriptionDoc = await getDoc(doc(db, 'subscriptions', userId));
+      const subscription = subscriptionDoc.exists() ? subscriptionDoc.data() as UserSubscription : null;
       
       if (subscription?.status === 'active') {
         setSuccess('¡Verificado! Redirigiendo al dashboard...');
@@ -579,6 +591,31 @@ export default function VerifyEmail() {
         // Verificar si hay un plan seleccionado en localStorage
         const savedPlan = localStorage.getItem('selectedPlan');
         if (savedPlan) {
+          const plan = JSON.parse(savedPlan);
+          
+          // Si el plan guardado es básico, activarlo y redirigir al dashboard
+          if (plan.id === 'basic') {
+            try {
+              const user = auth.currentUser;
+              if (user) {
+                const token = await user.getIdToken();
+                await fetch('/api/activate-free-plan', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+                
+                setSuccess('¡Verificado! Redirigiendo al dashboard...');
+                setTimeout(() => router.replace('/dashboard'), 1500);
+                return;
+              }
+            } catch (err) {
+              console.error('Error al activar plan gratuito:', err);
+            }
+          }
+          
           setSuccess('¡Verificado! Continuando con la suscripción...');
           setTimeout(() => router.replace('/subscribe'), 1500);
         } else {
