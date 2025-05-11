@@ -1,16 +1,12 @@
 'use client'
-export const dynamic = 'force-dynamic';
 
 
 import { Box, Typography, Button } from '@mui/material'
 import { useRouter } from 'next/navigation'
-import { AuthProvider } from '@/context/auth-context'
 
 export default function NotFound() {
   return (
-    <AuthProvider>
       <NotFoundContent />
-    </AuthProvider>
   )
 }
 

@@ -1,5 +1,4 @@
 'use client';
-export const dynamic = 'force-dynamic';
 
 
 import React, { useState } from 'react';
@@ -20,7 +19,6 @@ import { useContacts } from '@/hooks/use-contacts';
 import ContactList from '@/components/dashboard/contacts/contact-list';
 import ContactAddDialog from '@/components/dashboard/contacts/contact-add-dialog';
 import ChatNotifications from '@/components/dashboard/contacts/chatNotifications';
-import { AuthProvider } from '@/context/auth-context';
 
 
 // Iconos
@@ -48,7 +46,6 @@ const ContactsPage: React.FC = () => {
   };
   
   return (
-    <AuthProvider>
 
     <Container maxWidth="lg" sx={{ py: 3 }}>
       <Paper 
@@ -132,7 +129,6 @@ const ContactsPage: React.FC = () => {
       
       <ContactAddDialog open={addDialogOpen} onClose={handleCloseAddDialog} />
     </Container>
-    </AuthProvider>
   );
 };
 

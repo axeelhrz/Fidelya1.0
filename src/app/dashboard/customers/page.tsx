@@ -21,7 +21,6 @@ import CustomerImportDialog from '@/components/dashboard/customer/customer-impor
 import CustomerExportDialog from '@/components/dashboard/customer/customer-export-dialog';
 import CustomerDeleteDialog from '@/components/dashboard/customer/delete-confirm-dialog';
 import { useDashboardCustomerKpis } from '@/hooks/use-customer-dashboard-kpis';
-import { AuthProvider } from '@/context/auth-context';
 
 
 interface CustomerFilters {
@@ -459,7 +458,6 @@ const CustomersPage = () => {
   };
   
   return (
-    <AuthProvider>
     <Container maxWidth="xl">
       <Box
         component={motion.div}
@@ -571,7 +569,6 @@ const CustomersPage = () => {
         )}
       </Box>
     </Container>
-    </AuthProvider>
   );
 };
 

@@ -40,8 +40,9 @@ export async function POST(request: NextRequest) {
     const farFutureDate = new Date(now);
     farFutureDate.setFullYear(farFutureDate.getFullYear() + 100);
     
-    // Actualizar documento de usuario
-    await db.collection('users').doc(userId).update({
+    // Usar set con merge en lugar de update para el documento de usuario
+    // Esto creará el documento si no existe o lo actualizará si ya existe
+    await db.collection('users').doc(userId).set({
       plan: 'basic',
       planStatus: 'active',
       'subscription.status': 'active',
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
       'subscription.currentPeriodEnd': farFutureDate,
       'subscription.cancelAtPeriodEnd': false,
       updatedAt: now
-    });
+    }, { merge: true });
     
     // Crear o actualizar documento de suscripción
     const subscriptionRef = db.collection('subscriptions').doc(userId);

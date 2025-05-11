@@ -1,6 +1,4 @@
 import { Metadata } from 'next';
-import { AuthProvider } from '@/context/auth-context';
-import AuthLayout from '@/components/auth/layout';
 
 export const metadata: Metadata = {
   title: 'Autenticación | Assuriva',
@@ -13,8 +11,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AuthProvider>
-      <AuthLayout>{children}</AuthLayout>
-    </AuthProvider>
+      {children}
   );
 }

@@ -26,7 +26,6 @@ import {
 import { motion } from 'framer-motion';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
-import { AuthProvider } from '@/context/auth-context';
 
 
 // Componentes estilizados
@@ -119,7 +118,6 @@ export default function LicensesPage() {
   const theme = useTheme();
 
   return (
-    <AuthProvider>
     <Box sx={{ 
       minHeight: '100vh',
       display: 'flex',
@@ -407,6 +405,5 @@ export default function LicensesPage() {
 
       <Footer />
     </Box>
-    </AuthProvider>
   );
 }
