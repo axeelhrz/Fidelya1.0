@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { auth } from '@/lib/firebase-config';
 import { authService, UserData, AuthError } from '@/components/services/auth.services';
@@ -332,15 +332,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Hook personalizado para usar el contexto
-export function useAuth() {
-  const context = useContext(AuthContext);
-  
-  if (context === undefined) {
-    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
-  }
-  
-  return context;
-}
-
+// Remove the duplicate hook definition here
+// and export only the context
 export { AuthContext };
