@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import ClientOnly from '@/app/clientOnly';
 import ResetPasswordForm from '@/components/auth/reset-password-form';
 import GuestGuard from '@/components/auth/guest-guard';
 
@@ -9,8 +10,10 @@ export const metadata: Metadata = {
 
 export default function ResetPasswordPage() {
   return (
-    <GuestGuard>
-      <ResetPasswordForm />
-    </GuestGuard>
+    <ClientOnly>
+      <GuestGuard>
+        <ResetPasswordForm />
+      </GuestGuard>
+    </ClientOnly>
   );
 }
