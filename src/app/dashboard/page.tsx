@@ -13,7 +13,9 @@ import {
   Fade,
   Divider,
   IconButton,
-  Tooltip
+  Tooltip,
+  Container,
+  Grid
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
@@ -357,7 +359,6 @@ const DashboardPage = () => {
         animate="visible"
         exit="exit"
         sx={{
-          p: { xs: 2, sm: 3 },
           width: '100%',
           minHeight: '100vh',
           background: theme.palette.mode === 'dark'
@@ -367,16 +368,17 @@ const DashboardPage = () => {
           borderRadius: 0
         }}
       >
-        <Stack spacing={3} width="100%">
+        <Container maxWidth="xl" sx={{ py: 3 }}>
+          <Stack spacing={4}>
           {/* Header with connection indicator and refresh button */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             {renderConnectionIndicator()}
             
             <Tooltip title="Actualizar todos los datos" arrow>
-              <IconButton 
+                <IconButton 
                 onClick={handleRefreshAll}
                 disabled={refreshing}
-                sx={{ 
+                  sx={{ 
                   bgcolor: alpha(theme.palette.primary.main, 0.1),
                   '&:hover': {
                     bgcolor: alpha(theme.palette.primary.main, 0.2)
@@ -397,7 +399,7 @@ const DashboardPage = () => {
             </Tooltip>
           </Box>
 
-          {/* Welcome card and universal search */}
+            {/* Welcome card */}
           <motion.div variants={sectionVariants}>
             <DashboardWelcomeCard timeOfDay={timeOfDay} />
           </motion.div>
@@ -485,132 +487,167 @@ const DashboardPage = () => {
             <SummaryCards />
           </motion.div>
 
-          {/* Charts and recent activity */}
-          <Stack
-            direction={{ xs: 'column', lg: 'row' }}
-            spacing={3}
-            sx={{ width: '100%' }}
-          >
-            {/* Left column */}
-            <Stack spacing={3} sx={{ width: { xs: '100%', lg: '65%' } }}>
+            {/* Main Dashboard Content */}
+            <Grid container spacing={3}>
+              {/* Main Chart - Full Width */}
+              <Grid item xs={12}>
               <motion.div variants={sectionVariants}>
                 <PoliciesChart />
               </motion.div>
+              </Grid>
 
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
-                <Box sx={{ width: { xs: '100%', md: '50%' } }}>
+              {/* Policy Distribution Chart - Half Width */}
+              <Grid item xs={12} md={6}>
                   <motion.div variants={sectionVariants}>
-                    <PolicyDistributionChart />
-                  </motion.div>
-                </Box>
-                <Box sx={{ width: { xs: '100%', md: '50%' } }}>
-                  <motion.div variants={sectionVariants}>
-                    <TasksProgress />
-                  </motion.div>
-                </Box>
-              </Stack>
-
-              <motion.div variants={sectionVariants}>
-                <RecentPoliciesList />
-              </motion.div>
-
-              {isPremium && (
-                <motion.div variants={sectionVariants}>
-                  <ROICalculator open={false} onClose={() => {}} />
-                </motion.div>
-              )}
-            </Stack>
-
-            {/* Right column */}
-            <Stack spacing={3} sx={{ width: { xs: '100%', lg: '35%' } }}>
-              <motion.div variants={sectionVariants}>
-                <NotificationsCard />
-              </motion.div>
-
-              {isPremium && (
-                <motion.div variants={sectionVariants}>
-                  <RecommendationCard />
-                </motion.div>
-              )}
-
-              <motion.div variants={sectionVariants}>
-                <RecentClientList />
-              </motion.div>
-
-              {isPremium && (
-                <motion.div variants={sectionVariants}>
-                  <ChatNotifications />
-                </motion.div>
-              )}
-
-              {isPremium && (
-                <motion.div variants={sectionVariants}>
-                  <RecentActivityList />
-                </motion.div>
-              )}
-            </Stack>
-          </Stack>
-
-          {/* Footer section */}
-          <motion.div variants={sectionVariants}>
-            <Paper
+                  <Paper
               elevation={0}
               sx={{
-                mt: 2,
-                p: 3,
                 borderRadius: 4,
-                background: alpha(theme.palette.background.paper, 0.7),
+                      background: alpha(theme.palette.background.paper, 0.8),
                 backdropFilter: 'blur(10px)',
-                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+                      boxShadow: theme.palette.mode === 'dark' 
+                        ? `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`
+                        : `0 8px 32px ${alpha('#000', 0.05)}`,
+                      overflow: 'hidden',
+                      border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                      height: '100%'
               }}
             >
-              <Stack 
-                direction={{ xs: 'column', md: 'row' }} 
-                justifyContent="space-between"
-                alignItems={{ xs: 'flex-start', md: 'center' }}
-                spacing={2}
-              >
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    © {new Date().getFullYear()} Assuriva - Plataforma para corredores de seguros
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Todos los datos se actualizan en tiempo real. Última sincronización: {kpis?.lastUpdated ? new Date(kpis.lastUpdated.toDate()).toLocaleTimeString() : 'N/A'}
-                  </Typography>
-                </Box>
-                <Stack direction="row" spacing={2} divider={<Divider orientation="vertical" flexItem />}>
-                  <Typography 
-                    component={Link}
-                    href="/dashboard/soporte" 
-                    variant="body2" 
-                    color="primary"
-                    sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-                  >
-                    Soporte
-                  </Typography>
-                  <Typography 
-                    component={Link}
-                    href="/dashboard/configuracion" 
-                    variant="body2" 
-                    color="primary"
-                    sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-                  >
-                    Configuración
-                  </Typography>
-                  <Typography 
-                    component={Link}
-                    href="/ayuda" 
-                    variant="body2" 
-                    color="primary"
-                    sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-                  >
-                    Ayuda
-                  </Typography>
-                </Stack>
-              </Stack>
-            </Paper>
+                    <PolicyDistributionChart />
+                  </Paper>
           </motion.div>
-        </Stack>
+              </Grid>
+
+              {/* Tasks Progress - Half Width */}
+              <Grid item xs={12} md={6}>
+                <motion.div variants={sectionVariants}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      borderRadius: 4,
+                      background: alpha(theme.palette.background.paper, 0.8),
+                      backdropFilter: 'blur(10px)',
+                      boxShadow: theme.palette.mode === 'dark' 
+                        ? `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`
+                        : `0 8px 32px ${alpha('#000', 0.05)}`,
+                      overflow: 'hidden',
+                      border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                      height: '100%'
+                    }}
+                  >
+                    <TasksProgress />
+                  </Paper>
+                </motion.div>
+              </Grid>
+
+              {/* Recent Policies - 2/3 Width */}
+              <Grid item xs={12} lg={8}>
+                <motion.div variants={sectionVariants}>
+                  <RecentPoliciesList />
+                </motion.div>
+              </Grid>
+
+              {/* Notifications - 1/3 Width */}
+              <Grid item xs={12} lg={4}>
+                <motion.div variants={sectionVariants}>
+                  <NotificationsCard />
+                </motion.div>
+              </Grid>
+
+              {/* Recent Clients - Half Width */}
+              <Grid item xs={12} md={6}>
+                <motion.div variants={sectionVariants}>
+                  <RecentClientList />
+                </motion.div>
+              </Grid>
+
+              {/* Recommendations or Chat Notifications - Half Width */}
+              <Grid item xs={12} md={6}>
+                <motion.div variants={sectionVariants}>
+                  {isPremium ? <RecommendationCard /> : <ChatNotifications />}
+                </motion.div>
+              </Grid>
+
+              {/* ROI Calculator - Full Width for Premium */}
+              {isPremium && (
+                <Grid item xs={12}>
+                  <motion.div variants={sectionVariants}>
+                    <ROICalculator open={false} onClose={() => {}} />
+                  </motion.div>
+                </Grid>
+              )}
+
+              {/* Recent Activity - Full Width for Premium */}
+              {isPremium && (
+                <Grid item xs={12}>
+                  <motion.div variants={sectionVariants}>
+                    <RecentActivityList />
+                  </motion.div>
+                </Grid>
+              )}
+            </Grid>
+
+            {/* Footer section */}
+            <motion.div variants={sectionVariants}>
+              <Paper
+                elevation={0}
+                sx={{
+                  mt: 2,
+                  p: 3,
+                  borderRadius: 4,
+                  background: alpha(theme.palette.background.paper, 0.7),
+                  backdropFilter: 'blur(10px)',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+                }}
+              >
+                <Stack 
+                  direction={{ xs: 'column', md: 'row' }} 
+                  justifyContent="space-between"
+                  alignItems={{ xs: 'flex-start', md: 'center' }}
+                  spacing={2}
+                >
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      © {new Date().getFullYear()} Assuriva - Plataforma para corredores de seguros
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Todos los datos se actualizan en tiempo real. Última sincronización: {kpis?.lastUpdated ? new Date(kpis.lastUpdated.toDate()).toLocaleTimeString() : 'N/A'}
+                    </Typography>
+      </Box>
+                  <Stack direction="row" spacing={2} divider={<Divider orientation="vertical" flexItem />}>
+                    <Typography 
+                      component={Link}
+                      href="/dashboard/soporte" 
+                      variant="body2" 
+                      color="primary"
+                      sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                    >
+                      Soporte
+                    </Typography>
+                    <Typography 
+                      component={Link}
+                      href="/dashboard/configuracion" 
+                      variant="body2" 
+                      color="primary"
+                      sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                    >
+                      Configuración
+                    </Typography>
+                    <Typography 
+                      component={Link}
+                      href="/ayuda" 
+                      variant="body2" 
+                      color="primary"
+                      sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                    >
+                      Ayuda
+                    </Typography>
+                  </Stack>
+                </Stack>
+              </Paper>
+            </motion.div>
+          </Stack>
+        </Container>
       </Box>
     </Fade>
   );

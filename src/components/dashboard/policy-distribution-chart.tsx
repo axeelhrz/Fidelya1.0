@@ -532,7 +532,8 @@ const PolicyDistributionChart = () => {
       animate="visible"
       ref={chartRef}
       sx={{
-        height: { xs: 'auto', md: 400 }, // Altura fija para desktop, auto para móvil
+        height: 'auto',
+        minHeight: { xs: 'auto', md: 450 },
         borderRadius: 4,
         background: alpha(theme.palette.background.paper, 0.8),
         backdropFilter: 'blur(10px)',
@@ -644,16 +645,16 @@ const PolicyDistributionChart = () => {
       <CardContent 
         sx={{ 
           p: { xs: 2, md: 3 },
-          display: 'flex',
+          height: 'auto',
+            display: 'flex',
           flexDirection: { xs: 'column', md: 'row' },
-          height: { xs: 'auto', md: 'calc(100% - 64px)' },
           gap: { xs: 3, md: 0 }
-        }}
-      >
+          }}
+        >
         <Box 
           sx={{ 
             width: { xs: '100%', md: '50%' }, 
-            height: { xs: 250, md: '100%' },
+            height: { xs: 250, md: 300 },
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -665,8 +666,9 @@ const PolicyDistributionChart = () => {
         <Box 
           sx={{ 
             width: { xs: '100%', md: '50%' },
-            maxHeight: { xs: 'auto', md: '100%' },
-            overflowY: { xs: 'visible', md: 'auto' }
+            maxHeight: { xs: 'auto', md: 300 },
+            overflowY: 'auto',
+            pr: { xs: 0, md: 1 }
           }}
         >
           {renderLegend()}
