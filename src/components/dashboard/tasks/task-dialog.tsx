@@ -45,7 +45,7 @@ type TaskStatus = 'pendiente' | 'en_progreso' | 'completada';
 interface AddTaskModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (task: Task) => void;
+  onSave: (task: Task) => Promise<void>;
   task: Task | null;
   isEditMode: boolean;
 }
@@ -103,6 +103,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     if (open) {
       setIsSaving(false);
       setSaveSuccess(false);
+      setErrors({ title: false, dueDate: false });
     }
   }, [task, open, isEditMode]);
 
@@ -121,25 +122,28 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     if (validateForm()) {
       setIsSaving(true);
       
-      const taskData: Task = {
-        id: task?.id || '',
-        title,
-        description,
-        priority,
-        status,
-        dueDate: Timestamp.fromDate(dueDate),
-        userId: task?.userId || '',
-        createdAt: task?.createdAt || Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      };
-      
       try {
+        const taskData: Task = {
+          id: task?.id || '',
+          title,
+          description,
+          priority,
+          status,
+          dueDate: Timestamp.fromDate(dueDate),
+          userId: task?.userId || '',
+          createdAt: task?.createdAt || Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        };
+        
         await onSave(taskData);
+        
         setSaveSuccess(true);
         
         // Close dialog after showing success animation
         setTimeout(() => {
           onClose();
+          setSaveSuccess(false);
+          setIsSaving(false);
         }, 1000);
       } catch (error) {
         console.error('Error saving task:', error);

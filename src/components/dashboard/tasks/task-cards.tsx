@@ -106,6 +106,7 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
       }, 500);
     }
   }, [onComplete]);
+
   // Función para obtener el color según la prioridad
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
@@ -326,6 +327,10 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                         },
                         transition: 'transform 0.2s ease',
                         '&:hover': {
+                          color: theme.palette.text.primary,
+                          background: isDark
+                            ? 'rgba(255, 255, 255, 0.1)'
+                            : 'rgba(0, 0, 0, 0.05)',
                           transform: 'scale(1.1)',
                         },
                       }}
@@ -378,7 +383,7 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                   color="text.secondary"
                   sx={{
                     mb: 2,
-                    overflow: 'hidden',
+            overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
@@ -394,14 +399,14 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                 alignItems="center"
                 spacing={1}
                 sx={{ mb: 2 }}
-              >
+      >
                 <CalendarTodayIcon
                   fontSize="small"
                   sx={{
                     color: isTaskOverdue(task)
                       ? theme.palette.error.main
                       : theme.palette.text.secondary,
-                  }}
+          }}
                 />
                 <Typography
                   variant="body2"
@@ -411,7 +416,7 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                       : theme.palette.text.secondary,
                     fontWeight: isTaskOverdue(task) ? 600 : 400,
                   }}
-                >
+        >
                   {isTaskOverdue(task)
                     ? `Vencida: ${formatDate(task.dueDate ? ('toDate' in task.dueDate ? task.dueDate.toDate() : task.dueDate) : new Date())}`
                     : formatDate(task.dueDate ? ('toDate' in task.dueDate ? task.dueDate.toDate() : task.dueDate) : new Date())}
@@ -428,7 +433,7 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                     color: getStatusColor(task.status),
                     fontWeight: 600,
                     border: `1px solid ${alpha(getStatusColor(task.status), 0.2)}`,
-                  }}
+          }}
                 />
                 <Chip
                   size="small"
@@ -448,10 +453,10 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                       getPriorityColor(task.priority),
                       0.2
                     )}`,
-                  }}
+          }}
                 />
               </Stack>
-            </Box>
+    </Box>
           </Card>
         ))}
       </AnimatePresence>

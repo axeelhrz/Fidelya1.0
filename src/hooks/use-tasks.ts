@@ -10,8 +10,6 @@ import {
   query,
   onSnapshot,
   orderBy,
-  Timestamp,
-  getDocs,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Task, TaskFilters } from '../types/tasks';
@@ -34,15 +32,19 @@ export const useTasks = () => {
     if (!user?.uid) return;
 
     setLoading(true);
+    
+    // Referencia a la colección de tareas del usuario
     const tasksRef = collection(db, 'users', user.uid, 'tasks');
     const tasksQuery = query(tasksRef, orderBy('createdAt', 'desc'));
     
+    // Suscripción en tiempo real a los cambios en las tareas
     const unsubscribe = onSnapshot(tasksQuery, (snapshot) => {
       const tasksData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Task[];
       
+      // Actualizar el estado con las tareas obtenidas
       setTasks(tasksData);
       setLoading(false);
     }, (err) => {
@@ -51,6 +53,7 @@ export const useTasks = () => {
       setLoading(false);
     });
 
+    // Limpiar la suscripción cuando el componente se desmonte
     return () => unsubscribe();
   }, [user]);
 
@@ -72,7 +75,7 @@ export const useTasks = () => {
         return false;
       }
       
-      // Filtro por fecha (implementación básica)
+      // Filtro por fecha
       if (filters.dateFilter !== 'todas' && task.dueDate) {
         const dueDate = task.dueDate instanceof Date ? task.dueDate : task.dueDate.toDate();
         const today = new Date();
@@ -101,6 +104,7 @@ export const useTasks = () => {
     });
   }, [tasks, filters]);
 
+  // Agregar una nueva tarea
   const addTask = useCallback(
     async (taskData: Omit<Task, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.uid) {
@@ -109,9 +113,6 @@ export const useTasks = () => {
       }
 
       try {
-        setError(null);
-        const tasksRef = collection(db, 'users', user.uid, 'tasks');
-        
         // Preparar datos de la tarea
         const newTaskData = {
           ...taskData,
@@ -120,20 +121,11 @@ export const useTasks = () => {
           updatedAt: serverTimestamp(),
         };
         
-        // Add optimistic UI update
-        const optimisticId = `temp-${Date.now()}`;
-        const optimisticTask: Task = {
-          ...newTaskData,
-          id: optimisticId,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        };
-        
-        // Add to local state immediately for responsive UI
-        setTasks(prevTasks => [optimisticTask, ...prevTasks]);
-        
-        // Add to Firestore
+        // Agregar la tarea a Firestore
+        const tasksRef = collection(db, 'users', user.uid, 'tasks');
         const docRef = await addDoc(tasksRef, newTaskData);
+        
+        console.log('Tarea creada con ID:', docRef.id);
         
         return docRef.id;
       } catch (err) {
@@ -145,6 +137,7 @@ export const useTasks = () => {
     [user]
   );
 
+  // Actualizar una tarea existente
   const updateTask = useCallback(
     async (taskId: string, taskData: Omit<Task, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.uid) {
@@ -153,7 +146,7 @@ export const useTasks = () => {
       }
 
       try {
-        setError(null);
+        // Referencia al documento de la tarea
         const taskRef = doc(db, 'users', user.uid, 'tasks', taskId);
         
         // Verificar si la tarea existe
@@ -163,32 +156,16 @@ export const useTasks = () => {
           return false;
         }
         
-        // Get current task data
-        const currentTask = taskDoc.data() as Task;
-        
         // Preparar datos actualizados
         const updatedData = {
           ...taskData,
           updatedAt: serverTimestamp(),
         };
         
-        // Add optimistic UI update
-        const optimisticTask: Task = {
-          ...currentTask,
-          ...updatedData,
-          id: taskId,
-          updatedAt: Timestamp.now(),
-        };
-        
-        // Update local state immediately for responsive UI
-        setTasks(prevTasks => 
-          prevTasks.map(task => 
-            task.id === taskId ? optimisticTask : task
-          )
-        );
-        
-        // Update in Firestore
+        // Actualizar la tarea en Firestore
         await updateDoc(taskRef, updatedData);
+        
+        console.log('Tarea actualizada con ID:', taskId);
         
         return true;
       } catch (err) {
@@ -200,6 +177,7 @@ export const useTasks = () => {
     [user]
   );
 
+  // Eliminar una tarea
   const deleteTask = useCallback(
     async (taskId: string) => {
       if (!user?.uid) {
@@ -208,7 +186,7 @@ export const useTasks = () => {
       }
 
       try {
-        setError(null);
+        // Referencia al documento de la tarea
         const taskRef = doc(db, 'users', user.uid, 'tasks', taskId);
         
         // Verificar si la tarea existe
@@ -218,35 +196,22 @@ export const useTasks = () => {
           return false;
         }
         
-        // Add optimistic UI update
-        setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-        
-        // Delete from Firestore
+        // Eliminar la tarea de Firestore
         await deleteDoc(taskRef);
+        
+        console.log('Tarea eliminada con ID:', taskId);
         
         return true;
       } catch (err) {
         console.error('Error al eliminar tarea:', err);
         setError('Error al eliminar la tarea');
-        
-        // Revert optimistic update on error
-        if (user?.uid) {
-          const tasksRef = collection(db, 'users', user.uid, 'tasks');
-          const tasksQuery = query(tasksRef, orderBy('createdAt', 'desc'));
-          const snapshot = await getDocs(tasksQuery);
-          const tasksData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) as Task[];
-          setTasks(tasksData);
-        }
-        
         return false;
       }
     },
     [user]
   );
   
+  // Cambiar el estado de una tarea (completar/descompletar)
   const completeTask = useCallback(
     async (taskId: string) => {
       if (!user?.uid) {
@@ -255,7 +220,7 @@ export const useTasks = () => {
       }
 
       try {
-        setError(null);
+        // Referencia al documento de la tarea
         const taskRef = doc(db, 'users', user.uid, 'tasks', taskId);
         
         // Obtener el estado actual de la tarea
@@ -268,46 +233,19 @@ export const useTasks = () => {
         const taskData = taskDoc.data() as Task;
         const newStatus = taskData.status === 'completada' ? 'pendiente' : 'completada';
         
-        // Add optimistic UI update
-        const optimisticTask: Task = {
-          ...taskData,
-          id: taskId,
-          status: newStatus,
-          updatedAt: Timestamp.now(),
-          completedAt: newStatus === 'completada' ? Timestamp.now() : undefined
-        };
-        
-        // Update local state immediately for responsive UI
-        setTasks(prevTasks => 
-          prevTasks.map(task => 
-            task.id === taskId ? optimisticTask : task
-          )
-        );
-        
-        // Update in Firestore
+        // Actualizar el estado de la tarea en Firestore
         await updateDoc(taskRef, {
           status: newStatus,
           updatedAt: serverTimestamp(),
-          completedAt: newStatus === 'completada' ? serverTimestamp() : undefined
+          completedAt: newStatus === 'completada' ? serverTimestamp() : null
         });
+        
+        console.log('Estado de tarea actualizado con ID:', taskId);
         
         return true;
       } catch (err) {
         console.error('Error al cambiar estado de tarea:', err);
         setError('Error al cambiar el estado de la tarea');
-        
-        // Revert optimistic update on error
-        if (user?.uid) {
-          const tasksRef = collection(db, 'users', user.uid, 'tasks');
-          const tasksQuery = query(tasksRef, orderBy('createdAt', 'desc'));
-          const snapshot = await getDocs(tasksQuery);
-          const tasksData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) as Task[];
-          setTasks(tasksData);
-        }
-        
         return false;
       }
     },
@@ -349,6 +287,7 @@ export const useTasks = () => {
     };
   }, [tasks]);
 
+  // Sugerir la próxima tarea a realizar
   const suggestNextTask = useCallback(() => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
@@ -412,9 +351,10 @@ export const useTasks = () => {
     return null;
   }, [tasks]);
 
-  // Export tasks function
-  const exportTasks = useCallback(async () => {
-    // Implementation would go here
+  // Exportar tareas
+  const exportTasks = useCallback(async (format: 'pdf' | 'excel' = 'pdf') => {
+    // Implementación básica, se puede expandir según necesidades
+    console.log(`Exportando tareas en formato ${format}`);
     return true;
   }, []);
 

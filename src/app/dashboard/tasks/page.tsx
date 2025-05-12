@@ -43,8 +43,6 @@ import TaskImportDialog from '../../../components/dashboard/tasks/task-import-di
 import { TaskHeader } from '../../../components/dashboard/tasks/task-header';
 import { useTasks } from '../../../hooks/use-tasks';
 import { Task } from '../../../types/tasks';
-// Define TaskStatus enum since it's not exported from types/tasks
-
 import { useAuth } from '../../../hooks/use-auth';
 import { useSubscription } from '../../../hooks/use-subscription';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -63,7 +61,7 @@ export default function TasksPage() {
     filteredTasks,
     loading,
     filters,
-    setFilters: setTaskFilters,
+    setFilters,
     addTask,
     updateTask,
     deleteTask,
@@ -206,7 +204,11 @@ export default function TasksPage() {
     setOpenViewDialog(true);
   };
 
-
+  const handleEditTask = (task: Task) => {
+    setSelectedTask(task);
+    setIsEditMode(true);
+    setOpenTaskDialog(true);
+  };
 
   const handleDeleteTask = (taskId: string) => {
     const task = filteredTasks.find(t => t.id === taskId);
@@ -218,33 +220,52 @@ export default function TasksPage() {
 
   const handleConfirmDelete = async () => {
     if (selectedTask && selectedTask.id) {
-      const success = await deleteTask(selectedTask.id);
-      if (success) {
-        setSnackbar({
-          open: true,
-          message: 'Tarea eliminada correctamente',
-          severity: 'success',
-        });
-      } else {
+      try {
+        const success = await deleteTask(selectedTask.id);
+        if (success) {
+          setSnackbar({
+            open: true,
+            message: 'Tarea eliminada correctamente',
+            severity: 'success',
+          });
+        } else {
+          setSnackbar({
+            open: true,
+            message: 'Error al eliminar la tarea',
+            severity: 'error',
+          });
+        }
+      } catch (error) {
+        console.error('Error al eliminar tarea:', error);
         setSnackbar({
           open: true,
           message: 'Error al eliminar la tarea',
           severity: 'error',
         });
+      } finally {
+        setOpenDeleteDialog(false);
       }
-      setOpenDeleteDialog(false);
     }
   };
 
   const handleCompleteTask = async (taskId: string) => {
-    const success = await completeTask(taskId);
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: 'Estado de tarea actualizado correctamente',
-        severity: 'success',
-      });
-    } else {
+    try {
+      const success = await completeTask(taskId);
+      if (success) {
+        setSnackbar({
+          open: true,
+          message: 'Estado de tarea actualizado correctamente',
+          severity: 'success',
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: 'Error al actualizar el estado de la tarea',
+          severity: 'error',
+        });
+      }
+    } catch (error) {
+      console.error('Error al completar tarea:', error);
       setSnackbar({
         open: true,
         message: 'Error al actualizar el estado de la tarea',
@@ -254,42 +275,50 @@ export default function TasksPage() {
   };
 
   const handleSaveTask = async (taskData: Task) => {
-    if (isEditMode && taskData.id) {
-      // Actualizar tarea existente
-      const { id, ...updateData } = taskData;
-      const success = await updateTask(id, updateData);
-      if (success) {
-        setSnackbar({
-          open: true,
-          message: 'Tarea actualizada correctamente',
-          severity: 'success',
-        });
+    try {
+      if (isEditMode && taskData.id) {
+        // Actualizar tarea existente
+        const { id, ...updateData } = taskData;
+        const success = await updateTask(id, updateData);
+        if (success) {
+          setSnackbar({
+            open: true,
+            message: 'Tarea actualizada correctamente',
+            severity: 'success',
+          });
+        } else {
+          setSnackbar({
+            open: true,
+            message: 'Error al actualizar la tarea',
+            severity: 'error',
+          });
+        }
       } else {
-        setSnackbar({
-          open: true,
-          message: 'Error al actualizar la tarea',
-          severity: 'error',
-        });
+        // Crear nueva tarea
+        const { ...newTaskData } = taskData;
+        const taskId = await addTask(newTaskData);
+        if (taskId) {
+          setSnackbar({
+            open: true,
+            message: 'Tarea creada correctamente',
+            severity: 'success',
+          });
+        } else {
+          setSnackbar({
+            open: true,
+            message: 'Error al crear la tarea',
+            severity: 'error',
+          });
+        }
       }
-    } else {
-      // Crear nueva tarea
-      const { ...newTaskData } = taskData;
-      const taskId = await addTask(newTaskData);
-      if (taskId) {
-        setSnackbar({
-          open: true,
-          message: 'Tarea creada correctamente',
-          severity: 'success',
-        });
-      } else {
-        setSnackbar({
-          open: true,
-          message: 'Error al crear la tarea',
-          severity: 'error',
-        });
-      }
+    } catch (error) {
+      console.error('Error al guardar tarea:', error);
+      setSnackbar({
+        open: true,
+        message: isEditMode ? 'Error al actualizar la tarea' : 'Error al crear la tarea',
+        severity: 'error',
+      });
     }
-    setOpenTaskDialog(false);
   };
 
   const handleExport = async (format: 'pdf' | 'excel') => {
@@ -302,22 +331,31 @@ export default function TasksPage() {
       return;
     }
 
-    // exportTasks doesn't accept parameters
-    const success = await exportTasks();
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: `Tareas exportadas en formato ${format.toUpperCase()} correctamente`,
-        severity: 'success',
-      });
-    } else {
+    try {
+      const success = await exportTasks(format);
+      if (success) {
+        setSnackbar({
+          open: true,
+          message: `Tareas exportadas en formato ${format.toUpperCase()} correctamente`,
+          severity: 'success',
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: `Error al exportar las tareas en formato ${format.toUpperCase()}`,
+          severity: 'error',
+        });
+      }
+    } catch (error) {
+      console.error('Error al exportar tareas:', error);
       setSnackbar({
         open: true,
         message: `Error al exportar las tareas en formato ${format.toUpperCase()}`,
         severity: 'error',
       });
+    } finally {
+      setOpenExportDialog(false);
     }
-    setOpenExportDialog(false);
   };
 
   const handleImport = async (tasksData: Partial<Task>[]) => {
@@ -627,7 +665,7 @@ export default function TasksPage() {
                 >
                   <TaskFiltersComponent
                     filters={filters}
-                    onFilterChange={(newFilters) => setTaskFilters(prev => ({ ...prev, ...newFilters } as typeof prev))}
+                    onFilterChange={(newFilters) => setFilters(prev => ({ ...prev, ...newFilters } as typeof prev))}
                   />
                 </motion.div>
               )}
@@ -665,14 +703,14 @@ export default function TasksPage() {
                   {view === 'cards' ? (
                     <TaskCards
                       tasks={filteredTasks}
-                      onEdit={handleViewTask} 
+                      onEdit={handleEditTask} 
                       onDelete={handleDeleteTask}
                       onComplete={handleCompleteTask}
                     />
                   ) : (
                     <TaskBoardView
                       tasks={filteredTasks}
-                      onEdit={handleViewTask} 
+                      onEdit={handleEditTask} 
                       onDelete={handleDeleteTask}
                       onComplete={handleCompleteTask}
                     />
