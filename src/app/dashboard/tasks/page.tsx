@@ -44,11 +44,7 @@ import { TaskHeader } from '../../../components/dashboard/tasks/task-header';
 import { useTasks } from '../../../hooks/use-tasks';
 import { Task } from '../../../types/tasks';
 // Define TaskStatus enum since it's not exported from types/tasks
-enum TaskStatus {
-  PENDING = 'pendiente',
-  IN_PROGRESS = 'en_progreso',
-  COMPLETED = 'completada'
-}
+
 import { useAuth } from '../../../hooks/use-auth';
 import { useSubscription } from '../../../hooks/use-subscription';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -67,7 +63,7 @@ export default function TasksPage() {
     filteredTasks,
     loading,
     filters,
-    setFilters,
+    setFilters: setTaskFilters,
     addTask,
     updateTask,
     deleteTask,
@@ -210,11 +206,7 @@ export default function TasksPage() {
     setOpenViewDialog(true);
   };
 
-  const handleEditTask = (task: Task) => {
-    setSelectedTask(task);
-    setIsEditMode(true);
-    setOpenTaskDialog(true);
-  };
+
 
   const handleDeleteTask = (taskId: string) => {
     const task = filteredTasks.find(t => t.id === taskId);
@@ -264,7 +256,7 @@ export default function TasksPage() {
   const handleSaveTask = async (taskData: Task) => {
     if (isEditMode && taskData.id) {
       // Actualizar tarea existente
-      const { id, userId, createdAt, ...updateData } = taskData;
+      const { id, ...updateData } = taskData;
       const success = await updateTask(id, updateData);
       if (success) {
         setSnackbar({
@@ -281,7 +273,7 @@ export default function TasksPage() {
       }
     } else {
       // Crear nueva tarea
-      const { id, userId, createdAt, updatedAt, ...newTaskData } = taskData;
+      const { ...newTaskData } = taskData;
       const taskId = await addTask(newTaskData);
       if (taskId) {
         setSnackbar({
@@ -310,7 +302,8 @@ export default function TasksPage() {
       return;
     }
 
-    const success = await exportTasks(format);
+    // Since exportTasks doesn't accept arguments, we'll call it without parameters
+    const success = await exportTasks();
     if (success) {
       setSnackbar({
         open: true,
@@ -538,7 +531,7 @@ export default function TasksPage() {
                 ))}
               </Stack>
             ) : (
-              <TaskStats stats={stats} />
+              <TaskStats />
             )}
 
             {/* Sugerencia de próxima tarea */}
@@ -634,7 +627,7 @@ export default function TasksPage() {
                 >
                   <TaskFiltersComponent
                     filters={filters}
-                    onFilterChange={setFilters}
+                    onFilterChange={(newFilters) => setTaskFilters(prev => ({ ...prev, ...newFilters } as typeof prev))}
                   />
                 </motion.div>
               )}
