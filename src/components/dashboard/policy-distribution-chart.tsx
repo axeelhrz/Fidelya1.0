@@ -321,78 +321,78 @@ const PolicyDistributionChart = () => {
         spacing={1.5} 
         sx={{ 
           width: '100%', 
-          mt: { xs: 2, md: 0 },
-          pl: { md: 2 },
-          maxHeight: { xs: 'auto', md: '100%' },
-          overflowY: { xs: 'visible', md: 'auto' },
-          pr: { md: 1 }
-        }}
-      >
+          height: '100%',
+            display: 'flex',
+          flexDirection: 'column'
+          }}
+        >
         <Typography variant="subtitle2" fontWeight={600} gutterBottom>
           Distribución por tipo
         </Typography>
         
-        <AnimatePresence>
-          {chartData.map((entry, index) => (
-            <motion.div
-              key={`legend-${entry.id}`}
-              custom={index}
-              initial="hidden"
-              animate="visible"
-              variants={legendItemVariants}
-              whileHover="hover"
-              onMouseEnter={() => setHoveredType(entry.id)}
-              onMouseLeave={() => setHoveredType(null)}
-            >
-              <Stack 
-                direction="row" 
-                alignItems="center" 
-                spacing={1.5}
-                sx={{
-                  p: 1.2,
-                  borderRadius: 2,
-                  transition: 'all 0.2s ease',
-                  bgcolor: hoveredType === entry.id 
-                    ? alpha(entry.color, theme.palette.mode === 'dark' ? 0.15 : 0.1) 
-                    : 'transparent',
-                  '&:hover': {
-                    bgcolor: alpha(entry.color, theme.palette.mode === 'dark' ? 0.15 : 0.1),
-                  }
-                }}
+        <Box sx={{ flex: 1, overflow: 'hidden' }}>
+          <AnimatePresence>
+            {chartData.map((entry, index) => (
+              <motion.div
+                key={`legend-${entry.id}`}
+                custom={index}
+                initial="hidden"
+                animate="visible"
+                variants={legendItemVariants}
+                whileHover="hover"
+                onMouseEnter={() => setHoveredType(entry.id)}
+                onMouseLeave={() => setHoveredType(null)}
               >
-                <Avatar
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    bgcolor: entry.color,
-                    color: '#fff'
-                  }}
-                >
-                  {entry.icon}
-                </Avatar>
-                <Box sx={{ flexGrow: 1 }}>
-                  <Typography variant="body2" fontWeight={600}>
-                    {entry.name}
+                <Stack 
+                  direction="row" 
+                  alignItems="center" 
+                  spacing={1.5}
+          sx={{ 
+                    p: 1.2,
+                    borderRadius: 2,
+                    transition: 'all 0.2s ease',
+                    bgcolor: hoveredType === entry.id 
+                      ? alpha(entry.color, theme.palette.mode === 'dark' ? 0.15 : 0.1) 
+                      : 'transparent',
+                    '&:hover': {
+                      bgcolor: alpha(entry.color, theme.palette.mode === 'dark' ? 0.15 : 0.1),
+                    }
+          }}
+        >
+                  <Avatar
+          sx={{ 
+                      width: 36,
+                      height: 36,
+                      bgcolor: entry.color,
+                      color: '#fff'
+          }}
+        >
+                    {entry.icon}
+                  </Avatar>
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="body2" fontWeight={600}>
+                      {entry.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {entry.count} pólizas
+                    </Typography>
+        </Box>
+                  <Typography 
+                    variant="body2" 
+                    fontWeight={700}
+                    sx={{ 
+                      color: entry.color,
+                      minWidth: 45,
+                      textAlign: 'right'
+                    }}
+                  >
+                    {entry.percentage.toFixed(1)}%
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {entry.count} pólizas
-                  </Typography>
-                </Box>
-                <Typography 
-                  variant="body2" 
-                  fontWeight={700}
-                  sx={{ 
-                    color: entry.color,
-                    minWidth: 45,
-                    textAlign: 'right'
-                  }}
-                >
-                  {entry.percentage.toFixed(1)}%
-                </Typography>
-              </Stack>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+                </Stack>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </Box>
         
         {chartData.length === 0 && !isLoading && (
           <motion.div
@@ -415,8 +415,8 @@ const PolicyDistributionChart = () => {
           </motion.div>
         )}
       </Stack>
-    );
-  };
+  );
+};
 
   // Render chart based on selected type
   const renderChart = () => {
@@ -463,8 +463,8 @@ const PolicyDistributionChart = () => {
               width={100}
               tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
               axisLine={false}
-                />
-          <Tooltip content={<CustomTooltip />} />
+            />
+            <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="percentage" radius={[0, 4, 4, 0]}>
               {chartData.map((entry, index) => (
                 <Cell 
@@ -475,10 +475,10 @@ const PolicyDistributionChart = () => {
               ))}
             </Bar>
           </BarChart>
-      </ResponsiveContainer>
-    );
+        </ResponsiveContainer>
+      );
     }
-  return (
+    return (
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
@@ -491,7 +491,7 @@ const PolicyDistributionChart = () => {
             dataKey="value"
             animationDuration={1000}
             animationBegin={200}
-    >
+          >
             {chartData.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
@@ -499,7 +499,7 @@ const PolicyDistributionChart = () => {
                 stroke={theme.palette.background.paper}
                 strokeWidth={2}
                 opacity={hoveredType === null || hoveredType === entry.id ? 1 : 0.5}
-      />
+              />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
@@ -514,15 +514,15 @@ const PolicyDistributionChart = () => {
                 fontSize: '1.5rem',
                 fontWeight: 700,
                 fontFamily: 'Sora'
-        }}
-      >
+              }}
+            >
               {formatNumber(policies.length)}
             </text>
           )}
         </PieChart>
       </ResponsiveContainer>
-  );
-};
+    );
+  };
 
   return (
     <Card
@@ -532,8 +532,7 @@ const PolicyDistributionChart = () => {
       animate="visible"
       ref={chartRef}
       sx={{
-        height: 'auto',
-        minHeight: { xs: 'auto', md: 450 },
+        height: '100%',
         borderRadius: 4,
         background: alpha(theme.palette.background.paper, 0.8),
         backdropFilter: 'blur(10px)',
@@ -541,7 +540,9 @@ const PolicyDistributionChart = () => {
           ? `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`
           : `0 8px 32px ${alpha('#000', 0.05)}`,
         overflow: 'hidden',
-        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
       <CardHeader
@@ -645,20 +646,21 @@ const PolicyDistributionChart = () => {
       <CardContent 
         sx={{ 
           p: { xs: 2, md: 3 },
-          height: 'auto',
-            display: 'flex',
+          flex: 1,
+          display: 'flex',
           flexDirection: { xs: 'column', md: 'row' },
-          gap: { xs: 3, md: 0 }
-          }}
-        >
+          gap: 2,
+          overflow: 'hidden'
+        }}
+      >
         <Box 
           sx={{ 
             width: { xs: '100%', md: '50%' }, 
-            height: { xs: 250, md: 300 },
+            height: { xs: 220, md: '100%' },
+            minHeight: { xs: 220, md: 280 },
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative'
+            justifyContent: 'center'
           }}
         >
           {renderChart()}
@@ -666,9 +668,8 @@ const PolicyDistributionChart = () => {
         <Box 
           sx={{ 
             width: { xs: '100%', md: '50%' },
-            maxHeight: { xs: 'auto', md: 300 },
-            overflowY: 'auto',
-            pr: { xs: 0, md: 1 }
+            height: { xs: 'auto', md: '100%' },
+            display: 'flex'
           }}
         >
           {renderLegend()}
