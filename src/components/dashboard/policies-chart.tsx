@@ -17,7 +17,8 @@ import {
   ListItemText,
   Skeleton,
   Stack,
-  Divider
+  Divider,
+  Button
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { 
@@ -30,7 +31,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { onSnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { 
@@ -43,6 +44,7 @@ import {
   CalendarViewWeek
 } from '@mui/icons-material';
 import html2canvas from 'html2canvas';
+import { generatePolicyTrends } from '@/lib/generate-policy-trends';
 
 // Types for chart data
 interface ChartData {
@@ -70,16 +72,19 @@ const PoliciesChart = () => {
 
     // Real-time subscription to chart data from Firestore
     const unsubscribe = onSnapshot(
-      collection(db, `users/${user.uid}/dashboard`),
-      (snapshot) => {
-        const trendsDoc = snapshot.docs.find(doc => doc.id === 'trends');
-        
-        if (trendsDoc) {
-          const trendsData = trendsDoc.data();
+      doc(db, `users/${user.uid}/dashboard/trends`),
+      (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const trendsData = docSnapshot.data();
           if (trendsData.monthByMonth) {
             setChartData(trendsData.monthByMonth);
           }
-        }
+        } else {
+          // Si no existen datos de tendencias, generarlos
+          generatePolicyTrends(user.uid).then(() => {
+            console.log('Datos de tendencias generados');
+          });
+      }
         
         setIsLoading(false);
         setRefreshing(false);
@@ -92,35 +97,8 @@ const PoliciesChart = () => {
   // Filter data based on selected time range
   const getFilteredData = () => {
     if (chartData.length === 0) {
-      // Demo data if no real data is available
-      const demoData: ChartData[] = [
-        { name: 'Ene', nuevas: 4, renovadas: 3, canceladas: 1 },
-        { name: 'Feb', nuevas: 3, renovadas: 4, canceladas: 2 },
-        { name: 'Mar', nuevas: 5, renovadas: 3, canceladas: 0 },
-        { name: 'Abr', nuevas: 7, renovadas: 5, canceladas: 1 },
-        { name: 'May', nuevas: 6, renovadas: 4, canceladas: 2 },
-        { name: 'Jun', nuevas: 8, renovadas: 6, canceladas: 1 },
-        { name: 'Jul', nuevas: 9, renovadas: 7, canceladas: 0 },
-        { name: 'Ago', nuevas: 8, renovadas: 8, canceladas: 1 },
-        { name: 'Sep', nuevas: 10, renovadas: 9, canceladas: 2 },
-        { name: 'Oct', nuevas: 12, renovadas: 10, canceladas: 1 },
-        { name: 'Nov', nuevas: 11, renovadas: 11, canceladas: 0 },
-        { name: 'Dic', nuevas: 13, renovadas: 12, canceladas: 1 }
-      ];
-      
-      switch (timeRange) {
-        case 'week':
-          return demoData.slice(-3);
-        case 'month':
-          return demoData.slice(-6);
-        case 'quarter':
-          return demoData.slice(-9);
-        case 'year':
-        default:
-          return demoData;
-      }
+      return [];
     }
-    
     // Filter real data
     switch (timeRange) {
       case 'week':
@@ -154,10 +132,18 @@ const PoliciesChart = () => {
   };
 
   // Handle refresh
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    if (!user?.uid) return;
+    
     setRefreshing(true);
     setIsLoading(true);
-    // The data will be refreshed automatically via the Firestore subscription
+      try {
+      // Generar nuevos datos de tendencias
+      await generatePolicyTrends(user.uid);
+      console.log('Datos de tendencias actualizados');
+      } catch (error) {
+      console.error('Error al actualizar datos de tendencias:', error);
+      }
     handleMenuClose();
   };
 
@@ -216,20 +202,20 @@ const PoliciesChart = () => {
   // Custom tooltip component for the chart
   const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
-      return (
+  return (
         <Box
-          sx={{
+      sx={{
             backgroundColor: alpha(theme.palette.background.paper, 0.9),
             p: 2,
-            borderRadius: 2,
+                  borderRadius: 2,
             boxShadow: `0 4px 20px ${alpha(theme.palette.common.black, 0.1)}`,
             backdropFilter: 'blur(8px)',
             border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
-          }}
-        >
+              }}
+            >
           <Typography variant="subtitle2" fontWeight={600} mb={1}>
             {label}
-          </Typography>
+              </Typography>
           
           {payload.map((entry: TooltipPayloadEntry, index: number) => (
             <Stack 
@@ -259,10 +245,10 @@ const PoliciesChart = () => {
             Total: <strong>{payload.reduce((sum: number, entry: TooltipPayloadEntry) => sum + entry.value, 0)}</strong>
           </Typography>
         </Box>
-      );
+  );
     }
     return null;
-  };
+};
 
   // Animation for the component
   const cardVariants = {
@@ -410,6 +396,22 @@ const PoliciesChart = () => {
               <Typography variant="body2" color="text.secondary">
                 Cargando datos...
               </Typography>
+            </Stack>
+          </Box>
+        ) : data.length === 0 ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+            <Stack spacing={2} alignItems="center">
+              <Typography variant="body2" color="text.secondary">
+                No hay datos disponibles. Intente actualizar.
+              </Typography>
+              <Button 
+                variant="outlined" 
+                size="small" 
+                startIcon={<Refresh />}
+                onClick={handleRefresh}
+              >
+                Actualizar datos
+              </Button>
             </Stack>
           </Box>
         ) : (

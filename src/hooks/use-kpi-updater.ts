@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { generateKpis } from '@/lib/generate-kpis';
+import { generatePolicyTrends } from '@/lib/generate-policy-trends';
 import { useDashboardTaskKpis } from '@/hooks/use-task-dashboard-kpi';
 
 interface UseKpiUpdaterReturn {
@@ -38,12 +39,13 @@ export const useKpiUpdater = (): UseKpiUpdaterReturn => {
       setError(null);
 
       // Update all KPIs in parallel
-      const [generalKpisResult, taskKpisResult] = await Promise.all([
+      const [generalKpisResult, taskKpisResult, policyTrendsResult] = await Promise.all([
         generateKpis(user.uid),
-        updateTaskKpis()
+        updateTaskKpis(),
+        generatePolicyTrends(user.uid)
       ]);
 
-      if (generalKpisResult && taskKpisResult) {
+      if (generalKpisResult && taskKpisResult && policyTrendsResult) {
         setLastUpdateTime(new Date());
         return true;
       }
