@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -17,7 +17,7 @@ import {
   alpha 
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, updateDoc, doc, where, getDocs, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
@@ -32,7 +32,6 @@ import {
   Person, 
   Policy 
 } from '@mui/icons-material';
-import { Timestamp } from 'firebase/firestore';
 // Tipos para las notificaciones
 interface Notification {
   id: string;
@@ -53,8 +52,129 @@ const NotificationsCard = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Función para generar notificaciones reales basadas en datos del usuario
+  const generateRealNotifications = useCallback(async () => {
+    if (!user?.uid) return;
+
+    try {
+      // Verificar si ya existen notificaciones para el usuario
+      const notificationsRef = collection(db, `users/${user.uid}/notifications`);
+      const notificationsSnapshot = await getDocs(notificationsRef);
+      
+      // Si ya hay notificaciones, no generamos nuevas
+      if (!notificationsSnapshot.empty) return;
+
+      // 1. Buscar pólizas próximas a vencer (en los próximos 30 días)
+      const policiesRef = collection(db, 'policies');
+      const today = new Date();
+      const thirtyDaysLater = new Date();
+      thirtyDaysLater.setDate(today.getDate() + 30);
+      
+      const policiesQuery = query(
+        policiesRef,
+        where('userId', '==', user.uid),
+        where('expirationDate', '>=', today),
+        where('expirationDate', '<=', thirtyDaysLater)
+      );
+      
+      const policiesSnapshot = await getDocs(policiesQuery);
+      
+      if (!policiesSnapshot.empty) {
+        const count = policiesSnapshot.size;
+        const firstPolicy = policiesSnapshot.docs[0];
+        
+        await addDoc(notificationsRef, {
+      type: 'warning',
+      title: 'Pólizas por vencer',
+          message: `Tienes ${count} póliza${count > 1 ? 's' : ''} que vence${count > 1 ? 'n' : ''} en menos de 30 días`,
+      relatedTo: {
+        type: 'policy',
+            id: firstPolicy.id
+      },
+          createdAt: serverTimestamp(),
+      read: false
+        });
+      }
+
+      // 2. Buscar clientes inactivos (sin actividad en los últimos 90 días)
+      const clientsRef = collection(db, 'clients');
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(today.getDate() - 90);
+      
+      const clientsQuery = query(
+        clientsRef,
+        where('userId', '==', user.uid),
+        where('lastActivity', '<=', ninetyDaysAgo)
+  );
+      
+      const clientsSnapshot = await getDocs(clientsQuery);
+      
+      if (!clientsSnapshot.empty) {
+        const count = clientsSnapshot.size;
+        const firstClient = clientsSnapshot.docs[0];
+        
+        await addDoc(notificationsRef, {
+          type: 'info',
+          title: 'Clientes inactivos',
+          message: `Tienes ${count} cliente${count > 1 ? 's' : ''} inactivo${count > 1 ? 's' : ''} desde hace más de 90 días`,
+          relatedTo: {
+            type: 'client',
+            id: firstClient.id
+          },
+          createdAt: serverTimestamp(),
+          read: false
+        });
+      }
+
+      // 3. Buscar tareas vencidas
+      const tasksRef = collection(db, 'tasks');
+      
+      const tasksQuery = query(
+        tasksRef,
+        where('userId', '==', user.uid),
+        where('status', '!=', 'completed'),
+        where('dueDate', '<=', today)
+      );
+      
+      const tasksSnapshot = await getDocs(tasksQuery);
+      
+      if (!tasksSnapshot.empty) {
+        const count = tasksSnapshot.size;
+        const firstTask = tasksSnapshot.docs[0];
+        
+        await addDoc(notificationsRef, {
+          type: 'error',
+          title: 'Tareas vencidas',
+          message: `Tienes ${count} tarea${count > 1 ? 's' : ''} vencida${count > 1 ? 's' : ''} sin completar`,
+          relatedTo: {
+            type: 'task',
+            id: firstTask.id
+          },
+          createdAt: serverTimestamp(),
+          read: false
+        });
+      }
+
+      // Si no se encontraron datos para generar notificaciones, crear una notificación de bienvenida
+      if (policiesSnapshot.empty && clientsSnapshot.empty && tasksSnapshot.empty) {
+        await addDoc(notificationsRef, {
+          type: 'info',
+          title: 'Bienvenido a Assuriva',
+          message: 'Comienza a gestionar tus pólizas, clientes y tareas para recibir notificaciones personalizadas.',
+          createdAt: serverTimestamp(),
+          read: false
+        });
+      }
+    } catch (error) {
+    console.error('Error al generar notificaciones reales:', error);
+  }
+}, [user]);
+
   useEffect(() => {
     if (!user?.uid) return;
+
+    // Generar notificaciones reales basadas en datos del usuario
+    generateRealNotifications();
 
     // Suscripción a las notificaciones en tiempo real desde Firestore
     const unsubscribe = onSnapshot(
@@ -75,7 +195,21 @@ const NotificationsCard = () => {
     );
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, generateRealNotifications]);
+
+  // Función para marcar una notificación como leída
+  const markAsRead = async (notificationId: string) => {
+    if (!user?.uid) return;
+    
+    try {
+      const notificationRef = doc(db, `users/${user.uid}/notifications`, notificationId);
+      await updateDoc(notificationRef, {
+        read: true
+      });
+    } catch (error) {
+      console.error('Error al marcar notificación como leída:', error);
+    }
+  };
 
   // Función para formatear la fecha
   const formatDate = (timestamp: Timestamp | Date | number) => {
@@ -276,6 +410,7 @@ const NotificationsCard = () => {
                     py: 2,
                     bgcolor: notification.read ? 'transparent' : alpha(theme.palette.primary.main, 0.05)
                   }}
+                  onClick={() => markAsRead(notification.id)}
                 >
                   <ListItemIcon>
                     {getIconForType(notification.type)}
