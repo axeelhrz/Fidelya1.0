@@ -56,7 +56,8 @@ interface CustomerTableProps {
   onPageChange: (page: number) => void;
 }
 
-const ITEMS_PER_PAGE = 10;
+// Número de elementos por página
+const ITEMS_PER_PAGE = 8;
 
 const CustomerTable: React.FC<CustomerTableProps> = ({
   customers,
@@ -413,27 +414,33 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
         elevation={0}
         sx={{
           borderRadius: 2,
-          overflow: 'hidden',
           background: theme.palette.mode === 'dark' 
             ? alpha(theme.palette.background.paper, 0.8)
             : alpha(theme.palette.background.paper, 0.9),
           backdropFilter: 'blur(8px)',
           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          overflow: 'hidden', // Evita que aparezcan barras de desplazamiento
         }}
       >
-        <TableContainer>
-          <Table>
+        <Box sx={{ width: '100%' }}>
+          <Table sx={{ 
+            tableLayout: 'fixed', // Fija el ancho de las columnas
+            minWidth: '100%',
+              }}>
             <TableHead>
               <TableRow sx={{ 
                 '& th': { 
-                  fontWeight: 600,
-                  fontFamily: "'Sora', sans-serif",
+                          fontWeight: 600,
+                          fontFamily: "'Sora', sans-serif",
                   bgcolor: theme.palette.mode === 'dark' 
                     ? alpha(theme.palette.background.default, 0.5)
                     : alpha(theme.palette.background.default, 0.5),
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
                 } 
-              }}>
-                <TableCell>
+          }}>
+                <TableCell width="22%">
                   <TableSortLabel
                     active={sortConfig.key === 'name'}
                     direction={sortConfig.key === 'name' ? sortConfig.direction : 'asc'}
@@ -442,25 +449,25 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                     Cliente
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>
+                <TableCell width="15%">
                   <TableSortLabel
                     active={sortConfig.key === 'email'}
                     direction={sortConfig.key === 'email' ? sortConfig.direction : 'asc'}
                     onClick={() => onSort('email')}
-                  >
+      >
                     Email
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>
+                <TableCell width="12%">
                   <TableSortLabel
                     active={sortConfig.key === 'phone'}
                     direction={sortConfig.key === 'phone' ? sortConfig.direction : 'asc'}
                     onClick={() => onSort('phone')}
-                  >
+        >
                     Teléfono
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>
+                <TableCell width="10%">
                   <TableSortLabel
                     active={sortConfig.key === 'status'}
                     direction={sortConfig.key === 'status' ? sortConfig.direction : 'asc'}
@@ -469,18 +476,18 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                     Estado
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>Pólizas</TableCell>
-                <TableCell>Etiquetas</TableCell>
-                <TableCell>
+                <TableCell width="12%">Pólizas</TableCell>
+                <TableCell width="12%">Etiquetas</TableCell>
+                <TableCell width="12%">
                   <TableSortLabel
                     active={sortConfig.key === 'createdAt'}
                     direction={sortConfig.key === 'createdAt' ? sortConfig.direction : 'asc'}
                     onClick={() => onSort('createdAt')}
                   >
-                    Fecha de registro
+                    Registro
                   </TableSortLabel>
                 </TableCell>
-                <TableCell align="right">Acciones</TableCell>
+                <TableCell width="5%" align="right">Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -502,7 +509,14 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                     }}
                     onClick={() => onViewCustomer(customer)}
                   >
-                    <TableCell onClick={(e) => e.stopPropagation()}>
+                    <TableCell 
+                      onClick={(e) => e.stopPropagation()}
+                      sx={{ 
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
                       <Stack direction="row" spacing={2} alignItems="center">
                         <Avatar 
                           src={customer.photoURL || undefined}
@@ -513,16 +527,25 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                             bgcolor: !customer.photoURL 
                               ? `${theme.palette.primary.main}` 
                               : undefined,
+                            flexShrink: 0,
                           }}
                         >
                           {!customer.photoURL && (customer.name?.charAt(0) || 'C')}
                         </Avatar>
-                        <Box>
+                        <Box sx={{ 
+                          minWidth: 0, // Permite que el contenido se reduzca
+                          overflow: 'hidden',
+                        }}>
                           <Stack direction="row" spacing={1} alignItems="center">
                             <Typography 
                               variant="body1" 
                               fontWeight={600}
                               fontFamily="'Sora', sans-serif"
+                              sx={{
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
                             >
                               {customer.name || 'Sin nombre'}
                             </Typography>
@@ -532,24 +555,47 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                             variant="body2" 
                             color="text.secondary"
                             fontFamily="'Sora', sans-serif"
+                            sx={{
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
                           >
                             {customer.id.substring(0, 8)}
                           </Typography>
-                        </Box>
+    </Box>
                       </Stack>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ 
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
                       <Typography 
                         variant="body2"
                         fontFamily="'Sora', sans-serif"
+                        sx={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
                       >
                         {customer.email || 'Sin email'}
                       </Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ 
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
                       <Typography 
                         variant="body2"
                         fontFamily="'Sora', sans-serif"
+                        sx={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
                       >
                         {customer.phone || 'Sin teléfono'}
                       </Typography>
@@ -574,10 +620,19 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                     <TableCell>
                       {renderTags(customer.tags)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ 
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
                       <Typography 
                         variant="body2"
                         fontFamily="'Sora', sans-serif"
+                        sx={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
                       >
                         {formatDate(customer.createdAt)}
                       </Typography>
@@ -617,29 +672,47 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                       </Stack>
                     </TableCell>
                   </TableRow>
-                );
+  );
               })}
             </TableBody>
           </Table>
-        </TableContainer>
+        </Box>
         
+        {/* Paginación mejorada */}
         {totalPages > 1 && (
           <Box sx={{ 
             display: 'flex', 
-            justifyContent: 'center', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
             p: 2,
             borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           }}>
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+              fontFamily="'Sora', sans-serif"
+            >
+              Mostrando {startIndex + 1}-{Math.min(endIndex, customers.length)} de {customers.length} clientes
+            </Typography>
+            
             <Pagination
               count={totalPages}
               page={page}
               onChange={handleChangePage}
               color="primary"
               shape="rounded"
+              size="medium"
+              showFirstButton
+              showLastButton
               sx={{
                 '& .MuiPaginationItem-root': {
                   fontFamily: "'Sora', sans-serif",
                   fontWeight: 500,
+                  borderRadius: '8px',
+                },
+                '& .Mui-selected': {
+                  background: alpha(theme.palette.primary.main, 0.1),
+                  fontWeight: 600,
                 }
               }}
             />
