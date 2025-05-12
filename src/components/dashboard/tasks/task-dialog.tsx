@@ -16,6 +16,9 @@ import {
   useTheme,
   alpha,
   Divider,
+  CircularProgress,
+  Fade,
+  Box,
 } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -28,6 +31,8 @@ import {
   CalendarMonth as CalendarMonthIcon,
   Description as DescriptionIcon,
   Title as TitleIcon,
+  Save as SaveIcon,
+  Check as CheckIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { Task } from '../../../types/tasks';
@@ -68,6 +73,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     dueDate: false,
   });
 
+  // Estado de procesamiento
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
   // Efecto para cargar los datos de la tarea en modo edición
   useEffect(() => {
     if (task && open) {
@@ -89,6 +98,12 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       setStatus('pendiente');
       setDueDate(new Date());
     }
+
+    // Reset states when dialog opens
+    if (open) {
+      setIsSaving(false);
+      setSaveSuccess(false);
+    }
   }, [task, open, isEditMode]);
 
   // Función para validar el formulario
@@ -102,8 +117,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   };
 
   // Función para manejar el guardado
-  const handleSave = () => {
+  const handleSave = async () => {
     if (validateForm()) {
+      setIsSaving(true);
+      
       const taskData: Task = {
         id: task?.id || '',
         title,
@@ -115,7 +132,19 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         createdAt: task?.createdAt || Timestamp.now(),
         updatedAt: Timestamp.now(),
       };
-      onSave(taskData);
+      
+      try {
+        await onSave(taskData);
+        setSaveSuccess(true);
+        
+        // Close dialog after showing success animation
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+      } catch (error) {
+        console.error('Error saving task:', error);
+        setIsSaving(false);
+      }
     }
   };
 
@@ -150,7 +179,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={isSaving ? undefined : onClose}
       fullWidth
       maxWidth="sm"
       PaperProps={{
@@ -170,9 +199,60 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
           border: `1px solid ${
             isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
           }`,
+          position: 'relative',
         },
       }}
     >
+      {/* Success overlay */}
+      <Fade in={saveSuccess}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: alpha(theme.palette.background.paper, 0.9),
+            backdropFilter: 'blur(4px)',
+            zIndex: 10,
+            borderRadius: '24px',
+          }}
+        >
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Box
+              sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                background: alpha(theme.palette.success.main, 0.1),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mb: 2,
+              }}
+            >
+              <CheckIcon
+                sx={{
+                  fontSize: 48,
+                  color: theme.palette.success.main,
+                }}
+              />
+            </Box>
+          </motion.div>
+          <Typography variant="h6" fontWeight={600} color="success.main">
+            {isEditMode ? 'Tarea actualizada' : 'Tarea creada'}
+          </Typography>
+        </Box>
+      </Fade>
+
       <DialogTitle
         sx={{
           display: 'flex',
@@ -187,6 +267,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         <IconButton
           onClick={onClose}
           size="small"
+          disabled={isSaving}
           sx={{
             color: theme.palette.text.secondary,
             '&:hover': {
@@ -212,6 +293,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             onChange={(e) => setTitle(e.target.value)}
             error={errors.title}
             helperText={errors.title && 'El título es obligatorio'}
+            disabled={isSaving}
             InputProps={{
               startAdornment: (
                 <TitleIcon
@@ -237,6 +319,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             rows={4}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            disabled={isSaving}
             InputProps={{
               startAdornment: (
                 <DescriptionIcon
@@ -264,6 +347,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   setDueDate(newValue);
                 }
               }}
+              disabled={isSaving}
               slotProps={{
                 textField: {
                   fullWidth: true,
@@ -291,7 +375,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
           </LocalizationProvider>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <FormControl fullWidth>
+            <FormControl fullWidth disabled={isSaving}>
               <InputLabel id="priority-label">Prioridad</InputLabel>
               <Select
                 labelId="priority-label"
@@ -322,7 +406,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               </Select>
             </FormControl>
 
-            <FormControl fullWidth>
+            <FormControl fullWidth disabled={isSaving}>
               <InputLabel id="status-label">Estado</InputLabel>
               <Select
                 labelId="status-label"
@@ -362,6 +446,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         <Button
           onClick={onClose}
           variant="outlined"
+          disabled={isSaving}
           sx={{
             borderRadius: '12px',
             textTransform: 'none',
@@ -385,6 +470,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         <Button
           onClick={handleSave}
           variant="contained"
+          disabled={isSaving}
+          startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
           sx={{
             borderRadius: '12px',
             textTransform: 'none',

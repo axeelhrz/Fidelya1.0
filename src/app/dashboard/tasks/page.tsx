@@ -302,7 +302,7 @@ export default function TasksPage() {
       return;
     }
 
-    // Since exportTasks doesn't accept arguments, we'll call it without parameters
+    // exportTasks doesn't accept parameters
     const success = await exportTasks();
     if (success) {
       setSnackbar({

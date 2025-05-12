@@ -10,6 +10,8 @@ import {
   query,
   onSnapshot,
   orderBy,
+  Timestamp,
+  getDocs,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Task, TaskFilters } from '../types/tasks';
@@ -19,7 +21,7 @@ export const useTasks = () => {
   const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [filters, setFilters] = useState<TaskFilters>({
     status: 'todas',
     priority: 'todas',
@@ -107,7 +109,6 @@ export const useTasks = () => {
       }
 
       try {
-        setLoading(true);
         setError(null);
         const tasksRef = collection(db, 'users', user.uid, 'tasks');
         
@@ -119,18 +120,26 @@ export const useTasks = () => {
           updatedAt: serverTimestamp(),
         };
         
-        const docRef = await addDoc(tasksRef, newTaskData);
+        // Add optimistic UI update
+        const optimisticId = `temp-${Date.now()}`;
+        const optimisticTask: Task = {
+          ...newTaskData,
+          id: optimisticId,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        };
         
-        // We don't need to manually update the state since we're using onSnapshot
-        // which will automatically update when the database changes
+        // Add to local state immediately for responsive UI
+        setTasks(prevTasks => [optimisticTask, ...prevTasks]);
+        
+        // Add to Firestore
+        const docRef = await addDoc(tasksRef, newTaskData);
         
         return docRef.id;
       } catch (err) {
         console.error('Error al agregar tarea:', err);
         setError('Error al agregar la tarea');
         return '';
-      } finally {
-        setLoading(false);
       }
     },
     [user]
@@ -144,7 +153,6 @@ export const useTasks = () => {
       }
 
       try {
-        setLoading(true);
         setError(null);
         const taskRef = doc(db, 'users', user.uid, 'tasks', taskId);
         
@@ -155,27 +163,38 @@ export const useTasks = () => {
           return false;
         }
         
+        // Get current task data
+        const currentTask = taskDoc.data() as Task;
+        
         // Preparar datos actualizados
         const updatedData = {
           ...taskData,
           updatedAt: serverTimestamp(),
         };
         
-        // Verificar datos actuales de la tarea
+        // Add optimistic UI update
+        const optimisticTask: Task = {
+          ...currentTask,
+          ...updatedData,
+          id: taskId,
+          updatedAt: Timestamp.now(),
+        };
         
-        // Update the task in Firestore
+        // Update local state immediately for responsive UI
+        setTasks(prevTasks => 
+          prevTasks.map(task => 
+            task.id === taskId ? optimisticTask : task
+          )
+        );
+        
+        // Update in Firestore
         await updateDoc(taskRef, updatedData);
-        
-        // We don't need to manually update the state since we're using onSnapshot
-        // which will automatically update when the database changes
         
         return true;
       } catch (err) {
         console.error('Error al actualizar tarea:', err);
         setError('Error al actualizar la tarea');
         return false;
-      } finally {
-        setLoading(false);
       }
     },
     [user]
@@ -189,7 +208,6 @@ export const useTasks = () => {
       }
 
       try {
-        setLoading(true);
         setError(null);
         const taskRef = doc(db, 'users', user.uid, 'tasks', taskId);
         
@@ -200,19 +218,30 @@ export const useTasks = () => {
           return false;
         }
         
-        // Delete the task from Firestore
-        await deleteDoc(taskRef);
+        // Add optimistic UI update
+        setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
         
-        // We don't need to manually update the state since we're using onSnapshot
-        // which will automatically update when the database changes
+        // Delete from Firestore
+        await deleteDoc(taskRef);
         
         return true;
       } catch (err) {
         console.error('Error al eliminar tarea:', err);
         setError('Error al eliminar la tarea');
+        
+        // Revert optimistic update on error
+        if (user?.uid) {
+          const tasksRef = collection(db, 'users', user.uid, 'tasks');
+          const tasksQuery = query(tasksRef, orderBy('createdAt', 'desc'));
+          const snapshot = await getDocs(tasksQuery);
+          const tasksData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Task[];
+          setTasks(tasksData);
+        }
+        
         return false;
-      } finally {
-        setLoading(false);
       }
     },
     [user]
@@ -226,7 +255,6 @@ export const useTasks = () => {
       }
 
       try {
-        setLoading(true);
         setError(null);
         const taskRef = doc(db, 'users', user.uid, 'tasks', taskId);
         
@@ -240,23 +268,47 @@ export const useTasks = () => {
         const taskData = taskDoc.data() as Task;
         const newStatus = taskData.status === 'completada' ? 'pendiente' : 'completada';
         
-        // Update the task status in Firestore
+        // Add optimistic UI update
+        const optimisticTask: Task = {
+          ...taskData,
+          id: taskId,
+          status: newStatus,
+          updatedAt: Timestamp.now(),
+          completedAt: newStatus === 'completada' ? Timestamp.now() : undefined
+        };
+        
+        // Update local state immediately for responsive UI
+        setTasks(prevTasks => 
+          prevTasks.map(task => 
+            task.id === taskId ? optimisticTask : task
+          )
+        );
+        
+        // Update in Firestore
         await updateDoc(taskRef, {
           status: newStatus,
           updatedAt: serverTimestamp(),
-          completedAt: newStatus === 'completada' ? serverTimestamp() : null
+          completedAt: newStatus === 'completada' ? serverTimestamp() : undefined
         });
-        
-        // We don't need to manually update the state since we're using onSnapshot
-        // which will automatically update when the database changes
         
         return true;
       } catch (err) {
         console.error('Error al cambiar estado de tarea:', err);
         setError('Error al cambiar el estado de la tarea');
+        
+        // Revert optimistic update on error
+        if (user?.uid) {
+          const tasksRef = collection(db, 'users', user.uid, 'tasks');
+          const tasksQuery = query(tasksRef, orderBy('createdAt', 'desc'));
+          const snapshot = await getDocs(tasksQuery);
+          const tasksData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Task[];
+          setTasks(tasksData);
+        }
+        
         return false;
-      } finally {
-        setLoading(false);
       }
     },
     [user]

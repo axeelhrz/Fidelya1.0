@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -14,6 +14,8 @@ import {
   useTheme,
   alpha,
   Divider,
+  CircularProgress,
+  Tooltip,
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
@@ -23,6 +25,7 @@ import {
   CheckCircle as CheckCircleIcon,
   CalendarToday as CalendarTodayIcon,
   Visibility as VisibilityIcon,
+  Done as DoneIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, isBefore, isToday } from 'date-fns';
@@ -36,7 +39,6 @@ type TaskStatus = 'pendiente' | 'en_progreso' | 'completada';
 interface TaskCardsProps {
   tasks: Task[];
   onEdit: (task: Task) => void;
-
   onDelete: (taskId: string) => void;
   onComplete: (taskId: string) => void;
 }
@@ -54,6 +56,10 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
+  // Estado para acciones en progreso
+  const [processingTaskId, setProcessingTaskId] = useState<string | null>(null);
+  const [actionType, setActionType] = useState<'complete' | 'delete' | null>(null);
+
   const handleOpenMenu = (event: React.MouseEvent<HTMLElement>, taskId: string) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
@@ -70,16 +76,36 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
     onEdit(task);
   };
 
-  const handleDelete = (taskId: string) => {
+  const handleDelete = useCallback(async (taskId: string) => {
     handleCloseMenu();
-    onDelete(taskId);
-  };
-
-  const handleComplete = (event: React.MouseEvent<HTMLElement>, taskId: string) => {
+    setProcessingTaskId(taskId);
+    setActionType('delete');
+    
+    try {
+      await onDelete(taskId);
+    } finally {
+      // Reset processing state after a short delay to show the animation
+      setTimeout(() => {
+        setProcessingTaskId(null);
+        setActionType(null);
+      }, 500);
+    }
+  }, [onDelete]);
+  const handleComplete = useCallback(async (event: React.MouseEvent<HTMLElement> | React.ChangeEvent<HTMLInputElement>, taskId: string) => {
     event.stopPropagation();
-    onComplete(taskId);
-  };
-
+    setProcessingTaskId(taskId);
+    setActionType('complete');
+    
+    try {
+      await onComplete(taskId);
+    } finally {
+      // Reset processing state after a short delay to show the animation
+      setTimeout(() => {
+        setProcessingTaskId(null);
+        setActionType(null);
+      }, 500);
+    }
+  }, [onComplete]);
   // Función para obtener el color según la prioridad
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
@@ -174,29 +200,44 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
         gap: 3,
       }}
     >
-      <AnimatePresence>
+      <AnimatePresence mode="popLayout">
         {tasks.map((task) => (
           <Card
             key={task.id}
             component={motion.div}
             layout
             initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              x: 0,
+              filter: processingTaskId === task.id && actionType === 'delete' 
+                ? 'blur(4px)' 
+                : 'blur(0px)'
+            }}
+            exit={{ 
+              opacity: 0, 
+              scale: 0.9, 
+              x: actionType === 'delete' ? -100 : 0,
+              transition: { duration: 0.2 }
+            }}
             whileHover={{ y: -5 }}
-            transition={{ duration: 0.3 }}
+            transition={{ 
+              duration: 0.3,
+              layout: { duration: 0.3 }
+            }}
             onClick={() => onEdit(task)}
-            sx={{
+                    sx={{
               borderRadius: '24px',
               p: 0,
-              overflow: 'hidden',
-              background: isDark
+                      overflow: 'hidden',
+                      background: isDark
                 ? alpha(theme.palette.background.paper, 0.6)
                 : alpha(theme.palette.background.paper, 0.8),
-              backdropFilter: 'blur(10px)',
-              border: `1px solid ${
-                isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
-              }`,
+            backdropFilter: 'blur(10px)',
+            border: `1px solid ${
+              isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
+            }`,
               boxShadow: isTaskOverdue(task)
                 ? `0 4px 20px ${alpha(theme.palette.error.main, 0.2)}`
                 : `0 4px 20px ${alpha(
@@ -218,8 +259,48 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                       isDark ? 0.15 : 0.1
                     )}`,
               },
-            }}
-          >
+              position: 'relative',
+              opacity: processingTaskId === task.id ? 0.7 : 1,
+          }}
+        >
+            {/* Processing overlay */}
+            {processingTaskId === task.id && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: alpha(theme.palette.background.paper, 0.5),
+                  backdropFilter: 'blur(4px)',
+                  zIndex: 10,
+                  borderRadius: '24px',
+          }}
+        >
+                {actionType === 'complete' && task.status !== 'completada' ? (
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 1.5, opacity: 0 }}
+        >
+                    <DoneIcon 
+                      sx={{ 
+                        fontSize: 48, 
+                        color: theme.palette.success.main,
+                        filter: `drop-shadow(0 0 8px ${alpha(theme.palette.success.main, 0.5)})`
+                      }} 
+                    />
+                  </motion.div>
+                ) : (
+                  <CircularProgress size={40} color={actionType === 'delete' ? 'error' : 'primary'} />
+                )}
+    </Box>
+            )}
+
             <Box sx={{ p: 3 }}>
               <Stack
                 direction="row"
@@ -229,21 +310,27 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                 sx={{ mb: 2 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Checkbox
-                    checked={task.status === 'completada'}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      if (task.id) onComplete(task.id);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    color="primary"
-                    sx={{
-                      ml: -1,
-                      '& .MuiSvgIcon-root': {
-                        fontSize: 24,
-                      },
-                    }}
-                  />
+                  <Tooltip title={task.status === 'completada' ? 'Marcar como pendiente' : 'Marcar como completada'}>
+                    <Checkbox
+                      checked={task.status === 'completada'}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        if (task.id) handleComplete(e, task.id);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      color="primary"
+                      sx={{
+                        ml: -1,
+                        '& .MuiSvgIcon-root': {
+                          fontSize: 24,
+                        },
+                        transition: 'transform 0.2s ease',
+                        '&:hover': {
+                          transform: 'scale(1.1)',
+                        },
+                      }}
+                    />
+                  </Tooltip>
                   <Typography
                     variant="h6"
                     sx={{
@@ -264,21 +351,25 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                     {task.title}
                   </Typography>
                 </Box>
-                <IconButton
-                  size="small"
-                  onClick={(e) => task.id && handleOpenMenu(e, task.id)}
-                  sx={{
-                    color: theme.palette.text.secondary,
-                    '&:hover': {
-                      color: theme.palette.text.primary,
-                      background: isDark
-                        ? 'rgba(255, 255, 255, 0.1)'
-                        : 'rgba(0, 0, 0, 0.05)',
-                    },
-                  }}
-                >
-                  <MoreVertIcon fontSize="small" />
-                </IconButton>
+                <Tooltip title="Opciones">
+                  <IconButton
+                    size="small"
+                    onClick={(e) => task.id && handleOpenMenu(e, task.id)}
+                    sx={{
+                      color: theme.palette.text.secondary,
+                      transition: 'transform 0.2s ease',
+                      '&:hover': {
+                        color: theme.palette.text.primary,
+                        background: isDark
+                          ? 'rgba(255, 255, 255, 0.1)'
+                          : 'rgba(0, 0, 0, 0.05)',
+                        transform: 'scale(1.1)',
+                      },
+                    }}
+                  >
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Stack>
 
               {task.description && (
