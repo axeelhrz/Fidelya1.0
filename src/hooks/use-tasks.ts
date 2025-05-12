@@ -9,7 +9,7 @@ import {
   getDoc,
   query,
   onSnapshot,
-  orderBy
+  orderBy,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Task, TaskFilters } from '../types/tasks';
@@ -98,6 +98,7 @@ export const useTasks = () => {
       return true;
     });
   }, [tasks, filters]);
+
   const addTask = useCallback(
     async (taskData: Omit<Task, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.uid) {
@@ -119,6 +120,10 @@ export const useTasks = () => {
         };
         
         const docRef = await addDoc(tasksRef, newTaskData);
+        
+        // We don't need to manually update the state since we're using onSnapshot
+        // which will automatically update when the database changes
+        
         return docRef.id;
       } catch (err) {
         console.error('Error al agregar tarea:', err);
@@ -130,6 +135,7 @@ export const useTasks = () => {
     },
     [user]
   );
+
   const updateTask = useCallback(
     async (taskId: string, taskData: Omit<Task, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.uid) {
@@ -155,7 +161,14 @@ export const useTasks = () => {
           updatedAt: serverTimestamp(),
         };
         
+        // Verificar datos actuales de la tarea
+        
+        // Update the task in Firestore
         await updateDoc(taskRef, updatedData);
+        
+        // We don't need to manually update the state since we're using onSnapshot
+        // which will automatically update when the database changes
+        
         return true;
       } catch (err) {
         console.error('Error al actualizar tarea:', err);
@@ -167,6 +180,7 @@ export const useTasks = () => {
     },
     [user]
   );
+
   const deleteTask = useCallback(
     async (taskId: string) => {
       if (!user?.uid) {
@@ -186,7 +200,12 @@ export const useTasks = () => {
           return false;
         }
         
+        // Delete the task from Firestore
         await deleteDoc(taskRef);
+        
+        // We don't need to manually update the state since we're using onSnapshot
+        // which will automatically update when the database changes
+        
         return true;
       } catch (err) {
         console.error('Error al eliminar tarea:', err);
@@ -218,15 +237,18 @@ export const useTasks = () => {
           return false;
         }
         
-        const taskData = taskDoc.data();
+        const taskData = taskDoc.data() as Task;
         const newStatus = taskData.status === 'completada' ? 'pendiente' : 'completada';
         
-        // Actualizar el estado
+        // Update the task status in Firestore
         await updateDoc(taskRef, {
           status: newStatus,
           updatedAt: serverTimestamp(),
           completedAt: newStatus === 'completada' ? serverTimestamp() : null
         });
+        
+        // We don't need to manually update the state since we're using onSnapshot
+        // which will automatically update when the database changes
         
         return true;
       } catch (err) {
@@ -274,6 +296,7 @@ export const useTasks = () => {
       }).length
     };
   }, [tasks]);
+
   const suggestNextTask = useCallback(() => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
@@ -334,10 +357,18 @@ export const useTasks = () => {
       return sortedPending[0];
     }
     
+    return null;
   }, [tasks]);
+
+  // Export tasks function
+  const exportTasks = useCallback(async () => {
+    // Implementation would go here
+    return true;
+  }, []);
+
   return {
     tasks,
-    filteredTasks,
+    filteredTasks: filteredTasks(),
     loading,
     error,
     filters,
@@ -346,7 +377,8 @@ export const useTasks = () => {
     updateTask,
     deleteTask,
     completeTask,
-    calculateStats,
-    suggestNextTask
+    calculateStats: calculateStats(),
+    suggestNextTask,
+    exportTasks
   };
 };

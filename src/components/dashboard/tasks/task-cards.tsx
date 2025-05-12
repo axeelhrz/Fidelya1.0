@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Card,
@@ -36,6 +36,7 @@ type TaskStatus = 'pendiente' | 'en_progreso' | 'completada';
 interface TaskCardsProps {
   tasks: Task[];
   onEdit: (task: Task) => void;
+
   onDelete: (taskId: string) => void;
   onComplete: (taskId: string) => void;
 }
@@ -50,8 +51,14 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
   const isDark = theme.palette.mode === 'dark';
 
   // Estado para el menú de opciones
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>, taskId: string) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+    setSelectedTaskId(taskId);
+  };
 
   const handleCloseMenu = () => {
     setAnchorEl(null);
@@ -68,7 +75,7 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
     onDelete(taskId);
   };
 
-  const handleComplete = (event: React.ChangeEvent<HTMLInputElement>, taskId: string) => {
+  const handleComplete = (event: React.MouseEvent<HTMLElement>, taskId: string) => {
     event.stopPropagation();
     onComplete(taskId);
   };
@@ -225,9 +232,10 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                   <Checkbox
                     checked={task.status === 'completada'}
                     onChange={(e) => {
-                      if (task.id) handleComplete(e, task.id);
+                      e.stopPropagation();
+                      if (task.id) onComplete(task.id);
                     }}
-                                        onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
                     color="primary"
                     sx={{
                       ml: -1,
@@ -258,7 +266,7 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                 </Box>
                 <IconButton
                   size="small"
-                  onClick={() => task.id && handleDelete(task.id)}
+                  onClick={(e) => task.id && handleOpenMenu(e, task.id)}
                   sx={{
                     color: theme.palette.text.secondary,
                     '&:hover': {
@@ -325,8 +333,7 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                   label={getStatusText(task.status)}
                   sx={{
                     borderRadius: '8px',
-                    background: alpha(getStatusColor(
-                    task.status), 0.1),
+                    background: alpha(getStatusColor(task.status), 0.1),
                     color: getStatusColor(task.status),
                     fontWeight: 600,
                     border: `1px solid ${alpha(getStatusColor(task.status), 0.2)}`,
@@ -410,11 +417,11 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
           <ListItemText>Editar</ListItemText>
         </MenuItem>
         <MenuItem
-          onClick={() => {
+          onClick={(e) => {
             if (selectedTaskId) {
               const task = tasks.find((t) => t.id === selectedTaskId);
               if (task && task.status !== 'completada') {
-                onComplete(selectedTaskId);
+                handleComplete(e, selectedTaskId);
                 handleCloseMenu();
               }
             }

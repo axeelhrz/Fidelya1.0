@@ -27,6 +27,7 @@ import {
   Search as SearchIcon,
   ArrowUpward as ArrowUpwardIcon,
   LightbulbOutlined as LightbulbOutlinedIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { TaskStats } from '../../../components/dashboard/tasks/task-stats';
 import { TaskFiltersComponent } from '../../../components/dashboard/tasks/task-filters';
@@ -60,85 +61,22 @@ export default function TasksPage() {
   const { user } = useAuth();
   const { subscription } = useSubscription();
 
-  // Define the expected return type of useTasks
-  interface TaskFilters {
-    status: string;
-    priority: string;
-    dateFilter: string;
-    searchQuery: string;
-  }
+  // Get task data from the hook
+  const {
+    tasks,
+    filteredTasks,
+    loading,
+    filters,
+    setFilters,
+    addTask,
+    updateTask,
+    deleteTask,
+    completeTask,
+    calculateStats: stats,
+    suggestNextTask,
+    exportTasks,
+  } = useTasks();
   
-  interface TasksData {
-      tasks: Task[];
-      filters: TaskFilters;
-      setFilters: (filters: TaskFilters) => void;
-    addTask: (task: Omit<Task, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => Promise<string>;
-    updateTask: (id: string, task: Omit<Task, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => Promise<boolean>;
-    deleteTask: (id: string) => Promise<boolean>;
-    completeTask: (id: string) => Promise<boolean>;
-    suggestNextTask: () => Task | null;
-    exportTasks: (format: 'pdf' | 'excel') => Promise<boolean>;
-  }
-
-  // Get task data from the hook and merge with default values for type safety
-  const tasksFromHook = useTasks() as unknown as Partial<TasksData>;
-  const tasksData: TasksData = {
-      tasks: [],
-      filters: { 
-        status: 'todas', 
-        priority: 'todas', 
-        dateFilter: 'todas',
-        searchQuery: '' 
-      },
-      setFilters: () => {},
-      addTask: async () => '',
-      updateTask: async () => false,
-      deleteTask: async () => false,
-      completeTask: async () => false,
-      suggestNextTask: () => null,
-      exportTasks: async () => false,
-      ...tasksFromHook
-    };
-  
-    // Use this flag for initial loading state, could be connected to useTasks() in the future
-    const loading = false;
-    
-    // Define stats with default values
-    const stats = { 
-      total: 0, 
-      pending: 0, 
-      inProgress: 0, 
-      completed: 0,
-      urgent: 0,
-      dueToday: 0,
-      dueThisWeek: 0,
-      overdue: 0
-    };
-    
-    // Destructure only the properties that exist in the tasksData object
-    const {
-      filters = { 
-        status: 'todas', 
-        priority: 'todas', 
-        dateFilter: 'todas',
-        searchQuery: '' 
-      },
-      setFilters = () => {},
-      addTask = async () => '',
-      updateTask = async () => false,
-      deleteTask = async () => false,
-      completeTask = async () => false,
-      suggestNextTask = () => null,
-      exportTasks = async () => false,
-      tasks = [],
-    } = tasksData;
-    
-    // Alias addTask to createTask for compatibility with the rest of the code
-    const createTask = addTask;
-      
-      // Using the tasks directly as the filtered list
-      const filteredTasks = tasks;
-
   // Estados para diálogos
   const [openTaskDialog, setOpenTaskDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -272,6 +210,11 @@ export default function TasksPage() {
     setOpenViewDialog(true);
   };
 
+  const handleEditTask = (task: Task) => {
+    setSelectedTask(task);
+    setIsEditMode(true);
+    setOpenTaskDialog(true);
+  };
 
   const handleDeleteTask = (taskId: string) => {
     const task = filteredTasks.find(t => t.id === taskId);
@@ -306,22 +249,23 @@ export default function TasksPage() {
     if (success) {
       setSnackbar({
         open: true,
-        message: 'Tarea completada correctamente',
+        message: 'Estado de tarea actualizado correctamente',
         severity: 'success',
       });
     } else {
       setSnackbar({
         open: true,
-        message: 'Error al completar la tarea',
+        message: 'Error al actualizar el estado de la tarea',
         severity: 'error',
       });
     }
   };
 
-  const handleSaveTask = async (taskData: Omit<Task, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
-    if (isEditMode && selectedTask && selectedTask.id) {
+  const handleSaveTask = async (taskData: Task) => {
+    if (isEditMode && taskData.id) {
       // Actualizar tarea existente
-      const success = await updateTask(selectedTask.id, taskData);
+      const { id, userId, createdAt, ...updateData } = taskData;
+      const success = await updateTask(id, updateData);
       if (success) {
         setSnackbar({
           open: true,
@@ -337,7 +281,8 @@ export default function TasksPage() {
       }
     } else {
       // Crear nueva tarea
-      const taskId = await createTask(taskData);
+      const { id, userId, createdAt, updatedAt, ...newTaskData } = taskData;
+      const taskId = await addTask(newTaskData);
       if (taskId) {
         setSnackbar({
           open: true,
@@ -353,21 +298,6 @@ export default function TasksPage() {
       }
     }
     setOpenTaskDialog(false);
-  };
-  
-  // Wrapper function to make types compatible with the AddTaskModal component
-  const handleSaveTaskWrapper = (data: Task) => {
-    // Extract only the properties we need to pass to handleSaveTask
-    // Destructure and discard properties we don't need
-    const { ...taskData } = data;
-    
-    // Ensure that status is one of the expected values
-    const typedTaskData = {
-      ...taskData,
-      status: taskData.status as TaskStatus
-    };
-    
-    handleSaveTask(typedTaskData);
   };
 
   const handleExport = async (format: 'pdf' | 'excel') => {
@@ -394,6 +324,7 @@ export default function TasksPage() {
         severity: 'error',
       });
     }
+    setOpenExportDialog(false);
   };
 
   const handleImport = async (tasksData: Partial<Task>[]) => {
@@ -414,6 +345,7 @@ export default function TasksPage() {
         message: `${tasksData.length} tareas importadas correctamente`,
         severity: 'success',
       });
+      setOpenImportDialog(false);
     }, 1000);
     
     return true;
@@ -606,7 +538,7 @@ export default function TasksPage() {
                 ))}
               </Stack>
             ) : (
-              <TaskStats />
+              <TaskStats stats={stats} />
             )}
 
             {/* Sugerencia de próxima tarea */}
@@ -903,7 +835,7 @@ export default function TasksPage() {
       <AddTaskModal
         open={openTaskDialog}
         onClose={() => setOpenTaskDialog(false)}
-        onSave={handleSaveTaskWrapper}
+        onSave={handleSaveTask}
         task={selectedTask}
         isEditMode={isEditMode}
       />
@@ -976,6 +908,3 @@ export default function TasksPage() {
     </Box>
   );
 }
-
-// Importación del ícono de cierre que faltaba
-import CloseIcon from '@mui/icons-material/Close';
