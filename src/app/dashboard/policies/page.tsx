@@ -1,839 +1,589 @@
 'use client';
-import React, { useState } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
-  Snackbar,
-  Alert,
-  alpha,
-  useTheme,
-  Typography,
-  CircularProgress,
-  Paper,
-  ToggleButtonGroup,
-  ToggleButton,
-  Tooltip,
+  Container,
 } from '@mui/material';
-import {
-  ViewList as ViewListIcon,
-  ViewModule as ViewModuleIcon,
-} from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
-import { usePolicies } from '@/hooks/use-policies';
-import { useSubscription } from '@/hooks/use-subscription';
-import { Policy, PolicyReminder } from '@/types/policy';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
-import { Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Customer, CustomerTag } from '@/types/customer';
+import CustomerHeader from '@/components/dashboard/customer/customer-header';
+import { CustomerStats } from '@/components/dashboard/customer/customer-stats';
+import CustomerFiltersComponent from '@/components/dashboard/customer/customers-filters';
+import CustomerTable from '@/components/dashboard/customer/customers-table';
+import CustomerGrid from '@/components/dashboard/customer/customer-grid';
+import CustomerDialog from '@/components/dashboard/customer/customer-dialog';
+import CustomerViewDialog from '@/components/dashboard/customer/customerViewDialog';
+import CustomerImportDialog from '@/components/dashboard/customer/customer-import-dialog';
+import CustomerExportDialog from '@/components/dashboard/customer/customer-export-dialog';
+import CustomerDeleteDialog from '@/components/dashboard/customer/delete-confirm-dialog';
+import { useDashboardCustomerKpis } from '@/hooks/use-customer-dashboard-kpis';
 
+interface CustomerFilters {
+  search: string;
+  status?: ('active' | 'inactive' | 'lead')[];
+  type?: ('individual' | 'business' | 'family')[];
+  gender?: ('male' | 'female' | 'other')[];
+  civilStatus?: ('single' | 'married' | 'divorced' | 'widowed')[];
+  riskLevel?: ('low' | 'medium' | 'high')[];
+  dateRange?: { start: Date; end: Date };
+  hasPolicy?: boolean;
+  policyStatus?: ('active' | 'expired' | 'pending' | 'review' | 'cancelled')[];
+  policyType?: string[];
+  tags?: string[];
+}
 
-// Componentes
-import PolicyHeader from '@/components/dashboard/policies/policy-header';
-import PolicyStats from '@/components/dashboard/policies/policy-stats';
-import PolicyTabs from '@/components/dashboard/policies/policy-tabs';
-import PolicyTable from '@/components/dashboard/policies/policy-table';
-import PolicyGrid from '@/components/dashboard/policies/policy-grid';
-
-// Diálogos
-import PolicyFormDialog from '@/components/dashboard/policies/policy-form-dialog';
-import PolicyViewDialog from '@/components/dashboard/policies/policy-view-dialog';
-import PolicyDeleteDialog from '@/components/dashboard/policies/policy-delete-dialog';
-import PolicyImportDialog from '@/components/dashboard/policies/policy-import-dialog';
-import PolicyExportDialog from '@/components/dashboard/policies/policy-export-dialog';
-import PolicyAnalyticsDialog from '@/components/dashboard/policies/policy-analytics-dialog';
-
-export default function PoliciesPage() {
-  const theme = useTheme();
-  const { user, loading: authLoading } = useAuth();
-  const { subscription } = useSubscription();
-  const planType = typeof subscription?.plan === 'object' && subscription?.plan !== null 
-    ? 'type' in subscription.plan ? (subscription.plan as { type: string }).type : undefined 
-    : subscription?.plan;
-
-  // Estados
-  const [currentTab, setCurrentTab] = useState(0);
-  const [page, setPage] = useState(1);
+const CustomersPage = () => {
+  const { user } = useAuth();
+  const { kpis, loading: kpisLoading, isRefreshing: kpisRefreshing, updateCustomerKpis } = useDashboardCustomerKpis();
+  
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
-  const [openDialog, setOpenDialog] = useState(false);
+  const [page, setPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
+    key: 'name',
+    direction: 'asc'
+  });
+  
+  const [filters, setFilters] = useState<CustomerFilters>({
+    search: '',
+  });
+  
+  const [openCustomerDialog, setOpenCustomerDialog] = useState(false);
   const [openViewDialog, setOpenViewDialog] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openImportDialog, setOpenImportDialog] = useState(false);
   const [openExportDialog, setOpenExportDialog] = useState(false);
-  const [openAnalyticsDialog, setOpenAnalyticsDialog] = useState(false);
-  const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [snackbar, setSnackbar] = useState({ 
-    open: false, 
-    message: '', 
-    severity: 'success' as 'success' | 'error' | 'info' | 'warning' 
-  });
-
-  const handleImportPolicies = async (policiesToImport: Partial<Policy>[]): Promise<number> => {
-    let successCount = 0;
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>(undefined);
+  const [availableTags, setAvailableTags] = useState<CustomerTag[]>([]);
+  const [newCustomerJustAdded, setNewCustomerJustAdded] = useState(false);
+  
+  // Fetch customers with optimized approach
+  const fetchCustomers = useCallback(async () => {
+    if (!user?.uid) return;
     
-    for (const policyData of policiesToImport) {
-      try {
-        const success = await savePolicy(policyData, false);
-        if (success) {
-          successCount++;
-        }
-      } catch (error) {
-        console.error("Error importing policy:", error);
+    try {
+      setLoading(true);
+      
+      const customersRef = collection(db, 'customers');
+      const customersQuery = query(customersRef, where('userId', '==', user.uid));
+      const customersSnapshot = await getDocs(customersQuery);
+      
+      const customersData: Customer[] = [];
+      customersSnapshot.forEach(doc => {
+        customersData.push({ id: doc.id, ...doc.data() } as Customer);
+      });
+      
+      setCustomers(customersData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      setLoading(false);
+    }
+  }, [user]);
+  
+  // Fetch available tags
+  const fetchTags = useCallback(async () => {
+    if (!user?.uid) return;
+    
+    try {
+      const tagsRef = doc(db, `users/${user.uid}/settings/customerTags`);
+      const tagsDoc = await getDoc(tagsRef);
+      
+      if (tagsDoc.exists()) {
+        const tagsData = tagsDoc.data();
+        setAvailableTags(tagsData.tags || []);
+      } else {
+        setAvailableTags([]);
+      }
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    }
+  }, [user]);
+  
+  // Initial data fetch
+  useEffect(() => {
+    fetchCustomers();
+    fetchTags();
+  }, [fetchCustomers, fetchTags]);
+  
+  // Apply filters and sorting with memoization
+  useEffect(() => {
+    let result = [...customers];
+    
+    // Apply search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter(customer => 
+        customer.name?.toLowerCase().includes(searchLower) ||
+        customer.email?.toLowerCase().includes(searchLower) ||
+        customer.phone?.toLowerCase().includes(searchLower) ||
+        customer.company?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Apply status filter
+    if (filters.status && filters.status.length > 0) {
+      result = result.filter(customer => 
+        customer.status && filters.status?.includes(customer.status)
+      );
+    }
+    
+    // Apply type filter
+    if (filters.type && filters.type.length > 0) {
+      result = result.filter(customer => 
+        customer.type && filters.type?.includes(customer.type)
+      );
+    }
+    
+    // Apply gender filter
+    if (filters.gender && filters.gender.length > 0) {
+      result = result.filter(customer => 
+        customer.gender && filters.gender?.includes(customer.gender)
+      );
+    }
+    
+    // Apply civil status filter
+    if (filters.civilStatus && filters.civilStatus.length > 0) {
+      result = result.filter(customer => 
+        customer.civilStatus && filters.civilStatus?.includes(customer.civilStatus)
+      );
+    }
+    
+    // Apply risk level filter
+    if (filters.riskLevel && filters.riskLevel.length > 0) {
+      result = result.filter(customer => 
+        customer.riskLevel && filters.riskLevel?.includes(customer.riskLevel)
+      );
+    }
+    
+    // Apply date range filter
+    if (filters.dateRange) {
+      const { start, end } = filters.dateRange;
+      result = result.filter(customer => {
+        if (!customer.createdAt) return false;
+        
+        const createdAt = customer.createdAt.toDate();
+        return createdAt >= start && createdAt <= end;
+      });
+    }
+    
+    // Apply policy filters
+    if (filters.hasPolicy) {
+      result = result.filter(customer => 
+        customer.policies && customer.policies.length > 0
+      );
+      
+      // Apply policy status filter
+      if (filters.policyStatus && filters.policyStatus.length > 0) {
+        result = result.filter(customer => 
+          customer.policies?.some(policy => 
+            policy.status && filters.policyStatus?.includes(policy.status as 'active' | 'expired' | 'pending' | 'review' | 'cancelled')
+          )
+        );
+      }
+      
+      // Apply policy type filter
+      if (filters.policyType && filters.policyType.length > 0) {
+        result = result.filter(customer => 
+          customer.policies?.some(policy => 
+            filters.policyType?.includes(policy.type)
+          )
+        );
       }
     }
     
-    return successCount;
-  };
-
-  // Custom hook para manejar las pólizas
-  const {
-    policies,
-    filteredPolicies,
-    customers,
-    loading,
-    hasMore,
-    policyStats,
-    filters,
-    setFilters,
-    sortConfig,
-    setSortConfig,
-    savePolicy,
-    deletePolicy,
-    toggleArchivePolicy,
-    toggleStarPolicy,
-    duplicatePolicy,
-    addReminder,
-    toggleReminder,
-    deleteReminder,
-    uploadDocument,
-    deleteDocument,
-    updateNotes
-  } = usePolicies();
-
-  // Funciones para manejar los cambios de estado
-  const handleTabChange = (newValue: number) => {
-    setCurrentTab(newValue);
-    setPage(1);
-  };
-
-  const handlePageChange = (value: number) => {
-    setPage(value);
-  };
-
-  const handleSort = (key: string) => {
-    setSortConfig({
-      key,
-      direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+    // Apply tags filter
+    if (filters.tags && filters.tags.length > 0) {
+      result = result.filter(customer => 
+        customer.tags?.some(tag => 
+          filters.tags?.includes(tag.id)
+        )
+      );
+    }
+    
+    // Apply sorting
+    result.sort((a, b) => {
+      let aValue: string | number | boolean | Date | undefined;
+      let bValue: string | number | boolean | Date | undefined;
+      
+      switch (sortConfig.key) {
+        case 'name':
+          aValue = a.name || '';
+          bValue = b.name || '';
+          break;
+        case 'email':
+          aValue = a.email || '';
+          bValue = b.email || '';
+          break;
+        case 'phone':
+          aValue = a.phone || '';
+          bValue = b.phone || '';
+          break;
+        case 'status':
+          aValue = a.status || '';
+          bValue = b.status || '';
+          break;
+        case 'type':
+          aValue = a.type || '';
+          bValue = b.type || '';
+          break;
+        case 'createdAt':
+          aValue = a.createdAt ? a.createdAt.toDate().getTime() : 0;
+          bValue = b.createdAt ? b.createdAt.toDate().getTime() : 0;
+          break;
+        default:
+          // For other fields, handle potential array types separately
+          if (Array.isArray(a[sortConfig.key as keyof Customer])) {
+            // For arrays, compare their lengths as a simple comparison method
+            aValue = (a[sortConfig.key as keyof Customer] as unknown[])?.length || 0;
+            bValue = (b[sortConfig.key as keyof Customer] as unknown[])?.length || 0;
+          } else {
+            // For non-arrays, use the value or empty string
+            const aVal = a[sortConfig.key as keyof Customer];
+            const bVal = b[sortConfig.key as keyof Customer];
+            
+            // Handle Timestamp objects by converting to Date
+            if (aVal && typeof aVal === 'object' && 'toDate' in aVal && typeof aVal.toDate === 'function') {
+              aValue = aVal.toDate();
+            } else if (Array.isArray(aVal)) {
+              aValue = aVal.length;
+            } else if (typeof aVal === 'boolean') {
+              aValue = aVal;
+            } else if (typeof aVal === 'number') {
+              aValue = aVal;
+            } else if (typeof aVal === 'string') {
+              aValue = aVal;
+            } else {
+              aValue = undefined;
+            }
+            
+            if (bVal && typeof bVal === 'object' && 'toDate' in bVal && typeof bVal.toDate === 'function') {
+              bValue = bVal.toDate();
+            } else if (Array.isArray(bVal)) {
+              bValue = bVal.length;
+            } else if (typeof bVal === 'boolean') {
+              bValue = bVal;
+            } else if (typeof bVal === 'number') {
+              bValue = bVal;
+            } else if (typeof bVal === 'string') {
+              bValue = bVal;
+            } else {
+              bValue = undefined;
+            }
+          }
+      }
+      
+      // Handle undefined values in comparison
+      if (aValue === undefined && bValue === undefined) {
+        return 0;
+      }
+      if (aValue === undefined) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      if (bValue === undefined) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
     });
+    
+    setFilteredCustomers(result);
+    setPage(1); // Reset to first page when filters change
+  }, [customers, filters, sortConfig]);
+  
+  // Handle sort
+  const handleSort = (key: string) => {
+    setSortConfig(prevConfig => ({
+      key,
+      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
+    }));
   };
   
-
-
-  // Función para manejar el cambio de vista con ToggleButtonGroup
-  const handleViewToggleChange = (
-    event: React.MouseEvent<HTMLElement>,
-    newMode: 'table' | 'grid',
-  ) => {
-    if (newMode !== null) {
-      setViewMode(newMode);
-    }
+  // Handle view mode change
+  const handleViewModeChange = (mode: 'table' | 'grid') => {
+    setViewMode(mode);
   };
-
-  // Funciones para manejar los diálogos
-  const handleOpenDialog = (editMode = false, policy: Policy | null = null) => {
-    setIsEditMode(editMode);
-    setSelectedPolicy(policy);
-    setOpenDialog(true);
+  
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setPage(page);
   };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setSelectedPolicy(null);
-    setIsEditMode(false);
+  
+  // Handle add customer
+  const handleAddCustomer = () => {
+    setSelectedCustomer(undefined);
+    setOpenCustomerDialog(true);
   };
-
-  const handleOpenViewDialog = (policy: Policy) => {
-    setSelectedPolicy(policy);
+  
+  // Handle edit customer
+  const handleEditCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setOpenCustomerDialog(true);
+  };
+  
+  // Handle view customer
+  const handleViewCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
     setOpenViewDialog(true);
   };
-
-  const handleCloseViewDialog = () => {
-    setOpenViewDialog(false);
-    setSelectedPolicy(null);
-  };
-
-  const handleOpenDeleteDialog = (policy: Policy) => {
-    setSelectedPolicy(policy);
+  
+  // Handle delete customer
+  const handleDeleteCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
     setOpenDeleteDialog(true);
   };
-
-  const handleCloseDeleteDialog = () => {
-    setOpenDeleteDialog(false);
-    setSelectedPolicy(null);
+  
+  // Handle email customer
+  const handleEmailCustomer = (customer: Customer) => {
+    // Implement email functionality
+    console.log('Email customer:', customer);
   };
-
-  const handleOpenImportDialog = () => {
+  
+  // Handle schedule meeting
+  const handleScheduleMeeting = (customer: Customer) => {
+    // Implement meeting scheduling functionality
+    console.log('Schedule meeting with customer:', customer);
+  };
+  
+  // Handle import customers
+  const handleImportCustomers = () => {
     setOpenImportDialog(true);
   };
-
-  const handleCloseImportDialog = () => {
-    setOpenImportDialog(false);
-  };
-
-  const handleOpenExportDialog = () => {
+  
+  // Handle export customers
+  const handleExportCustomers = () => {
     setOpenExportDialog(true);
   };
-
-  const handleCloseExportDialog = () => {
+  
+  // Handle customer dialog close
+  const handleCustomerDialogClose = () => {
+    setOpenCustomerDialog(false);
+    setSelectedCustomer(undefined);
+  };
+  
+  // Handle customer dialog success with optimized approach
+  const handleCustomerDialogSuccess = async () => {
+    try {
+      // First close the dialog to improve perceived performance
+      setOpenCustomerDialog(false);
+      setSelectedCustomer(undefined);
+      
+      // Indicate that a new customer was added
+      setNewCustomerJustAdded(true);
+      
+      // Fetch data in parallel
+      await Promise.all([
+        fetchCustomers(),
+        updateCustomerKpis()
+      ]);
+      
+      // Reset the new customer added state after 5 seconds
+      setTimeout(() => {
+        setNewCustomerJustAdded(false);
+      }, 5000);
+      
+      return true;
+    } catch (error) {
+      console.error('Error in handleCustomerDialogSuccess:', error);
+      return false;
+    }
+  };
+  
+  // Handle view dialog close
+  const handleViewDialogClose = () => {
+    setOpenViewDialog(false);
+    setSelectedCustomer(undefined);
+  };
+  
+  // Handle import dialog close
+  const handleImportDialogClose = () => {
+    setOpenImportDialog(false);
+  };
+  
+  // Handle import dialog success with optimized approach
+  const handleImportDialogSuccess = async () => {
+    // First close the dialog to improve perceived performance
+    setOpenImportDialog(false);
+    
+    // Fetch data in parallel
+    await Promise.all([
+      fetchCustomers(),
+      updateCustomerKpis()
+    ]);
+  };
+  
+  // Handle export dialog close
+  const handleExportDialogClose = () => {
     setOpenExportDialog(false);
   };
-
-  const handleOpenAnalyticsDialog = () => {
-    setOpenAnalyticsDialog(true);
+  
+  // Handle delete dialog close
+  const handleDeleteDialogClose = () => {
+    setOpenDeleteDialog(false);
+    setSelectedCustomer(undefined);
   };
-
-  const handleCloseAnalyticsDialog = () => {
-    setOpenAnalyticsDialog(false);
-  };
-
-  // Funciones para manejar las acciones de las pólizas
-  const handleSavePolicy = async (policyData: Partial<Policy>, isEdit: boolean = false, policyId?: string) => {
-    // Asegúrate de que todos los campos requeridos estén presentes
-    const completePolicy: Partial<Policy> = {
-      ...policyData,
-      errors: [], // Campo requerido
-      customerId: policyData.customerId || '', // Asegúrate de que exista
-      coverages: policyData.coverages || [], // Asegúrate de que exista
-      paymentFrequency: policyData.paymentFrequency || 'annual', // Asegúrate de que exista
-    };
+  
+  // Handle delete dialog confirm with optimized approach
+  const handleDeleteDialogConfirm = async () => {
+    if (!selectedCustomer) return;
     
-    const success = await savePolicy(completePolicy, isEdit, policyId);
-    
-    if (success) {
-      // Resetear filtros y cambiar a la pestaña "Todas"
-      setFilters({
-        status: [],
-        type: [],
-        company: [],
-        search: '',
-        startDate: null,
-        endDate: null,
-        minPremium: null,
-        maxPremium: null,
-        onlyStarred: false,
-        isArchived: false,
-        isStarred: false,
-        dateRange: { start: null, end: null },
-        premium: { min: null, max: null },
-        searchTerm: '',
-      });
+    try {
+      // First close the dialog to improve perceived performance
+      setOpenDeleteDialog(false);
+      setSelectedCustomer(undefined);
       
-      // Cambiar a la pestaña "Todas"
-      setCurrentTab(0);
+      // Delete the customer
+      await deleteDoc(doc(db, 'customers', selectedCustomer.id));
       
-      // Resetear la página a 1
-      setPage(1);
-
-      setSnackbar({
-        open: true,
-        message: isEdit ? 'Póliza actualizada con éxito' : 'Póliza guardada con éxito',
-        severity: 'success'
-      });
-      
-      return success;
-    }
-    return false;
-  };
-
-  const handleDeletePolicyConfirm = async () => {
-    if (!selectedPolicy) return;
-    
-    const success = await deletePolicy(selectedPolicy.id);
-    
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: 'Póliza eliminada con éxito',
-        severity: 'success'
-      });
-      handleCloseDeleteDialog();
-      if (openViewDialog) {
-        handleCloseViewDialog();
-      }
-    } else {
-      setSnackbar({
-        open: true,
-        message: 'Error al eliminar póliza',
-        severity: 'error'
-      });
+      // Fetch data in parallel
+      await Promise.all([
+        fetchCustomers(),
+        updateCustomerKpis()
+      ]);
+    } catch (error) {
+      console.error('Error deleting customer:', error);
     }
   };
-
-  const handleToggleStar = async (id: string, star: boolean) => {
-    const success = await toggleStarPolicy(id, star);
-    
-    if (!success) {
-      setSnackbar({
-        open: true,
-        message: 'Error al destacar póliza',
-        severity: 'error'
-      });
-    }
-  };
-
-  const handleToggleArchive = async (id: string, archive: boolean) => {
-    const success = await toggleArchivePolicy(id, archive);
-    
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: archive ? 'Póliza archivada con éxito' : 'Póliza desarchivada con éxito',
-        severity: 'success'
-      });
-      if (openViewDialog) {
-        handleCloseViewDialog();
-      }
-    } else {
-      setSnackbar({
-        open: true,
-        message: 'Error al cambiar estado de archivo',
-        severity: 'error'
-      });
-    }
-  };
-
-  const handleDuplicatePolicy = async (policy: Policy) => {
-    const success = await duplicatePolicy(policy);
-    
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: 'Póliza duplicada con éxito',
-        severity: 'success'
-      });
-      if (openViewDialog) {
-        handleCloseViewDialog();
-      }
-    } else {
-      setSnackbar({
-        open: true,
-        message: 'Error al duplicar póliza',
-        severity: 'error'
-      });
-    }
-  };
-
-  const handleRenewPolicy = (policy: Policy) => {
-    handleOpenDialog(true, {
-      ...policy,
-      policyNumber: `${policy.policyNumber}-R`,
-      isRenewal: true,
-      status: 'active',
-      startDate: policy.endDate, // La fecha de inicio es la fecha de fin de la póliza anterior
-      endDate: (() => {
-        const endDate = new Date(policy.endDate.toDate());
-        endDate.setFullYear(endDate.getFullYear() + 1);
-        return Timestamp.fromDate(endDate);
-      })(),
-    });
-  };
-
-  const handleAddReminder = async (policyId: string, reminder: Omit<PolicyReminder, "id">) => {
-    const success = await addReminder(policyId, reminder);
-    
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: 'Recordatorio añadido con éxito',
-        severity: 'success'
-      });
-    } else {
-      setSnackbar({
-        open: true,
-        message: 'Error al añadir recordatorio',
-        severity: 'error'
-      });
-    }
-  };
-
-  const handleToggleReminder = async (policyId: string, reminderId: string, completed: boolean) => {
-    const success = await toggleReminder(policyId, reminderId, completed);
-    
-    if (!success) {
-      setSnackbar({
-        open: true,
-        message: 'Error al actualizar recordatorio',
-        severity: 'error'
-      });
-    }
-  };
-
-  const handleDeleteReminder = async (policyId: string, reminderId: string) => {
-    const success = await deleteReminder(policyId, reminderId);
-    
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: 'Recordatorio eliminado con éxito',
-        severity: 'success'
-      });
-    } else {
-      setSnackbar({
-        open: true,
-        message: 'Error al eliminar recordatorio',
-        severity: 'error'
-      });
-    }
-  };
-
-  const handleUploadDocument = async (policyId: string, file: File) => {
-    const document = await uploadDocument(policyId, file);
-    
-    if (document) {
-      setSnackbar({
-        open: true,
-        message: 'Documento subido con éxito',
-        severity: 'success'
-      });
-      return document;
-    } else {
-      setSnackbar({
-        open: true,
-        message: 'Error al subir documento',
-        severity: 'error'
-      });
-      return null;
-    }
-  };
-
-  const handleDeleteDocument = async (policyId: string, docId: string) => {
-    const success = await deleteDocument(policyId, docId);
-    
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: 'Documento eliminado con éxito',
-        severity: 'success'
-      });
-    } else {
-      setSnackbar({
-        open: true,
-        message: 'Error al eliminar documento',
-        severity: 'error'
-      });
-    }
-  };
-
-  const handleUpdateNotes = async (policyId: string, notes: string) => {
-    const success = await updateNotes(policyId, notes);
-    
-    if (!success) {
-      setSnackbar({
-        open: true,
-        message: 'Error al actualizar notas',
-        severity: 'error'
-      });
-    }
-  };
-
-// Función para filtrar las pólizas según la pestaña actual
-const getFilteredPoliciesByTab = () => {
-  // Primero, asegúrate de que estamos trabajando con la lista más actualizada
-  let filtered = [...filteredPolicies];
   
-  console.log("Total de pólizas antes de filtrar por pestaña:", filtered.length);
-  console.log("Pestaña actual:", currentTab);
+  // Calculate customer stats
+  const customerStats = {
+    totalCustomers: kpis?.totalCustomers || 0,
+    activeCustomers: kpis?.activeCustomers || 0,
+    inactiveCustomers: kpis?.inactiveCustomers || 0,
+    leadCustomers: kpis?.leadCustomers || 0,
+    newCustomersThisMonth: kpis?.newCustomersThisMonth || 0,
+    customersWithPolicies: kpis?.customersWithPolicies || 0,
+    customersWithActivePolicies: kpis?.customersWithActivePolicies || 0,
+    customersWithExpiredPolicies: kpis?.customersWithExpiredPolicies || 0,
+    customersWithRenewingPolicies: kpis?.customersWithRenewingPolicies || 0,
+  };
   
-  // Verificar si hay pólizas con campos faltantes y corregirlas
-  filtered = filtered.map(p => ({
-    ...p,
-    errors: p.errors || [],
-    customerId: p.customerId || '',
-    coverages: p.coverages || [],
-    paymentFrequency: p.paymentFrequency || 'annual',
-  }));
-  
-  // Imprimir información sobre las pólizas antes de filtrar
-  if (filtered.length > 0) {
-    console.log("Pólizas antes de filtrar:", filtered.map(p => ({
-      id: p.id,
-      policyNumber: p.policyNumber,
-      status: p.status,
-      isArchived: p.isArchived
-    })));
-  }
-  
-  // Filtrar por pestaña
-  switch (currentTab) {
-    case 0: // Todas
-      filtered = filtered.filter(p => !p.isArchived);
-      break;
-    case 1: // Activas
-      filtered = filtered.filter(p => p.status === 'active' && !p.isArchived);
-      break;
-    case 2: // Vencidas
-      filtered = filtered.filter(p => p.status === 'expired' && !p.isArchived);
-      break;
-    case 3: // Pendientes
-      filtered = filtered.filter(p => p.status === 'pending' && !p.isArchived);
-      break;
-    case 4: // En revisión
-      // 'review' is not a valid status, removing it or using a valid status
-      filtered = filtered.filter(p => !p.isArchived);
-      break;
-  }
-  
-  console.log("Total de pólizas después de filtrar por pestaña:", filtered.length);
-  console.log("Filtro aplicado para pestaña:", currentTab);
-  
-  // Imprimir información sobre las pólizas filtradas
-  if (filtered.length > 0) {
-    console.log("Pólizas después de filtrar:", filtered.map(p => ({
-      id: p.id,
-      policyNumber: p.policyNumber,
-      status: p.status,
-      isArchived: p.isArchived
-    })));
-  } else {
-    console.log("No hay pólizas que cumplan con los filtros actuales");
-    console.log("Filtros actuales:", filters);
-    console.log("Pestaña actual:", currentTab);
-  }
-  
-  return filtered;
+  return (
+    <Container maxWidth="xl">
+      <Box
+        component={motion.div}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        sx={{ py: 3 }}
+      >
+        <CustomerHeader 
+          customersCount={customerStats.totalCustomers}
+          onNewCustomer={handleAddCustomer}
+          onImport={handleImportCustomers}
+          onExport={handleExportCustomers}
+          onRefresh={updateCustomerKpis}
+          onAnalytics={() => {}} // Add implementation or placeholder for analytics
+        />
+        
+        <CustomerStats 
+          stats={customerStats}
+          loading={kpisLoading}
+          isRefreshing={kpisRefreshing}
+          newCustomerAdded={newCustomerJustAdded}
+          onRefresh={updateCustomerKpis}
+        />
+        
+        <CustomerFiltersComponent 
+          filters={filters}
+          setFilters={setFilters}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          availableTags={availableTags}
+        />
+        
+        {viewMode === 'table' ? (
+          <CustomerTable 
+            customers={filteredCustomers}
+            loading={loading}
+            onViewCustomer={handleViewCustomer}
+            onEditCustomer={handleEditCustomer}
+            onDeleteCustomer={handleDeleteCustomer}
+            onEmailCustomer={handleEmailCustomer}
+            onScheduleMeeting={handleScheduleMeeting}
+            sortConfig={sortConfig}
+            onSort={handleSort}
+            page={page}
+            onPageChange={handlePageChange}
+          />
+        ) : (
+          <CustomerGrid 
+            customers={filteredCustomers}
+            loading={loading}
+            onViewCustomer={handleViewCustomer}
+            onEditCustomer={handleEditCustomer}
+            onDeleteCustomer={handleDeleteCustomer}
+            page={page}
+            onPageChange={handlePageChange}
+          />
+        )}
+        
+        {/* Customer Dialog */}
+        <CustomerDialog 
+          open={openCustomerDialog}
+          onClose={handleCustomerDialogClose}
+          customer={selectedCustomer}
+          title={selectedCustomer ? 'Editar cliente' : 'Nuevo cliente'}
+          onSuccess={handleCustomerDialogSuccess}
+        />
+        
+        {/* View Dialog */}
+        {selectedCustomer && (
+          <CustomerViewDialog 
+            open={openViewDialog}
+            onClose={handleViewDialogClose}
+            customer={selectedCustomer}
+            onEdit={() => {
+              setOpenViewDialog(false);
+              setOpenCustomerDialog(true);
+            }}
+            onDelete={() => {
+              setOpenViewDialog(false);
+              setOpenDeleteDialog(true);
+            }}
+            onEmailCustomer={handleEmailCustomer}
+          />
+        )}
+        
+        {/* Import Dialog */}
+        <CustomerImportDialog 
+          open={openImportDialog}
+          onClose={handleImportDialogClose}
+          onSuccess={handleImportDialogSuccess}
+          availableTags={availableTags}
+        />
+        
+        {/* Export Dialog */}
+        <CustomerExportDialog 
+          open={openExportDialog}
+          onClose={handleExportDialogClose}
+          customers={filteredCustomers}
+        />
+        
+        {/* Delete Dialog */}
+        {selectedCustomer && (
+          <CustomerDeleteDialog 
+            open={openDeleteDialog}
+            onClose={handleDeleteDialogClose}
+            onConfirm={handleDeleteDialogConfirm}
+            customerName={selectedCustomer.name}
+          />
+        )}
+      </Box>
+    </Container>
+  );
 };
 
-  // Obtener las pólizas filtradas por la pestaña actual
-  const displayedPolicies = getFilteredPoliciesByTab();
-
-  // Obtener las compañías únicas para el filtro
-
-  // Mostrar pantalla de carga mientras se autentica
-  if (authLoading) {
-    return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  // Mostrar mensaje si no hay usuario autenticado
-  if (!user) {
-    return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        <Paper 
-          elevation={0}
-          sx={{ 
-            p: 4, 
-            textAlign: 'center',
-            maxWidth: 500,
-            borderRadius: 2,
-            background: theme.palette.mode === 'dark' 
-              ? alpha(theme.palette.background.paper, 0.6)
-              : alpha(theme.palette.background.paper, 0.8),
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          }}
-        >
-          <Typography variant="h5" gutterBottom>
-            Acceso no autorizado
-          </Typography>
-          <Typography variant="body1">
-            Debes iniciar sesión para acceder a esta página.
-          </Typography>
-        </Paper>
-      </Box>
-    );
-  }
-
-  return (
-    <AnimatePresence mode="wait">
-      <Box sx={{ 
-        p: { xs: 2, md: 3 },
-        height: '100%',
-        overflow: 'auto',
-        background: theme.palette.mode === 'dark' 
-          ? `linear-gradient(135deg, ${alpha('#1a1c20', 0.96)}, ${alpha('#0f1114', 0.96)})`
-          : `linear-gradient(135deg, ${alpha('#f8fafc', 0.96)}, ${alpha('#eef2f6', 0.96)})`,
-        fontFamily: 'Sora, sans-serif',
-      }}>
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <PolicyHeader 
-            policiesCount={policies.length}
-            planType={planType}
-            onNewPolicy={() => handleOpenDialog(false)}
-            onImport={handleOpenImportDialog}
-            onExport={handleOpenExportDialog}
-            onAnalytics={handleOpenAnalyticsDialog}
-          />
-        </motion.div>
-
-        {/* Estadísticas */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <PolicyStats stats={{
-            total: policyStats.total,
-            active: policyStats.active,
-            expired: policyStats.expired,
-            pending: policyStats.pending,
-            review: policyStats.review,
-            cancelled: policyStats.cancelled,
-            expiringIn30Days: policyStats.expiringIn30Days,
-            totalPremium: policies.reduce((sum, policy) => sum + (policy.premium || 0), 0)
-          }} />
-        </motion.div>
-
-        {/* Filtros y búsqueda */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <PolicyTabs 
-                currentTab={currentTab}
-                onTabChange={handleTabChange}
-                policies={policies}
-              />
-              
-              {/* Botones de cambio de vista modernizados */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Paper
-                  elevation={0}
-                  sx={{
-                    display: 'flex',
-                    overflow: 'hidden',
-                    borderRadius: '12px',
-                    background: alpha(theme.palette.background.paper, 0.7),
-                    backdropFilter: 'blur(8px)',
-                    border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                    boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.08)}`,
-                  }}
-                >
-                  <ToggleButtonGroup
-                    value={viewMode}
-                    exclusive
-                    onChange={handleViewToggleChange}
-                    aria-label="vista de pólizas"
-                    sx={{
-                      '& .MuiToggleButtonGroup-grouped': {
-                        border: 0,
-                        '&:not(:first-of-type)': {
-                          borderRadius: '12px',
-                        },
-                        '&:first-of-type': {
-                          borderRadius: '12px',
-                        },
-                      },
-                    }}
-                  >
-                    <ToggleButton 
-                      value="table" 
-                      aria-label="vista de tabla"
-                      sx={{
-                        px: 2,
-                        py: 1,
-                        borderRadius: '12px',
-                        fontFamily: 'Sora, sans-serif',
-                        fontWeight: 600,
-                        fontSize: '0.85rem',
-                        textTransform: 'none',
-                        color: viewMode === 'table' ? theme.palette.primary.main : theme.palette.text.secondary,
-                        backgroundColor: viewMode === 'table' 
-                          ? alpha(theme.palette.primary.main, 0.1) 
-                          : 'transparent',
-                        '&:hover': {
-                          backgroundColor: viewMode === 'table'
-                            ? alpha(theme.palette.primary.main, 0.15)
-                            : alpha(theme.palette.primary.main, 0.05),
-                        },
-                        transition: 'all 0.2s ease-in-out',
-                      }}
-                    >
-                      <Tooltip title="Vista de tabla">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <ViewListIcon fontSize="small" />
-                          <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Tabla</Box>
-                        </Box>
-                      </Tooltip>
-                    </ToggleButton>
-                    <ToggleButton 
-                      value="grid" 
-                      aria-label="vista de tarjetas"
-                      sx={{
-                        px: 2,
-                        py: 1,
-                        borderRadius: '12px',
-                        fontFamily: 'Sora, sans-serif',
-                        fontWeight: 600,
-                        fontSize: '0.85rem',
-                        textTransform: 'none',
-                        color: viewMode === 'grid' ? theme.palette.primary.main : theme.palette.text.secondary,
-                        backgroundColor: viewMode === 'grid' 
-                          ? alpha(theme.palette.primary.main, 0.1) 
-                          : 'transparent',
-                        '&:hover': {
-                          backgroundColor: viewMode === 'grid'
-                            ? alpha(theme.palette.primary.main, 0.15)
-                            : alpha(theme.palette.primary.main, 0.05),
-                        },
-                        transition: 'all 0.2s ease-in-out',
-                      }}
-                    >
-                      <Tooltip title="Vista de tarjetas">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <ViewModuleIcon fontSize="small" />
-                          <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Tarjetas</Box>
-                        </Box>
-                      </Tooltip>
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-                </Paper>
-              </motion.div>
-            </Box>
-          </motion.div>
-        </motion.div>
-
-        {/* Contenido principal */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          {viewMode === 'table' ? (
-            <PolicyTable 
-              policies={displayedPolicies}
-              loading={loading}
-              hasMore={hasMore}
-              page={page}
-              onPageChange={handlePageChange}
-              onSort={handleSort}
-              sortConfig={sortConfig}
-              onView={handleOpenViewDialog}
-              onEdit={(policy) => handleOpenDialog(true, policy)}
-              onToggleStar={handleToggleStar}
-              onNewPolicy={() => handleOpenDialog(false)}
-            />
-          ) : (
-            <PolicyGrid 
-              policies={displayedPolicies}
-              loading={loading}
-              onView={handleOpenViewDialog}
-              onEdit={(policy) => handleOpenDialog(true, policy)}
-              onRenew={handleRenewPolicy}
-              onNewPolicy={() => handleOpenDialog(false)}
-            />
-          )}
-        </motion.div>
-
-        {/* Diálogos */}
-        <PolicyFormDialog 
-          open={openDialog}
-          onClose={handleCloseDialog}
-          policy={selectedPolicy}
-          isEditMode={isEditMode}
-          onSave={handleSavePolicy}
-          customers={customers} // Pasamos la lista de clientes al formulario
-        />
-
-        <PolicyViewDialog 
-          open={openViewDialog}
-          onClose={handleCloseViewDialog}
-          policy={selectedPolicy}
-          customers={customers}
-          onEdit={(policy) => {
-            handleCloseViewDialog();
-            handleOpenDialog(true, policy);
-          }}
-          onDelete={handleOpenDeleteDialog}
-          onToggleArchive={handleToggleArchive}
-          onToggleStar={handleToggleStar}
-          onDuplicate={handleDuplicatePolicy}
-          onRenew={handleRenewPolicy}
-          onAddReminder={handleAddReminder}
-          onToggleReminder={handleToggleReminder}
-          onDeleteReminder={handleDeleteReminder}
-          onUploadDocument={handleUploadDocument}
-          onDeleteDocument={handleDeleteDocument}
-          onUpdateNotes={handleUpdateNotes}
-        />
-
-        <PolicyDeleteDialog 
-          open={openDeleteDialog}
-          onClose={handleCloseDeleteDialog}
-          policy={selectedPolicy}
-          onDelete={handleDeletePolicyConfirm}
-        />
-
-        <PolicyImportDialog 
-          open={openImportDialog}
-          onClose={handleCloseImportDialog}
-          customers={customers}
-          onImportPolicies={handleImportPolicies}
-        />
-
-        <PolicyExportDialog 
-          open={openExportDialog}
-          onClose={handleCloseExportDialog}
-          policies={filteredPolicies}
-        />
-
-        <PolicyAnalyticsDialog 
-          open={openAnalyticsDialog}
-          onClose={handleCloseAnalyticsDialog}
-          policies={policies}
-        />
-
-        {/* Snackbar para notificaciones */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        >
-          <Alert 
-            onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
-            severity={snackbar.severity}
-            variant="filled"
-            sx={{ 
-              width: '100%',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              fontFamily: 'Sora, sans-serif',
-              fontWeight: 500
-            }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Box>
-    </AnimatePresence>
-  );
-}
+export default CustomersPage;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, ReactNode } from 'react';
+import React, { useEffect, useState, useCallback, useRef, ReactNode, memo } from 'react';
 import {
   Box,
   Paper,
@@ -10,6 +10,7 @@ import {
   Chip,
   IconButton,
   Collapse,
+  CircularProgress,
 } from '@mui/material';
 import {
   People as PeopleIcon,
@@ -41,185 +42,20 @@ interface StatCardData {
 interface CustomerStatsProps {
   stats: CustomerStatsType;
   loading: boolean;
+  isRefreshing?: boolean;
   newCustomerAdded?: boolean;
   onRefresh?: () => Promise<boolean>;
 }
 
-export const CustomerStats: React.FC<CustomerStatsProps> = ({
-  stats,
-  loading,
-  newCustomerAdded = false,
-  onRefresh
+// Memoized stat card component for better performance
+const StatCard = memo(({ stat, index, isPolicy = false }: { 
+  stat: StatCardData; 
+  index: number; 
+  isPolicy?: boolean;
 }) => {
   const theme = useTheme();
-  const [expanded, setExpanded] = useState(true);
-  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const prevStatsRef = useRef<CustomerStatsType | null>(null);
   
-  // Calculate percentages
-  const activePercentage = stats.totalCustomers > 0
-    ? Math.round((stats.activeCustomers / stats.totalCustomers) * 100)
-    : 0;
-  
-  const withPoliciesPercentage = stats.totalCustomers > 0
-    ? Math.round((stats.customersWithPolicies / stats.totalCustomers) * 100)
-    : 0;
-  
-  // Función para actualizar las estadísticas
-  const refreshStats = useCallback(async () => {
-    if (onRefresh && !isRefreshing) {
-      setIsRefreshing(true);
-      try {
-        const success = await onRefresh();
-        if (success) {
-          setLastRefreshed(new Date());
-        }
-      } catch (error) {
-        console.error('Error al actualizar estadísticas:', error);
-      } finally {
-        setIsRefreshing(false);
-      }
-    }
-  }, [onRefresh, isRefreshing]);
-  
-  // Detectar cambios en las estadísticas
-  useEffect(() => {
-    // Si es la primera carga, guardar las estadísticas actuales
-    if (!prevStatsRef.current) {
-      prevStatsRef.current = { ...stats };
-      return;
-    }
-    
-    // Verificar si hay cambios en las estadísticas
-    const hasChanges = 
-      stats.totalCustomers !== prevStatsRef.current.totalCustomers ||
-      stats.activeCustomers !== prevStatsRef.current.activeCustomers ||
-      stats.newCustomersThisMonth !== prevStatsRef.current.newCustomersThisMonth ||
-      stats.customersWithPolicies !== prevStatsRef.current.customersWithPolicies;
-    
-    // Si hay cambios, actualizar la hora de última actualización
-    if (hasChanges) {
-      setLastRefreshed(new Date());
-      
-      // Si se agregó un nuevo cliente, expandir la sección
-      if (stats.totalCustomers > prevStatsRef.current.totalCustomers) {
-        setExpanded(true);
-      }
-    }
-    
-    // Actualizar la referencia a las estadísticas actuales
-    prevStatsRef.current = { ...stats };
-  }, [stats]);
-  
-  // Actualizar cuando se agrega un nuevo cliente
-  useEffect(() => {
-    if (newCustomerAdded) {
-      // Expandir la sección cuando se agrega un nuevo cliente
-      setExpanded(true);
-      
-      // Actualizar las estadísticas
-      refreshStats();
-    }
-  }, [newCustomerAdded, refreshStats]);
-  
-  // Group stats into categories for better organization
-  const primaryStats = [
-    {
-      title: 'Total Clientes',
-      value: stats.totalCustomers,
-      icon: <PeopleIcon />,
-      color: theme.palette.primary.main,
-      subtitle: `${activePercentage}% activos`,
-      change: null,
-      highlight: newCustomerAdded,
-      tooltip: 'Número total de clientes registrados en el sistema',
-      category: 'primary',
-    },
-    {
-      title: 'Clientes Activos',
-      value: stats.activeCustomers,
-      icon: <CheckCircleIcon />,
-      color: theme.palette.success.main,
-      subtitle: `${activePercentage}% del total`,
-      change: null,
-      highlight: false,
-      tooltip: 'Clientes con estado activo',
-      category: 'primary',
-    },
-    {
-      title: 'Nuevos este mes',
-      value: stats.newCustomersThisMonth,
-      icon: <PersonAddIcon />,
-      color: theme.palette.info.main,
-      subtitle: 'desde el inicio del mes',
-      change: stats.newCustomersThisMonth > 0 ? '+' + stats.newCustomersThisMonth : '0',
-      highlight: newCustomerAdded,
-      tooltip: 'Clientes añadidos durante el mes actual',
-      category: 'primary',
-    },
-    {
-      title: 'Oportunidades',
-      value: stats.leadCustomers,
-      icon: <TrendingUpIcon />,
-      color: theme.palette.secondary.main,
-      subtitle: 'leads potenciales',
-      change: null,
-      highlight: false,
-      tooltip: 'Clientes potenciales en estado de lead',
-      category: 'primary',
-    },
-  ];
-  
-  const policyStats = [
-    {
-      title: 'Con Pólizas',
-      value: stats.customersWithPolicies,
-      icon: <AssignmentIcon />,
-      color: theme.palette.info.main,
-      subtitle: `${withPoliciesPercentage}% del total`,
-      change: null,
-      highlight: false,
-      tooltip: 'Clientes que tienen al menos una póliza',
-      category: 'policy',
-    },
-    {
-      title: 'Pólizas Activas',
-      value: stats.customersWithActivePolicies,
-      icon: <CheckCircleIcon />,
-      color: theme.palette.success.main,
-      subtitle: 'clientes con pólizas activas',
-      change: null,
-      highlight: false,
-      tooltip: 'Clientes con al menos una póliza activa',
-      category: 'policy',
-    },
-    {
-      title: 'Por Renovar',
-      value: stats.customersWithRenewingPolicies,
-      icon: <AutorenewIcon />,
-      color: theme.palette.warning.main,
-      subtitle: 'en los próximos 30 días',
-      change: null,
-      highlight: false,
-      tooltip: 'Clientes con pólizas que vencen en los próximos 30 días',
-      category: 'policy',
-    },
-    {
-      title: 'Vencidas',
-      icon: <WarningIcon />,
-      value: stats.customersWithExpiredPolicies,
-      color: theme.palette.error.main,
-      subtitle: 'clientes con pólizas vencidas',
-      change: null,
-      highlight: false,
-      tooltip: 'Clientes con pólizas que ya han vencido',
-      category: 'policy',
-    },
-  ];
-  
-  // Render a stat card
-  const renderStatCard = (stat: StatCardData, index: number, isPolicy: boolean = false) => (
+  return (
     <Tooltip key={`${isPolicy ? 'policy' : 'primary'}-${index}`} title={stat.tooltip} arrow placement="top">
       <Paper
         component={motion.div}
@@ -295,37 +131,33 @@ export const CustomerStats: React.FC<CustomerStatsProps> = ({
         </Box>
         
         <Box sx={{ mt: 'auto' }}>
-          {loading || isRefreshing ? (
-            <Skeleton variant="rectangular" width="60%" height={40} sx={{ borderRadius: 1, mb: 1 }} />
-          ) : (
-            <Typography
-              variant="h3"
-              fontWeight={700}
-              fontFamily="'Sora', sans-serif"
-              sx={{
-                mb: 0.5,
-                color: theme.palette.text.primary,
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              {stat.value}
-              
-              {stat.change && (
-                <Chip
-                  size="small"
-                  label={stat.change}
-                  color="success"
-                  sx={{
-                    ml: 1,
-                    height: 20,
-                    fontSize: '0.7rem',
-                    fontWeight: 600,
-                  }}
-                />
-              )}
-            </Typography>
-          )}
+          <Typography
+            variant="h3"
+            fontWeight={700}
+            fontFamily="'Sora', sans-serif"
+            sx={{
+              mb: 0.5,
+              color: theme.palette.text.primary,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            {stat.value}
+            
+            {stat.change && (
+              <Chip
+                size="small"
+                label={stat.change}
+                color="success"
+                sx={{
+                  ml: 1,
+                  height: 20,
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                }}
+              />
+            )}
+          </Typography>
           
           <Typography
             variant="caption"
@@ -356,38 +188,302 @@ export const CustomerStats: React.FC<CustomerStatsProps> = ({
       </Paper>
     </Tooltip>
   );
+});
+
+StatCard.displayName = 'StatCard';
+
+// Memoized loading skeleton for better performance
+const StatCardSkeleton = memo(({ index, isPolicy = false }: { index: number; isPolicy?: boolean }) => {
+  const theme = useTheme();
   
-  // Formatear la hora de última actualización
-  const formatLastRefreshed = () => {
+  return (
+    <Paper
+      component={motion.div}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: (isPolicy ? index + 4 : index) * 0.1 }}
+      elevation={0}
+      sx={{
+        p: 2.5,
+        width: { xs: '100%', sm: 'calc(50% - 8px)', md: 'calc(25% - 12px)' },
+        borderRadius: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        overflow: 'hidden',
+        background: theme.palette.mode === 'dark'
+          ? alpha(theme.palette.background.paper, 0.8)
+          : alpha(theme.palette.background.paper, 0.9),
+        backdropFilter: 'blur(8px)',
+        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        mb: 2,
+        mx: { xs: 0, sm: 1 },
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+        <Skeleton variant="text" width="60%" height={24} />
+        <Skeleton variant="circular" width={40} height={40} />
+      </Box>
+      
+      <Box sx={{ mt: 'auto' }}>
+        <Skeleton variant="rectangular" width="60%" height={40} sx={{ borderRadius: 1, mb: 1 }} />
+        <Skeleton variant="text" width="40%" height={16} />
+      </Box>
+    </Paper>
+  );
+});
+
+StatCardSkeleton.displayName = 'StatCardSkeleton';
+
+// Main component with performance optimizations
+export const CustomerStats: React.FC<CustomerStatsProps> = memo(({
+  stats,
+  loading,
+  isRefreshing = false,
+  newCustomerAdded = false,
+  onRefresh
+}) => {
+  const theme = useTheme();
+  const [expanded, setExpanded] = useState(true);
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
+  const [localIsRefreshing, setLocalIsRefreshing] = useState(false);
+  const prevStatsRef = useRef<CustomerStatsType | null>(null);
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Calculate percentages with memoization
+  const activePercentage = stats.totalCustomers > 0
+    ? Math.round((stats.activeCustomers / stats.totalCustomers) * 100)
+    : 0;
+  
+  const withPoliciesPercentage = stats.totalCustomers > 0
+    ? Math.round((stats.customersWithPolicies / stats.totalCustomers) * 100)
+    : 0;
+  
+  // Debounced refresh function to prevent multiple rapid refreshes
+  const debouncedRefresh = useCallback(() => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+    
+    refreshTimeoutRef.current = setTimeout(async () => {
+      if (onRefresh && !localIsRefreshing && !isRefreshing) {
+        setLocalIsRefreshing(true);
+        try {
+          const success = await onRefresh();
+          if (success) {
+            setLastRefreshed(new Date());
+          }
+        } catch (error) {
+          console.error('Error refreshing statistics:', error);
+        } finally {
+          setLocalIsRefreshing(false);
+        }
+      }
+    }, 300);
+  }, [onRefresh, localIsRefreshing, isRefreshing]);
+  
+  // Detect changes in statistics
+  useEffect(() => {
+    // If loading or refreshing, don't update
+    if (loading || isRefreshing || localIsRefreshing) return;
+    
+    // If it's the first load, save the current stats
+    if (!prevStatsRef.current) {
+      prevStatsRef.current = { ...stats };
+      return;
+    }
+    
+    // Check if there are changes in the statistics
+    const hasChanges = 
+      stats.totalCustomers !== prevStatsRef.current.totalCustomers ||
+      stats.activeCustomers !== prevStatsRef.current.activeCustomers ||
+      stats.newCustomersThisMonth !== prevStatsRef.current.newCustomersThisMonth ||
+      stats.customersWithPolicies !== prevStatsRef.current.customersWithPolicies;
+    
+    // If there are changes, update the last refreshed time
+    if (hasChanges) {
+      setLastRefreshed(new Date());
+      
+      // If a new customer was added, expand the section
+      if (stats.totalCustomers > prevStatsRef.current.totalCustomers) {
+        setExpanded(true);
+      }
+    }
+    
+    // Update the reference to the current stats
+    prevStatsRef.current = { ...stats };
+  }, [stats, loading, isRefreshing, localIsRefreshing]);
+  
+  // Handle new customer added
+  useEffect(() => {
+    if (newCustomerAdded) {
+      // Expand the section when a new customer is added
+      setExpanded(true);
+      
+      // Refresh the statistics
+      debouncedRefresh();
+    }
+  }, [newCustomerAdded, debouncedRefresh]);
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, []);
+  
+  // Memoize stat data to prevent unnecessary re-renders
+  const primaryStats = React.useMemo(() => [
+    {
+      title: 'Total Clientes',
+      value: stats.totalCustomers,
+      icon: <PeopleIcon />,
+      color: theme.palette.primary.main,
+      subtitle: `${activePercentage}% activos`,
+      change: null,
+      highlight: newCustomerAdded,
+      tooltip: 'Número total de clientes registrados en el sistema',
+      category: 'primary',
+    },
+    {
+      title: 'Clientes Activos',
+      value: stats.activeCustomers,
+      icon: <CheckCircleIcon />,
+      color: theme.palette.success.main,
+      subtitle: `${activePercentage}% del total`,
+      change: null,
+      highlight: false,
+      tooltip: 'Clientes con estado activo',
+      category: 'primary',
+    },
+    {
+      title: 'Nuevos este mes',
+      value: stats.newCustomersThisMonth,
+      icon: <PersonAddIcon />,
+      color: theme.palette.info.main,
+      subtitle: 'desde el inicio del mes',
+      change: stats.newCustomersThisMonth > 0 ? '+' + stats.newCustomersThisMonth : '0',
+      highlight: newCustomerAdded,
+      tooltip: 'Clientes añadidos durante el mes actual',
+      category: 'primary',
+    },
+    {
+      title: 'Oportunidades',
+      value: stats.leadCustomers,
+      icon: <TrendingUpIcon />,
+      color: theme.palette.secondary.main,
+      subtitle: 'leads potenciales',
+      change: null,
+      highlight: false,
+      tooltip: 'Clientes potenciales en estado de lead',
+      category: 'primary',
+    },
+  ], [stats, activePercentage, newCustomerAdded, theme.palette]);
+  
+  const policyStats = React.useMemo(() => [
+    {
+      title: 'Con Pólizas',
+      value: stats.customersWithPolicies,
+      icon: <AssignmentIcon />,
+      color: theme.palette.info.main,
+      subtitle: `${withPoliciesPercentage}% del total`,
+      change: null,
+      highlight: false,
+      tooltip: 'Clientes que tienen al menos una póliza',
+      category: 'policy',
+    },
+    {
+      title: 'Pólizas Activas',
+      value: stats.customersWithActivePolicies,
+      icon: <CheckCircleIcon />,
+      color: theme.palette.success.main,
+      subtitle: 'clientes con pólizas activas',
+      change: null,
+      highlight: false,
+      tooltip: 'Clientes con al menos una póliza activa',
+      category: 'policy',
+    },
+    {
+      title: 'Por Renovar',
+      value: stats.customersWithRenewingPolicies,
+      icon: <AutorenewIcon />,
+      color: theme.palette.warning.main,
+      subtitle: 'en los próximos 30 días',
+      change: null,
+      highlight: false,
+      tooltip: 'Clientes con pólizas que vencen en los próximos 30 días',
+      category: 'policy',
+    },
+    {
+      title: 'Vencidas',
+      icon: <WarningIcon />,
+      value: stats.customersWithExpiredPolicies,
+      color: theme.palette.error.main,
+      subtitle: 'clientes con pólizas vencidas',
+      change: null,
+      highlight: false,
+      tooltip: 'Clientes con pólizas que ya han vencido',
+      category: 'policy',
+    },
+  ], [stats, withPoliciesPercentage, theme.palette]);
+  
+  // Format the last refreshed time
+  const formatLastRefreshed = useCallback(() => {
     const now = new Date();
     const diff = now.getTime() - lastRefreshed.getTime();
     
-    // Si fue hace menos de un minuto
+    // If it was less than a minute ago
     if (diff < 60000) {
       return 'hace unos segundos';
     }
     
-    // Si fue hace menos de una hora
+    // If it was less than an hour ago
     if (diff < 3600000) {
       const minutes = Math.floor(diff / 60000);
       return `hace ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
     }
     
-    // Si fue hoy
+    // If it was today
     if (lastRefreshed.toDateString() === now.toDateString()) {
       return `hoy a las ${lastRefreshed.getHours().toString().padStart(2, '0')}:${lastRefreshed.getMinutes().toString().padStart(2, '0')}`;
     }
     
-    // Si fue ayer
+    // If it was yesterday
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     if (lastRefreshed.toDateString() === yesterday.toDateString()) {
       return `ayer a las ${lastRefreshed.getHours().toString().padStart(2, '0')}:${lastRefreshed.getMinutes().toString().padStart(2, '0')}`;
     }
     
-    // En otro caso, mostrar la fecha completa
+    // Otherwise, show the full date
     return `${lastRefreshed.getDate()}/${lastRefreshed.getMonth() + 1}/${lastRefreshed.getFullYear()} ${lastRefreshed.getHours().toString().padStart(2, '0')}:${lastRefreshed.getMinutes().toString().padStart(2, '0')}`;
-  };
+  }, [lastRefreshed]);
+  
+  // Memoized collapsed summary stats
+  const collapsedSummaryStats = React.useMemo(() => [
+    {
+      icon: <PeopleIcon />,
+      color: theme.palette.primary.main,
+      value: `${stats.totalCustomers} clientes`,
+    },
+    {
+      icon: <CheckCircleIcon />,
+      color: theme.palette.success.main,
+      value: `${stats.activeCustomers} activos`,
+    },
+    {
+      icon: <AssignmentIcon />,
+      color: theme.palette.info.main,
+      value: `${stats.customersWithPolicies} con pólizas`,
+    },
+    {
+      icon: <AutorenewIcon />,
+      color: theme.palette.warning.main,
+      value: `${stats.customersWithRenewingPolicies} por renovar`,
+    },
+  ], [stats, theme.palette]);
   
   return (
     <Box 
@@ -414,16 +510,16 @@ export const CustomerStats: React.FC<CustomerStatsProps> = ({
           borderBottom: expanded ? `1px solid ${alpha(theme.palette.divider, 0.1)}` : 'none',
           bgcolor: alpha(theme.palette.background.paper, 0.6),
           backdropFilter: 'blur(10px)',
-          cursor: 'pointer', // Añadir cursor pointer para indicar que es clickeable
+          cursor: 'pointer',
         }}
-        onClick={() => setExpanded(!expanded)} // Expandir/contraer al hacer clic en el header
+        onClick={() => setExpanded(!expanded)}
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <IconButton 
             size="small"
             sx={{ mr: 1 }}
             onClick={(e) => {
-              e.stopPropagation(); // Evitar que el clic se propague al header
+              e.stopPropagation();
               setExpanded(!expanded);
             }}
           >
@@ -446,7 +542,16 @@ export const CustomerStats: React.FC<CustomerStatsProps> = ({
                 label="¡Nuevo cliente añadido!"
                 color="success"
                 size="small"
-                sx={{ ml: 2, fontWeight: 500, animation: 'pulse 2s infinite' }}
+                sx={{ 
+                  ml: 2, 
+                  fontWeight: 500, 
+                  '@keyframes pulse': {
+                    '0%': { boxShadow: '0 0 0 0 rgba(76, 175, 80, 0.4)' },
+                    '70%': { boxShadow: '0 0 0 10px rgba(76, 175, 80, 0)' },
+                    '100%': { boxShadow: '0 0 0 0 rgba(76, 175, 80, 0)' },
+                  },
+                  animation: 'pulse 2s infinite',
+                }}
               />
             )}
           </Typography>
@@ -465,19 +570,19 @@ export const CustomerStats: React.FC<CustomerStatsProps> = ({
             <IconButton 
               size="small" 
               onClick={(e) => {
-                e.stopPropagation(); // Evitar que el clic se propague al header
-                refreshStats();
+                e.stopPropagation();
+                debouncedRefresh();
               }}
-              disabled={isRefreshing || loading}
+              disabled={isRefreshing || localIsRefreshing || loading}
               sx={{
-                animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
-                '@keyframes spin': {
-                  '0%': { transform: 'rotate(0deg)' },
-                  '100%': { transform: 'rotate(360deg)' },
-                },
+                position: 'relative',
               }}
             >
-              <RefreshIcon fontSize="small" />
+              {(isRefreshing || localIsRefreshing) ? (
+                <CircularProgress size={16} thickness={5} />
+              ) : (
+                <RefreshIcon fontSize="small" />
+              )}
             </IconButton>
           </Tooltip>
         </Box>
@@ -503,7 +608,17 @@ export const CustomerStats: React.FC<CustomerStatsProps> = ({
               mb: 3 
             }}
           >
-            {primaryStats.map((stat, index) => renderStatCard(stat, index))}
+            {loading || isRefreshing || localIsRefreshing ? (
+              // Show skeletons when loading
+              primaryStats.map((_, index) => (
+                <StatCardSkeleton key={`primary-skeleton-${index}`} index={index} />
+              ))
+            ) : (
+              // Show actual stats when loaded
+              primaryStats.map((stat, index) => (
+                <StatCard key={`primary-stat-${index}`} stat={stat} index={index} />
+              ))
+            )}
           </Box>
           
           {/* Policy Stats Section */}
@@ -522,7 +637,17 @@ export const CustomerStats: React.FC<CustomerStatsProps> = ({
               mx: { xs: 0, sm: -1 }
             }}
           >
-            {policyStats.map((stat, index) => renderStatCard(stat, index, true))}
+            {loading || isRefreshing || localIsRefreshing ? (
+              // Show skeletons when loading
+              policyStats.map((_, index) => (
+                <StatCardSkeleton key={`policy-skeleton-${index}`} index={index} isPolicy />
+              ))
+            ) : (
+              // Show actual stats when loaded
+              policyStats.map((stat, index) => (
+                <StatCard key={`policy-stat-${index}`} stat={stat} index={index} isPolicy />
+              ))
+            )}
           </Box>
           
           {/* New Customer Notification */}
@@ -595,107 +720,47 @@ export const CustomerStats: React.FC<CustomerStatsProps> = ({
             gap: 2,
           }}
         >
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              p: 1,
-              borderRadius: 1,
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-            }}
-          >
-            <PeopleIcon 
-              sx={{ 
-                color: theme.palette.primary.main,
-                mr: 1,
-                fontSize: '1.2rem'
-              }} 
-            />
-            <Typography variant="body2" fontWeight={600}>
-              {loading || isRefreshing ? (
-                <Skeleton width={30} />
-              ) : (
-                `${stats.totalCustomers} clientes`
-              )}
-            </Typography>
-          </Box>
-          
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              p: 1,
-              borderRadius: 1,
-              bgcolor: alpha(theme.palette.success.main, 0.1),
-            }}
-          >
-            <CheckCircleIcon 
-              sx={{ 
-                color: theme.palette.success.main,
-                mr: 1,
-                fontSize: '1.2rem'
-              }} 
-            />
-            <Typography variant="body2" fontWeight={600}>
-              {loading || isRefreshing ? (
-                <Skeleton width={30} />
-              ) : (
-                `${stats.activeCustomers} activos`
-              )}
-            </Typography>
-          </Box>
-          
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              p: 1,
-              borderRadius: 1,
-              bgcolor: alpha(theme.palette.info.main, 0.1),
-            }}
-          >
-            <AssignmentIcon 
-              sx={{ 
-                color: theme.palette.info.main,
-                mr: 1,
-                fontSize: '1.2rem'
-              }} 
-            />
-            <Typography variant="body2" fontWeight={600}>
-              {loading || isRefreshing ? (
-                <Skeleton width={30} />
-              ) : (
-                `${stats.customersWithPolicies} con pólizas`
-              )}
-            </Typography>
-          </Box>
-          
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              p: 1,
-              borderRadius: 1,
-              bgcolor: alpha(theme.palette.warning.main, 0.1),
-            }}
-          >
-            <AutorenewIcon 
-              sx={{ 
-                color: theme.palette.warning.main,
-                mr: 1,
-                fontSize: '1.2rem'
-              }} 
-            />
-            <Typography variant="body2" fontWeight={600}>
-              {loading || isRefreshing ? (
-                <Skeleton width={30} />
-              ) : (
-                `${stats.customersWithRenewingPolicies} por renovar`
-              )}
-            </Typography>
-          </Box>
+          {loading || isRefreshing || localIsRefreshing ? (
+            // Show skeletons when loading
+            collapsedSummaryStats.map((_, index) => (
+              <Skeleton 
+                key={`collapsed-skeleton-${index}`}
+                variant="rounded" 
+                width={120} 
+                height={32} 
+                sx={{ borderRadius: 1 }}
+              />
+            ))
+          ) : (
+            // Show actual stats when loaded
+            collapsedSummaryStats.map((stat, index) => (
+              <Box 
+                key={`collapsed-stat-${index}`}
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  p: 1,
+                  borderRadius: 1,
+                  bgcolor: alpha(stat.color, 0.1),
+                }}
+              >
+                {React.cloneElement(stat.icon, { 
+                  sx: { 
+                    color: stat.color,
+                    mr: 1,
+                    fontSize: '1.2rem'
+                  }
+                })}
+                <Typography variant="body2" fontWeight={600}>
+                  {stat.value}
+                </Typography>
+              </Box>
+            ))
+          )}
         </Box>
       )}
     </Box>
   );
-};
+});
+
+CustomerStats.displayName = 'CustomerStats';
