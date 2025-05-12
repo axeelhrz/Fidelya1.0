@@ -336,16 +336,22 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.2 }}
                       style={{ 
-                        backgroundColor: theme.palette.background.paper,
+                        backgroundColor: policy.isStarred 
+                          ? alpha(theme.palette.warning.main, 0.05)
+                          : theme.palette.background.paper,
                         transition: 'background-color 0.3s ease'
                       }}
                       whileHover={{ 
-                        backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                        backgroundColor: policy.isStarred
+                          ? alpha(theme.palette.warning.main, 0.1)
+                          : alpha(theme.palette.primary.main, 0.05),
                         transition: { duration: 0.1 }
                       }}
                       sx={{
                         '&:hover': {
-                          backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                          backgroundColor: policy.isStarred
+                            ? alpha(theme.palette.warning.main, 0.1)
+                            : alpha(theme.palette.primary.main, 0.05),
                           cursor: 'pointer',
                         },
                         '& td': {
@@ -359,13 +365,20 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
                         <IconButton
                           size="small"
                           onClick={(e) => {
-                            e.stopPropagation();
+                                e.stopPropagation();
                             onToggleStar(policy.id, !policy.isStarred);
-                          }}
-                          sx={{ color: theme.palette.warning.main }}
-                        >
+                              }}
+                          sx={{ 
+                            color: policy.isStarred 
+                              ? theme.palette.warning.main 
+                              : theme.palette.text.secondary,
+                            '&:hover': {
+                              backgroundColor: alpha(theme.palette.warning.main, 0.1),
+                            }
+                              }}
+                            >
                           {policy.isStarred ? <StarIcon /> : <StarBorderIcon />}
-                        </IconButton>
+                            </IconButton>
                       </TableCell>
                       <TableCell>
                         <Typography 
@@ -421,15 +434,15 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
                         <Chip
                           label={getStatusLabel(policy.status)}
                           size="small"
-                          sx={{
+            sx={{
                             backgroundColor: alpha(getStatusColor(policy.status), 0.1),
                             color: getStatusColor(policy.status),
-                            fontWeight: 600,
+                fontWeight: 600,
                             fontSize: '0.75rem',
                             fontFamily: 'Sora, sans-serif',
-                            borderRadius: '8px',
+                borderRadius: '8px',
                           }}
-                        />
+          />
                       </TableCell>
                       <TableCell align="right">
                         <Stack direction="row" spacing={1} justifyContent="flex-end">

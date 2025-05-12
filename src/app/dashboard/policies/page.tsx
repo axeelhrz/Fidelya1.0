@@ -24,13 +24,13 @@ import { Policy, PolicyReminder } from '@/types/policy';
 import { useAuth } from '@/hooks/use-auth';
 import { Timestamp } from 'firebase/firestore';
 
-
 // Componentes
 import PolicyHeader from '@/components/dashboard/policies/policy-header';
 import PolicyStats from '@/components/dashboard/policies/policy-stats';
 import PolicyTabs from '@/components/dashboard/policies/policy-tabs';
 import PolicyTable from '@/components/dashboard/policies/policy-table';
 import PolicyGrid from '@/components/dashboard/policies/policy-grid';
+import ArchivedPoliciesSection from '@/components/dashboard/policies/archived-policies-section';
 
 // Diálogos
 import PolicyFormDialog from '@/components/dashboard/policies/policy-form-dialog';
@@ -125,7 +125,6 @@ export default function PoliciesPage() {
     });
   };
   
-
 
   // Función para manejar el cambio de vista con ToggleButtonGroup
   const handleViewToggleChange = (
@@ -754,6 +753,17 @@ const getFilteredPoliciesByTab = () => {
           )}
         </motion.div>
 
+        {/* Sección de pólizas archivadas - Solo se muestra si no estamos en la pestaña de archivadas */}
+        {currentTab !== 6 && (
+          <ArchivedPoliciesSection 
+          policies={policies}
+            onView={handleOpenViewDialog}
+            onEdit={(policy) => handleOpenDialog(true, policy)}
+            onToggleArchive={handleToggleArchive}
+            onToggleStar={handleToggleStar}
+        />
+        )}
+
         {/* Diálogos */}
         <PolicyFormDialog 
           open={openDialog}
@@ -772,7 +782,7 @@ const getFilteredPoliciesByTab = () => {
           onEdit={(policy) => {
             handleCloseViewDialog();
             handleOpenDialog(true, policy);
-          }}
+            }}
           onDelete={handleOpenDeleteDialog}
           onToggleArchive={handleToggleArchive}
           onToggleStar={handleToggleStar}
