@@ -19,56 +19,41 @@ import {
   alpha 
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { collection, query, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { useAuth } from '@/hooks/use-auth';
+import { Timestamp } from 'firebase/firestore';
+import { usePolicies } from '@/hooks/use-policies';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { ArrowForward } from '@mui/icons-material';
-
-// Tipos para las pólizas
-interface Policy {
-  id: string;
-  number: string;
-  type: string;
-  clientName: string;
-  clientId: string;
-  status: 'active' | 'pending' | 'expired' | 'cancelled';
-  premium: number;
-  startDate: Timestamp | Date;
-  endDate: Timestamp | Date;
-  createdAt: Timestamp | Date;
-}
+import { Policy } from '@/types/policy';
 
 const RecentPoliciesList = () => {
   const theme = useTheme();
-  const { user } = useAuth();
-  const [policies, setPolicies] = useState<Policy[]>([]);
+  const { policies, loading: policiesLoading } = usePolicies();
   const [isLoading, setIsLoading] = useState(true);
+  const [recentPolicies, setRecentPolicies] = useState<Policy[]>([]);
 
   useEffect(() => {
-    if (!user?.uid) return;
-
-    // Suscripción a las pólizas recientes en tiempo real desde Firestore
-    const unsubscribe = onSnapshot(
-      query(
-        collection(db, `users/${user.uid}/policies`),
-        orderBy('createdAt', 'desc'),
-        limit(5)
-      ),
-      (snapshot) => {
-        const policiesData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Policy[];
-        
-        setPolicies(policiesData);
-        setIsLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user]);
+    if (policies.length > 0) {
+      // Filtrar solo las pólizas no archivadas
+      const nonArchivedPolicies = policies.filter(p => !p.isArchived);
+      
+      // Ordenar por fecha de creación (más reciente primero)
+      const sortedPolicies = [...nonArchivedPolicies].sort((a, b) => {
+        const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate() : new Date(a.createdAt);
+        const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate() : new Date(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      });
+      
+      // Tomar las 5 más recientes
+      const latest = sortedPolicies.slice(0, 5);
+      
+      setRecentPolicies(latest);
+      setIsLoading(false);
+    } else if (!policiesLoading) {
+      // Si no hay pólizas y ya terminó de cargar
+      setIsLoading(false);
+    }
+  }, [policies, policiesLoading]);
 
   // Función para formatear la fecha
   const formatDate = (timestamp: Timestamp | Date | undefined) => {
@@ -214,7 +199,7 @@ const RecentPoliciesList = () => {
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
             <Typography>Cargando pólizas...</Typography>
           </Box>
-        ) : policies.length === 0 ? (
+        ) : recentPolicies.length === 0 ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
             <Typography color="text.secondary">No hay pólizas recientes</Typography>
           </Box>
@@ -232,7 +217,7 @@ const RecentPoliciesList = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {policies.map((policy, index) => (
+                {recentPolicies.map((policy, index) => (
                   <TableRow
                     key={policy.id}
                     component={motion.tr}
@@ -249,12 +234,12 @@ const RecentPoliciesList = () => {
                   >
                     <TableCell>
                       <Typography variant="body2" fontWeight={600}>
-                        {policy.number}
+                        {policy.policyNumber}
                       </Typography>
                     </TableCell>
                     <TableCell>{policy.type}</TableCell>
                     <TableCell>
-                      <Link href={`/dashboard/customers?id=${policy.clientId}`} passHref>
+                      <Link href={`/dashboard/customers?id=${policy.customerId}`} passHref>
                         <Typography 
                           component="a" 
                           variant="body2" 
@@ -265,7 +250,7 @@ const RecentPoliciesList = () => {
                           }}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {policy.clientName}
+                          {policy.customerName}
                         </Typography>
                       </Link>
                     </TableCell>

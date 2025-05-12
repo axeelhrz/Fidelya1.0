@@ -10,7 +10,8 @@ import {
   updateDoc,
   deleteDoc,
   Timestamp,
-  getCountFromServer
+  getCountFromServer,
+  onSnapshot
 } from 'firebase/firestore';
 import { ref, deleteObject } from "firebase/storage";
 import { db, storage } from '@/lib/firebase';
@@ -102,48 +103,47 @@ export function usePolicies() {
     }
   }, [user]);
   
-  const fetchPolicies = useCallback(async (loadMore = false) => {
+  // Modificado para usar onSnapshot y mantener datos en tiempo real
+  const setupPoliciesListener = useCallback(() => {
     if (!user) {
       setPolicies([]);
       setLoading(false);
       setHasMore(false);
-      return;
+      return () => {}; // Retornar una función de limpieza vacía
     }
   
     setLoading(true);
-    console.log("Iniciando fetchPolicies, loadMore:", loadMore);
+    console.log("Configurando listener de pólizas en tiempo real");
   
-    try {
-      // IMPORTANTE: Para la carga inicial, usar una consulta simple sin filtros
-      // para obtener todas las pólizas del usuario
-      let q = query(
-        collection(db, 'policies'),
-        where('userId', '==', user.uid)
-      );
+    // Crear la consulta base
+    let q = query(
+      collection(db, 'policies'),
+      where('userId', '==', user.uid)
+    );
   
-      // Solo aplicar filtros si no es la carga inicial
-      if (filters.status.length > 0) {
-        q = query(q, where('status', 'in', filters.status));
-      }
-      
-      // Aplicar ordenamiento
-      if (sortConfig.key) {
-        const firestoreSortKey = sortConfig.key === 'customerName' ? 'customerName' : 
-                                sortConfig.key === 'policyNumber' ? 'policyNumber' :
-                                sortConfig.key === 'type' ? 'type' :
-                                sortConfig.key === 'status' ? 'status' :
-                                sortConfig.key === 'company' ? 'company' :
-                                sortConfig.key === 'premium' ? 'premium' :
-                                sortConfig.key === 'startDate' ? 'startDate' :
-                                sortConfig.key === 'endDate' ? 'endDate' : 'endDate';
-        q = query(q, orderBy(firestoreSortKey, sortConfig.direction));
-      } else {
-        // Si no hay ordenamiento, ordenar por fecha de creación descendente
-        q = query(q, orderBy('createdAt', 'desc'));
-      }
+    // Aplicar filtros si existen
+    if (filters.status.length > 0) {
+      q = query(q, where('status', 'in', filters.status));
+    }
+    
+    // Aplicar ordenamiento
+    if (sortConfig.key) {
+      const firestoreSortKey = sortConfig.key === 'customerName' ? 'customerName' : 
+                              sortConfig.key === 'policyNumber' ? 'policyNumber' :
+                              sortConfig.key === 'type' ? 'type' :
+                              sortConfig.key === 'status' ? 'status' :
+                              sortConfig.key === 'company' ? 'company' :
+                              sortConfig.key === 'premium' ? 'premium' :
+                              sortConfig.key === 'startDate' ? 'startDate' :
+                              sortConfig.key === 'endDate' ? 'endDate' : 'endDate';
+      q = query(q, orderBy(firestoreSortKey, sortConfig.direction));
+    } else {
+      // Si no hay ordenamiento, ordenar por fecha de creación descendente
+      q = query(q, orderBy('createdAt', 'desc'));
+    }
   
-      // Ejecutar la consulta sin límite para obtener todas las pólizas
-      const querySnapshot = await getDocs(q);
+    // Configurar el listener en tiempo real
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedPolicies: Policy[] = [];
       
       querySnapshot.forEach((doc) => {
@@ -163,19 +163,17 @@ export function usePolicies() {
   
       // Actualizar estado con todas las pólizas
       setPolicies(fetchedPolicies);
+      setLoading(false);
       
       // Log para depuración
-      console.log('Pólizas obtenidas:', fetchedPolicies.length);
-      if (fetchedPolicies.length > 0) {
-        console.log('Primera póliza:', fetchedPolicies[0].policyNumber);
-        console.log('Última póliza:', fetchedPolicies[fetchedPolicies.length - 1].policyNumber);
-      }
-      
-    } catch (error) {
-      console.error("Error al obtener pólizas: ", error);
-    } finally {
+      console.log('Pólizas actualizadas en tiempo real:', fetchedPolicies.length);
+    }, (error) => {
+      console.error("Error en el listener de pólizas:", error);
       setLoading(false);
-    }
+    });
+  
+    // Retornar la función de limpieza para desuscribirse cuando el componente se desmonte
+    return unsubscribe;
   }, [user, filters, sortConfig]);
 
   const calculateStats = useCallback(async () => {
@@ -304,63 +302,15 @@ export function usePolicies() {
     fetchCustomers();
   }, [fetchCustomers]);
 
+  // Efecto para configurar el listener de pólizas en tiempo real
   useEffect(() => {
-    // Cargar pólizas
-    fetchPolicies(false);
+    const unsubscribe = setupPoliciesListener();
     
-    // Recalcular estadísticas
-    calculateStats();
-    
-    // Log para depuración
-    console.log("Efecto para cargar pólizas ejecutado con filtros:", filters);
-  }, [fetchPolicies, calculateStats, filters, sortConfig]);
-  
-  // Efecto adicional para cargar pólizas cuando cambia el usuario
-  useEffect(() => {
-    if (user) {
-      console.log("Usuario cambiado, cargando pólizas...");
-      
-      // Cargar pólizas sin filtros al iniciar
-      const loadInitialPolicies = async () => {
-        try {
-          // Consulta simple para obtener todas las pólizas del usuario
-          const q = query(
-            collection(db, 'policies'),
-            where('userId', '==', user.uid),
-            orderBy('createdAt', 'desc')
-          );
-          
-          const querySnapshot = await getDocs(q);
-          const fetchedPolicies: Policy[] = [];
-          
-          querySnapshot.forEach((doc) => {
-            const policyData = doc.data();
-            // Asegurarse de que todos los campos requeridos estén presentes
-            const policy: Policy = {
-              id: doc.id,
-              ...policyData,
-              errors: policyData.errors || [],
-              customerId: policyData.customerId || '',
-              coverage: policyData.coverage || 0,
-              paymentFrequency: policyData.paymentFrequency || 'annual',
-            } as Policy;
-            
-            fetchedPolicies.push(policy);
-          });
-          
-          // Actualizar estado con todas las pólizas
-          setPolicies(fetchedPolicies);
-          
-          // Log para depuración
-          console.log('Pólizas iniciales cargadas:', fetchedPolicies.length);
-        } catch (error) {
-          console.error("Error al cargar pólizas iniciales:", error);
-        }
-      };
-      
-      loadInitialPolicies();
-    }
-  }, [user]);
+    // Limpiar el listener cuando el componente se desmonte o cambien las dependencias
+    return () => {
+      unsubscribe();
+    };
+  }, [setupPoliciesListener]);
   
   // Efecto para búsqueda y ordenamiento en el cliente (si no se hace en backend)
   const filteredPolicies = policies
@@ -388,6 +338,77 @@ export function usePolicies() {
       }
       return sortConfig.direction === 'desc' ? comparison * -1 : comparison;
     });
+
+  // Función para recargar manualmente las pólizas
+  const fetchPolicies = useCallback(async (loadMore = false) => {
+    if (!user) {
+      setPolicies([]);
+      setLoading(false);
+      setHasMore(false);
+      return;
+    }
+  
+    setLoading(true);
+    console.log("Iniciando fetchPolicies manual, loadMore:", loadMore);
+  
+    try {
+      // Consulta simple para obtener todas las pólizas del usuario
+      let q = query(
+        collection(db, 'policies'),
+        where('userId', '==', user.uid)
+      );
+  
+      // Aplicar filtros si existen
+      if (filters.status.length > 0) {
+        q = query(q, where('status', 'in', filters.status));
+      }
+      
+      // Aplicar ordenamiento
+      if (sortConfig.key) {
+        const firestoreSortKey = sortConfig.key === 'customerName' ? 'customerName' : 
+                                sortConfig.key === 'policyNumber' ? 'policyNumber' :
+                                sortConfig.key === 'type' ? 'type' :
+                                sortConfig.key === 'status' ? 'status' :
+                                sortConfig.key === 'company' ? 'company' :
+                                sortConfig.key === 'premium' ? 'premium' :
+                                sortConfig.key === 'startDate' ? 'startDate' :
+                                sortConfig.key === 'endDate' ? 'endDate' : 'endDate';
+        q = query(q, orderBy(firestoreSortKey, sortConfig.direction));
+      } else {
+        // Si no hay ordenamiento, ordenar por fecha de creación descendente
+        q = query(q, orderBy('createdAt', 'desc'));
+      }
+  
+      // Ejecutar la consulta sin límite para obtener todas las pólizas
+      const querySnapshot = await getDocs(q);
+      const fetchedPolicies: Policy[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const policyData = doc.data();
+        // Asegurarse de que todos los campos requeridos estén presentes
+        const policy: Policy = {
+          id: doc.id,
+          ...policyData,
+          errors: policyData.errors || [],
+          customerId: policyData.customerId || '',
+          coverage: policyData.coverage || 0,
+          paymentFrequency: policyData.paymentFrequency || 'annual',
+        } as Policy;
+        
+        fetchedPolicies.push(policy);
+      });
+  
+      // Actualizar estado con todas las pólizas
+      setPolicies(fetchedPolicies);
+      setLoading(false);
+      
+      // Log para depuración
+      console.log('Pólizas obtenidas manualmente:', fetchedPolicies.length);
+    } catch (error) {
+      console.error("Error al obtener pólizas manualmente: ", error);
+      setLoading(false);
+    }
+  }, [user, filters, sortConfig]);
 
   const savePolicy = async (policyData: Partial<Policy>, isEdit: boolean, policyId?: string): Promise<boolean> => {
     if (!user) return false;
@@ -429,46 +450,8 @@ export function usePolicies() {
         console.log("Nueva póliza creada con ID:", docRef.id);
       }
       
-      // IMPORTANTE: Forzar una actualización completa después de guardar
-      console.log("Política guardada, actualizando datos...");
-      
-      // Resetear los filtros para forzar una recarga completa
-      // No es necesario setLastDoc ya que no estamos usando ese estado
-      
-      // Forzar una recarga completa de las políticas sin filtros
-      // Usar una consulta simple para obtener todas las pólizas del usuario
-      const q = query(
-        collection(db, 'policies'),
-        where('userId', '==', user.uid)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const fetchedPolicies: Policy[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const policyData = doc.data();
-        // Asegurarse de que todos los campos requeridos estén presentes
-        const policy: Policy = {
-          id: doc.id,
-          ...policyData,
-          errors: policyData.errors || [],
-          customerId: policyData.customerId || '',
-          coverage: policyData.coverage || 0,
-          paymentFrequency: policyData.paymentFrequency || 'annual',
-        } as Policy;
-        
-        fetchedPolicies.push(policy);
-      });
-      
-      // Actualizar el estado con todas las pólizas
-      setPolicies(fetchedPolicies);
-      
-      // Log para depuración
-      console.log('Pólizas obtenidas después de guardar:', fetchedPolicies.length);
-      if (fetchedPolicies.length > 0) {
-        console.log('Primera póliza:', fetchedPolicies[0].policyNumber);
-        console.log('Última póliza:', fetchedPolicies[fetchedPolicies.length - 1].policyNumber);
-      }
+      // No es necesario recargar manualmente las pólizas ya que el listener onSnapshot
+      // detectará los cambios y actualizará el estado automáticamente
       
       // IMPORTANTE: Recalcular estadísticas después de guardar
       await calculateStats();
@@ -497,11 +480,13 @@ export function usePolicies() {
   
       const policyRef = doc(db, 'policies', policyId);
       await deleteDoc(policyRef);
-      setPolicies(prev => prev.filter(p => p.id !== policyId));
+      
+      // No es necesario actualizar manualmente el estado ya que el listener onSnapshot
+      // detectará la eliminación y actualizará el estado automáticamente
       
       // IMPORTANTE: Recalcular estadísticas después de eliminar
       await calculateStats();
-      
+
       return true;
     } catch (error) {
       console.error("Error deleting policy: ", error);
@@ -514,8 +499,9 @@ export function usePolicies() {
     try {
       const policyRef = doc(db, 'policies', policyId);
       await updateDoc(policyRef, { isArchived: archive, updatedAt: Timestamp.now() });
-      // Actualizar localmente o recargar
-      setPolicies(prev => prev.map(p => p.id === policyId ? { ...p, isArchived: archive, updatedAt: Timestamp.now() } : p));
+      
+      // No es necesario actualizar manualmente el estado ya que el listener onSnapshot
+      // detectará el cambio y actualizará el estado automáticamente
       
       // IMPORTANTE: Recalcular estadísticas después de archivar/desarchivar
       await calculateStats();
@@ -532,7 +518,9 @@ export function usePolicies() {
     try {
       const policyRef = doc(db, 'policies', policyId);
       await updateDoc(policyRef, { isStarred: star, updatedAt: Timestamp.now() });
-      setPolicies(prev => prev.map(p => p.id === policyId ? { ...p, isStarred: star, updatedAt: Timestamp.now() } : p));
+      
+      // No es necesario actualizar manualmente el estado ya que el listener onSnapshot
+      // detectará el cambio y actualizará el estado automáticamente
       
       // No es necesario recalcular stats por esto, a menos que las stats dependan de isStarred
       
@@ -560,8 +548,8 @@ export function usePolicies() {
       };
       await addDoc(collection(db, 'policies'), duplicatedPolicy);
       
-      // Recargar pólizas
-      await fetchPolicies(false);
+      // No es necesario recargar manualmente las pólizas ya que el listener onSnapshot
+      // detectará el cambio y actualizará el estado automáticamente
       
       // IMPORTANTE: Recalcular estadísticas después de duplicar
       await calculateStats();
@@ -595,7 +583,9 @@ export function usePolicies() {
       const updatedDocuments = [...(currentPolicy?.documents || []), newDocument];
       await updateDoc(policyRef, { documents: updatedDocuments, updatedAt: Timestamp.now() });
       
-      setPolicies(prev => prev.map(p => p.id === policyId ? { ...p, documents: updatedDocuments, updatedAt: Timestamp.now() } : p));
+      // No es necesario actualizar manualmente el estado ya que el listener onSnapshot
+      // detectará el cambio y actualizará el estado automáticamente
+      
       return newDocument;
     } catch (error) {
       console.error("Error uploading document: ", error);
@@ -621,7 +611,9 @@ export function usePolicies() {
       const updatedDocuments = currentPolicy.documents.filter(d => (d.id || d.name) !== (docToDelete.id || docToDelete.name) );
       await updateDoc(policyRef, { documents: updatedDocuments, updatedAt: Timestamp.now() });
       
-      setPolicies(prev => prev.map(p => p.id === policyId ? { ...p, documents: updatedDocuments, updatedAt: Timestamp.now() } : p));
+      // No es necesario actualizar manualmente el estado ya que el listener onSnapshot
+      // detectará el cambio y actualizará el estado automáticamente
+      
       return true;
     } catch (error) {
       console.error("Error deleting document: ", error);
@@ -639,6 +631,10 @@ export function usePolicies() {
       const updatedReminders = [...(currentPolicy?.reminders || []), newReminder];
       
       await updateDoc(policyRef, { reminders: updatedReminders, updatedAt: Timestamp.now() });
+      
+      // No es necesario actualizar manualmente el estado ya que el listener onSnapshot
+      // detectará el cambio y actualizará el estado automáticamente
+      
       return true;
     } catch (error) {
       console.error("Error adding reminder: ", error);
@@ -658,7 +654,10 @@ export function usePolicies() {
       );
       
       await updateDoc(policyRef, { reminders: updatedReminders, updatedAt: Timestamp.now() });
-      setPolicies(prev => prev.map(p => p.id === policyId ? { ...p, reminders: updatedReminders, updatedAt: Timestamp.now() } : p));
+      
+      // No es necesario actualizar manualmente el estado ya que el listener onSnapshot
+      // detectará el cambio y actualizará el estado automáticamente
+      
       return true;
     } catch (error) {
       console.error("Error toggling reminder: ", error);
@@ -676,7 +675,10 @@ export function usePolicies() {
       const updatedReminders = currentPolicy.reminders.filter(r => r.id !== reminderId);
       
       await updateDoc(policyRef, { reminders: updatedReminders, updatedAt: Timestamp.now() });
-      setPolicies(prev => prev.map(p => p.id === policyId ? { ...p, reminders: updatedReminders, updatedAt: Timestamp.now() } : p));
+      
+      // No es necesario actualizar manualmente el estado ya que el listener onSnapshot
+      // detectará el cambio y actualizará el estado automáticamente
+      
       return true;
     } catch (error) {
       console.error("Error deleting reminder: ", error);
@@ -690,7 +692,10 @@ export function usePolicies() {
     try {
       const policyRef = doc(db, 'policies', policyId);
       await updateDoc(policyRef, { notes, updatedAt: Timestamp.now() });
-      setPolicies(prev => prev.map(p => p.id === policyId ? { ...p, notes, updatedAt: Timestamp.now() } : p));
+      
+      // No es necesario actualizar manualmente el estado ya que el listener onSnapshot
+      // detectará el cambio y actualizará el estado automáticamente
+      
       return true;
     } catch (error) {
       console.error("Error updating notes: ", error);
