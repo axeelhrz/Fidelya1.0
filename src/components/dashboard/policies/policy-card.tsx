@@ -18,6 +18,8 @@ import {
   Visibility as VisibilityIcon,
   Edit as EditIcon,
   Refresh as RefreshIcon,
+  Archive as ArchiveIcon,
+  Unarchive as UnarchiveIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { Policy } from '@/types/policy';
@@ -30,6 +32,7 @@ interface PolicyCardProps {
   onView: (policy: Policy) => void;
   onEdit: (policy: Policy) => void;
   onToggleStar: (id: string, star: boolean) => void;
+  onToggleArchive?: (id: string, archive: boolean) => void;
   onRenew: (policy: Policy) => void;
 }
 
@@ -38,6 +41,7 @@ const PolicyCard: React.FC<PolicyCardProps> = ({
   onView,
   onEdit,
   onToggleStar,
+  onToggleArchive,
   onRenew
 }) => {
   const theme = useTheme();
@@ -93,17 +97,25 @@ const PolicyCard: React.FC<PolicyCardProps> = ({
         sx={{
           height: '100%',
           borderRadius: '16px',
-          background: theme.palette.mode === 'dark' 
+          background: policy.isStarred
+            ? `linear-gradient(135deg, ${alpha(theme.palette.warning.light, 0.1)}, ${alpha(theme.palette.background.paper, 0.8)})`
+            : theme.palette.mode === 'dark' 
             ? alpha(theme.palette.background.paper, 0.6)
             : alpha(theme.palette.background.paper, 0.8),
           backdropFilter: 'blur(10px)',
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          border: policy.isStarred
+            ? `1px solid ${alpha(theme.palette.warning.main, 0.3)}`
+            : `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           transition: 'all 0.3s ease',
           position: 'relative',
           overflow: 'hidden',
           '&:hover': {
-            boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`,
-            borderColor: alpha(theme.palette.primary.main, 0.2),
+            boxShadow: policy.isStarred
+              ? `0 8px 32px ${alpha(theme.palette.warning.main, 0.15)}`
+              : `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`,
+            borderColor: policy.isStarred
+              ? alpha(theme.palette.warning.main, 0.4)
+              : alpha(theme.palette.primary.main, 0.2),
           },
           '&::after': policy.isStarred ? {
             content: '""',
@@ -131,9 +143,26 @@ const PolicyCard: React.FC<PolicyCardProps> = ({
                 variant="h6" 
                 fontWeight={700}
                 fontFamily="Sora, sans-serif"
-                sx={{ color: theme.palette.text.primary }}
+                sx={{ 
+                  color: theme.palette.text.primary,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }}
               >
                 {policy.policyNumber}
+                {policy.isArchived && (
+                  <Tooltip title="Póliza archivada">
+                    <ArchiveIcon 
+                      fontSize="small" 
+                      sx={{ 
+                        color: theme.palette.text.secondary,
+                        opacity: 0.7,
+                        fontSize: '1rem'
+                      }} 
+                    />
+                  </Tooltip>
+                )}
               </Typography>
               <Chip
                 label={getStatusLabel(policy.status)}
@@ -147,7 +176,7 @@ const PolicyCard: React.FC<PolicyCardProps> = ({
                   borderRadius: '8px',
                 }}
               />
-            </Stack>
+              </Stack>
 
             {/* Cliente y tipo */}
             <Box>
@@ -255,6 +284,26 @@ const PolicyCard: React.FC<PolicyCardProps> = ({
                       }}
                     >
                       <RefreshIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {onToggleArchive && (
+                  <Tooltip title={policy.isArchived ? "Desarchivar" : "Archivar"}>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleArchive(policy.id, !policy.isArchived);
+                      }}
+                      sx={{ 
+                        color: theme.palette.grey[600],
+                        backgroundColor: alpha(theme.palette.grey[500], 0.1),
+                        '&:hover': {
+                          backgroundColor: alpha(theme.palette.grey[500], 0.2),
+                        }
+                      }}
+                    >
+                      {policy.isArchived ? <UnarchiveIcon fontSize="small" /> : <ArchiveIcon fontSize="small" />}
                     </IconButton>
                   </Tooltip>
                 )}

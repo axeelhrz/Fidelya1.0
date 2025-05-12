@@ -32,6 +32,8 @@ interface PolicyGridProps {
   loading: boolean;
   onView: (policy: Policy) => void;
   onEdit: (policy: Policy) => void;
+  onToggleStar?: (id: string, star: boolean) => void;
+  onToggleArchive?: (id: string, archive: boolean) => void;
   onRenew: (policy: Policy) => void;
   onNewPolicy: () => void;
 }

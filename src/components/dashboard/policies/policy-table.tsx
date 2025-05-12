@@ -26,7 +26,9 @@ import {
   StarBorder as StarBorderIcon,
   Visibility as VisibilityIcon,
   Edit as EditIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  Archive as ArchiveIcon,
+  Unarchive as UnarchiveIcon
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Policy } from '@/types/policy';
@@ -47,6 +49,7 @@ interface PolicyTableProps {
   onView: (policy: Policy) => void;
   onEdit: (policy: Policy) => void;
   onToggleStar: (id: string, star: boolean) => void;
+  onToggleArchive: (id: string, archive: boolean) => void;
   onNewPolicy: () => void;
 }
 
@@ -60,6 +63,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
   onView,
   onEdit,
   onToggleStar,
+  onToggleArchive,
   onNewPolicy
 }) => {
   const theme = useTheme();
@@ -438,7 +442,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
                               }}
                               sx={{ 
                                 color: theme.palette.primary.main,
-                                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                backgroundColor: alpha(theme.palette.primary.main, 0.2),
                                 '&:hover': {
                                   backgroundColor: alpha(theme.palette.primary.main, 0.2),
                                 }
@@ -465,10 +469,30 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
                               <EditIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
+                          {onToggleArchive && (
+                            <Tooltip title={policy.isArchived ? "Desarchivar" : "Archivar"}>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onToggleArchive(policy.id, !policy.isArchived);
+                                }}
+                                sx={{ 
+                                  color: theme.palette.grey[600],
+                                  backgroundColor: alpha(theme.palette.grey[500], 0.1),
+                                  '&:hover': {
+                                    backgroundColor: alpha(theme.palette.grey[500], 0.2),
+                                  }
+            }}
+                              >
+                                {policy.isArchived ? <UnarchiveIcon fontSize="small" /> : <ArchiveIcon fontSize="small" />}
+                              </IconButton>
+                            </Tooltip>
+      )}
                         </Stack>
                       </TableCell>
                     </MotionTableRow>
-                  );
+  );
                 })}
               </AnimatePresence>
             </TableBody>

@@ -739,8 +739,9 @@ const getFilteredPoliciesByTab = () => {
               onView={handleOpenViewDialog}
               onEdit={(policy) => handleOpenDialog(true, policy)}
               onToggleStar={handleToggleStar}
+          onToggleArchive={handleToggleArchive}
               onNewPolicy={() => handleOpenDialog(false)}
-            />
+        />
           ) : (
             <PolicyGrid 
               policies={displayedPolicies}
@@ -749,7 +750,7 @@ const getFilteredPoliciesByTab = () => {
               onEdit={(policy) => handleOpenDialog(true, policy)}
               onRenew={handleRenewPolicy}
               onNewPolicy={() => handleOpenDialog(false)}
-            />
+        />
           )}
         </motion.div>
 
@@ -815,9 +816,9 @@ const getFilteredPoliciesByTab = () => {
         <Snackbar
           open={snackbar.open}
           autoHideDuration={6000}
-          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+            onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        >
+          >
           <Alert 
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
             severity={snackbar.severity}
