@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -29,7 +29,7 @@ import {
   Star as StarIcon,
   StarBorder as StarBorderIcon
 } from '@mui/icons-material';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Policy } from '@/types/policy';
 import { formatCurrency } from '@/lib/formatters';
 
@@ -49,9 +49,13 @@ const ArchivedPoliciesSection: React.FC<ArchivedPoliciesSectionProps> = ({
 }) => {
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
+  const [archivedPolicies, setArchivedPolicies] = useState<Policy[]>([]);
   
-  // Filtrar solo las pólizas archivadas
-  const archivedPolicies = policies.filter(policy => policy.isArchived);
+  // Actualizar archivedPolicies cuando cambie policies
+  useEffect(() => {
+    const filtered = policies.filter(policy => policy.isArchived);
+    setArchivedPolicies(filtered);
+  }, [policies]);
   
   // Si no hay pólizas archivadas, no mostrar la sección
   if (archivedPolicies.length === 0) {
@@ -173,23 +177,21 @@ const ArchivedPoliciesSection: React.FC<ArchivedPoliciesSectionProps> = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
+                  <AnimatePresence>
                   {displayedPolicies.map((policy) => (
-                    <TableRow 
+                      <motion.tr
                       key={policy.id}
-                      sx={{
-                        '&:hover': {
-                          backgroundColor: alpha(theme.palette.primary.main, 0.05),
-                          cursor: 'pointer',
-                        },
-                        '& td': {
-                          fontFamily: 'Inter, sans-serif',
-                          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                        },
-                        backgroundColor: policy.isStarred 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        style={{
+                          backgroundColor: policy.isStarred 
                           ? alpha(theme.palette.warning.main, 0.05)
                           : 'transparent',
                       }}
                       onClick={() => onView(policy)}
+                        className="hover:bg-primary-50 cursor-pointer"
                     >
                       <TableCell>
                         <IconButton
@@ -198,9 +200,9 @@ const ArchivedPoliciesSection: React.FC<ArchivedPoliciesSectionProps> = ({
                             e.stopPropagation();
                             onToggleStar(policy.id, !policy.isStarred);
                           }}
-                          sx={{ 
-                            color: policy.isStarred 
-                              ? theme.palette.warning.main 
+                            sx={{ 
+                              color: policy.isStarred 
+                                ? theme.palette.warning.main 
                               : theme.palette.text.secondary,
                             '&:hover': {
                               backgroundColor: alpha(theme.palette.warning.main, 0.1),
@@ -211,8 +213,8 @@ const ArchivedPoliciesSection: React.FC<ArchivedPoliciesSectionProps> = ({
                         </IconButton>
                       </TableCell>
                       <TableCell>
-                        <Typography 
-                          variant="body2" 
+                          <Typography 
+                            variant="body2" 
                           fontWeight={600}
                           sx={{ color: theme.palette.text.primary }}
                         >
@@ -235,8 +237,8 @@ const ArchivedPoliciesSection: React.FC<ArchivedPoliciesSectionProps> = ({
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography 
-                          variant="body2" 
+                          <Typography 
+                            variant="body2" 
                           fontWeight={600}
                           sx={{ color: theme.palette.primary.main }}
                         >
@@ -266,7 +268,7 @@ const ArchivedPoliciesSection: React.FC<ArchivedPoliciesSectionProps> = ({
                                 e.stopPropagation();
                                 onView(policy);
                               }}
-                              sx={{ 
+                                sx={{ 
                                 color: theme.palette.primary.main,
                                 backgroundColor: alpha(theme.palette.primary.main, 0.1),
                                 '&:hover': {
@@ -284,7 +286,7 @@ const ArchivedPoliciesSection: React.FC<ArchivedPoliciesSectionProps> = ({
                                 e.stopPropagation();
                                 onToggleArchive(policy.id, false);
                               }}
-                              sx={{ 
+                                sx={{ 
                                 color: theme.palette.grey[600],
                                 backgroundColor: alpha(theme.palette.grey[500], 0.1),
                                 '&:hover': {
@@ -297,8 +299,9 @@ const ArchivedPoliciesSection: React.FC<ArchivedPoliciesSectionProps> = ({
                           </Tooltip>
                         </Stack>
                       </TableCell>
-                    </TableRow>
+                      </motion.tr>
                   ))}
+                  </AnimatePresence>
                 </TableBody>
               </Table>
             </TableContainer>

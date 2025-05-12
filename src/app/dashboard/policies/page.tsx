@@ -84,29 +84,28 @@ export default function PoliciesPage() {
   };
 
   // Custom hook para manejar las pólizas
-  const {
-    policies,
-    filteredPolicies,
-    customers,
-    loading,
-    hasMore,
-    policyStats,
-    filters,
-    setFilters,
-    sortConfig,
-    setSortConfig,
-    savePolicy,
-    deletePolicy,
-    toggleArchivePolicy,
-    toggleStarPolicy,
-    duplicatePolicy,
-    addReminder,
-    toggleReminder,
-    deleteReminder,
-    uploadDocument,
-    deleteDocument,
-    updateNotes
-  } = usePolicies();
+    const {
+      policies,
+      filteredPolicies,
+      customers,
+      loading,
+      hasMore,
+      policyStats,
+      setFilters,
+      sortConfig,
+      setSortConfig,
+      savePolicy,
+      deletePolicy,
+      toggleArchivePolicy,
+      toggleStarPolicy,
+      duplicatePolicy,
+      addReminder,
+      toggleReminder,
+      deleteReminder,
+      uploadDocument,
+      deleteDocument,
+      updateNotes
+    } = usePolicies();
 
   // Funciones para manejar los cambios de estado
   const handleTabChange = (newValue: number) => {
@@ -265,60 +264,61 @@ export default function PoliciesPage() {
       });
     }
   };
+const handleToggleStar = async (id: string, star: boolean) => {
+  const success = await toggleStarPolicy(id, star);
+  
+  if (!success) {
+    setSnackbar({
+      open: true,
+      message: 'Error al destacar póliza',
+      severity: 'error'
+    });
+  }
+};
 
-  const handleToggleStar = async (id: string, star: boolean) => {
-    const success = await toggleStarPolicy(id, star);
-    
-    if (!success) {
-      setSnackbar({
-        open: true,
-        message: 'Error al destacar póliza',
-        severity: 'error'
-      });
+const handleToggleArchive = async (id: string, archive: boolean) => {
+  const success = await toggleArchivePolicy(id, archive);
+  
+  if (success) {
+    setSnackbar({
+      open: true,
+      message: archive ? 'Póliza archivada con éxito' : 'Póliza desarchivada con éxito',
+      severity: 'success'
+    });
+    if (openViewDialog) {
+      handleCloseViewDialog();
     }
-  };
+  } else {
+    setSnackbar({
+      open: true,
+      message: 'Error al cambiar estado de archivo',
+      severity: 'error'
+    });
+  }
+};
 
-  const handleToggleArchive = async (id: string, archive: boolean) => {
-    const success = await toggleArchivePolicy(id, archive);
-    
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: archive ? 'Póliza archivada con éxito' : 'Póliza desarchivada con éxito',
-        severity: 'success'
-      });
-      if (openViewDialog) {
-        handleCloseViewDialog();
-      }
-    } else {
-      setSnackbar({
-        open: true,
-        message: 'Error al cambiar estado de archivo',
-        severity: 'error'
-      });
+const handleDuplicatePolicy = async (policy: Policy) => {
+  if (!policy) return;
+  
+  const success = await duplicatePolicy(policy);
+  
+  if (success) {
+    setSnackbar({
+      open: true,
+      message: 'Póliza duplicada con éxito',
+      severity: 'success'
+    });
+    if (openViewDialog) {
+      handleCloseViewDialog();
     }
-  };
-
-  const handleDuplicatePolicy = async (policy: Policy) => {
-    const success = await duplicatePolicy(policy);
-    
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: 'Póliza duplicada con éxito',
-        severity: 'success'
-      });
-      if (openViewDialog) {
-        handleCloseViewDialog();
-      }
-    } else {
-      setSnackbar({
-        open: true,
-        message: 'Error al duplicar póliza',
-        severity: 'error'
-      });
-    }
-  };
+  } else {
+    setSnackbar({
+      open: true,
+      message: 'Error al duplicar póliza',
+      severity: 'error'
+    });
+  }
+};
 
   const handleRenewPolicy = (policy: Policy) => {
     handleOpenDialog(true, {
@@ -438,9 +438,6 @@ const getFilteredPoliciesByTab = () => {
   // Primero, asegúrate de que estamos trabajando con la lista más actualizada
   let filtered = [...filteredPolicies];
   
-  console.log("Total de pólizas antes de filtrar por pestaña:", filtered.length);
-  console.log("Pestaña actual:", currentTab);
-  
   // Verificar si hay pólizas con campos faltantes y corregirlas
   filtered = filtered.map(p => ({
     ...p,
@@ -448,17 +445,9 @@ const getFilteredPoliciesByTab = () => {
     customerId: p.customerId || '',
     coverages: p.coverages || [],
     paymentFrequency: p.paymentFrequency || 'annual',
+    isStarred: p.isStarred || false,
+    isArchived: p.isArchived || false,
   }));
-  
-  // Imprimir información sobre las pólizas antes de filtrar
-  if (filtered.length > 0) {
-    console.log("Pólizas antes de filtrar:", filtered.map(p => ({
-      id: p.id,
-      policyNumber: p.policyNumber,
-      status: p.status,
-      isArchived: p.isArchived
-    })));
-  }
   
   // Filtrar por pestaña
   switch (currentTab) {
@@ -475,26 +464,14 @@ const getFilteredPoliciesByTab = () => {
       filtered = filtered.filter(p => p.status === 'pending' && !p.isArchived);
       break;
     case 4: // En revisión
-      // 'review' is not a valid status, removing it or using a valid status
-      filtered = filtered.filter(p => !p.isArchived);
+      filtered = filtered.filter(p => p.status === 'pending' && !p.isArchived); // Using 'pending' instead of invalid 'review'
       break;
-  }
-  
-  console.log("Total de pólizas después de filtrar por pestaña:", filtered.length);
-  console.log("Filtro aplicado para pestaña:", currentTab);
-  
-  // Imprimir información sobre las pólizas filtradas
-  if (filtered.length > 0) {
-    console.log("Pólizas después de filtrar:", filtered.map(p => ({
-      id: p.id,
-      policyNumber: p.policyNumber,
-      status: p.status,
-      isArchived: p.isArchived
-    })));
-  } else {
-    console.log("No hay pólizas que cumplan con los filtros actuales");
-    console.log("Filtros actuales:", filters);
-    console.log("Pestaña actual:", currentTab);
+    case 5: // Destacadas
+      filtered = filtered.filter(p => p.isStarred === true);
+      break;
+    case 6: // Archivadas
+      filtered = filtered.filter(p => p.isArchived === true);
+      break;
   }
   
   return filtered;
@@ -516,8 +493,8 @@ const getFilteredPoliciesByTab = () => {
       }}>
         <CircularProgress />
       </Box>
-    );
-  }
+  );
+}
 
   // Mostrar mensaje si no hay usuario autenticado
   if (!user) {
