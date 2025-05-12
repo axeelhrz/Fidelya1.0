@@ -322,7 +322,10 @@ const PolicyDistributionChart = () => {
         sx={{ 
           width: '100%', 
           mt: { xs: 2, md: 0 },
-          pl: { md: 2 }
+          pl: { md: 2 },
+          maxHeight: { xs: 'auto', md: '100%' },
+          overflowY: { xs: 'visible', md: 'auto' },
+          pr: { md: 1 }
         }}
       >
         <Typography variant="subtitle2" fontWeight={600} gutterBottom>
@@ -346,7 +349,7 @@ const PolicyDistributionChart = () => {
                 alignItems="center" 
                 spacing={1.5}
                 sx={{
-                  p: 1,
+                  p: 1.2,
                   borderRadius: 2,
                   transition: 'all 0.2s ease',
                   bgcolor: hoveredType === entry.id 
@@ -359,8 +362,8 @@ const PolicyDistributionChart = () => {
               >
                 <Avatar
                   sx={{
-                    width: 32,
-                    height: 32,
+                    width: 36,
+                    height: 36,
                     bgcolor: entry.color,
                     color: '#fff'
                   }}
@@ -446,17 +449,22 @@ const PolicyDistributionChart = () => {
           <BarChart
             data={chartData}
             layout="vertical"
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            margin={{ top: 5, right: 20, left: 40, bottom: 5 }}
           >
-            <XAxis type="number" hide />
+            <XAxis 
+              type="number" 
+              domain={[0, 100]} 
+              tickFormatter={(value) => `${value}%`}
+              tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
+            />
             <YAxis 
               dataKey="name" 
               type="category" 
-              width={80}
+              width={100}
               tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
               axisLine={false}
-            />
-            <Tooltip content={<CustomTooltip />} />
+                />
+          <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="percentage" radius={[0, 4, 4, 0]}>
               {chartData.map((entry, index) => (
                 <Cell 
@@ -467,11 +475,10 @@ const PolicyDistributionChart = () => {
               ))}
             </Bar>
           </BarChart>
-        </ResponsiveContainer>
-      );
+      </ResponsiveContainer>
+    );
     }
-
-    return (
+  return (
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
@@ -479,12 +486,12 @@ const PolicyDistributionChart = () => {
             cx="50%"
             cy="50%"
             innerRadius={chartType === 'donut' ? 60 : 0}
-            outerRadius={80}
+            outerRadius={90}
             paddingAngle={4}
             dataKey="value"
             animationDuration={1000}
             animationBegin={200}
-          >
+    >
             {chartData.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
@@ -492,11 +499,11 @@ const PolicyDistributionChart = () => {
                 stroke={theme.palette.background.paper}
                 strokeWidth={2}
                 opacity={hoveredType === null || hoveredType === entry.id ? 1 : 0.5}
-              />
+      />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
-          {chartData.length > 0 && (
+          {chartData.length > 0 && chartType === 'donut' && (
             <text
               x="50%"
               y="50%"
@@ -507,15 +514,15 @@ const PolicyDistributionChart = () => {
                 fontSize: '1.5rem',
                 fontWeight: 700,
                 fontFamily: 'Sora'
-              }}
-            >
+        }}
+      >
               {formatNumber(policies.length)}
             </text>
           )}
         </PieChart>
       </ResponsiveContainer>
-    );
-  };
+  );
+};
 
   return (
     <Card
@@ -525,7 +532,7 @@ const PolicyDistributionChart = () => {
       animate="visible"
       ref={chartRef}
       sx={{
-        height: '100%',
+        height: { xs: 'auto', md: 400 }, // Altura fija para desktop, auto para móvil
         borderRadius: 4,
         background: alpha(theme.palette.background.paper, 0.8),
         backdropFilter: 'blur(10px)',
@@ -636,24 +643,32 @@ const PolicyDistributionChart = () => {
       />
       <CardContent 
         sx={{ 
-          height: 'calc(100% - 64px)',
-          p: 2,
+          p: { xs: 2, md: 3 },
           display: 'flex',
-          flexDirection: { xs: 'column', md: 'row' }
+          flexDirection: { xs: 'column', md: 'row' },
+          height: { xs: 'auto', md: 'calc(100% - 64px)' },
+          gap: { xs: 3, md: 0 }
         }}
       >
         <Box 
           sx={{ 
             width: { xs: '100%', md: '50%' }, 
-            height: { xs: 200, md: '100%' },
+            height: { xs: 250, md: '100%' },
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            position: 'relative'
           }}
         >
           {renderChart()}
         </Box>
-        <Box sx={{ width: { xs: '100%', md: '50%' } }}>
+        <Box 
+          sx={{ 
+            width: { xs: '100%', md: '50%' },
+            maxHeight: { xs: 'auto', md: '100%' },
+            overflowY: { xs: 'visible', md: 'auto' }
+          }}
+        >
           {renderLegend()}
         </Box>
       </CardContent>
