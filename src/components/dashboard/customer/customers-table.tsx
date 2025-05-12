@@ -41,6 +41,9 @@ import {
 import { Customer, CustomerTag } from '@/types/customer';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const MotionTableRow = motion(TableRow);
 
 interface CustomerTableProps {
   customers: Customer[];
@@ -57,7 +60,7 @@ interface CustomerTableProps {
 }
 
 // Número de elementos por página
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 10;
 
 const CustomerTable: React.FC<CustomerTableProps> = ({
   customers,
@@ -132,29 +135,27 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return {
-          bg: alpha(theme.palette.success.main, 0.2),
-          color: theme.palette.success.main,
-          text: 'Activo'
-        };
+        return theme.palette.success.main;
       case 'inactive':
-        return {
-          bg: alpha(theme.palette.warning.main, 0.2),
-          color: theme.palette.warning.main,
-          text: 'Inactivo'
-        };
+        return theme.palette.warning.main;
       case 'lead':
-        return {
-          bg: alpha(theme.palette.info.main, 0.2),
-          color: theme.palette.info.main,
-          text: 'Lead'
-        };
+        return theme.palette.info.main;
       default:
-        return {
-          bg: alpha(theme.palette.grey[500], 0.2),
-          color: theme.palette.grey[500],
-          text: status
-        };
+        return theme.palette.grey[500];
+    }
+  };
+
+  // Function to get status label
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'Activo';
+      case 'inactive':
+        return 'Inactivo';
+      case 'lead':
+        return 'Lead';
+      default:
+        return status;
     }
   };
 
@@ -173,7 +174,6 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
       thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
       return p.status === 'active' && endDate <= thirtyDaysFromNow && endDate >= now;
     });
-
     return (
       <Stack direction="row" spacing={1}>
         {hasActivePolicies && (
@@ -187,11 +187,11 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                 color: theme.palette.success.main,
                 fontWeight: 600,
                 fontSize: '0.7rem',
-                fontFamily: "'Sora', sans-serif",
-                borderRadius: '6px',
-              }}
-            />
-          </Tooltip>
+                          fontFamily: "'Sora', sans-serif",
+                          borderRadius: '6px',
+                        }}
+                      />
+                        </Tooltip>
         )}
         {hasExpiredPolicies && (
           <Tooltip title="Pólizas vencidas">
@@ -204,7 +204,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                 color: theme.palette.error.main,
                 fontWeight: 600,
                 fontSize: '0.7rem',
-                fontFamily: "'Sora', sans-serif",
+              fontFamily: "'Sora', sans-serif",
                 borderRadius: '6px',
               }}
             />
@@ -229,13 +229,13 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                 fontSize: '0.7rem',
                 fontFamily: "'Sora', sans-serif",
                 borderRadius: '6px',
-              }}
+        }}
             />
           </Tooltip>
         )}
       </Stack>
-    );
-  };
+  );
+};
 
   // Function to render tags
   const renderTags = (tags?: CustomerTag[]) => {
@@ -314,19 +314,20 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
   // Render loading skeletons
   if (loading) {
     return (
-      <Paper
-        elevation={0}
-        sx={{
-          p: 2,
-          borderRadius: 2,
-          background: theme.palette.mode === 'dark' 
-            ? alpha(theme.palette.background.paper, 0.8)
-            : alpha(theme.palette.background.paper, 0.9),
-          backdropFilter: 'blur(8px)',
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        }}
-      >
-        <TableContainer>
+      <Box sx={{ mb: 3 }}>
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{
+            borderRadius: '16px',
+            overflow: 'hidden',
+            background: theme.palette.mode === 'dark' 
+              ? alpha(theme.palette.background.paper, 0.6)
+              : alpha(theme.palette.background.paper, 0.8),
+            backdropFilter: 'blur(10px)',
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          }}
+        >
           <Table>
             <TableHead>
               <TableRow>
@@ -369,78 +370,82 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
             </TableBody>
           </Table>
         </TableContainer>
-      </Paper>
+      </Box>
     );
   }
   
   // Render message if no customers
   if (customers.length === 0) {
     return (
-      <Paper
-        elevation={0}
-        sx={{
-          p: 4,
-          borderRadius: 2,
-          textAlign: 'center',
-          background: theme.palette.mode === 'dark' 
-            ? alpha(theme.palette.background.paper, 0.8)
-            : alpha(theme.palette.background.paper, 0.9),
-          backdropFilter: 'blur(8px)',
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        }}
-      >
-        <Typography 
-          variant="h6" 
-          gutterBottom
-          fontFamily="'Sora', sans-serif"
-          fontWeight={600}
+      <Box sx={{ mb: 3 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: 4,
+            textAlign: 'center',
+            borderRadius: '16px',
+            background: theme.palette.mode === 'dark' 
+              ? alpha(theme.palette.background.paper, 0.6)
+              : alpha(theme.palette.background.paper, 0.8),
+            backdropFilter: 'blur(10px)',
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          }}
         >
-          No se encontraron clientes
-        </Typography>
-        <Typography 
-          variant="body1" 
-          color="text.secondary"
-          fontFamily="'Sora', sans-serif"
-        >
-          Intenta cambiar los filtros o agrega un nuevo cliente
-        </Typography>
-      </Paper>
+          <Typography 
+            variant="h6" 
+            gutterBottom
+            fontWeight={600}
+            fontFamily="'Sora', sans-serif"
+          >
+            No se encontraron clientes
+          </Typography>
+          <Typography 
+            variant="body1" 
+            color="text.secondary"
+            fontFamily="'Sora', sans-serif"
+          >
+            Intenta cambiar los filtros o agrega un nuevo cliente
+          </Typography>
+        </Paper>
+      </Box>
     );
   }
   
   return (
-    <Box>
-      <Paper
-        elevation={0}
-        sx={{
-          borderRadius: 2,
-          background: theme.palette.mode === 'dark' 
-            ? alpha(theme.palette.background.paper, 0.8)
-            : alpha(theme.palette.background.paper, 0.9),
-          backdropFilter: 'blur(8px)',
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          overflow: 'hidden', // Evita que aparezcan barras de desplazamiento
-        }}
+    <Box sx={{ mb: 3 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
       >
-        <Box sx={{ width: '100%' }}>
-          <Table sx={{ 
-            tableLayout: 'fixed', // Fija el ancho de las columnas
-            minWidth: '100%',
-              }}>
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{
+            borderRadius: '16px',
+            overflow: 'hidden',
+            background: theme.palette.mode === 'dark' 
+              ? alpha(theme.palette.background.paper, 0.6)
+              : alpha(theme.palette.background.paper, 0.8),
+            backdropFilter: 'blur(10px)',
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          }}
+        >
+          <Table>
             <TableHead>
-              <TableRow sx={{ 
-                '& th': { 
-                          fontWeight: 600,
-                          fontFamily: "'Sora', sans-serif",
-                  bgcolor: theme.palette.mode === 'dark' 
-                    ? alpha(theme.palette.background.default, 0.5)
-                    : alpha(theme.palette.background.default, 0.5),
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                } 
-          }}>
-                <TableCell width="22%">
+              <TableRow
+                sx={{
+                  '& th': {
+                    backgroundColor: theme.palette.mode === 'dark' 
+                      ? alpha(theme.palette.background.paper, 0.8)
+                      : alpha(theme.palette.background.paper, 0.9),
+                    fontFamily: 'Sora, sans-serif',
+                    fontWeight: 600,
+                    color: theme.palette.text.primary,
+                  }
+                }}
+              >
+                <TableCell>
                   <TableSortLabel
                     active={sortConfig.key === 'name'}
                     direction={sortConfig.key === 'name' ? sortConfig.direction : 'asc'}
@@ -449,25 +454,25 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                     Cliente
                   </TableSortLabel>
                 </TableCell>
-                <TableCell width="15%">
+                <TableCell>
                   <TableSortLabel
                     active={sortConfig.key === 'email'}
                     direction={sortConfig.key === 'email' ? sortConfig.direction : 'asc'}
                     onClick={() => onSort('email')}
-      >
+                  >
                     Email
                   </TableSortLabel>
                 </TableCell>
-                <TableCell width="12%">
+                <TableCell>
                   <TableSortLabel
                     active={sortConfig.key === 'phone'}
                     direction={sortConfig.key === 'phone' ? sortConfig.direction : 'asc'}
                     onClick={() => onSort('phone')}
-        >
+                  >
                     Teléfono
                   </TableSortLabel>
                 </TableCell>
-                <TableCell width="10%">
+                <TableCell>
                   <TableSortLabel
                     active={sortConfig.key === 'status'}
                     direction={sortConfig.key === 'status' ? sortConfig.direction : 'asc'}
@@ -476,47 +481,50 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                     Estado
                   </TableSortLabel>
                 </TableCell>
-                <TableCell width="12%">Pólizas</TableCell>
-                <TableCell width="12%">Etiquetas</TableCell>
-                <TableCell width="12%">
+                <TableCell>Pólizas</TableCell>
+                <TableCell>Etiquetas</TableCell>
+                <TableCell>
                   <TableSortLabel
                     active={sortConfig.key === 'createdAt'}
                     direction={sortConfig.key === 'createdAt' ? sortConfig.direction : 'asc'}
                     onClick={() => onSort('createdAt')}
                   >
-                    Registro
+                    Fecha de registro
                   </TableSortLabel>
                 </TableCell>
-                <TableCell width="5%" align="right">Acciones</TableCell>
+                <TableCell align="right">Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {displayedCustomers.map((customer) => {
-                const statusColor = getStatusColor(customer.status || 'inactive');
-                
-                return (
-                  <TableRow 
+              <AnimatePresence>
+                {displayedCustomers.map((customer) => (
+                  <MotionTableRow
                     key={customer.id}
-                    hover
-                    sx={{ 
-                      '&:hover': { 
-                        bgcolor: theme.palette.mode === 'dark' 
-                          ? alpha(theme.palette.primary.main, 0.1)
-                          : alpha(theme.palette.primary.main, 0.05),
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ 
+                      backgroundColor: theme.palette.background.paper,
+                      transition: 'background-color 0.3s ease'
+                    }}
+                    whileHover={{ 
+                      backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                      transition: { duration: 0.1 }
+                    }}
+                    sx={{
+                      '&:hover': {
+                        backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                        cursor: 'pointer',
                       },
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s',
+                      '& td': {
+                        fontFamily: 'Inter, sans-serif',
+                        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                      }
                     }}
                     onClick={() => onViewCustomer(customer)}
                   >
-                    <TableCell 
-                      onClick={(e) => e.stopPropagation()}
-                      sx={{ 
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
+                    <TableCell>
                       <Stack direction="row" spacing={2} alignItems="center">
                         <Avatar 
                           src={customer.photoURL || undefined}
@@ -527,90 +535,51 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                             bgcolor: !customer.photoURL 
                               ? `${theme.palette.primary.main}` 
                               : undefined,
-                            flexShrink: 0,
                           }}
                         >
                           {!customer.photoURL && (customer.name?.charAt(0) || 'C')}
                         </Avatar>
-                        <Box sx={{ 
-                          minWidth: 0, // Permite que el contenido se reduzca
-                          overflow: 'hidden',
-                        }}>
+                        <Box>
                           <Stack direction="row" spacing={1} alignItems="center">
                             <Typography 
-                              variant="body1" 
+                              variant="body2" 
                               fontWeight={600}
-                              fontFamily="'Sora', sans-serif"
-                              sx={{
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              }}
+                              sx={{ color: theme.palette.text.primary }}
                             >
                               {customer.name || 'Sin nombre'}
                             </Typography>
                             {renderReminders(customer)}
                           </Stack>
                           <Typography 
-                            variant="body2" 
+                            variant="caption" 
                             color="text.secondary"
-                            fontFamily="'Sora', sans-serif"
-                            sx={{
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
                           >
                             {customer.id.substring(0, 8)}
                           </Typography>
-    </Box>
+                        </Box>
                       </Stack>
                     </TableCell>
-                    <TableCell sx={{ 
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}>
-                      <Typography 
-                        variant="body2"
-                        fontFamily="'Sora', sans-serif"
-                        sx={{
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
+                    <TableCell>
+                      <Typography variant="body2">
                         {customer.email || 'Sin email'}
                       </Typography>
                     </TableCell>
-                    <TableCell sx={{ 
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}>
-                      <Typography 
-                        variant="body2"
-                        fontFamily="'Sora', sans-serif"
-                        sx={{
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
+                    <TableCell>
+                      <Typography variant="body2">
                         {customer.phone || 'Sin teléfono'}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={statusColor.text}
+                        label={getStatusLabel(customer.status || 'inactive')}
                         size="small"
                         sx={{
-                          bgcolor: statusColor.bg,
-                          color: statusColor.color,
+                          backgroundColor: alpha(getStatusColor(customer.status || 'inactive'), 0.1),
+                          color: getStatusColor(customer.status || 'inactive'),
                           fontWeight: 600,
                           fontSize: '0.75rem',
-                          fontFamily: "'Sora', sans-serif",
-                          borderRadius: '6px',
+                          fontFamily: 'Sora, sans-serif',
+                          borderRadius: '8px',
                         }}
                       />
                     </TableCell>
@@ -620,20 +589,8 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                     <TableCell>
                       {renderTags(customer.tags)}
                     </TableCell>
-                    <TableCell sx={{ 
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}>
-                      <Typography 
-                        variant="body2"
-                        fontFamily="'Sora', sans-serif"
-                        sx={{
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
+                    <TableCell>
+                      <Typography variant="body2">
                         {formatDate(customer.createdAt)}
                       </Typography>
                     </TableCell>
@@ -642,12 +599,15 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                         <Tooltip title="Ver detalles">
                           <IconButton
                             size="small"
-                            onClick={() => onViewCustomer(customer)}
-                            sx={{
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onViewCustomer(customer);
+                            }}
+                            sx={{ 
                               color: theme.palette.primary.main,
-                              bgcolor: alpha(theme.palette.primary.main, 0.1),
+                              backgroundColor: alpha(theme.palette.primary.main, 0.1),
                               '&:hover': {
-                                bgcolor: alpha(theme.palette.primary.main, 0.2),
+                                backgroundColor: alpha(theme.palette.primary.main, 0.2),
                               }
                             }}
                           >
@@ -657,12 +617,15 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                         <Tooltip title="Más acciones">
                           <IconButton
                             size="small"
-                            onClick={(e) => handleMenuOpen(e, customer)}
-                            sx={{
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMenuOpen(e, customer);
+                            }}
+                            sx={{ 
                               color: theme.palette.text.secondary,
-                              bgcolor: alpha(theme.palette.text.secondary, 0.1),
+                              backgroundColor: alpha(theme.palette.text.secondary, 0.1),
                               '&:hover': {
-                                bgcolor: alpha(theme.palette.text.secondary, 0.2),
+                                backgroundColor: alpha(theme.palette.text.secondary, 0.2),
                               }
                             }}
                           >
@@ -671,54 +634,46 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                         </Tooltip>
                       </Stack>
                     </TableCell>
-                  </TableRow>
-  );
-              })}
+                  </MotionTableRow>
+                ))}
+              </AnimatePresence>
             </TableBody>
           </Table>
+        </TableContainer>
+      </motion.div>
+
+      {/* Paginación */}
+      {customers.length > 0 && totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            fontFamily="'Sora', sans-serif"
+          >
+            Mostrando {startIndex + 1}-{Math.min(endIndex, customers.length)} de {customers.length} clientes
+          </Typography>
+          
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={handleChangePage}
+            color="primary"
+            shape="rounded"
+            showFirstButton
+            showLastButton
+            sx={{
+              '& .MuiPaginationItem-root': {
+                fontFamily: 'Sora, sans-serif',
+                fontWeight: 600,
+                borderRadius: '8px',
+              },
+              '& .Mui-selected': {
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+              }
+            }}
+          />
         </Box>
-        
-        {/* Paginación mejorada */}
-        {totalPages > 1 && (
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            p: 2,
-            borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          }}>
-            <Typography 
-              variant="body2" 
-              color="text.secondary"
-              fontFamily="'Sora', sans-serif"
-            >
-              Mostrando {startIndex + 1}-{Math.min(endIndex, customers.length)} de {customers.length} clientes
-            </Typography>
-            
-            <Pagination
-              count={totalPages}
-              page={page}
-              onChange={handleChangePage}
-              color="primary"
-              shape="rounded"
-              size="medium"
-              showFirstButton
-              showLastButton
-              sx={{
-                '& .MuiPaginationItem-root': {
-                  fontFamily: "'Sora', sans-serif",
-                  fontWeight: 500,
-                  borderRadius: '8px',
-                },
-                '& .Mui-selected': {
-                  background: alpha(theme.palette.primary.main, 0.1),
-                  fontWeight: 600,
-                }
-              }}
-            />
-          </Box>
-        )}
-      </Paper>
+      )}
       
       {/* Actions menu */}
       <Menu
