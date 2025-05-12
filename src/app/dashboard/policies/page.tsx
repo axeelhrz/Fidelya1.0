@@ -9,14 +9,20 @@ import {
   Typography,
   CircularProgress,
   Paper,
+  ToggleButtonGroup,
+  ToggleButton,
+  Tooltip,
 } from '@mui/material';
+import {
+  ViewList as ViewListIcon,
+  ViewModule as ViewModuleIcon,
+} from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePolicies } from '@/hooks/use-policies';
 import { useSubscription } from '@/hooks/use-subscription';
 import { Policy, PolicyReminder } from '@/types/policy';
 import { useAuth } from '@/hooks/use-auth';
 import { Timestamp } from 'firebase/firestore';
-
 
 // Componentes
 import PolicyHeader from '@/components/dashboard/policies/policy-header';
@@ -117,12 +123,17 @@ export default function PoliciesPage() {
       direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
     });
   };
-  
-  const handleViewModeChange = (mode: 'table' | 'grid') => {
-    setViewMode(mode);
+
+
+  // Función para manejar el cambio de vista con ToggleButtonGroup
+  const handleViewToggleChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newMode: 'table' | 'grid',
+  ) => {
+    if (newMode !== null) {
+      setViewMode(newMode);
+    }
   };
-
-
 
   // Funciones para manejar los diálogos
   const handleOpenDialog = (editMode = false, policy: Policy | null = null) => {
@@ -175,8 +186,8 @@ export default function PoliciesPage() {
 
   const handleOpenAnalyticsDialog = () => {
     setOpenAnalyticsDialog(true);
-  };
-
+    };
+    
   const handleCloseAnalyticsDialog = () => {
     setOpenAnalyticsDialog(false);
   };
@@ -190,10 +201,9 @@ export default function PoliciesPage() {
       customerId: policyData.customerId || '', // Asegúrate de que exista
       coverages: policyData.coverages || [], // Asegúrate de que exista
       paymentFrequency: policyData.paymentFrequency || 'annual', // Asegúrate de que exista
-    };
-    
+  };
+
     const success = await savePolicy(completePolicy, isEdit, policyId);
-    
     if (success) {
       // Resetear filtros y cambiar a la pestaña "Todas"
       setFilters({
@@ -218,7 +228,6 @@ export default function PoliciesPage() {
       
       // Resetear la página a 1
       setPage(1);
-
       setSnackbar({
         open: true,
         message: isEdit ? 'Póliza actualizada con éxito' : 'Póliza guardada con éxito',
@@ -226,13 +235,12 @@ export default function PoliciesPage() {
       });
       
       return success;
-    }
+      }
     return false;
   };
 
   const handleDeletePolicyConfirm = async () => {
     if (!selectedPolicy) return;
-    
     const success = await deletePolicy(selectedPolicy.id);
     
     if (success) {
@@ -243,7 +251,7 @@ export default function PoliciesPage() {
       });
       handleCloseDeleteDialog();
       if (openViewDialog) {
-        handleCloseViewDialog();
+            handleCloseViewDialog();
       }
     } else {
       setSnackbar({
@@ -504,8 +512,8 @@ const getFilteredPoliciesByTab = () => {
       }}>
         <CircularProgress />
       </Box>
-    );
-  }
+  );
+}
 
   // Mostrar mensaje si no hay usuario autenticado
   if (!user) {
@@ -569,12 +577,12 @@ const getFilteredPoliciesByTab = () => {
         </motion.div>
 
         {/* Estadísticas */}
-<motion.div
-  initial={{ opacity: 0, y: -10 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.5, delay: 0.1 }}
->
-<PolicyStats stats={{
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <PolicyStats stats={{
             total: policyStats.total,
             active: policyStats.active,
             expired: policyStats.expired,
@@ -583,8 +591,8 @@ const getFilteredPoliciesByTab = () => {
             cancelled: policyStats.cancelled,
             expiringIn30Days: policyStats.expiringIn30Days,
             totalPremium: policies.reduce((sum, policy) => sum + (policy.premium || 0), 0)
-  }} />
-</motion.div>
+          }} />
+        </motion.div>
 
         {/* Filtros y búsqueda */}
         <motion.div
@@ -603,29 +611,107 @@ const getFilteredPoliciesByTab = () => {
                 onTabChange={handleTabChange}
                 policies={policies}
               />
-              <Box>
-                <button onClick={() => handleViewModeChange('table')} style={{ 
-                  backgroundColor: viewMode === 'table' ? '#3f51b5' : '#e0e0e0',
-                  color: viewMode === 'table' ? 'white' : 'black',
-                  border: 'none',
-                  padding: '8px 12px',
-                  borderRadius: '4px',
-                  marginRight: '8px',
-                  cursor: 'pointer'
-                }}>
-                  Table
-                </button>
-                <button onClick={() => handleViewModeChange('grid')} style={{
-                  backgroundColor: viewMode === 'grid' ? '#3f51b5' : '#e0e0e0',
-                  color: viewMode === 'grid' ? 'white' : 'black',
-                  border: 'none',
-                  padding: '8px 12px',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}>
-                  Grid
-                </button>
-              </Box>
+              
+              {/* Botones de cambio de vista modernizados */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    display: 'flex',
+                    overflow: 'hidden',
+                    borderRadius: '12px',
+                    background: alpha(theme.palette.background.paper, 0.7),
+                    backdropFilter: 'blur(8px)',
+                    border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                    boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.08)}`,
+                  }}
+                >
+                  <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={handleViewToggleChange}
+                    aria-label="vista de pólizas"
+                    sx={{
+                      '& .MuiToggleButtonGroup-grouped': {
+                        border: 0,
+                        '&:not(:first-of-type)': {
+                          borderRadius: '12px',
+                        },
+                        '&:first-of-type': {
+                          borderRadius: '12px',
+                        },
+                      },
+                    }}
+                  >
+                    <ToggleButton 
+                      value="table" 
+                      aria-label="vista de tabla"
+                      sx={{
+                        px: 2,
+                        py: 1,
+                        borderRadius: '12px',
+                        fontFamily: 'Sora, sans-serif',
+                        fontWeight: 600,
+                        fontSize: '0.85rem',
+                        textTransform: 'none',
+                        color: viewMode === 'table' ? theme.palette.primary.main : theme.palette.text.secondary,
+                        backgroundColor: viewMode === 'table' 
+                          ? alpha(theme.palette.primary.main, 0.1) 
+                          : 'transparent',
+                        '&:hover': {
+                          backgroundColor: viewMode === 'table'
+                            ? alpha(theme.palette.primary.main, 0.15)
+                            : alpha(theme.palette.primary.main, 0.05),
+                        },
+                        transition: 'all 0.2s ease-in-out',
+                      }}
+                    >
+                      <Tooltip title="Vista de tabla">
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <ViewListIcon fontSize="small" />
+                          <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Tabla</Box>
+                        </Box>
+                      </Tooltip>
+                    </ToggleButton>
+                    <ToggleButton 
+                      value="grid" 
+                      aria-label="vista de tarjetas"
+                      sx={{
+                        px: 2,
+                        py: 1,
+                        borderRadius: '12px',
+                        fontFamily: 'Sora, sans-serif',
+                        fontWeight: 600,
+                        fontSize: '0.85rem',
+                        textTransform: 'none',
+                        color: viewMode === 'grid' ? theme.palette.primary.main : theme.palette.text.secondary,
+                        backgroundColor: viewMode === 'grid' 
+                          ? alpha(theme.palette.primary.main, 0.1) 
+                          : 'transparent',
+                        '&:hover': {
+                          backgroundColor: viewMode === 'grid'
+                            ? alpha(theme.palette.primary.main, 0.15)
+                            : alpha(theme.palette.primary.main, 0.05),
+                        },
+                        transition: 'all 0.2s ease-in-out',
+                      }}
+                    >
+                      <Tooltip title="Vista de tarjetas">
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <ViewModuleIcon fontSize="small" />
+                          <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Tarjetas</Box>
+                        </Box>
+                      </Tooltip>
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Paper>
+              </motion.div>
             </Box>
           </motion.div>
         </motion.div>
@@ -636,31 +722,30 @@ const getFilteredPoliciesByTab = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-{viewMode === 'table' ? (
-  <PolicyTable 
-    policies={displayedPolicies}
-    loading={loading}
-    hasMore={hasMore}
-    page={page}
-    onPageChange={handlePageChange}
-    onSort={handleSort}
-    sortConfig={sortConfig}
-    onView={handleOpenViewDialog}
-    onEdit={(policy) => handleOpenDialog(true, policy)}
-    onToggleStar={handleToggleStar}
-    onNewPolicy={() => handleOpenDialog(false)}
-  />
-) : (
-  <PolicyGrid 
-    policies={displayedPolicies}
-    loading={loading}
-    onView={handleOpenViewDialog}
-    onEdit={(policy) => handleOpenDialog(true, policy)}
-    onRenew={handleRenewPolicy}
-    onNewPolicy={() => handleOpenDialog(false)}
-  />
-)}
-
+          {viewMode === 'table' ? (
+            <PolicyTable 
+              policies={displayedPolicies}
+              loading={loading}
+              hasMore={hasMore}
+              page={page}
+              onPageChange={handlePageChange}
+              onSort={handleSort}
+              sortConfig={sortConfig}
+              onView={handleOpenViewDialog}
+              onEdit={(policy) => handleOpenDialog(true, policy)}
+              onToggleStar={handleToggleStar}
+              onNewPolicy={() => handleOpenDialog(false)}
+            />
+          ) : (
+            <PolicyGrid 
+              policies={displayedPolicies}
+              loading={loading}
+              onView={handleOpenViewDialog}
+              onEdit={(policy) => handleOpenDialog(true, policy)}
+              onRenew={handleRenewPolicy}
+              onNewPolicy={() => handleOpenDialog(false)}
+            />
+          )}
         </motion.div>
 
         {/* Diálogos */}
@@ -701,12 +786,12 @@ const getFilteredPoliciesByTab = () => {
           onDelete={handleDeletePolicyConfirm}
         />
 
-<PolicyImportDialog 
-  open={openImportDialog}
-  onClose={handleCloseImportDialog}
-  customers={customers}
-  onImportPolicies={handleImportPolicies}
-/>
+        <PolicyImportDialog 
+          open={openImportDialog}
+          onClose={handleCloseImportDialog}
+          customers={customers}
+          onImportPolicies={handleImportPolicies}
+        />
 
         <PolicyExportDialog 
           open={openExportDialog}
