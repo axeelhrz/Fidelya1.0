@@ -336,20 +336,20 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.2 }}
                       style={{ 
-                        backgroundColor: policy.isStarred 
+                        backgroundColor: policy.isStarred === true
                           ? alpha(theme.palette.warning.main, 0.05)
                           : theme.palette.background.paper,
                         transition: 'background-color 0.3s ease'
                       }}
                       whileHover={{ 
-                        backgroundColor: policy.isStarred
+                        backgroundColor: policy.isStarred === true
                           ? alpha(theme.palette.warning.main, 0.1)
                           : alpha(theme.palette.primary.main, 0.05),
                         transition: { duration: 0.1 }
                       }}
                       sx={{
                         '&:hover': {
-                          backgroundColor: policy.isStarred
+                          backgroundColor: policy.isStarred === true
                             ? alpha(theme.palette.warning.main, 0.1)
                             : alpha(theme.palette.primary.main, 0.05),
                           cursor: 'pointer',
@@ -369,7 +369,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
                             onToggleStar(policy.id, !policy.isStarred);
                               }}
                           sx={{ 
-                            color: policy.isStarred 
+                            color: policy.isStarred === true
                               ? theme.palette.warning.main 
                               : theme.palette.text.secondary,
                             '&:hover': {
@@ -377,7 +377,7 @@ const PolicyTable: React.FC<PolicyTableProps> = ({
                             }
                               }}
                             >
-                          {policy.isStarred ? <StarIcon /> : <StarBorderIcon />}
+                          {policy.isStarred === true ? <StarIcon /> : <StarBorderIcon />}
                             </IconButton>
                       </TableCell>
                       <TableCell>

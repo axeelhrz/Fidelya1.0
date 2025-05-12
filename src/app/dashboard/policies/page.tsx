@@ -264,6 +264,7 @@ export default function PoliciesPage() {
       });
     }
   };
+
 const handleToggleStar = async (id: string, star: boolean) => {
   const success = await toggleStarPolicy(id, star);
   
@@ -435,7 +436,7 @@ const handleDuplicatePolicy = async (policy: Policy) => {
 
 // Función para filtrar las pólizas según la pestaña actual
 const getFilteredPoliciesByTab = () => {
-  // Primero, asegúrate de que estamos trabajando con la lista más actualizada
+  // Asegurarse de que estamos trabajando con la lista más actualizada
   let filtered = [...filteredPolicies];
   
   // Verificar si hay pólizas con campos faltantes y corregirlas
@@ -464,7 +465,7 @@ const getFilteredPoliciesByTab = () => {
       filtered = filtered.filter(p => p.status === 'pending' && !p.isArchived);
       break;
     case 4: // En revisión
-      filtered = filtered.filter(p => p.status === 'pending' && !p.isArchived); // Using 'pending' instead of invalid 'review'
+      filtered = filtered.filter(p => p.status === 'pending' && !p.isArchived); // Changed 'review' to 'pending' as 'review' is not in the status type
       break;
     case 5: // Destacadas
       filtered = filtered.filter(p => p.isStarred === true);

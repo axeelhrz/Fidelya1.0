@@ -614,40 +614,63 @@ export function usePolicies() {
   const toggleArchivePolicy = async (policyId: string, archive: boolean): Promise<boolean> => {
     if (!user) return false;
     try {
+      // Actualizar el estado local inmediatamente para una respuesta instantánea en la UI
+      setPolicies(prevPolicies => 
+        prevPolicies.map(policy => 
+          policy.id === policyId ? { ...policy, isArchived: archive } : policy
+        )
+      );
+      
+      // Luego actualizar en Firebase
       const policyRef = doc(db, 'policies', policyId);
       await updateDoc(policyRef, { isArchived: archive, updatedAt: Timestamp.now() });
       
-      // No es necesario actualizar manualmente el estado ya que el listener onSnapshot
-      // detectará el cambio y actualizará el estado automáticamente
-      
-      // IMPORTANTE: Recalcular estadísticas después de archivar/desarchivar
+      // Recalcular estadísticas
       await calculateStats();
-      
       return true;
     } catch (error) {
       console.error("Error archiving policy: ", error);
+      
+      // Revertir el cambio en el estado local si falla la actualización en Firebase
+      setPolicies(prevPolicies => 
+        prevPolicies.map(policy => 
+          policy.id === policyId ? { ...policy, isArchived: !archive } : policy
+        )
+      );
+      
       return false;
     }
   };
-  
+
   const toggleStarPolicy = async (policyId: string, star: boolean): Promise<boolean> => {
     if (!user) return false;
     try {
+      // Actualizar el estado local inmediatamente para una respuesta instantánea en la UI
+      setPolicies(prevPolicies => 
+        prevPolicies.map(policy => 
+          policy.id === policyId ? { ...policy, isStarred: star } : policy
+        )
+      );
+      
+      // Luego actualizar en Firebase
       const policyRef = doc(db, 'policies', policyId);
       await updateDoc(policyRef, { isStarred: star, updatedAt: Timestamp.now() });
-      
-      // No es necesario actualizar manualmente el estado ya que el listener onSnapshot
-      // detectará el cambio y actualizará el estado automáticamente
-      
-      // No es necesario recalcular stats por esto, a menos que las stats dependan de isStarred
       
       return true;
     } catch (error) {
       console.error("Error starring policy: ", error);
+      
+      // Revertir el cambio en el estado local si falla la actualización en Firebase
+      setPolicies(prevPolicies => 
+        prevPolicies.map(policy => 
+          policy.id === policyId ? { ...policy, isStarred: !star } : policy
+        )
+      );
+      
       return false;
     }
   };
-  
+
   const duplicatePolicy = async (policyToDuplicate: Policy): Promise<boolean> => {
     if (!user) return false;
     try {
@@ -662,7 +685,7 @@ export function usePolicies() {
         userId: user.uid,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
-      };
+  };
       
       // Guardar la póliza duplicada
       const docRef = await addDoc(collection(db, 'policies'), duplicatedPolicy);
@@ -670,7 +693,7 @@ export function usePolicies() {
       // Actualizar la información de la póliza en el cliente
       if (duplicatedPolicy.customerId) {
         await updatePolicyInCustomer(duplicatedPolicy, docRef.id, true);
-      }
+}
       
       // No es necesario recargar manualmente las pólizas ya que el listener onSnapshot
       // detectará el cambio y actualizará el estado automáticamente

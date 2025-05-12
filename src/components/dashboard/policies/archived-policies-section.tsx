@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -49,21 +49,18 @@ const ArchivedPoliciesSection: React.FC<ArchivedPoliciesSectionProps> = ({
 }) => {
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
-  const [archivedPolicies, setArchivedPolicies] = useState<Policy[]>([]);
   
-  // Actualizar archivedPolicies cuando cambie policies
-  useEffect(() => {
-    const filtered = policies.filter(policy => policy.isArchived);
-    setArchivedPolicies(filtered);
-  }, [policies]);
+  // Filtrar solo las pólizas archivadas
+  const archivedPolicies = policies.filter(policy => policy.isArchived === true);
   
+  // Usar useMemo para evitar recálculos innecesarios
+  const displayedPolicies = React.useMemo(() => {
+    return expanded ? archivedPolicies : archivedPolicies.slice(0, 5);
+  }, [expanded, archivedPolicies]);
   // Si no hay pólizas archivadas, no mostrar la sección
   if (archivedPolicies.length === 0) {
     return null;
   }
-  
-  // Mostrar solo las primeras 5 pólizas si no está expandido
-  const displayedPolicies = expanded ? archivedPolicies : archivedPolicies.slice(0, 5);
   
   const getStatusColor = (status: string) => {
     switch (status) {
