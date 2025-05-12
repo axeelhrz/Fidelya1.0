@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -49,14 +49,15 @@ const ArchivedPoliciesSection: React.FC<ArchivedPoliciesSectionProps> = ({
 }) => {
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
+  const [archivedPolicies, setArchivedPolicies] = useState<Policy[]>([]);
   
-  // Filtrar solo las pólizas archivadas
-  const archivedPolicies = policies.filter(policy => policy.isArchived === true);
+  // Filtrar solo las pólizas archivadas (moved into useEffect)
   
-  // Usar useMemo para evitar recálculos innecesarios
-  const displayedPolicies = React.useMemo(() => {
-    return expanded ? archivedPolicies : archivedPolicies.slice(0, 5);
-  }, [expanded, archivedPolicies]);
+  // Usar useEffect para actualizar archivedPolicies cuando cambie policies
+  useEffect(() => {
+    const filtered = policies.filter(policy => policy.isArchived === true);
+    setArchivedPolicies(filtered);
+  }, [policies]);
   // Si no hay pólizas archivadas, no mostrar la sección
   if (archivedPolicies.length === 0) {
     return null;
@@ -175,20 +176,20 @@ const ArchivedPoliciesSection: React.FC<ArchivedPoliciesSectionProps> = ({
                 </TableHead>
                 <TableBody>
                   <AnimatePresence>
-                  {displayedPolicies.map((policy) => (
-                      <motion.tr
+                  {archivedPolicies.map((policy) => (
+                    <motion.tr
                       key={policy.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        style={{
-                          backgroundColor: policy.isStarred 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      style={{
+                        backgroundColor: policy.isStarred 
                           ? alpha(theme.palette.warning.main, 0.05)
                           : 'transparent',
                       }}
                       onClick={() => onView(policy)}
-                        className="hover:bg-primary-50 cursor-pointer"
+                      className="hover:bg-primary-50 cursor-pointer"
                     >
                       <TableCell>
                         <IconButton

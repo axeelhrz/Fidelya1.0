@@ -578,6 +578,10 @@ export function usePolicies() {
     try {
       // Obtener la póliza antes de eliminarla para tener el customerId
       const policyToDelete = policies.find(p => p.id === policyId);
+      if (!policyToDelete) return false;
+      
+      // Actualizar el estado local inmediatamente para una respuesta instantánea en la UI
+      setPolicies(prevPolicies => prevPolicies.filter(p => p.id !== policyId));
       
       // Opcional: eliminar documentos adjuntos de Firebase Storage
       if (policyToDelete?.documents && policyToDelete.documents.length > 0) {
@@ -595,11 +599,9 @@ export function usePolicies() {
         await removePolicyFromCustomer(policyId, policyToDelete.customerId);
       }
   
+      // Eliminar la póliza de Firebase
       const policyRef = doc(db, 'policies', policyId);
       await deleteDoc(policyRef);
-      
-      // No es necesario actualizar manualmente el estado ya que el listener onSnapshot
-      // detectará la eliminación y actualizará el estado automáticamente
       
       // IMPORTANTE: Recalcular estadísticas después de eliminar
       await calculateStats();
@@ -607,10 +609,16 @@ export function usePolicies() {
       return true;
     } catch (error) {
       console.error("Error deleting policy: ", error);
+      
+      // Si falla la eliminación en Firebase, restaurar la póliza en el estado local
+      const policyToRestore = policies.find(p => p.id === policyId);
+      if (policyToRestore) {
+        setPolicies(prevPolicies => [...prevPolicies, policyToRestore]);
+      }
       return false;
     }
   };
-  
+
   const toggleArchivePolicy = async (policyId: string, archive: boolean): Promise<boolean> => {
     if (!user) return false;
     try {
@@ -655,7 +663,6 @@ export function usePolicies() {
       // Luego actualizar en Firebase
       const policyRef = doc(db, 'policies', policyId);
       await updateDoc(policyRef, { isStarred: star, updatedAt: Timestamp.now() });
-      
       return true;
     } catch (error) {
       console.error("Error starring policy: ", error);
@@ -686,7 +693,7 @@ export function usePolicies() {
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
   };
-      
+
       // Guardar la póliza duplicada
       const docRef = await addDoc(collection(db, 'policies'), duplicatedPolicy);
       
@@ -737,7 +744,7 @@ export function usePolicies() {
     } catch (error) {
       console.error("Error uploading document: ", error);
       return null;
-    }
+}
   };
 
   const deleteDocument = async (policyId: string, docId: string): Promise<boolean> => {

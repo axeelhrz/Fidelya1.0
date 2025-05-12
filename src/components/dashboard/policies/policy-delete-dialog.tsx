@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import {
   Close as CloseIcon,
-  DeleteForever as DeleteForeverIcon,
+  DeleteForever as DeleteIcon,
   Warning as WarningIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -25,7 +25,7 @@ interface PolicyDeleteDialogProps {
   open: boolean;
   onClose: () => void;
   policy: Policy | null;
-  onDelete: () => Promise<void>;
+  onDelete: (id: number) => Promise<void>;
 }
 
 const PolicyDeleteDialog: React.FC<PolicyDeleteDialogProps> = ({
@@ -39,14 +39,6 @@ const PolicyDeleteDialog: React.FC<PolicyDeleteDialogProps> = ({
 
   if (!policy) return null;
 
-  const handleDelete = async () => {
-    setLoading(true);
-    try {
-      await onDelete();
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <Dialog
@@ -161,20 +153,22 @@ const PolicyDeleteDialog: React.FC<PolicyDeleteDialogProps> = ({
           Cancelar
         </Button>
         <Button
-          onClick={handleDelete}
-          color="error"
           variant="contained"
-          disabled={loading}
-          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <DeleteForeverIcon />}
-          sx={{ 
-            borderRadius: '999px',
-            fontFamily: 'Sora, sans-serif',
-            fontWeight: 600,
-            textTransform: 'none',
-            px: 3,
+          color="error"
+          onClick={async () => {
+            if (policy) {
+              setLoading(true);
+              try {
+                await onDelete(Number(policy.id));
+              } finally {
+                setLoading(false);
+              }
+            }
           }}
+          disabled={loading}
+          startIcon={loading ? <CircularProgress size={20} /> : <DeleteIcon />}
         >
-          {loading ? 'Eliminando...' : 'Eliminar Permanentemente'}
+          {loading ? 'Eliminando...' : 'Eliminar'}
         </Button>
       </DialogActions>
     </Dialog>
