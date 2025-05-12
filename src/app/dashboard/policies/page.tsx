@@ -24,6 +24,7 @@ import { Policy, PolicyReminder } from '@/types/policy';
 import { useAuth } from '@/hooks/use-auth';
 import { Timestamp } from 'firebase/firestore';
 
+
 // Componentes
 import PolicyHeader from '@/components/dashboard/policies/policy-header';
 import PolicyStats from '@/components/dashboard/policies/policy-stats';
@@ -123,6 +124,7 @@ export default function PoliciesPage() {
       direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
     });
   };
+  
 
 
   // Función para manejar el cambio de vista con ToggleButtonGroup
@@ -186,8 +188,8 @@ export default function PoliciesPage() {
 
   const handleOpenAnalyticsDialog = () => {
     setOpenAnalyticsDialog(true);
-    };
-    
+  };
+
   const handleCloseAnalyticsDialog = () => {
     setOpenAnalyticsDialog(false);
   };
@@ -201,9 +203,10 @@ export default function PoliciesPage() {
       customerId: policyData.customerId || '', // Asegúrate de que exista
       coverages: policyData.coverages || [], // Asegúrate de que exista
       paymentFrequency: policyData.paymentFrequency || 'annual', // Asegúrate de que exista
-  };
-
+    };
+    
     const success = await savePolicy(completePolicy, isEdit, policyId);
+    
     if (success) {
       // Resetear filtros y cambiar a la pestaña "Todas"
       setFilters({
@@ -228,6 +231,7 @@ export default function PoliciesPage() {
       
       // Resetear la página a 1
       setPage(1);
+
       setSnackbar({
         open: true,
         message: isEdit ? 'Póliza actualizada con éxito' : 'Póliza guardada con éxito',
@@ -235,12 +239,13 @@ export default function PoliciesPage() {
       });
       
       return success;
-      }
+    }
     return false;
   };
 
   const handleDeletePolicyConfirm = async () => {
     if (!selectedPolicy) return;
+    
     const success = await deletePolicy(selectedPolicy.id);
     
     if (success) {
@@ -251,7 +256,7 @@ export default function PoliciesPage() {
       });
       handleCloseDeleteDialog();
       if (openViewDialog) {
-            handleCloseViewDialog();
+        handleCloseViewDialog();
       }
     } else {
       setSnackbar({
@@ -512,8 +517,8 @@ const getFilteredPoliciesByTab = () => {
       }}>
         <CircularProgress />
       </Box>
-  );
-}
+    );
+  }
 
   // Mostrar mensaje si no hay usuario autenticado
   if (!user) {
@@ -755,6 +760,7 @@ const getFilteredPoliciesByTab = () => {
           policy={selectedPolicy}
           isEditMode={isEditMode}
           onSave={handleSavePolicy}
+          customers={customers} // Pasamos la lista de clientes al formulario
         />
 
         <PolicyViewDialog 

@@ -11,13 +11,14 @@ import {
   deleteDoc,
   Timestamp,
   getCountFromServer,
-  onSnapshot
+  onSnapshot,
+  getDoc
 } from 'firebase/firestore';
 import { ref, deleteObject } from "firebase/storage";
 import { db, storage } from '@/lib/firebase';
 import { useAuth } from './use-auth';
 import { Policy, PolicyStats, PolicyDocument, PolicyReminder } from '@/types/policy';
-import { Customer } from '@/types/customer';
+import { Customer, CustomerPolicyLink } from '@/types/customer';
 import { uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Define the Filter type locally since it's not exported from '@/types/policy'
@@ -410,6 +411,106 @@ export function usePolicies() {
     }
   }, [user, filters, sortConfig]);
 
+  // Función para actualizar la información de la póliza en el cliente
+  const updatePolicyInCustomer = async (policyData: Partial<Policy>, policyId: string, isNew: boolean = false): Promise<boolean> => {
+    if (!user || !policyData.customerId) return false;
+    
+    try {
+      // Obtener el documento del cliente
+      const customerRef = doc(db, 'customers', policyData.customerId);
+      const customerDoc = await getDoc(customerRef);
+      
+      if (!customerDoc.exists()) {
+        console.error("Cliente no encontrado:", policyData.customerId);
+        return false;
+      }
+      
+      const customerData = customerDoc.data() as Customer;
+      
+      // Crear el objeto de enlace de póliza para el cliente
+      const policyLink: CustomerPolicyLink = {
+        policyId: policyId,
+        policyNumber: policyData.policyNumber || '',
+        type: policyData.type || '',
+        company: policyData.company || '',
+        status: policyData.status || 'active',
+        startDate: policyData.startDate || Timestamp.now(),
+        endDate: policyData.endDate || Timestamp.now()
+      };
+      
+      // Actualizar la lista de pólizas del cliente
+      let updatedPolicies: CustomerPolicyLink[] = [];
+      
+      if (customerData.policies && customerData.policies.length > 0) {
+        if (isNew) {
+          // Si es una nueva póliza, añadirla a la lista
+          updatedPolicies = [...customerData.policies, policyLink];
+        } else {
+          // Si es una actualización, reemplazar la existente
+          updatedPolicies = customerData.policies.map(p => 
+            p.policyId === policyId ? policyLink : p
+          );
+          
+          // Si no existe en la lista, añadirla
+          if (!updatedPolicies.some(p => p.policyId === policyId)) {
+            updatedPolicies.push(policyLink);
+          }
+        }
+      } else {
+        // Si no hay pólizas, crear una nueva lista
+        updatedPolicies = [policyLink];
+      }
+      
+      // Actualizar el documento del cliente
+      await updateDoc(customerRef, {
+        policies: updatedPolicies,
+        updatedAt: Timestamp.now()
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error al actualizar la póliza en el cliente:", error);
+      return false;
+    }
+  };
+  
+  // Función para eliminar la póliza del cliente
+  const removePolicyFromCustomer = async (policyId: string, customerId: string): Promise<boolean> => {
+    if (!user || !customerId) return false;
+    
+    try {
+      // Obtener el documento del cliente
+      const customerRef = doc(db, 'customers', customerId);
+      const customerDoc = await getDoc(customerRef);
+      
+      if (!customerDoc.exists()) {
+        console.error("Cliente no encontrado:", customerId);
+        return false;
+      }
+      
+      const customerData = customerDoc.data() as Customer;
+      
+      // Si el cliente no tiene pólizas, no hay nada que hacer
+      if (!customerData.policies || customerData.policies.length === 0) {
+        return true;
+      }
+      
+      // Filtrar la póliza a eliminar
+      const updatedPolicies = customerData.policies.filter(p => p.policyId !== policyId);
+      
+      // Actualizar el documento del cliente
+      await updateDoc(customerRef, {
+        policies: updatedPolicies,
+        updatedAt: Timestamp.now()
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error al eliminar la póliza del cliente:", error);
+      return false;
+    }
+  };
+
   const savePolicy = async (policyData: Partial<Policy>, isEdit: boolean, policyId?: string): Promise<boolean> => {
     if (!user) return false;
     try {
@@ -424,6 +525,8 @@ export function usePolicies() {
       };
   
       console.log("Guardando póliza completa:", completePolicy);
+      
+      let savedPolicyId = policyId || '';
   
       if (isEdit && policyId) {
         const policyRef = doc(db, 'policies', policyId);
@@ -431,6 +534,7 @@ export function usePolicies() {
           ...completePolicy, 
           updatedAt: Timestamp.now() 
         });
+        savedPolicyId = policyId;
       } else {
         // Crear una nueva póliza con todos los campos requeridos
         const newPolicy = {
@@ -448,6 +552,12 @@ export function usePolicies() {
         // Guardar la nueva póliza en Firebase
         const docRef = await addDoc(collection(db, 'policies'), newPolicy);
         console.log("Nueva póliza creada con ID:", docRef.id);
+        savedPolicyId = docRef.id;
+      }
+      
+      // Actualizar la información de la póliza en el cliente
+      if (completePolicy.customerId) {
+        await updatePolicyInCustomer(completePolicy, savedPolicyId, !isEdit);
       }
       
       // No es necesario recargar manualmente las pólizas ya que el listener onSnapshot
@@ -466,8 +576,10 @@ export function usePolicies() {
   const deletePolicy = async (policyId: string): Promise<boolean> => {
     if (!user) return false;
     try {
-      // Opcional: eliminar documentos adjuntos de Firebase Storage
+      // Obtener la póliza antes de eliminarla para tener el customerId
       const policyToDelete = policies.find(p => p.id === policyId);
+      
+      // Opcional: eliminar documentos adjuntos de Firebase Storage
       if (policyToDelete?.documents && policyToDelete.documents.length > 0) {
         policyToDelete.documents.forEach(docFile => {
           // Check if path exists as it might not be in the type definition
@@ -476,6 +588,11 @@ export function usePolicies() {
             deleteObject(fileRef).catch(err => console.error("Error deleting file from storage:", err)); // No bloquear si falla la eliminación del archivo
           }
         });
+      }
+      
+      // Eliminar la póliza del cliente si existe
+      if (policyToDelete && policyToDelete.customerId) {
+        await removePolicyFromCustomer(policyId, policyToDelete.customerId);
       }
   
       const policyRef = doc(db, 'policies', policyId);
@@ -546,7 +663,14 @@ export function usePolicies() {
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       };
-      await addDoc(collection(db, 'policies'), duplicatedPolicy);
+      
+      // Guardar la póliza duplicada
+      const docRef = await addDoc(collection(db, 'policies'), duplicatedPolicy);
+      
+      // Actualizar la información de la póliza en el cliente
+      if (duplicatedPolicy.customerId) {
+        await updatePolicyInCustomer(duplicatedPolicy, docRef.id, true);
+      }
       
       // No es necesario recargar manualmente las pólizas ya que el listener onSnapshot
       // detectará el cambio y actualizará el estado automáticamente

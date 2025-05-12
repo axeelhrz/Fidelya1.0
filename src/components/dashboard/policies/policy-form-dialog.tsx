@@ -19,19 +19,22 @@ import {
   Divider,
   CircularProgress,
   Box,
-  Stack
+  Stack,
+  Autocomplete
 } from '@mui/material';
 import {
   Close as CloseIcon,
   Save as SaveIcon,
   CalendarMonth as CalendarMonthIcon,
-  AttachMoney as AttachMoneyIcon
+  AttachMoney as AttachMoneyIcon,
+  Person as PersonIcon
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { es } from 'date-fns/locale';
 import { Policy } from '@/types/policy';
+import { Customer } from '@/types/customer';
 import { Timestamp } from 'firebase/firestore';
 import { SelectChangeEvent } from '@mui/material/Select';
 
@@ -41,6 +44,7 @@ interface PolicyFormDialogProps {
   policy: Policy | null;
   isEditMode: boolean;
   onSave: (policy: Partial<Policy>, isEdit: boolean, policyId?: string) => Promise<boolean>;
+  customers: Customer[]; // Añadimos la lista de clientes como prop
 }
 
 const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
@@ -48,7 +52,8 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
   onClose,
   policy,
   isEditMode,
-  onSave
+  onSave,
+  customers
 }) => {
   const theme = useTheme();
   const [loading, setLoading] = useState(false);
@@ -72,6 +77,9 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
     errors: [],
   });
 
+  // Estado para el cliente seleccionado
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
   useEffect(() => {
     if (policy && open) {
       setFormData({
@@ -93,6 +101,12 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
         paymentFrequency: policy.paymentFrequency || 'annual',
         errors: policy.errors || [],
       });
+      
+      // Buscar el cliente correspondiente si existe
+      if (policy.customerId) {
+        const customer = customers.find(c => c.id === policy.customerId);
+        setSelectedCustomer(customer || null);
+      }
     } else if (open) {
       // Reset form for new policy
       setFormData({
@@ -114,8 +128,9 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
         paymentFrequency: 'annual',
         errors: [],
       });
+      setSelectedCustomer(null);
     }
-  }, [policy, open]);
+  }, [policy, open, customers]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -143,6 +158,24 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
     setFormData(prev => ({ ...prev, coverage: isNaN(value) ? 0 : value }));
   };
 
+  // Manejar cambio de cliente
+  const handleCustomerChange = (event: React.SyntheticEvent, value: Customer | null) => {
+    setSelectedCustomer(value);
+    if (value) {
+      setFormData(prev => ({ 
+        ...prev, 
+        customerId: value.id,
+        customerName: value.fullName || value.name
+      }));
+    } else {
+      setFormData(prev => ({ 
+        ...prev, 
+        customerId: '',
+        customerName: ''
+      }));
+    }
+      };
+      
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -151,6 +184,7 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
         ...formData,
         errors: formData.errors || [],
         customerId: formData.customerId || '',
+        customerName: formData.customerName || '',
         coverage: formData.coverage || 0,
         paymentFrequency: formData.paymentFrequency || 'annual',
       };
@@ -160,7 +194,7 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
       const success = await onSave(completePolicy, isEditMode, policy?.id);
       if (success) {
         onClose();
-      }
+    }
     } finally {
       setLoading(false);
     }
@@ -170,6 +204,7 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
     return (
       formData.policyNumber &&
       formData.customerName &&
+      formData.customerId && // Ahora requerimos el ID del cliente
       formData.type &&
       formData.company &&
       formData.premium !== undefined &&
@@ -257,26 +292,54 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
                   />
                 </Box>
                 <Box sx={{ width: '100%', flex: { xs: '1 1 100%', sm: '1 1 50%' } }}>
-                  <TextField
-                    name="customerName"
-                    label="Nombre del Cliente"
-                    value={formData.customerName}
-                    onChange={handleChange}
-                    fullWidth
-                    required
-                    variant="outlined"
+                  {/* Reemplazamos el campo de texto por un Autocomplete */}
+                  <Autocomplete
+                    id="customer-select"
+                    options={customers}
+                    getOptionLabel={(option) => option.fullName || option.name}
+                    value={selectedCustomer}
+                    onChange={handleCustomerChange}
                     disabled={loading}
-                    InputProps={{
-                      sx: {
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Cliente"
+                        required
+                        variant="outlined"
+                        InputProps={{
+                          ...params.InputProps,
+                      startAdornment: (
+                            <>
+                              <InputAdornment position="start">
+                                <PersonIcon />
+                        </InputAdornment>
+                              {params.InputProps.startAdornment}
+                            </>
+                          ),
+                          sx: {
+                        borderRadius: '12px',
+                        fontFamily: 'Inter, sans-serif',
+                          }
+                      }}
+                InputLabelProps={{
+                  sx: {
+                    fontFamily: 'Inter, sans-serif',
+                  }
+                }}
+              />
+                    )}
+                    renderOption={(props, option) => (
+                      <li {...props} style={{ fontFamily: 'Inter, sans-serif' }}>
+                        {option.fullName || option.name}
+                        {option.email && ` - ${option.email}`}
+                      </li>
+                    )}
+          sx={{
+                      '& .MuiAutocomplete-inputRoot': {
                         borderRadius: '12px',
                         fontFamily: 'Inter, sans-serif',
                       }
-                    }}
-                    InputLabelProps={{
-                      sx: {
-                        fontFamily: 'Inter, sans-serif',
-                      }
-                    }}
+          }}
                   />
                 </Box>
               </Stack>
@@ -290,11 +353,11 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
                       value={formData.type}
                       onChange={handleSelectChange}
                       label="Tipo de Póliza"
-                      sx={{
+          sx={{
                         borderRadius: '12px',
                         fontFamily: 'Inter, sans-serif',
-                      }}
-                    >
+          }}
+        >
                       {['Auto', 'Vida', 'Hogar', 'Salud', 'Viaje', 'Negocio', 'Responsabilidad Civil', 'Otro'].map((type) => (
                         <MenuItem key={type} value={type} sx={{ fontFamily: 'Inter, sans-serif' }}>
                           {type}
