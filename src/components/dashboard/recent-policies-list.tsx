@@ -8,22 +8,30 @@ import {
   Box, 
   Typography, 
   Chip, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
   Button, 
   useTheme, 
-  alpha 
+  alpha,
+  Stack,
+  Avatar,
+  Tooltip
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Timestamp } from 'firebase/firestore';
 import { usePolicies } from '@/hooks/use-policies';
 import { format } from 'date-fns';
 import Link from 'next/link';
-import { ArrowForward } from '@mui/icons-material';
+import { 
+  ArrowForward, 
+  DirectionsCar as CarIcon, 
+  Favorite as LifeIcon, 
+  Home as HomeIcon, 
+  HealthAndSafety as HealthIcon, 
+  Business as BusinessIcon, 
+  Public as OtherIcon,
+  CalendarMonth,
+  Euro,
+  Person
+} from '@mui/icons-material';
 import { Policy } from '@/types/policy';
 
 const RecentPoliciesList = () => {
@@ -118,6 +126,44 @@ const RecentPoliciesList = () => {
     }
   };
 
+  // Función para obtener el icono del tipo de póliza
+  const getPolicyTypeIcon = (type: string) => {
+    const lowerType = type?.toLowerCase() || '';
+    
+    if (lowerType.includes('auto') || lowerType.includes('coche') || lowerType.includes('vehiculo')) {
+      return <CarIcon />;
+    } else if (lowerType.includes('vida') || lowerType.includes('life')) {
+      return <LifeIcon />;
+    } else if (lowerType.includes('hogar') || lowerType.includes('casa') || lowerType.includes('home')) {
+      return <HomeIcon />;
+    } else if (lowerType.includes('salud') || lowerType.includes('health')) {
+      return <HealthIcon />;
+    } else if (lowerType.includes('empresa') || lowerType.includes('negocio') || lowerType.includes('business')) {
+      return <BusinessIcon />;
+    } else {
+      return <OtherIcon />;
+    }
+  };
+
+  // Función para obtener el color del tipo de póliza
+  const getPolicyTypeColor = (type: string) => {
+    const lowerType = type?.toLowerCase() || '';
+    
+    if (lowerType.includes('auto') || lowerType.includes('coche') || lowerType.includes('vehiculo')) {
+      return theme.palette.mode === 'dark' ? '#1E40AF' : '#3B82F6';
+    } else if (lowerType.includes('vida') || lowerType.includes('life')) {
+      return theme.palette.mode === 'dark' ? '#B91C1C' : '#EF4444';
+    } else if (lowerType.includes('hogar') || lowerType.includes('casa') || lowerType.includes('home')) {
+      return theme.palette.mode === 'dark' ? '#B45309' : '#F59E0B';
+    } else if (lowerType.includes('salud') || lowerType.includes('health')) {
+      return theme.palette.mode === 'dark' ? '#065F46' : '#10B981';
+    } else if (lowerType.includes('empresa') || lowerType.includes('negocio') || lowerType.includes('business')) {
+      return theme.palette.mode === 'dark' ? '#4338CA' : '#6366F1';
+    } else {
+      return theme.palette.mode === 'dark' ? '#5B21B6' : '#8B5CF6';
+    }
+  };
+
   // Animación para el componente
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -130,14 +176,14 @@ const RecentPoliciesList = () => {
         damping: 15
       }
     }
-  };
+};
 
-  // Animación para las filas de la tabla
-  const rowVariants = {
-    hidden: { opacity: 0, x: -20 },
+  // Animación para las tarjetas de póliza
+  const policyCardVariants = {
+    hidden: { opacity: 0, y: 10 },
     visible: (i: number) => ({
       opacity: 1,
-      x: 0,
+      y: 0,
       transition: {
         delay: i * 0.1,
         type: 'spring',
@@ -146,8 +192,8 @@ const RecentPoliciesList = () => {
       }
     }),
     hover: {
-      scale: 1.01,
-      backgroundColor: alpha(theme.palette.primary.main, 0.05),
+      y: -5,
+      boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.15)}`,
       transition: {
         type: 'spring',
         stiffness: 400,
@@ -160,14 +206,20 @@ const RecentPoliciesList = () => {
     <Card
       component={motion.div}
       variants={cardVariants}
+      initial="hidden"
+      animate="visible"
       sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         borderRadius: 4,
         background: alpha(theme.palette.background.paper, 0.8),
         backdropFilter: 'blur(12px)',
         boxShadow: theme.palette.mode === 'dark' 
           ? `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`
           : `0 8px 32px ${alpha('#000', 0.05)}`,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
       }}
     >
       <CardHeader
@@ -194,84 +246,165 @@ const RecentPoliciesList = () => {
           </Button>
         }
       />
-      <CardContent sx={{ p: 0 }}>
+      <CardContent 
+        sx={{ 
+          p: { xs: 2, md: 3 }, 
+          pt: 0,
+          flex: 1,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
         {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: '100%',
+            minHeight: 200
+          }}>
             <Typography>Cargando pólizas...</Typography>
           </Box>
         ) : recentPolicies.length === 0 ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: '100%',
+            minHeight: 200
+          }}>
             <Typography color="text.secondary">No hay pólizas recientes</Typography>
           </Box>
         ) : (
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Número</TableCell>
-                  <TableCell>Tipo</TableCell>
-                  <TableCell>Cliente</TableCell>
-                  <TableCell>Prima</TableCell>
-                  <TableCell>Vencimiento</TableCell>
-                  <TableCell>Estado</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {recentPolicies.map((policy, index) => (
-                  <TableRow
-                    key={policy.id}
-                    component={motion.tr}
-                    custom={index}
-                    variants={rowVariants}
-                    initial="hidden"
-                    animate="visible"
-                    whileHover="hover"
-                    sx={{ 
-                      cursor: 'pointer',
-                      '&:last-child td, &:last-child th': { border: 0 }
+          <Stack spacing={2} sx={{ flex: 1 }}>
+            {recentPolicies.map((policy, index) => (
+              <Box
+                key={policy.id}
+                component={motion.div}
+                custom={index}
+                variants={policyCardVariants}
+                initial="hidden"
+                animate="visible"
+                whileHover="hover"
+                sx={{ 
+                  p: 2,
+                  borderRadius: 3,
+                  background: alpha(getPolicyTypeColor(policy.type), 0.05),
+                  border: `1px solid ${alpha(getPolicyTypeColor(policy.type), 0.1)}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onClick={() => window.location.href = `/dashboard/policies?id=${policy.id}`}
+              >
+                <Stack direction="row" spacing={2} alignItems="center">
+                  {/* Tipo de póliza con icono */}
+                  <Avatar
+                    sx={{
+                      bgcolor: alpha(getPolicyTypeColor(policy.type), 0.2),
+                      color: getPolicyTypeColor(policy.type),
+                      width: 48,
+                      height: 48
                     }}
-                    onClick={() => window.location.href = `/dashboard/policies?id=${policy.id}`}
                   >
-                    <TableCell>
-                      <Typography variant="body2" fontWeight={600}>
+                    {getPolicyTypeIcon(policy.type)}
+                  </Avatar>
+                  
+                  {/* Información principal */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+                      <Typography variant="subtitle1" fontWeight={600} noWrap>
                         {policy.policyNumber}
                       </Typography>
-                    </TableCell>
-                    <TableCell>{policy.type}</TableCell>
-                    <TableCell>
-                      <Link href={`/dashboard/customers?id=${policy.customerId}`} passHref>
-                        <Typography 
-                          component="a" 
-                          variant="body2" 
-                          color="primary"
-                          sx={{ 
-                            textDecoration: 'none',
-                            '&:hover': { textDecoration: 'underline' }
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {policy.customerName}
-                        </Typography>
-                      </Link>
-                    </TableCell>
-                    <TableCell>{formatPrice(policy.premium)}</TableCell>
-                    <TableCell>{formatDate(policy.endDate)}</TableCell>
-                    <TableCell>
                       <Chip 
                         label={translateStatus(policy.status)}
                         size="small"
                         sx={{ 
+                          height: 22,
                           backgroundColor: getStatusColor(policy.status).bg,
                           color: getStatusColor(policy.status).text,
-                          fontWeight: 600
+                          fontWeight: 600,
+                          fontSize: '0.7rem'
                         }}
                       />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                    </Stack>
+                    
+                    <Typography variant="body2" color="text.secondary" noWrap>
+                      {policy.type}
+                    </Typography>
+                  </Box>
+                  
+                  {/* Información del cliente */}
+                  <Tooltip title="Cliente">
+                    <Stack 
+                      direction="row" 
+                      alignItems="center" 
+                      spacing={1}
+                      sx={{ 
+                        minWidth: { xs: '30%', md: '20%' },
+                        display: { xs: 'none', sm: 'flex' }
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.location.href = `/dashboard/customers?id=${policy.customerId}`;
+                      }}
+                    >
+                      <Person fontSize="small" color="action" />
+                      <Typography 
+                        variant="body2" 
+                        color="primary"
+                        sx={{ 
+                          textDecoration: 'none',
+                          '&:hover': { textDecoration: 'underline' },
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}
+                      >
+                        {policy.customerName}
+                      </Typography>
+                    </Stack>
+                  </Tooltip>
+                  
+                  {/* Prima */}
+                  <Tooltip title="Prima anual">
+                    <Stack 
+                      direction="row" 
+                      alignItems="center" 
+                      spacing={1}
+                      sx={{ 
+                        minWidth: { xs: '25%', md: '15%' },
+                        justifyContent: 'flex-end'
+                      }}
+                    >
+                      <Euro fontSize="small" color="action" />
+                      <Typography variant="body2" fontWeight={600}>
+                        {formatPrice(policy.premium)}
+                      </Typography>
+                    </Stack>
+                  </Tooltip>
+                  
+                  {/* Fecha de vencimiento */}
+                  <Tooltip title="Fecha de vencimiento">
+                    <Stack 
+                      direction="row" 
+                      alignItems="center" 
+                      spacing={1}
+                      sx={{ 
+                        minWidth: { xs: '25%', md: '15%' },
+                        justifyContent: 'flex-end'
+                      }}
+                    >
+                      <CalendarMonth fontSize="small" color="action" />
+                      <Typography variant="body2">
+                        {formatDate(policy.endDate)}
+                      </Typography>
+                    </Stack>
+                  </Tooltip>
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
         )}
       </CardContent>
     </Card>
