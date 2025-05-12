@@ -27,7 +27,8 @@ import {
   Save as SaveIcon,
   CalendarMonth as CalendarMonthIcon,
   AttachMoney as AttachMoneyIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
+  Business as BusinessIcon
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -367,29 +368,36 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
                   </FormControl>
                 </Box>
                 <Box sx={{ width: '100%', flex: { xs: '1 1 100%', sm: '1 1 50%' } }}>
-                  <FormControl fullWidth required variant="outlined" disabled={loading}>
-                    <InputLabel id="company-label" sx={{ fontFamily: 'Inter, sans-serif' }}>Compañía Aseguradora</InputLabel>
-                    <Select
-                      labelId="company-label"
-                      name="company"
+                  {/* Reemplazamos el Select por un TextField para la compañía aseguradora */}
+                  <TextField
+                    name="company"
+                    label="Compañía Aseguradora"
                       value={formData.company}
-                      onChange={handleSelectChange}
-                      label="Compañía Aseguradora"
-                      sx={{
+                    onChange={handleChange}
+                    fullWidth
+                    required
+                    variant="outlined"
+                    disabled={loading}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <BusinessIcon />
+                        </InputAdornment>
+                      ),
+                      sx: {
                         borderRadius: '12px',
                         fontFamily: 'Inter, sans-serif',
-                      }}
-                    >
-                      {['Mapfre', 'Allianz', 'AXA', 'Generali', 'Zurich', 'Liberty', 'Mutua Madrileña', 'Reale', 'Pelayo', 'Catalana Occidente', 'Otra'].map((company) => (
-                        <MenuItem key={company} value={company} sx={{ fontFamily: 'Inter, sans-serif' }}>
-                          {company}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                      }
+                    }}
+                    InputLabelProps={{
+                      sx: {
+                        fontFamily: 'Inter, sans-serif',
+                      }
+                    }}
+                  />
                 </Box>
               </Stack>
-            </Box>
+                </Box>
 
             {/* Detalles financieros */}
             <Box>
@@ -415,19 +423,19 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
                     disabled={loading}
                     InputProps={{
                       startAdornment: (
-                        <InputAdornment position="start">
+                            <InputAdornment position="start">
                           <AttachMoneyIcon />
-                        </InputAdornment>
-                      ),
-                      sx: {
-                        borderRadius: '12px',
-                        fontFamily: 'Inter, sans-serif',
-                      }
+                            </InputAdornment>
+                          ),
+                          sx: {
+                            borderRadius: '12px',
+                            fontFamily: 'Inter, sans-serif',
+                          }
                     }}
                     InputLabelProps={{
-                      sx: {
-                        fontFamily: 'Inter, sans-serif',
-                      }
+                          sx: {
+                            fontFamily: 'Inter, sans-serif',
+                          }
                     }}
                   />
                 </Box>
@@ -441,8 +449,8 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
                       onChange={handleSelectChange}
                       label="Estado"
                       sx={{
-                        borderRadius: '12px',
-                        fontFamily: 'Inter, sans-serif',
+                    borderRadius: '12px',
+                    fontFamily: 'Inter, sans-serif',
                       }}
                     >
                       <MenuItem value="active" sx={{ fontFamily: 'Inter, sans-serif' }}>Activa</MenuItem>
@@ -466,7 +474,7 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
                     fullWidth
                     type="number"
                     variant="outlined"
-                    disabled={loading}
+          disabled={loading}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -477,12 +485,12 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
                         borderRadius: '12px',
                         fontFamily: 'Inter, sans-serif',
                       }
-                    }}
+          }}
                     InputLabelProps={{
                       sx: {
                         fontFamily: 'Inter, sans-serif',
                       }
-                    }}
+          }}
                   />
                 </Box>
                 <Box sx={{ width: '100%', flex: { xs: '1 1 100%', sm: '1 1 50%' } }}>
@@ -498,7 +506,7 @@ const PolicyFormDialog: React.FC<PolicyFormDialogProps> = ({
                         borderRadius: '12px',
                         fontFamily: 'Inter, sans-serif',
                       }}
-                    >
+        >
                       <MenuItem value="monthly" sx={{ fontFamily: 'Inter, sans-serif' }}>Mensual</MenuItem>
                       <MenuItem value="quarterly" sx={{ fontFamily: 'Inter, sans-serif' }}>Trimestral</MenuItem>
                       <MenuItem value="biannual" sx={{ fontFamily: 'Inter, sans-serif' }}>Semestral</MenuItem>
