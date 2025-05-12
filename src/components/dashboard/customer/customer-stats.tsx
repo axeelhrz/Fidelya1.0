@@ -249,6 +249,8 @@ export const CustomerStats: React.FC<CustomerStatsProps> = memo(({
   const [localIsRefreshing, setLocalIsRefreshing] = useState(false);
   const prevStatsRef = useRef<CustomerStatsType | null>(null);
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const updateInProgressRef = useRef<boolean>(false);
+  const statsUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Calculate percentages with memoization
   const activePercentage = stats.totalCustomers > 0
@@ -259,12 +261,20 @@ export const CustomerStats: React.FC<CustomerStatsProps> = memo(({
     ? Math.round((stats.customersWithPolicies / stats.totalCustomers) * 100)
     : 0;
   
-  // Debounced refresh function to prevent multiple rapid refreshes
+  // Improved debounced refresh function with better handling
   const debouncedRefresh = useCallback(() => {
+    // Si ya hay una actualización en progreso, no hacemos nada
+    if (updateInProgressRef.current) return;
+
+    // Limpiamos cualquier timeout pendiente
     if (refreshTimeoutRef.current) {
       clearTimeout(refreshTimeoutRef.current);
     }
     
+    // Marcamos que hay una actualización en progreso
+    updateInProgressRef.current = true;
+
+    // Establecemos un nuevo timeout
     refreshTimeoutRef.current = setTimeout(async () => {
       if (onRefresh && !localIsRefreshing && !isRefreshing) {
         setLocalIsRefreshing(true);
@@ -277,63 +287,90 @@ export const CustomerStats: React.FC<CustomerStatsProps> = memo(({
           console.error('Error refreshing statistics:', error);
         } finally {
           setLocalIsRefreshing(false);
+          // Después de completar la actualización, permitimos otra después de un tiempo
+          setTimeout(() => {
+            updateInProgressRef.current = false;
+          }, 1000); // Esperar 1 segundo antes de permitir otra actualización
         }
+      } else {
+        // Si no se pudo actualizar, permitimos intentarlo de nuevo
+        updateInProgressRef.current = false;
       }
-    }, 300);
+    }, 500); // Aumentamos el tiempo de debounce para evitar múltiples actualizaciones
   }, [onRefresh, localIsRefreshing, isRefreshing]);
   
-  // Detect changes in statistics
+  // Detect changes in statistics - optimizado para evitar actualizaciones múltiples
   useEffect(() => {
-    // If loading or refreshing, don't update
+    // Si estamos cargando o actualizando, no hacemos nada
     if (loading || isRefreshing || localIsRefreshing) return;
     
-    // If it's the first load, save the current stats
+    // Si es la primera carga, guardamos las estadísticas actuales
     if (!prevStatsRef.current) {
       prevStatsRef.current = { ...stats };
       return;
     }
     
-    // Check if there are changes in the statistics
+    // Limpiamos cualquier timeout pendiente para la actualización de estadísticas
+    if (statsUpdateTimeoutRef.current) {
+      clearTimeout(statsUpdateTimeoutRef.current);
+    }
+
+    // Usamos un timeout para agrupar múltiples actualizaciones cercanas
+    statsUpdateTimeoutRef.current = setTimeout(() => {
+      // Verificamos si hay cambios en las estadísticas
     const hasChanges = 
-      stats.totalCustomers !== prevStatsRef.current.totalCustomers ||
-      stats.activeCustomers !== prevStatsRef.current.activeCustomers ||
-      stats.newCustomersThisMonth !== prevStatsRef.current.newCustomersThisMonth ||
-      stats.customersWithPolicies !== prevStatsRef.current.customersWithPolicies;
+        stats.totalCustomers !== prevStatsRef.current!.totalCustomers ||
+        stats.activeCustomers !== prevStatsRef.current!.activeCustomers ||
+        stats.newCustomersThisMonth !== prevStatsRef.current!.newCustomersThisMonth ||
+        stats.customersWithPolicies !== prevStatsRef.current!.customersWithPolicies;
     
-    // If there are changes, update the last refreshed time
+      // Si hay cambios, actualizamos la hora de la última actualización
     if (hasChanges) {
       setLastRefreshed(new Date());
       
-      // If a new customer was added, expand the section
-      if (stats.totalCustomers > prevStatsRef.current.totalCustomers) {
+        // Si se agregó un nuevo cliente, expandimos la sección
+        if (stats.totalCustomers > prevStatsRef.current!.totalCustomers) {
         setExpanded(true);
       }
     }
     
-    // Update the reference to the current stats
+      // Actualizamos la referencia a las estadísticas actuales
     prevStatsRef.current = { ...stats };
+    }, 300);
+
+    // Limpiamos el timeout al desmontar
+    return () => {
+      if (statsUpdateTimeoutRef.current) {
+        clearTimeout(statsUpdateTimeoutRef.current);
+      }
+    };
   }, [stats, loading, isRefreshing, localIsRefreshing]);
-  
-  // Handle new customer added
+
+  // Handle new customer added - optimizado para evitar múltiples actualizaciones
   useEffect(() => {
-    if (newCustomerAdded) {
-      // Expand the section when a new customer is added
+    if (newCustomerAdded && !updateInProgressRef.current) {
+      // Expandimos la sección cuando se agrega un nuevo cliente
       setExpanded(true);
-      
-      // Refresh the statistics
-      debouncedRefresh();
+
+      // Actualizamos las estadísticas una sola vez
+      if (!updateInProgressRef.current) {
+                debouncedRefresh();
+      }
     }
   }, [newCustomerAdded, debouncedRefresh]);
-  
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current);
       }
+      if (statsUpdateTimeoutRef.current) {
+        clearTimeout(statsUpdateTimeoutRef.current);
+      }
     };
   }, []);
-  
+
   // Memoize stat data to prevent unnecessary re-renders
   const primaryStats = React.useMemo(() => [
     {
@@ -351,7 +388,7 @@ export const CustomerStats: React.FC<CustomerStatsProps> = memo(({
       title: 'Clientes Activos',
       value: stats.activeCustomers,
       icon: <CheckCircleIcon />,
-      color: theme.palette.success.main,
+                        color: theme.palette.success.main,
       subtitle: `${activePercentage}% del total`,
       change: null,
       highlight: false,
@@ -381,7 +418,7 @@ export const CustomerStats: React.FC<CustomerStatsProps> = memo(({
       category: 'primary',
     },
   ], [stats, activePercentage, newCustomerAdded, theme.palette]);
-  
+
   const policyStats = React.useMemo(() => [
     {
       title: 'Con Pólizas',
@@ -428,39 +465,39 @@ export const CustomerStats: React.FC<CustomerStatsProps> = memo(({
       category: 'policy',
     },
   ], [stats, withPoliciesPercentage, theme.palette]);
-  
+
   // Format the last refreshed time
   const formatLastRefreshed = useCallback(() => {
     const now = new Date();
     const diff = now.getTime() - lastRefreshed.getTime();
-    
+
     // If it was less than a minute ago
     if (diff < 60000) {
       return 'hace unos segundos';
     }
-    
+
     // If it was less than an hour ago
     if (diff < 3600000) {
       const minutes = Math.floor(diff / 60000);
       return `hace ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
     }
-    
+
     // If it was today
     if (lastRefreshed.toDateString() === now.toDateString()) {
       return `hoy a las ${lastRefreshed.getHours().toString().padStart(2, '0')}:${lastRefreshed.getMinutes().toString().padStart(2, '0')}`;
     }
-    
+
     // If it was yesterday
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     if (lastRefreshed.toDateString() === yesterday.toDateString()) {
       return `ayer a las ${lastRefreshed.getHours().toString().padStart(2, '0')}:${lastRefreshed.getMinutes().toString().padStart(2, '0')}`;
     }
-    
+
     // Otherwise, show the full date
     return `${lastRefreshed.getDate()}/${lastRefreshed.getMonth() + 1}/${lastRefreshed.getFullYear()} ${lastRefreshed.getHours().toString().padStart(2, '0')}:${lastRefreshed.getMinutes().toString().padStart(2, '0')}`;
   }, [lastRefreshed]);
-  
+
   // Memoized collapsed summary stats
   const collapsedSummaryStats = React.useMemo(() => [
     {
@@ -484,38 +521,48 @@ export const CustomerStats: React.FC<CustomerStatsProps> = memo(({
       value: `${stats.customersWithRenewingPolicies} por renovar`,
     },
   ], [stats, theme.palette]);
-  
+
+  // Función para manejar la actualización manual
+  const handleManualRefresh = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // Solo permitimos la actualización si no hay una en progreso
+    if (!updateInProgressRef.current && !isRefreshing && !localIsRefreshing && !loading) {
+      debouncedRefresh();
+    }
+  };
+
   return (
-    <Box 
+        <Box 
       component={motion.div}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      sx={{ 
+          sx={{ 
         mb: 4,
         border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
         borderRadius: 2,
         overflow: 'hidden',
         boxShadow: expanded ? `0 4px 20px ${alpha(theme.palette.primary.main, 0.08)}` : 'none',
         transition: 'box-shadow 0.3s ease',
-      }}
-    >
+          }}
+        >
       {/* Header with toggle */}
-      <Box 
-        sx={{ 
-          p: 2, 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
+              <Box 
+                sx={{ 
+          p: 2,
+                  display: 'flex', 
+          justifyContent: 'space-between',
+                  alignItems: 'center',
           borderBottom: expanded ? `1px solid ${alpha(theme.palette.divider, 0.1)}` : 'none',
           bgcolor: alpha(theme.palette.background.paper, 0.6),
           backdropFilter: 'blur(10px)',
           cursor: 'pointer',
-        }}
+                }}
         onClick={() => setExpanded(!expanded)}
-      >
+              >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton 
+          <IconButton
             size="small"
             sx={{ mr: 1 }}
             onClick={(e) => {
@@ -525,13 +572,13 @@ export const CustomerStats: React.FC<CustomerStatsProps> = memo(({
           >
             {expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
-          
-          <Typography 
-            variant="h6" 
+
+          <Typography
+            variant="h6"
             fontWeight={600}
             fontFamily="'Sora', sans-serif"
-            sx={{ 
-              display: 'flex', 
+            sx={{
+              display: 'flex',
               alignItems: 'center',
               color: theme.palette.text.primary,
             }}
@@ -542,9 +589,9 @@ export const CustomerStats: React.FC<CustomerStatsProps> = memo(({
                 label="¡Nuevo cliente añadido!"
                 color="success"
                 size="small"
-                sx={{ 
-                  ml: 2, 
-                  fontWeight: 500, 
+                sx={{
+                  ml: 2,
+                  fontWeight: 500,
                   '@keyframes pulse': {
                     '0%': { boxShadow: '0 0 0 0 rgba(76, 175, 80, 0.4)' },
                     '70%': { boxShadow: '0 0 0 10px rgba(76, 175, 80, 0)' },
@@ -553,212 +600,135 @@ export const CustomerStats: React.FC<CustomerStatsProps> = memo(({
                   animation: 'pulse 2s infinite',
                 }}
               />
-            )}
+          )}
           </Typography>
-        </Box>
-        
+    </Box>
+
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography 
-            variant="caption" 
-            color="text.secondary"
-            sx={{ mr: 1, fontStyle: 'italic' }}
-          >
-            Actualizado {formatLastRefreshed()}
-          </Typography>
+          <Tooltip title={`Actualizado ${formatLastRefreshed()}`} arrow>
+            <Typography variant="caption" color="text.secondary" sx={{ mr: 1, display: { xs: 'none', sm: 'block' } }}>
+              {formatLastRefreshed()}
+            </Typography>
+          </Tooltip>
           
-          <Tooltip title="Actualizar manualmente">
-            <IconButton 
-              size="small" 
-              onClick={(e) => {
-                e.stopPropagation();
-                debouncedRefresh();
-              }}
-              disabled={isRefreshing || localIsRefreshing || loading}
+          <Tooltip title="Actualizar estadísticas" arrow>
+            <IconButton
+              size="small"
+              onClick={handleManualRefresh}
+              disabled={loading || isRefreshing || localIsRefreshing}
               sx={{
                 position: 'relative',
+                color: (loading || isRefreshing || localIsRefreshing) ? 'text.disabled' : 'primary.main',
               }}
             >
-              {(isRefreshing || localIsRefreshing) ? (
-                <CircularProgress size={16} thickness={5} />
-              ) : (
-                <RefreshIcon fontSize="small" />
+              <RefreshIcon sx={{ 
+                animation: (isRefreshing || localIsRefreshing) ? 'spin 1s linear infinite' : 'none',
+                '@keyframes spin': {
+                  '0%': { transform: 'rotate(0deg)' },
+                  '100%': { transform: 'rotate(360deg)' },
+                }
+              }} />
+              {(isRefreshing || localIsRefreshing) && (
+                <CircularProgress
+                  size={20}
+                  thickness={5}
+                  sx={{
+                    color: 'primary.main',
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    marginTop: '-10px',
+                    marginLeft: '-10px',
+                  }}
+                />
               )}
             </IconButton>
           </Tooltip>
         </Box>
       </Box>
-      
+
       {/* Collapsible content */}
-      <Collapse in={expanded} timeout="auto">
+      <Collapse in={expanded} timeout="auto" unmountOnExit>
         <Box sx={{ p: 2 }}>
-          {/* Primary Stats Section */}
-          <Typography
-            variant="subtitle2"
-            fontWeight={500}
-            sx={{ mb: 1, color: theme.palette.text.secondary }}
-          >
-            Información General
+          {/* Primary Stats */}
+          <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2, color: theme.palette.text.secondary }}>
+            Resumen General
           </Typography>
-          
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              mx: { xs: 0, sm: -1 },
-              mb: 3 
-            }}
-          >
-            {loading || isRefreshing || localIsRefreshing ? (
-              // Show skeletons when loading
-              primaryStats.map((_, index) => (
-                <StatCardSkeleton key={`primary-skeleton-${index}`} index={index} />
-              ))
-            ) : (
-              // Show actual stats when loaded
-              primaryStats.map((stat, index) => (
-                <StatCard key={`primary-stat-${index}`} stat={stat} index={index} />
-              ))
-            )}
-          </Box>
-          
-          {/* Policy Stats Section */}
-          <Typography
-            variant="subtitle2"
-            fontWeight={500}
-            sx={{ mb: 1, color: theme.palette.text.secondary }}
-          >
-            Información de Pólizas
-          </Typography>
-          
-          <Box 
-            sx={{ 
-              display: 'flex', 
+          <Box
+            sx={{
+              display: 'flex',
               flexWrap: 'wrap',
-              mx: { xs: 0, sm: -1 }
+              justifyContent: 'flex-start',
+              mx: { xs: 0, sm: -1 },
             }}
           >
-            {loading || isRefreshing || localIsRefreshing ? (
-              // Show skeletons when loading
-              policyStats.map((_, index) => (
-                <StatCardSkeleton key={`policy-skeleton-${index}`} index={index} isPolicy />
-              ))
-            ) : (
-              // Show actual stats when loaded
-              policyStats.map((stat, index) => (
-                <StatCard key={`policy-stat-${index}`} stat={stat} index={index} isPolicy />
-              ))
-            )}
+            {loading
+              ? Array.from(new Array(4)).map((_, index) => (
+                  <StatCardSkeleton key={`primary-skeleton-${index}`} index={index} />
+                ))
+              : primaryStats.map((stat, index) => (
+                  <StatCard key={`primary-${index}`} stat={stat} index={index} />
+                ))}
           </Box>
-          
-          {/* New Customer Notification */}
-          <AnimatePresence>
-            {newCustomerAdded && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Paper
-                  elevation={0}
-                  sx={{
-                    mt: 3,
-                    p: 2,
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    background: `linear-gradient(90deg, ${alpha(theme.palette.success.main, 0.15)}, ${alpha(theme.palette.success.main, 0.05)})`,
-                    border: `1px solid ${alpha(theme.palette.success.main, 0.3)}`,
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Box
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: alpha(theme.palette.success.main, 0.2),
-                        color: theme.palette.success.main,
-                        mr: 2,
-                      }}
-                    >
-                      <PersonAddIcon />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={600}>
-                        ¡Nuevo cliente añadido con éxito!
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Las estadísticas se han actualizado automáticamente
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Chip
-                    label="Actualizado"
-                    color="success"
-                    size="small"
-                    sx={{ fontWeight: 500 }}
-                  />
-                </Paper>
-              </motion.div>
-            )}
-          </AnimatePresence>
+
+          {/* Policy Stats */}
+          <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 3, mb: 2, color: theme.palette.text.secondary }}>
+            Estado de Pólizas
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'flex-start',
+              mx: { xs: 0, sm: -1 },
+            }}
+          >
+            {loading
+              ? Array.from(new Array(4)).map((_, index) => (
+                  <StatCardSkeleton key={`policy-skeleton-${index}`} index={index} isPolicy />
+                ))
+              : policyStats.map((stat, index) => (
+                  <StatCard key={`policy-${index}`} stat={stat} index={index} isPolicy />
+                ))}
+          </Box>
         </Box>
       </Collapse>
-      
-      {/* Collapsed summary (visible when collapsed) */}
-      {!expanded && (
-        <Box 
-          sx={{ 
-            p: 2, 
-            display: 'flex', 
-            flexWrap: 'wrap',
-            gap: 2,
-          }}
-        >
-          {loading || isRefreshing || localIsRefreshing ? (
-            // Show skeletons when loading
-            collapsedSummaryStats.map((_, index) => (
-              <Skeleton 
-                key={`collapsed-skeleton-${index}`}
-                variant="rounded" 
-                width={120} 
-                height={32} 
-                sx={{ borderRadius: 1 }}
-              />
-            ))
-          ) : (
-            // Show actual stats when loaded
-            collapsedSummaryStats.map((stat, index) => (
-              <Box 
-                key={`collapsed-stat-${index}`}
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center',
-                  p: 1,
-                  borderRadius: 1,
-                  bgcolor: alpha(stat.color, 0.1),
-                }}
-              >
-                {React.cloneElement(stat.icon, { 
-                  sx: { 
-                    color: stat.color,
-                    mr: 1,
-                    fontSize: '1.2rem'
-                  }
-                })}
-                <Typography variant="body2" fontWeight={600}>
-                  {stat.value}
-                </Typography>
-              </Box>
-            ))
-          )}
-        </Box>
-      )}
+
+      {/* Collapsed Summary */}
+      <AnimatePresence>
+        {!expanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Box 
+              sx={{ 
+                p: 1.5, 
+                display: 'flex', 
+                justifyContent: 'space-around', 
+                alignItems: 'center',
+                bgcolor: alpha(theme.palette.background.paper, 0.6),
+                backdropFilter: 'blur(10px)',
+              }}
+            >
+              {collapsedSummaryStats.map((item, index) => (
+                <Tooltip key={`summary-${index}`} title={item.value} arrow placement="top">
+                  <Box sx={{ display: 'flex', alignItems: 'center', color: item.color }}>
+                    <Box sx={{ fontSize: 18, mr: 0.5, display: 'flex' }}>
+                      {item.icon}
+                    </Box>
+                    <Typography variant="caption" fontWeight={500} sx={{ display: { xs: 'none', sm: 'block' } }}>
+                      {item.value}
+                    </Typography>
+                  </Box>
+                </Tooltip>
+              ))}
+            </Box>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Box>
   );
 });
