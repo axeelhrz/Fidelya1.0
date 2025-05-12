@@ -156,10 +156,15 @@ export const useTasks = () => {
           return false;
         }
         
-        // Preparar datos actualizados
+        // Obtener los datos actuales de la tarea
+        const currentTaskData = taskDoc.data();
+        
+        // Preparar datos actualizados, manteniendo los campos que no se actualizan
         const updatedData = {
           ...taskData,
-          updatedAt: serverTimestamp(),
+          userId: currentTaskData.userId, // Mantener el userId original
+          createdAt: currentTaskData.createdAt, // Mantener la fecha de creación original
+          updatedAt: serverTimestamp(), // Actualizar la fecha de modificación
         };
         
         // Actualizar la tarea en Firestore

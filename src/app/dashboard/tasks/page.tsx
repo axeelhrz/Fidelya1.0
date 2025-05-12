@@ -278,7 +278,11 @@ export default function TasksPage() {
     try {
       if (isEditMode && taskData.id) {
         // Actualizar tarea existente
+        // Extraemos solo los campos que necesitamos actualizar, manteniendo el ID
         const { id, ...updateData } = taskData;
+        
+        console.log('Actualizando tarea con ID:', id);
+        
         const success = await updateTask(id, updateData);
         if (success) {
           setSnackbar({
@@ -295,7 +299,9 @@ export default function TasksPage() {
         }
       } else {
         // Crear nueva tarea
+        // Para nuevas tareas, no incluimos el ID
         const { ...newTaskData } = taskData;
+        
         const taskId = await addTask(newTaskData);
         if (taskId) {
           setSnackbar({
@@ -311,6 +317,9 @@ export default function TasksPage() {
           });
         }
       }
+      
+      // Cerrar el diálogo después de guardar
+      setOpenTaskDialog(false);
     } catch (error) {
       console.error('Error al guardar tarea:', error);
       setSnackbar({
