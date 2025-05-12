@@ -1,16 +1,15 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  Box, 
-  Typography, 
-  LinearProgress, 
-  Stack, 
-  useTheme, 
-  alpha, 
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Box,
+  Typography,
+  Stack,
+  useTheme,
+  alpha,
   IconButton,
   Tooltip,
   Menu,
@@ -19,18 +18,16 @@ import {
   ListItemText,
   Divider,
   Skeleton,
-  Badge,
-  Grid,
   Paper
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
-import { 
-  CheckCircle, 
-  AccessTime, 
-  PriorityHigh, 
+import {
+  CheckCircle,
+  AccessTime,
+  PriorityHigh,
   MoreVert,
   Refresh,
   FileDownload,
@@ -203,7 +200,7 @@ const TasksProgress = () => {
         ease: 'easeOut'
       }
     })
-};
+  };
 
   return (
     <Card
@@ -330,25 +327,25 @@ const TasksProgress = () => {
         ) : (
           <Stack spacing={3}>
             {/* Summary section with total tasks and completion rate */}
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 2, 
-                borderRadius: 3, 
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                borderRadius: 3,
                 background: alpha(theme.palette.primary.main, 0.05),
                 border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
               }}
             >
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={6}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Box>
                   <Typography variant="h4" fontWeight={700} color="primary">
                     {taskProgress.totalTasks}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Tareas totales
                   </Typography>
-                </Grid>
-                <Grid item xs={6} sx={{ textAlign: 'right' }}>
+                </Box>
+                <Box sx={{ textAlign: 'right' }}>
                   <Box sx={{ position: 'relative', display: 'inline-flex' }}>
                     <motion.div
                       initial={{ rotate: 0 }}
@@ -372,8 +369,8 @@ const TasksProgress = () => {
                   <Typography variant="body2" color="text.secondary">
                     Tasa de finalización
                   </Typography>
-                </Grid>
-              </Grid>
+                </Box>
+              </Stack>
             </Paper>
 
             {/* Progress bar section */}
@@ -404,142 +401,139 @@ const TasksProgress = () => {
             </Box>
 
             {/* Task status cards */}
-            <Grid container spacing={2}>
+            <Stack direction="row" spacing={2}>
               {/* Completed tasks */}
-              <Grid item xs={4}>
-                <motion.div
-                  custom={0}
-                  variants={statCardVariants}
-                  initial="hidden"
-                  animate="visible"
+              <motion.div
+                custom={0}
+                variants={statCardVariants}
+                initial="hidden"
+                animate="visible"
+                style={{ flex: 1 }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 1.5,
+                    height: '100%',
+                    borderRadius: 3,
+                    background: alpha(theme.palette.success.main, 0.05),
+                    border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: `0 10px 20px ${alpha(theme.palette.success.main, 0.1)}`
+                    }
+                  }}
                 >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 1.5,
-                      height: '100%',
-                      borderRadius: 3,
-                      background: alpha(theme.palette.success.main, 0.05),
-                      border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
-                      transition: 'transform 0.3s, box-shadow 0.3s',
-                      '&:hover': {
-                        transform: 'translateY(-5px)',
-                        boxShadow: `0 10px 20px ${alpha(theme.palette.success.main, 0.1)}`
-                      }
-                    }}
-                  >
-                    <Stack spacing={1} alignItems="center">
-                      <Box
-                        sx={{
-                          p: 1,
-                          borderRadius: '50%',
-                          backgroundColor: alpha(theme.palette.success.main, 0.1),
-                          color: theme.palette.success.main
-                        }}
-                      >
-                        <CheckCircle />
-                      </Box>
-                      <Typography variant="h5" fontWeight={700} color="success.main">
-                        {taskProgress.completed}
-                      </Typography>
-                      <Typography variant="body2" fontWeight={500} textAlign="center">
-                        Completadas
-                      </Typography>
-                    </Stack>
-                  </Paper>
-                </motion.div>
-              </Grid>
+                  <Stack spacing={1} alignItems="center">
+                    <Box
+                      sx={{
+                        p: 1,
+                        borderRadius: '50%',
+                        backgroundColor: alpha(theme.palette.success.main, 0.1),
+                        color: theme.palette.success.main
+                      }}
+                    >
+                      <CheckCircle />
+                    </Box>
+                    <Typography variant="h5" fontWeight={700} color="success.main">
+                      {taskProgress.completed}
+                    </Typography>
+                    <Typography variant="body2" fontWeight={500} textAlign="center">
+                      Completadas
+                    </Typography>
+                  </Stack>
+                </Paper>
+              </motion.div>
 
               {/* Pending tasks */}
-              <Grid item xs={4}>
-                <motion.div
-                  custom={1}
-                  variants={statCardVariants}
-                  initial="hidden"
-                  animate="visible"
+              <motion.div
+                custom={1}
+                variants={statCardVariants}
+                initial="hidden"
+                animate="visible"
+                style={{ flex: 1 }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 1.5,
+                    height: '100%',
+                    borderRadius: 3,
+                    background: alpha(theme.palette.warning.main, 0.05),
+                    border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: `0 10px 20px ${alpha(theme.palette.warning.main, 0.1)}`
+                    }
+                  }}
                 >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 1.5,
-                      height: '100%',
-                      borderRadius: 3,
-                      background: alpha(theme.palette.warning.main, 0.05),
-                      border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
-                      transition: 'transform 0.3s, box-shadow 0.3s',
-                      '&:hover': {
-                        transform: 'translateY(-5px)',
-                        boxShadow: `0 10px 20px ${alpha(theme.palette.warning.main, 0.1)}`
-                      }
-                    }}
-                  >
-                    <Stack spacing={1} alignItems="center">
-                      <Box
-                        sx={{
-                          p: 1,
-                          borderRadius: '50%',
-                          backgroundColor: alpha(theme.palette.warning.main, 0.1),
-                          color: theme.palette.warning.main
-                        }}
-                      >
-                        <AccessTime />
-                      </Box>
-                      <Typography variant="h5" fontWeight={700} color="warning.main">
-                        {taskProgress.pending}
-                      </Typography>
-                      <Typography variant="body2" fontWeight={500} textAlign="center">
-                        Pendientes
-                      </Typography>
-                    </Stack>
-                  </Paper>
-                </motion.div>
-              </Grid>
+                  <Stack spacing={1} alignItems="center">
+                    <Box
+                      sx={{
+                        p: 1,
+                        borderRadius: '50%',
+                        backgroundColor: alpha(theme.palette.warning.main, 0.1),
+                        color: theme.palette.warning.main
+                      }}
+                    >
+                      <AccessTime />
+                    </Box>
+                    <Typography variant="h5" fontWeight={700} color="warning.main">
+                      {taskProgress.pending}
+                    </Typography>
+                    <Typography variant="body2" fontWeight={500} textAlign="center">
+                      Pendientes
+                    </Typography>
+                  </Stack>
+                </Paper>
+              </motion.div>
 
               {/* Overdue tasks */}
-              <Grid item xs={4}>
-                <motion.div
-                  custom={2}
-                  variants={statCardVariants}
-                  initial="hidden"
-                  animate="visible"
+              <motion.div
+                custom={2}
+                variants={statCardVariants}
+                initial="hidden"
+                animate="visible"
+                style={{ flex: 1 }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 1.5,
+                    height: '100%',
+                    borderRadius: 3,
+                    background: alpha(theme.palette.error.main, 0.05),
+                    border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: `0 10px 20px ${alpha(theme.palette.error.main, 0.1)}`
+                    }
+                  }}
                 >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 1.5,
-                      height: '100%',
-                      borderRadius: 3,
-                      background: alpha(theme.palette.error.main, 0.05),
-                      border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
-                      transition: 'transform 0.3s, box-shadow 0.3s',
-                      '&:hover': {
-                        transform: 'translateY(-5px)',
-                        boxShadow: `0 10px 20px ${alpha(theme.palette.error.main, 0.1)}`
-                      }
-                    }}
-                  >
-                    <Stack spacing={1} alignItems="center">
-                      <Box
-                        sx={{
-                          p: 1,
-                          borderRadius: '50%',
-                          backgroundColor: alpha(theme.palette.error.main, 0.1),
-                          color: theme.palette.error.main
-                        }}
-                      >
-                        <PriorityHigh />
-                      </Box>
-                      <Typography variant="h5" fontWeight={700} color="error.main">
-                        {taskProgress.overdue}
-                      </Typography>
-                      <Typography variant="body2" fontWeight={500} textAlign="center">
-                        Vencidas
-                      </Typography>
-                    </Stack>
-                  </Paper>
-                </motion.div>
-              </Grid>
-            </Grid>
+                  <Stack spacing={1} alignItems="center">
+                    <Box
+                      sx={{
+                        p: 1,
+                        borderRadius: '50%',
+                        backgroundColor: alpha(theme.palette.error.main, 0.1),
+                        color: theme.palette.error.main
+                      }}
+                    >
+                      <PriorityHigh />
+                    </Box>
+                    <Typography variant="h5" fontWeight={700} color="error.main">
+                      {taskProgress.overdue}
+                    </Typography>
+                    <Typography variant="body2" fontWeight={500} textAlign="center">
+                      Vencidas
+                    </Typography>
+                  </Stack>
+                </Paper>
+              </motion.div>
+            </Stack>
 
             {/* Priority distribution */}
             <Box>
@@ -621,86 +615,83 @@ const TasksProgress = () => {
               </Box>
 
               {/* Priority legend */}
-              <Grid container spacing={1} sx={{ mt: 1.5 }}>
-                <Grid item xs={4}>
-                  <Paper
-                    elevation={0}
+              <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 1,
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: alpha(theme.palette.error.main, 0.1),
+                    flex: 1
+                  }}
+                >
+                  <Box
                     sx={{
-                      p: 1,
-                      borderRadius: 2,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: alpha(theme.palette.error.main, 0.1)
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      bgcolor: theme.palette.error.main,
+                      mr: 1
                     }}
-                  >
-                    <Box
-                      sx={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: '50%',
-                        bgcolor: theme.palette.error.main,
-                        mr: 1
-                      }}
-                    />
-                    <Typography variant="caption" fontWeight={500}>
-                      Alta: {taskProgress.highPriority}
-                    </Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={4}>
-                  <Paper
-                    elevation={0}
+                  />
+                  <Typography variant="caption" fontWeight={500}>
+                    Alta: {taskProgress.highPriority}
+                  </Typography>
+                </Paper>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 1,
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: alpha(theme.palette.warning.main, 0.1),
+                    flex: 1
+                  }}
+                >
+                  <Box
                     sx={{
-                      p: 1,
-                      borderRadius: 2,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: alpha(theme.palette.warning.main, 0.1)
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      bgcolor: theme.palette.warning.main,
+                      mr: 1
                     }}
-                  >
-                    <Box
-                      sx={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: '50%',
-                        bgcolor: theme.palette.warning.main,
-                        mr: 1
-                      }}
-                    />
-                    <Typography variant="caption" fontWeight={500}>
-                      Media: {taskProgress.mediumPriority}
-                    </Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={4}>
-                  <Paper
-                    elevation={0}
+                  />
+                  <Typography variant="caption" fontWeight={500}>
+                    Media: {taskProgress.mediumPriority}
+                  </Typography>
+                </Paper>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 1,
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: alpha(theme.palette.success.main, 0.1),
+                    flex: 1
+                  }}
+                >
+                  <Box
                     sx={{
-                      p: 1,
-                      borderRadius: 2,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: alpha(theme.palette.success.main, 0.1)
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      bgcolor: theme.palette.success.main,
+                      mr: 1
                     }}
-                  >
-                    <Box
-                      sx={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: '50%',
-                        bgcolor: theme.palette.success.main,
-                        mr: 1
-                      }}
-                    />
-                    <Typography variant="caption" fontWeight={500}>
-                      Baja: {taskProgress.lowPriority}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              </Grid>
+                  />
+                  <Typography variant="caption" fontWeight={500}>
+                    Baja: {taskProgress.lowPriority}
+                  </Typography>
+                </Paper>
+              </Stack>
             </Box>
           </Stack>
         )}
