@@ -1,36 +1,33 @@
 'use client';
-
 import { useEffect, useState, useMemo } from 'react';
-import { 
-  Box, 
-  Stack, 
-  Typography, 
-  useTheme, 
-  alpha, 
-  Chip, 
+import {
+  Box,
+  Stack,
+  Typography,
+  useTheme,
+  alpha,
+  Chip,
   CircularProgress,
   Paper,
   Fade,
   Divider,
   IconButton,
   Tooltip,
-  Container,
-  Grid
+  Container
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/hooks/use-subscription';
 import { useDashboardKpis } from '@/hooks/use-dashboard-kpis';
-import { 
-  SignalWifi4Bar, 
-  SignalWifiOff, 
+import {
+  SignalWifi4Bar,
+  SignalWifiOff,
   WifiTethering,
   Bolt,
   Insights,
   Refresh,
 } from '@mui/icons-material';
 import Link from 'next/link';
-
 // Dashboard Components
 import SummaryCards from '@/components/dashboard/summary-card';
 import PoliciesChart from '@/components/dashboard/policies-chart';
@@ -45,7 +42,6 @@ import RecentActivityList from '@/components/dashboard/recent-activity-list';
 import ChatNotifications from '@/components/dashboard/chat-notifications';
 import QuickActions from '@/components/dashboard/quick-actions';
 import ROICalculator from '@/components/dashboard/ROI-calculator';
-
 // Animation variants
 const pageVariants = {
   hidden: { opacity: 0 },
@@ -67,7 +63,6 @@ const pageVariants = {
     }
   }
 };
-
 const sectionVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
@@ -87,27 +82,23 @@ const sectionVariants = {
     }
   }
 };
-
 const DashboardPage = () => {
   const theme = useTheme();
   const { user, loading: authLoading } = useAuth();
   const { subscription, loading: subscriptionLoading } = useSubscription();
   const { kpis, loading: kpisLoading, refreshKpis } = useDashboardKpis();
-  
   const [isLoading, setIsLoading] = useState(true);
   const [connectionQuality, setConnectionQuality] = useState<'good' | 'degraded' | 'offline'>('good');
   const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening'>('morning');
   const [pageReady, setPageReady] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
   // Check if the user has a premium plan
-  const isPremium = useMemo(() => 
-    subscription?.plan ? 
-      (subscription.plan === 'professional' || subscription.plan === 'enterprise') : 
-      false, 
+  const isPremium = useMemo(() =>
+    subscription?.plan ?
+      (subscription.plan === 'professional' || subscription.plan === 'enterprise') :
+      false,
     [subscription?.plan]
   );
-
   useEffect(() => {
     // Detect time of day for personalized greeting
     const hour = new Date().getHours();
@@ -118,18 +109,15 @@ const DashboardPage = () => {
     } else {
       setTimeOfDay('evening');
     }
-
     // Connection quality detection
     const handleOnline = () => setConnectionQuality('good');
     const handleOffline = () => setConnectionQuality('offline');
-    
     // Simulate connection quality detection based on latency
     const checkConnectionQuality = () => {
       if (!navigator.onLine) {
         setConnectionQuality('offline');
         return;
       }
-      
       // Simulate latency detection (0-1000ms)
       const latency = Math.random() * 1000;
       if (latency < 200) {
@@ -138,22 +126,18 @@ const DashboardPage = () => {
         setConnectionQuality('degraded');
       }
     };
-
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     const connectionInterval = setInterval(checkConnectionQuality, 30000);
     checkConnectionQuality(); // Initial check
-
     // Simulate loading time for animations
     const timer = setTimeout(() => {
       setIsLoading(false);
-      
       // Add a small delay before showing content for smoother transition
       setTimeout(() => {
         setPageReady(true);
       }, 300);
     }, 1000);
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -161,7 +145,6 @@ const DashboardPage = () => {
       clearTimeout(timer);
     };
   }, [authLoading, subscriptionLoading, kpisLoading]);
-
   // Handle refresh all data
   const handleRefreshAll = async () => {
     setRefreshing(true);
@@ -176,16 +159,15 @@ const DashboardPage = () => {
       setRefreshing(false);
     }
   };
-
   // Verify if user has access to dashboard
   if (authLoading || !user || !user.emailVerified) {
     return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
+      <Box
+        sx={{
+          display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center', 
-          alignItems: 'center', 
+          justifyContent: 'center',
+          alignItems: 'center',
           height: '100vh',
           gap: 2,
           p: 3,
@@ -208,7 +190,7 @@ const DashboardPage = () => {
             <Box
               component={motion.div}
               initial={{ scale: 0.9, opacity: 0.5 }}
-              animate={{ 
+              animate={{
                 scale: [0.9, 1.05, 1],
                 opacity: 1,
                 transition: { duration: 0.5 }
@@ -228,7 +210,6 @@ const DashboardPage = () => {
       </Box>
     );
   }
-
   // Loading state with animated indicator
   if (isLoading) {
     return (
@@ -267,7 +248,6 @@ const DashboardPage = () => {
             }}
           />
         </motion.div>
-        
         <Box sx={{ textAlign: 'center' }}>
           <Typography
             variant="h5"
@@ -282,7 +262,6 @@ const DashboardPage = () => {
           >
             Preparando tu dashboard
           </Typography>
-          
           <Typography variant="body2" color="text.secondary">
             Cargando datos en tiempo real...
           </Typography>
@@ -290,7 +269,6 @@ const DashboardPage = () => {
       </Box>
     );
   }
-
   // Render connection indicator
   const renderConnectionIndicator = () => {
     if (connectionQuality === 'good') {
@@ -349,7 +327,6 @@ const DashboardPage = () => {
       );
     }
   };
-
   return (
     <Fade in={pageReady} timeout={500}>
       <Box
@@ -370,223 +347,229 @@ const DashboardPage = () => {
       >
         <Container maxWidth="xl" sx={{ py: 3 }}>
           <Stack spacing={4}>
-          {/* Header with connection indicator and refresh button */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {renderConnectionIndicator()}
-            
-            <Tooltip title="Actualizar todos los datos" arrow>
-                <IconButton 
-                onClick={handleRefreshAll}
-                disabled={refreshing}
-                  sx={{ 
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
-                  '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.2)
-                  }
-                }}
-              >
-                {refreshing ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Refresh />
-                  </motion.div>
-                ) : (
-                  <Refresh />
-                )}
-              </IconButton>
-            </Tooltip>
-          </Box>
-
-            {/* Welcome card */}
-          <motion.div variants={sectionVariants}>
-            <DashboardWelcomeCard timeOfDay={timeOfDay} />
-          </motion.div>
-
-          {/* Quick actions */}
-          <motion.div variants={sectionVariants}>
-            <QuickActions />
-          </motion.div>
-
-          {/* Premium feature highlight for non-premium users */}
-          {!isPremium && (
-            <motion.div variants={sectionVariants}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  borderRadius: 4,
-                  background: `linear-gradient(135deg, ${alpha(theme.palette.warning.light, 0.15)}, ${alpha(theme.palette.warning.main, 0.05)})`,
-                  border: `1px solid ${alpha(theme.palette.warning.main, 0.1)}`,
-                  backdropFilter: 'blur(10px)',
-                  display: 'flex',
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  alignItems: 'center',
-                  gap: 2
-                }}
-              >
-                <Box
+            {/* Header with connection indicator and refresh button */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {renderConnectionIndicator()}
+              <Tooltip title="Actualizar todos los datos" arrow>
+                <IconButton
+                  onClick={handleRefreshAll}
+                  disabled={refreshing}
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    p: 1.5,
-                    borderRadius: '50%',
-                    bgcolor: alpha(theme.palette.warning.main, 0.2),
-                    color: theme.palette.warning.main,
-                    mr: 1
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    '&:hover': {
+                      bgcolor: alpha(theme.palette.primary.main, 0.2)
+                    }
                   }}
                 >
-                  <Insights fontSize="large" />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" fontWeight={600} gutterBottom>
-                    Desbloquea todas las funcionalidades premium
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    Mejora tu plan para acceder a análisis avanzados, calculadora de ROI, recomendaciones personalizadas y más.
-                  </Typography>
-                </Box>
-                <Box sx={{ alignSelf: { xs: 'stretch', sm: 'center' } }}>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Box
-                      component="a"
-                      href="/pricing"
-                      sx={{
-                        display: 'block',
-                        py: 1.5,
-                        px: 3,
-                        borderRadius: 3,
-                        bgcolor: theme.palette.warning.main,
-                        color: theme.palette.warning.contrastText,
-                        fontWeight: 600,
-                        textDecoration: 'none',
-                        textAlign: 'center',
-                        boxShadow: `0 4px 14px ${alpha(theme.palette.warning.main, 0.4)}`,
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          bgcolor: theme.palette.warning.dark,
-                          boxShadow: `0 6px 20px ${alpha(theme.palette.warning.main, 0.6)}`
-                        }
-                      }}
+                  {refreshing ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
                     >
-                      Ver planes
-                    </Box>
-                  </motion.div>
-                </Box>
-              </Paper>
+                      <Refresh />
+                    </motion.div>
+                  ) : (
+                    <Refresh />
+                  )}
+                </IconButton>
+              </Tooltip>
+            </Box>
+            
+            {/* Welcome card */}
+            <motion.div variants={sectionVariants}>
+              <DashboardWelcomeCard timeOfDay={timeOfDay} />
             </motion.div>
-          )}
-
-          {/* KPI Summary Cards */}
-          <motion.div variants={sectionVariants}>
-            <SummaryCards />
-          </motion.div>
-
-            {/* Main Dashboard Content */}
-            <Grid container spacing={3}>
-              {/* Main Chart - Full Width */}
-              <Grid item xs={12}>
+            
+            {/* Quick actions */}
+            <motion.div variants={sectionVariants}>
+              <QuickActions />
+            </motion.div>
+            
+            {/* Premium feature highlight for non-premium users */}
+            {!isPremium && (
               <motion.div variants={sectionVariants}>
-                <PoliciesChart />
-              </motion.div>
-              </Grid>
-
-              {/* Policy Distribution Chart - Half Width */}
-              <Grid item xs={12} md={6}>
-                  <motion.div variants={sectionVariants}>
-                  <Paper
-              elevation={0}
-              sx={{
-                borderRadius: 4,
-                      background: alpha(theme.palette.background.paper, 0.8),
-                backdropFilter: 'blur(10px)',
-                      boxShadow: theme.palette.mode === 'dark' 
-                        ? `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`
-                        : `0 8px 32px ${alpha('#000', 0.05)}`,
-                      overflow: 'hidden',
-                      border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                      height: '100%'
-              }}
-            >
-                    <PolicyDistributionChart />
-                  </Paper>
-          </motion.div>
-              </Grid>
-
-              {/* Tasks Progress - Half Width */}
-              <Grid item xs={12} md={6}>
-                <motion.div variants={sectionVariants}>
-                  <Paper
-                    elevation={0}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: 4,
+                    background: `linear-gradient(135deg, ${alpha(theme.palette.warning.light, 0.15)}, ${alpha(theme.palette.warning.main, 0.05)})`,
+                    border: `1px solid ${alpha(theme.palette.warning.main, 0.1)}`,
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: 'center',
+                    gap: 2
+                  }}
+                >
+                  <Box
                     sx={{
-                      borderRadius: 4,
-                      background: alpha(theme.palette.background.paper, 0.8),
-                      backdropFilter: 'blur(10px)',
-                      boxShadow: theme.palette.mode === 'dark' 
-                        ? `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`
-                        : `0 8px 32px ${alpha('#000', 0.05)}`,
-                      overflow: 'hidden',
-                      border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                      height: '100%'
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      p: 1.5,
+                      borderRadius: '50%',
+                      bgcolor: alpha(theme.palette.warning.main, 0.2),
+                      color: theme.palette.warning.main,
+                      mr: 1
                     }}
                   >
-                    <TasksProgress />
-                  </Paper>
-                </motion.div>
-              </Grid>
-
-              {/* Recent Policies - 2/3 Width */}
-              <Grid item xs={12} lg={8}>
+                    <Insights fontSize="large" />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" fontWeight={600} gutterBottom>
+                      Desbloquea todas las funcionalidades premium
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Mejora tu plan para acceder a análisis avanzados, calculadora de ROI, recomendaciones personalizadas y más.
+                    </Typography>
+                  </Box>
+                  <Box sx={{ alignSelf: { xs: 'stretch', sm: 'center' } }}>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Box
+                        component="a"
+                        href="/pricing"
+                        sx={{
+                          display: 'block',
+                          py: 1.5,
+                          px: 3,
+                          borderRadius: 3,
+                          bgcolor: theme.palette.warning.main,
+                          color: theme.palette.warning.contrastText,
+                          fontWeight: 600,
+                          textDecoration: 'none',
+                          textAlign: 'center',
+                          boxShadow: `0 4px 14px ${alpha(theme.palette.warning.main, 0.4)}`,
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            bgcolor: theme.palette.warning.dark,
+                            boxShadow: `0 6px 20px ${alpha(theme.palette.warning.main, 0.6)}`
+                          }
+                        }}
+                      >
+                        Ver planes
+                      </Box>
+                    </motion.div>
+                  </Box>
+                </Paper>
+              </motion.div>
+            )}
+            
+            {/* KPI Summary Cards */}
+            <motion.div variants={sectionVariants}>
+              <SummaryCards />
+            </motion.div>
+            
+            {/* Main Dashboard Content - Using Box and Stack instead of Grid */}
+            
+            {/* Main Chart - Full Width */}
+            <motion.div variants={sectionVariants}>
+              <PoliciesChart />
+            </motion.div>
+            
+            {/* Two equal columns for Policy Distribution and Tasks Progress */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+              <motion.div 
+                variants={sectionVariants} 
+                style={{ flex: 1, minWidth: 0 }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    borderRadius: 4,
+                    background: alpha(theme.palette.background.paper, 0.8),
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: theme.palette.mode === 'dark'
+                      ? `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`
+                      : `0 8px 32px ${alpha('#000', 0.05)}`,
+                    overflow: 'hidden',
+                    border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}
+                >
+                  <PolicyDistributionChart />
+                </Paper>
+              </motion.div>
+              
+              <motion.div 
+                variants={sectionVariants} 
+                style={{ flex: 1, minWidth: 0 }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    borderRadius: 4,
+                    background: alpha(theme.palette.background.paper, 0.8),
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: theme.palette.mode === 'dark'
+                      ? `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`
+                      : `0 8px 32px ${alpha('#000', 0.05)}`,
+                    overflow: 'hidden',
+                    border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}
+                >
+                  <TasksProgress />
+                </Paper>
+              </motion.div>
+            </Box>
+            
+            {/* Recent Policies and Notifications in a 2/3 - 1/3 split */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3 }}>
+              <motion.div 
+                variants={sectionVariants} 
+                style={{ flex: 2, minWidth: 0 }}
+              >
+                <RecentPoliciesList />
+              </motion.div>
+              
+              <motion.div 
+                variants={sectionVariants} 
+                style={{ flex: 1, minWidth: 0 }}
+              >
+                <NotificationsCard />
+              </motion.div>
+            </Box>
+            
+            {/* Recent Clients and Chat/Recommendations in equal columns */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+              <motion.div 
+                variants={sectionVariants} 
+                style={{ flex: 1, minWidth: 0 }}
+              >
+                <RecentClientList />
+              </motion.div>
+              
+              <motion.div 
+                variants={sectionVariants} 
+                style={{ flex: 1, minWidth: 0 }}
+              >
+                {isPremium ? <RecommendationCard /> : <ChatNotifications />}
+              </motion.div>
+            </Box>
+            
+            {/* Premium-only features */}
+            {isPremium && (
+              <>
+                {/* ROI Calculator - Full Width */}
                 <motion.div variants={sectionVariants}>
-                  <RecentPoliciesList />
+                  <ROICalculator open={false} onClose={() => {}} />
                 </motion.div>
-              </Grid>
-
-              {/* Notifications - 1/3 Width */}
-              <Grid item xs={12} lg={4}>
+                
+                {/* Recent Activity - Full Width */}
                 <motion.div variants={sectionVariants}>
-                  <NotificationsCard />
+                  <RecentActivityList />
                 </motion.div>
-              </Grid>
-
-              {/* Recent Clients - Half Width */}
-              <Grid item xs={12} md={6}>
-                <motion.div variants={sectionVariants}>
-                  <RecentClientList />
-                </motion.div>
-              </Grid>
-
-              {/* Recommendations or Chat Notifications - Half Width */}
-              <Grid item xs={12} md={6}>
-                <motion.div variants={sectionVariants}>
-                  {isPremium ? <RecommendationCard /> : <ChatNotifications />}
-                </motion.div>
-              </Grid>
-
-              {/* ROI Calculator - Full Width for Premium */}
-              {isPremium && (
-                <Grid item xs={12}>
-                  <motion.div variants={sectionVariants}>
-                    <ROICalculator open={false} onClose={() => {}} />
-                  </motion.div>
-                </Grid>
-              )}
-
-              {/* Recent Activity - Full Width for Premium */}
-              {isPremium && (
-                <Grid item xs={12}>
-                  <motion.div variants={sectionVariants}>
-                    <RecentActivityList />
-                  </motion.div>
-                </Grid>
-              )}
-            </Grid>
-
+              </>
+            )}
+            
             {/* Footer section */}
             <motion.div variants={sectionVariants}>
               <Paper
@@ -600,8 +583,8 @@ const DashboardPage = () => {
                   border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
                 }}
               >
-                <Stack 
-                  direction={{ xs: 'column', md: 'row' }} 
+                <Stack
+                  direction={{ xs: 'column', md: 'row' }}
                   justifyContent="space-between"
                   alignItems={{ xs: 'flex-start', md: 'center' }}
                   spacing={2}
@@ -613,30 +596,30 @@ const DashboardPage = () => {
                     <Typography variant="caption" color="text.secondary">
                       Todos los datos se actualizan en tiempo real. Última sincronización: {kpis?.lastUpdated ? new Date(kpis.lastUpdated.toDate()).toLocaleTimeString() : 'N/A'}
                     </Typography>
-      </Box>
+                  </Box>
                   <Stack direction="row" spacing={2} divider={<Divider orientation="vertical" flexItem />}>
-                    <Typography 
+                    <Typography
                       component={Link}
-                      href="/dashboard/soporte" 
-                      variant="body2" 
+                      href="/dashboard/soporte"
+                      variant="body2"
                       color="primary"
                       sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                     >
                       Soporte
                     </Typography>
-                    <Typography 
+                    <Typography
                       component={Link}
-                      href="/dashboard/configuracion" 
-                      variant="body2" 
+                      href="/dashboard/configuracion"
+                      variant="body2"
                       color="primary"
                       sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                     >
                       Configuración
                     </Typography>
-                    <Typography 
+                    <Typography
                       component={Link}
-                      href="/ayuda" 
-                      variant="body2" 
+                      href="/ayuda"
+                      variant="body2"
                       color="primary"
                       sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                     >
