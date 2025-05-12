@@ -214,7 +214,7 @@ const BenefitsSection = () => {
 };
 
 // Componente principal de la página
-export default function SignInPage() {
+export default function SignInForm() {
   const theme = useTheme();
   const router = useRouter();
   const isDark = theme.palette.mode === 'dark';
