@@ -14,10 +14,11 @@ import {
   Stack,
   Chip,
   Tooltip,
-  IconButton
+  IconButton,
+  CircularProgress
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
@@ -28,25 +29,20 @@ import {
   Email as EmailIcon, 
   Phone as PhoneIcon,
   AccessTime as TimeIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  Business as BusinessIcon,
+  Person as PersonIcon,
+  People as PeopleIcon,
+  Star as StarIcon
 } from '@mui/icons-material';
-
-// Tipos para los clientes
+import { Customer } from '@/types/customer';
 import { Timestamp } from 'firebase/firestore';
 
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  avatarUrl?: string;
-  createdAt: Timestamp | Date | number;
-}
 
 const RecentClientList = () => {
   const theme = useTheme();
   const { user } = useAuth();
-  const [clients, setClients] = useState<Client[]>([]);
+  const [clients, setClients] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -55,7 +51,8 @@ const RecentClientList = () => {
     // Suscripción a los clientes recientes en tiempo real desde Firestore
     const unsubscribe = onSnapshot(
       query(
-        collection(db, `users/${user.uid}/customers`),
+        collection(db, 'customers'),
+        where('userId', '==', user.uid),
         orderBy('createdAt', 'desc'),
         limit(5)
       ),
@@ -63,9 +60,13 @@ const RecentClientList = () => {
         const clientsData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        })) as Client[];
+        })) as Customer[];
         
         setClients(clientsData);
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching recent clients:', error);
         setIsLoading(false);
       }
     );
@@ -75,6 +76,7 @@ const RecentClientList = () => {
 
   // Función para obtener las iniciales del nombre
   const getInitials = (name: string) => {
+    if (!name) return '';
     return name
       .split(' ')
       .map(part => part.charAt(0))
@@ -84,15 +86,22 @@ const RecentClientList = () => {
   };
 
   // Función para formatear la fecha
-  const formatDate = (timestamp: Timestamp | Date | number | null | undefined) => {
+  const formatDate = (timestamp: Timestamp | null | undefined) => {
     if (!timestamp) return '';
     
+    try {
     const date = timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
     return formatDistanceToNow(date, { addSuffix: true, locale: es });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
+    }
   };
 
   // Función para generar un color basado en el nombre
   const getAvatarColor = (name: string) => {
+    if (!name) return theme.palette.primary.main;
+    
     const colors = [
       theme.palette.primary.main,
       theme.palette.secondary.main,
@@ -106,6 +115,53 @@ const RecentClientList = () => {
     const charCodeSum = name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
     return colors[charCodeSum % colors.length];
   };
+
+  // Función para obtener el icono del tipo de cliente
+  const getClientTypeIcon = (type: string | undefined) => {
+    if (!type) return <PersonIcon />;
+    
+    switch (type.toLowerCase()) {
+      case 'business':
+        return <BusinessIcon />;
+      case 'family':
+        return <PeopleIcon />;
+      case 'individual':
+      default:
+        return <PersonIcon />;
+    }
+  };
+
+  // Función para obtener el color del estado
+  const getStatusColor = (status: string | undefined) => {
+    if (!status) return theme.palette.info.main;
+    
+    switch (status.toLowerCase()) {
+      case 'active':
+        return theme.palette.success.main;
+      case 'inactive':
+        return theme.palette.error.main;
+      case 'lead':
+        return theme.palette.warning.main;
+      default:
+        return theme.palette.info.main;
+    }
+};
+
+  // Función para traducir el estado
+  const translateStatus = (status: string | undefined) => {
+    if (!status) return 'Desconocido';
+    
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'Activo';
+      case 'inactive':
+        return 'Inactivo';
+      case 'lead':
+        return 'Potencial';
+      default:
+        return status;
+    }
+};
 
   // Animación para el componente
   const cardVariants = {
@@ -143,7 +199,7 @@ const RecentClientList = () => {
         damping: 10
       }
     }
-};
+  };
 
   return (
     <Card
@@ -225,7 +281,12 @@ const RecentClientList = () => {
             height: '100%',
             minHeight: 200
           }}>
-            <Typography>Cargando clientes...</Typography>
+            <Stack spacing={2} alignItems="center">
+              <CircularProgress size={30} thickness={4} />
+              <Typography variant="body2" color="text.secondary">
+                Cargando clientes...
+              </Typography>
+            </Stack>
           </Box>
         ) : clients.length === 0 ? (
           <Box sx={{ 
@@ -273,48 +334,86 @@ const RecentClientList = () => {
                   {/* Información principal del cliente */}
                   <Stack direction="row" spacing={2} alignItems="center">
                     <Avatar 
-                      src={client.avatarUrl} 
-                      alt={client.name}
+                      src={client.photoURL} 
+                      alt={client.name || client.fullName}
                       sx={{ 
-                        bgcolor: getAvatarColor(client.name),
+                        bgcolor: getAvatarColor(client.name || client.fullName || ''),
                         width: 48,
                         height: 48,
                         fontSize: '1.2rem',
                         fontWeight: 600
                       }}
                     >
-                      {getInitials(client.name)}
+                      {getInitials(client.name || client.fullName || '')}
                     </Avatar>
                     
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="subtitle1" fontWeight={600} noWrap>
-                        {client.name}
-                      </Typography>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Typography variant="subtitle1" fontWeight={600} noWrap>
+                          {client.name || client.fullName || 'Sin nombre'}
+                        </Typography>
+                        
+                        {client.isStarred && (
+                          <StarIcon 
+                            fontSize="small" 
+                            sx={{ color: theme.palette.warning.main }}
+                          />
+                        )}
+                      </Stack>
                       
                       <Stack 
                         direction="row" 
-                        spacing={0.5} 
+                        spacing={1} 
                         alignItems="center"
                         sx={{ mt: 0.5 }}
                       >
                         <Chip
-                          icon={<TimeIcon fontSize="small" />}
-                          label={formatDate(client.createdAt)}
+                          label={translateStatus(client.status)}
                           size="small"
-                          variant="outlined"
                           sx={{ 
-                            height: 24,
+                            height: 20,
                             fontSize: '0.7rem',
-                            bgcolor: alpha(theme.palette.primary.main, 0.05),
-                            borderColor: alpha(theme.palette.primary.main, 0.2),
-                            '& .MuiChip-icon': {
-                              fontSize: '0.85rem',
-                              color: theme.palette.text.secondary
-                            }
+                            bgcolor: alpha(getStatusColor(client.status), 0.1),
+                            color: getStatusColor(client.status),
+                            fontWeight: 600,
+                            '& .MuiChip-label': { px: 1 }
                           }}
                         />
+                        
+                        <Tooltip title="Fecha de registro">
+                          <Chip
+                            icon={<TimeIcon fontSize="small" />}
+                            label={formatDate(client.createdAt || client.registeredAt)}
+                            size="small"
+                            variant="outlined"
+                            sx={{ 
+                              height: 20,
+                              fontSize: '0.7rem',
+                              bgcolor: alpha(theme.palette.primary.main, 0.05),
+                              borderColor: alpha(theme.palette.primary.main, 0.2),
+                              '& .MuiChip-icon': {
+                                fontSize: '0.75rem',
+                                color: theme.palette.text.secondary
+                              },
+                              '& .MuiChip-label': { px: 1 }
+                            }}
+                          />
+                        </Tooltip>
                       </Stack>
                     </Box>
+                    
+                    <Tooltip title={client.type ? `Tipo: ${client.type}` : 'Tipo no especificado'}>
+                      <Avatar
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          color: theme.palette.primary.main
+                        }}
+                      >
+                        {getClientTypeIcon(client.type)}
+                      </Avatar>
+                    </Tooltip>
                   </Stack>
                   
                   {/* Información de contacto */}
@@ -376,6 +475,23 @@ const RecentClientList = () => {
                       </Stack>
                     </Tooltip>
                   </Stack>
+                  
+                  {/* Pólizas (si existen) */}
+                  {client.policies && client.policies.length > 0 && (
+                    <Box sx={{ mt: 1 }}>
+                      <Chip
+                        label={`${client.policies.length} ${client.policies.length === 1 ? 'póliza' : 'pólizas'}`}
+                        size="small"
+                        sx={{
+                          height: 20,
+                          fontSize: '0.7rem',
+                          bgcolor: alpha(theme.palette.info.main, 0.1),
+                          color: theme.palette.info.main,
+                          fontWeight: 600
+                        }}
+                      />
+                    </Box>
+                  )}
                 </Stack>
               </Box>
             ))}
