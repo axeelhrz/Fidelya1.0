@@ -16,13 +16,13 @@ import { useDashboardTaskKpis } from '@/hooks/use-task-dashboard-kpi';
 import KpiRefreshButton from '@/components/ui/kpi-refresh-button';
 import { Task } from '@/types/tasks';
 
+
 export const TaskStats: React.FC = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const tasksResult = useTasks();
   const { tasks = [] as Task[], loading: tasksLoading = false } = typeof tasksResult === 'object' ? tasksResult : {};
   const { kpis, loading: kpisLoading, updateTaskKpis } = useDashboardTaskKpis();
-  
   const isLoading = tasksLoading || kpisLoading;
   
   // Use KPIs if available, otherwise calculate from tasks
