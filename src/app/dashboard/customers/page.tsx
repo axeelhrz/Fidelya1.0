@@ -20,6 +20,7 @@ import CustomerViewDialog from '@/components/dashboard/customer/customerViewDial
 import CustomerImportDialog from '@/components/dashboard/customer/customer-import-dialog';
 import CustomerExportDialog from '@/components/dashboard/customer/customer-export-dialog';
 import CustomerDeleteDialog from '@/components/dashboard/customer/delete-confirm-dialog';
+import CustomerAnalyticsDialog from '@/components/dashboard/customer/customer-analytics-dialog';
 import { useDashboardCustomerKpis } from '@/hooks/use-customer-dashboard-kpis';
 
 
@@ -60,6 +61,7 @@ const CustomersPage = () => {
   const [openImportDialog, setOpenImportDialog] = useState(false);
   const [openExportDialog, setOpenExportDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openAnalyticsDialog, setOpenAnalyticsDialog] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>(undefined);
   const [availableTags, setAvailableTags] = useState<CustomerTag[]>([]);
   
@@ -368,15 +370,23 @@ const CustomersPage = () => {
     setOpenExportDialog(true);
   };
   
+  // Handle analytics
+  const handleAnalytics = () => {
+    setOpenAnalyticsDialog(true);
+  };
+
+  // Handle analytics dialog close
+  const handleAnalyticsDialogClose = () => {
+    setOpenAnalyticsDialog(false);
+  };
+  
   // Handle customer dialog close
   const handleCustomerDialogClose = () => {
     setOpenCustomerDialog(false);
     setSelectedCustomer(undefined);
   };
-
-  const [newCustomerJustAdded, setNewCustomerJustAdded] = useState(false);
-
   
+  const [newCustomerJustAdded, setNewCustomerJustAdded] = useState(false);
   // Handle customer dialog success
   const handleCustomerDialogSuccess = async () => {
     try {
@@ -402,10 +412,10 @@ const CustomersPage = () => {
   
   // Handle view dialog close
   const handleViewDialogClose = () => {
-    setOpenViewDialog(false);
+              setOpenViewDialog(false);
     setSelectedCustomer(undefined);
-  };
-  
+};
+
   // Handle import dialog close
   const handleImportDialogClose = () => {
     setOpenImportDialog(false);
@@ -472,15 +482,15 @@ const CustomersPage = () => {
           onImport={handleImportCustomers}
           onExport={handleExportCustomers}
           onRefresh={updateCustomerKpis}
-          onAnalytics={() => {}} // Add implementation or placeholder for analytics
+          onAnalytics={handleAnalytics}
         />
         
         <CustomerStats 
-  stats={customerStats}
-  loading={kpisLoading}
-  newCustomerAdded={newCustomerJustAdded}
-  onRefresh={updateCustomerKpis}
-/>
+          stats={customerStats}
+          loading={kpisLoading}
+          newCustomerAdded={newCustomerJustAdded}
+          onRefresh={updateCustomerKpis}
+        />
         
         <CustomerFiltersComponent 
           filters={filters}
@@ -567,6 +577,13 @@ const CustomersPage = () => {
             customerName={selectedCustomer.name}
           />
         )}
+        
+        {/* Analytics Dialog */}
+        <CustomerAnalyticsDialog
+          open={openAnalyticsDialog}
+          onClose={handleAnalyticsDialogClose}
+          customers={customers}
+        />
       </Box>
     </Container>
   );
