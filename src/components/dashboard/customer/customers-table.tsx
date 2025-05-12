@@ -25,6 +25,7 @@ import {
   ListItemText,
   Divider,
   Badge,
+  Popover,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -37,6 +38,7 @@ import {
   Warning as WarningIcon,
   CheckCircle as CheckCircleIcon,
   Notifications as NotificationsIcon,
+  LocalOffer as LocalOfferIcon,
 } from '@mui/icons-material';
 import { Customer, CustomerTag } from '@/types/customer';
 import { format } from 'date-fns';
@@ -78,6 +80,8 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedCustomer, setSelectedCustomer] = React.useState<Customer | null>(null);
+  const [tagsAnchorEl, setTagsAnchorEl] = React.useState<HTMLElement | null>(null);
+  const [tagsCustomer, setTagsCustomer] = React.useState<Customer | null>(null);
   
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, customer: Customer) => {
     setAnchorEl(event.currentTarget);
@@ -89,9 +93,19 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
     setSelectedCustomer(null);
   };
   
+  const handleTagsOpen = (event: React.MouseEvent<HTMLElement>, customer: Customer) => {
+    event.stopPropagation();
+    setTagsAnchorEl(event.currentTarget);
+    setTagsCustomer(customer);
+  };
+  
+  const handleTagsClose = () => {
+    setTagsAnchorEl(null);
+    setTagsCustomer(null);
+  };
+  
   const handleAction = (action: string) => {
     if (!selectedCustomer) return;
-    
     switch (action) {
       case 'view':
         onViewCustomer(selectedCustomer);
@@ -112,7 +126,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
     
     handleMenuClose();
   };
-  
+
   // Function to format dates
   const formatDate = (dateValue: Date | string | { toDate: () => Date } | null | undefined) => {
     if (!dateValue) return 'N/A';
@@ -130,7 +144,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
       return 'Fecha inválida';
     }
   };
-  
+
   // Function to get status color
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -143,7 +157,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
       default:
         return theme.palette.grey[500];
     }
-  };
+};
 
   // Function to get status label
   const getStatusLabel = (status: string) => {
@@ -178,21 +192,21 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
       <Stack direction="row" spacing={1}>
         {hasActivePolicies && (
           <Tooltip title="Pólizas activas">
-            <Chip
+                      <Chip
               icon={<CheckCircleIcon fontSize="small" />}
               label={customer.policies.filter(p => p.status === 'active').length}
-              size="small"
-              sx={{
+                        size="small"
+                        sx={{
                 bgcolor: alpha(theme.palette.success.main, 0.1),
                 color: theme.palette.success.main,
-                fontWeight: 600,
+                          fontWeight: 600,
                 fontSize: '0.7rem',
-                          fontFamily: "'Sora', sans-serif",
-                          borderRadius: '6px',
+                fontFamily: "'Sora', sans-serif",
+                borderRadius: '6px',
                         }}
                       />
                         </Tooltip>
-        )}
+      )}
         {hasExpiredPolicies && (
           <Tooltip title="Pólizas vencidas">
             <Chip
@@ -237,50 +251,54 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
   );
 };
 
-  // Function to render tags
-  const renderTags = (tags?: CustomerTag[]) => {
+  // Function to render tags indicator
+  const renderTagsIndicator = (customer: Customer) => {
+    if (!customer.tags || customer.tags.length === 0) return null;
+    
+    return (
+      <Tooltip title={`${customer.tags.length} etiquetas`}>
+        <Chip
+          icon={<LocalOfferIcon fontSize="small" />}
+          label={customer.tags.length}
+          size="small"
+          onClick={(e) => handleTagsOpen(e, customer)}
+          sx={{
+            bgcolor: alpha(theme.palette.primary.main, 0.1),
+            color: theme.palette.primary.main,
+            fontWeight: 600,
+            fontSize: '0.7rem',
+            fontFamily: "'Sora', sans-serif",
+            borderRadius: '6px',
+            cursor: 'pointer',
+            '&:hover': {
+              bgcolor: alpha(theme.palette.primary.main, 0.2),
+            }
+          }}
+        />
+      </Tooltip>
+    );
+  };
+
+  // Function to render tags in popover
+  const renderTagsPopover = (tags?: CustomerTag[]) => {
     if (!tags || tags.length === 0) return null;
 
     return (
-      <Stack direction="row" spacing={0.5} flexWrap="wrap">
-        {tags.slice(0, 2).map((tag) => (
-          <Tooltip key={tag.id} title={tag.name}>
-            <Chip
-              size="small"
-              label={tag.name}
-              sx={{
-                height: 20,
-                fontSize: '0.65rem',
-                fontWeight: 600,
-                bgcolor: alpha(tag.color, 0.1),
-                color: tag.color,
-                borderRadius: '4px',
-                '& .MuiChip-label': {
-                  px: 1,
-                }
-              }}
-            />
-          </Tooltip>
+      <Stack spacing={1} sx={{ p: 1 }}>
+        {tags.map((tag) => (
+          <Chip
+            key={tag.id}
+            label={tag.name}
+            size="small"
+            sx={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              bgcolor: alpha(tag.color, 0.1),
+              color: tag.color,
+              borderRadius: '4px',
+            }}
+          />
         ))}
-        {tags.length > 2 && (
-          <Tooltip title={tags.slice(2).map(tag => tag.name).join(', ')}>
-            <Chip
-              size="small"
-              label={`+${tags.length - 2}`}
-              sx={{
-                height: 20,
-                fontSize: '0.65rem',
-                fontWeight: 600,
-                bgcolor: alpha(theme.palette.grey[500], 0.1),
-                color: theme.palette.grey[600],
-                borderRadius: '4px',
-                '& .MuiChip-label': {
-                  px: 1,
-                }
-              }}
-            />
-          </Tooltip>
-        )}
       </Stack>
     );
   };
@@ -336,7 +354,6 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                 <TableCell>Teléfono</TableCell>
                 <TableCell>Estado</TableCell>
                 <TableCell>Pólizas</TableCell>
-                <TableCell>Etiquetas</TableCell>
                 <TableCell>Fecha de registro</TableCell>
                 <TableCell align="right">Acciones</TableCell>
               </TableRow>
@@ -356,7 +373,6 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                   <TableCell><Skeleton variant="text" width={150} /></TableCell>
                   <TableCell><Skeleton variant="text" width={100} /></TableCell>
                   <TableCell><Skeleton variant="rounded" width={80} height={24} /></TableCell>
-                  <TableCell><Skeleton variant="text" width={100} /></TableCell>
                   <TableCell><Skeleton variant="text" width={100} /></TableCell>
                   <TableCell><Skeleton variant="text" width={100} /></TableCell>
                   <TableCell align="right">
@@ -482,7 +498,6 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>Pólizas</TableCell>
-                <TableCell>Etiquetas</TableCell>
                 <TableCell>
                   <TableSortLabel
                     active={sortConfig.key === 'createdAt'}
@@ -549,6 +564,11 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                               {customer.name || 'Sin nombre'}
                             </Typography>
                             {renderReminders(customer)}
+                            {customer.tags && customer.tags.length > 0 && (
+                              <Box sx={{ ml: 0.5 }}>
+                                {renderTagsIndicator(customer)}
+                              </Box>
+                            )}
                           </Stack>
                           <Typography 
                             variant="caption" 
@@ -585,9 +605,6 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                     </TableCell>
                     <TableCell>
                       {getPolicyIndicators(customer)}
-                    </TableCell>
-                    <TableCell>
-                      {renderTags(customer.tags)}
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
@@ -674,6 +691,42 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
           />
         </Box>
       )}
+      
+      {/* Tags Popover */}
+      <Popover
+        open={Boolean(tagsAnchorEl)}
+        anchorEl={tagsAnchorEl}
+        onClose={handleTagsClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+        PaperProps={{
+          elevation: 3,
+          sx: {
+            mt: 1,
+            borderRadius: 2,
+            boxShadow: `0 4px 20px ${alpha(theme.palette.common.black, 0.1)}`,
+            maxWidth: 250,
+          }
+        }}
+      >
+        <Box sx={{ p: 1.5 }}>
+          <Typography 
+            variant="subtitle2" 
+            fontWeight={600} 
+            fontFamily="'Sora', sans-serif"
+            sx={{ mb: 1, px: 1 }}
+          >
+            Etiquetas
+          </Typography>
+          {tagsCustomer && renderTagsPopover(tagsCustomer.tags)}
+        </Box>
+      </Popover>
       
       {/* Actions menu */}
       <Menu
