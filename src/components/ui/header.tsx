@@ -865,10 +865,11 @@ export const Header = () => {
                         sx={{ 
                           fontFamily: '"Plus Jakarta Sans", sans-serif',
                           fontWeight: 600,
-                          display: { xs: 'none', md: 'block' }
+                          display: { xs: 'none', md: 'block' },
+                          color: theme.palette.mode === 'light' ? 'black' : 'white'
                         }}
                       >
-                        Hola, {getFirstName()} 🚀
+                        Hola, {getFirstName()}
                       </Typography>
                       
                       {/* Botón de Dashboard */}
@@ -1189,7 +1190,8 @@ export const Header = () => {
                               pl: 1,
                               display: 'flex',
                               alignItems: 'center',
-                              gap: 1
+                              gap: 1,
+                              color: theme.palette.mode === 'light' ? 'black' : 'white'
                             }}
                           >
                             <Box 
@@ -1206,7 +1208,7 @@ export const Header = () => {
                             >
                               {getFirstName()?.charAt(0).toUpperCase()}
                             </Box>
-                            Hola, {getFirstName()} 🚀
+                            Hola, {getFirstName()}
                           </Typography>
                           
                           <StyledButton
