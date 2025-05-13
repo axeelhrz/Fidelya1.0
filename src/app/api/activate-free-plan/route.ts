@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, db } from '@/lib/firebaseAdmin'; // Importamos directamente auth y db que ya están inicializados
-
+import { auth, db } from '@/lib/firebaseAdmin';
 export async function POST(request: NextRequest) {
   try {
     // Obtener token de autorización

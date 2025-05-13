@@ -514,6 +514,7 @@ class AuthService {
       return { success: false, error };
     }
   }
+
   // Verificar si el email ya está en uso
   async isEmailInUse(email: string): Promise<boolean> {
     try {
