@@ -114,16 +114,22 @@ export default function TasksPage() {
   const [showTip, setShowTip] = useState(true);
 
   // Verificar si el usuario ha alcanzado el límite de tareas del plan
-  const planLimits = useMemo(() => {
-    return subscription?.plan 
-      ? PLAN_LIMITS[subscription.plan as keyof typeof PLAN_LIMITS] 
-      : PLAN_LIMITS[PlanValue.BASIC];
-  }, [subscription]);
-  
-  const hasReachedTaskLimit = calculateStats.total >= (Number(planLimits?.activeTasks) || 25);
-  const canUseKanbanView = planLimits?.kanbanView || false;
-  const canExportTasks = planLimits?.export || false;
-  const canImportTasks = planLimits?.import || false;
+ // Verificar si el usuario ha alcanzado el límite de tareas del plan
+const planLimits = useMemo(() => {
+  // Asegurarnos de que subscription.plan existe y es una clave válida en PLAN_LIMITS
+  if (subscription?.plan && PLAN_LIMITS[subscription.plan as keyof typeof PLAN_LIMITS]) {
+    return PLAN_LIMITS[subscription.plan as keyof typeof PLAN_LIMITS];
+  }
+  // Si no hay plan o el plan no es válido, usar el plan básico como fallback
+  return PLAN_LIMITS[PlanValue.BASIC];
+}, [subscription]);
+
+// Convertir 'unlimited' a un número muy grande para comparaciones
+const taskLimit = planLimits.activeTasks === 'unlimited' ? Number.MAX_SAFE_INTEGER : Number(planLimits.activeTasks);
+const hasReachedTaskLimit = calculateStats.total >= taskLimit;
+const canUseKanbanView = planLimits?.kanbanView || false;
+const canExportTasks = planLimits?.export || false;
+const canImportTasks = planLimits?.import || false;
 
   // Referencia para scroll
   const contentRef = React.useRef<HTMLDivElement>(null);
