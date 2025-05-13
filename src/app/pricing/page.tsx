@@ -1092,7 +1092,7 @@ export default function PricingPage() {
                               alignItems: 'baseline',
                             }}
                           >
-                            {isAnnual ? plan.annualPrice : plan.monthlyPrice}€
+                            {isAnnual ? plan.annualPrice : plan.monthlyPrice}$
                             <Typography
                               component="span"
                               sx={{
@@ -1438,7 +1438,7 @@ export default function PricingPage() {
                         Potencial aumento de ingresos
                       </Typography>
                       <Typography variant="h5" component="p" sx={{ fontWeight: 700 }}>
-                        {roiData.potentialIncrease.toLocaleString()}€
+                        {roiData.potentialIncrease.toLocaleString()}$
                       </Typography>
                     </Card>
                     

@@ -106,7 +106,7 @@ export function PricingCards() {
             <p className="mt-4 text-sm text-gray-500">{plan.description}</p>
             <div className="mt-6 flex items-baseline">
               <span className="text-5xl font-bold tracking-tight text-gray-900">
-                ${plan.price}
+                $${plan.price}
               </span>
               <span className="ml-1 text-xl font-semibold text-gray-500">
                 /{plan.period}
