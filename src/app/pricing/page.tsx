@@ -309,7 +309,7 @@ const CountryDetection = () => {
         }}
       >
         <Typography variant="body2" color="text.secondary">
-          Precios mostrados en EUR para {country}
+          Precios mostrados en USD para {country}
         </Typography>
         <Tooltip title="Detectamos automáticamente tu ubicación para mostrarte los precios en tu moneda local">
           <InfoOutlinedIcon fontSize="small" sx={{ color: 'text.secondary', cursor: 'help' }} />
@@ -1314,10 +1314,10 @@ export default function PricingPage() {
                     <Box>
                       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
                         <Typography variant="body2">
-                          Prima media anual (€)
+                          Prima media anual ($)
                         </Typography>
                         <Typography variant="body2" fontWeight="600">
-                          {avgPremium}€
+                          {avgPremium}$
                         </Typography>
                       </Stack>
                       
@@ -1365,10 +1365,10 @@ export default function PricingPage() {
                         <Box>
                           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
                             <Typography variant="body2">
-                              Coste por hora (€)
+                              Coste por hora ($)
                             </Typography>
                             <Typography variant="body2" fontWeight="600">
-                              {hourlyRate}€
+                              {hourlyRate}$
                             </Typography>
                           </Stack>
                           
@@ -1422,7 +1422,7 @@ export default function PricingPage() {
                         Ahorro económico anual
                       </Typography>
                       <Typography variant="h5" component="p" sx={{ fontWeight: 700 }}>
-                        {roiData.moneySaved.toLocaleString()}€
+                        {roiData.moneySaved.toLocaleString()}$
                       </Typography>
                     </Card>
                     
