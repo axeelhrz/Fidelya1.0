@@ -18,7 +18,8 @@ import {
   DialogActions,
   CircularProgress,
   Snackbar,
-  Alert
+  Alert,
+  Paper
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { 
@@ -30,20 +31,100 @@ import {
   Calendar, 
   Users, 
   ChartBar, 
-  Robot 
+  Robot,
+  Check,
+  Star
 } from 'phosphor-react';
 import { useProfile } from '@/hooks/use-profile';
+import { useSubscription } from '@/hooks/use-subscription';
+import { useRouter } from 'next/navigation';
+import { Plan, PLAN_FEATURES } from '@/lib/subscription';
+
+// Definición de planes para mostrar en la interfaz
+const plans = [
+  {
+    id: 'basic',
+    name: "Básico",
+    price: "0",
+    period: "/mes",
+    description: "Para corredores independientes que están comenzando",
+    features: [
+      { text: `Hasta ${PLAN_FEATURES.basic.maxPolicies} pólizas`, tooltip: "Límite de pólizas activas en el sistema" },
+      { text: `Hasta ${PLAN_FEATURES.basic.maxClients} clientes`, tooltip: "Límite de clientes activos en el sistema" },
+      { text: "Gestión básica de pólizas", tooltip: "Registro y seguimiento de pólizas con campos esenciales" },
+      { text: "Recordatorios de renovación", tooltip: "Notificaciones automáticas para renovaciones próximas" },
+      { text: "Soporte por email", tooltip: "Tiempo de respuesta en 24 horas hábiles" }
+    ],
+    cta: "Activar plan básico",
+    popular: false,
+    color: "linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%)",
+    darkColor: "linear-gradient(135deg, #0C4A6E 0%, #075985 100%)",
+  },
+  {
+    id: "professional",
+    name: "Profesional",
+    price: "29",
+    period: "/mes",
+    description: "Para corredurías en crecimiento que necesitan más herramientas",
+    features: [
+      { text: `Hasta ${PLAN_FEATURES.professional.maxPolicies} pólizas`, tooltip: "Límite de pólizas activas en el sistema" },
+      { text: `Hasta ${PLAN_FEATURES.professional.maxClients} clientes`, tooltip: "Límite de clientes activos en el sistema" },
+      { text: "Gestión avanzada de pólizas", tooltip: "Campos personalizados, documentos adjuntos y seguimiento detallado" },
+      { text: "Automatización de renovaciones", tooltip: "Flujos de trabajo automatizados para renovaciones" },
+      { text: "Soporte prioritario", tooltip: "Asistencia por email y chat con prioridad" },
+      { text: "Análisis de rentabilidad", tooltip: "Informes detallados de rendimiento por cliente y póliza" },
+      { text: "Exportación de datos", tooltip: "Exportación avanzada de datos en múltiples formatos" }
+    ],
+    cta: "Actualizar a Profesional",
+    popular: true,
+    color: "linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)",
+    darkColor: "linear-gradient(135deg, #1E3A8A 0%, #1E40AF 100%)",
+    badge: "Más popular",
+    trialDays: 7,
+    paypalPlanId: process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID
+  },
+  {
+    id: "enterprise",
+    name: "Empresarial",
+    price: "99",
+    period: "/mes",
+    description: "Para grandes corredurías con necesidades específicas",
+    features: [
+      { text: "Pólizas ilimitadas", tooltip: "Sin restricciones en el número de pólizas" },
+      { text: "Clientes ilimitados", tooltip: "Sin restricciones en el número de clientes" },
+      { text: "API personalizada", tooltip: "Acceso a API para integraciones a medida" },
+      { text: "Gestor de cuenta dedicado", tooltip: "Un representante exclusivo para tu cuenta" },
+      { text: "Formación personalizada", tooltip: "Sesiones de formación adaptadas a tu equipo" },
+      { text: "Integraciones a medida", tooltip: "Desarrollo de integraciones específicas para tu negocio" },
+      { text: "Cumplimiento normativo avanzado", tooltip: "Herramientas adicionales para cumplimiento regulatorio" }
+    ],
+    cta: "Actualizar a Empresarial",
+    popular: false,
+    color: "linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)",
+    darkColor: "linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%)",
+    paypalPlanId: process.env.NEXT_PUBLIC_PAYPAL_ENTERPRISE_PLAN_ID,
+  }
+];
 
 export default function PlanTab() {
   const theme = useTheme();
+  const router = useRouter();
   const { profile, isLoading: profileLoading } = useProfile();
+  const { 
+    subscription, 
+    loading: subscriptionLoading, 
+    cancelSubscription,
+    activateFreePlan
+  } = useSubscription();
   
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [changePlanDialogOpen, setChangePlanDialogOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [changingPlan, setChangingPlan] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
-  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   
   // Abrir diálogo de cancelación
   const handleCancelDialogOpen = () => {
@@ -55,23 +136,76 @@ export default function PlanTab() {
     setCancelDialogOpen(false);
   };
   
+  // Abrir diálogo de cambio de plan
+  const handleChangePlanDialogOpen = () => {
+    setChangePlanDialogOpen(true);
+  };
+  
+  // Cerrar diálogo de cambio de plan
+  const handleChangePlanDialogClose = () => {
+    setChangePlanDialogOpen(false);
+    setSelectedPlan(null);
+  };
+  
+  // Seleccionar plan
+  const handleSelectPlan = (planId: string) => {
+    setSelectedPlan(planId);
+  };
+  
   // Cancelar suscripción
   const handleCancelSubscription = async () => {
     setCancelling(true);
-    setSubscriptionLoading(true);
     try {
-      // Implement your subscription cancellation logic here
-      // Example: await api.cancelSubscription(profile?.subscriptionId);
-      handleCancelDialogClose();
-      setSnackbarMessage('Suscripción cancelada correctamente');
-      setSnackbarSeverity('success');
+      const success = await cancelSubscription();
+      
+      if (success) {
+        handleCancelDialogClose();
+        setSnackbarMessage('Suscripción cancelada correctamente');
+        setSnackbarSeverity('success');
+      } else {
+        throw new Error('Error al cancelar la suscripción');
+      }
     } catch (error) {
       console.error('Error cancelling subscription:', error);
       setSnackbarMessage('Error al cancelar la suscripción');
       setSnackbarSeverity('error');
     } finally {
       setCancelling(false);
-      setSubscriptionLoading(false);
+      setSnackbarOpen(true);
+    }
+  };
+  
+  // Cambiar plan
+  const handleChangePlan = async () => {
+    if (!selectedPlan) return;
+    
+    setChangingPlan(true);
+    
+    try {
+      if (selectedPlan === 'basic') {
+        // Activar plan básico
+        const success = await activateFreePlan();
+        
+        if (success) {
+          handleChangePlanDialogClose();
+          setSnackbarMessage('Plan básico activado correctamente');
+          setSnackbarSeverity('success');
+        } else {
+          throw new Error('Error al activar el plan básico');
+        }
+      } else {
+        // Para planes de pago, redirigir a la página de precios
+        // Guardar el plan seleccionado en localStorage para recuperarlo después
+        localStorage.setItem('selectedPlan', selectedPlan);
+        handleChangePlanDialogClose();
+        router.push('/pricing');
+      }
+    } catch (error) {
+      console.error('Error changing plan:', error);
+      setSnackbarMessage('Error al cambiar de plan');
+      setSnackbarSeverity('error');
+    } finally {
+      setChangingPlan(false);
       setSnackbarOpen(true);
     }
   };
@@ -89,42 +223,76 @@ export default function PlanTab() {
     }).format(date);
   };
   
-  if (profileLoading || subscriptionLoading) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <Typography>Cargando información del plan...</Typography>
-      </Box>
-    );
-  }
-  
-  // Datos del plan (simulados)
-  const planData = {
-    name: profile?.plan?.name || 'Free',
-    price: profile?.plan?.price ? Number(profile?.plan?.price) : 0,
-    billingCycle: profile?.plan?.billingCycle || 'monthly',
-    status: profile?.plan?.status || 'active',
-    startDate: profile?.plan?.startDate || '2023-01-01',
-    endDate: profile?.plan?.endDate || '2023-12-31',
-    features: {
-      clients: profile?.plan?.name === 'Free' ? 10 : profile?.plan?.name === 'Pro' ? 100 : 'Ilimitados',
-      policies: profile?.plan?.name === 'Free' ? 20 : profile?.plan?.name === 'Pro' ? 200 : 'Ilimitadas',
-      analytics: profile?.plan?.name !== 'Free',
-      ai: profile?.plan?.name === 'Enterprise'
-    },
-    usage: {
-      clients: {
-        used: 8,
-        total: profile?.plan?.name === 'Free' ? 10 : profile?.plan?.name === 'Pro' ? 100 : 1000
-      },
-      policies: {
-        used: 15,
-        total: profile?.plan?.name === 'Free' ? 20 : profile?.plan?.name === 'Pro' ? 200 : 1000
-      }
+  // Obtener datos del plan actual
+  const getCurrentPlanData = () => {
+    if (!subscription) {
+      return {
+        name: 'Básico',
+        price: 0,
+        billingCycle: 'monthly',
+        status: 'active',
+        startDate: new Date().toISOString(),
+        endDate: new Date().toISOString(),
+        features: {
+          clients: PLAN_FEATURES.basic.maxClients,
+          policies: PLAN_FEATURES.basic.maxPolicies,
+          analytics: PLAN_FEATURES.basic.analytics,
+          ai: false
+        },
+        usage: {
+          clients: {
+            used: 0,
+            total: PLAN_FEATURES.basic.maxClients
+          },
+          policies: {
+            used: 0,
+            total: PLAN_FEATURES.basic.maxPolicies
+          }
+        }
+      };
     }
+    
+    // Mapear el planId a un plan de la lista
+    const planId = subscription.planId as Plan || 'basic';
+    
+    return {
+      name: subscription.plan || 'Básico',
+      price: planId === 'professional' ? 29 : planId === 'enterprise' ? 99 : 0,
+      billingCycle: 'monthly',
+      status: subscription.status || 'active',
+      startDate: subscription.currentPeriodStart 
+        ? new Date(subscription.currentPeriodStart instanceof Date 
+            ? subscription.currentPeriodStart 
+            : subscription.currentPeriodStart.toDate()).toISOString() 
+        : new Date().toISOString(),
+      endDate: subscription.currentPeriodEnd 
+        ? new Date(subscription.currentPeriodEnd instanceof Date 
+            ? subscription.currentPeriodEnd 
+            : subscription.currentPeriodEnd.toDate()).toISOString() 
+        : new Date().toISOString(),
+      features: {
+        clients: PLAN_FEATURES[planId]?.maxClients || PLAN_FEATURES.basic.maxClients,
+        policies: PLAN_FEATURES[planId]?.maxPolicies || PLAN_FEATURES.basic.maxPolicies,
+        analytics: PLAN_FEATURES[planId]?.analytics || false,
+        ai: planId === 'enterprise'
+      },
+      usage: {
+        clients: {
+          used: profile?.clientsCount || 0,
+          total: PLAN_FEATURES[planId]?.maxClients || PLAN_FEATURES.basic.maxClients
+        },
+        policies: {
+          used: profile?.policiesCount || 0,
+          total: PLAN_FEATURES[planId]?.maxPolicies || PLAN_FEATURES.basic.maxPolicies
+        }
+      }
+    };
   };
   
+  const planData = getCurrentPlanData();
+  
   // Calcular porcentaje de uso
-  const calculateUsagePercentage = (used: number, total: number) => {
+  const calculateUsagePercentage = (used: number, total: number | string) => {
     if (typeof total === 'string') return 0;
     return Math.min(Math.round((used / total) * 100), 100);
   };
@@ -135,6 +303,15 @@ export default function PlanTab() {
     if (percentage < 80) return theme.palette.warning.main;
     return theme.palette.error.main;
   };
+  
+  if (profileLoading || subscriptionLoading) {
+    return (
+      <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+        <CircularProgress />
+        <Typography sx={{ ml: 2 }}>Cargando información del plan...</Typography>
+      </Box>
+    );
+  }
   
   return (
     <Stack spacing={4}>
@@ -221,9 +398,9 @@ export default function PlanTab() {
                     component={motion.button}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    href="/pricing"
+                    onClick={handleChangePlanDialogOpen}
                   >
-                    {planData.name === 'Free' ? 'Actualizar plan' : 'Cambiar plan'}
+                    Cambiar plan
                   </Button>
                   
                   {planData.price > 0 && (
@@ -336,7 +513,7 @@ export default function PlanTab() {
                     Clientes
                   </Typography>
                   <Typography variant="body1" fontWeight={500}>
-                    {planData.features.clients}
+                    {typeof planData.features.clients === 'string' ? 'Ilimitados' : planData.features.clients}
                   </Typography>
                 </Box>
               </Stack>
@@ -360,7 +537,7 @@ export default function PlanTab() {
                     Pólizas
                   </Typography>
                   <Typography variant="body1" fontWeight={500}>
-                    {planData.features.policies}
+                    {typeof planData.features.policies === 'string' ? 'Ilimitadas' : planData.features.policies}
                   </Typography>
                 </Box>
               </Stack>
@@ -562,23 +739,182 @@ export default function PlanTab() {
           </Button>
         </DialogActions>
       </Dialog>
+
+  {/* Diálogo para cambiar de plan */}
+  <Dialog 
+    open={changePlanDialogOpen} 
+    onClose={handleChangePlanDialogClose}
+    PaperProps={{
+      sx: {
+        borderRadius: '16px',
+        width: '100%',
+        maxWidth: '800px'
+      }
+    }}
+  >
+    <DialogTitle sx={{ fontFamily: 'Sora', fontWeight: 600 }}>
+      Cambiar plan
+    </DialogTitle>
+    <DialogContent>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Selecciona el plan que mejor se adapte a tus necesidades
+      </Typography>
       
-      {/* Snackbar de notificaciones */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      <Stack 
+        direction={{ xs: 'column', md: 'row' }} 
+        spacing={3} 
+        sx={{ width: '100%' }}
       >
-        <Alert 
-          onClose={() => setSnackbarOpen(false)} 
-          severity={snackbarSeverity} 
-          variant="filled"
-          sx={{ width: '100%', borderRadius: '10px' }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
-    </Stack>
-  );
+        {plans.map((plan) => (
+          <Paper
+            key={plan.id}
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: '16px',
+              border: `2px solid ${selectedPlan === plan.id 
+                ? theme.palette.primary.main 
+                : alpha(theme.palette.divider, 0.1)}`,
+              background: theme.palette.mode === 'dark' ? plan.darkColor : plan.color,
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              position: 'relative',
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+            component={motion.div}
+            whileHover={{ y: -5 }}
+            onClick={() => handleSelectPlan(plan.id)}
+          >
+            {plan.badge && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: -10,
+                  right: 10,
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: '50px',
+                  bgcolor: theme.palette.primary.main,
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  zIndex: 1,
+                }}
+              >
+                {plan.badge}
+              </Box>
+            )}
+            
+            {selectedPlan === plan.id && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 10,
+                  right: 10,
+                  width: 24,
+                  height: 24,
+                  borderRadius: '50%',
+                  bgcolor: theme.palette.primary.main,
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Check weight="bold" size={16} />
+              </Box>
+            )}
+            
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+              {plan.name}
+            </Typography>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, flexGrow: 0 }}>
+              {plan.description}
+            </Typography>
+            
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, display: 'flex', alignItems: 'baseline' }}>
+              {plan.price === '0' ? 'Gratis' : `$${plan.price}`}
+              {plan.price !== '0' && (
+                <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                  {plan.period}
+                </Typography>
+              )}
+            </Typography>
+            
+            <Box sx={{ mb: 3, flexGrow: 1 }}>
+              {plan.features.map((feature, index) => (
+                <Stack key={index} direction="row" spacing={1} alignItems="flex-start" sx={{ mb: 1 }}>
+                  <Check size={18} weight="bold" style={{ color: theme.palette.success.main, marginTop: 2 }} />
+                  <Typography variant="body2">
+                    {feature.text}
+                  </Typography>
+                </Stack>
+              ))}
+            </Box>
+            
+            {plan.trialDays && (
+              <Typography variant="body2" sx={{ 
+                mb: 2, 
+                color: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.dark,
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <Star weight="fill" size={16} style={{ marginRight: 4 }} />
+                Incluye {plan.trialDays} días de prueba
+              </Typography>
+            )}
+          </Paper>
+        ))}
+      </Stack>
+    </DialogContent>
+    <DialogActions sx={{ p: 2 }}>
+      <Button 
+        onClick={handleChangePlanDialogClose}
+        color="inherit"
+        sx={{ 
+          borderRadius: '10px',
+          textTransform: 'none',
+          fontWeight: 500
+        }}
+      >
+        Cancelar
+      </Button>
+      <Button 
+        onClick={handleChangePlan}
+        variant="contained"
+        color="primary"
+        disabled={!selectedPlan || changingPlan}
+        startIcon={changingPlan ? <CircularProgress size={20} color="inherit" /> : <ArrowCircleUp weight="bold" />}
+        sx={{ 
+          borderRadius: '10px',
+          textTransform: 'none',
+          fontWeight: 500
+        }}
+      >
+        {changingPlan ? 'Procesando...' : 'Cambiar a este plan'}
+      </Button>
+    </DialogActions>
+  </Dialog>
+  
+  {/* Snackbar de notificaciones */}
+  <Snackbar
+    open={snackbarOpen}
+    autoHideDuration={4000}
+    onClose={() => setSnackbarOpen(false)}
+    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+  >
+    <Alert 
+      onClose={() => setSnackbarOpen(false)} 
+      severity={snackbarSeverity} 
+      variant="filled"
+      sx={{ width: '100%', borderRadius: '10px' }}
+    >
+      {snackbarMessage}
+    </Alert>
+  </Snackbar>
+</Stack>
+);
 }

@@ -68,6 +68,8 @@ export interface ProfileCertification {
 
 export interface ProfileData {
   plan?: { name: string; [key: string]: unknown };
+  clientsCount?: number;
+  policiesCount?: number;
   name: string;
   firstName: string;
   id: string;
