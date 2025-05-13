@@ -232,7 +232,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
-  const { signOut } = useAuth();
+  const { signOut, user, userData } = useAuth();
   const { profile } = useProfile();
   const { subscription, loading: subscriptionLoading } = useSubscription();
   const { totalUnread } = useMessages('', ''); // Pass empty strings as placeholders
@@ -263,15 +263,17 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
     const planId = subscription?.planId || 'basic';
     
     // Mapear el planId a uno de los valores esperados
-    const planIdStr = String(planId).toLowerCase();
-    
-    if (planIdStr === 'pro' || planIdStr === 'professional') {
-      return 'professional';
-    } else if (planIdStr === 'enterprise') {
-      return 'enterprise';
-    } else {
-      return 'basic';
+    if (typeof planId === 'string') {
+      const planIdLower = planId.toLowerCase();
+      if (planIdLower === 'pro' || planIdLower === 'professional') {
+        return 'professional' as const;
+      } else if (planIdLower === 'enterprise') {
+        return 'enterprise' as const;
+      }
     }
+    
+    // Por defecto, retornar 'basic'
+    return 'basic' as const;
   }, [subscription, subscriptionLoading]);
 
   // Función para verificar si un usuario puede acceder a una funcionalidad según su plan
@@ -362,18 +364,58 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
 
   // Obtener el nombre de usuario desde Firebase
   const getUserDisplayName = () => {
-    // Priorizar el nombre del perfil
+    // Intentar obtener el nombre desde diferentes fuentes en orden de prioridad
+    
+    // 1. Desde el perfil en la colección 'profiles'
     if (profile?.displayName) {
       return profile.displayName;
     }
     
-    // Si no hay displayName, intentar construirlo desde firstName y lastName
-    if (profile?.displayName) {
-      return `${profile.displayName}`.trim();
+    // 2. Desde userData en la colección 'users'
+    if (userData?.displayName) {
+      return userData.displayName;
     }
     
-    // Si no hay nombre, mostrar el email o un valor por defecto
-    return profile?.email || 'Usuario';
+    // 3. Construir desde firstName y lastName del perfil
+    if (profile?.firstName || profile?.lastName) {
+      return `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+    }
+    
+    // 4. Construir desde firstName y lastName de userData
+    if (userData?.firstName || userData?.lastName) {
+      return `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+    }
+    
+    // 5. Desde el objeto user de Firebase Auth
+    if (user?.displayName) {
+      return user.displayName;
+    }
+    
+    // 6. Usar el email como último recurso
+    return user?.email || userData?.email || profile?.email || 'Usuario';
+  };
+
+  // Obtener la URL del avatar
+  const getAvatarUrl = () => {
+    // Intentar obtener la URL del avatar desde diferentes fuentes en orden de prioridad
+    
+    // 1. Desde el perfil en la colección 'profiles'
+    if (profile?.avatarUrl) {
+      return profile.avatarUrl;
+    }
+    
+    // 2. Desde userData en la colección 'users'
+    if (userData?.photoURL) {
+      return userData.photoURL;
+    }
+    
+    // 3. Desde el objeto user de Firebase Auth
+    if (user?.photoURL) {
+      return user.photoURL;
+    }
+    
+    // 4. Retornar undefined para usar el avatar por defecto
+    return undefined;
   };
 
   // Renderizar ítems de navegación
@@ -547,7 +589,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
           >
             <Stack direction="row" spacing={2} alignItems="center">
               <UserAvatar 
-                src={profile?.avatarUrl || profile?.photoURL || undefined}
+                src={getAvatarUrl()}
                 alt={getUserDisplayName()}
               />
               <Box sx={{ minWidth: 0 }}>
@@ -717,7 +759,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
           >
             <Stack direction="row" spacing={2} alignItems="center">
               <UserAvatar 
-                src={profile?.avatarUrl || profile?.photoURL || undefined}
+                src={getAvatarUrl()}
                 alt={getUserDisplayName()}
               />
               <Box sx={{ minWidth: 0 }}>
