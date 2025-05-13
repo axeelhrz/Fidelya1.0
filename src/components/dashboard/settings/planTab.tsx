@@ -741,8 +741,8 @@ export default function PlanTab() {
       </Dialog>
 
   {/* Diálogo para cambiar de plan */}
-  <Dialog 
-    open={changePlanDialogOpen} 
+      <Dialog 
+        open={changePlanDialogOpen} 
     onClose={handleChangePlanDialogClose}
     PaperProps={{
       sx: {
@@ -760,9 +760,9 @@ export default function PlanTab() {
         Selecciona el plan que mejor se adapte a tus necesidades
       </Typography>
       
-      <Stack 
-        direction={{ xs: 'column', md: 'row' }} 
-        spacing={3} 
+          <Stack 
+            direction={{ xs: 'column', md: 'row' }} 
+            spacing={3} 
         sx={{ width: '100%' }}
       >
         {plans.map((plan) => (
@@ -772,8 +772,8 @@ export default function PlanTab() {
             sx={{
               p: 3,
               borderRadius: '16px',
-              border: `2px solid ${selectedPlan === plan.id 
-                ? theme.palette.primary.main 
+                  border: `2px solid ${selectedPlan === plan.id 
+                    ? theme.palette.primary.main 
                 : alpha(theme.palette.divider, 0.1)}`,
               background: theme.palette.mode === 'dark' ? plan.darkColor : plan.color,
               cursor: 'pointer',
@@ -856,8 +856,8 @@ export default function PlanTab() {
             </Box>
             
             {plan.trialDays && (
-              <Typography variant="body2" sx={{ 
-                mb: 2, 
+                  <Typography variant="body2" sx={{ 
+                    mb: 2, 
                 color: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.dark,
                 display: 'flex',
                 alignItems: 'center'
@@ -871,10 +871,10 @@ export default function PlanTab() {
       </Stack>
     </DialogContent>
     <DialogActions sx={{ p: 2 }}>
-      <Button 
+          <Button 
         onClick={handleChangePlanDialogClose}
         color="inherit"
-        sx={{ 
+            sx={{ 
           borderRadius: '10px',
           textTransform: 'none',
           fontWeight: 500
@@ -882,19 +882,23 @@ export default function PlanTab() {
       >
         Cancelar
       </Button>
-      <Button 
+          <Button 
         onClick={handleChangePlan}
         variant="contained"
         color="primary"
-        disabled={!selectedPlan || changingPlan}
-        startIcon={changingPlan ? <CircularProgress size={20} color="inherit" /> : <ArrowCircleUp weight="bold" />}
-        sx={{ 
+            disabled={!selectedPlan || changingPlan}
+            startIcon={
+              changingPlan ? 
+                <CircularProgress size={20} color="inherit" /> : 
+                <ArrowCircleUp weight="bold" />
+            }
+            sx={{
           borderRadius: '10px',
           textTransform: 'none',
           fontWeight: 500
         }}
       >
-        {changingPlan ? 'Procesando...' : 'Cambiar a este plan'}
+            {changingPlan ? 'Procesando...' : 'Cambiar a este plan'}
       </Button>
     </DialogActions>
   </Dialog>
@@ -906,9 +910,9 @@ export default function PlanTab() {
     onClose={() => setSnackbarOpen(false)}
     anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
   >
-    <Alert 
-      onClose={() => setSnackbarOpen(false)} 
-      severity={snackbarSeverity} 
+        <Alert 
+          onClose={() => setSnackbarOpen(false)} 
+          severity={snackbarSeverity} 
       variant="filled"
       sx={{ width: '100%', borderRadius: '10px' }}
     >

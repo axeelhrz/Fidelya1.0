@@ -9,6 +9,8 @@ const PAYPAL_API_URL = process.env.NEXT_PUBLIC_PAYPAL_API_URL || 'https://api-m.
 
 // Interfaces para PayPal
 export interface PayPalSubscriptionResponse {
+  custom: string
+  custom_id: string;
   id: string;
   status: string;
   create_time: string;
