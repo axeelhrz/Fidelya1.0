@@ -97,7 +97,7 @@ const languages = [
 
 const currencies = [
   { code: 'USD', label: 'USD $', symbol: '$' },
-  { code: 'EUR', label: 'EUR €', symbol: '€' },
+  { code: 'EUR', label: 'EUR $', symbol: '$' },
 ];
 
 export default function Footer() {

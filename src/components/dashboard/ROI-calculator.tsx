@@ -34,7 +34,7 @@ import {
 const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
-    currency: 'EUR',
+    currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(value);
@@ -60,7 +60,7 @@ const ROICalculator = ({ open = false, onClose, isDialog = false }: ROICalculato
   const thirdYearRevenue = secondYearRevenue * (renewalRate / 100) * 0.7;
   
   const totalThreeYearRevenue = firstYearRevenue + secondYearRevenue + thirdYearRevenue;
-  const timeInvestmentValue = timeInvestment * numPolicies * 50; // Valorando el tiempo a 50€/hora
+  const timeInvestmentValue = timeInvestment * numPolicies * 50; // Valorando el tiempo a 50$/hora
   const roi = (totalThreeYearRevenue / timeInvestmentValue) * 100;
   
   // Función para resetear los valores
@@ -122,7 +122,7 @@ const ROICalculator = ({ open = false, onClose, isDialog = false }: ROICalculato
         <Box>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
             <Typography variant="body2" fontWeight={600}>
-              Prima media anual (€)
+              Prima media anual ($)
             </Typography>
             <Typography variant="body2" color="primary" fontWeight={600}>
               {formatCurrency(avgPremium)}
@@ -136,7 +136,7 @@ const ROICalculator = ({ open = false, onClose, isDialog = false }: ROICalculato
             size="small"
             fullWidth
             InputProps={{
-              startAdornment: <InputAdornment position="start">€</InputAdornment>,
+              startAdornment: <InputAdornment position="start">$</InputAdornment>,
               sx: {
                 borderRadius: 2
               }

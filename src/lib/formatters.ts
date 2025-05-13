@@ -15,7 +15,7 @@ export function parseCurrency(value: string): number {
 export const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat('es-ES', { 
     style: 'currency', 
-    currency: 'EUR',
+    currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(value);

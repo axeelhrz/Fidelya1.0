@@ -311,7 +311,7 @@ export default function SubscribeContent() {
 
   // Formatear precio
   const formatPrice = (price: number, period: string) => {
-    return `${price}€/${period === 'month' ? 'mes' : 'año'}`;
+    return `$${price}/${period === 'month' ? 'mes' : 'año'}`;
   };
 
   // Volver a la página de pricing

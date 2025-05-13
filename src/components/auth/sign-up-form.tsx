@@ -1281,7 +1281,7 @@ export default function SignUpForm() {
                           Plan seleccionado: <span style={{ color: theme.palette.primary.main }}>{selectedPlan.name}</span>
                         </Typography>
                         <Typography variant="caption" sx={{ fontFamily: '"Inter", sans-serif', display: 'block', mt: 0.5 }}>
-                          {selectedPlan.price === 0 ? 'Gratuito' : `${selectedPlan.price}€/${selectedPlan.billingPeriod === 'year' ? 'año' : 'mes'}`}
+                          {selectedPlan.price === 0 ? 'Gratuito' : `$${selectedPlan.price}/${selectedPlan.billingPeriod === 'year' ? 'año' : 'mes'}`}
                         </Typography>
                       </Box>
                       <Chip 
