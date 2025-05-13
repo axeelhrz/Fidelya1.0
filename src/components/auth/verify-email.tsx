@@ -24,7 +24,6 @@ import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
 import { sendEmailVerification, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import Logo from '@/components/ui/logo';
 import {
   CheckCircle,
   Refresh,
@@ -92,11 +91,7 @@ const ParticlesBackground = () => {
   );
 };
 
-// Tipos
-interface UserSubscription {
-  status: 'pending' | 'active' | 'cancelled' | 'expired';
-  planId: string;
-}
+
 
 // Componentes estilizados
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -539,6 +534,34 @@ const VerificationStatus = ({ verificationChecks, onCheck }: {
   );
 };
 
+// Función para activar el plan gratuito
+const activateFreePlan = async (): Promise<boolean> => {
+    try {
+              const user = auth.currentUser;
+    if (!user) return false;
+                const token = await user.getIdToken();
+    const response = await fetch('/api/activate-free-plan', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+                
+    if (!response.ok) {
+      console.error('Error al activar plan gratuito:', await response.text());
+      return false;
+              }
+    
+    return true;
+            } catch (err) {
+              console.error('Error al activar plan gratuito:', err);
+    return false;
+            }
+    };
+
+// Este bloque ha sido movido dentro del componente VerifyEmail
+
 export default function VerifyEmail() {
   const router = useRouter();
   const theme = useTheme();
@@ -566,142 +589,135 @@ export default function VerifyEmail() {
     setShowEmailPreview(false);
   };
 
-  // Función para verificar el estado de la suscripción
-  const checkSubscriptionAndRedirect = useCallback(async (userId: string) => {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', userId));
-      const userData = userDoc.exists() ? userDoc.data() : null;
+// Función para verificar el estado de la suscripción
+const checkSubscriptionAndRedirect = useCallback(async (userId: string) => {
+  try {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    const userData = userDoc.exists() ? userDoc.data() : null;
+    
+    // Verificar si el usuario tiene un plan básico activo
+    if (userData?.planStatus === 'active' && userData?.plan === 'basic') {
+      setSuccess('¡Verificado! Redirigiendo al dashboard...');
+      setTimeout(() => router.replace('/dashboard'), 1500);
+      return;
+    }
+    
+    // Si no tiene plan básico activo, activarlo automáticamente
+    const activated = await activateFreePlan();
+    
+    if (activated) {
+      setSuccess('¡Plan básico activado! Redirigiendo al dashboard...');
+      setTimeout(() => router.replace('/dashboard'), 1500);
+      return;
+    }
+    
+    // Si hay un error al activar el plan básico, verificar si hay un plan seleccionado
+    const savedPlan = localStorage.getItem('selectedPlan');
+    if (savedPlan) {
+      const plan = JSON.parse(savedPlan);
       
-      // Verificar si el usuario tiene un plan básico activo
-      if (userData?.planStatus === 'active' || 
-          (userData?.subscription?.status === 'active' && userData?.subscription?.planId === 'basic')) {
-        setSuccess('¡Verificado! Redirigiendo al dashboard...');
-        setTimeout(() => router.replace('/dashboard'), 1500);
-        return;
-      }
-      
-      // Verificar si hay una suscripción activa
-      const subscriptionDoc = await getDoc(doc(db, 'subscriptions', userId));
-      const subscription = subscriptionDoc.exists() ? subscriptionDoc.data() as UserSubscription : null;
-      
-      if (subscription?.status === 'active') {
-        setSuccess('¡Verificado! Redirigiendo al dashboard...');
-        setTimeout(() => router.replace('/dashboard'), 1500);
-      } else {
-        // Verificar si hay un plan seleccionado en localStorage
-        const savedPlan = localStorage.getItem('selectedPlan');
-        if (savedPlan) {
-          const plan = JSON.parse(savedPlan);
-          
-          // Si el plan guardado es básico, activarlo y redirigir al dashboard
-          if (plan.id === 'basic') {
-            try {
-              const user = auth.currentUser;
-              if (user) {
-                const token = await user.getIdToken();
-                await fetch('/api/activate-free-plan', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                  }
-                });
-                
-                setSuccess('¡Verificado! Redirigiendo al dashboard...');
-                setTimeout(() => router.replace('/dashboard'), 1500);
-                return;
-              }
-            } catch (err) {
-              console.error('Error al activar plan gratuito:', err);
-            }
-          }
-          
-          setSuccess('¡Verificado! Continuando con la suscripción...');
-          setTimeout(() => router.replace('/subscribe'), 1500);
-        } else {
-          setSuccess('¡Verificado! Selecciona un plan para continuar...');
-          setTimeout(() => router.replace('/pricing'), 1500);
+      // Si el plan guardado es básico, intentar activarlo nuevamente
+      if (plan.id === 'basic') {
+        const retryActivation = await activateFreePlan();
+        
+        if (retryActivation) {
+          setSuccess('¡Plan básico activado! Redirigiendo al dashboard...');
+          setTimeout(() => router.replace('/dashboard'), 1500);
+          return;
         }
       }
-    } catch (err) {
-      console.error('Error al verificar suscripción:', err);
-      setError('Error al verificar el estado de la suscripción');
+      
+      // Si no es plan básico o no se pudo activar, continuar con la suscripción
+      setSuccess('¡Verificado! Continuando con la suscripción...');
+      setTimeout(() => router.replace('/subscribe'), 1500);
+    } else {
+      // Si no hay plan seleccionado, activar plan básico por defecto
+      const defaultActivation = await activateFreePlan();
+      
+      if (defaultActivation) {
+        setSuccess('¡Plan básico activado! Redirigiendo al dashboard...');
+        setTimeout(() => router.replace('/dashboard'), 1500);
+      } else {
+        setSuccess('¡Verificado! Selecciona un plan para continuar...');
+        setTimeout(() => router.replace('/pricing'), 1500);
+      }
+    }
+  } catch (err) {
+    console.error('Error al verificar suscripción:', err);
+    setError('Error al verificar el estado de la suscripción');
+  }
+}, [router]);
+
+// Function to check verification status
+const checkVerification = useCallback(async (manual: boolean = false) => {
+  try {
+    if (manual) setLoading(true);
+    
+    const user = auth.currentUser;
+    await user?.reload();
+    
+    if (user?.emailVerified) {
+      await checkSubscriptionAndRedirect(user.uid);
+    } else if (manual) {
+      setError('Tu correo aún no ha sido verificado. Por favor, revisa tu bandeja de entrada.');
       setLoading(false);
     }
-  }, [router]);
-
-  // Función para verificar el estado del correo
-  const checkVerification = useCallback(async (showFeedback = true) => {
-    if (showFeedback) {
-      setLoading(true);
-    }
-    setError(null);
-    
-    try {
-      const user = auth.currentUser;
-      if (!user) throw new Error('No hay usuario autenticado');
-      
-      await user.reload();
-      
-      if (user.emailVerified) {
-        // NUNCA redirigir directamente al dashboard
-        // Siempre verificar suscripción primero
-        await checkSubscriptionAndRedirect(user.uid);
-      } else if (showFeedback) {
-        setError('El correo aún no ha sido verificado. Por favor, verifica tu bandeja de entrada.');
-      }
-    } catch (err) {
-      console.error('Error al verificar estado:', err);
-      if (showFeedback) {
-        setError('Error al verificar el estado del correo.');
-      }
-    } finally {
-      if (showFeedback) {
-        setLoading(false);
-      }
-    }
-  }, [checkSubscriptionAndRedirect, setError, setLoading]);
-
-  // Efecto para manejar la autenticación inicial
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        router.replace('/auth/sign-in');
-        return;
-      }
-      
-      setUserEmail(user.email);
-      
-      if (user.emailVerified) {
-        await checkSubscriptionAndRedirect(user.uid);
-        return;
-      }
-      
+  } catch (err) {
+    console.error('Error al verificar email:', err);
+    if (manual) {
+      setError('Error al verificar el estado del correo');
       setLoading(false);
-      
-      if (!emailSent) {
-        await handleSendVerification();
-      }
-    });
-    
-    return () => unsubscribe();
-  }, [router, emailSent, checkSubscriptionAndRedirect]);
+    }
+  }
+}, [checkSubscriptionAndRedirect, setError, setLoading]);
 
-  // Efecto para manejar el temporizador de reenvío
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
+// Define handleSendVerification
+const handleSendVerification = async () => {
+  setError(null);
+  setLoading(true);
+  
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error('No hay usuario autenticado');
     
-    if (emailSent && verificationTimer > 0) {
-      interval = setInterval(() => {
-        setVerificationTimer((prev) => prev - 1);
-      }, 1000);
+    await sendEmailVerification(user);
+    setEmailSent(true);
+    setVerificationTimer(60);
+    setCanResend(false);
+    setAutoCheckActive(true);
+    setSuccess('Correo de verificación enviado con éxito');
+  } catch (err) {
+    console.error('Error al enviar correo:', err);
+    setError('Error al enviar el correo de verificación');
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Efecto para manejar la autenticación inicial
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      router.replace('/auth/sign-in');
+      return;
     }
     
-    // Cleanup function to clear the interval
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [emailSent, verificationTimer]);
+    setUserEmail(user.email);
+    
+    if (user.emailVerified) {
+      await checkSubscriptionAndRedirect(user.uid);
+      return;
+    }
+    
+    setLoading(false);
+    
+    if (!emailSent) {
+      await handleSendVerification();
+    }
+  });
+  
+  return () => unsubscribe();
+}, [router, emailSent, checkSubscriptionAndRedirect]);
 
   // Efecto para verificación automática
   useEffect(() => {
@@ -713,33 +729,10 @@ export default function VerifyEmail() {
         setVerificationChecks(prev => prev + 1);
       }, 10000); // Verificar cada 10 segundos
     }
-    
     return () => {
       if (interval) clearInterval(interval);
     };
   }, [autoCheckActive, checkVerification]);
-
-  const handleSendVerification = async () => {
-    setError(null);
-    setLoading(true);
-    
-    try {
-      const user = auth.currentUser;
-      if (!user) throw new Error('No hay usuario autenticado');
-      
-      await sendEmailVerification(user);
-      setEmailSent(true);
-      setVerificationTimer(60);
-      setCanResend(false);
-      setAutoCheckActive(true);
-      setSuccess('Correo de verificación enviado con éxito');
-    } catch (err) {
-      console.error('Error al enviar correo:', err);
-      setError('Error al enviar el correo de verificación');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSignOut = async () => {
     try {
@@ -757,44 +750,27 @@ export default function VerifyEmail() {
 
   return (
     <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        position: 'relative',
-        background: isDark
-          ? 'radial-gradient(circle at 50% 50%, #0F172A 0%, #1E293B 100%)'
-          : 'radial-gradient(circle at 50% 50%, #F8FAFC 0%, #EFF6FF 100%)',
-        overflow: 'hidden',
-      }}
-    >
-      <ParticlesBackground />
-      
-      {/* Logo */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 20,
-          left: 20,
-          zIndex: 10,
-        }}
+    sx={{
+      minHeight: '100vh',
+      display: 'flex',
+      position: 'relative',
+      background: isDark
+        ? 'radial-gradient(circle at 50% 50%, #0F172A 0%, #1E293B 100%)'
+        : 'radial-gradient(circle at 50% 50%, #F8FAFC 0%, #EFF6FF 100%)',
+    }}
+  >
+    <ParticlesBackground />
+    
+    <Container maxWidth="sm" sx={{ py: 6, zIndex: 1 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
       >
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Logo />
-        </motion.div>
-      </Box>
-      
-      <Container maxWidth="sm" sx={{ py: 4, zIndex: 1 }}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <StyledPaper>
-            <Stack spacing={3} alignItems="center">
+  <StyledPaper elevation={0}>
+    {/* The rest of the content is being handled in the next Stack component */}
+
+    <Stack spacing={3} alignItems="center">
               {/* Icono de Email Animado */}
               <EmailIconWrapper>
                 <MailOutline

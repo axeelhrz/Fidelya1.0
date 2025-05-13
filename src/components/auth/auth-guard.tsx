@@ -15,13 +15,14 @@ export default function AuthGuard({
   fallback?: React.ReactNode;
   requiredRoles?: string[];
 }) {
-  const { user, userData, loading, isAuthenticated, isEmailVerified } = useAuth();
+  const { userData, loading, isAuthenticated, isEmailVerified, activateFreePlan } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
   const [isChecking, setIsChecking] = useState<boolean>(true);
   
   useEffect(() => {
+    const checkAuth = async () => {
     // Si está cargando, esperar
     if (loading) return;
 
@@ -44,56 +45,43 @@ export default function AuthGuard({
     if (!hasPlan && !pathname.startsWith('/subscribe') && !pathname.startsWith('/pricing')) {
       // Si el plan es básico, activarlo automáticamente
       if (userData?.plan === 'basic') {
-        // Activar plan básico mediante API
-        const activateBasicPlan = async () => {
           try {
-            const token = await user?.getIdToken();
-            if (!token) return;
-            
-            const response = await fetch('/api/activate-free-plan', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-            });
-            
-            if (response.ok) {
+            const result = await activateFreePlan();
+            if (result.success) {
               setIsAuthorized(true);
+            setIsChecking(false);
             } else {
-              router.push('/pricing');
-            }
+      router.push('/pricing');
+    }
           } catch (error) {
             console.error('Error al activar plan básico:', error);
             router.push('/pricing');
-          } finally {
-            setIsChecking(false);
           }
-        };
-        
-        activateBasicPlan();
         return;
       }
-      
-      // Si no es plan básico, redirigir a suscripción
-      router.push('/pricing');
-      return;
+        
+        // Si no es plan básico, redirigir a suscripción
+        router.push('/pricing');
+        return;
     }
 
-    // Verificar roles si se requieren
-    if (requiredRoles && requiredRoles.length > 0) {
-      const hasRequiredRole = requiredRoles.includes(userData?.role || '');
-      
-      if (!hasRequiredRole) {
-        router.push('/dashboard');
-        return;
+      // Verificar roles si se requieren
+      if (requiredRoles && requiredRoles.length > 0) {
+        const hasRequiredRole = requiredRoles.includes(userData?.role || '');
+        
+        if (!hasRequiredRole) {
+          router.push('/dashboard');
+          return;
+        }
       }
-    }
 
     // Si pasa todas las verificaciones, está autorizado
     setIsAuthorized(true);
     setIsChecking(false);
-  }, [loading, isAuthenticated, isEmailVerified, userData, router, pathname, user, requiredRoles]);
+    };
+
+    checkAuth();
+  }, [loading, isAuthenticated, isEmailVerified, userData, router, pathname, activateFreePlan, requiredRoles]);
 
   // Mostrar fallback mientras se verifica la autorización
   if (loading || isChecking) {
