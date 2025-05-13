@@ -168,18 +168,11 @@ export function formatPriceForCurrency(
   currency: string = 'EUR',
   locale: string = 'es-ES'
 ): string {
-  // Obtener la configuración de la moneda
-  const currencyConfig = getCurrencyConfig(currency);
-  
-  // Usar el locale adecuado para el país
-  const countryCode = Object.values(SUPPORTED_COUNTRIES).find(
-    country => country.currency === currency
-  )?.defaultLocale || locale;
-  return new Intl.NumberFormat(countryCode, {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,
-    minimumFractionDigits: currencyConfig.decimals,
-    maximumFractionDigits: currencyConfig.decimals,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 

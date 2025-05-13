@@ -17,7 +17,7 @@ interface CurrencyDetectorProps {
   showSelector?: boolean;
 }
 
-export function CurrencyDetector({ onCurrencyChange, showSelector = true }: CurrencyDetectorProps) {
+export function CurrencyDetector({ onCurrencyChange, showSelector = false }: CurrencyDetectorProps) {
   const [geoData, setGeoData] = useState<GeoLocationResponse | null>(null);
   const [rates, setRates] = useState<ExchangeRates | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,52 +123,19 @@ export function CurrencyDetector({ onCurrencyChange, showSelector = true }: Curr
       <Box
         sx={{
           display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
           alignItems: 'center',
           justifyContent: 'center',
-          gap: { xs: 1, sm: 2 },
+          gap: 1,
           mb: 2,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <PublicIcon fontSize="small" sx={{ color: 'text.secondary' }} />
           <Typography variant="body2" color="text.secondary">
-            {geoData.flag} {geoData.country}
+          {geoData.flag} Precios mostrados en {selectedCurrency} para {geoData.country}
           </Typography>
-        </Box>
-        
-        {showSelector ? (
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel id="currency-select-label">Moneda</InputLabel>
-            <Select
-              labelId="currency-select-label"
-              id="currency-select"
-              value={selectedCurrency}
-              label="Moneda"
-              onChange={handleCurrencyChange}
-              sx={{ height: 40 }}
-            >
-              {currencyOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        ) : (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2" color="text.secondary">
-              Precios mostrados en {selectedCurrency}
-            </Typography>
             <Tooltip title="Detectamos automáticamente tu ubicación para mostrarte los precios en tu moneda local">
-              <InfoOutlinedIcon 
-                fontSize="small" 
-                sx={{ color: 'text.secondary', cursor: 'help' }} 
-              />
+          <InfoOutlinedIcon fontSize="small" sx={{ color: 'text.secondary', cursor: 'help' }} />
             </Tooltip>
           </Box>
-        )}
-      </Box>
     </motion.div>
   );
 }
