@@ -204,7 +204,7 @@ function PriceCard({ plan, index, onSubscribe, isLoading, loadingPlanId, isSelec
                 fontSize: '2.5rem',
               }}
             >
-              {plan.price === '0' ? 'Gratis' : `${plan.price}$`}
+              {plan.price === '0' ? 'Gratis' : `$${plan.price}`}
             </Typography>
             {plan.price !== '0' && (
               <Typography
