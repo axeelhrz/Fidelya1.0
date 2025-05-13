@@ -539,7 +539,14 @@ const activateFreePlan = async (): Promise<boolean> => {
     try {
               const user = auth.currentUser;
     if (!user) return false;
-                const token = await user.getIdToken();
+    
+    // Obtener un token fresco
+    await user.reload();
+    const token = await user.getIdToken(true);
+    
+    // Establecer el token en una cookie para el middleware
+    document.cookie = `firebase-token=${token}; path=/; max-age=3600; SameSite=Strict`;
+    
     const response = await fetch('/api/activate-free-plan', {
                   method: 'POST',
                   headers: {
@@ -598,126 +605,179 @@ const checkSubscriptionAndRedirect = useCallback(async (userId: string) => {
     // Verificar si el usuario tiene un plan básico activo
     if (userData?.planStatus === 'active' && userData?.plan === 'basic') {
       setSuccess('¡Verificado! Redirigiendo al dashboard...');
-      setTimeout(() => router.replace('/dashboard'), 1500);
-      return;
-    }
-    
-    // Si no tiene plan básico activo, activarlo automáticamente
-    const activated = await activateFreePlan();
-    
-    if (activated) {
-      setSuccess('¡Plan básico activado! Redirigiendo al dashboard...');
-      setTimeout(() => router.replace('/dashboard'), 1500);
-      return;
-    }
-    
-    // Si hay un error al activar el plan básico, verificar si hay un plan seleccionado
-    const savedPlan = localStorage.getItem('selectedPlan');
-    if (savedPlan) {
-      const plan = JSON.parse(savedPlan);
-      
-      // Si el plan guardado es básico, intentar activarlo nuevamente
-      if (plan.id === 'basic') {
-        const retryActivation = await activateFreePlan();
         
-        if (retryActivation) {
+        // Establecer una cookie de sesión para el middleware
+    const user = auth.currentUser;
+        if (user) {
+          const token = await user.getIdToken(true);
+          document.cookie = `session=true; path=/; max-age=86400; SameSite=Strict`;
+          document.cookie = `firebase-token=${token}; path=/; max-age=86400; SameSite=Strict`;
+        }
+        
+        // Usar setTimeout para asegurar que las cookies se establezcan antes de la redirección
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500);
+      return;
+    }
+    
+      // Si no tiene plan básico activo, activarlo automáticamente
+      const activated = await activateFreePlan();
+      
+      if (activated) {
+        setSuccess('¡Plan básico activado! Redirigiendo al dashboard...');
+        
+        // Establecer una cookie de sesión para el middleware
+        const user = auth.currentUser;
+        if (user) {
+          const token = await user.getIdToken(true);
+          document.cookie = `session=true; path=/; max-age=86400; SameSite=Strict`;
+          document.cookie = `firebase-token=${token}; path=/; max-age=86400; SameSite=Strict`;
+        }
+        
+        // Usar setTimeout para asegurar que las cookies se establezcan antes de la redirección
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500);
+      return;
+    }
+    
+      // Si hay un error al activar el plan básico, verificar si hay un plan seleccionado
+      const savedPlan = localStorage.getItem('selectedPlan');
+      if (savedPlan) {
+        const plan = JSON.parse(savedPlan);
+        
+        // Si el plan guardado es básico, intentar activarlo nuevamente
+        if (plan.id === 'basic') {
+          const retryActivation = await activateFreePlan();
+          
+          if (retryActivation) {
+            setSuccess('¡Plan básico activado! Redirigiendo al dashboard...');
+            
+            // Establecer una cookie de sesión para el middleware
+            const user = auth.currentUser;
+            if (user) {
+              const token = await user.getIdToken(true);
+              document.cookie = `session=true; path=/; max-age=86400; SameSite=Strict`;
+              document.cookie = `firebase-token=${token}; path=/; max-age=86400; SameSite=Strict`;
+    }
+            
+            // Usar setTimeout para asegurar que las cookies se establezcan antes de la redirección
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1500);
+            return;
+          }
+        }
+        
+        // Si no es plan básico o no se pudo activar, continuar con la suscripción
+        setSuccess('¡Verificado! Continuando con la suscripción...');
+        setTimeout(() => {
+          window.location.href = '/subscribe';
+        }, 1500);
+      } else {
+        // Si no hay plan seleccionado, activar plan básico por defecto
+        const defaultActivation = await activateFreePlan();
+        
+        if (defaultActivation) {
           setSuccess('¡Plan básico activado! Redirigiendo al dashboard...');
-          setTimeout(() => router.replace('/dashboard'), 1500);
-          return;
+          
+          // Establecer una cookie de sesión para el middleware
+          const user = auth.currentUser;
+          if (user) {
+            const token = await user.getIdToken(true);
+            document.cookie = `session=true; path=/; max-age=86400; SameSite=Strict`;
+            document.cookie = `firebase-token=${token}; path=/; max-age=86400; SameSite=Strict`;
+          }
+          
+          // Usar setTimeout para asegurar que las cookies se establezcan antes de la redirección
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 1500);
+        } else {
+          setSuccess('¡Verificado! Selecciona un plan para continuar...');
+          setTimeout(() => {
+            window.location.href = '/pricing';
+          }, 1500);
         }
       }
+    } catch (err) {
+      console.error('Error al verificar suscripción:', err);
+      setError('Error al verificar el estado de la suscripción');
+      setLoading(false);
+    }
+  }, [setSuccess, setError, setLoading]);
+
+  // Function to check verification status
+  const checkVerification = useCallback(async (manual: boolean = false) => {
+    try {
+      if (manual) setLoading(true);
       
-      // Si no es plan básico o no se pudo activar, continuar con la suscripción
-      setSuccess('¡Verificado! Continuando con la suscripción...');
-      setTimeout(() => router.replace('/subscribe'), 1500);
-    } else {
-      // Si no hay plan seleccionado, activar plan básico por defecto
-      const defaultActivation = await activateFreePlan();
+      const user = auth.currentUser;
+      await user?.reload();
       
-      if (defaultActivation) {
-        setSuccess('¡Plan básico activado! Redirigiendo al dashboard...');
-        setTimeout(() => router.replace('/dashboard'), 1500);
-      } else {
-        setSuccess('¡Verificado! Selecciona un plan para continuar...');
-        setTimeout(() => router.replace('/pricing'), 1500);
+      if (user?.emailVerified) {
+        await checkSubscriptionAndRedirect(user.uid);
+      } else if (manual) {
+        setError('Tu correo aún no ha sido verificado. Por favor, revisa tu bandeja de entrada.');
+        setLoading(false);
+    }
+    } catch (err) {
+      console.error('Error al verificar email:', err);
+      if (manual) {
+        setError('Error al verificar el estado del correo');
+        setLoading(false);
       }
     }
-  } catch (err) {
-    console.error('Error al verificar suscripción:', err);
-    setError('Error al verificar el estado de la suscripción');
-  }
-}, [router]);
+  }, [checkSubscriptionAndRedirect, setError, setLoading]);
 
-// Function to check verification status
-const checkVerification = useCallback(async (manual: boolean = false) => {
-  try {
-    if (manual) setLoading(true);
+  // Define handleSendVerification
+  const handleSendVerification = async () => {
+    setError(null);
+    setLoading(true);
     
-    const user = auth.currentUser;
-    await user?.reload();
-    
-    if (user?.emailVerified) {
-      await checkSubscriptionAndRedirect(user.uid);
-    } else if (manual) {
-      setError('Tu correo aún no ha sido verificado. Por favor, revisa tu bandeja de entrada.');
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('No hay usuario autenticado');
+      
+      await sendEmailVerification(user);
+      setEmailSent(true);
+      setVerificationTimer(60);
+      setCanResend(false);
+      setAutoCheckActive(true);
+      setSuccess('Correo de verificación enviado con éxito');
+    } catch (err) {
+      console.error('Error al enviar correo:', err);
+      setError('Error al enviar el correo de verificación');
+    } finally {
       setLoading(false);
     }
-  } catch (err) {
-    console.error('Error al verificar email:', err);
-    if (manual) {
-      setError('Error al verificar el estado del correo');
+  };
+
+  // Efecto para manejar la autenticación inicial
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        router.replace('/auth/sign-in');
+        return;
+      }
+      
+      setUserEmail(user.email);
+      
+      if (user.emailVerified) {
+        await checkSubscriptionAndRedirect(user.uid);
+        return;
+      }
+      
       setLoading(false);
-    }
-  }
-}, [checkSubscriptionAndRedirect, setError, setLoading]);
-
-// Define handleSendVerification
-const handleSendVerification = async () => {
-  setError(null);
-  setLoading(true);
-  
-  try {
-    const user = auth.currentUser;
-    if (!user) throw new Error('No hay usuario autenticado');
+      
+      if (!emailSent) {
+        await handleSendVerification();
+      }
+    });
     
-    await sendEmailVerification(user);
-    setEmailSent(true);
-    setVerificationTimer(60);
-    setCanResend(false);
-    setAutoCheckActive(true);
-    setSuccess('Correo de verificación enviado con éxito');
-  } catch (err) {
-    console.error('Error al enviar correo:', err);
-    setError('Error al enviar el correo de verificación');
-  } finally {
-    setLoading(false);
-  }
-};
-
-// Efecto para manejar la autenticación inicial
-useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      router.replace('/auth/sign-in');
-      return;
-    }
-    
-    setUserEmail(user.email);
-    
-    if (user.emailVerified) {
-      await checkSubscriptionAndRedirect(user.uid);
-      return;
-    }
-    
-    setLoading(false);
-    
-    if (!emailSent) {
-      await handleSendVerification();
-    }
-  });
-  
-  return () => unsubscribe();
-}, [router, emailSent, checkSubscriptionAndRedirect]);
+    return () => unsubscribe();
+  }, [router, emailSent, checkSubscriptionAndRedirect]);
 
   // Efecto para verificación automática
   useEffect(() => {
@@ -731,7 +791,7 @@ useEffect(() => {
     }
     return () => {
       if (interval) clearInterval(interval);
-    };
+  };
   }, [autoCheckActive, checkVerification]);
 
   const handleSignOut = async () => {

@@ -15,7 +15,7 @@ export default function AuthGuard({
   fallback?: React.ReactNode;
   requiredRoles?: string[];
 }) {
-  const { userData, loading, isAuthenticated, isEmailVerified, activateFreePlan } = useAuth();
+  const { user, userData, loading, isAuthenticated, isEmailVerified, activateFreePlan } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
@@ -48,6 +48,11 @@ export default function AuthGuard({
           try {
             const result = await activateFreePlan();
             if (result.success) {
+              // Establecer cookies para mantener la sesión
+              const token = await user?.getIdToken(true);
+              document.cookie = `session=true; path=/; max-age=86400; SameSite=Strict`;
+              document.cookie = `firebase-token=${token}; path=/; max-age=86400; SameSite=Strict`;
+              
               setIsAuthorized(true);
             setIsChecking(false);
             } else {
@@ -76,12 +81,19 @@ export default function AuthGuard({
       }
 
     // Si pasa todas las verificaciones, está autorizado
+      // Establecer cookies para mantener la sesión
+      if (user) {
+        const token = await user.getIdToken(true);
+        document.cookie = `session=true; path=/; max-age=86400; SameSite=Strict`;
+        document.cookie = `firebase-token=${token}; path=/; max-age=86400; SameSite=Strict`;
+      }
+      
     setIsAuthorized(true);
     setIsChecking(false);
     };
 
     checkAuth();
-  }, [loading, isAuthenticated, isEmailVerified, userData, router, pathname, activateFreePlan, requiredRoles]);
+  }, [loading, isAuthenticated, isEmailVerified, userData, router, pathname, activateFreePlan, requiredRoles, user]);
 
   // Mostrar fallback mientras se verifica la autorización
   if (loading || isChecking) {
