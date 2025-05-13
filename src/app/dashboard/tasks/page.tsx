@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -18,6 +18,8 @@ import {
   useMediaQuery,
   IconButton,
   Chip,
+  Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -28,6 +30,10 @@ import {
   ArrowUpward as ArrowUpwardIcon,
   LightbulbOutlined as LightbulbOutlinedIcon,
   Close as CloseIcon,
+  Refresh as RefreshIcon,
+  FilterList as FilterListIcon,
+  DeleteSweep as DeleteSweepIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
 } from '@mui/icons-material';
 import { TaskStats } from '../../../components/dashboard/tasks/task-stats';
 import { TaskFiltersComponent } from '../../../components/dashboard/tasks/task-filters';
@@ -66,9 +72,14 @@ export default function TasksPage() {
     updateTask,
     deleteTask,
     completeTask,
-    calculateStats: stats,
+    moveTask,
+    deleteTasks,
+    completeTasks,
+    calculateStats,
     suggestNextTask,
     exportTasks,
+    importTasks,
+    refreshTasks,
   } = useTasks();
   
   // Estados para diálogos
@@ -84,6 +95,8 @@ export default function TasksPage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+  const [selectMode, setSelectMode] = useState(false);
   
   // Estado para snackbar
   const [snackbar, setSnackbar] = useState<{
@@ -101,8 +114,13 @@ export default function TasksPage() {
   const [showTip, setShowTip] = useState(true);
 
   // Verificar si el usuario ha alcanzado el límite de tareas del plan
-  const planLimits = subscription?.plan ? PLAN_LIMITS[subscription.plan as keyof typeof PLAN_LIMITS] : PLAN_LIMITS[PlanValue.BASIC];
-  const hasReachedTaskLimit = stats.total >= (Number(planLimits?.activeTasks) || 25);
+  const planLimits = useMemo(() => {
+    return subscription?.plan 
+      ? PLAN_LIMITS[subscription.plan as keyof typeof PLAN_LIMITS] 
+      : PLAN_LIMITS[PlanValue.BASIC];
+  }, [subscription]);
+  
+  const hasReachedTaskLimit = calculateStats.total >= (Number(planLimits?.activeTasks) || 25);
   const canUseKanbanView = planLimits?.kanbanView || false;
   const canExportTasks = planLimits?.export || false;
   const canImportTasks = planLimits?.import || false;
@@ -112,13 +130,13 @@ export default function TasksPage() {
 
   // Efecto para sugerir la próxima tarea
   useEffect(() => {
-    if (filteredTasks.length > 0) {
+    if (filteredTasks.length > 0 && !loading) {
       const nextTask = suggestNextTask();
       setSuggestedTask(nextTask);
     } else {
       setSuggestedTask(null);
     }
-  }, [filteredTasks, suggestNextTask]);
+  }, [filteredTasks, suggestNextTask, loading]);
 
   // Efecto para detectar scroll
   useEffect(() => {
@@ -140,17 +158,19 @@ export default function TasksPage() {
     };
   }, []);
 
+  // Efecto para limpiar selección cuando se cambia de vista
+  useEffect(() => {
+    setSelectedTasks([]);
+    setSelectMode(false);
+  }, [view]);
+
   // Hotkeys para acciones rápidas
   useHotkeys('mod+n', (event) => {
     event.preventDefault();
     if (!hasReachedTaskLimit) {
       handleOpenTaskDialog();
     } else {
-      setSnackbar({
-        open: true,
-        message: `Has alcanzado el límite de ${planLimits.activeTasks} tareas para tu plan. Actualiza para crear más tareas.`,
-        severity: 'warning',
-      });
+      showPlanLimitMessage();
     }
   }, { enableOnFormTags: false });
 
@@ -168,57 +188,82 @@ export default function TasksPage() {
     setShowFilters(prev => !prev);
   }, { enableOnFormTags: false });
 
+  useHotkeys('escape', (event) => {
+    if (selectMode) {
+      event.preventDefault();
+      setSelectMode(false);
+      setSelectedTasks([]);
+    }
+  }, { enableOnFormTags: false });
+
   // Función para refrescar datos
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    // Simular refresco (en una implementación real, esto podría recargar datos de Firebase)
-    setTimeout(() => {
+    
+    try {
+      refreshTasks();
+      
+      // Simular un tiempo de carga mínimo para mejor UX
+      setTimeout(() => {
+        setRefreshing(false);
+        setSnackbar({
+          open: true,
+          message: 'Datos actualizados correctamente',
+          severity: 'success',
+        });
+      }, 800);
+    } catch {
       setRefreshing(false);
       setSnackbar({
         open: true,
-        message: 'Datos actualizados correctamente',
-        severity: 'success',
+        message: 'Error al actualizar los datos',
+        severity: 'error',
       });
-    }, 1000);
-  }, []);
+    }
+  }, [refreshTasks]);
+
+  // Mostrar mensaje de límite del plan
+  const showPlanLimitMessage = useCallback(() => {
+    setSnackbar({
+      open: true,
+      message: `Has alcanzado el límite de ${planLimits.activeTasks} tareas para tu plan. Actualiza para crear más tareas.`,
+      severity: 'warning',
+    });
+  }, [planLimits.activeTasks]);
 
   // Funciones para manejar tareas
-  const handleOpenTaskDialog = () => {
+  const handleOpenTaskDialog = useCallback(() => {
     // Verificar límite del plan
     if (hasReachedTaskLimit) {
-      setSnackbar({
-        open: true,
-        message: `Has alcanzado el límite de ${planLimits.activeTasks} tareas para tu plan. Actualiza para crear más tareas.`,
-        severity: 'warning',
-      });
+      showPlanLimitMessage();
       return;
     }
     
     setSelectedTask(null);
     setIsEditMode(false);
     setOpenTaskDialog(true);
-  };
+  }, [hasReachedTaskLimit, showPlanLimitMessage]);
 
-  const handleViewTask = (task: Task) => {
+  const handleViewTask = useCallback((task: Task) => {
     setSelectedTask(task);
     setOpenViewDialog(true);
-  };
+  }, []);
 
-  const handleEditTask = (task: Task) => {
+  const handleEditTask = useCallback((task: Task) => {
     setSelectedTask(task);
     setIsEditMode(true);
     setOpenTaskDialog(true);
-  };
+  }, []);
 
-  const handleDeleteTask = (taskId: string) => {
+  const handleDeleteTask = useCallback((taskId: string) => {
     const task = filteredTasks.find(t => t.id === taskId);
     if (task) {
       setSelectedTask(task);
       setOpenDeleteDialog(true);
     }
-  };
+  }, [filteredTasks]);
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (selectedTask && selectedTask.id) {
       try {
         const success = await deleteTask(selectedTask.id);
@@ -246,9 +291,9 @@ export default function TasksPage() {
         setOpenDeleteDialog(false);
       }
     }
-  };
+  }, [selectedTask, deleteTask]);
 
-  const handleCompleteTask = async (taskId: string) => {
+  const handleCompleteTask = useCallback(async (taskId: string) => {
     try {
       const success = await completeTask(taskId);
       if (success) {
@@ -272,16 +317,40 @@ export default function TasksPage() {
         severity: 'error',
       });
     }
-  };
+  }, [completeTask]);
 
-  const handleSaveTask = async (taskData: Task) => {
+  const handleMoveTask = useCallback(async (taskId: string, newStatus: 'pendiente' | 'en_progreso' | 'completada') => {
+    try {
+      const success = await moveTask(taskId, newStatus);
+      if (success) {
+        setSnackbar({
+          open: true,
+          message: 'Tarea movida correctamente',
+          severity: 'success',
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: 'Error al mover la tarea',
+          severity: 'error',
+        });
+      }
+    } catch (error) {
+      console.error('Error al mover tarea:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error al mover la tarea',
+        severity: 'error',
+      });
+    }
+  }, [moveTask]);
+
+  const handleSaveTask = useCallback(async (taskData: Task) => {
     try {
       if (isEditMode && taskData.id) {
         // Actualizar tarea existente
         // Extraemos solo los campos que necesitamos actualizar, manteniendo el ID
         const { id, ...updateData } = taskData;
-        
-        console.log('Actualizando tarea con ID:', id);
         
         const success = await updateTask(id, updateData);
         if (success) {
@@ -328,9 +397,9 @@ export default function TasksPage() {
         severity: 'error',
       });
     }
-  };
+  }, [isEditMode, updateTask, addTask]);
 
-  const handleExport = async (format: 'pdf' | 'excel') => {
+  const handleExport = useCallback(async (format: 'pdf' | 'excel') => {
     if (!canExportTasks) {
       setSnackbar({
         open: true,
@@ -341,22 +410,28 @@ export default function TasksPage() {
     }
 
     try {
-      const success = await exportTasks(format);
-      if (success) {
+      // Si hay tareas seleccionadas, exportar solo esas
+      const tasksToExport = selectedTasks.length > 0
+        ? filteredTasks.filter(task => selectedTasks.includes(task.id || ''))
+        : undefined;
+      
+      const result = await exportTasks(format, tasksToExport);
+      
+      if (result.success) {
         setSnackbar({
           open: true,
-          message: `Tareas exportadas en formato ${format.toUpperCase()} correctamente`,
+          message: result.message,
           severity: 'success',
         });
       } else {
         setSnackbar({
           open: true,
-          message: `Error al exportar las tareas en formato ${format.toUpperCase()}`,
+          message: result.message,
           severity: 'error',
         });
       }
     } catch (error) {
-      console.error('Error al exportar tareas:', error);
+      console.error(`Error al exportar tareas en formato ${format}:`, error);
       setSnackbar({
         open: true,
         message: `Error al exportar las tareas en formato ${format.toUpperCase()}`,
@@ -364,10 +439,15 @@ export default function TasksPage() {
       });
     } finally {
       setOpenExportDialog(false);
+      // Limpiar selección después de exportar
+      if (selectedTasks.length > 0) {
+        setSelectedTasks([]);
+        setSelectMode(false);
+      }
     }
-  };
+  }, [canExportTasks, exportTasks, filteredTasks, selectedTasks]);
 
-  const handleImport = async (tasksData: Partial<Task>[]) => {
+  const handleImport = useCallback(async (tasksData: Partial<Task>[]) => {
     if (!canImportTasks) {
       setSnackbar({
         open: true,
@@ -377,21 +457,32 @@ export default function TasksPage() {
       return false;
     }
 
-    // Aquí iría la lógica para importar tareas
-    // Por ahora, simulamos una importación exitosa
-    setTimeout(() => {
+    try {
+      const result = await importTasks(tasksData);
+      
       setSnackbar({
         open: true,
-        message: `${tasksData.length} tareas importadas correctamente`,
-        severity: 'success',
+        message: result.message,
+        severity: result.success ? 'success' : 'error',
       });
-      setOpenImportDialog(false);
-    }, 1000);
-    
-    return true;
-  };
+      
+      if (result.success) {
+        setOpenImportDialog(false);
+      }
+      
+      return result.success;
+    } catch (error) {
+      console.error('Error al importar tareas:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error al importar las tareas',
+        severity: 'error',
+      });
+      return false;
+    }
+  }, [canImportTasks, importTasks]);
 
-  const handleSuggestNextTask = () => {
+  const handleSuggestNextTask = useCallback(() => {
     if (suggestedTask) {
       handleViewTask(suggestedTask);
     } else {
@@ -401,13 +492,13 @@ export default function TasksPage() {
         severity: 'info',
       });
     }
-  };
+  }, [suggestedTask, handleViewTask]);
 
-  const handleCloseSnackbar = () => {
+  const handleCloseSnackbar = useCallback(() => {
     setSnackbar(prev => ({ ...prev, open: false }));
-  };
+  }, []);
 
-  const handleViewChange = (newView: 'cards' | 'board') => {
+  const handleViewChange = useCallback((newView: 'cards' | 'board') => {
     if (newView === 'board' && !canUseKanbanView) {
       setSnackbar({
         open: true,
@@ -417,16 +508,108 @@ export default function TasksPage() {
       return;
     }
     setView(newView);
-  };
+  }, [canUseKanbanView]);
 
-  const handleScrollToTop = () => {
+  const handleScrollToTop = useCallback(() => {
     if (contentRef.current) {
       contentRef.current.scrollTo({
         top: 0,
         behavior: 'smooth'
       });
     }
-  };
+  }, []);
+
+  // Funciones para selección múltiple
+  const handleToggleSelectMode = useCallback(() => {
+    setSelectMode(prev => !prev);
+    setSelectedTasks([]);
+  }, []);
+
+  const handleSelectTask = useCallback((taskId: string, selected: boolean) => {
+    setSelectedTasks(prev => {
+      if (selected) {
+        return [...prev, taskId];
+      } else {
+        return prev.filter(id => id !== taskId);
+      }
+    });
+  }, []);
+
+  const handleSelectAllTasks = useCallback(() => {
+    if (selectedTasks.length === filteredTasks.length) {
+      // Si todas están seleccionadas, deseleccionar todas
+      setSelectedTasks([]);
+    } else {
+      // Seleccionar todas las tareas filtradas
+      setSelectedTasks(filteredTasks.map(task => task.id || '').filter(Boolean));
+    }
+  }, [selectedTasks.length, filteredTasks]);
+
+  const handleDeleteSelectedTasks = useCallback(async () => {
+    if (selectedTasks.length === 0) return;
+    
+    try {
+      const success = await deleteTasks(selectedTasks);
+      
+      if (success) {
+        setSnackbar({
+          open: true,
+          message: `${selectedTasks.length} tareas eliminadas correctamente`,
+          severity: 'success',
+        });
+        
+        // Limpiar selección
+        setSelectedTasks([]);
+        setSelectMode(false);
+      } else {
+        setSnackbar({
+          open: true,
+          message: 'Error al eliminar las tareas seleccionadas',
+          severity: 'error',
+        });
+      }
+    } catch (error) {
+      console.error('Error al eliminar tareas seleccionadas:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error al eliminar las tareas seleccionadas',
+        severity: 'error',
+      });
+    }
+  }, [selectedTasks, deleteTasks]);
+
+  const handleCompleteSelectedTasks = useCallback(async () => {
+    if (selectedTasks.length === 0) return;
+    
+    try {
+      const success = await completeTasks(selectedTasks);
+      
+      if (success) {
+        setSnackbar({
+          open: true,
+          message: `${selectedTasks.length} tareas completadas correctamente`,
+          severity: 'success',
+        });
+        
+        // Limpiar selección
+        setSelectedTasks([]);
+        setSelectMode(false);
+      } else {
+        setSnackbar({
+          open: true,
+          message: 'Error al completar las tareas seleccionadas',
+          severity: 'error',
+        });
+      }
+    } catch (error) {
+      console.error('Error al completar tareas seleccionadas:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error al completar las tareas seleccionadas',
+        severity: 'error',
+      });
+    }
+  }, [selectedTasks, completeTasks]);
 
   // Verificar si el usuario está autenticado y tiene suscripción activa
   if (!user || !subscription) {
@@ -492,6 +675,13 @@ export default function TasksPage() {
               onToggleFilters={() => setShowFilters(prev => !prev)}
               onRefresh={handleRefresh}
               refreshing={refreshing}
+              onToggleSelectMode={handleToggleSelectMode}
+              selectMode={selectMode}
+              selectedCount={selectedTasks.length}
+              totalCount={filteredTasks.length}
+              onSelectAll={handleSelectAllTasks}
+              onDeleteSelected={handleDeleteSelectedTasks}
+              onCompleteSelected={handleCompleteSelectedTasks}
             />
 
             {/* Atajos de teclado */}
@@ -542,7 +732,13 @@ export default function TasksPage() {
                           label="/" 
                           sx={{ mx: 0.5, fontWeight: 600 }} 
                         /> 
-                        para buscar
+                        para buscar,
+                        <Chip 
+                          size="small" 
+                          label="ESC" 
+                          sx={{ mx: 0.5, fontWeight: 600 }} 
+                        /> 
+                        para salir del modo selección
                       </Typography>
                     </Box>
                   </Box>
@@ -681,11 +877,51 @@ export default function TasksPage() {
             </AnimatePresence>
 
             {/* Pestañas para cambiar de vista */}
-            <TaskTabs 
-              view={view} 
-              onViewChange={handleViewChange} 
-              disableBoardView={!canUseKanbanView}
-            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <TaskTabs 
+                view={view} 
+                onViewChange={handleViewChange} 
+                disableBoardView={!canUseKanbanView}
+              />
+              
+              {/* Acciones de selección múltiple */}
+              {selectMode && (
+                <Stack direction="row" spacing={1}>
+                  <Tooltip title="Completar seleccionadas">
+                    <Button
+                      variant="outlined"
+                      color="success"
+                      size="small"
+                      disabled={selectedTasks.length === 0}
+                      onClick={handleCompleteSelectedTasks}
+                      startIcon={<CheckCircleOutlineIcon />}
+                      sx={{
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                      }}
+                    >
+                      Completar ({selectedTasks.length})
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="Eliminar seleccionadas">
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      disabled={selectedTasks.length === 0}
+                      onClick={handleDeleteSelectedTasks}
+                      startIcon={<DeleteSweepIcon />}
+                      sx={{
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                      }}
+                    >
+                      Eliminar ({selectedTasks.length})
+                    </Button>
+                  </Tooltip>
+                </Stack>
+              )}
+            </Box>
 
             {/* Lista de tareas */}
             {loading ? (
@@ -715,13 +951,24 @@ export default function TasksPage() {
                       onEdit={handleEditTask} 
                       onDelete={handleDeleteTask}
                       onComplete={handleCompleteTask}
+                      onView={handleViewTask}
+                      selectMode={selectMode}
+                      selectedTasks={selectedTasks}
+                      onSelectTask={handleSelectTask}
                     />
+
+
                   ) : (
                     <TaskBoardView
                       tasks={filteredTasks}
                       onEdit={handleEditTask} 
                       onDelete={handleDeleteTask}
                       onComplete={handleCompleteTask}
+                      onView={handleViewTask}
+                      onMoveTask={handleMoveTask}
+                      selectMode={selectMode}
+                      selectedTasks={selectedTasks}
+                      onSelectTask={handleSelectTask}
                     />
                   )}
                 </motion.div>
@@ -766,21 +1013,35 @@ export default function TasksPage() {
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                   Intenta cambiar los filtros o crea una nueva tarea
                 </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleOpenTaskDialog}
-                  disabled={hasReachedTaskLimit}
-                  sx={{
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
-                    px: 3,
-                  }}
-                >
-                  Nueva Tarea
-                </Button>
+                <Stack direction="row" spacing={2} justifyContent="center">
+                  <Button
+                    variant="outlined"
+                    startIcon={<FilterListIcon />}
+                    onClick={() => setShowFilters(true)}
+                    sx={{
+                      borderRadius: '12px',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Cambiar filtros
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleOpenTaskDialog}
+                    disabled={hasReachedTaskLimit}
+                    sx={{
+                      borderRadius: '12px',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+                      px: 3,
+                    }}
+                  >
+                    Nueva Tarea
+                  </Button>
+                </Stack>
               </Box>
             )}
 
@@ -819,7 +1080,7 @@ export default function TasksPage() {
             )}
 
             {/* Botón flotante para nueva tarea */}
-            <Zoom in={!isMobile}>
+            <Zoom in={!isMobile && !selectMode}>
               <Fab
                 color="primary"
                 aria-label="nueva tarea"
@@ -841,6 +1102,54 @@ export default function TasksPage() {
               </Fab>
             </Zoom>
 
+            {/* Botón para refrescar */}
+            <Zoom in={!isMobile && !refreshing}>
+              <Tooltip title="Refrescar datos">
+                <Fab
+                  size="medium"
+                  color="default"
+                  aria-label="refrescar"
+                  onClick={handleRefresh}
+                  sx={{
+                    position: 'fixed',
+                    bottom: 24,
+                    right: 100,
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    background: isDark 
+                      ? 'rgba(255, 255, 255, 0.1)'
+                      : 'rgba(255, 255, 255, 0.9)',
+                    '&:hover': {
+                      background: isDark 
+                        ? 'rgba(255, 255, 255, 0.2)'
+                        : 'rgba(255, 255, 255, 1)',
+                    },
+                    zIndex: 10,
+                  }}
+                >
+                  <RefreshIcon />
+                </Fab>
+              </Tooltip>
+            </Zoom>
+
+            {/* Indicador de carga durante el refresco */}
+            <Zoom in={refreshing}>
+              <Fab
+                size="medium"
+                color="primary"
+                aria-label="cargando"
+                disabled
+                sx={{
+                  position: 'fixed',
+                  bottom: 24,
+                  right: 100,
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  zIndex: 10,
+                }}
+              >
+                <CircularProgress size={24} color="inherit" />
+              </Fab>
+            </Zoom>
+
             {/* Botón para volver arriba */}
             <Zoom in={showScrollTop}>
               <Fab
@@ -851,7 +1160,7 @@ export default function TasksPage() {
                 sx={{
                   position: 'fixed',
                   bottom: 24,
-                  right: isMobile ? 24 : 100,
+                  right: isMobile ? 24 : 176,
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                   background: isDark 
                     ? 'rgba(255, 255, 255, 0.1)'
@@ -891,7 +1200,7 @@ export default function TasksPage() {
         open={openExportDialog}
         onClose={() => setOpenExportDialog(false)}
         onExport={handleExport}
-        tasksCount={filteredTasks.length}
+        tasksCount={selectedTasks.length > 0 ? selectedTasks.length : filteredTasks.length}
       />
 
       <TaskImportDialog

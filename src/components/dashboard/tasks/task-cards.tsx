@@ -26,9 +26,12 @@ import {
   CalendarToday as CalendarTodayIcon,
   Visibility as VisibilityIcon,
   Done as DoneIcon,
+  PlayArrow as PlayArrowIcon,
+  CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
+  CheckBox as CheckBoxIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format, isBefore, isToday } from 'date-fns';
+import { format, isBefore, isToday, isThisWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Task } from '../../../types/tasks';
 
@@ -36,11 +39,18 @@ import { Task } from '../../../types/tasks';
 type TaskPriority = 'alta' | 'media' | 'baja' | 'normal';
 type TaskStatus = 'pendiente' | 'en_progreso' | 'completada';
 
+
+
+
 interface TaskCardsProps {
   tasks: Task[];
   onEdit: (task: Task) => void;
   onDelete: (taskId: string) => void;
   onComplete: (taskId: string) => void;
+  onView: (task: Task) => void;
+  selectMode?: boolean;
+  selectedTasks?: string[];
+  onSelectTask?: (taskId: string, selected: boolean) => void;
 }
 
 export const TaskCards: React.FC<TaskCardsProps> = ({
@@ -48,6 +58,10 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
   onEdit,
   onDelete,
   onComplete,
+  onView,
+  selectMode = false,
+  selectedTasks = [],
+  onSelectTask,
 }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
@@ -76,6 +90,11 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
     onEdit(task);
   };
 
+  const handleView = (task: Task) => {
+    handleCloseMenu();
+    onView(task);
+  };
+
   const handleDelete = useCallback(async (taskId: string) => {
     handleCloseMenu();
     setProcessingTaskId(taskId);
@@ -91,6 +110,7 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
       }, 500);
     }
   }, [onDelete]);
+
   const handleComplete = useCallback(async (event: React.MouseEvent<HTMLElement> | React.ChangeEvent<HTMLInputElement>, taskId: string) => {
     event.stopPropagation();
     setProcessingTaskId(taskId);
@@ -106,6 +126,21 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
       }, 500);
     }
   }, [onComplete]);
+
+  const handleCardClick = useCallback((task: Task) => {
+    if (selectMode && task.id && onSelectTask) {
+      onSelectTask(task.id, !selectedTasks.includes(task.id));
+    } else {
+      onView(task);
+    }
+  }, [selectMode, selectedTasks, onSelectTask, onView]);
+
+  const handleSelectTask = useCallback((event: React.MouseEvent<HTMLElement> | React.ChangeEvent<HTMLInputElement>, taskId: string) => {
+    event.stopPropagation();
+    if (onSelectTask) {
+      onSelectTask(taskId, !selectedTasks.includes(taskId));
+    }
+  }, [selectedTasks, onSelectTask]);
 
   // Función para obtener el color según la prioridad
   const getPriorityColor = (priority: TaskPriority) => {
@@ -168,6 +203,9 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
     if (isToday(date)) {
       return `Hoy, ${format(date, 'HH:mm')}`;
     }
+    if (isThisWeek(date, { weekStartsOn: 1 })) {
+      return format(date, "EEEE, HH:mm", { locale: es });
+    }
     return format(date, "d 'de' MMMM, HH:mm", { locale: es });
   };
 
@@ -227,43 +265,54 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
               duration: 0.3,
               layout: { duration: 0.3 }
             }}
-            onClick={() => onEdit(task)}
-                    sx={{
+            onClick={() => task.id && handleCardClick(task)}
+            sx={{
               borderRadius: '24px',
               p: 0,
-                      overflow: 'hidden',
-                      background: isDark
+              overflow: 'hidden',
+              background: isDark
                 ? alpha(theme.palette.background.paper, 0.6)
                 : alpha(theme.palette.background.paper, 0.8),
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${
-              isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
-            }`,
+              backdropFilter: 'blur(10px)',
+              border: `1px solid ${
+                isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
+              }`,
               boxShadow: isTaskOverdue(task)
                 ? `0 4px 20px ${alpha(theme.palette.error.main, 0.2)}`
-                : `0 4px 20px ${alpha(
-                    theme.palette.primary.main,
-                    isDark ? 0.1 : 0.05
-                  )}`,
+                : task.id && selectedTasks.includes(task.id)
+                  ? `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}`
+                  : `0 4px 20px ${alpha(
+                      theme.palette.primary.main,
+                      isDark ? 0.1 : 0.05
+                    )}`,
               borderLeft: `4px solid ${
-                isTaskOverdue(task)
-                  ? theme.palette.error.main
-                  : getPriorityColor(task.priority)
+                task.id && selectedTasks.includes(task.id)
+                  ? theme.palette.primary.main
+                  : isTaskOverdue(task)
+                    ? theme.palette.error.main
+                    : getPriorityColor(task.priority)
               }`,
               cursor: 'pointer',
               transition: 'all 0.3s ease',
               '&:hover': {
                 boxShadow: isTaskOverdue(task)
                   ? `0 8px 25px ${alpha(theme.palette.error.main, 0.3)}`
-                  : `0 8px 25px ${alpha(
-                      theme.palette.primary.main,
-                      isDark ? 0.15 : 0.1
-                    )}`,
+                  : task.id && selectedTasks.includes(task.id)
+                    ? `0 8px 25px ${alpha(theme.palette.primary.main, 0.4)}`
+                    : `0 8px 25px ${alpha(
+                        theme.palette.primary.main,
+                        isDark ? 0.15 : 0.1
+                      )}`,
               },
               position: 'relative',
               opacity: processingTaskId === task.id ? 0.7 : 1,
-          }}
-        >
+              ...(task.id && selectedTasks.includes(task.id) && {
+                background: isDark
+                  ? alpha(theme.palette.primary.main, 0.1)
+                  : alpha(theme.palette.primary.main, 0.05),
+              }),
+            }}
+          >
             {/* Processing overlay */}
             {processingTaskId === task.id && (
               <Box
@@ -280,14 +329,14 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                   backdropFilter: 'blur(4px)',
                   zIndex: 10,
                   borderRadius: '24px',
-          }}
-        >
+                }}
+              >
                 {actionType === 'complete' && task.status !== 'completada' ? (
                   <motion.div
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 1.5, opacity: 0 }}
-        >
+                  >
                     <DoneIcon 
                       sx={{ 
                         fontSize: 48, 
@@ -299,7 +348,7 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                 ) : (
                   <CircularProgress size={40} color={actionType === 'delete' ? 'error' : 'primary'} />
                 )}
-    </Box>
+              </Box>
             )}
 
             <Box sx={{ p: 3 }}>
@@ -311,15 +360,14 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                 sx={{ mb: 2 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Tooltip title={task.status === 'completada' ? 'Marcar como pendiente' : 'Marcar como completada'}>
+                  {selectMode ? (
                     <Checkbox
-                      checked={task.status === 'completada'}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        if (task.id) handleComplete(e, task.id);
-                      }}
+                      checked={task.id ? selectedTasks.includes(task.id) : false}
+                      onChange={(e) => task.id && handleSelectTask(e, task.id)}
                       onClick={(e) => e.stopPropagation()}
                       color="primary"
+                      icon={<CheckBoxOutlineBlankIcon />}
+                      checkedIcon={<CheckBoxIcon />}
                       sx={{
                         ml: -1,
                         '& .MuiSvgIcon-root': {
@@ -335,7 +383,33 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                         },
                       }}
                     />
-                  </Tooltip>
+                  ) : (
+                    <Tooltip title={task.status === 'completada' ? 'Marcar como pendiente' : 'Marcar como completada'}>
+                      <Checkbox
+                        checked={task.status === 'completada'}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          if (task.id) handleComplete(e, task.id);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        color="primary"
+                        sx={{
+                          ml: -1,
+                          '& .MuiSvgIcon-root': {
+                            fontSize: 24,
+                          },
+                          transition: 'transform 0.2s ease',
+                          '&:hover': {
+                            color: theme.palette.text.primary,
+                            background: isDark
+                              ? 'rgba(255, 255, 255, 0.1)'
+                              : 'rgba(0, 0, 0, 0.05)',
+                            transform: 'scale(1.1)',
+                          },
+                        }}
+                      />
+                    </Tooltip>
+                  )}
                   <Typography
                     variant="h6"
                     sx={{
@@ -356,25 +430,27 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                     {task.title}
                   </Typography>
                 </Box>
-                <Tooltip title="Opciones">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => task.id && handleOpenMenu(e, task.id)}
-                    sx={{
-                      color: theme.palette.text.secondary,
-                      transition: 'transform 0.2s ease',
-                      '&:hover': {
-                        color: theme.palette.text.primary,
-                        background: isDark
-                          ? 'rgba(255, 255, 255, 0.1)'
-                          : 'rgba(0, 0, 0, 0.05)',
-                        transform: 'scale(1.1)',
-                      },
-                    }}
-                  >
-                    <MoreVertIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
+                {!selectMode && (
+                  <Tooltip title="Opciones">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => task.id && handleOpenMenu(e, task.id)}
+                      sx={{
+                        color: theme.palette.text.secondary,
+                        transition: 'transform 0.2s ease',
+                        '&:hover': {
+                          color: theme.palette.text.primary,
+                          background: isDark
+                            ? 'rgba(255, 255, 255, 0.1)'
+                            : 'rgba(0, 0, 0, 0.05)',
+                          transform: 'scale(1.1)',
+                        },
+                      }}
+                    >
+                      <MoreVertIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
               </Stack>
 
               {task.description && (
@@ -383,7 +459,7 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                   color="text.secondary"
                   sx={{
                     mb: 2,
-            overflow: 'hidden',
+                    overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
@@ -399,14 +475,14 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                 alignItems="center"
                 spacing={1}
                 sx={{ mb: 2 }}
-      >
+              >
                 <CalendarTodayIcon
                   fontSize="small"
                   sx={{
                     color: isTaskOverdue(task)
                       ? theme.palette.error.main
                       : theme.palette.text.secondary,
-          }}
+                  }}
                 />
                 <Typography
                   variant="body2"
@@ -416,10 +492,13 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                       : theme.palette.text.secondary,
                     fontWeight: isTaskOverdue(task) ? 600 : 400,
                   }}
-        >
-                  {isTaskOverdue(task)
-                    ? `Vencida: ${formatDate(task.dueDate ? ('toDate' in task.dueDate ? task.dueDate.toDate() : task.dueDate) : new Date())}`
-                    : formatDate(task.dueDate ? ('toDate' in task.dueDate ? task.dueDate.toDate() : task.dueDate) : new Date())}
+                >
+                  {task.dueDate 
+                    ? isTaskOverdue(task)
+                      ? `Vencida: ${formatDate(task.dueDate ? ('toDate' in task.dueDate ? task.dueDate.toDate() : task.dueDate) : new Date())}`
+                      : formatDate(task.dueDate ? ('toDate' in task.dueDate ? task.dueDate.toDate() : task.dueDate) : new Date())
+                    : 'Sin fecha límite'
+                  }
                 </Typography>
               </Stack>
 
@@ -433,7 +512,7 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                     color: getStatusColor(task.status),
                     fontWeight: 600,
                     border: `1px solid ${alpha(getStatusColor(task.status), 0.2)}`,
-          }}
+                  }}
                 />
                 <Chip
                   size="small"
@@ -449,14 +528,24 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
                     background: alpha(getPriorityColor(task.priority), 0.1),
                     color: getPriorityColor(task.priority),
                     fontWeight: 600,
-                    border: `1px solid ${alpha(
-                      getPriorityColor(task.priority),
-                      0.2
-                    )}`,
-          }}
+                    border: `1px solid ${alpha(getPriorityColor(task.priority), 0.2)}`,
+                  }}
                 />
+                {task.subtasks && task.subtasks.length > 0 && (
+                  <Chip
+                    size="small"
+                    label={`${task.subtasks?.filter((st) => typeof st === 'object' && 'completed' in st && st.completed).length || 0}/${task.subtasks?.length || 0}`}
+                    sx={{
+                      borderRadius: '8px',
+                      background: alpha(theme.palette.primary.main, 0.1),
+                      color: theme.palette.primary.main,
+                      fontWeight: 600,
+                      border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                    }}
+                  />
+                )}
               </Stack>
-    </Box>
+            </Box>
           </Card>
         ))}
       </AnimatePresence>
@@ -491,7 +580,7 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
         <MenuItem
           onClick={() => {
             const task = tasks.find((t) => t.id === selectedTaskId);
-            if (task) handleEdit(task);
+            if (task) handleView(task);
           }}
           sx={{ py: 1.5 }}
         >
@@ -513,6 +602,28 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
           <ListItemText>Editar</ListItemText>
         </MenuItem>
         <MenuItem
+          onClick={() => {
+            if (selectedTaskId) {
+              const task = tasks.find((t) => t.id === selectedTaskId);
+              if (task && task.status === 'pendiente') {
+                // Aquí iría la lógica para iniciar la tarea
+                handleCloseMenu();
+              }
+            }
+          }}
+          disabled={
+            selectedTaskId
+              ? tasks.find((t) => t.id === selectedTaskId)?.status !== 'pendiente'
+              : true
+          }
+          sx={{ py: 1.5 }}
+        >
+          <ListItemIcon>
+            <PlayArrowIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Iniciar</ListItemText>
+        </MenuItem>
+        <MenuItem
           onClick={(e) => {
             if (selectedTaskId) {
               const task = tasks.find((t) => t.id === selectedTaskId);
@@ -524,9 +635,8 @@ export const TaskCards: React.FC<TaskCardsProps> = ({
           }}
           disabled={
             selectedTaskId
-              ? tasks.find((t) => t.id === selectedTaskId)?.status ===
-                'completada'
-              : false
+              ? tasks.find((t) => t.id === selectedTaskId)?.status === 'completada'
+              : true
           }
           sx={{ py: 1.5 }}
         >
