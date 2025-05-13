@@ -83,7 +83,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     if (!geoData) return `${amount}`;
     
     const convertedAmount = convertPriceToCurrentCurrency(amount, fromCurrency);
-    return formatPriceForCurrency(convertedAmount, currency, geoData.locale);
+    // Use navigator.language as fallback if locale is not available in geoData
+    const locale = geoData.country ? `${geoData.country.toLowerCase()}-${geoData.country}` : navigator.language;
+    return formatPriceForCurrency(convertedAmount, currency, locale);
   };
 
   // Valor del contexto

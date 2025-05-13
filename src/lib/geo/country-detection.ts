@@ -1,3 +1,8 @@
+import { 
+  MOCK_EXCHANGE_RATES,
+  getCurrencyConfig
+} from './currency-config';
+
 // Tipos para la respuesta de la API de geolocalización
 export interface GeoLocationResponse {
   country: string;
@@ -52,20 +57,6 @@ const COUNTRY_NAMES_ES: Record<string, string> = {
   PE: 'Perú',
   BR: 'Brasil',
   // Añadir más países según sea necesario
-};
-
-// Tasas de cambio de ejemplo (en producción, estas se obtendrían de una API)
-// Valores relativos al EUR (Euro como base)
-const MOCK_EXCHANGE_RATES: ExchangeRates = {
-  EUR: 1,
-  USD: 1.09,
-  GBP: 0.85,
-  MXN: 18.5,
-  ARS: 950,
-  CLP: 950,
-  COP: 4200,
-  PEN: 4.1,
-  BRL: 5.4,
 };
 
 /**
@@ -168,11 +159,14 @@ export function formatPriceForCurrency(
   currency: string = 'EUR',
   locale: string = 'es-ES'
 ): string {
+  // Obtener la configuración de la moneda
+  const currencyConfig = getCurrencyConfig(currency);
+  
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: currencyConfig.decimals,
+    maximumFractionDigits: currencyConfig.decimals,
   }).format(amount);
 }
 

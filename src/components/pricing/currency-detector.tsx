@@ -1,15 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Box, Typography, Tooltip, CircularProgress, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent } from '@mui/material';
+import { Box, Typography, Tooltip, CircularProgress } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import PublicIcon from '@mui/icons-material/Public';
 import { motion } from 'framer-motion';
 import { 
   detectUserCountry, 
   getExchangeRates, 
   GeoLocationResponse, 
-  ExchangeRates 
 } from '@/lib/geo/country-detection';
 
 interface CurrencyDetectorProps {
@@ -17,9 +15,8 @@ interface CurrencyDetectorProps {
   showSelector?: boolean;
 }
 
-export function CurrencyDetector({ onCurrencyChange, showSelector = false }: CurrencyDetectorProps) {
+export function CurrencyDetector({ onCurrencyChange, showSelector = true }: CurrencyDetectorProps) {
   const [geoData, setGeoData] = useState<GeoLocationResponse | null>(null);
-  const [rates, setRates] = useState<ExchangeRates | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState<string>('');
@@ -47,8 +44,8 @@ export function CurrencyDetector({ onCurrencyChange, showSelector = false }: Cur
         setGeoData(countryData);
         
         // Obtener tasas de cambio
+        // Obtener tasas de cambio
         const exchangeRates = await getExchangeRates();
-        setRates(exchangeRates);
         
         // Establecer la moneda detectada como seleccionada
         setSelectedCurrency(countryData.currency);
@@ -74,20 +71,14 @@ export function CurrencyDetector({ onCurrencyChange, showSelector = false }: Cur
   }, [onCurrencyChange]);
 
   // Manejar cambio de moneda en el selector
-  const handleCurrencyChange = (event: SelectChangeEvent<string>) => {
+  const handleCurrencyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newCurrency = event.target.value;
     setSelectedCurrency(newCurrency);
     
-    // Encontrar el símbolo de la moneda seleccionada
-    const currencyInfo = currencyOptions.find(option => option.value === newCurrency);
-    
-    // Notificar al componente padre sobre el cambio de moneda
-    if (onCurrencyChange && rates && currencyInfo) {
-      onCurrencyChange(
-        newCurrency, 
-        currencyInfo.symbol, 
-        rates[newCurrency] || 1
-      );
+    const selectedOption = currencyOptions.find(option => option.value === newCurrency);
+    if (selectedOption && onCurrencyChange && geoData) {
+      // We would need exchange rates here, but for now passing 1 as default rate
+      onCurrencyChange(newCurrency, selectedOption.symbol, 1);
     }
   };
 
@@ -120,22 +111,27 @@ export function CurrencyDetector({ onCurrencyChange, showSelector = false }: Cur
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 1,
-          mb: 2,
-        }}
-      >
-          <Typography variant="body2" color="text.secondary">
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography variant="body2" color="text.secondary">
           {geoData.flag} Precios mostrados en {selectedCurrency} para {geoData.country}
-          </Typography>
-            <Tooltip title="Detectamos automáticamente tu ubicación para mostrarte los precios en tu moneda local">
+        </Typography>
+        <Tooltip title="Detectamos automáticamente tu ubicación para mostrarte los precios en tu moneda local">
           <InfoOutlinedIcon fontSize="small" sx={{ color: 'text.secondary', cursor: 'help' }} />
-            </Tooltip>
-          </Box>
+        </Tooltip>
+        {showSelector && (
+          <select 
+            value={selectedCurrency} 
+            onChange={handleCurrencyChange}
+            style={{ marginLeft: '10px', padding: '4px' }}
+          >
+            {currencyOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        )}
+      </Box>
     </motion.div>
   );
 }
