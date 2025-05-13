@@ -94,6 +94,11 @@ export const DashboardPreview = ({ ctaAction = 'signup' }: DashboardPreviewProps
   const isDarkMode = theme.palette.mode === 'dark';
   const selectedCta = CTA_CONFIG[ctaAction];
 
+  // Seleccionar la imagen según el modo de tema
+  const dashboardImage = isDarkMode 
+    ? "/assets/dashboard-preview-night.png" 
+    : "/assets/dashboard-preview.png";
+
   return (
     <Box
       component="section"
@@ -222,7 +227,7 @@ export const DashboardPreview = ({ ctaAction = 'signup' }: DashboardPreviewProps
                 }}
               >
                 <Image
-                  src="/assets/ResumenGeneral.png"
+                  src={dashboardImage}
                   alt="Panel de control de Assuriva - Gestión integral para corredores de seguros"
                   fill
                   style={{
