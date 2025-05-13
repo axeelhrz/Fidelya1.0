@@ -47,6 +47,7 @@ export const profileService = {
       id: userId,
       name: displayName || '',
       firstName: displayName?.split(' ')[0] || '',
+      lastName: displayName?.split(' ').slice(1).join(' ') || '',
       displayName: displayName || '',
       email: email || '',
       bio: '',

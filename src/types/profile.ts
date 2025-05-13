@@ -72,6 +72,8 @@ export interface ProfileData {
   policiesCount?: number;
   name: string;
   firstName: string;
+  lastName: string;
+  photoURL?: string;
   id: string;
   displayName: string;
   email: string;

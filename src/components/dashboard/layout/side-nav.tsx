@@ -158,9 +158,6 @@ const SidebarFooter = styled(Box)(({ theme }) => ({
   backgroundColor: alpha(theme.palette.background.paper, 0.6),
 }));
 
-// Componente para el botón de colapsar
-
-
 // Componente para la insignia del plan
 const PlanBadge = styled(Chip)(({ theme }) => ({
   backgroundColor: alpha(theme.palette.primary.main, 0.1),
@@ -222,7 +219,7 @@ interface NavItem {
   label: string;
   path: string;
   badge?: number;
-  requiredPlan?: 'free' | 'professional' | 'enterprise';
+  requiredPlan?: 'basic' | 'professional' | 'enterprise';
 }
 
 interface SideNavProps {
@@ -237,7 +234,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const { signOut } = useAuth();
   const { profile } = useProfile();
-  const { subscription } = useSubscription();
+  const { subscription, loading: subscriptionLoading } = useSubscription();
   const { totalUnread } = useMessages('', ''); // Pass empty strings as placeholders
   const { mode, toggleColorMode } = useThemeContext();
 
@@ -258,10 +255,27 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
   }, [pathname, isMobile, open, onToggle]);
 
   // Determinar el plan actual del usuario
-  const currentPlan = (subscription?.plan || 'free') as 'free' | 'professional' | 'enterprise';
+  const currentPlan = React.useMemo(() => {
+    // Si está cargando, mostrar un valor por defecto
+    if (subscriptionLoading) return 'basic';
+    
+    // Obtener el plan desde la suscripción
+    const planId = subscription?.planId || 'basic';
+    
+    // Mapear el planId a uno de los valores esperados
+    const planIdStr = String(planId).toLowerCase();
+    
+    if (planIdStr === 'pro' || planIdStr === 'professional') {
+      return 'professional';
+    } else if (planIdStr === 'enterprise') {
+      return 'enterprise';
+    } else {
+      return 'basic';
+    }
+  }, [subscription, subscriptionLoading]);
 
   // Función para verificar si un usuario puede acceder a una funcionalidad según su plan
-  const canAccess = (requiredPlan?: 'free' | 'professional' | 'enterprise') => {
+  const canAccess = (requiredPlan?: 'basic' | 'professional' | 'enterprise') => {
     if (!requiredPlan) return true;
     
     if (requiredPlan === 'professional') {
@@ -344,6 +358,22 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
       default:
         return 'Free';
     }
+  };
+
+  // Obtener el nombre de usuario desde Firebase
+  const getUserDisplayName = () => {
+    // Priorizar el nombre del perfil
+    if (profile?.displayName) {
+      return profile.displayName;
+    }
+    
+    // Si no hay displayName, intentar construirlo desde firstName y lastName
+    if (profile?.displayName) {
+      return `${profile.displayName}`.trim();
+    }
+    
+    // Si no hay nombre, mostrar el email o un valor por defecto
+    return profile?.email || 'Usuario';
   };
 
   // Renderizar ítems de navegación
@@ -517,8 +547,8 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
           >
             <Stack direction="row" spacing={2} alignItems="center">
               <UserAvatar 
-                src={profile?.avatarUrl || undefined}
-                alt={profile?.displayName || 'Usuario'}
+                src={profile?.avatarUrl || profile?.photoURL || undefined}
+                alt={getUserDisplayName()}
               />
               <Box sx={{ minWidth: 0 }}>
                 <Typography 
@@ -528,7 +558,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
                   fontFamily="Sora, sans-serif"
                   letterSpacing={0.2}
                 >
-                  {profile?.displayName || 'Usuario'}
+                  {getUserDisplayName()}
                 </Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <PlanBadge 
@@ -667,8 +697,6 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
         />
       </LogoContainer>
 
-
-
       {/* Perfil de usuario */}
       {open && (
         <motion.div
@@ -689,8 +717,8 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
           >
             <Stack direction="row" spacing={2} alignItems="center">
               <UserAvatar 
-                src={profile?.avatarUrl || undefined}
-                alt={profile?.displayName || 'Usuario'}
+                src={profile?.avatarUrl || profile?.photoURL || undefined}
+                alt={getUserDisplayName()}
               />
               <Box sx={{ minWidth: 0 }}>
                 <Typography 
@@ -700,7 +728,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen = true, onToggle }) => {
                   fontFamily="Sora, sans-serif"
                   letterSpacing={0.2}
                 >
-                  {profile?.displayName || 'Usuario'}
+                  {getUserDisplayName()}
                 </Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <PlanBadge 
