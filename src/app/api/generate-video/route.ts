@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createVideo } from '@/services/ai/videoProcessor';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,28 +14,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Here we would integrate with OpenAI, ElevenLabs, etc.
-    // For now, we'll just mock the response
+    // Start the video generation process
+    const videoResponse = await createVideo({
+      prompt,
+      tone,
+      duration,
+      language,
+    });
 
-    // Mock delay to simulate processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // If there was an error during processing
+    if (videoResponse.status === 'error') {
+    return NextResponse.json(
+        { error: videoResponse.error || 'Failed to generate video' },
+      { status: 500 }
+    );
+  }
 
-    // Mock response
-    const response = {
-      id: Math.random().toString(36).substring(2, 15),
-      status: 'success',
-      videoUrl: '/mock-video.mp4',
-      thumbnailUrl: '/mock-thumbnail.jpg',
-      script: 'This is a generated script based on your prompt.',
-      duration: duration,
-    };
-
-    return NextResponse.json(response);
+    return NextResponse.json(videoResponse);
   } catch (error) {
     console.error('Error generating video:', error);
     return NextResponse.json(
       { error: 'Failed to generate video' },
       { status: 500 }
     );
-  }
+}
 }
