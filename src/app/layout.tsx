@@ -1,56 +1,75 @@
-import type { Metadata } from "next";
-import { Sora, Inter } from "next/font/google";
-import ThemeProvider from "@/components/layout/ThemeProvider";
-import "./globals.css";
-
-// Import fonts
-const sora = Sora({
-  variable: "--font-sora",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
+import { type Metadata } from 'next'
+import { Analytics } from "@vercel/analytics/react"
+import Script from 'next/script'
+import { SpeedInsights } from "@vercel/speed-insights/react"
+import { Plus_Jakarta_Sans, Work_Sans, Inter, Sora } from 'next/font/google'
+import { PlanProvider } from '@/context/planContext'
+import ThemeContextProvider from '@/context/themeContext'
+import { AuthProvider } from '@/context/auth-context'
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "ReelGenius | AI-Powered Viral Video Generator",
-  description: "Generate viral Reels and TikToks automatically with AI. Turn your ideas into engaging videos in seconds.",
-  keywords: "AI video generator, TikTok creator, Reels maker, viral videos, content creation, social media",
-  authors: [{ name: "ReelGenius Team" }],
-  openGraph: {
-    title: "ReelGenius | AI-Powered Viral Video Generator",
-    description: "Generate viral Reels and TikToks automatically with AI. Turn your ideas into engaging videos in seconds.",
-    url: "https://reelgenius.com",
-    siteName: "ReelGenius",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "ReelGenius - AI Video Generator",
-      },
-    ],
-    locale: "en_US",
-    type: "website",
+  title: 'Assuriva',
+  description: 'Assuriva Gestiona pólizas, clientes y tareas desde una sola plataforma pensada para corredores de seguros.',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
   },
-};
+}
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '600', '700', '800'],
+})
+
+const sora = Sora({
+  weight: ['400', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-sora'
+});
+
+const workSans = Work_Sans({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+})
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+})
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en" className={`${sora.variable} ${inter.variable}`}>
-      <body className="antialiased">
-        <ThemeProvider>
-     {children}
-        </ThemeProvider>
+    <html className={`${plusJakarta.className} ${workSans.className} ${inter.className} ${sora.className}`} lang="es">
+<head>
+  {/* ✅ Google Tag para conversión */}
+        <Script src="https://www.googletagmanager.com/gtag/js?id=AW-16998950708" strategy="afterInteractive" />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-16998950708');
+          `}
+        </Script>
+      </head>
+      <body>
+        <div className="flex flex-col min-h-screen">
+                    <AuthProvider>
+
+        <ThemeContextProvider>
+        <PlanProvider>
+          <Analytics />
+          {process.env.NODE_ENV === 'production' && <SpeedInsights />}
+          {children}
+        </PlanProvider>
+        </ThemeContextProvider>
+        </AuthProvider>
+        </div>
       </body>
     </html>
-  );
-}
+  )
+};
