@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Typography, Box, useTheme, alpha, Skeleton } from '@mui/material';
+import { Paper, Typography, Box, useTheme, alpha, Skeleton, useMediaQuery } from '@mui/material';
 import { motion } from 'framer-motion';
 import { createPremiumCardStyle } from '@/styles/theme/themeAnalytics';
 
@@ -24,26 +24,37 @@ export const ChartWrapper: React.FC<ChartWrapperProps> = ({
   color
 }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const defaultColor = color || theme.palette.primary.main;
+
+  // Ajustar altura para móviles
+  const mobileHeight = typeof height === 'number' ? Math.min(height, 250) : height;
+  const responsiveHeight = isMobile ? mobileHeight : height;
+
+  // Reducir animaciones en móvil para mejorar rendimiento
+  const mobileVariants = isMobile ? {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.3 } },
+  } : chartVariants;
 
   return (
     <Paper
       component={motion.div}
-      variants={chartVariants}
+      variants={mobileVariants}
       initial="hidden"
       animate="visible"
       elevation={0}
       sx={{
-        p: 3,
-        ...createPremiumCardStyle(theme, defaultColor),
+        p: isMobile ? 2 : 3,
+        ...createPremiumCardStyle(theme, defaultColor, isMobile),
         height: '100%',
-        minHeight: height,
+        minHeight: responsiveHeight,
         display: 'flex',
         flexDirection: 'column',
       }}
     >
       <Typography 
-        variant="h6" 
+        variant={isMobile ? "subtitle1" : "h6"} 
         component="h3" 
         gutterBottom 
         sx={{ 
@@ -61,7 +72,7 @@ export const ChartWrapper: React.FC<ChartWrapperProps> = ({
             width="100%" 
             height="100%" 
             sx={{ 
-              minHeight: 250, 
+              minHeight: isMobile ? 180 : 250, 
               borderRadius: '12px',
               bgcolor: alpha(theme.palette.primary.main, 0.1)
             }} 

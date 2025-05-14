@@ -1,6 +1,6 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { useTheme, alpha } from '@mui/material/styles';
+import { useTheme, alpha, useMediaQuery } from '@mui/material/styles';
 import { Box, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import { ChartWrapper } from '@/components/dashboard/analytics/chart-wrapper';
@@ -29,16 +29,23 @@ const typeIcons: { [key: string]: React.ReactNode } = {
 
 export const PolicyTypePieChart: React.FC<PolicyTypePieChartProps> = ({ data, loading }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
   const totalValue = data.reduce((sum, entry) => sum + entry.value, 0);
 
+  // Simplificar datos para móvil si hay demasiados elementos
+  const optimizedData = isMobile && data.length > 4 
+    ? [...data.slice(0, 3), {
+        name: 'Otros',
+        value: data.slice(3).reduce((sum, entry) => sum + entry.value, 0),
+      }]
+    : data;
+
   // Añadir porcentaje a los datos para el tooltip
-  const dataWithPercentage = data.map(entry => ({
+  const dataWithPercentage = optimizedData.map(entry => ({
     ...entry,
     percentage: totalValue > 0 ? ((entry.value / totalValue) * 100).toFixed(1) : 0,
   }));
-
-  // Removed unused animation constant
 
   // Custom Tooltip
   const CustomTooltip = ({ 
@@ -63,7 +70,7 @@ export const PolicyTypePieChart: React.FC<PolicyTypePieChartProps> = ({ data, lo
             border: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
             p: 1.5,
             borderRadius: '8px',
-            boxShadow: theme.shadows[3],
+            boxShadow: isMobile ? 'none' : theme.shadows[3],
           }}
         >
           <Typography 
@@ -93,7 +100,7 @@ export const PolicyTypePieChart: React.FC<PolicyTypePieChartProps> = ({ data, lo
     return null;
   };
 
-  // Custom Legend
+  // Custom Legend - simplificado para móvil
   const renderLegend = (props: LegendProps) => {
     const { payload } = props;
     if (!payload) return null;
@@ -103,7 +110,7 @@ export const PolicyTypePieChart: React.FC<PolicyTypePieChartProps> = ({ data, lo
         component={motion.ul}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
+        transition={{ delay: isMobile ? 0.2 : 0.5, duration: isMobile ? 0.3 : 0.5 }}
         sx={{ 
           listStyle: 'none', 
           p: 0, 
@@ -111,7 +118,7 @@ export const PolicyTypePieChart: React.FC<PolicyTypePieChartProps> = ({ data, lo
           display: 'flex', 
           flexWrap: 'wrap', 
           justifyContent: 'center', 
-          gap: '15px' 
+          gap: isMobile ? '8px' : '15px' 
         }}
       >
         {payload.map((entry, index) => (
@@ -121,26 +128,23 @@ export const PolicyTypePieChart: React.FC<PolicyTypePieChartProps> = ({ data, lo
             sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              cursor: 'pointer', 
-              fontSize: '0.75rem', 
+              fontSize: isMobile ? '0.65rem' : '0.75rem', 
               fontFamily: 'Inter, sans-serif', 
               color: theme.palette.text.secondary,
-              '&:hover': {
-                color: theme.palette.text.primary,
-              }
             }}
           >
             <Box 
               sx={{ 
-                width: 10, 
-                height: 10, 
+                width: isMobile ? 8 : 10, 
+                height: isMobile ? 8 : 10, 
                 backgroundColor: entry.color ?? '#ccc', 
-                mr: 0.75, 
+                mr: 0.5, 
                 borderRadius: '50%', 
                 display: 'inline-block' 
               }}
             />
-            {typeIcons[entry.value?.toString()] && (
+            {/* Mostrar iconos solo en desktop */}
+            {!isMobile && typeIcons[entry.value?.toString()] && (
               <Box sx={{ mr: 0.5 }}>
                 {typeIcons[entry.value?.toString()]}
               </Box>
@@ -149,7 +153,8 @@ export const PolicyTypePieChart: React.FC<PolicyTypePieChartProps> = ({ data, lo
               variant="caption" 
               sx={{ 
                 fontFamily: 'Inter, sans-serif',
-                fontWeight: 500
+                fontWeight: 500,
+                fontSize: isMobile ? '0.65rem' : '0.75rem'
               }}
             >
               {entry.value}
@@ -169,21 +174,21 @@ export const PolicyTypePieChart: React.FC<PolicyTypePieChartProps> = ({ data, lo
             data={dataWithPercentage}
             cx="50%"
             cy="50%"
-            innerRadius="50%"
-            outerRadius="80%"
+            innerRadius={isMobile ? "40%" : "50%"}
+            outerRadius={isMobile ? "70%" : "80%"}
             fill="#8884d8"
-            paddingAngle={2}
+            paddingAngle={isMobile ? 1 : 2}
             dataKey="value"
             labelLine={false}
             animationBegin={0}
-            animationDuration={1500}
+            animationDuration={isMobile ? 800 : 1500}
           >
             {dataWithPercentage.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
                 fill={entry.color || `hsl(${index * 45}, 70%, 50%)`} 
                 stroke={theme.palette.background.paper}
-                strokeWidth={2}
+                strokeWidth={isMobile ? 1 : 2}
               />
             ))}
           </Pie>
