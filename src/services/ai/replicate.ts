@@ -35,6 +35,7 @@ function generarUrlVideoSimulado(): string {
  * Genera un video usando el modelo de texto a video de Replicate
  */
 export async function generateVideo({
+  prompt,
   scenes,
   duration,
 }: VideoGenerationParams): Promise<string> {
@@ -47,25 +48,27 @@ export async function generateVideo({
       return generarUrlVideoSimulado();
     }
     
-    // Usar Zeroscope XL para la generación de video a partir de texto
-    // Modelo: https://replicate.com/anotherjesse/zeroscope-v2-xl
+    // Usar un modelo más avanzado para la generación de video
+    // Modelo: https://replicate.com/stability-ai/stable-video-diffusion
     const output = await replicate.run(
-      "anotherjesse/zeroscope-v2-xl:71996d331e8ede8ef7bd76eba9fae076d31792e4ddf4ad057779b443d6aea62f",
+      "stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
       {
         input: {
           prompt: scenes.map(scene => scene.visualDescription).join(" "),
-          fps: 24,
-          model: "xl",
-          width: 1024,
-          height: 576,
-          num_frames: duration * 24, // Convertir segundos a frames a 24fps
-          guidance_scale: 17.5,
+          video_length: "25_frames_with_svd_xt",
+          sizing_strategy: "maintain_aspect_ratio",
+          frames_per_second: 6,
+          motion_bucket_id: 127,
+          cond_aug: 0.02,
+          seed: Math.floor(Math.random() * 10000000),
         }
       }
     );
 
-    // La salida es típicamente un array con la URL del video como último elemento
-    if (Array.isArray(output) && output.length > 0) {
+    // La salida es la URL del video generado
+    if (typeof output === 'string') {
+      return output;
+    } else if (Array.isArray(output) && output.length > 0) {
       return output[output.length - 1] as string;
     }
 

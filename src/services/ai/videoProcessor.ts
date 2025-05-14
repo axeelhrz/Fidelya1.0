@@ -22,7 +22,7 @@ export interface VideoGenerationResponse {
 }
 
 /**
- * Main function to orchestrate the entire video generation process
+ * Función principal para orquestar todo el proceso de generación de video
  */
 export async function createVideo(
   params: VideoGenerationRequest
@@ -30,8 +30,8 @@ export async function createVideo(
   const videoId = uuidv4();
   
   try {
-    // Step 1: Generate script using OpenAI
-    console.log(`Generating script for video ${videoId}...`);
+    // Paso 1: Generar guión usando OpenAI
+    console.log(`Generando guión para video ${videoId}...`);
     const scriptData = await generateVideoScript({
       prompt: params.prompt,
       tone: params.tone,
@@ -39,39 +39,47 @@ export async function createVideo(
       language: params.language,
     });
     
-    // Step 2: Generate video using Replicate
-    console.log(`Generating video for ${videoId}...`);
+    // Paso 2: Generar video usando Replicate
+    console.log(`Generando video para ${videoId}...`);
     const videoUrl = await generateVideo({
       prompt: params.prompt,
       scenes: scriptData.scenes,
       duration: params.duration,
     });
     
-    // Step 3: Generate speech using ElevenLabs
-    console.log(`Generating speech for ${videoId}...`);
+    // Paso 3: Generar voz usando ElevenLabs
+    console.log(`Generando voz para ${videoId}...`);
+    try {
     await generateSpeech({
       text: scriptData.script,
       language: params.language,
     });
+  } catch (error) {
+      console.error(`Error en la generación de voz para video ${videoId}:`, error);
+      // Continuamos sin audio si hay un error
+    }
     
-    // Step 4: In a production environment, we would combine the video and audio
-    // For this demo, we'll just return the video URL
+    // Generar una URL de miniatura basada en la URL del video
+    // En un entorno de producción, generaríamos una miniatura real
+    const thumbnailUrl = videoUrl.includes('replicate.delivery') 
+      ? videoUrl.replace('.mp4', '.jpg') 
+      : 'https://i.ytimg.com/vi/aqz-KE-bpKQ/maxresdefault.jpg';
     
     return {
       id: videoId,
       status: 'success',
       videoUrl,
-      thumbnailUrl: `${videoUrl.split('.')[0]}_thumbnail.jpg`,
+      thumbnailUrl,
       script: scriptData.script,
       title: scriptData.title,
       description: scriptData.description,
     };
   } catch (error) {
-    console.error(`Error creating video ${videoId}:`, error);
+    console.error(`Error creando video ${videoId}:`, error);
     return {
       id: videoId,
       status: 'error',
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      error: error instanceof Error ? error.message : 'Error desconocido',
     };
   }
 }

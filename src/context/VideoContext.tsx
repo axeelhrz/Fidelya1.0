@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { VideoData, VideoGenerationParams } from '@/types/video';
 
 // Definir la forma del contexto
@@ -22,61 +22,9 @@ interface VideoContextType {
 // Crear el contexto
 const VideoContext = createContext<VideoContextType | undefined>(undefined);
 
-// Datos de ejemplo para videos
-const sampleVideos: VideoData[] = [
-  { 
-    id: '1', 
-    title: 'Tips de productividad', 
-    description: 'Consejos para maximizar tu tiempo diario',
-    thumbnailUrl: '/placeholder-1.jpg', 
-    videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    script: 'Este es un script generado basado en tu prompt.',
-    duration: 15, 
-    createdAt: '2023-10-15',
-    views: 245,
-    status: 'success'
-  },
-  { 
-    id: '2', 
-    title: 'Receta rápida', 
-    description: 'Pasta al pesto en menos de 10 minutos',
-    thumbnailUrl: '/placeholder-2.jpg', 
-    videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-    script: 'Este es un script generado basado en tu prompt.',
-    duration: 30, 
-    createdAt: '2023-10-14',
-    views: 189,
-    status: 'success'
-  },
-  { 
-    id: '3', 
-    title: 'Rutina de ejercicios', 
-    description: 'Entrenamiento completo en 15 minutos',
-    thumbnailUrl: '/placeholder-3.jpg', 
-    videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    script: 'Este es un script generado basado en tu prompt.',
-    duration: 15, 
-    createdAt: '2023-10-12',
-    views: 312,
-    status: 'success'
-  },
-  { 
-    id: '4', 
-    title: 'Reseña de producto', 
-    description: 'Lo bueno y lo malo del nuevo iPhone',
-    thumbnailUrl: '/placeholder-4.jpg', 
-    videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-    script: 'Este es un script generado basado en tu prompt.',
-    duration: 30, 
-    createdAt: '2023-10-10',
-    views: 427,
-    status: 'success'
-  },
-];
-
 // Proveedor del contexto
 export const VideoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [videos, setVideos] = useState<VideoData[]>(sampleVideos);
+  const [videos, setVideos] = useState<VideoData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [generationProgress, setGenerationProgress] = useState({
@@ -123,6 +71,10 @@ export const VideoProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setIsGenerating(true);
     
     try {
+      // Iniciar la simulación de progreso
+      simulateProgress();
+      
+      // Realizar la solicitud a la API
       const response = await fetch('/api/generate-video', {
         method: 'POST',
         headers: {
@@ -138,16 +90,13 @@ export const VideoProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       
       const videoData = await response.json();
       
-      // Simular la progresión mientras se genera el video
-      simulateProgress();
-      
       // Crear un nuevo objeto de video con los datos recibidos
       const newVideo: VideoData = {
         id: videoData.id,
-        title: videoData.title || `Video ${new Date().toLocaleDateString()}`,
+        title: videoData.title || `Video sobre ${params.prompt.substring(0, 20)}...`,
         description: videoData.description || params.prompt,
-        thumbnailUrl: videoData.thumbnailUrl || '/placeholder-1.jpg',
-        videoUrl: videoData.videoUrl || 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        thumbnailUrl: videoData.thumbnailUrl || 'https://i.ytimg.com/vi/aqz-KE-bpKQ/maxresdefault.jpg',
+        videoUrl: videoData.videoUrl,
         script: videoData.script || params.prompt,
         duration: params.duration,
         createdAt: new Date().toLocaleDateString(),
