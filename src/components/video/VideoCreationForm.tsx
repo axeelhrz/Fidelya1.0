@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, TextField, Typography, MenuItem, FormControl, InputLabel, Select, Slider, Paper, Alert, CircularProgress } from '@mui/material';
+import { Box, TextField, Typography, MenuItem, FormControl, InputLabel, Select, Paper, Alert, CircularProgress } from '@mui/material';
 import Button from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
 
@@ -35,7 +35,10 @@ const VideoCreationForm = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | 
+    { target: { name?: string; value: unknown } }
+  ) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -63,7 +66,6 @@ const VideoCreationForm = () => {
         throw new Error(errorData.error || 'Failed to generate video');
       }
       
-      const data = await response.json();
       setSuccess(true);
       
       // Redirect to the video page or refresh the gallery
@@ -71,8 +73,8 @@ const VideoCreationForm = () => {
         router.push('/dashboard?tab=1'); // Switch to "My Videos" tab
     }, 2000);
       
-    } catch (error: any) {
-      setError(error.message || 'An error occurred while generating the video');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'An error occurred while generating the video');
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Container, Box, IconButton, Drawer, List, ListItem, Avatar, Menu, MenuItem, useScrollTrigger, Fade, Tooltip } from '@mui/material';
+import { useState } from 'react';
+import { AppBar, Toolbar, Container, Box, IconButton, Drawer, List, ListItem, Avatar, Menu, MenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';

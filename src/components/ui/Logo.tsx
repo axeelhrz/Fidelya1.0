@@ -17,7 +17,7 @@ const Logo = ({ variant = 'default', size = 'md', animated = true }: LogoProps) 
     lg: { fontSize: '2rem', badgeSize: '0.875rem', badgePadding: '0.25rem 0.625rem' },
   };
 
-  const { fontSize, badgeSize, badgePadding } = sizes[size];
+  const { fontSize, badgeSize } = sizes[size];
 
   const logoContent = (
     <Box className="relative flex items-center">
