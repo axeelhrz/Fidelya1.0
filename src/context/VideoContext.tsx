@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { VideoData, VideoGenerationParams } from '@/types/video';
 
 // Definir la forma del contexto
@@ -22,37 +22,9 @@ interface VideoContextType {
 // Crear el contexto
 const VideoContext = createContext<VideoContextType | undefined>(undefined);
 
-// Datos de ejemplo para videos iniciales
-const initialVideos: VideoData[] = [
-  { 
-    id: '1', 
-    title: 'Tips de productividad', 
-    description: 'Consejos para maximizar tu tiempo diario',
-    thumbnailUrl: 'https://i.ytimg.com/vi/aqz-KE-bpKQ/maxresdefault.jpg', 
-    videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    script: 'Este es un script generado basado en tu prompt.',
-    duration: 15, 
-    createdAt: '2023-10-15',
-    views: 245,
-    status: 'success'
-  },
-  { 
-    id: '2', 
-    title: 'Receta rápida', 
-    description: 'Pasta al pesto en menos de 10 minutos',
-    thumbnailUrl: 'https://i.ytimg.com/vi/aqz-KE-bpKQ/maxresdefault.jpg', 
-    videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-    script: 'Este es un script generado basado en tu prompt.',
-    duration: 30, 
-    createdAt: '2023-10-14',
-    views: 189,
-    status: 'success'
-  }
-];
-
 // Proveedor del contexto
 export const VideoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [videos, setVideos] = useState<VideoData[]>(initialVideos);
+  const [videos, setVideos] = useState<VideoData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [generationProgress, setGenerationProgress] = useState({
@@ -67,6 +39,7 @@ export const VideoProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setActiveStep(0);
     setGenerationProgress({ script: false, video: false, audio: false, final: false });
     setIsGenerating(true);
+    
       setTimeout(() => {
       setGenerationProgress(prev => ({ ...prev, script: true }));
       setActiveStep(1);

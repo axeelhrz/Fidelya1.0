@@ -40,7 +40,9 @@ function generarUrlVideoSimulado(): string {
  * Genera un video usando el modelo de texto a video de Replicate
  */
 export async function generateVideo({
+  prompt,
   scenes,
+  duration,
 }: VideoGenerationParams): Promise<string> {
   try {
     // Verificar si debemos usar el respaldo (si REPLICATE_API_TOKEN no está configurado o es "mock")
@@ -51,29 +53,39 @@ export async function generateVideo({
       return generarUrlVideoSimulado();
     }
     
+    console.log("Generando video con Replicate usando el token:", process.env.REPLICATE_API_TOKEN);
+    
     // Usar un modelo más simple y accesible para la generación de video
-    // Modelo: https://replicate.com/lucataco/animate-diff
+    // Modelo: https://replicate.com/cjwbw/damo-text-to-video
     const output = await replicate.run(
-      "lucataco/animate-diff:b51abdc3bd0e8f89b2c6f6d0fc2d3984245fa56f98d2e56b3426663c4f0daddb",
+      "cjwbw/damo-text-to-video:1e205ea73084bd17a0a3b43396e49ba0d6bc2e754e9283b2df49fad2dcf95755",
       {
         input: {
           prompt: scenes[0].visualDescription,
           negative_prompt: "blurry, low quality, low resolution, bad anatomy",
-          fps: 8,
-          num_frames: 24,
-          guidance_scale: 7.5,
-          seed: Math.floor(Math.random() * 10000000),
+          num_frames: 16,
+          num_inference_steps: 50
         }
       }
     );
 
-    if (Array.isArray(output) && output.length > 0) {
+    console.log("Resultado de Replicate:", output);
+
+    // La salida es la URL del video generado
+    if (typeof output === 'string') {
+      return output;
+    } else if (Array.isArray(output) && output.length > 0) {
       return output[output.length - 1] as string;
-    } else if (typeof output === 'object' && output !== null && 'output' in output) {
-      return (output as ReplicateOutput).output;
+    } else if (typeof output === 'object' && output !== null) {
+      if ('output' in output) {
+        return (output as any).output;
+      } else if ('video' in output) {
+        return (output as any).video;
+    }
     }
 
-    throw new Error("Error al generar video: Formato de salida inválido");
+    console.log("Formato de salida no reconocido, usando video simulado");
+    return generarUrlVideoSimulado();
   } catch (error) {
     console.error("Error generando video con Replicate:", error);
     // Usar URL de video simulado como respaldo
