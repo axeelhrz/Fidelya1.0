@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Typography, IconButton, Menu, MenuItem, Skeleton, Dialog, DialogContent } from '@mui/material';
+import { Box, Typography, IconButton, Menu, MenuItem, Dialog, DialogContent, LinearProgress } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -14,14 +14,13 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import Button from '@/components/ui/Button';
 import { useVideo } from '@/context/VideoContext';
 
-// Mock data was removed as it's not being used
-
 const VideoGallery = () => {
-  const { videos, deleteVideo, isGenerating } = useVideo();
+  const { videos, deleteVideo, isGenerating, activeStep } = useVideo();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const [hoveredVideoId, setHoveredVideoId] = useState<string | null>(null);
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+  const [videoLoading, setVideoLoading] = useState(false);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, videoId: string) => {
     event.stopPropagation();
@@ -35,14 +34,42 @@ const VideoGallery = () => {
   };
 
   const handleDownload = () => {
-    console.log(`Descargando video ${selectedVideoId}`);
-    // Aquí iría la lógica para descargar el video
+    if (!selectedVideoId) return;
+    
+    const video = videos.find(v => v.id === selectedVideoId);
+    if (!video) return;
+    
+    // Crear un enlace para descargar el video
+    const link = document.createElement('a');
+    link.href = video.videoUrl;
+    link.download = `${video.title.replace(/\s+/g, '_')}.mp4`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
     handleMenuClose();
   };
 
   const handleShare = () => {
-    console.log(`Compartiendo video ${selectedVideoId}`);
-    // Aquí iría la lógica para compartir el video
+    if (!selectedVideoId) return;
+    
+    const video = videos.find(v => v.id === selectedVideoId);
+    if (!video) return;
+    
+    // Compartir el video (en un entorno real, esto podría abrir un diálogo de compartir)
+    if (navigator.share) {
+      navigator.share({
+        title: video.title,
+        text: video.description,
+        url: video.videoUrl,
+      }).catch(error => console.log('Error compartiendo:', error));
+    } else {
+      // Copiar la URL al portapapeles
+      navigator.clipboard.writeText(video.videoUrl)
+        .then(() => alert('URL del video copiada al portapapeles'))
+        .catch(err => console.error('Error copiando URL:', err));
+    }
+    
     handleMenuClose();
   };
 
@@ -59,88 +86,30 @@ const VideoGallery = () => {
 
   const handlePlayVideo = (videoId: string) => {
     setPlayingVideo(videoId);
+    setVideoLoading(true);
   };
 
   const handleCloseVideo = () => {
     setPlayingVideo(null);
+    setVideoLoading(false);
+  };
+
+  const handleVideoLoaded = () => {
+    setVideoLoading(false);
   };
 
   // Encontrar el video que se está reproduciendo
   const currentPlayingVideo = videos.find(video => video.id === playingVideo);
 
-  // Renderizar esqueletos de carga
-  const renderSkeletons = () => {
-    return Array(4).fill(0).map((_, index) => (
-      <Box 
-        key={`skeleton-${index}`}
-        sx={{
-          flex: '1 1 300px',
-          maxWidth: '350px',
-          minWidth: '280px',
-        }}
-      >
-        <Box
-          sx={{
-            height: '100%',
-            backgroundColor: 'rgba(23, 23, 23, 0.6)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: '24px',
-            overflow: 'hidden',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-          }}
-        >
-          <Skeleton 
-            variant="rectangular" 
-            height={500} 
-            sx={{ 
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              transform: 'none',
-            }} 
-          />
-          <Box sx={{ p: 3 }}>
-            <Skeleton 
-              variant="text" 
-              width="70%" 
-              height={32} 
-              sx={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                transform: 'none',
-              }} 
-            />
-            <Skeleton 
-              variant="text" 
-              width="100%" 
-              height={20} 
-              sx={{ 
-                mt: 1,
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                transform: 'none',
-              }} 
-            />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-              <Skeleton 
-                variant="text" 
-                width="40%" 
-                height={16} 
-                sx={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  transform: 'none',
-                }} 
-              />
-              <Skeleton 
-                variant="text" 
-                width="30%" 
-                height={16} 
-                sx={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  transform: 'none',
-                }} 
-              />
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-    ));
+  // Calcular el progreso de generación (0-100)
+  const calculateGenerationProgress = () => {
+    switch (activeStep) {
+      case 0: return 25;
+      case 1: return 50;
+      case 2: return 75;
+      case 3: return 90;
+      default: return 0;
+    }
   };
 
   return (
@@ -173,23 +142,27 @@ const VideoGallery = () => {
             <AutoAwesomeIcon sx={{ mr: 1 }} /> 
             Generando nuevo video...
           </Typography>
+          <LinearProgress 
+            variant="determinate" 
+            value={calculateGenerationProgress()} 
+            sx={{ 
+              mt: 2,
+              mb: 1,
+              height: 6, 
+              borderRadius: 3,
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 3,
+                background: 'linear-gradient(90deg, #1ED760 0%, #FF3366 100%)',
+              }
+            }} 
+          />
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             Tu video se está generando y aparecerá automáticamente en esta galería cuando esté listo.
           </Typography>
         </Box>
       )}
 
-      {isGenerating ? (
-        <Box 
-          sx={{ 
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 3,
-          }}
-        >
-          {renderSkeletons()}
-        </Box>
-      ) : videos.length === 0 ? (
+      {videos.length === 0 && !isGenerating ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -332,6 +305,29 @@ const VideoGallery = () => {
                       {video.duration}s
                     </Box>
                     
+                    {/* Etiqueta de IA */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 12,
+                        left: 12,
+                        backgroundColor: 'rgba(30, 215, 96, 0.7)',
+                        color: 'white',
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                        backdropFilter: 'blur(4px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                      }}
+                    >
+                      <AutoAwesomeIcon fontSize="inherit" />
+                      IA
+                    </Box>
+                    
                     {/* Botón de menú */}
                     <Box
                       sx={{
@@ -427,11 +423,24 @@ const VideoGallery = () => {
           <DialogContent sx={{ p: 0 }}>
             {currentPlayingVideo && (
               <Box>
+                {videoLoading && (
+                  <Box sx={{ width: '100%', height: 4, position: 'absolute', top: 0, left: 0, zIndex: 2 }}>
+                    <LinearProgress 
+                      sx={{ 
+                        height: 4,
+                        '& .MuiLinearProgress-bar': {
+                          background: 'linear-gradient(90deg, #1ED760 0%, #FF3366 100%)',
+                        }
+                      }} 
+                    />
+                  </Box>
+                )}
                 <video
                   src={currentPlayingVideo.videoUrl}
                   controls
                   autoPlay
                   style={{ width: '100%', maxHeight: '80vh', objectFit: 'contain' }}
+                  onLoadedData={handleVideoLoaded}
                 />
                 <Box sx={{ p: 3 }}>
                   <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
@@ -443,6 +452,32 @@ const VideoGallery = () => {
                   <Typography variant="body2" color="text.secondary">
                     Creado el {currentPlayingVideo.createdAt} • {currentPlayingVideo.views} visualizaciones
                   </Typography>
+                  
+                  {/* Botones de acción */}
+                  <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => {
+                        setSelectedVideoId(currentPlayingVideo.id);
+                        handleDownload();
+                      }}
+                      icon={<DownloadIcon />}
+                    >
+                      Descargar
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => {
+                        setSelectedVideoId(currentPlayingVideo.id);
+                        handleShare();
+                      }}
+                      icon={<ShareIcon />}
+                    >
+                      Compartir
+                    </Button>
+                  </Box>
                 </Box>
               </Box>
             )}
