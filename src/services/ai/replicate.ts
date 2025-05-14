@@ -53,18 +53,22 @@ export async function generateVideo({
       return generarUrlVideoSimulado();
     }
     
-    console.log("Generando video con Replicate usando el token:", process.env.REPLICATE_API_TOKEN);
+    console.log("Generando video con Replicate usando el modelo Stable Video Diffusion");
     
-    // Usar un modelo más simple y accesible para la generación de video
-    // Modelo: https://replicate.com/cjwbw/damo-text-to-video
+    // Usar el modelo Stable Video Diffusion de Stability AI
     const output = await replicate.run(
-      "cjwbw/damo-text-to-video:1e205ea73084bd17a0a3b43396e49ba0d6bc2e754e9283b2df49fad2dcf95755",
+      "stability-ai/stable-video-diffusion:db21e45f9c26ad36a3474dfb42b60cfaaf8d3ff732f41436b23a9a1e3c6a25ed",
       {
         input: {
           prompt: scenes[0].visualDescription,
-          negative_prompt: "blurry, low quality, low resolution, bad anatomy",
-          num_frames: 16,
-          num_inference_steps: 50
+          negative_prompt: "blurry, low quality, low resolution, bad anatomy, distorted face, disfigured, deformed body, watermark",
+          fps: 7,
+          motion_bucket_id: 127,
+          cond_aug: 0.02,
+          decoding_t: 14, // Más rápido
+          seed: Math.floor(Math.random() * 10000000),
+          width: 1024,
+          height: 576,
         }
       }
     );
