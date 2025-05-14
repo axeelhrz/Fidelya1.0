@@ -1,6 +1,5 @@
 import { Container, Typography, Box, Link as MuiLink } from '@mui/material';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import Logo from '@/components/ui/Logo';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import InstagramIcon from '@mui/icons-material/Instagram';
@@ -85,12 +84,6 @@ const Footer = () => {
               maxWidth: { md: '30%' },
             }}
           >
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
               <Box sx={{ mb: 3 }}>
                 <Logo />
     </Box>
@@ -100,12 +93,8 @@ const Footer = () => {
               
               <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
                 {socialLinks.map((social) => (
-                  <motion.div
+                <MuiLink
                     key={social.name}
-                    whileHover={{ y: -3 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-                  >
-                    <MuiLink
                       href={social.href}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -128,14 +117,12 @@ const Footer = () => {
                     >
                       {social.icon}
                     </MuiLink>
-                  </motion.div>
                 ))}
               </Box>
               
               <Typography variant="body2" color="text.secondary">
                 © {currentYear} ReelGenius. All rights reserved.
               </Typography>
-            </motion.div>
           </Box>
           
           {/* Links sections */}
@@ -148,7 +135,7 @@ const Footer = () => {
               gap: { xs: 4, md: 2 },
             }}
           >
-            {footerLinks.map((section, sectionIndex) => (
+            {footerLinks.map((section) => (
               <Box 
                 key={section.title}
                 sx={{ 
@@ -156,17 +143,11 @@ const Footer = () => {
                   minWidth: { xs: '150px', md: '140px' },
                 }}
               >
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 + (sectionIndex * 0.1) }}
-                  viewport={{ once: true }}
-                >
-                  <Typography 
-                    variant="subtitle2" 
-                    color="text.primary" 
-                    sx={{ 
-                      mb: 3, 
+                <Typography 
+                  variant="subtitle2" 
+                  color="text.primary" 
+                  sx={{ 
+                    mb: 3, 
                       fontWeight: 600,
                       fontSize: '1rem',
                       position: 'relative',
@@ -188,53 +169,48 @@ const Footer = () => {
                   
                   <Box component="ul" sx={{ p: 0, m: 0, listStyle: 'none' }}>
                     {section.links.map((link) => (
-                      <Box 
-                        component="li" 
-                        key={link.label} 
+                    <Box 
+                      component="li" 
+                      key={link.label} 
                         sx={{ mb: 2 }}
                       >
-                        <motion.div
-                          whileHover={{ x: 5 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-                        >
                           <Link href={link.href} passHref>
                             <MuiLink
                               underline="none"
                               color="text.secondary"
                               sx={{
                                 transition: 'all 0.2s ease',
-                                '&:hover': { 
+                            '&:hover': { 
                                   color: 'primary.main',
-                                },
-                                fontSize: '0.875rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                              }}
-                            >
-                              <Box 
-                                component="span" 
-                                sx={{ 
-                                  width: 0,
-                                  height: 1,
-                                  backgroundColor: 'primary.main',
-                                  display: 'inline-block',
-                                  mr: 1,
-                                  transition: 'all 0.2s ease',
-                                  opacity: 0,
-                                  '.MuiLink-root:hover &': {
-                                    width: 8,
-                                    opacity: 1,
-                                  }
-                                }} 
-                              />
-                              {link.label}
-                            </MuiLink>
-                          </Link>
-                        </motion.div>
+                              transform: 'translateX(5px)',
+                            },
+                            fontSize: '0.875rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Box 
+                            component="span" 
+                            sx={{ 
+                              width: 0,
+                              height: 1,
+                              backgroundColor: 'primary.main',
+                              display: 'inline-block',
+                              mr: 1,
+                              transition: 'all 0.2s ease',
+                              opacity: 0,
+                              '.MuiLink-root:hover &': {
+                                width: 8,
+                                opacity: 1,
+                              }
+                            }} 
+                          />
+                          {link.label}
+                        </MuiLink>
+                      </Link>
                       </Box>
                     ))}
                   </Box>
-                </motion.div>
               </Box>
             ))}
             
@@ -246,17 +222,11 @@ const Footer = () => {
                 mt: { xs: 2, md: 0 },
               }}
             >
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                viewport={{ once: true }}
-              >
-                <Typography 
-                  variant="subtitle2" 
-                  color="text.primary" 
-                  sx={{ 
-                    mb: 3, 
+              <Typography 
+                variant="subtitle2" 
+                color="text.primary" 
+                sx={{ 
+                  mb: 3, 
                     fontWeight: 600,
                     fontSize: '1rem',
                     position: 'relative',
@@ -280,9 +250,9 @@ const Footer = () => {
                   Get notified about new features and updates.
                 </Typography>
                 
-                <Box 
-                  component="form" 
-                  sx={{ 
+              <Box 
+                component="form" 
+                sx={{ 
                     display: 'flex',
                     flexDirection: { xs: 'column', sm: 'row' },
                     gap: 1,
@@ -326,7 +296,6 @@ const Footer = () => {
                     Subscribe
                   </Box>
                 </Box>
-              </motion.div>
             </Box>
           </Box>
         </Box>
