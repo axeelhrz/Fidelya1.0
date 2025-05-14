@@ -16,7 +16,8 @@ import {
   Step,
   StepLabel,
   Divider,
-  Chip
+  Chip,
+  LinearProgress
 } from '@mui/material';
 import Button from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
@@ -25,6 +26,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SmartDisplayIcon from '@mui/icons-material/SmartDisplay';
 import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver';
 import MovieIcon from '@mui/icons-material/Movie';
+import { useVideo } from '@/context/VideoContext';
 
 const toneOptions = [
   { value: 'funny', label: 'Divertido' },
@@ -49,6 +51,8 @@ const languageOptions = [
 
 const VideoCreationForm = () => {
   const router = useRouter();
+  const { generateVideo, isGenerating, generationProgress, activeStep } = useVideo();
+  
   const [formData, setFormData] = useState<VideoGenerationParams>({
     prompt: '',
     tone: 'informative',
@@ -56,17 +60,8 @@ const VideoCreationForm = () => {
     language: 'es',
   });
   
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [activeStep, setActiveStep] = useState(0);
-  const [generationProgress, setGenerationProgress] = useState({
-    script: false,
-    video: false,
-    audio: false,
-    final: false,
-  });
-
   const steps = [
     'Generando guión',
     'Creando video',
@@ -85,70 +80,23 @@ const VideoCreationForm = () => {
     });
   };
 
-  const simulateProgress = () => {
-    // This function simulates the progress of video generation
-    // In a real implementation, you would get updates from the backend
-    setTimeout(() => {
-      setActiveStep(0);
-      setGenerationProgress(prev => ({ ...prev, script: true }));
-      
-      setTimeout(() => {
-        setActiveStep(1);
-        setGenerationProgress(prev => ({ ...prev, video: true }));
-        
-        setTimeout(() => {
-          setActiveStep(2);
-          setGenerationProgress(prev => ({ ...prev, audio: true }));
-          
-          setTimeout(() => {
-            setActiveStep(3);
-            setGenerationProgress(prev => ({ ...prev, final: true }));
-            
-            setTimeout(() => {
-              setSuccess(true);
-              setTimeout(() => {
-        router.push('/dashboard?tab=1'); // Switch to "My Videos" tab
-    }, 2000);
-            }, 1000);
-          }, 3000);
-        }, 5000);
-      }, 3000);
-    }, 1000);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     setSuccess(false);
-    setGenerationProgress({
-      script: false,
-      video: false,
-      audio: false,
-      final: false,
-    });
-    
     try {
-      const response = await fetch('/api/generate-video', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      await generateVideo(formData);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate video');
-      }
-      
-      // In a real implementation, you would get the video data from the response
-      // and update the UI accordingly
-      simulateProgress();
-      
+      // Mostrar mensaje de éxito después de que termine la generación
+      setTimeout(() => {
+        setSuccess(true);
+        // Redirigir a la galería después de mostrar el mensaje de éxito
+        setTimeout(() => {
+          router.push('/dashboard?tab=1'); // Cambiar a la pestaña "Mis Videos"
+        }, 2000);
+      }, 10000); // Tiempo total aproximado de la simulación
     } catch (error: unknown) {
-      setLoading(false);
-      setError(error instanceof Error ? error.message : 'An error occurred while generating the video');
+      setError(error instanceof Error ? error.message : 'Ocurrió un error al generar el video');
     }
 };
 
@@ -166,6 +114,23 @@ const VideoCreationForm = () => {
         return null;
     }
   };
+
+  // Calcular el progreso total (0-100)
+  const calculateTotalProgress = () => {
+    let progress = 0;
+    if (generationProgress.script) progress += 25;
+    if (generationProgress.video) progress += 25;
+    if (generationProgress.audio) progress += 25;
+    if (generationProgress.final) progress += 25;
+    
+    // Si estamos en un paso pero aún no se ha completado, agregar progreso parcial
+    if (activeStep === 0 && !generationProgress.script) progress += 12;
+    else if (activeStep === 1 && !generationProgress.video) progress += 12;
+    else if (activeStep === 2 && !generationProgress.audio) progress += 12;
+    else if (activeStep === 3 && !generationProgress.final) progress += 12;
+    
+    return progress;
+};
 
   return (
     <Paper
@@ -194,8 +159,22 @@ const VideoCreationForm = () => {
         </Alert>
       )}
       
-      {loading && (
+      {isGenerating && (
         <Box sx={{ mb: 4 }}>
+          <LinearProgress 
+            variant="determinate" 
+            value={calculateTotalProgress()} 
+            sx={{ 
+              height: 8, 
+              borderRadius: 4,
+              mb: 3,
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 4,
+                background: 'linear-gradient(90deg, #1ED760 0%, #FF3366 100%)',
+              }
+            }} 
+          />
+          
           <Stepper activeStep={activeStep} alternativeLabel>
             {steps.map((label, index) => (
               <Step key={label} completed={
@@ -279,12 +258,12 @@ const VideoCreationForm = () => {
           required
           placeholder="Ej: Un tutorial rápido sobre cómo hacer un café latte en casa con ingredientes simples. Mostrar los pasos clave y el resultado final."
           InputLabelProps={{ shrink: true }}
-          disabled={loading}
+          disabled={isGenerating}
           helperText="Sé específico con los detalles que quieres incluir en el video"
         />
         
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-          <FormControl fullWidth disabled={loading}>
+          <FormControl fullWidth disabled={isGenerating}>
             <InputLabel id="tone-label">Tono</InputLabel>
             <Select
               labelId="tone-label"
@@ -301,7 +280,7 @@ const VideoCreationForm = () => {
             </Select>
           </FormControl>
           
-          <FormControl fullWidth disabled={loading}>
+          <FormControl fullWidth disabled={isGenerating}>
             <InputLabel id="duration-label">Duración</InputLabel>
             <Select
               labelId="duration-label"
@@ -318,7 +297,7 @@ const VideoCreationForm = () => {
             </Select>
           </FormControl>
           
-          <FormControl fullWidth disabled={loading}>
+          <FormControl fullWidth disabled={isGenerating}>
             <InputLabel id="language-label">Idioma</InputLabel>
             <Select
               labelId="language-label"
@@ -342,10 +321,10 @@ const VideoCreationForm = () => {
           color="secondary"
           size="large"
           fullWidth
-          disabled={loading || !formData.prompt}
+          disabled={isGenerating || !formData.prompt}
           sx={{ mt: 2 }}
         >
-          {loading ? (
+          {isGenerating ? (
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
               Generando...
