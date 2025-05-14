@@ -29,8 +29,12 @@ const SignupForm = () => {
     try {
       await signUp(email, password, name);
       // Redirect will be handled by the protected route component
-    } catch (error: any) {
-      setError(error.message || 'Failed to create account');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Failed to create account');
+      }
     } finally {
       setLoading(false);
     }

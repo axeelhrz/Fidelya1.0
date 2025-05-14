@@ -69,6 +69,7 @@ const LoginForm = () => {
       </Box>
 
       <Button
+        component="button"
         type="submit"
         variant="contained"
         color="secondary"
