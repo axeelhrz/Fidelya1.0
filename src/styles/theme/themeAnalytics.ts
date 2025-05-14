@@ -12,15 +12,15 @@ export const createGlassmorphismStyle = (theme: Theme, intensity: 'low' | 'mediu
   };
   
   const blurMap = {
-    low: isMobile ? '2px' : '4px',
-    medium: isMobile ? '4px' : '8px',
-    high: isMobile ? '6px' : '12px'
+    low: isMobile ? '0px' : '4px',  // Sin blur en móvil
+    medium: isMobile ? '0px' : '8px', // Sin blur en móvil
+    high: isMobile ? '0px' : '12px' // Sin blur en móvil
   };
   
   return {
-    backgroundColor: alpha(theme.palette.background.paper, opacityMap[actualIntensity]),
+    backgroundColor: alpha(theme.palette.background.paper, isMobile ? 0.95 : opacityMap[actualIntensity]),
     backdropFilter: isMobile ? 'none' : `blur(${blurMap[actualIntensity]})`, // Eliminar blur en móviles
-    border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+    border: `1px solid ${alpha(theme.palette.divider, isMobile ? 0.1 : 0.2)}`,
     boxShadow: isMobile ? 'none' : theme.shadows[2] // Eliminar sombras en móviles
   };
 };
@@ -81,5 +81,40 @@ export const createAnimatedBorderStyle = (theme: Theme, color: string, isMobile 
       maskComposite: 'exclude',
       pointerEvents: 'none'
     }
+  };
+};
+
+// Nuevas funciones optimizadas para móvil
+
+// Función para crear estilos de gráficos optimizados para móvil
+export const createOptimizedChartStyle = (theme: Theme, isMobile = false) => {
+  return {
+    '& .recharts-cartesian-grid-horizontal line, & .recharts-cartesian-grid-vertical line': {
+      stroke: alpha(theme.palette.divider, isMobile ? 0.1 : 0.2),
+      strokeWidth: isMobile ? 0.5 : 1,
+    },
+    '& .recharts-cartesian-axis-line': {
+      stroke: alpha(theme.palette.divider, isMobile ? 0.2 : 0.3),
+      strokeWidth: isMobile ? 0.5 : 1,
+    },
+    '& .recharts-text': {
+      fontSize: isMobile ? '0.65rem' : '0.75rem',
+      fill: theme.palette.text.secondary,
+    },
+    '& .recharts-layer.recharts-pie': {
+      transform: isMobile ? 'scale(0.9)' : 'none',
+    }
+  };
+};
+
+// Función para crear estilos de tarjetas de datos optimizados para móvil
+export const createOptimizedDataCardStyle = (theme: Theme, isMobile = false) => {
+  return {
+    p: isMobile ? 1.5 : 3,
+    borderRadius: isMobile ? '10px' : '16px',
+    backgroundColor: alpha(theme.palette.background.paper, isMobile ? 0.95 : 0.8),
+    border: `1px solid ${alpha(theme.palette.divider, isMobile ? 0.1 : 0.2)}`,
+    boxShadow: isMobile ? 'none' : theme.shadows[1],
+    transition: 'none',
   };
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box, Tooltip, useTheme, useMediaQuery } from '@mui/material';
+import { Card, CardContent, Typography, Box, Tooltip, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { formatCurrency, formatNumber, formatPercentage, getTrendColor } from '@/lib/formatters';
@@ -16,6 +16,7 @@ interface KpiCardProps {
   isCurrency?: boolean;
   isPercentage?: boolean;
   color?: string;
+  isMobile?: boolean;
 }
 
 const cardVariants = {
@@ -24,11 +25,11 @@ const cardVariants = {
   hover: { y: -5, scale: 1.03, transition: { duration: 0.2 } }
 };
 
-// Variantes simplificadas para móvil
+// Variantes optimizadas para móvil
 const mobileCardVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.3 } },
-  hover: {} // Sin efecto hover en móvil
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } },
+  // Sin efecto hover en móvil para mejorar rendimiento
 };
 
 export const KpiCard: React.FC<KpiCardProps> = ({
@@ -40,53 +41,50 @@ export const KpiCard: React.FC<KpiCardProps> = ({
   isCurrency = false,
   isPercentage = false,
   color,
+  isMobile = false,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const defaultColor = color || theme.palette.primary.main;
 
-  const formattedValue = isCurrency
-    ? formatCurrency(value)
-    : isPercentage
-    ? formatPercentage(value)
-    : formatNumber(value);
+  // Optimización: Formatear valores solo cuando es necesario
+  const formattedValue = React.useMemo(() => {
+    if (isCurrency) return formatCurrency(value);
+    if (isPercentage) return formatPercentage(value);
+    return formatNumber(value);
+  }, [value, isCurrency, isPercentage]);
 
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
   const trendColor = getTrendColor(trend, theme);
 
-  // Usar variantes según dispositivo
-  const variants = isMobile ? mobileCardVariants : cardVariants;
-  
-  // Reducir tamaño de icono en móvil
-  const iconSize = isMobile ? 20 : 28;
-  const iconComponent = React.cloneElement(icon as React.ReactElement, { size: iconSize });
-
   const cardContent = (
     <Card
       component={motion.div}
-      variants={variants}
+      variants={isMobile ? mobileCardVariants : cardVariants}
       whileHover={isMobile ? undefined : "hover"}
       sx={{
         ...createPremiumCardStyle(theme, defaultColor, isMobile),
-        minWidth: isMobile ? 150 : 200,
+        minWidth: isMobile ? 'auto' : 200,
         flexGrow: 1,
       }}
     >
       <CardContent sx={{ 
         display: 'flex', 
         flexDirection: 'column', 
-        gap: 1,
-        padding: isMobile ? '12px !important' : undefined // Reducir padding en móvil
+        gap: isMobile ? 0.5 : 1,
+        p: isMobile ? 1.5 : 2, // Padding reducido en móvil
       }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography 
             variant={isMobile ? "caption" : "body2"} 
             color="text.secondary" 
-            sx={{ fontFamily: 'Inter, sans-serif' }}
+            sx={{ 
+              fontFamily: 'Inter, sans-serif',
+              fontSize: isMobile ? '0.7rem' : undefined
+            }}
           >
             {title}
-          </Typography>
-          {iconComponent}
+        </Typography>
+          {icon}
         </Box>
         <Typography 
           variant={isMobile ? "h5" : "h4"} 
@@ -95,19 +93,19 @@ export const KpiCard: React.FC<KpiCardProps> = ({
             fontFamily: 'Sora, sans-serif', 
             fontWeight: 700, 
             color: defaultColor,
-            fontSize: isMobile ? '1.25rem' : undefined // Ajustar tamaño en móvil
+            fontSize: isMobile ? '1.25rem' : undefined
           }}
-        >
+    >
           {formattedValue}
         </Typography>
         <Box display="flex" alignItems="center" gap={0.5}>
-          <TrendIcon size={isMobile ? 12 : 16} color={trendColor} />
+          <TrendIcon size={isMobile ? 14 : 16} color={trendColor} />
           <Typography 
             variant="caption" 
             color={trendColor} 
             sx={{ 
               fontFamily: 'Inter, sans-serif',
-              fontSize: isMobile ? '0.65rem' : '0.75rem' // Reducir tamaño en móvil
+              fontSize: isMobile ? '0.65rem' : '0.75rem'
             }}
           >
             {trend === 'up' ? 'Incremento' : trend === 'down' ? 'Decremento' : 'Estable'}
@@ -117,8 +115,8 @@ export const KpiCard: React.FC<KpiCardProps> = ({
     </Card>
   );
 
-  // Deshabilitar tooltips en móvil para mejorar rendimiento
-  return (tooltip && !isMobile) ? (
+  // En móvil, omitir el tooltip para mejorar rendimiento
+  return (isMobile || !tooltip) ? cardContent : (
     <Tooltip 
       title={
         <Typography variant="body2" sx={{ fontFamily: 'Inter, sans-serif' }}>
@@ -130,7 +128,5 @@ export const KpiCard: React.FC<KpiCardProps> = ({
     >
       {cardContent}
     </Tooltip>
-  ) : (
-    cardContent
   );
 };
