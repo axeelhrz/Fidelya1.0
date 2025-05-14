@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Typography, IconButton, Menu, MenuItem } from '@mui/material';
+import { Box, Typography, IconButton, Menu, MenuItem, Skeleton, Dialog, DialogContent } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -9,54 +9,21 @@ import DownloadIcon from '@mui/icons-material/Download';
 import ShareIcon from '@mui/icons-material/Share';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import Button from '@/components/ui/Button';
+import { useVideo } from '@/context/VideoContext';
 
-// Mock data for user videos
-const mockVideos = [
-  { 
-    id: 1, 
-    title: 'Tips de productividad', 
-    description: 'Consejos para maximizar tu tiempo diario',
-    thumbnail: '/placeholder-1.jpg', 
-    duration: '15s', 
-    createdAt: '2023-10-15',
-    views: 245
-  },
-  { 
-    id: 2, 
-    title: 'Receta rápida', 
-    description: 'Pasta al pesto en menos de 10 minutos',
-    thumbnail: '/placeholder-2.jpg', 
-    duration: '30s', 
-    createdAt: '2023-10-14',
-    views: 189
-  },
-  { 
-    id: 3, 
-    title: 'Rutina de ejercicios', 
-    description: 'Entrenamiento completo en 15 minutos',
-    thumbnail: '/placeholder-3.jpg', 
-    duration: '15s', 
-    createdAt: '2023-10-12',
-    views: 312
-  },
-  { 
-    id: 4, 
-    title: 'Reseña de producto', 
-    description: 'Lo bueno y lo malo del nuevo iPhone',
-    thumbnail: '/placeholder-4.jpg', 
-    duration: '30s', 
-    createdAt: '2023-10-10',
-    views: 427
-  },
-];
+// Mock data was removed as it's not being used
 
 const VideoGallery = () => {
+  const { videos, deleteVideo, isGenerating } = useVideo();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedVideoId, setSelectedVideoId] = useState<number | null>(null);
-  const [hoveredVideoId, setHoveredVideoId] = useState<number | null>(null);
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+  const [hoveredVideoId, setHoveredVideoId] = useState<string | null>(null);
+  const [playingVideo, setPlayingVideo] = useState<string | null>(null);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, videoId: number) => {
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, videoId: string) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
     setSelectedVideoId(videoId);
@@ -68,27 +35,112 @@ const VideoGallery = () => {
   };
 
   const handleDownload = () => {
-    console.log(`Downloading video ${selectedVideoId}`);
+    console.log(`Descargando video ${selectedVideoId}`);
+    // Aquí iría la lógica para descargar el video
     handleMenuClose();
   };
 
   const handleShare = () => {
-    console.log(`Sharing video ${selectedVideoId}`);
+    console.log(`Compartiendo video ${selectedVideoId}`);
+    // Aquí iría la lógica para compartir el video
     handleMenuClose();
   };
 
   const handleDelete = () => {
-    console.log(`Deleting video ${selectedVideoId}`);
+    if (selectedVideoId) {
+      deleteVideo(selectedVideoId);
+    }
     handleMenuClose();
   };
 
-  const handleVideoHover = (videoId: number | null) => {
+  const handleVideoHover = (videoId: string | null) => {
     setHoveredVideoId(videoId);
   };
 
-  const handlePlayVideo = (videoId: number) => {
-    console.log(`Playing video ${videoId}`);
-    // Logic to play video
+  const handlePlayVideo = (videoId: string) => {
+    setPlayingVideo(videoId);
+  };
+
+  const handleCloseVideo = () => {
+    setPlayingVideo(null);
+  };
+
+  // Encontrar el video que se está reproduciendo
+  const currentPlayingVideo = videos.find(video => video.id === playingVideo);
+
+  // Renderizar esqueletos de carga
+  const renderSkeletons = () => {
+    return Array(4).fill(0).map((_, index) => (
+      <Box 
+        key={`skeleton-${index}`}
+        sx={{
+          flex: '1 1 300px',
+          maxWidth: '350px',
+          minWidth: '280px',
+        }}
+      >
+        <Box
+          sx={{
+            height: '100%',
+            backgroundColor: 'rgba(23, 23, 23, 0.6)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '24px',
+            overflow: 'hidden',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+          }}
+        >
+          <Skeleton 
+            variant="rectangular" 
+            height={500} 
+            sx={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              transform: 'none',
+            }} 
+          />
+          <Box sx={{ p: 3 }}>
+            <Skeleton 
+              variant="text" 
+              width="70%" 
+              height={32} 
+              sx={{ 
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                transform: 'none',
+              }} 
+            />
+            <Skeleton 
+              variant="text" 
+              width="100%" 
+              height={20} 
+              sx={{ 
+                mt: 1,
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                transform: 'none',
+              }} 
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+              <Skeleton 
+                variant="text" 
+                width="40%" 
+                height={16} 
+                sx={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  transform: 'none',
+                }} 
+              />
+              <Skeleton 
+                variant="text" 
+                width="30%" 
+                height={16} 
+                sx={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  transform: 'none',
+                }} 
+              />
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    ));
   };
 
   return (
@@ -107,7 +159,37 @@ const VideoGallery = () => {
         </Button>
       </Box>
 
-      {mockVideos.length === 0 ? (
+      {isGenerating && (
+        <Box 
+          sx={{ 
+            p: 3, 
+            mb: 4, 
+            borderRadius: 3, 
+            backgroundColor: 'rgba(30, 215, 96, 0.1)', 
+            border: '1px solid rgba(30, 215, 96, 0.3)'
+          }}
+        >
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'primary.main', display: 'flex', alignItems: 'center' }}>
+            <AutoAwesomeIcon sx={{ mr: 1 }} /> 
+            Generando nuevo video...
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Tu video se está generando y aparecerá automáticamente en esta galería cuando esté listo.
+          </Typography>
+        </Box>
+      )}
+
+      {isGenerating ? (
+        <Box 
+          sx={{ 
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 3,
+          }}
+        >
+          {renderSkeletons()}
+        </Box>
+      ) : videos.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -145,7 +227,7 @@ const VideoGallery = () => {
           }}
         >
           <AnimatePresence>
-            {mockVideos.map((video) => (
+            {videos.map((video) => (
               <motion.div
                 key={video.id}
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -185,16 +267,16 @@ const VideoGallery = () => {
                     <Box
                       sx={{
                         height: 0,
-                        paddingTop: '177.77%', // 9:16 aspect ratio for vertical videos
+                        paddingTop: '177.77%', // Relación de aspecto 9:16 para videos verticales
                         backgroundColor: '#0A0A0A',
-                        backgroundImage: `url(${video.thumbnail})`,
+                        backgroundImage: `url(${video.thumbnailUrl})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         position: 'relative',
                       }}
                     />
                     
-                    {/* Play button overlay */}
+                    {/* Superposición del botón de reproducción */}
                     <Box
                       sx={{
                         position: 'absolute',
@@ -231,7 +313,7 @@ const VideoGallery = () => {
                       </motion.div>
                     </Box>
                     
-                    {/* Duration badge */}
+                    {/* Etiqueta de duración */}
                     <Box
                       sx={{
                         position: 'absolute',
@@ -247,10 +329,10 @@ const VideoGallery = () => {
                         backdropFilter: 'blur(4px)',
                       }}
                     >
-                      {video.duration}
+                      {video.duration}s
                     </Box>
                     
-                    {/* Menu button */}
+                    {/* Botón de menú */}
                     <Box
                       sx={{
                         position: 'absolute',
@@ -310,6 +392,63 @@ const VideoGallery = () => {
           </AnimatePresence>
         </Box>
       )}
+
+      {/* Diálogo para reproducir el video */}
+      <Dialog
+        open={playingVideo !== null}
+        onClose={handleCloseVideo}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: '#0A0A0A',
+            borderRadius: 3,
+            overflow: 'hidden',
+          }
+        }}
+      >
+        <Box sx={{ position: 'relative' }}>
+          <IconButton
+            onClick={handleCloseVideo}
+            sx={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              color: 'white',
+              zIndex: 1,
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+          <DialogContent sx={{ p: 0 }}>
+            {currentPlayingVideo && (
+              <Box>
+                <video
+                  src={currentPlayingVideo.videoUrl}
+                  controls
+                  autoPlay
+                  style={{ width: '100%', maxHeight: '80vh', objectFit: 'contain' }}
+                />
+                <Box sx={{ p: 3 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                    {currentPlayingVideo.title}
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                    {currentPlayingVideo.description}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Creado el {currentPlayingVideo.createdAt} • {currentPlayingVideo.views} visualizaciones
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+          </DialogContent>
+        </Box>
+      </Dialog>
 
       <Menu
         anchorEl={anchorEl}

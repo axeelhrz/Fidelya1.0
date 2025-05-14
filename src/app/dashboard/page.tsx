@@ -5,6 +5,7 @@ import { Container, Typography, Box, Tabs, Tab } from '@mui/material';
 import PageLayout from '@/components/layout/PageLayout';
 import VideoCreationForm from '@/components/video/VideoCreationForm';
 import VideoGallery from '@/components/video/VideoGallery';
+import { VideoProvider } from '@/context/VideoContext';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState(0);
@@ -14,6 +15,7 @@ export default function Dashboard() {
   };
 
   return (
+    <VideoProvider>
       <PageLayout>
         <Box
         component="section"
@@ -66,5 +68,6 @@ export default function Dashboard() {
         </Container>
       </Box>
     </PageLayout>
+    </VideoProvider>
   );
 }
