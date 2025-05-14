@@ -1,11 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { AppBar, Toolbar, Container, Box, IconButton, Drawer, List, ListItem } from '@mui/material';
+import { AppBar, Toolbar, Container, Box, IconButton, Drawer, List, ListItem, Avatar, Menu, MenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/auth/AuthContext';
 import Logo from '@/components/ui/Logo';
 import Button from '@/components/ui/Button';
 
@@ -16,10 +19,36 @@ const navItems = [
 ];
 
 const Navbar = () => {
+  const router = useRouter();
+  const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      handleProfileMenuClose();
+      router.push('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const handleDashboardClick = () => {
+    handleProfileMenuClose();
+    router.push('/dashboard');
   };
 
   return (
@@ -47,12 +76,63 @@ const Navbar = () => {
           </Box>
 
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
-            <Button variant="outlined" color="primary">
-              Log In
-            </Button>
-            <Button variant="contained" color="secondary">
-              Try Free
-            </Button>
+            {user ? (
+              <>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  href="/dashboard"
+                >
+                  Dashboard
+                </Button>
+                <IconButton
+                  onClick={handleProfileMenuOpen}
+                  sx={{
+                    ml: 1,
+                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.2)' },
+                  }}
+                >
+                  {user.photoURL ? (
+                    <Avatar src={user.photoURL} alt={user.displayName || 'User'} sx={{ width: 32, height: 32 }} />
+                  ) : (
+                    <AccountCircleIcon />
+                  )}
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleProfileMenuClose}
+                  PaperProps={{
+                    sx: {
+                      backgroundColor: '#171717',
+                      color: 'white',
+                      mt: 1,
+                    },
+                  }}
+                >
+                  <MenuItem onClick={handleDashboardClick}>Dashboard</MenuItem>
+                  <MenuItem onClick={handleSignOut}>Cerrar Sesión</MenuItem>
+                </Menu>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  href="/login"
+                >
+                  Log In
+                </Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  href="/signup"
+                >
+                  Try Free
+                </Button>
+              </>
+            )}
           </Box>
 
           {/* Mobile Navigation Icon */}
@@ -103,12 +183,52 @@ const Navbar = () => {
           ))}
           <ListItem disablePadding sx={{ mt: 2 }}>
             <Box sx={{ p: 2, width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Button variant="outlined" color="primary" fullWidth>
-                Log In
-              </Button>
-              <Button variant="contained" color="secondary" fullWidth>
-                Try Free
-              </Button>
+              {user ? (
+                <>
+                  <Link href="/dashboard" onClick={handleDrawerToggle} className="w-full">
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      fullWidth
+                    >
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Link href="/" onClick={() => {
+                    signOut();
+                    handleDrawerToggle();
+                  }} className="w-full">
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      fullWidth
+                    >
+                      Cerrar Sesión
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" onClick={handleDrawerToggle} className="w-full">
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      fullWidth
+                    >
+                      Log In
+                    </Button>
+                  </Link>
+                  <Link href="/signup" onClick={handleDrawerToggle} className="w-full">
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      fullWidth
+                    >
+                      Try Free
+                    </Button>
+                  </Link>
+                </>
+              )}
             </Box>
           </ListItem>
         </List>

@@ -21,8 +21,8 @@ const LoginForm = () => {
     try {
       await signIn(email, password);
       // Redirect will be handled by the protected route component
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign in');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to sign in');
     } finally {
       setLoading(false);
     }

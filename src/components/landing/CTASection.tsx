@@ -1,8 +1,7 @@
 'use client';
 
-import { Container, Typography, Box } from '@mui/material';
+import { Container, Typography, Box, Button } from '@mui/material';
 import { motion } from 'framer-motion';
-import Button from '@/components/ui/Button';
 
 const CTASection = () => {
   return (

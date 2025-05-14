@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Container, Typography, Box, Grid, Tabs, Tab } from '@mui/material';
+import { Container, Typography, Box, Tabs, Tab } from '@mui/material';
 import PageLayout from '@/components/layout/PageLayout';
 import VideoCreationForm from '@/components/video/VideoCreationForm';
 import VideoGallery from '@/components/video/VideoGallery';

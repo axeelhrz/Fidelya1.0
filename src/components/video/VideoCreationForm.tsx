@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, TextField, Typography, MenuItem, FormControl, InputLabel, Select, Slider, Paper } from '@mui/material';
+import { Box, TextField, Typography, MenuItem, FormControl, InputLabel, Select, Slider, Paper, Alert, CircularProgress } from '@mui/material';
 import Button from '@/components/ui/Button';
+import { useRouter } from 'next/navigation';
 
 const toneOptions = [
   { value: 'funny', label: 'Divertido' },
@@ -23,6 +24,7 @@ const languageOptions = [
 ];
 
 const VideoCreationForm = () => {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     prompt: '',
     tone: 'informative',
@@ -30,6 +32,8 @@ const VideoCreationForm = () => {
     language: 'es',
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
     const { name, value } = e.target;
@@ -42,15 +46,36 @@ const VideoCreationForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
+    setSuccess(false);
     
-    // Here we would call the API to generate the video
-    console.log('Form data submitted:', formData);
-    
-    // Simulate API call
+    try {
+      const response = await fetch('/api/generate-video', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate video');
+      }
+      
+      const data = await response.json();
+      setSuccess(true);
+      
+      // Redirect to the video page or refresh the gallery
     setTimeout(() => {
-      setLoading(false);
-      // Handle success or redirect to results page
+        router.push('/dashboard?tab=1'); // Switch to "My Videos" tab
     }, 2000);
+      
+    } catch (error: any) {
+      setError(error.message || 'An error occurred while generating the video');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,6 +93,18 @@ const VideoCreationForm = () => {
         Crea tu video
       </Typography>
       
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          ¡Video generado con éxito! Redirigiendo a tu galería...
+        </Alert>
+      )}
+      
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <TextField
           label="Contá de qué trata tu video"
@@ -80,10 +117,11 @@ const VideoCreationForm = () => {
           required
           placeholder="Ej: Un tutorial rápido sobre cómo hacer un café latte en casa con ingredientes simples."
           InputLabelProps={{ shrink: true }}
+          disabled={loading}
         />
         
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-          <FormControl fullWidth>
+          <FormControl fullWidth disabled={loading}>
             <InputLabel id="tone-label">Tono</InputLabel>
             <Select
               labelId="tone-label"
@@ -100,7 +138,7 @@ const VideoCreationForm = () => {
             </Select>
           </FormControl>
           
-          <FormControl fullWidth>
+          <FormControl fullWidth disabled={loading}>
             <InputLabel id="duration-label">Duración</InputLabel>
             <Select
               labelId="duration-label"
@@ -117,7 +155,7 @@ const VideoCreationForm = () => {
             </Select>
           </FormControl>
           
-          <FormControl fullWidth>
+          <FormControl fullWidth disabled={loading}>
             <InputLabel id="language-label">Idioma</InputLabel>
             <Select
               labelId="language-label"
@@ -144,7 +182,14 @@ const VideoCreationForm = () => {
           disabled={loading || !formData.prompt}
           sx={{ mt: 2 }}
         >
-          {loading ? 'Generando...' : 'Generar mi Reel'}
+          {loading ? (
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
+              Generando...
+      </Box>
+          ) : (
+            'Generar mi Reel'
+          )}
         </Button>
       </Box>
     </Paper>
