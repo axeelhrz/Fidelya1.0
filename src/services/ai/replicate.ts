@@ -35,7 +35,6 @@ function generarUrlVideoSimulado(): string {
  * Genera un video usando el modelo de texto a video de Replicate
  */
 export async function generateVideo({
-  prompt,
   scenes,
   duration,
 }: VideoGenerationParams): Promise<string> {

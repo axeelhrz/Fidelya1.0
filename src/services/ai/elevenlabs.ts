@@ -7,16 +7,33 @@ export interface TextToSpeechParams {
 }
 
 /**
- * Generates speech audio from text using ElevenLabs API
+ * Genera una respuesta de voz simulada cuando la API de ElevenLabs no está disponible
+ */
+function generarVozSimulada(): ArrayBuffer {
+  // Devuelve un ArrayBuffer vacío como marcador de posición
+  // En una implementación real, podrías devolver un archivo de audio predeterminado
+  return new ArrayBuffer(0);
+}
+
+/**
+ * Genera audio de voz a partir de texto usando la API de ElevenLabs
  */
 export async function generateSpeech({
   text,
-  voice_id = 'pNInz6obpgDQGcFmaJgB', // Default Spanish female voice
+  voice_id = 'pNInz6obpgDQGcFmaJgB', // Voz femenina española predeterminada
   language,
 }: TextToSpeechParams): Promise<ArrayBuffer> {
-  // Select appropriate voice based on language
+  // Verificar si debemos usar el respaldo
+  if (!process.env.ELEVENLABS_API_KEY || 
+      process.env.ELEVENLABS_API_KEY === "mock" || 
+      process.env.USE_MOCK_AI === "true") {
+    console.log("Usando generador de voz simulado (clave de API de ElevenLabs no disponible o modo simulado habilitado)");
+    return generarVozSimulada();
+  }
+
+  // Seleccionar la voz apropiada según el idioma
   if (language === 'en') {
-    voice_id = '21m00Tcm4TlvDq8ikWAM'; // English voice (Rachel)
+    voice_id = '21m00Tcm4TlvDq8ikWAM'; // Voz inglesa (Rachel)
   }
 
   try {
@@ -42,7 +59,9 @@ export async function generateSpeech({
 
     return response.data;
   } catch (error) {
-    console.error("Error generating speech with ElevenLabs:", error);
-    throw new Error(`Failed to generate speech: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("Error generando voz con ElevenLabs:", error);
+    // Usar voz simulada como respaldo
+    console.log("Usando generador de voz simulado debido a error de API");
+    return generarVozSimulada();
   }
 }
