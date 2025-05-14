@@ -47,6 +47,8 @@ export async function createVideo(
       duration: params.duration,
     });
     
+    console.log(`Video generado: ${videoUrl}`);
+    
     // Paso 3: Generar voz usando ElevenLabs
     console.log(`Generando voz para ${videoId}...`);
     try {
@@ -61,9 +63,7 @@ export async function createVideo(
     
     // Generar una URL de miniatura basada en la URL del video
     // En un entorno de producción, generaríamos una miniatura real
-    const thumbnailUrl = videoUrl.includes('replicate.delivery') 
-      ? videoUrl.replace('.mp4', '.jpg') 
-      : 'https://i.ytimg.com/vi/aqz-KE-bpKQ/maxresdefault.jpg';
+    const thumbnailUrl = 'https://i.ytimg.com/vi/aqz-KE-bpKQ/maxresdefault.jpg';
     
     return {
       id: videoId,

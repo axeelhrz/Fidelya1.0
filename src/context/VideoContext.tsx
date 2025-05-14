@@ -22,9 +22,37 @@ interface VideoContextType {
 // Crear el contexto
 const VideoContext = createContext<VideoContextType | undefined>(undefined);
 
+// Datos de ejemplo para videos iniciales
+const initialVideos: VideoData[] = [
+  { 
+    id: '1', 
+    title: 'Tips de productividad', 
+    description: 'Consejos para maximizar tu tiempo diario',
+    thumbnailUrl: 'https://i.ytimg.com/vi/aqz-KE-bpKQ/maxresdefault.jpg', 
+    videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    script: 'Este es un script generado basado en tu prompt.',
+    duration: 15, 
+    createdAt: '2023-10-15',
+    views: 245,
+    status: 'success'
+  },
+  { 
+    id: '2', 
+    title: 'Receta rápida', 
+    description: 'Pasta al pesto en menos de 10 minutos',
+    thumbnailUrl: 'https://i.ytimg.com/vi/aqz-KE-bpKQ/maxresdefault.jpg', 
+    videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    script: 'Este es un script generado basado en tu prompt.',
+    duration: 30, 
+    createdAt: '2023-10-14',
+    views: 189,
+    status: 'success'
+  }
+];
+
 // Proveedor del contexto
 export const VideoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [videos, setVideos] = useState<VideoData[]>([]);
+  const [videos, setVideos] = useState<VideoData[]>(initialVideos);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [generationProgress, setGenerationProgress] = useState({
@@ -33,14 +61,13 @@ export const VideoProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     audio: false,
     final: false,
   });
-
+      
   // Simular la progresión de la generación de video
   const simulateProgress = () => {
     setActiveStep(0);
     setGenerationProgress({ script: false, video: false, audio: false, final: false });
     setIsGenerating(true);
-    
-    setTimeout(() => {
+      setTimeout(() => {
       setGenerationProgress(prev => ({ ...prev, script: true }));
       setActiveStep(1);
       
@@ -56,7 +83,7 @@ export const VideoProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             setGenerationProgress(prev => ({ ...prev, final: true }));
             
             setTimeout(() => {
-              setIsGenerating(false);
+      setIsGenerating(false);
               // Reiniciar el estado de progreso
               setGenerationProgress({ script: false, video: false, audio: false, final: false });
             }, 1000);
@@ -89,21 +116,22 @@ export const VideoProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
       
       const videoData = await response.json();
+      console.log("Video generado:", videoData);
       
       // Crear un nuevo objeto de video con los datos recibidos
       const newVideo: VideoData = {
-        id: videoData.id,
+        id: videoData.id || `video-${Date.now()}`,
         title: videoData.title || `Video sobre ${params.prompt.substring(0, 20)}...`,
         description: videoData.description || params.prompt,
         thumbnailUrl: videoData.thumbnailUrl || 'https://i.ytimg.com/vi/aqz-KE-bpKQ/maxresdefault.jpg',
-        videoUrl: videoData.videoUrl,
+        videoUrl: videoData.videoUrl || 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
         script: videoData.script || params.prompt,
         duration: params.duration,
         createdAt: new Date().toLocaleDateString(),
         views: 0,
         status: 'success',
-      };
-      
+  };
+
       // Agregar el nuevo video a la lista después de que termine la simulación
       setTimeout(() => {
         addVideo(newVideo);
@@ -119,12 +147,12 @@ export const VideoProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Función para agregar un nuevo video a la lista
   const addVideo = (video: VideoData) => {
     setVideos(prevVideos => [video, ...prevVideos]);
-  };
+};
 
   // Función para eliminar un video de la lista
   const deleteVideo = (id: string) => {
     setVideos(prevVideos => prevVideos.filter(video => video.id !== id));
-  };
+};
 
   return (
     <VideoContext.Provider

@@ -5,6 +5,11 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
+// Type for Replicate output with 'output' property
+interface ReplicateOutput {
+  output: string;
+}
+
 export interface VideoGenerationParams {
   prompt: string;
   scenes: {
@@ -46,28 +51,26 @@ export async function generateVideo({
       return generarUrlVideoSimulado();
     }
     
-    // Usar un modelo más avanzado para la generación de video
-    // Modelo: https://replicate.com/stability-ai/stable-video-diffusion
+    // Usar un modelo más simple y accesible para la generación de video
+    // Modelo: https://replicate.com/lucataco/animate-diff
     const output = await replicate.run(
-      "stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
+      "lucataco/animate-diff:b51abdc3bd0e8f89b2c6f6d0fc2d3984245fa56f98d2e56b3426663c4f0daddb",
       {
         input: {
-          prompt: scenes.map(scene => scene.visualDescription).join(" "),
-          video_length: "25_frames_with_svd_xt",
-          sizing_strategy: "maintain_aspect_ratio",
-          frames_per_second: 6,
-          motion_bucket_id: 127,
-          cond_aug: 0.02,
+          prompt: scenes[0].visualDescription,
+          negative_prompt: "blurry, low quality, low resolution, bad anatomy",
+          fps: 8,
+          num_frames: 24,
+          guidance_scale: 7.5,
           seed: Math.floor(Math.random() * 10000000),
         }
       }
     );
 
-    // La salida es la URL del video generado
-    if (typeof output === 'string') {
-      return output;
-    } else if (Array.isArray(output) && output.length > 0) {
+    if (Array.isArray(output) && output.length > 0) {
       return output[output.length - 1] as string;
+    } else if (typeof output === 'object' && output !== null && 'output' in output) {
+      return (output as ReplicateOutput).output;
     }
 
     throw new Error("Error al generar video: Formato de salida inválido");
