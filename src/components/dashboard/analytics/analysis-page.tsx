@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Stack, 
@@ -7,7 +7,9 @@ import {
   Alert, 
   useTheme, 
   alpha,
-  Button
+  Button,
+  useMediaQuery,
+  Grid
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { 
@@ -58,8 +60,6 @@ interface ExportableAnalytics {
   name: string;
   values: AnalyticsData | null;
 }
-
-
 
 // Analytics data structure
 export interface KpiData {
