@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Sora, Inter } from "next/font/google";
 import ThemeProvider from "@/components/layout/ThemeProvider";
-import { AuthProvider } from "@/components/auth/AuthContext";
 import "./globals.css";
 
 // Import fonts
@@ -49,7 +48,7 @@ export default function RootLayout({
     <html lang="en" className={`${sora.variable} ${inter.variable}`}>
       <body className="antialiased">
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+     {children}
         </ThemeProvider>
       </body>
     </html>

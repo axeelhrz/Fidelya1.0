@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Box, TextField, Typography, Alert, Link as MuiLink } from '@mui/material';
-import { useAuth } from './AuthContext';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
 
@@ -13,7 +12,6 @@ const SignupForm = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +25,6 @@ const SignupForm = () => {
     setLoading(true);
 
     try {
-      await signUp(email, password, name);
       // Redirect will be handled by the protected route component
     } catch (error: unknown) {
       if (error instanceof Error) {

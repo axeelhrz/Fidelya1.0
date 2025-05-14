@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Box, TextField, Typography, Alert, Link as MuiLink } from '@mui/material';
-import { useAuth } from './AuthContext';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
 
@@ -11,21 +10,12 @@ const LoginForm = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-    try {
-      await signIn(email, password);
-      // Redirect will be handled by the protected route component
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Failed to sign in');
-    } finally {
-      setLoading(false);
-    }
+    // Add your login logic here
   };
 
   return (

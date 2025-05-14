@@ -5,7 +5,6 @@ import { Container, Typography, Box, Tabs, Tab } from '@mui/material';
 import PageLayout from '@/components/layout/PageLayout';
 import VideoCreationForm from '@/components/video/VideoCreationForm';
 import VideoGallery from '@/components/video/VideoGallery';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState(0);
@@ -15,7 +14,6 @@ export default function Dashboard() {
   };
 
   return (
-    <ProtectedRoute>
       <PageLayout>
         <Box
         component="section"
@@ -68,6 +66,5 @@ export default function Dashboard() {
         </Container>
       </Box>
     </PageLayout>
-    </ProtectedRoute>
   );
 }

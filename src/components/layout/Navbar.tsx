@@ -8,9 +8,10 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/auth/AuthContext';
 import Logo from '@/components/ui/Logo';
 import Button from '@/components/ui/Button';
+// Import your auth utilities or hooks
+// import { useAuth } from '@/lib/auth';
 
 const navItems = [
   { label: 'How It Works', href: '/#how-it-works' },
@@ -20,9 +21,17 @@ const navItems = [
 
 const Navbar = () => {
   const router = useRouter();
-  const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  // Option 1: Use your auth hook if available
+  // Option 2: Create a temporary state for user
+  const [user, setUser] = useState<null | { photoURL?: string; displayName?: string }>(null);
+  
+  // Add a signOut function if not using an auth hook
+  const signOut = async () => {
+    setUser(null);
+    router.push('/');
+  };
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -38,7 +47,6 @@ const Navbar = () => {
 
   const handleSignOut = async () => {
     try {
-      await signOut();
       handleProfileMenuClose();
       router.push('/');
     } catch (error) {
