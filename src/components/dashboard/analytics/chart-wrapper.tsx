@@ -1,5 +1,6 @@
 import React from 'react';
 import { Paper, Typography, Box, useTheme, alpha, Skeleton } from '@mui/material';
+import { SxProps, Theme } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import { createPremiumCardStyle } from '@/styles/theme/themeAnalytics';
 
@@ -39,7 +40,6 @@ export const ChartWrapper: React.FC<ChartWrapperProps> = ({
       variants={isMobile ? mobileChartVariants : chartVariants}
       initial="hidden"
       animate="visible"
-      elevation={0}
       sx={{
         p: isMobile ? 1.5 : 3,
         ...createPremiumCardStyle(theme, defaultColor, isMobile),
@@ -47,7 +47,7 @@ export const ChartWrapper: React.FC<ChartWrapperProps> = ({
         minHeight: isMobile ? (typeof height === 'number' ? height * 0.8 : height) : height,
         display: 'flex',
         flexDirection: 'column',
-      }}
+      } as SxProps<Theme>}
     >
       <Typography 
         variant={isMobile ? "subtitle1" : "h6"} 

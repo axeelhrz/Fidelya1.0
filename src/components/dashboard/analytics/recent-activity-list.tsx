@@ -12,7 +12,9 @@ import {
   Chip, 
   Divider,
   useTheme,
-  alpha
+  alpha,
+  SxProps,
+  Theme
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { FileText, Users, CheckSquare } from 'lucide-react';
@@ -315,9 +317,8 @@ export const RecentActivityList: React.FC<RecentActivityListProps> = ({
 
   return (
     <Paper
-      elevation={0}
       sx={{
-        ...createPremiumCardStyle(theme, theme.palette.primary.main),
+        ...(createPremiumCardStyle(theme, theme.palette.primary.main) as SxProps<Theme>),
         overflow: 'hidden'
       }}
     >

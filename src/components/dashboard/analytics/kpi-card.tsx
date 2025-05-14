@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box, Tooltip, useTheme } from '@mui/material';
+import { Card, CardContent, Typography, Box, Tooltip, useTheme, SxProps, Theme } from '@mui/material';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { formatCurrency, formatNumber, formatPercentage, getTrendColor } from '@/lib/formatters';
@@ -62,7 +62,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
       variants={isMobile ? mobileCardVariants : cardVariants}
       whileHover={isMobile ? undefined : "hover"}
       sx={{
-        ...createPremiumCardStyle(theme, defaultColor, isMobile),
+        ...(createPremiumCardStyle(theme, defaultColor, isMobile) as SxProps<Theme>),
         minWidth: isMobile ? 'auto' : 200,
         flexGrow: 1,
       }}

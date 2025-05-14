@@ -10,9 +10,10 @@ import {
   Cell,
   Tooltip
 } from 'recharts';
-import { useTheme, alpha, useMediaQuery } from '@mui/material/styles';
+import { useTheme, alpha } from '@mui/material/styles';
 import { Box, Typography } from '@mui/material';
 import { ChartWrapper } from '@/components/dashboard/analytics/chart-wrapper';
+import { createOptimizedChartStyle } from '@/styles/theme/themeAnalytics';
 
 interface ExpirationData {
   range: string;
@@ -23,27 +24,28 @@ interface ExpirationData {
 interface ExpirationAnalysisBarChartProps {
   data: ExpirationData[];
   loading?: boolean;
+  isMobile?: boolean;
 }
 
-export const ExpirationAnalysisBarChart: React.FC<ExpirationAnalysisBarChartProps> = ({ data, loading }) => {
+// Exportar como componente por defecto para lazy loading
+const ExpirationAnalysisBarChart: React.FC<ExpirationAnalysisBarChartProps> = ({ 
+  data, 
+  loading, 
+  isMobile = false 
+}) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
-  // Optimizar datos para móvil si hay demasiados puntos
-  const optimizedData = isMobile && data.length > 5 
-    ? data.filter((_, index) => index % 2 === 0) // Mostrar solo cada segundo punto en móvil
-    : data;
-
-  // Abreviar nombres de rangos en móvil
-  const processedData = isMobile 
-    ? optimizedData.map(item => ({
-        ...item,
-        range: item.range.length > 4 ? item.range.substring(0, 4) : item.range // Abreviar rangos largos
-      }))
-    : optimizedData;
+  // Optimización: Reducir datos en móvil si hay muchos puntos
+  const optimizedData = React.useMemo(() => {
+    if (isMobile && data.length > 5) {
+      // En móvil, mostrar solo los primeros 5 rangos si hay muchos datos
+      return data.slice(0, 5);
+    }
+    return data;
+  }, [data, isMobile]);
   
-  // Custom Tooltip
-  const CustomTooltip = ({ 
+  // Custom Tooltip - Memoizado
+  const CustomTooltip = React.useCallback(({ 
     active, 
     payload, 
     label 
@@ -64,7 +66,7 @@ export const ExpirationAnalysisBarChart: React.FC<ExpirationAnalysisBarChartProp
             border: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
             p: isMobile ? 1 : 1.5,
             borderRadius: '8px',
-            boxShadow: isMobile ? 'none' : theme.shadows[3],
+            boxShadow: isMobile ? theme.shadows[1] : theme.shadows[3],
           }}
         >
           <Typography 
@@ -83,7 +85,7 @@ export const ExpirationAnalysisBarChart: React.FC<ExpirationAnalysisBarChartProp
               mt: 0.5, 
               color: entry.color,
               fontFamily: 'Inter, sans-serif',
-              fontSize: isMobile ? '0.65rem' : '0.75rem',
+              fontSize: isMobile ? '0.7rem' : '0.75rem',
               display: 'flex',
               alignItems: 'center'
             }}
@@ -99,14 +101,13 @@ export const ExpirationAnalysisBarChart: React.FC<ExpirationAnalysisBarChartProp
                 mr: 1 
               }} 
             />
-            Pólizas por vencer: {entry.value}
+            Pólizas: {entry.value}
           </Typography>
         </Box>
       );
     }
     return null;
-  };
-  
+  }, [theme, isMobile]);
   // Interface for label props
   interface LabelProps {
     x?: string | number;
@@ -115,27 +116,29 @@ export const ExpirationAnalysisBarChart: React.FC<ExpirationAnalysisBarChartProp
     value?: string | number;
   }
   
-  // Renderizado personalizado para las etiquetas de las barras
-  const renderCustomizedLabel = (props: LabelProps) => {
+  // Renderizado personalizado para las etiquetas de las barras - Memoizado
+  const renderCustomizedLabel = React.useCallback((props: LabelProps) => {
     const { x, y, width, value } = props;
     if (x === undefined || y === undefined || width === undefined || value === undefined) {
       return null;
     }
     
-    // Ocultar etiquetas en móvil para mejorar rendimiento
-    if (isMobile) return null;
+    // En móvil, ocultar etiquetas para valores pequeños
+    if (isMobile && Number(value) < 5) {
+      return null;
+    }
     
     return (
       <g>
         <text 
           x={Number(x) + Number(width) / 2} 
-          y={Number(y) - 10} 
+          y={Number(y) - (isMobile ? 5 : 10)} 
           fill={theme.palette.text.primary} 
           textAnchor="middle" 
           dominantBaseline="middle"
           style={{ 
             fontFamily: 'Inter, sans-serif',
-            fontSize: '0.75rem',
+            fontSize: isMobile ? '0.65rem' : '0.75rem',
             fontWeight: 600
           }}
         >
@@ -143,67 +146,76 @@ export const ExpirationAnalysisBarChart: React.FC<ExpirationAnalysisBarChartProp
         </text>
       </g>
     );
-  };
-
+  }, [theme, isMobile]);
   return (
-    <ChartWrapper title="Análisis de Vencimientos" loading={loading}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={processedData}
-          margin={{
-            top: 20,
-            right: isMobile ? 10 : 30,
-            left: isMobile ? 0 : 20,
-            bottom: 5,
-          }}
+    <ChartWrapper 
+      title="Análisis de Vencimientos" 
+      loading={loading}
+      height={isMobile ? 250 : 350}
+      isMobile={isMobile}
         >
-          <CartesianGrid 
-            strokeDasharray="3 3" 
-            stroke={alpha(theme.palette.divider, 0.2)} 
-            vertical={false} 
-            // Reducir densidad de líneas en móvil
-            horizontalPoints={isMobile ? [40, 80, 120] : undefined}
-          />
-          <XAxis 
-            dataKey="range" 
-            tick={{ 
-              fill: theme.palette.text.secondary, 
-              fontFamily: 'Inter, sans-serif',
-              fontSize: isMobile ? 10 : 12
+      <Box sx={createOptimizedChartStyle(theme, isMobile)}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={optimizedData}
+            margin={{
+              top: 20,
+              right: isMobile ? 5 : 30,
+              left: isMobile ? 5 : 20,
+              bottom: 5,
             }}
-            axisLine={{ stroke: alpha(theme.palette.divider, 0.3) }}
-            tickLine={false}
-          />
-          <YAxis 
-            tick={{ 
-              fill: theme.palette.text.secondary, 
-              fontFamily: 'Inter, sans-serif',
-              fontSize: isMobile ? 10 : 12
-            }}
-            axisLine={{ stroke: alpha(theme.palette.divider, 0.3) }}
-            tickLine={false}
-            // Reducir número de ticks en móvil
-            tickCount={isMobile ? 3 : 5}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Bar 
-            dataKey="value" 
-            name="Pólizas" 
-            radius={[isMobile ? 2 : 4, isMobile ? 2 : 4, 0, 0]}
-            animationBegin={0}
-            animationDuration={isMobile ? 800 : 1500}
+            barSize={isMobile ? 15 : 20}
           >
-            {processedData.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`}
-                fill={entry.color || `hsl(${index * 45}, 70%, 50%)`} 
-              />
-            ))}
-            {/* Mostrar etiquetas solo en desktop */}
-            {!isMobile && <LabelList dataKey="value" content={renderCustomizedLabel} />}
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke={alpha(theme.palette.divider, isMobile ? 0.1 : 0.2)} 
+              vertical={!isMobile} // Eliminar líneas verticales en móvil
+            />
+            <XAxis 
+              dataKey="range" 
+              tick={{ 
+                fill: theme.palette.text.secondary, 
+              fontFamily: 'Inter, sans-serif',
+                fontSize: isMobile ? '0.65rem' : undefined
+            }}
+            axisLine={{ stroke: alpha(theme.palette.divider, 0.3) }}
+            tickLine={false}
+              // Reducir texto en móvil
+              tickFormatter={isMobile ? (value) => value.substring(0, 3) : undefined}
+          />
+            <YAxis 
+              tick={{ 
+                fill: theme.palette.text.secondary, 
+                fontFamily: 'Inter, sans-serif',
+                fontSize: isMobile ? '0.65rem' : undefined
+              }}
+              axisLine={{ stroke: alpha(theme.palette.divider, 0.3) }}
+              tickLine={false}
+              // Reducir número de ticks en móvil
+              tickCount={isMobile ? 3 : 5}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Bar 
+              dataKey="value" 
+              name="Pólizas" 
+              radius={[isMobile ? 3 : 4, isMobile ? 3 : 4, 0, 0]}
+              animationBegin={0}
+              animationDuration={isMobile ? 800 : 1500}
+            >
+              {optimizedData.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`}
+                  fill={entry.color || `hsl(${index * 45}, 70%, 50%)`} 
+                />
+              ))}
+              <LabelList dataKey="value" content={renderCustomizedLabel} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+      </Box>
     </ChartWrapper>
   );
 };
+
+export { ExpirationAnalysisBarChart };
+export default ExpirationAnalysisBarChart;

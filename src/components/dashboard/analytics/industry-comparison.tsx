@@ -66,8 +66,8 @@ export const IndustryComparison: React.FC<IndustryComparisonProps> = ({ data }) 
     <Paper
       elevation={0}
       sx={{
-        ...createPremiumCardStyle(theme, theme.palette.info.main),
-        p: 3
+        p: 3,
+        ...(createPremiumCardStyle(theme, theme.palette.info.main) as React.CSSProperties)
       }}
     >
       <Typography 

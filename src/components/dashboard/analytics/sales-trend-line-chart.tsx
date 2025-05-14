@@ -11,10 +11,11 @@ import {
   ComposedChart 
 } from 'recharts';
 import { Props as LegendProps } from 'recharts/types/component/DefaultLegendContent';
-import { useTheme, alpha, useMediaQuery } from '@mui/material/styles';
+import { useTheme, alpha } from '@mui/material/styles';
 import { Box, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import { ChartWrapper } from '@/components/dashboard/analytics/chart-wrapper';
+import { createOptimizedChartStyle } from '@/styles/theme/themeAnalytics';
 
 interface MonthlyTrendData {
   month: string;
@@ -26,32 +27,28 @@ interface MonthlyTrendData {
 interface SalesTrendLineChartProps {
   data: MonthlyTrendData[];
   loading?: boolean;
+  isMobile?: boolean;
 }
 
-export const SalesTrendLineChart: React.FC<SalesTrendLineChartProps> = ({ data, loading }) => {
+// Exportar como componente por defecto para lazy loading
+const SalesTrendLineChart: React.FC<SalesTrendLineChartProps> = ({ data, loading, isMobile = false }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
   // Colores para las líneas
   const newColor = theme.palette.primary.main;
   const renewalsColor = theme.palette.success.main;
   const totalColor = theme.palette.info.main;
   
-  // Optimizar datos para móvil si hay demasiados puntos
-  const optimizedData = isMobile && data.length > 6 
-    ? data.filter((_, index) => index % 2 === 0) // Mostrar solo cada segundo punto en móvil
-    : data;
+  // Optimización: Reducir datos en móvil si hay muchos puntos
+  const optimizedData = React.useMemo(() => {
+    if (isMobile && data.length > 6) {
+      // En móvil, mostrar solo los últimos 6 meses si hay muchos datos
+      return data.slice(-6);
+    }
+    return data;
+  }, [data, isMobile]);
 
-  // Abreviar nombres de meses en móvil
-  const processedData = isMobile 
-    ? optimizedData.map(item => ({
-        ...item,
-        month: item.month.substring(0, 3) // Usar solo las primeras 3 letras del mes
-      }))
-    : optimizedData;
-  
-  // Custom Tooltip
-  const CustomTooltip = ({ 
+  // Custom Tooltip - Memoizado
+  const CustomTooltip = React.useCallback(({ 
     active, 
     payload, 
     label 
@@ -72,8 +69,7 @@ export const SalesTrendLineChart: React.FC<SalesTrendLineChartProps> = ({ data, 
             border: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
             p: isMobile ? 1 : 1.5,
             borderRadius: '8px',
-            boxShadow: isMobile ? 'none' : theme.shadows[3],
-            maxWidth: isMobile ? '150px' : 'auto',
+            boxShadow: isMobile ? theme.shadows[1] : theme.shadows[3],
           }}
         >
           <Typography 
@@ -94,7 +90,7 @@ export const SalesTrendLineChart: React.FC<SalesTrendLineChartProps> = ({ data, 
                 mt: 0.5, 
                 color: entry.color,
                 fontFamily: 'Inter, sans-serif',
-                fontSize: isMobile ? '0.65rem' : '0.75rem',
+                fontSize: isMobile ? '0.7rem' : '0.75rem',
                 display: 'flex',
                 alignItems: 'center'
               }}
@@ -117,10 +113,10 @@ export const SalesTrendLineChart: React.FC<SalesTrendLineChartProps> = ({ data, 
       );
     }
     return null;
-  };
+  }, [theme, isMobile]);
   
-  // Custom Legend - simplificado para móvil
-  const renderLegend = (props: LegendProps) => {
+  // Custom Legend - Memoizado
+  const renderLegend = React.useCallback((props: LegendProps) => {
     const { payload } = props;
     if (!payload) return null;
     return (
@@ -132,7 +128,7 @@ export const SalesTrendLineChart: React.FC<SalesTrendLineChartProps> = ({ data, 
         sx={{ 
           listStyle: 'none', 
           p: 0, 
-          m: '10px 0 0', 
+          m: isMobile ? '5px 0 0' : '10px 0 0', 
           display: 'flex', 
           flexWrap: 'wrap', 
           justifyContent: 'center', 
@@ -146,9 +142,13 @@ export const SalesTrendLineChart: React.FC<SalesTrendLineChartProps> = ({ data, 
             sx={{ 
               display: 'flex', 
               alignItems: 'center', 
+              cursor: 'pointer', 
               fontSize: isMobile ? '0.65rem' : '0.75rem', 
               fontFamily: 'Inter, sans-serif', 
               color: theme.palette.text.secondary,
+              '&:hover': {
+                color: entry.color,
+              }
             }}
           >
             <Box 
@@ -175,89 +175,98 @@ export const SalesTrendLineChart: React.FC<SalesTrendLineChartProps> = ({ data, 
         ))}
       </Box>
     );
-  };
-
+  }, [theme, isMobile]);
   return (
-    <ChartWrapper title="Tendencia de Ventas Mensual" loading={loading}>
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart
-          data={processedData}
-          margin={{
-            top: 5,
-            right: isMobile ? 10 : 30,
-            left: isMobile ? 0 : 20,
-            bottom: 5,
-          }}
+    <ChartWrapper 
+      title="Tendencia de Ventas" 
+      loading={loading}
+      height={isMobile ? 250 : 350}
+      isMobile={isMobile}
         >
-          <CartesianGrid 
-            strokeDasharray="3 3" 
-            stroke={alpha(theme.palette.divider, 0.2)} 
-            vertical={false} 
-            // Reducir densidad de líneas en móvil
-            horizontalPoints={isMobile ? [40, 80, 120] : undefined}
-          />
-          <XAxis 
-            dataKey="month" 
-            tick={{ 
-              fill: theme.palette.text.secondary, 
+      <Box sx={createOptimizedChartStyle(theme, isMobile)}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart
+            data={optimizedData}
+            margin={{
+              top: 5,
+              right: isMobile ? 5 : 30,
+              left: isMobile ? 5 : 20,
+              bottom: 5,
+            }}
+          >
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke={alpha(theme.palette.divider, isMobile ? 0.1 : 0.2)} 
+              vertical={!isMobile} // Eliminar líneas verticales en móvil
+            />
+            <XAxis 
+              dataKey="month" 
+              tick={{ 
+                fill: theme.palette.text.secondary, 
               fontFamily: 'Inter, sans-serif',
-              fontSize: isMobile ? 10 : 12
+                fontSize: isMobile ? '0.65rem' : undefined
             }}
             axisLine={{ stroke: alpha(theme.palette.divider, 0.3) }}
             tickLine={false}
             // Reducir número de ticks en móvil
-            interval={isMobile ? 1 : 0}
+              interval={isMobile ? 1 : 0}
           />
-          <YAxis 
-            tick={{ 
-              fill: theme.palette.text.secondary, 
-              fontFamily: 'Inter, sans-serif',
-              fontSize: isMobile ? 10 : 12
-            }}
-            axisLine={{ stroke: alpha(theme.palette.divider, 0.3) }}
-            tickLine={false}
-            // Reducir número de ticks en móvil
-            tickCount={isMobile ? 3 : 5}
+            <YAxis 
+              tick={{ 
+                fill: theme.palette.text.secondary, 
+                fontFamily: 'Inter, sans-serif',
+                fontSize: isMobile ? '0.65rem' : undefined
+              }}
+              axisLine={{ stroke: alpha(theme.palette.divider, 0.3) }}
+              tickLine={false}
+              // Reducir número de ticks en móvil
+              interval={isMobile ? 1 : 0}
+              // Ocultar algunos ticks en móvil
+              tickCount={isMobile ? 3 : 5}
           />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend content={(props) => renderLegend(props as LegendProps)} />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend content={(props) => renderLegend(props as LegendProps)} />
           
-          {/* Área para nuevas pólizas */}
-          <Area 
-            type="monotone" 
-            dataKey="new" 
-            name="Nuevas" 
-            fill={alpha(newColor, 0.2)} 
-            stroke={newColor} 
-            activeDot={{ r: isMobile ? 4 : 8 }}
-            strokeWidth={isMobile ? 1 : 2}
-          />
-          
-          {/* Línea para renovaciones */}
-          <Line 
-            type="monotone" 
-            dataKey="renewals" 
-            name="Renovaciones" 
-            stroke={renewalsColor} 
-            activeDot={{ r: isMobile ? 4 : 8 }}
-            strokeWidth={isMobile ? 1 : 2}
-            // Reducir puntos en móvil
-            dot={isMobile ? false : { r: 3 }}
-          />
-          
-          {/* Línea para total - ocultar en móvil para simplificar */}
+            {/* En móvil, simplificar el gráfico mostrando solo las líneas más importantes */}
           {!isMobile && (
+              <Area 
+                type="monotone" 
+                dataKey="new" 
+                name="Nuevas" 
+                fill={alpha(newColor, 0.2)} 
+                stroke={newColor} 
+                activeDot={{ r: isMobile ? 6 : 8 }}
+                strokeWidth={isMobile ? 1.5 : 2}
+            />
+          )}
+            
+            <Line 
+              type="monotone" 
+              dataKey="renewals" 
+              name="Renovaciones" 
+              stroke={renewalsColor} 
+              activeDot={{ r: isMobile ? 6 : 8 }}
+              strokeWidth={isMobile ? 1.5 : 2}
+              // Simplificar curva en móvil
+              connectNulls={true}
+            />
+            
             <Line 
               type="monotone" 
               dataKey="total" 
               name="Total" 
               stroke={totalColor} 
-              strokeDasharray="5 5"
-              strokeWidth={2}
+              strokeDasharray={isMobile ? "3 3" : "5 5"}
+              strokeWidth={isMobile ? 1.5 : 2}
+              // Simplificar curva en móvil
+              connectNulls={true}
             />
-          )}
         </ComposedChart>
       </ResponsiveContainer>
+      </Box>
     </ChartWrapper>
   );
 };
+
+export { SalesTrendLineChart };
+export default SalesTrendLineChart;
