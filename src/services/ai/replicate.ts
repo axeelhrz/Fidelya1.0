@@ -18,7 +18,6 @@ export interface VideoGenerationParams {
  * Generates a video using Replicate's text-to-video model
  */
 export async function generateVideo({
-  prompt,
   scenes,
   duration,
 }: VideoGenerationParams): Promise<string> {

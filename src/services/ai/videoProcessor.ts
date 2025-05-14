@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { generateVideoScript } from './openai';
 import { generateVideo } from './replicate';
 import { generateSpeech } from './elevenlabs';
@@ -50,7 +49,7 @@ export async function createVideo(
     
     // Step 3: Generate speech using ElevenLabs
     console.log(`Generating speech for ${videoId}...`);
-    const speechBuffer = await generateSpeech({
+    await generateSpeech({
       text: scriptData.script,
       language: params.language,
     });
