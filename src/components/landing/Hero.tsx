@@ -20,10 +20,7 @@ const Hero = () => {
     });
   }, [controls]);
 
-  const handlePlayVideo = () => {
-    setIsVideoPlaying(true);
-    // Logic to play video would go here
-  };
+
 
   return (
     <Box
@@ -348,7 +345,7 @@ const Hero = () => {
                     }}
                   >
                     <Typography variant="h6" sx={{ color: 'white', mb: 1 }}>
-                      Ejemplo: "5 consejos para aumentar tu productividad"
+                      Ejemplo: &ldquo;5 consejos para aumentar tu productividad&rdquo;
                     </Typography>
                     <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                       Generado en 45 segundos • 15s de duración
