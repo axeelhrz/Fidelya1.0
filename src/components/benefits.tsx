@@ -3,46 +3,37 @@
 import { Box, Button, Card, Container, Stack, Typography, useTheme } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import {
-  Clock,
-  Shield,
-  FileText,
-  Users,
-  Bell,
-  Layout,
-  Star,
-} from '@phosphor-icons/react';
+import { memo, useEffect, useState } from 'react';
 
+// Import only the specific icons we need using optimized imports
+import { Clock } from '@phosphor-icons/react/dist/ssr/Clock';
+import { Shield } from '@phosphor-icons/react/dist/ssr/Shield';
+import { FileText } from '@phosphor-icons/react/dist/ssr/FileText';
+import { Users } from '@phosphor-icons/react/dist/ssr/Users';
+import { Bell } from '@phosphor-icons/react/dist/ssr/Bell';
+import { Layout } from '@phosphor-icons/react/dist/ssr/Layout';
+import { Star } from '@phosphor-icons/react/dist/ssr/Star';
+
+// Simplified animation config with reduced complexity
 const ANIMATION_CONFIG = {
   container: {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.15 }
+      transition: { staggerChildren: 0.1, delayChildren: 0.1 }
     }
   },
-  itemLeft: {
-    hidden: { opacity: 0, x: -20, y: 20, filter: 'blur(6px)' },
+  item: {
+    hidden: { opacity: 0, y: 15 },
     visible: {
       opacity: 1,
-      x: 0,
       y: 0,
-      filter: 'blur(0px)',
-      transition: { duration: 0.8, ease: "easeOut" }
-    }
-  },
-  itemRight: {
-    hidden: { opacity: 0, x: 20, y: 20, filter: 'blur(6px)' },
-    visible: {
-      opacity: 1,
-      x: 0,
-      y: 0,
-      filter: 'blur(0px)',
-      transition: { duration: 0.8, ease: "easeOut" }
+      transition: { duration: 0.5, ease: "easeOut" }
     }
   }
 };
 
+// Predefined colors to avoid recalculations
 const COLORS = {
   primary: {
     light: '#2196F3',
@@ -70,6 +61,7 @@ const COLORS = {
   }
 };
 
+// Memoized benefits data to prevent recreations
 const benefits = [
   {
     icon: <Clock weight="duotone" />,
@@ -127,17 +119,39 @@ const benefits = [
   }
 ];
 
-export const BenefitsSection = () => {
+// Memoized component to prevent unnecessary re-renders
+const BenefitsSection = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
   const { scrollYProgress } = useScroll();
-  const cardScale = useTransform(scrollYProgress, [0, 1], [0.95, 1]);
+  const cardScale = useTransform(scrollYProgress, [0, 1], [0.98, 1]);
+  
+  // Use intersection observer for more efficient animations
+  const [isVisible, setIsVisible] = useState(false);
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    
+    const element = document.getElementById('benefits-section');
+    if (element) observer.observe(element);
+    
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <Box
+      id="benefits-section"
       component="section"
       sx={{
-        py: { xs: 8, md: 12 },
+        py: { xs: 6, md: 10 },
         backgroundColor: isDarkMode ? 'background.default' : 'grey.50',
         position: 'relative',
         overflow: 'hidden',
@@ -163,15 +177,14 @@ export const BenefitsSection = () => {
         <motion.div
           variants={ANIMATION_CONFIG.container}
           initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-50px' }}
+          animate={isVisible ? "visible" : "hidden"}
         >
-          <Stack spacing={8}>
-            <Stack spacing={3} sx={{ mb: 8, textAlign: 'center' }}>
-              <motion.div variants={ANIMATION_CONFIG.itemLeft}>
+          <Stack spacing={6}>
+            <Stack spacing={2} sx={{ mb: 6, textAlign: 'center' }}>
+              <motion.div variants={ANIMATION_CONFIG.item}>
                 <Box
                   sx={{
-                    mb: 3,
+                    mb: 2,
                     display: 'flex',
                     justifyContent: 'center',
                     gap: 2,
@@ -180,7 +193,7 @@ export const BenefitsSection = () => {
                   <Typography
                     variant="overline"
                     sx={{
-                      px: 2.5,
+                      px: 2,
                       py: 0.75,
                       borderRadius: 2,
                       fontSize: '0.75rem',
@@ -205,7 +218,7 @@ export const BenefitsSection = () => {
                   sx={{
                     fontWeight: 800,
                     mb: 2,
-                    fontSize: { xs: '2rem', md: '2.5rem' },
+                    fontSize: { xs: '1.75rem', md: '2.25rem' },
                     fontFamily: 'Plus Jakarta Sans',
                     background: `linear-gradient(135deg, 
                       ${COLORS.primary[isDarkMode ? 'dark' : 'light']}, 
@@ -225,12 +238,11 @@ export const BenefitsSection = () => {
                     maxWidth: 800,
                     mx: 'auto',
                     lineHeight: 1.6,
-                    fontSize: { xs: '1rem', md: '1.125rem' },
+                    fontSize: { xs: '0.95rem', md: '1.05rem' },
                     fontFamily: 'Inter',
                   }}
                 >
                   Transformá tu forma de trabajar con herramientas diseñadas
-                  <br />
                   específicamente para corredores de seguros.
                 </Typography>
               </motion.div>
@@ -240,15 +252,15 @@ export const BenefitsSection = () => {
               sx={{
                 display: 'flex',
                 flexWrap: 'wrap',
-                gap: { xs: 3, md: 4 },
+                gap: { xs: 2, md: 3 },
                 justifyContent: 'center',
                 alignItems: 'stretch',
               }}
             >
-              {benefits.map((benefit, index) => (
+              {benefits.map((benefit) => (
                 <motion.div
                   key={benefit.title}
-                  variants={index % 2 === 0 ? ANIMATION_CONFIG.itemLeft : ANIMATION_CONFIG.itemRight}
+                  variants={ANIMATION_CONFIG.item}
                   style={{
                     flex: '1 1 300px',
                     minWidth: '280px',
@@ -262,7 +274,7 @@ export const BenefitsSection = () => {
                       display: 'flex',
                       flexDirection: 'column',
                       width: '100%',
-                      minHeight: 320,
+                      minHeight: 300,
                       p: 3,
                       position: 'relative',
                       borderRadius: 3,
@@ -272,16 +284,16 @@ export const BenefitsSection = () => {
                         benefit.color[isDarkMode ? 'dark' : 'light'],
                         isDarkMode ? 0.2 : 0.1
                       )}`,
-                      boxShadow: `0 12px 40px ${alpha(
+                      boxShadow: `0 8px 20px ${alpha(
                         benefit.color[isDarkMode ? 'dark' : 'light'],
                         0.04
                       )}`,
-                      transition: 'all 0.3s ease-in-out',
+                      transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
                       overflow: 'visible',
                       '&:hover': {
                         transform: 'translateY(-4px)',
                         boxShadow: `
-                          0 20px 40px ${alpha(
+                          0 12px 24px ${alpha(
                             benefit.color[isDarkMode ? 'dark' : 'light'],
                             0.08
                           )},
@@ -291,7 +303,7 @@ export const BenefitsSection = () => {
                           )}
                         `,
                         '& .benefit-icon': {
-                          transform: 'scale(1.1) rotate(5deg)',
+                          transform: 'scale(1.05)',
                         }
                       },
                       '&::before': benefit.featured ? {
@@ -311,7 +323,7 @@ export const BenefitsSection = () => {
                     }}
                   >
                     <Stack
-                      spacing={2.5}
+                      spacing={2}
                       sx={{
                         height: '100%',
                         position: 'relative',
@@ -321,9 +333,9 @@ export const BenefitsSection = () => {
                       <Box
                         className="benefit-icon"
                         sx={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: '16px',
+                          width: 56,
+                          height: 56,
+                          borderRadius: '14px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -332,8 +344,8 @@ export const BenefitsSection = () => {
                             isDarkMode ? 0.15 : 0.1
                           ),
                           color: benefit.color[isDarkMode ? 'dark' : 'light'],
-                          fontSize: 32,
-                          transition: 'all 0.3s ease',
+                          fontSize: 28,
+                          transition: 'transform 0.3s ease',
                         }}
                       >
                         {benefit.icon}
@@ -344,7 +356,7 @@ export const BenefitsSection = () => {
                         component="h3"
                         sx={{
                           fontWeight: 700,
-                          fontSize: '1.4rem',
+                          fontSize: '1.25rem',
                           color: isDarkMode ? 'grey.100' : 'grey.900',
                           fontFamily: 'Plus Jakarta Sans',
                         }}
@@ -356,8 +368,9 @@ export const BenefitsSection = () => {
                         variant="body2"
                         sx={{
                           color: isDarkMode ? 'grey.400' : 'grey.700',
-                          lineHeight: 1.7,
+                          lineHeight: 1.6,
                           fontFamily: 'Inter',
+                          fontSize: '0.875rem',
                         }}
                       >
                         {benefit.description}
@@ -385,7 +398,7 @@ export const BenefitsSection = () => {
                             <Typography
                               variant="h6"
                               sx={{
-                                fontSize: '1.5rem',
+                                fontSize: '1.4rem',
                                 fontWeight: 700,
                                 fontFamily: 'Plus Jakarta Sans',
                               }}
@@ -399,6 +412,7 @@ export const BenefitsSection = () => {
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.5px',
                                 fontWeight: 500,
+                                fontSize: '0.7rem',
                               }}
                             >
                               {benefit.metric.label}
@@ -427,7 +441,7 @@ export const BenefitsSection = () => {
                         >
                           <Star
                             weight="fill"
-                            size={16}
+                            size={14}
                             color={benefit.color[isDarkMode ? 'dark' : 'light']}
                           />
                           <Typography
@@ -435,6 +449,7 @@ export const BenefitsSection = () => {
                             sx={{
                               fontWeight: 600,
                               color: benefit.color[isDarkMode ? 'dark' : 'light'],
+                              fontSize: '0.7rem',
                             }}
                           >
                             {benefit.rating.value}
@@ -444,6 +459,7 @@ export const BenefitsSection = () => {
                             sx={{
                               color: isDarkMode ? 'grey.400' : 'grey.600',
                               ml: 0.5,
+                              fontSize: '0.7rem',
                             }}
                           >
                             ({benefit.rating.count})
@@ -457,17 +473,14 @@ export const BenefitsSection = () => {
             </Box>
 
             <motion.div
-              variants={ANIMATION_CONFIG.itemLeft}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
+              variants={ANIMATION_CONFIG.item}
             >
               <Stack
                 alignItems="center"
-                mt={8}
-                spacing={3}
+                mt={6}
+                spacing={2}
                 sx={{
-                  p: { xs: 3, md: 4 },
+                  p: { xs: 2, md: 3 },
                   borderRadius: 4,
                   backgroundColor: isDarkMode
                     ? alpha(COLORS.primary.dark, 0.1)
@@ -479,13 +492,14 @@ export const BenefitsSection = () => {
                 }}
               >
                 <Typography
-                  variant="h3"
+                  variant="h4"
                   sx={{
                     fontWeight: 700,
                     textAlign: 'center',
                     maxWidth: 600,
                     color: isDarkMode ? 'grey.100' : 'grey.900',
                     fontFamily: 'Plus Jakarta Sans',
+                    fontSize: { xs: '1.5rem', md: '1.75rem' },
                   }}
                 >
                   ¿Querés todos estos beneficios para tu negocio?
@@ -496,15 +510,15 @@ export const BenefitsSection = () => {
                   size="large"
                   href="/pricing"
                   sx={{
-                    px: 5,
-                    py: 2,
+                    px: 4,
+                    py: 1.5,
                     borderRadius: 3,
-                    fontSize: '1.125rem',
+                    fontSize: '1rem',
                     fontWeight: 600,
                     textTransform: 'none',
                     fontFamily: 'Plus Jakarta Sans',
                     backgroundColor: COLORS.primary[isDarkMode ? 'dark' : 'light'],
-                    boxShadow: `0 8px 16px ${alpha(
+                    boxShadow: `0 6px 12px ${alpha(
                       COLORS.primary[isDarkMode ? 'dark' : 'light'],
                       0.25
                     )}`,
@@ -514,7 +528,7 @@ export const BenefitsSection = () => {
                         0.9
                       ),
                       transform: 'translateY(-2px)',
-                      boxShadow: `0 12px 20px ${alpha(
+                      boxShadow: `0 8px 16px ${alpha(
                         COLORS.primary[isDarkMode ? 'dark' : 'light'],
                         0.35
                       )}`,
@@ -525,7 +539,7 @@ export const BenefitsSection = () => {
                   Activá tu cuenta hoy
                 </Button>
 
-                <Stack spacing={1.5} alignItems="center">
+                <Stack spacing={1} alignItems="center">
                   <Typography
                     variant="caption"
                     sx={{
@@ -534,9 +548,10 @@ export const BenefitsSection = () => {
                       alignItems: 'center',
                       gap: 1,
                       fontFamily: 'Inter',
+                      fontSize: '0.75rem',
                     }}
                   >
-                    <Shield weight="fill" size={14} />
+                    <Shield weight="fill" size={12} />
                     Sin compromiso. Cancelá cuando quieras.
                   </Typography>
                   <Typography
@@ -547,53 +562,15 @@ export const BenefitsSection = () => {
                       alignItems: 'center',
                       gap: 0.5,
                       fontWeight: 500,
+                      fontSize: '0.75rem',
                     }}
                   >
-                    <Star weight="fill" size={14} />
+                    <Star weight="fill" size={12} />
                     7 días de prueba gratis
                   </Typography>
                 </Stack>
               </Stack>
             </motion.div>
-
-            <Box
-              sx={{
-                display: { xs: 'flex', md: 'none' },
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                p: 2,
-                backgroundColor: isDarkMode ? 'background.paper' : 'background.default',
-                borderTop: `1px solid ${alpha(
-                  COLORS.primary[isDarkMode ? 'dark' : 'light'],
-                  0.1
-                )}`,
-                zIndex: 1000,
-              }}
-            >
-              <Button
-                fullWidth
-                variant="contained"
-                href="/pricing"
-                sx={{
-                  py: 1.5,
-                  borderRadius: 2,
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  backgroundColor: COLORS.primary[isDarkMode ? 'dark' : 'light'],
-                  '&:hover': {
-                    backgroundColor: alpha(
-                      COLORS.primary[isDarkMode ? 'dark' : 'light'],
-                      0.9
-                    ),
-                  },
-                }}
-              >
-                Empezar gratis
-              </Button>
-            </Box>
           </Stack>
         </motion.div>
       </Container>
@@ -601,4 +578,4 @@ export const BenefitsSection = () => {
   );
 };
 
-export default BenefitsSection;
+export default memo(BenefitsSection);

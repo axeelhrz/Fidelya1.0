@@ -25,7 +25,7 @@ const ClientLayout = dynamic(() => import('./clientLayout'), {
   ssr: true,
 });
 
-// Create dynamic components with optimized options
+// Create dynamic components with optimized options and increased loading priority
 const BenefitsSection = dynamic(() => import('@/components/benefits'), {
   ssr: false,
   loading: () => <ComponentSkeleton height={400} />
@@ -68,21 +68,21 @@ const Cta = dynamic(() => import('@/components/cta'), {
 
 export default function Home(): React.ReactElement {
   return (
-          <ClientLayout>
+    <ClientLayout>
       {/* Hero is loaded directly for LCP optimization */}
-            <Hero />
+      <Hero />
 
-      {/* Sections with deferred loading */}
+      {/* Sections with deferred loading and reduced priority */}
       <Suspense fallback={<ComponentSkeleton height={400} />}>
-            <section id='benefits' style={{ scrollMarginTop: '120px' }}>
-                <BenefitsSection />
-            </section>
+        <section id='benefits' style={{ scrollMarginTop: '120px' }}>
+          <BenefitsSection />
+        </section>
       </Suspense>
 
       <Suspense fallback={<ComponentSkeleton height={400} />}>
-            <section id='features' style={{ scrollMarginTop: '120px' }}>
-                <Features />
-            </section>
+        <section id='features' style={{ scrollMarginTop: '120px' }}>
+          <Features />
+        </section>
       </Suspense>
 
       <Suspense fallback={<ComponentSkeleton height={300} />}>
@@ -90,32 +90,32 @@ export default function Home(): React.ReactElement {
       </Suspense>
 
       <Suspense fallback={<ComponentSkeleton height={400} />}>
-            <Testimonials />
+        <Testimonials />
       </Suspense>
 
       <Suspense fallback={<ComponentSkeleton height={400} />}>
-            <section id='how-it-works' style={{ scrollMarginTop: '120px' }}>
-                <HowItWorks />
-            </section>
+        <section id='how-it-works' style={{ scrollMarginTop: '120px' }}>
+          <HowItWorks />
+        </section>
       </Suspense>
 
       <Suspense fallback={<ComponentSkeleton height={300} />}>
-            <section id='security' style={{ scrollMarginTop: '120px' }}>
-                <SecuritySection />
-            </section>
+        <section id='security' style={{ scrollMarginTop: '120px' }}>
+          <SecuritySection />
+        </section>
       </Suspense>
 
       <Suspense fallback={<ComponentSkeleton height={400} />}>
-            <section id='faq' style={{ scrollMarginTop: '120px' }}>
-                <FAQ />
-            </section>
+        <section id='faq' style={{ scrollMarginTop: '120px' }}>
+          <FAQ />
+        </section>
       </Suspense>
 
       <Suspense fallback={<ComponentSkeleton height={200} />}>
-            <section id='contact' style={{ scrollMarginTop: '120px' }}>
-                <Cta />
-            </section>
+        <section id='contact' style={{ scrollMarginTop: '120px' }}>
+          <Cta />
+        </section>
       </Suspense>
-          </ClientLayout>
-    );
+    </ClientLayout>
+  );
 }

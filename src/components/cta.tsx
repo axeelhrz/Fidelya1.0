@@ -13,6 +13,13 @@ import {
   Users,
 } from '@phosphor-icons/react';
 
+// Extend Window interface to include gtag
+declare global {
+  interface Window {
+    gtag: (command: string, action: string, params?: Record<string, unknown>) => void;
+  }
+}
+
 // Animation variants
 const ANIMATION_VARIANTS = {
   fadeInUp: {
