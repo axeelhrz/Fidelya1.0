@@ -187,7 +187,7 @@ export const BenefitsSection = () => {
                       letterSpacing: 1.2,
                       fontFamily: 'Work Sans',
                       textTransform: 'uppercase',
-                      backgroundColor: alpha(COLORS.primary[isDarkMode ? 'dark' : 'light'], isDarkMode ? 0.15 : 0.1),
+                      backgroundColor: alpha(COLORS.primary[isDarkMode ? 'dark' : 'light'], 0.15),
                       color: COLORS.primary[isDarkMode ? 'dark' : 'light'],
                       display: 'flex',
                       alignItems: 'center',
