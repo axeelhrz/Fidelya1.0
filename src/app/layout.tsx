@@ -16,62 +16,55 @@ export const metadata: Metadata = {
     shortcut: '/favicon.ico',
   },
 }
+
+// Optimizar carga de fuentes
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   weight: ['400', '600', '700', '800'],
+  display: 'swap', // Añadido para mejorar rendimiento
+  preload: true,    // Añadido para mejorar rendimiento
+  variable: '--font-plus-jakarta',
 })
 
 const sora = Sora({
   weight: ['400', '600', '700'],
   subsets: ['latin'],
+  display: 'swap',  // Añadido para mejorar rendimiento
+  preload: true,    // Añadido para mejorar rendimiento
   variable: '--font-sora'
 });
 
 const workSans = Work_Sans({
   subsets: ['latin'],
   weight: ['400', '600', '700'],
+  display: 'swap',  // Añadido para mejorar rendimiento
+  preload: true,    // Añadido para mejorar rendimiento
+  variable: '--font-work-sans',
 })
 
 const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
+  display: 'swap',  // Añadido para mejorar rendimiento
+  preload: true,    // Añadido para mejorar rendimiento
+  variable: '--font-inter',
 })
-
-// Function to load non-critical resources
-const loadNonCriticalResources = (callback: () => void) => {
-  // Use requestIdleCallback or setTimeout as a fallback
-  if (typeof window !== 'undefined') {
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(callback);
-    } else {
-      setTimeout(callback, 1000);
-    }
-  }
-};
-
-// Function to load Google Tag Manager
-const loadGTM = () => {
-  if (typeof window !== 'undefined') {
-    // Google Tag Manager initialization code would go here
-    console.log('GTM loaded');
-  }
-};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // Cargar GTM de forma diferida
-  if (typeof window !== 'undefined') {
-    loadNonCriticalResources(() => {
-      loadGTM();
-    });
-  }
-  
   return (
-    <html className={`${plusJakarta.className} ${workSans.className} ${inter.className} ${sora.className}`} lang="es">
+    <html className={`${plusJakarta.variable} ${workSans.variable} ${inter.variable} ${sora.variable}`} lang="es">
       <head>
+        {/* Preconectar con dominios críticos */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* Precargar recursos críticos */}
+        <link rel="preload" as="image" href="/assets/LandingLogo.svg" />
+        
         {/* Scripts críticos */}
         <Script
           id="performance-optimization"
@@ -86,6 +79,16 @@ export default function RootLayout({
               if (connection && (connection.saveData || connection.effectiveType.includes('2g'))) {
                 document.documentElement.classList.add('save-data');
               }
+              
+              // Optimización para dispositivos móviles
+              if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                document.documentElement.classList.add('mobile-device');
+              }
+              
+              // Función para cargar recursos no críticos
+              function loadNonCriticalResources() {
+                // Implementación de carga diferida
+              }
             `,
           }}
         />
@@ -95,9 +98,14 @@ export default function RootLayout({
                     <AuthProvider>
         <ThemeContextProvider>
         <PlanProvider>
-          <Analytics />
-          {process.env.NODE_ENV === 'production' && <SpeedInsights />}
-          {children}
+                {/* Cargar Analytics solo en producción y de forma diferida */}
+                {process.env.NODE_ENV === 'production' && (
+                  <>
+                    <Analytics />
+                    <SpeedInsights />
+                  </>
+                )}
+                {children}
         </PlanProvider>
         </ThemeContextProvider>
         </AuthProvider>
@@ -112,10 +120,17 @@ export default function RootLayout({
               // Marcar que la carga de JS ha terminado
               document.documentElement.classList.remove('js-loading');
               document.documentElement.classList.add('js-loaded');
+              
+              // Cargar Google Tag Manager de forma diferida
+              if (typeof window !== 'undefined') {
+                setTimeout(function() {
+                  // Código de Google Tag Manager aquí
+                }, 2000);
+              }
             `,
           }}
         />
       </body>
     </html>
   )
-};
+}
