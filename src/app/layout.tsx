@@ -15,13 +15,17 @@ export const metadata: Metadata = {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
   },
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover',
 }
 
 // Optimización: Cargar fuentes con display swap para evitar bloqueo de renderizado
+// y reducir el conjunto de pesos para mejorar el rendimiento en móviles
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['400', '600', '700', '800'],
+  weight: ['400', '600', '700'],
   display: 'swap',
+  variable: '--font-plus-jakarta',
+  preload: true,
 })
 
 const sora = Sora({
@@ -29,18 +33,23 @@ const sora = Sora({
   subsets: ['latin'],
   variable: '--font-sora',
   display: 'swap',
+  preload: true,
 });
 
 const workSans = Work_Sans({
   subsets: ['latin'],
-  weight: ['400', '600', '700'],
+  weight: ['400', '600'],
   display: 'swap',
+  variable: '--font-work-sans',
+  preload: true,
 })
 
 const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   display: 'swap',
+  variable: '--font-inter',
+  preload: true,
 })
 
 // Función para cargar recursos no críticos
@@ -76,7 +85,10 @@ export default function RootLayout({
   }
   
   return (
-    <html className={`${plusJakarta.className} ${workSans.className} ${inter.className} ${sora.className}`} lang="es">
+    <html 
+      className={`${plusJakarta.variable} ${workSans.variable} ${inter.variable} ${sora.variable}`} 
+      lang="es"
+    >
       <head>
         {/* Scripts críticos */}
         <Script
@@ -86,6 +98,12 @@ export default function RootLayout({
             __html: `
               // Evitar FOUT (Flash of Unstyled Text)
               document.documentElement.classList.add('js-loading');
+              
+              // Detectar dispositivos móviles
+              const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+              if (isMobile) {
+                document.documentElement.classList.add('mobile-device');
+              }
               
               // Detectar conexiones lentas
               const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -106,6 +124,11 @@ export default function RootLayout({
                 if (link.crossOrigin) linkEl.crossOrigin = link.crossOrigin;
                 document.head.appendChild(linkEl);
               });
+              
+              // Optimización para móviles: Reducir animaciones
+              if (isMobile) {
+                document.documentElement.style.setProperty('--animation-reduced', '0.7');
+              }
             `,
           }}
         />
@@ -133,6 +156,21 @@ export default function RootLayout({
               // Marcar que la carga de JS ha terminado
               document.documentElement.classList.remove('js-loading');
               document.documentElement.classList.add('js-loaded');
+              
+              // Optimización para imágenes en móviles
+              if (document.documentElement.classList.contains('mobile-device')) {
+                // Cargar imágenes de menor resolución en móviles
+                document.querySelectorAll('img[data-mobile-src]').forEach(img => {
+                  if (img.dataset.mobileSrc) {
+                    img.src = img.dataset.mobileSrc;
+                  }
+                });
+                
+                // Reducir complejidad de animaciones
+                document.querySelectorAll('.complex-animation').forEach(el => {
+                  el.style.willChange = 'auto';
+                });
+              }
             `,
           }}
         />
