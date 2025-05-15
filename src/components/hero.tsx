@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Button, 
@@ -12,6 +12,7 @@ import {
   Paper,
   Tooltip,
   styled,
+  Skeleton,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -25,9 +26,6 @@ import {
   Lightning,
   ArrowRight,
 } from '@phosphor-icons/react';
-
-
-
 
 // Constantes
 const ANIMATION_DURATION = 0.6;
@@ -125,6 +123,7 @@ const benefits = [
     text: 'Control total de pólizas',
   },
 ];
+
 const StyledBadge = styled(Chip)(({ theme }) => ({
   borderRadius: '12px',
   height: 32,
@@ -177,6 +176,18 @@ const BenefitChip = styled(Box)(({ theme }) => ({
 export const HeroSection = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Asegurarse de que el componente se renderice solo en el cliente
+  useEffect(() => {
+    setIsClient(true);
+    
+    // Precarga de la imagen
+    const img = new window.Image();
+    img.src = '/assets/LandingLogo.svg';
+    img.onload = () => setImageLoaded(true);
+  }, []);
 
   return (
     <Box
@@ -255,6 +266,7 @@ export const HeroSection = () => {
       </Box>
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        {isClient && (
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -290,184 +302,202 @@ export const HeroSection = () => {
                 <motion.div variants={itemVariants}>
                   <Typography
                     variant="h1"
+                      component="h1"
                     sx={{
-                      fontSize: FONT_SIZES.h1,
-                      fontWeight: FONT_WEIGHTS.extrabold,
-                      lineHeight: 1.2,
-                      letterSpacing: '-0.02em',
-                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      mb: 2,
-                    }}
-                  >
-                    Tu nueva oficina digital como corredor de seguros
-                  </Typography>
+                        fontSize: FONT_SIZES.h1,
+                        fontWeight: FONT_WEIGHTS.extrabold,
+                        lineHeight: 1.2,
+                        letterSpacing: '-0.02em',
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        mb: 2,
+                      }}
+                    >
+                      Tu nueva oficina digital como corredor de seguros
+                    </Typography>
 
-                  {/* Subtítulo */}
-                  <Typography
-                    variant="h2"
-                    sx={{
-                      fontSize: FONT_SIZES.subtitle,
-                      color: alpha(theme.palette.text.primary, 0.8),
-                      lineHeight: 1.6,
-                      fontWeight: FONT_WEIGHTS.regular,
-                    }}
-                  >
-                    Gestioná pólizas, clientes y recordatorios con la única plataforma pensada 100% para corredores. Más eficiencia, menos estrés.
-                  </Typography>
+                    {/* Subtítulo */}
+                    <Typography
+                      variant="h2"
+                      component="p"
+                      sx={{
+                        fontSize: FONT_SIZES.subtitle,
+                        color: alpha(theme.palette.text.primary, 0.8),
+                        lineHeight: 1.6,
+                        fontWeight: FONT_WEIGHTS.regular,
+                      }}
+                    >
+                      Gestioná pólizas, clientes y recordatorios con la única plataforma pensada 100% para corredores. Más eficiencia, menos estrés.
+                    </Typography>
                 </motion.div>
 
-                {/* Beneficios */}
+                  {/* Beneficios */}
                 <motion.div variants={itemVariants}>
                   <Stack
                     direction={{ xs: 'column', sm: 'row' }}
                     spacing={2}
                     justifyContent={{ xs: 'center', lg: 'flex-start' }}
-                    sx={{ mb: 4 }}
+                      sx={{ mb: 4 }}
                   >
-                    {benefits.map((benefit, index) => (
-                      <BenefitChip key={index}>
-                        {benefit.icon}
-                        {benefit.text}
-                      </BenefitChip>
-                    ))}
-                  </Stack>
-                </motion.div>
+                      {benefits.map((benefit, index) => (
+                        <BenefitChip key={index}>
+                          {benefit.icon}
+                          {benefit.text}
+                        </BenefitChip>
+                      ))}
+                    </Stack>
+                  </motion.div>
 
-                {/* Botones de acción */}
+                  {/* Botones de acción */}
                 <motion.div variants={itemVariants}>
                   <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
+                      direction={{ xs: 'column', sm: 'row' }}
                     spacing={2}
                     justifyContent={{ xs: 'center', lg: 'flex-start' }}
-                  >
-                    <Link href="/pricing" style={{ textDecoration: 'none' }}>
-                      <Button
-                        variant="contained"
-                        size="large"
-                        endIcon={<ArrowRight weight="bold" />}
-                        sx={{
-                          px: 4,
-                          py: 2,
-                          borderRadius: '12px',
-                          fontSize: '1.1rem',
-                          fontWeight: FONT_WEIGHTS.semibold,
-                          textTransform: 'none',
-                          background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                          boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.25)}`,
-                          '&:hover': {
-                            background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                            boxShadow: `0 12px 32px ${alpha(theme.palette.primary.main, 0.35)}`,
-                            transform: 'translateY(-2px)',
-                          },
-                        }}
-                      >
-                        Crear cuenta gratis
-                      </Button>
-                    </Link>
+                    >
+                      <Link href="/pricing" style={{ textDecoration: 'none' }}>
+                        <Button
+                          variant="contained"
+                          size="large"
+                          endIcon={<ArrowRight weight="bold" />}
+                          sx={{
+                            px: 4,
+                            py: 2,
+                            borderRadius: '12px',
+                            fontSize: '1.1rem',
+                            fontWeight: FONT_WEIGHTS.semibold,
+                            textTransform: 'none',
+                            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                            boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.25)}`,
+                            '&:hover': {
+                              background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                              boxShadow: `0 12px 32px ${alpha(theme.palette.primary.main, 0.35)}`,
+                              transform: 'translateY(-2px)',
+                            },
+                          }}
+                        >
+                          Crear cuenta gratis
+                        </Button>
+                      </Link>
 
-                    <Link href="/caracteristicas" style={{ textDecoration: 'none' }}>
-                      <Button
-                        variant="outlined"
-                        size="large"
-                        sx={{
-                          px: 4,
-                          py: 2,
-                          borderRadius: '12px',
-                          fontSize: '1.1rem',
-                          fontWeight: FONT_WEIGHTS.semibold,
-                          textTransform: 'none',
-                          borderWidth: 2,
-                          '&:hover': {
-                            borderWidth: 2,
-                            transform: 'translateY(-2px)',
-                          },
-                        }}
-                      >
-                        Ver funcionalidades
-                      </Button>
-                    </Link>
-                  </Stack>
-
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      mt: 2,
-                      color: 'text.secondary',
-                      textAlign: { xs: 'center', lg: 'left' },
-                    }}
-                  >
-                    Sin compromiso. Cancelá cuando quieras.
-                  </Typography>
-                </motion.div>
-
-                {/* Trust badges */}
-                <motion.div variants={itemVariants}>
-                  <Stack
-                    direction="row"
-                    spacing={2}
-                    justifyContent={{ xs: 'center', lg: 'flex-start' }}
-                    sx={{ mt: 4 }}
-                  >
-                    {trustBadges.map((badge, index) => (
-                      <Tooltip key={index} title={badge.tooltip} arrow>
-                        <TrustBadge elevation={0}>
-                          {badge.icon}
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              fontWeight: FONT_WEIGHTS.medium,
-                              color: 'text.primary',
-                            }}
-                          >
-                            {badge.label}
-                          </Typography>
-                        </TrustBadge>
-                      </Tooltip>
-                    ))}
-                  </Stack>
-                </motion.div>
-              </Stack>
-
-              {/* Columna derecha - Imagen */}
-              <Box
-                component={motion.div}
-                variants={imageVariants}
+                      <Link href="/caracteristicas" style={{ textDecoration: 'none' }}>
+                        <Button
+                          variant="outlined"
+                          size="large"
                 sx={{
-                  position: 'relative',
-                  width: '100%',
-                  maxWidth: { xs: '100%', lg: '50%' },
-                  aspectRatio: '4/3',
+                            px: 4,
+                            py: 2,
+                            borderRadius: '12px',
+                            fontSize: '1.1rem',
+                            fontWeight: FONT_WEIGHTS.semibold,
+                            textTransform: 'none',
+                            borderWidth: 2,
+                            '&:hover': {
+                              borderWidth: 2,
+                              transform: 'translateY(-2px)',
+                            },
                 }}
               >
+                          Ver funcionalidades
+                        </Button>
+                      </Link>
+                    </Stack>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        mt: 2,
+                        color: 'text.secondary',
+                        textAlign: { xs: 'center', lg: 'left' },
+                  }}
+                >
+                      Sin compromiso. Cancelá cuando quieras.
+                    </Typography>
+        </motion.div>
+
+                  {/* Trust badges */}
+                  <motion.div variants={itemVariants}>
+                    <Stack
+                      direction="row"
+                      spacing={2}
+                      justifyContent={{ xs: 'center', lg: 'flex-start' }}
+                      sx={{ mt: 4 }}
+                    >
+                      {trustBadges.map((badge, index) => (
+                        <Tooltip key={index} title={badge.tooltip} arrow>
+                          <TrustBadge elevation={0}>
+                            {badge.icon}
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontWeight: FONT_WEIGHTS.medium,
+                                color: 'text.primary',
+                              }}
+                            >
+                              {badge.label}
+                            </Typography>
+                          </TrustBadge>
+                        </Tooltip>
+                      ))}
+                    </Stack>
+                  </motion.div>
+                </Stack>
+
+                {/* Columna derecha - Imagen */}
                 <Box
+                  component={motion.div}
+                  variants={imageVariants}
                   sx={{
                     position: 'relative',
                     width: '100%',
-                    height: '100%',
-                    overflow: 'hidden',
-                    borderRadius: '24px',
+                    maxWidth: { xs: '100%', lg: '50%' },
+                    aspectRatio: '4/3',
                   }}
                 >
-                  <Image
-                    src="/assets/LandingLogo.svg"
-                    alt="Dashboard de la plataforma"
-                    fill
-                    style={{
-                      objectFit: 'cover',
-                      objectPosition: 'center',
-                      filter: isDarkMode ? 'invert(1)' : 'none',
-                      transition: 'filter 0.3s ease',
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '100%',
+                      overflow: 'hidden',
+                      borderRadius: '24px',
                     }}
-                    priority
-                    quality={90}
-                  />
+                  >
+                    {!imageLoaded ? (
+                      <Skeleton 
+                        variant="rectangular" 
+                        width="100%" 
+                        height="100%" 
+                        animation="wave"
+                        sx={{ 
+                          borderRadius: '24px',
+                          bgcolor: alpha(theme.palette.primary.main, 0.1)
+                        }}
+                      />
+                    ) : (
+                      <Image
+                        src="/assets/LandingLogo.svg"
+                        alt="Dashboard de la plataforma"
+                        fill
+                        style={{
+                          objectFit: 'cover',
+                          objectPosition: 'center',
+                          filter: isDarkMode ? 'invert(1)' : 'none',
+                          transition: 'filter 0.3s ease',
+                        }}
+                        priority
+                        quality={75}
+                        loading="eager"
+                        sizes="(max-width: 1200px) 100vw, 50vw"
+                        onLoad={() => setImageLoaded(true)}
+                      />
+                    )}
+    </Box>
                 </Box>
-              </Box>
+              </Stack>
             </Stack>
-          </Stack>
-        </motion.div>
+          </motion.div>
+        )}
       </Container>
     </Box>
   );
