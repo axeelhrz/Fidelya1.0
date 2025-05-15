@@ -1,5 +1,11 @@
-import { type Metadata, type Viewport } from 'next'
+import { type Metadata } from 'next'
+import { Analytics } from "@vercel/analytics/react"
+import Script from 'next/script'
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Plus_Jakarta_Sans, Work_Sans, Inter, Sora } from 'next/font/google'
+import { PlanProvider } from '@/context/planContext'
+import ThemeContextProvider from '@/context/themeContext'
+import { AuthProvider } from '@/context/auth-context'
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -11,94 +17,122 @@ export const metadata: Metadata = {
   },
 }
 
-// Separate viewport export as per Next.js 14+ requirements
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 5,
-  viewportFit: 'cover',
-}
-
-// Font optimization: Load only essential weights and use display swap
+// Optimización: Cargar fuentes con display swap para evitar bloqueo de renderizado
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['400', '600', '700'],
+  weight: ['400', '600', '700', '800'],
   display: 'swap',
-  variable: '--font-plus-jakarta',
-  preload: true,
 })
 
 const sora = Sora({
-  weight: ['400', '600'],
+  weight: ['400', '600', '700'],
   subsets: ['latin'],
   variable: '--font-sora',
   display: 'swap',
-  preload: false, // Only preload primary fonts
-})
+});
+
 const workSans = Work_Sans({
   subsets: ['latin'],
-  weight: ['400', '600'],
+  weight: ['400', '600', '700'],
   display: 'swap',
-  variable: '--font-work-sans',
-  preload: false, // Only preload primary fonts
 })
 
 const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   display: 'swap',
-  variable: '--font-inter',
-  preload: false, // Only preload primary fonts
 })
+
+// Función para cargar recursos no críticos
+const loadNonCriticalResources = (callback: () => void) => {
+  // Usar requestIdleCallback o setTimeout como fallback
+  if (typeof window !== 'undefined') {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(callback);
+    } else {
+      setTimeout(callback, 1000);
+    }
+  }
+};
+
+// Función para cargar Google Tag Manager
+const loadGTM = () => {
+  if (typeof window !== 'undefined') {
+    // Google Tag Manager initialization code would go here
+    console.log('GTM loaded');
+  }
+};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // Cargar GTM de forma diferida
+  if (typeof window !== 'undefined') {
+    loadNonCriticalResources(() => {
+      loadGTM();
+    });
+  }
+  
   return (
-    <html 
-      className={`${plusJakarta.variable} ${workSans.variable} ${inter.variable} ${sora.variable}`} 
-      lang="es"
-    >
+    <html className={`${plusJakarta.className} ${workSans.className} ${inter.className} ${sora.className}`} lang="es">
       <head>
-        {/* Preconnect to critical domains */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
-        {/* Preload critical hero image */}
-        <link 
-          rel="preload" 
-          href="/assets/LandingLogo.svg" 
-          as="image" 
-          type="image/svg+xml"
-        />
-      </head>
-      <body>
-        <div className="flex flex-col min-h-screen">
-          {children}
-        </div>
-        
-        {/* Non-critical scripts loaded with lazyOnload strategy */}
-        <script
+        {/* Scripts críticos */}
+        <Script
+          id="performance-optimization"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              // Detect mobile devices
-              const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
-              if (isMobile) {
-                document.documentElement.classList.add('mobile-device');
-              }
+              // Evitar FOUT (Flash of Unstyled Text)
+              document.documentElement.classList.add('js-loading');
               
-              // Detect slow connections
+              // Detectar conexiones lentas
               const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
               if (connection && (connection.saveData || connection.effectiveType.includes('2g'))) {
                 document.documentElement.classList.add('save-data');
               }
               
-              // Optimization for mobile: Reduce animations
-              if (isMobile) {
-                document.documentElement.style.setProperty('--animation-reduced', '0.7');
-                  }
+              // Optimización: Precargar recursos críticos
+              const preloadLinks = [
+                { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+                { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' }
+              ];
+              
+              preloadLinks.forEach(link => {
+                const linkEl = document.createElement('link');
+                linkEl.rel = link.rel;
+                linkEl.href = link.href;
+                if (link.crossOrigin) linkEl.crossOrigin = link.crossOrigin;
+                document.head.appendChild(linkEl);
+              });
+            `,
+          }}
+        />
+      </head>
+      <body>
+        <div className="flex flex-col min-h-screen">
+          {/* Optimización: Reducir anidamiento de contextos */}
+                    <AuthProvider>
+        <ThemeContextProvider>
+        <PlanProvider>
+          <Analytics />
+          {process.env.NODE_ENV === 'production' && <SpeedInsights />}
+          {children}
+        </PlanProvider>
+        </ThemeContextProvider>
+        </AuthProvider>
+        </div>
+        
+        {/* Scripts no críticos cargados de forma diferida */}
+        <Script
+          id="non-critical-scripts"
+          strategy="lazyOnload"
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Marcar que la carga de JS ha terminado
+              document.documentElement.classList.remove('js-loading');
+              document.documentElement.classList.add('js-loaded');
             `,
           }}
         />
