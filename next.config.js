@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
+import bundleAnalyzer from '@next/bundle-analyzer';
 
 const withBundleAnalyzer = process.env.ANALYZE === 'true'
-  ? require('@next/bundle-analyzer')({ enabled: true })
+  ? bundleAnalyzer({ enabled: true })
   : (config) => config;
 
 const nextConfig = {
@@ -19,5 +20,5 @@ const nextConfig = {
     optimizePackageImports: ['@mui/material', '@mui/icons-material', 'framer-motion'],
   },
 };
-
+export default withBundleAnalyzer(nextConfig);
 module.exports = withBundleAnalyzer(nextConfig);

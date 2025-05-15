@@ -1,8 +1,8 @@
 'use client';
 
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import dynamic from 'next/dynamic';
-import { Box, Skeleton, Container } from '@mui/material';
+import {  Skeleton, Container } from '@mui/material';
 import Hero from '@/components/hero';
 import ClientLayout from './clientLayout';
 

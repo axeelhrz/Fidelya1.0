@@ -16,7 +16,6 @@ import {
 } from '@mui/material';
 import Link from 'next/link';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 
 // Optimización: Importar solo los iconos necesarios en lugar de toda la biblioteca
 import { RocketLaunch } from '@phosphor-icons/react/dist/ssr/RocketLaunch';
