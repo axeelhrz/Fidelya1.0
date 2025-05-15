@@ -1,4 +1,4 @@
-import { type Metadata } from 'next'
+import { type Metadata, type Viewport } from 'next'
 import Script from 'next/script'
 import { Plus_Jakarta_Sans, Work_Sans, Inter, Sora } from 'next/font/google'
 import './globals.css';
@@ -10,7 +10,14 @@ export const metadata: Metadata = {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
   },
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover',
+}
+
+// Separate viewport export as per Next.js 14+ requirements
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
 }
 
 // Font optimization: Load only essential weights and use display swap
@@ -28,8 +35,7 @@ const sora = Sora({
   variable: '--font-sora',
   display: 'swap',
   preload: false, // Only preload primary fonts
-});
-
+})
 const workSans = Work_Sans({
   subsets: ['latin'],
   weight: ['400', '600'],
@@ -75,9 +81,7 @@ export default function RootLayout({
         </div>
         
         {/* Non-critical scripts loaded with lazyOnload strategy */}
-        <Script
-          id="performance-optimization"
-          strategy="lazyOnload"
+        <script
           dangerouslySetInnerHTML={{
             __html: `
               // Detect mobile devices
@@ -99,23 +103,6 @@ export default function RootLayout({
             `,
           }}
         />
-        
-        {/* Analytics loaded with lazyOnload strategy */}
-        <Script id="analytics-script" strategy="lazyOnload">
-          {`
-            window.addEventListener('load', () => {
-              if (typeof window !== 'undefined') {
-                const Analytics = require('@vercel/analytics/react').Analytics;
-                const SpeedInsights = require('@vercel/speed-insights/react').SpeedInsights;
-                
-                if (process.env.NODE_ENV === 'production') {
-                  Analytics();
-                  SpeedInsights();
-}
-              }
-            });
-          `}
-        </Script>
       </body>
     </html>
   );
