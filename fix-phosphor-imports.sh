@@ -11,8 +11,11 @@ fix_imports() {
   # Create a backup of the original file
   cp "$file" "${file}.bak"
   
-  # Replace import statements for named imports from dist/ssr
+  # Replace import statements for named imports from dist/ssr (pattern 1)
   sed -i '' -E 's/import \{ ([A-Za-z, ]+) \} from '"'"'@phosphor-icons\/react\/dist\/ssr'"'"';/import { \1 } from '"'"'@phosphor-icons\/react'"'"';/g' "$file"
+  
+  # Replace import statements for named imports from dist/ssr/Component (pattern 2)
+  sed -i '' -E 's/import \{ ([A-Za-z]+)( as [A-Za-z]+)? \} from '"'"'@phosphor-icons\/react\/dist\/ssr\/([A-Za-z]+)'"'"';/import { \3 as \1 } from '"'"'@phosphor-icons\/react'"'"';/g' "$file"
   
   # Check if the file was modified
   if cmp -s "$file" "${file}.bak"; then
