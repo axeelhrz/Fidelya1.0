@@ -203,7 +203,8 @@ export const FaqSection = () => {
               Preguntas Frecuentes
             </Typography>
             <Typography
-              variant="h6"
+              variant="subtitle1"
+              component="h3"
               sx={{
                 maxWidth: 600,
                 mx: 'auto',

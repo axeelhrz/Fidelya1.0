@@ -137,7 +137,8 @@ export const CtaSection = () => {
             {/* Subtitle */}
             <motion.div variants={ANIMATION_VARIANTS.fadeInUp}>
               <Typography
-                variant="h6"
+                variant="subtitle1"
+                component="p"
                 align="center"
                 sx={{
                   color: 'rgba(255,255,255,0.9)',

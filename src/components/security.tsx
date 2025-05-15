@@ -350,7 +350,7 @@ export default function SecuritySection() {
               </Typography>
 
               <Typography
-                variant="subtitle1"
+                variant="body1"
                 sx={{
                   fontFamily: 'var(--font-inter)',
                   color: isDarkMode ? 'grey.300' : 'grey.800',

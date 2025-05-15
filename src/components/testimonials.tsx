@@ -501,7 +501,8 @@ export default function TestimonialsSection() {
               }}
             >
               <Typography
-                variant="h5"
+                variant="h3"
+                component="h3"
                 sx={{
                   fontFamily: 'var(--font-work-sans)',
                   fontWeight: 700,

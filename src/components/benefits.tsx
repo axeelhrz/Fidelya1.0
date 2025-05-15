@@ -340,7 +340,7 @@ export const BenefitsSection = () => {
                       </Box>
 
                       <Typography
-                        variant="h6"
+                        variant="body1"
                         component="h3"
                         sx={{
                           fontWeight: 700,
@@ -479,7 +479,7 @@ export const BenefitsSection = () => {
                 }}
               >
                 <Typography
-                  variant="h5"
+                  variant="h3"
                   sx={{
                     fontWeight: 700,
                     textAlign: 'center',
