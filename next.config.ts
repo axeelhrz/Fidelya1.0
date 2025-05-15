@@ -8,7 +8,6 @@ const nextConfig: NextConfig = {
     // turbo: {} // Solo para desarrollo
   },
   // Optimizaciones para producción
-  swcMinify: true, // Usar SWC para minificación (más rápido que Terser)
   compiler: {
     // Eliminar console.logs en producción
     removeConsole: process.env.NODE_ENV === 'production' ? {
@@ -27,9 +26,6 @@ const nextConfig: NextConfig = {
     },
     '@mui/icons-material': {
       transform: '@mui/icons-material/{{member}}',
-    },
-    '@phosphor-icons/react': {
-      transform: '@phosphor-icons/react/dist/ssr/{{member}}',
     },
     'react-icons': {
       transform: 'react-icons/{{member}}',

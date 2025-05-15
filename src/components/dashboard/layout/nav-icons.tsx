@@ -1,10 +1,13 @@
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
-import { ChartPie as ChartPie } from '@phosphor-icons/react';
-import { GearSix as GearSix } from '@phosphor-icons/react';
-import { PlugsConnected as PlugsConnected } from '@phosphor-icons/react';
-import { User as User } from '@phosphor-icons/react';
-import { Users as Users } from '@phosphor-icons/react';
-import { XSquare as XSquare } from '@phosphor-icons/react';
+
+import { 
+  XSquare, 
+  ChartPie as ChartPieIcon, 
+  GearSix as GearSixIcon, 
+  PlugsConnected as PlugsConnectedIcon,
+  User as UserIcon,
+  Users as UsersIcon
+} from '@phosphor-icons/react';
 
 export const navIcons = {
   'chart-pie': ChartPieIcon,
