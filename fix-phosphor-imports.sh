@@ -1,34 +1,34 @@
 #!/bin/bash
 
-# This script fixes the import statements for @phosphor-icons/react
-# It changes imports from dist/ssr to the main package
+# Este script busca y reemplaza importaciones globales de Phosphor Icons
+# por importaciones específicas para mejorar el rendimiento
 
-# Function to process a file
-fix_imports() {
-  local file=$1
-  echo "Processing $file..."
+echo "Optimizando importaciones de Phosphor Icons..."
+
+# Buscar archivos con importaciones de Phosphor Icons
+FILES=$(grep -l "@phosphor-icons/react" $(find src -type f -name "*.tsx" -o -name "*.ts"))
+
+# Procesar cada archivo
+for FILE in $FILES; do
+  echo "Procesando $FILE..."
   
-  # Create a backup of the original file
-  cp "$file" "${file}.bak"
+  # Extraer los iconos importados
+  ICONS=$(grep -o "[A-Za-z]\+," $FILE | sed 's/,//' | sort | uniq)
   
-  # Replace import statements for named imports from dist/ssr (pattern 1)
-  sed -i '' -E 's/import \{ ([A-Za-z, ]+) \} from '"'"'@phosphor-icons\/react\/dist\/ssr'"'"';/import { \1 } from '"'"'@phosphor-icons\/react'"'"';/g' "$file"
-  
-  # Replace import statements for named imports from dist/ssr/Component (pattern 2)
-  sed -i '' -E 's/import \{ ([A-Za-z]+)( as [A-Za-z]+)? \} from '"'"'@phosphor-icons\/react\/dist\/ssr\/([A-Za-z]+)'"'"';/import { \3 as \1 } from '"'"'@phosphor-icons\/react'"'"';/g' "$file"
-  
-  # Check if the file was modified
-  if cmp -s "$file" "${file}.bak"; then
-    echo "No changes made to $file"
-    rm "${file}.bak"
+  # Verificar si hay importaciones globales
+  if grep -q "from '@phosphor-icons/react'" $FILE; then
+    # Crear nuevas importaciones específicas
+    NEW_IMPORTS=""
+    for ICON in $ICONS; do
+      NEW_IMPORTS="${NEW_IMPORTS}import { $ICON } from '@phosphor-icons/react/dist/ssr/$ICON';\n"
+    done
+
+    # Reemplazar importaciones globales por específicas
+    sed -i '' -e "s|import {.*} from '@phosphor-icons/react';|${NEW_IMPORTS}|" $FILE
+    
+    echo "✅ Optimizado $FILE"
   else
-    echo "Fixed imports in $file"
+    echo "⏭️ Saltando $FILE (no tiene importaciones globales)"
   fi
-}
-
-# Find all files with phosphor imports from dist/ssr
-find src -type f -name "*.tsx" -o -name "*.ts" | xargs grep -l "@phosphor-icons/react/dist/ssr" | while read file; do
-  fix_imports "$file"
 done
-
-echo "Import fixing complete!"
+echo "✨ Optimización completada!"
