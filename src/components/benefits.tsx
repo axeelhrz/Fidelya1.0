@@ -219,7 +219,7 @@ export const BenefitsSection = () => {
                 </Typography>
 
                 <Typography
-                  variant="subtitle1"
+                  variant="body1"
                   sx={{
                     color: isDarkMode ? 'grey.300' : 'grey.800',
                     maxWidth: 800,
