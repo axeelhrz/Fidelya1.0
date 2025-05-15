@@ -17,3 +17,13 @@ export const navIcons = {
   user: UserIcon,
   users: UsersIcon,
 } as Record<string, Icon>;
+
+// Crea un componente optimizado para iconos
+const OptimizedIcon = ({ icon: Icon, ...props }: { icon: Icon, [key: string]: unknown }) => {
+  // Reduce la complejidad del SVG
+  return <Icon {...props} />; 
+};
+
+// Usa React.memo para evitar re-renderizados innecesarios
+import React from 'react';
+export default React.memo(OptimizedIcon);

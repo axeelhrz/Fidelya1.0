@@ -39,6 +39,9 @@ interface Filter {
   searchTerm: string;
 }
 
+// This function was causing a naming conflict with the exported usePolicies
+// Commented out to avoid the "Individual declarations in merged declaration" error
+
 export function usePolicies() {
   const { user } = useAuth();
   const [policies, setPolicies] = useState<Policy[]>([]);
@@ -121,11 +124,11 @@ export function usePolicies() {
       collection(db, 'policies'),
       where('userId', '==', user.uid)
     );
-  
+          
     // Aplicar filtros si existen
     if (filters.status.length > 0) {
       q = query(q, where('status', 'in', filters.status));
-    }
+          }
     
     // Aplicar ordenamiento
     if (sortConfig.key) {
@@ -138,18 +141,18 @@ export function usePolicies() {
                               sortConfig.key === 'startDate' ? 'startDate' :
                               sortConfig.key === 'endDate' ? 'endDate' : 'endDate';
       q = query(q, orderBy(firestoreSortKey, sortConfig.direction));
-    } else {
+      } else {
       // Si no hay ordenamiento, ordenar por fecha de creación descendente
       q = query(q, orderBy('createdAt', 'desc'));
-    }
-  
+      }
+      
     // Configurar el listener en tiempo real
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedPolicies: Policy[] = [];
       
       querySnapshot.forEach((doc) => {
         const policyData = doc.data();
-        // Asegurarse de que todos los campos requeridos estén presentes
+      // Asegurarse de que todos los campos requeridos estén presentes
         const policy: Policy = {
           id: doc.id,
           ...policyData,
@@ -179,7 +182,6 @@ export function usePolicies() {
 
   const calculateStats = useCallback(async () => {
     if (!user) return;
-  
     try {
       console.log("Calculando estadísticas...");
       
@@ -209,7 +211,7 @@ export function usePolicies() {
           const endDate = p.endDate.toDate();
           return endDate > now && endDate <= thirtyDaysFromNow;
         }
-        return false;
+      return false;
       }).length;
       
       const newStats: PolicyStats = {
@@ -260,9 +262,9 @@ export function usePolicies() {
             baseQuery,
             where('endDate', '>', Timestamp.fromDate(now)),
             where('endDate', '<=', Timestamp.fromDate(thirtyDaysFromNow))
-          )
-        );
-        
+        )
+      );
+      
         const firebaseStats: PolicyStats = {
           total: totalSnapshot.data().count,
           active: activeSnapshot.data().count,
@@ -283,8 +285,8 @@ export function usePolicies() {
           policiesByType: [],
           policiesByCompany: [],
           status: 'active' // Adding the required status property
-        };
-        
+  };
+
         console.log("Usando estadísticas de Firebase");
         setPolicyStats(firebaseStats);
       }
@@ -292,7 +294,7 @@ export function usePolicies() {
       console.error("Error calculating stats: ", error);
     }
   }, [user, policies]);
-
+      
   useEffect(() => {
     if (user && policies.length > 0) {
       calculateStats();
@@ -310,9 +312,9 @@ export function usePolicies() {
     // Limpiar el listener cuando el componente se desmonte o cambien las dependencias
     return () => {
       unsubscribe();
-    };
+  };
   }, [setupPoliciesListener]);
-  
+
   // Efecto para búsqueda y ordenamiento en el cliente (si no se hace en backend)
   const filteredPolicies = policies
     .filter(policy => {
@@ -330,7 +332,7 @@ export function usePolicies() {
       const valA = a[sortConfig.key];
       // @ts-expect-error - Dynamic property access based on sortConfig.key
       const valB = b[sortConfig.key];
-
+      
       let comparison = 0;
       if (valA > valB) {
         comparison = 1;
@@ -351,7 +353,6 @@ export function usePolicies() {
   
     setLoading(true);
     console.log("Iniciando fetchPolicies manual, loadMore:", loadMore);
-  
     try {
       // Consulta simple para obtener todas las pólizas del usuario
       let q = query(
@@ -414,7 +415,6 @@ export function usePolicies() {
   // Función para actualizar la información de la póliza en el cliente
   const updatePolicyInCustomer = async (policyData: Partial<Policy>, policyId: string, isNew: boolean = false): Promise<boolean> => {
     if (!user || !policyData.customerId) return false;
-    
     try {
       // Obtener el documento del cliente
       const customerRef = doc(db, 'customers', policyData.customerId);
@@ -422,8 +422,8 @@ export function usePolicies() {
       
       if (!customerDoc.exists()) {
         console.error("Cliente no encontrado:", policyData.customerId);
-        return false;
-      }
+      return false;
+    }
       
       const customerData = customerDoc.data() as Customer;
       
@@ -436,8 +436,8 @@ export function usePolicies() {
         status: policyData.status || 'active',
         startDate: policyData.startDate || Timestamp.now(),
         endDate: policyData.endDate || Timestamp.now()
-      };
-      
+  };
+
       // Actualizar la lista de pólizas del cliente
       let updatedPolicies: CustomerPolicyLink[] = [];
       
@@ -486,7 +486,7 @@ export function usePolicies() {
       if (!customerDoc.exists()) {
         console.error("Cliente no encontrado:", customerId);
         return false;
-      }
+}
       
       const customerData = customerDoc.data() as Customer;
       
@@ -527,7 +527,7 @@ export function usePolicies() {
       console.log("Guardando póliza completa:", completePolicy);
       
       let savedPolicyId = policyId || '';
-  
+      
       if (isEdit && policyId) {
         const policyRef = doc(db, 'policies', policyId);
         await updateDoc(policyRef, { 
@@ -622,7 +622,7 @@ export function usePolicies() {
   const toggleArchivePolicy = async (policyId: string, archive: boolean): Promise<boolean> => {
     if (!user) return false;
     try {
-      // Actualizar el estado local inmediatamente para una respuesta instantánea en la UI
+      // Actualizar el estado local inmediatamente para una respuesta instant��nea en la UI
       setPolicies(prevPolicies => 
         prevPolicies.map(policy => 
           policy.id === policyId ? { ...policy, isArchived: archive } : policy

@@ -20,19 +20,18 @@ export function OptimizedImage({
   className,
   ...props
 }: OptimizedImageProps & React.ComponentPropsWithoutRef<typeof Image>) {
+  // Elimina el div envolvente innecesario
   return (
-    <div className={cn('overflow-hidden', className)}>
-      <Image
+    <Image
         src={src}
         alt={alt}
         width={width}
         height={height}
         priority={priority}
         loading={priority ? 'eager' : 'lazy'}
-        className="w-full h-auto object-cover transition-opacity"
+      className={cn("w-full h-auto object-cover transition-opacity", className)}
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         {...props}
       />
-    </div>
   );
 }
