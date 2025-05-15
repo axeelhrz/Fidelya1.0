@@ -1,52 +1,12 @@
 'use client';
 
-import React from 'react';
-import dynamic from 'next/dynamic';
-import {  Skeleton, Container } from '@mui/material';
-import Hero from '@/components/hero';
+import React, { Suspense } from 'react';
+import { Box, Container, Skeleton } from '@mui/material';
 import ClientLayout from './clientLayout';
+import { createDynamicComponent } from '@/lib/dynamic-imports';
 
-// Optimización: Cargar componentes pesados con dynamic import y ssr: false
-const BenefitsSection = dynamic(() => import('@/components/benefits'), { 
-  ssr: false,
-  loading: () => <ComponentSkeleton height={400} />
-});
-
-const Features = dynamic(() => import('@/components/features'), { 
-  ssr: false,
-  loading: () => <ComponentSkeleton height={400} />
-});
-
-const DashboardPreview = dynamic(() => import('@/components/dashboard-preview'), { 
-  ssr: false,
-  loading: () => <ComponentSkeleton height={300} />
-});
-
-const Testimonials = dynamic(() => import('@/components/testimonials'), { 
-  ssr: false,
-  loading: () => <ComponentSkeleton height={400} />
-});
-
-const HowItWorks = dynamic(() => import('@/components/how-it-works'), { 
-  ssr: false,
-  loading: () => <ComponentSkeleton height={400} />
-});
-
-const SecuritySection = dynamic(() => import('@/components/security'), { 
-  ssr: false,
-  loading: () => <ComponentSkeleton height={300} />
-});
-
-const FAQ = dynamic(() => import('@/components/faq'), { 
-  ssr: false,
-  loading: () => <ComponentSkeleton height={400} />
-});
-
-const Cta = dynamic(() => import('@/components/cta'), { 
-  ssr: false,
-  loading: () => <ComponentSkeleton height={200} />
-});
-
+// Importar el Hero optimizado directamente (no usar dynamic import para el LCP)
+import Hero from '@/components/optimized/hero';
 // Componente de esqueleto para mostrar durante la carga
 const ComponentSkeleton = ({ height }: { height: number }) => (
   <Container maxWidth="lg">
@@ -60,11 +20,52 @@ const ComponentSkeleton = ({ height }: { height: number }) => (
   </Container>
 );
 
+// Crear componentes dinámicos con opciones optimizadas
+const BenefitsSection = createDynamicComponent(() => import('@/components/benefits'), {
+  ssr: false,
+  loading: () => <ComponentSkeleton height={400} />
+});
+
+const Features = createDynamicComponent(() => import('@/components/features'), {
+  ssr: false,
+  loading: () => <ComponentSkeleton height={400} />
+});
+
+const DashboardPreview = createDynamicComponent(() => import('@/components/dashboard-preview'), {
+  ssr: false,
+  loading: () => <ComponentSkeleton height={300} />
+});
+
+const Testimonials = createDynamicComponent(() => import('@/components/testimonials'), {
+  ssr: false,
+  loading: () => <ComponentSkeleton height={400} />
+});
+
+const HowItWorks = createDynamicComponent(() => import('@/components/how-it-works'), {
+  ssr: false,
+  loading: () => <ComponentSkeleton height={400} />
+});
+
+const SecuritySection = createDynamicComponent(() => import('@/components/security'), {
+  ssr: false,
+  loading: () => <ComponentSkeleton height={300} />
+});
+
+const FAQ = createDynamicComponent(() => import('@/components/faq'), {
+  ssr: false,
+  loading: () => <ComponentSkeleton height={400} />
+});
+
+const Cta = createDynamicComponent(() => import('@/components/cta'), {
+  ssr: false,
+  loading: () => <ComponentSkeleton height={200} />
+});
+
 export default function Home(): React.ReactElement {
     return (
         <>
           <ClientLayout>
-            {/* Hero se carga normalmente ya que es crítico para LCP */}
+            {/* Hero se carga directamente para optimizar LCP */}
             <Hero />
 
             {/* Secciones con carga diferida */}

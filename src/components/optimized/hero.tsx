@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, memo } from 'react';
+import React, { memo } from 'react';
 import { 
   Box, 
   Button, 
@@ -12,12 +12,12 @@ import {
   Paper,
   Tooltip,
   styled,
-  Skeleton,
 } from '@mui/material';
 import Link from 'next/link';
 import Image from 'next/image';
+import Head from 'next/head';
 
-// Optimización: Importar solo los iconos necesarios en lugar de toda la biblioteca
+// Importar solo los iconos necesarios para reducir el bundle inicial
 import { RocketLaunch } from '@phosphor-icons/react/dist/ssr/RocketLaunch';
 import { ShieldCheck } from '@phosphor-icons/react/dist/ssr/ShieldCheck';
 import { Lock } from '@phosphor-icons/react/dist/ssr/Lock';
@@ -28,8 +28,8 @@ import { ArrowRight } from '@phosphor-icons/react/dist/ssr/ArrowRight';
 
 // Constantes - Movidas fuera del componente para evitar recreaciones
 const FONT_SIZES = {
-  h1: { xs: '2rem', sm: '2.5rem', md: '3rem' }, // Reducido para mejor rendimiento móvil
-  subtitle: { xs: '1rem', sm: '1.1rem', md: '1.2rem' }, // Reducido para mejor rendimiento móvil
+  h1: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+  subtitle: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
 };
 
 const FONT_WEIGHTS = {
@@ -157,240 +157,195 @@ HeroSubtitle.displayName = 'HeroSubtitle';
 const HeroSection = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  // Optimización: Cargar imagen de forma más eficiente
-  useEffect(() => {
-    // Usar IntersectionObserver para cargar la imagen cuando sea visible
-    if (typeof window !== 'undefined') {
-      const loadImage = () => {
-        const img = new window.Image();
-        img.src = '/assets/LandingLogo.svg';
-        img.onload = () => setImageLoaded(true);
-      };
-      
-      const observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          loadImage();
-          observer.disconnect();
-        }
-      }, { rootMargin: '200px' });
-      
-      const heroSection = document.querySelector('#hero-section');
-      if (heroSection) {
-        observer.observe(heroSection);
-      } else {
-        // Fallback si no se encuentra el elemento
-        if ('requestIdleCallback' in window) {
-          window.requestIdleCallback(loadImage);
-        } else {
-          setTimeout(loadImage, 200);
-        }
-      }
-      
-      return () => {
-        observer.disconnect();
-      };
-    }
-  }, []);
-
   // Renderizado estático para el contenido principal
   return (
-    <Box
-      id="hero-section"
-      component="section"
-      sx={{
-        position: 'relative',
-        minHeight: { xs: '80vh', md: '90vh' }, // Reducido para móviles
-        display: 'flex',
-        alignItems: 'center',
-        background: isDarkMode
-          ? theme.palette.background.default
-          : alpha(theme.palette.primary.light, 0.05),
-        overflow: 'hidden',
-        pt: { xs: 8, md: 10 }, // Reducido para móviles
-        pb: { xs: 4, md: 8 }, // Reducido para móviles
-      }}
-    >
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-        <Stack spacing={4}> {/* Reducido el espaciado */}
-          {/* Etiqueta superior - Estática */}
-          <Stack alignItems="center">
-            <StyledBadge
-              icon={<RocketLaunch weight="duotone" />}
-              label="Nuevo en Latinoamérica • Más de 500 corredores activos"
-            />
-          </Stack>
+    <>
+      {/* Precargar la imagen crítica para LCP */}
+      <Head>
+        <link 
+          rel="preload" 
+          href="/assets/LandingLogo.svg" 
+          as="image" 
+          type="image/svg+xml"
+        />
+      </Head>
 
-          {/* Contenido principal */}
-          <Stack
-            direction={{ xs: 'column', lg: 'row' }}
-            spacing={{ xs: 4, lg: 6 }} // Reducido el espaciado
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            {/* Columna izquierda */}
-            <Stack
-              spacing={2} // Reducido el espaciado
+            <Box
+        id="hero-section"
+        component="section"
               sx={{
-                maxWidth: { xs: '100%', lg: '50%' },
-                textAlign: { xs: 'center', lg: 'left' },
-              }}
+                position: 'relative',
+          minHeight: { xs: '80vh', md: '90vh' },
+                display: 'flex',
+          alignItems: 'center',
+          background: isDarkMode
+            ? theme.palette.background.default
+            : alpha(theme.palette.primary.light, 0.05),
+                  overflow: 'hidden',
+          pt: { xs: 8, md: 10 },
+          pb: { xs: 4, md: 8 },
+                }}
+              >
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+          <Stack spacing={4}>
+            {/* Etiqueta superior - Estática */}
+            <Stack alignItems="center">
+              <StyledBadge
+                icon={<RocketLaunch weight="duotone" />}
+                label="Nuevo en Latinoamérica • Más de 500 corredores activos"
+                  />
+            </Stack>
+
+            {/* Contenido principal */}
+            <Stack
+              direction={{ xs: 'column', lg: 'row' }}
+              spacing={{ xs: 4, lg: 6 }}
+              alignItems="center"
+              justifyContent="space-between"
             >
-              {/* Título y subtítulo memoizados */}
-              <HeroTitle theme={theme} />
-              <HeroSubtitle theme={theme} />
-
-              {/* Beneficios */}
+              {/* Columna izquierda */}
               <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1.5} // Reducido el espaciado
-                justifyContent={{ xs: 'center', lg: 'flex-start' }}
-                sx={{ mb: 2 }} // Reducido el margen
-              >
-                {benefits.map((benefit, index) => (
-                  <BenefitChip key={index}>
-                    {benefit.icon}
-                    {benefit.text}
-                  </BenefitChip>
-                ))}
-              </Stack>
-
-              {/* Botones de acción */}
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1.5} // Reducido el espaciado
-                justifyContent={{ xs: 'center', lg: 'flex-start' }}
-              >
-                <Link href="/pricing" style={{ textDecoration: 'none' }}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    endIcon={<ArrowRight weight="bold" />}
-                    sx={{
-                      px: 3, // Reducido el padding
-                      py: 1.5, // Reducido el padding
-                      borderRadius: '12px',
-                      fontSize: '1rem', // Reducido el tamaño de fuente
-                      fontWeight: FONT_WEIGHTS.semibold,
-                      textTransform: 'none',
-                      backgroundColor: theme.palette.primary.main,
-                    }}
-                  >
-                    Crear cuenta gratis
-                  </Button>
-                </Link>
-
-                <Link href="/caracteristicas" style={{ textDecoration: 'none' }}>
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    sx={{
-                      px: 3, // Reducido el padding
-                      py: 1.5, // Reducido el padding
-                      borderRadius: '12px',
-                      fontSize: '1rem', // Reducido el tamaño de fuente
-                      fontWeight: FONT_WEIGHTS.semibold,
-                      textTransform: 'none',
-                      borderWidth: 2,
-                    }}
-                  >
-                    Ver funcionalidades
-                  </Button>
-                </Link>
-              </Stack>
-              
-              <Typography
-                variant="body2"
+                spacing={2}
                 sx={{
-                  mt: 1,
-                  color: 'text.secondary',
+                  maxWidth: { xs: '100%', lg: '50%' },
                   textAlign: { xs: 'center', lg: 'left' },
                 }}
               >
-                Sin compromiso. Cancelá cuando quieras.
-              </Typography>
+                {/* Título y subtítulo memoizados */}
+                <HeroTitle theme={theme} />
+                <HeroSubtitle theme={theme} />
 
-              {/* Trust badges */}
-              <Stack
-                direction="row"
-                spacing={1.5} // Reducido el espaciado
-                justifyContent={{ xs: 'center', lg: 'flex-start' }}
-                sx={{ mt: 2 }} // Reducido el margen
-              >
-                {trustBadges.map((badge, index) => (
-                  <Tooltip key={index} title={badge.tooltip} arrow>
-                    <TrustBadge elevation={0}>
-                      {badge.icon}
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontWeight: FONT_WEIGHTS.medium,
-                          color: 'text.primary',
-                        }}
-                      >
-                        {badge.label}
-                      </Typography>
-                    </TrustBadge>
-                  </Tooltip>
-                ))}
+                {/* Beneficios */}
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1.5}
+                  justifyContent={{ xs: 'center', lg: 'flex-start' }}
+                  sx={{ mb: 2 }}
+                >
+                  {benefits.map((benefit, index) => (
+                    <BenefitChip key={index}>
+                      {benefit.icon}
+                      {benefit.text}
+                    </BenefitChip>
+                  ))}
+                </Stack>
+
+                {/* Botones de acción */}
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1.5}
+                  justifyContent={{ xs: 'center', lg: 'flex-start' }}
+                >
+                  <Link href="/pricing" style={{ textDecoration: 'none' }}>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      endIcon={<ArrowRight weight="bold" />}
+                      sx={{
+                        px: 3,
+                        py: 1.5,
+                        borderRadius: '12px',
+                        fontSize: '1rem',
+                        fontWeight: FONT_WEIGHTS.semibold,
+                        textTransform: 'none',
+                        backgroundColor: theme.palette.primary.main,
+                      }}
+                    >
+                      Crear cuenta gratis
+                    </Button>
+                  </Link>
+
+                  <Link href="/caracteristicas" style={{ textDecoration: 'none' }}>
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      sx={{
+                        px: 3,
+                        py: 1.5,
+                        borderRadius: '12px',
+                        fontSize: '1rem',
+                        fontWeight: FONT_WEIGHTS.semibold,
+                        textTransform: 'none',
+                        borderWidth: 2,
+                      }}
+                    >
+                      Ver funcionalidades
+                    </Button>
+                  </Link>
+        </Stack>
+                
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: 1,
+                    color: 'text.secondary',
+                    textAlign: { xs: 'center', lg: 'left' },
+                  }}
+                >
+                  Sin compromiso. Cancelá cuando quieras.
+                </Typography>
+
+                {/* Trust badges */}
+                <Stack
+                  direction="row"
+                  spacing={1.5}
+                  justifyContent={{ xs: 'center', lg: 'flex-start' }}
+                  sx={{ mt: 2 }}
+                >
+                  {trustBadges.map((badge, index) => (
+                    <Tooltip key={index} title={badge.tooltip} arrow>
+                      <TrustBadge elevation={0}>
+                        {badge.icon}
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontWeight: FONT_WEIGHTS.medium,
+                            color: 'text.primary',
+                          }}
+                        >
+                          {badge.label}
+                        </Typography>
+                      </TrustBadge>
+                    </Tooltip>
+                  ))}
+                </Stack>
               </Stack>
-            </Stack>
 
-            {/* Columna derecha - Imagen optimizada */}
-            <Box
-              sx={{
-                position: 'relative',
-                width: '100%',
-                maxWidth: { xs: '100%', lg: '50%' },
-                aspectRatio: '4/3',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
+              {/* Columna derecha - Imagen optimizada para LCP */}
               <Box
                 sx={{
                   position: 'relative',
                   width: '100%',
-                  height: '100%',
-                  overflow: 'hidden',
+                  maxWidth: { xs: '100%', lg: '50%' },
+                  height: 'auto',
+                  aspectRatio: '4/3',
                   borderRadius: '24px',
+                  overflow: 'hidden',
                 }}
               >
-                {!imageLoaded ? (
-                  <Skeleton 
-                    variant="rectangular" 
-                    width="100%" 
-                    height="100%" 
-                    animation="wave"
-                    sx={{ 
-                      borderRadius: '24px',
-                      bgcolor: alpha(theme.palette.primary.main, 0.1)
-                    }}
-                  />
-                ) : (
-                  <Image
-                    src="/assets/LandingLogo.svg"
-                    alt="Dashboard de la plataforma"
-                    fill
-                    style={{
-                      objectFit: 'cover',
-                      objectPosition: 'center',
-                      filter: isDarkMode ? 'brightness(0.9)' : 'none',
-                    }}
-                    priority={true}
-                    quality={60} // Reducido para mejor rendimiento
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    loading="eager" // Cargar de inmediato ya que es parte del LCP
-                  />
-                )}
-              </Box>
-            </Box>
-          </Stack>
-        </Stack>
-      </Container>
+                {/* Imagen optimizada para LCP */}
+                <Image
+                  src="/assets/LandingLogo.svg"
+                  alt="Dashboard de la plataforma"
+                  width={600}
+                  height={450}
+                  priority={true}
+                  quality={100}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    borderRadius: '24px',
+                    filter: isDarkMode ? 'brightness(0.9)' : 'none',
+                  }}
+                />
     </Box>
+            </Stack>
+          </Stack>
+        </Container>
+      </Box>
+    </>
   );
 };
 
