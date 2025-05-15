@@ -1,5 +1,4 @@
 import { type Metadata, type Viewport } from 'next'
-import Script from 'next/script'
 import { Plus_Jakarta_Sans, Work_Sans, Inter, Sora } from 'next/font/google'
 import './globals.css';
 
