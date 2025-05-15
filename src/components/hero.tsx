@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { 
   Box, 
   Button, 
@@ -14,7 +14,6 @@ import {
   styled,
   Skeleton,
 } from '@mui/material';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -27,15 +26,15 @@ import {
   ArrowRight,
 } from '@phosphor-icons/react';
 
-// Constantes
-const ANIMATION_DURATION = 0.6;
-const STAGGER_DELAY = 0.1;
+// Importación dinámica de Framer Motion para reducir el tamaño del bundle inicial
 
-// Estilos
+
+// Constantes - Movidas fuera del componente para evitar recreaciones
+
+// Estilos - Simplificados
 const FONT_SIZES = {
-  h1: { xs: '2.5rem', sm: '3rem', md: '3.75rem' },
-  h2: { xs: '2rem', sm: '2.5rem', md: '3rem' },
-  subtitle: { xs: '1.1rem', sm: '1.25rem', md: '1.35rem' },
+  h1: { xs: '2.5rem', sm: '3rem', md: '3.5rem' }, // Ligeramente reducido
+  subtitle: { xs: '1.1rem', sm: '1.2rem', md: '1.3rem' }, // Ligeramente reducido
 };
 
 const FONT_WEIGHTS = {
@@ -46,51 +45,11 @@ const FONT_WEIGHTS = {
   extrabold: 800,
 };
 
-// Animaciones
-const containerVariants = {
-  hidden: { 
-    opacity: 0 
-  },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: ANIMATION_DURATION,
-      delayChildren: 0.3,
-      staggerChildren: STAGGER_DELAY,
-    }
-  }
-};
+// Animaciones - Simplificadas
 
-const itemVariants = {
-  hidden: { 
-    opacity: 0, 
-    y: 20 
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: ANIMATION_DURATION,
-      ease: "easeOut"
-    }
-  }
-};
 
-const imageVariants = {
-  hidden: { 
-    opacity: 0, 
-    scale: 0.95 
-  },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      duration: ANIMATION_DURATION * 1.5,
-      ease: "easeOut"
-    }
-  }
-};
 
+// Datos estáticos - Memoizados
 const trustBadges = [
   {
     icon: <ShieldCheck weight="duotone" />,
@@ -124,6 +83,7 @@ const benefits = [
   },
 ];
 
+// Componentes estilizados - Simplificados
 const StyledBadge = styled(Chip)(({ theme }) => ({
   borderRadius: '12px',
   height: 32,
@@ -144,18 +104,11 @@ const TrustBadge = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(1.5, 2.5),
   borderRadius: '12px',
   backgroundColor: alpha(theme.palette.background.paper, 0.8),
-  backdropFilter: 'blur(8px)',
   border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(1),
-  transition: 'all 0.2s ease-in-out',
-  cursor: 'help',
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    backgroundColor: alpha(theme.palette.background.paper, 0.9),
-    boxShadow: `0 4px 12px ${alpha(theme.palette.common.black, 0.08)}`,
-  },
+  // Eliminadas transiciones complejas
 }));
 
 const BenefitChip = styled(Box)(({ theme }) => ({
@@ -173,133 +126,8 @@ const BenefitChip = styled(Box)(({ theme }) => ({
   },
 }));
 
-export const HeroSection = () => {
-  const theme = useTheme();
-  const isDarkMode = theme.palette.mode === 'dark';
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-
-  // Asegurarse de que el componente se renderice solo en el cliente
-  useEffect(() => {
-    setIsClient(true);
-    
-    // Precarga de la imagen
-    const img = new window.Image();
-    img.src = '/assets/LandingLogo.svg';
-    img.onload = () => setImageLoaded(true);
-  }, []);
-
-  return (
-    <Box
-      component="section"
-      sx={{
-        position: 'relative',
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        background: isDarkMode
-          ? `linear-gradient(135deg, 
-              ${alpha(theme.palette.background.default, 0.95)}, 
-              ${alpha(theme.palette.primary.dark, 0.1)})`
-          : `linear-gradient(135deg, 
-              ${alpha(theme.palette.primary.light, 0.05)}, 
-              ${alpha(theme.palette.background.default, 0.95)})`,
-        overflow: 'hidden',
-        pt: { xs: 12, md: 16 },
-        pb: { xs: 8, md: 12 },
-      }}
-    >
-      {/* Efectos de fondo */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          overflow: 'hidden',
-          zIndex: 0,
-          opacity: 0.4,
-          pointerEvents: 'none',
-        }}
-      >
-        {/* Gradiente superior */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '-10%',
-            left: '-10%',
-            width: '50%',
-            height: '50%',
-            background: `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.08)} 0%, transparent 70%)`,
-            filter: 'blur(60px)',
-          }}
-        />
-
-        {/* Gradiente inferior */}
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: '-10%',
-            right: '-10%',
-            width: '50%',
-            height: '50%',
-            background: `radial-gradient(circle, ${alpha(theme.palette.secondary.main, 0.08)} 0%, transparent 70%)`,
-            filter: 'blur(60px)',
-          }}
-        />
-
-        {/* Patrón de fondo */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: 0.4,
-            background: `linear-gradient(${alpha(theme.palette.primary.main, 0.03)} 1px, transparent 1px),
-                        linear-gradient(90deg, ${alpha(theme.palette.primary.main, 0.03)} 1px, transparent 1px)`,
-            backgroundSize: '50px 50px',
-          }}
-        />
-      </Box>
-
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-        {isClient && (
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <Stack spacing={8}>
-            {/* Etiqueta superior */}
-            <motion.div variants={itemVariants}>
-              <Stack alignItems="center">
-                <StyledBadge
-                  icon={<RocketLaunch weight="duotone" />}
-                  label="Nuevo en Latinoamérica • Más de 500 corredores activos"
-                />
-              </Stack>
-            </motion.div>
-
-            {/* Contenido principal */}
-            <Stack
-              direction={{ xs: 'column', lg: 'row' }}
-              spacing={{ xs: 8, lg: 12 }}
-              alignItems="center"
-              justifyContent="space-between"
-            >
-              {/* Columna izquierda */}
-              <Stack
-                spacing={4}
-                sx={{
-                  maxWidth: { xs: '100%', lg: '50%' },
-                  textAlign: { xs: 'center', lg: 'left' },
-                }}
-              >
-                {/* Título principal */}
-                <motion.div variants={itemVariants}>
+// Componentes memoizados para evitar re-renderizados
+const HeroTitle = memo<{ theme: import('@mui/material/styles').Theme }>(({ theme }) => (
                   <Typography
                     variant="h1"
                       component="h1"
@@ -308,16 +136,17 @@ export const HeroSection = () => {
                         fontWeight: FONT_WEIGHTS.extrabold,
                         lineHeight: 1.2,
                         letterSpacing: '-0.02em',
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
+      color: theme.palette.primary.main, // Simplificado en lugar de gradiente
                         mb: 2,
                       }}
                     >
                       Tu nueva oficina digital como corredor de seguros
                     </Typography>
+));
 
-                    {/* Subtítulo */}
+HeroTitle.displayName = 'HeroTitle';
+
+const HeroSubtitle = memo<{ theme: import('@mui/material/styles').Theme }>(({ theme }) => (
                     <Typography
                       variant="h2"
                       component="p"
@@ -330,177 +159,241 @@ export const HeroSection = () => {
                     >
                       Gestioná pólizas, clientes y recordatorios con la única plataforma pensada 100% para corredores. Más eficiencia, menos estrés.
                     </Typography>
-                </motion.div>
+));
 
-                  {/* Beneficios */}
-                <motion.div variants={itemVariants}>
-                  <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    spacing={2}
-                    justifyContent={{ xs: 'center', lg: 'flex-start' }}
-                      sx={{ mb: 4 }}
-                  >
-                      {benefits.map((benefit, index) => (
-                        <BenefitChip key={index}>
-                          {benefit.icon}
-                          {benefit.text}
-                        </BenefitChip>
-                      ))}
-                    </Stack>
-                  </motion.div>
+HeroSubtitle.displayName = 'HeroSubtitle';
 
-                  {/* Botones de acción */}
-                <motion.div variants={itemVariants}>
-                  <Stack
-                      direction={{ xs: 'column', sm: 'row' }}
-                    spacing={2}
-                    justifyContent={{ xs: 'center', lg: 'flex-start' }}
-                    >
-                      <Link href="/pricing" style={{ textDecoration: 'none' }}>
-                        <Button
-                          variant="contained"
-                          size="large"
-                          endIcon={<ArrowRight weight="bold" />}
-                          sx={{
-                            px: 4,
-                            py: 2,
-                            borderRadius: '12px',
-                            fontSize: '1.1rem',
-                            fontWeight: FONT_WEIGHTS.semibold,
-                            textTransform: 'none',
-                            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                            boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.25)}`,
-                            '&:hover': {
-                              background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                              boxShadow: `0 12px 32px ${alpha(theme.palette.primary.main, 0.35)}`,
-                              transform: 'translateY(-2px)',
-                            },
-                          }}
-                        >
-                          Crear cuenta gratis
-                        </Button>
-                      </Link>
+// Componente principal optimizado
+export const HeroSection = () => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+  const [imageLoaded, setImageLoaded] = useState(false);
 
-                      <Link href="/caracteristicas" style={{ textDecoration: 'none' }}>
-                        <Button
-                          variant="outlined"
-                          size="large"
-                sx={{
-                            px: 4,
-                            py: 2,
-                            borderRadius: '12px',
-                            fontSize: '1.1rem',
-                            fontWeight: FONT_WEIGHTS.semibold,
-                            textTransform: 'none',
-                            borderWidth: 2,
-                            '&:hover': {
-                              borderWidth: 2,
-                              transform: 'translateY(-2px)',
-                            },
-                }}
-              >
-                          Ver funcionalidades
-                        </Button>
-                      </Link>
-                    </Stack>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        mt: 2,
-                        color: 'text.secondary',
-                        textAlign: { xs: 'center', lg: 'left' },
-                  }}
-                >
-                      Sin compromiso. Cancelá cuando quieras.
-                    </Typography>
-        </motion.div>
+  // Optimización: Usar un efecto más ligero
+  useEffect(() => {
+    
+    // Precargar imagen con menor prioridad
+    if (typeof window !== 'undefined') {
+      const img = new window.Image();
+      img.src = '/assets/LandingLogo.svg';
+      img.onload = () => setImageLoaded(true);
+    }
+  }, []);
 
-                  {/* Trust badges */}
-                  <motion.div variants={itemVariants}>
-                    <Stack
-                      direction="row"
-                      spacing={2}
-                      justifyContent={{ xs: 'center', lg: 'flex-start' }}
-                      sx={{ mt: 4 }}
-                    >
-                      {trustBadges.map((badge, index) => (
-                        <Tooltip key={index} title={badge.tooltip} arrow>
-                          <TrustBadge elevation={0}>
-                            {badge.icon}
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                fontWeight: FONT_WEIGHTS.medium,
-                                color: 'text.primary',
-                              }}
-                            >
-                              {badge.label}
-                            </Typography>
-                          </TrustBadge>
-                        </Tooltip>
-                      ))}
-                    </Stack>
-                  </motion.div>
-                </Stack>
-
-                {/* Columna derecha - Imagen */}
-                <Box
-                  component={motion.div}
-                  variants={imageVariants}
-                  sx={{
-                    position: 'relative',
-                    width: '100%',
-                    maxWidth: { xs: '100%', lg: '50%' },
-                    aspectRatio: '4/3',
-                  }}
-                >
-                  <Box
-                    sx={{
-                      position: 'relative',
-                      width: '100%',
-                      height: '100%',
-                      overflow: 'hidden',
-                      borderRadius: '24px',
-                    }}
-                  >
-                    {!imageLoaded ? (
-                      <Skeleton 
-                        variant="rectangular" 
-                        width="100%" 
-                        height="100%" 
-                        animation="wave"
-                        sx={{ 
-                          borderRadius: '24px',
-                          bgcolor: alpha(theme.palette.primary.main, 0.1)
-                        }}
+  // Renderizado estático para el contenido principal
+  const renderStaticContent = () => (
+    <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+      <Stack spacing={6}>
+        {/* Etiqueta superior - Estática */}
+        <Stack alignItems="center">
+          <StyledBadge
+            icon={<RocketLaunch weight="duotone" />}
+            label="Nuevo en Latinoamérica • Más de 500 corredores activos"
                       />
-                    ) : (
-                      <Image
-                        src="/assets/LandingLogo.svg"
-                        alt="Dashboard de la plataforma"
-                        fill
-                        style={{
-                          objectFit: 'cover',
-                          objectPosition: 'center',
-                          filter: isDarkMode ? 'invert(1)' : 'none',
-                          transition: 'filter 0.3s ease',
-                        }}
-                        priority
-                        quality={75}
-                        loading="eager"
-                        sizes="(max-width: 1200px) 100vw, 50vw"
-                        onLoad={() => setImageLoaded(true)}
-                      />
-                    )}
-    </Box>
-                </Box>
               </Stack>
+
+        {/* Contenido principal */}
+        <Stack
+          direction={{ xs: 'column', lg: 'row' }}
+          spacing={{ xs: 6, lg: 8 }}
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          {/* Columna izquierda */}
+          <Stack
+            spacing={3}
+            sx={{
+              maxWidth: { xs: '100%', lg: '50%' },
+              textAlign: { xs: 'center', lg: 'left' },
+            }}
+          >
+            {/* Título y subtítulo memoizados */}
+            <HeroTitle theme={theme} />
+            <HeroSubtitle theme={theme} />
+
+            {/* Beneficios */}
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={2}
+              justifyContent={{ xs: 'center', lg: 'flex-start' }}
+              sx={{ mb: 3 }}
+            >
+              {benefits.map((benefit, index) => (
+                <BenefitChip key={index}>
+                  {benefit.icon}
+                  {benefit.text}
+                </BenefitChip>
+              ))}
             </Stack>
-          </motion.div>
-        )}
-      </Container>
+
+            {/* Botones de acción */}
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={2}
+              justifyContent={{ xs: 'center', lg: 'flex-start' }}
+            >
+              <Link href="/pricing" style={{ textDecoration: 'none' }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  endIcon={<ArrowRight weight="bold" />}
+                  sx={{
+                    px: 4,
+                    py: 2,
+                    borderRadius: '12px',
+                    fontSize: '1.1rem',
+                    fontWeight: FONT_WEIGHTS.semibold,
+                    textTransform: 'none',
+                    backgroundColor: theme.palette.primary.main,
+                  }}
+                >
+                  Crear cuenta gratis
+                </Button>
+              </Link>
+
+              <Link href="/caracteristicas" style={{ textDecoration: 'none' }}>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  sx={{
+                    px: 4,
+                    py: 2,
+                    borderRadius: '12px',
+                    fontSize: '1.1rem',
+                    fontWeight: FONT_WEIGHTS.semibold,
+                    textTransform: 'none',
+                    borderWidth: 2,
+                  }}
+                >
+                  Ver funcionalidades
+                </Button>
+              </Link>
+            </Stack>
+            
+            <Typography
+              variant="body2"
+              sx={{
+                mt: 1,
+                color: 'text.secondary',
+                textAlign: { xs: 'center', lg: 'left' },
+              }}
+            >
+              Sin compromiso. Cancelá cuando quieras.
+            </Typography>
+
+            {/* Trust badges */}
+            <Stack
+              direction="row"
+              spacing={2}
+              justifyContent={{ xs: 'center', lg: 'flex-start' }}
+              sx={{ mt: 3 }}
+            >
+              {trustBadges.map((badge, index) => (
+                <Tooltip key={index} title={badge.tooltip} arrow>
+                  <TrustBadge elevation={0}>
+                    {badge.icon}
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: FONT_WEIGHTS.medium,
+                        color: 'text.primary',
+                      }}
+                    >
+                      {badge.label}
+                    </Typography>
+                  </TrustBadge>
+                </Tooltip>
+              ))}
+            </Stack>
+          </Stack>
+
+          {/* Columna derecha - Imagen optimizada */}
+          <Box
+            sx={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: { xs: '100%', lg: '50%' },
+              aspectRatio: '4/3',
+            }}
+          >
+            <Box
+              sx={{
+                position: 'relative',
+                width: '100%',
+                height: '100%',
+                overflow: 'hidden',
+                borderRadius: '24px',
+              }}
+            >
+              {!imageLoaded ? (
+                <Skeleton 
+                  variant="rectangular" 
+                  width="100%" 
+                  height="100%" 
+                  animation="wave"
+                  sx={{ 
+                    borderRadius: '24px',
+                    bgcolor: alpha(theme.palette.primary.main, 0.1)
+                  }}
+                />
+              ) : (
+                <Image
+                  src="/assets/LandingLogo.svg"
+                  alt="Dashboard de la plataforma"
+                  fill
+                  style={{
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                    filter: isDarkMode ? 'brightness(0.9)' : 'none',
+                  }}
+                  priority
+                  quality={70}
+                  loading="eager"
+                  sizes="(max-width: 1200px) 100vw, 50vw"
+                />
+              )}
+    </Box>
+          </Box>
+        </Stack>
+      </Stack>
+    </Container>
+  );
+
+  return (
+    <Box
+      component="section"
+      sx={{
+        position: 'relative',
+        minHeight: '90vh', // Reducido para mejorar el rendimiento
+        display: 'flex',
+        alignItems: 'center',
+        background: isDarkMode
+          ? theme.palette.background.default
+          : alpha(theme.palette.primary.light, 0.05),
+        overflow: 'hidden',
+        pt: { xs: 10, md: 12 },
+        pb: { xs: 6, md: 10 },
+      }}
+    >
+      {/* Fondo simplificado */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          overflow: 'hidden',
+          zIndex: 0,
+          opacity: 0.3,
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Renderizado condicional optimizado */}
+      {renderStaticContent()}
     </Box>
   );
 };
 
-export default HeroSection;
+export default memo(HeroSection);
