@@ -1,6 +1,5 @@
 'use client';
 
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Box, Container, Typography, Button, useTheme, Paper, Chip, Stack } from '@mui/material';
@@ -17,8 +16,8 @@ import {
   Lightning,
   ChartPieSlice,
   Brain,
-  CircleWavyCheck,
 } from '@phosphor-icons/react';
+import { CircleWavyCheck } from '@phosphor-icons/react/dist/ssr';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 

@@ -289,3 +289,21 @@ export function calculateReadingTime(text: string, wordsPerMinute: number = 200)
   const words = text.trim().split(/\s+/).length
   return Math.ceil(words / wordsPerMinute)
 }
+
+/**
+ * Carga diferida de recursos no críticos
+ * @param callback Función a ejecutar después de la carga inicial
+ */
+export function loadNonCriticalResources(callback: () => void): void {
+  if (typeof window !== 'undefined') {
+    // Verificar si el navegador admite requestIdleCallback
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(() => {
+        callback();
+      });
+    } else {
+      // Fallback para navegadores que no admiten requestIdleCallback
+      setTimeout(callback, 1000);
+    }
+  }
+}
