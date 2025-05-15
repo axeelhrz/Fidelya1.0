@@ -1,12 +1,24 @@
 import { type Metadata } from 'next'
-import { Analytics } from "@vercel/analytics/react"
 import Script from 'next/script'
-import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Plus_Jakarta_Sans, Work_Sans, Inter, Sora } from 'next/font/google'
 import { PlanProvider } from '@/context/planContext'
 import ThemeContextProvider from '@/context/themeContext'
 import { AuthProvider } from '@/context/auth-context'
 import './globals.css';
+
+// Importar Analytics y SpeedInsights solo en producción
+let Analytics: React.ComponentType<object> = () => null;
+let SpeedInsights: React.ComponentType<object> = () => null;
+
+if (process.env.NODE_ENV === 'production') {
+  // Importaciones dinámicas solo en producción
+  import('@vercel/analytics/react').then((mod) => {
+    Analytics = mod.Analytics;
+  });
+  import('@vercel/speed-insights/react').then((mod) => {
+    SpeedInsights = mod.SpeedInsights;
+  });
+}
 
 export const metadata: Metadata = {
   title: 'Assuriva',
@@ -61,8 +73,6 @@ export default function RootLayout({
         {/* Preconectar con dominios críticos */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
-        
         {/* Precargar recursos críticos */}
         <link rel="preload" as="image" href="/assets/LandingLogo.svg" />
         
@@ -85,58 +95,6 @@ export default function RootLayout({
               if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
                 document.documentElement.classList.add('mobile-device');
               }
-              
-              // Función para cargar recursos no críticos
-              function loadNonCriticalResources() {
-                // Implementación de carga diferida
-                const loadResource = (src, type) => {
-                  if (type === 'script') {
-                    const script = document.createElement('script');
-                    script.src = src;
-                    script.async = true;
-                    script.defer = true;
-                    document.body.appendChild(script);
-                  } else if (type === 'style') {
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.href = src;
-                    document.head.appendChild(link);
-              }
-                };
-                
-                // Usar Intersection Observer para cargar recursos cuando sean visibles
-                if ('IntersectionObserver' in window) {
-                  const loadWhenVisible = (selector, resourceSrc, resourceType) => {
-                    const observer = new IntersectionObserver((entries) => {
-                      entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                          loadResource(resourceSrc, resourceType);
-                          observer.disconnect();
-                        }
-                      });
-                    }, { rootMargin: '200px' });
-                    
-                    const element = document.querySelector(selector);
-                    if (element) observer.observe(element);
-                  };
-                  
-                  // Cargar recursos específicos cuando las secciones sean visibles
-                  document.addEventListener('DOMContentLoaded', () => {
-                    // Ejemplos de carga diferida basada en visibilidad
-                    loadWhenVisible('#benefits', '/assets/benefits-scripts.js', 'script');
-                    loadWhenVisible('#features', '/assets/features-scripts.js', 'script');
-                    // Añadir más recursos según sea necesario
-                  });
-                }
-              }
-              
-              // Registrar para cargar recursos no críticos cuando la página esté inactiva
-              if ('requestIdleCallback' in window) {
-                window.requestIdleCallback(loadNonCriticalResources);
-              } else {
-                // Fallback para navegadores que no soportan requestIdleCallback
-                setTimeout(loadNonCriticalResources, 2000);
-              }
             `,
           }}
         />
@@ -146,13 +104,6 @@ export default function RootLayout({
           <AuthProvider>
             <ThemeContextProvider>
               <PlanProvider>
-                {/* Cargar Analytics solo en producción y de forma diferida */}
-                {process.env.NODE_ENV === 'production' && (
-                  <>
-                    <Analytics />
-                    <SpeedInsights />
-                  </>
-                )}
                 {children}
               </PlanProvider>
             </ThemeContextProvider>
@@ -168,40 +119,13 @@ export default function RootLayout({
               // Marcar que la carga de JS ha terminado
               document.documentElement.classList.remove('js-loading');
               document.documentElement.classList.add('js-loaded');
-              
-              // Implementar carga diferida de scripts de terceros
-              const loadThirdPartyScripts = () => {
-                // Función para cargar scripts de forma diferida
-                const loadScript = (src, id, async = true, defer = true) => {
-                  if (document.getElementById(id)) return;
-                  const script = document.createElement('script');
-                  script.id = id;
-                  script.src = src;
-                  script.async = async;
-                  script.defer = defer;
-                  document.body.appendChild(script);
-                };
-                
-                // Cargar scripts de terceros solo cuando sean necesarios
-                // Ejemplo: Google Tag Manager
-                setTimeout(() => {
-                  // Cargar GTM de forma diferida
-                  // loadScript('https://www.googletagmanager.com/gtm.js?id=GTM-XXXX', 'gtm-script');
-                  
-                  // Otros scripts de terceros
-                }, 3000);
-              };
-              
-              // Usar requestIdleCallback para cargar scripts de terceros
-              if ('requestIdleCallback' in window) {
-                window.requestIdleCallback(loadThirdPartyScripts, { timeout: 5000 });
-              } else {
-                // Fallback
-                setTimeout(loadThirdPartyScripts, 5000);
-}
             `,
           }}
         />
+        
+        {/* Añadir componentes de Analytics */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

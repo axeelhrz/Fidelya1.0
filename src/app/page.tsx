@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React from 'react';
 import ClientLayout from './clientLayout';
 import { 
   DynamicHero,
@@ -14,26 +14,7 @@ import {
   DynamicCta
 } from '@/lib/dynamic-imports';
 
-// Componente de carga para secciones
-const SectionLoader = () => (
-  <div className="section-loader" style={{ 
-    height: '300px', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center' 
-  }}>
-    Cargando sección...
-  </div>
-);
-
-// Componente de sección con carga diferida
-const LazySection = ({ id, component: Component }: { id: string, component: React.ComponentType }) => (
-  <section id={id} style={{ scrollMarginTop: '120px' }}>
-    <Suspense fallback={<SectionLoader />}>
-      <Component />
-    </Suspense>
-  </section>
-);
+// Either remove LazySection if not needed or use it in the component below
 
 export default function Home(): React.ReactElement {
   return (
@@ -41,23 +22,32 @@ export default function Home(): React.ReactElement {
       {/* Hero es crítico, cargarlo inmediatamente */}
       <DynamicHero />
 
-      {/* Usar Intersection Observer para cargar componentes cuando sean visibles */}
-      <LazySection id="benefits" component={DynamicBenefits} />
-      <LazySection id="features" component={DynamicFeatures} />
-      
-      {/* Cargar el preview del dashboard cuando sea visible */}
-      <Suspense fallback={<SectionLoader />}>
+      {/* Secciones con ID para navegación */}
+      <section id="benefits" style={{ scrollMarginTop: '120px' }}>
+        <DynamicBenefits />
+      </section>
+
+      <section id="features" style={{ scrollMarginTop: '120px' }}>
+        <DynamicFeatures />
+      </section>
         <DynamicDashboardPreview />
-      </Suspense>
-      
-      <Suspense fallback={<SectionLoader />}>
         <DynamicTestimonials />
-      </Suspense>
       
-      <LazySection id="how-it-works" component={DynamicHowItWorks} />
-      <LazySection id="security" component={DynamicSecurity} />
-      <LazySection id="faq" component={DynamicFAQ} />
-      <LazySection id="contact" component={DynamicCta} />
+      <section id="how-it-works" style={{ scrollMarginTop: '120px' }}>
+        <DynamicHowItWorks />
+      </section>
+      
+      <section id="security" style={{ scrollMarginTop: '120px' }}>
+        <DynamicSecurity />
+      </section>
+
+      <section id="faq" style={{ scrollMarginTop: '120px' }}>
+        <DynamicFAQ />
+      </section>
+
+      <section id="contact" style={{ scrollMarginTop: '120px' }}>
+        <DynamicCta />
+      </section>
     </ClientLayout>
   );
 }
