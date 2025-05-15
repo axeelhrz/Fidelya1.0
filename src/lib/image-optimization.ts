@@ -69,7 +69,7 @@ export const preloadCriticalImages = (imagePaths: string[]) => {
   
   // Usar requestIdleCallback para no bloquear el renderizado
   if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(() => {
+    (window as Window & typeof globalThis & { requestIdleCallback: (callback: () => void) => number }).requestIdleCallback(() => {
       imagePaths.forEach(preloadImage);
     });
   } else {

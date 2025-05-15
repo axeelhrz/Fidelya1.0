@@ -1,6 +1,6 @@
 'use client';
 
-import React, { lazy, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import ClientLayout from './clientLayout';
 import { 
   DynamicHero,
@@ -27,7 +27,7 @@ const SectionLoader = () => (
 );
 
 // Componente de sección con carga diferida
-const LazySection = ({ id, component: Component }) => (
+const LazySection = ({ id, component: Component }: { id: string, component: React.ComponentType }) => (
   <section id={id} style={{ scrollMarginTop: '120px' }}>
     <Suspense fallback={<SectionLoader />}>
       <Component />

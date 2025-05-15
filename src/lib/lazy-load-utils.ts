@@ -73,13 +73,26 @@ export const loadWhenVisible = (
   }
 };
 
+// Interfaz para la API de conexión de red
+interface NetworkInformation {
+  saveData?: boolean;
+  effectiveType?: string;
+}
+
+// Interfaz extendida de Navigator para incluir información de conexión
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+  mozConnection?: NetworkInformation;
+  webkitConnection?: NetworkInformation;
+}
+
 // Función para detectar conexiones lentas
 export const isSlowConnection = (): boolean => {
   if (typeof navigator === 'undefined') return false;
   
-  const connection = (navigator as any).connection || 
-                    (navigator as any).mozConnection || 
-                    (navigator as any).webkitConnection;
+  const connection = (navigator as NavigatorWithConnection).connection || 
+                    (navigator as NavigatorWithConnection).mozConnection || 
+                    (navigator as NavigatorWithConnection).webkitConnection;
   
   if (!connection) return false;
   
