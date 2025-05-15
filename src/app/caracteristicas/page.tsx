@@ -1,9 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Box, Container, Typography, Button, useTheme, Paper, Chip, Stack } from '@mui/material';
 import {
+  CircleWavyCheck, useState } from 'react';
+import {
+  CircleWavyCheck, motion } from 'framer-motion';
+import {
+  CircleWavyCheck, Box, Container, Typography, Button, useTheme, Paper, Chip, Stack } from '@mui/material';
+import {
+  CircleWavyCheck,
   Rocket,
   Shield,
   Clock,
@@ -17,7 +21,6 @@ import {
   ChartPieSlice,
   Brain,
 } from '@phosphor-icons/react';
-import { CircleWavyCheck } from '@phosphor-icons/react';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 
