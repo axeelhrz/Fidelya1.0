@@ -1,15 +1,26 @@
 #!/bin/bash
 
-# Fix the CircleWavyCheck import in caracteristicas/page.tsx
-# This script merges the CircleWavyCheck import with the main phosphor-icons import
+# Este script busca y reemplaza importaciones específicas del icono CircleWavyCheck
+# por importaciones optimizadas para mejorar el rendimiento
 
-# Create a backup of the original file
-cp src/app/caracteristicas/page.tsx src/app/caracteristicas/page.tsx.bak
+echo "🔍 Buscando importaciones de CircleWavyCheck..."
 
-# Remove the separate CircleWavyCheck import
-sed -i '' '/import { CircleWavyCheck } from '"'"'@phosphor-icons\/react'"'"';/d' src/app/caracteristicas/page.tsx
+# Buscar archivos con importaciones de CircleWavyCheck
+FILES=$(grep -l "CircleWavyCheck" $(find src -type f -name "*.tsx" -o -name "*.ts"))
 
-# Add CircleWavyCheck to the main phosphor-icons import
-sed -i '' '/import {/,/} from '"'"'@phosphor-icons\/react'"'"';/ s/import {/import {\n  CircleWavyCheck,/1' src/app/caracteristicas/page.tsx
+# Procesar cada archivo
+for FILE in $FILES; do
+  echo "  Procesando $FILE..."
+  
+  # Verificar si hay importaciones globales
+  if grep -q "CircleWavyCheck.*from '@phosphor-icons/react'" $FILE; then
+    # Reemplazar importaciones globales por específicas
+    sed -i '' -e "s|import { CircleWavyCheck.*} from '@phosphor-icons/react'|import { CircleWavyCheck } from '@phosphor-icons/react/dist/ssr/CircleWavyCheck'|g" $FILE
+    
+    echo "  ✅ Optimizado $FILE"
+  else
+    echo "  ⏭️ Saltando $FILE (no tiene importaciones globales de CircleWavyCheck)"
+  fi
+done
 
-echo "Fixed CircleWavyCheck import in caracteristicas/page.tsx"
+echo "✨ Optimización de CircleWavyCheck completada!"
