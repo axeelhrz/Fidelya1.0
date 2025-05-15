@@ -7,7 +7,7 @@ import React from 'react';
  * @param options Configuration options for the dynamic import
  * @returns Dynamically imported component
  */
-export const createDynamicComponent = <T extends React.ComponentType<unknown>>(
+export const createDynamicComponent = <T extends React.ComponentType<P>, P = object>(
   importFunc: () => Promise<{ default: T } | T>,
   options?: {
     loading?: React.ReactNode | (() => React.ReactNode);
@@ -35,6 +35,7 @@ export const DynamicChart = dynamic(
   loading: () => React.createElement('div', { className: "loading-placeholder" }, "Cargando gráfico..."),
   ssr: false, // Deshabilitar SSR para componentes que solo se necesitan en el cliente
 });
+
 // Importaciones dinámicas para componentes de dashboard
 export const DynamicPoliciesChart = dynamic(
   () => import('../components/dashboard/policies-chart').then((mod) => mod.default),

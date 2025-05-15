@@ -1,7 +1,7 @@
 'use client';
 
-import React, { Suspense } from 'react';
-import { Box, Container, Skeleton } from '@mui/material';
+import React from 'react';
+import { Container, Skeleton } from '@mui/material';
 import ClientLayout from './clientLayout';
 import { createDynamicComponent } from '@/lib/dynamic-imports';
 
@@ -22,42 +22,41 @@ const ComponentSkeleton = ({ height }: { height: number }) => (
 
 // Crear componentes dinámicos con opciones optimizadas
 const BenefitsSection = createDynamicComponent(() => import('@/components/benefits'), {
-  ssr: false,
+  ssr: true,
   loading: () => <ComponentSkeleton height={400} />
 });
 
 const Features = createDynamicComponent(() => import('@/components/features'), {
-  ssr: false,
+  ssr: true,
   loading: () => <ComponentSkeleton height={400} />
 });
 
 const DashboardPreview = createDynamicComponent(() => import('@/components/dashboard-preview'), {
-  ssr: false,
+  ssr: true,
   loading: () => <ComponentSkeleton height={300} />
 });
-
 const Testimonials = createDynamicComponent(() => import('@/components/testimonials'), {
-  ssr: false,
+  ssr: true,
   loading: () => <ComponentSkeleton height={400} />
 });
 
 const HowItWorks = createDynamicComponent(() => import('@/components/how-it-works'), {
-  ssr: false,
+  ssr: true,
   loading: () => <ComponentSkeleton height={400} />
 });
 
 const SecuritySection = createDynamicComponent(() => import('@/components/security'), {
-  ssr: false,
+  ssr: true,
   loading: () => <ComponentSkeleton height={300} />
 });
 
 const FAQ = createDynamicComponent(() => import('@/components/faq'), {
-  ssr: false,
+  ssr: true,
   loading: () => <ComponentSkeleton height={400} />
 });
 
 const Cta = createDynamicComponent(() => import('@/components/cta'), {
-  ssr: false,
+  ssr: true,
   loading: () => <ComponentSkeleton height={200} />
 });
 
@@ -77,7 +76,7 @@ export default function Home(): React.ReactElement {
                 <Features />
             </section>
 
-            <DashboardPreview />
+            <DashboardPreview /> {/* Load dashboard preview component */}
 
             <Testimonials />
 
