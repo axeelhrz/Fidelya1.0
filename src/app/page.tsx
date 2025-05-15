@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Container, Skeleton } from '@mui/material';
-import ClientLayout from './clientLayout';
-import { createDynamicComponent } from '@/lib/dynamic-imports';
+import dynamic from 'next/dynamic';
 
-// Importar el Hero optimizado directamente (no usar dynamic import para el LCP)
+// Import the Hero component directly (not using dynamic import for LCP)
 import Hero from '@/components/optimized/hero';
-// Componente de esqueleto para mostrar durante la carga
+
+// Skeleton component for loading state
 const ComponentSkeleton = ({ height }: { height: number }) => (
   <Container maxWidth="lg">
     <Skeleton 
@@ -20,82 +20,102 @@ const ComponentSkeleton = ({ height }: { height: number }) => (
   </Container>
 );
 
-// Crear componentes dinámicos con opciones optimizadas
-const BenefitsSection = createDynamicComponent(() => import('@/components/benefits'), {
+// ClientLayout loaded with dynamic import but with SSR enabled
+const ClientLayout = dynamic(() => import('./clientLayout'), {
   ssr: true,
+});
+
+// Create dynamic components with optimized options
+const BenefitsSection = dynamic(() => import('@/components/benefits'), {
+  ssr: false,
   loading: () => <ComponentSkeleton height={400} />
 });
 
-const Features = createDynamicComponent(() => import('@/components/features'), {
-  ssr: true,
+const Features = dynamic(() => import('@/components/features'), {
+  ssr: false,
   loading: () => <ComponentSkeleton height={400} />
 });
 
-const DashboardPreview = createDynamicComponent(() => import('@/components/dashboard-preview'), {
-  ssr: true,
-  loading: () => <ComponentSkeleton height={300} />
-});
-const Testimonials = createDynamicComponent(() => import('@/components/testimonials'), {
-  ssr: true,
-  loading: () => <ComponentSkeleton height={400} />
-});
-
-const HowItWorks = createDynamicComponent(() => import('@/components/how-it-works'), {
-  ssr: true,
-  loading: () => <ComponentSkeleton height={400} />
-});
-
-const SecuritySection = createDynamicComponent(() => import('@/components/security'), {
-  ssr: true,
+const DashboardPreview = dynamic(() => import('@/components/dashboard-preview'), {
+  ssr: false,
   loading: () => <ComponentSkeleton height={300} />
 });
 
-const FAQ = createDynamicComponent(() => import('@/components/faq'), {
-  ssr: true,
+const Testimonials = dynamic(() => import('@/components/testimonials'), {
+  ssr: false,
   loading: () => <ComponentSkeleton height={400} />
 });
 
-const Cta = createDynamicComponent(() => import('@/components/cta'), {
-  ssr: true,
+const HowItWorks = dynamic(() => import('@/components/how-it-works'), {
+  ssr: false,
+  loading: () => <ComponentSkeleton height={400} />
+});
+
+const SecuritySection = dynamic(() => import('@/components/security'), {
+  ssr: false,
+  loading: () => <ComponentSkeleton height={300} />
+});
+
+const FAQ = dynamic(() => import('@/components/faq'), {
+  ssr: false,
+  loading: () => <ComponentSkeleton height={400} />
+});
+
+const Cta = dynamic(() => import('@/components/cta'), {
+  ssr: false,
   loading: () => <ComponentSkeleton height={200} />
 });
 
 export default function Home(): React.ReactElement {
-    return (
-        <>
+  return (
           <ClientLayout>
-            {/* Hero se carga directamente para optimizar LCP */}
+      {/* Hero is loaded directly for LCP optimization */}
             <Hero />
 
-            {/* Secciones con carga diferida */}
+      {/* Sections with deferred loading */}
+      <Suspense fallback={<ComponentSkeleton height={400} />}>
             <section id='benefits' style={{ scrollMarginTop: '120px' }}>
                 <BenefitsSection />
             </section>
+      </Suspense>
 
+      <Suspense fallback={<ComponentSkeleton height={400} />}>
             <section id='features' style={{ scrollMarginTop: '120px' }}>
                 <Features />
             </section>
+      </Suspense>
 
-            <DashboardPreview /> {/* Load dashboard preview component */}
+      <Suspense fallback={<ComponentSkeleton height={300} />}>
+        <DashboardPreview />
+      </Suspense>
 
+      <Suspense fallback={<ComponentSkeleton height={400} />}>
             <Testimonials />
+      </Suspense>
 
+      <Suspense fallback={<ComponentSkeleton height={400} />}>
             <section id='how-it-works' style={{ scrollMarginTop: '120px' }}>
                 <HowItWorks />
             </section>
+      </Suspense>
 
+      <Suspense fallback={<ComponentSkeleton height={300} />}>
             <section id='security' style={{ scrollMarginTop: '120px' }}>
                 <SecuritySection />
             </section>
+      </Suspense>
 
+      <Suspense fallback={<ComponentSkeleton height={400} />}>
             <section id='faq' style={{ scrollMarginTop: '120px' }}>
                 <FAQ />
             </section>
+      </Suspense>
 
+      <Suspense fallback={<ComponentSkeleton height={200} />}>
             <section id='contact' style={{ scrollMarginTop: '120px' }}>
                 <Cta />
             </section>
+      </Suspense>
           </ClientLayout>
-        </>
     );
-};
+}

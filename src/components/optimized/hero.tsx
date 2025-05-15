@@ -15,9 +15,8 @@ import {
 } from '@mui/material';
 import Link from 'next/link';
 import Image from 'next/image';
-import Head from 'next/head';
 
-// Importar solo los iconos necesarios para reducir el bundle inicial
+// Import only the specific icons we need
 import { RocketLaunch } from '@phosphor-icons/react/dist/ssr/RocketLaunch';
 import { ShieldCheck } from '@phosphor-icons/react/dist/ssr/ShieldCheck';
 import { Lock } from '@phosphor-icons/react/dist/ssr/Lock';
@@ -28,8 +27,8 @@ import { ArrowRight } from '@phosphor-icons/react/dist/ssr/ArrowRight';
 
 // Constantes - Movidas fuera del componente para evitar recreaciones
 const FONT_SIZES = {
-  h1: { xs: '2rem', sm: '2.5rem', md: '3rem' },
-  subtitle: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
+  h1: { xs: '1.75rem', sm: '2.25rem', md: '2.75rem' }, // Reduced for mobile
+  subtitle: { xs: '0.875rem', sm: '1rem', md: '1.1rem' }, // Reduced for mobile
 };
 
 const FONT_WEIGHTS = {
@@ -40,7 +39,7 @@ const FONT_WEIGHTS = {
   extrabold: 800,
 };
 
-// Datos estáticos - Memoizados
+// Static data - Memoized
 const trustBadges = [
   {
     icon: <ShieldCheck weight="duotone" />,
@@ -74,7 +73,7 @@ const benefits = [
   },
 ];
 
-// Componentes estilizados - Simplificados y optimizados
+// Styled components - Simplified and optimized
 const StyledBadge = styled(Chip)(({ theme }) => ({
   borderRadius: '12px',
   height: 32,
@@ -92,7 +91,7 @@ const StyledBadge = styled(Chip)(({ theme }) => ({
 }));
 
 const TrustBadge = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(1.5, 2.5),
+  padding: theme.spacing(1, 2),
   borderRadius: '12px',
   backgroundColor: alpha(theme.palette.background.paper, 0.8),
   border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
@@ -105,7 +104,7 @@ const BenefitChip = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(1),
-  padding: theme.spacing(1, 2),
+  padding: theme.spacing(0.75, 1.5),
   borderRadius: '12px',
   backgroundColor: alpha(theme.palette.success.main, 0.1),
   color: theme.palette.success.dark,
@@ -116,8 +115,8 @@ const BenefitChip = styled(Box)(({ theme }) => ({
   },
 }));
 
-// Componentes memoizados para evitar re-renderizados
-const HeroTitle = memo<{ theme: import('@mui/material/styles').Theme }>(({ theme }) => (
+// Memoized components to avoid re-renders
+const HeroTitle = memo(({ theme }: { theme: any }) => (
   <Typography
     variant="h1"
     component="h1"
@@ -127,7 +126,7 @@ const HeroTitle = memo<{ theme: import('@mui/material/styles').Theme }>(({ theme
       lineHeight: 1.2,
       letterSpacing: '-0.02em',
       color: theme.palette.primary.main,
-      mb: 2,
+      mb: { xs: 1.5, md: 2 },
     }}
   >
     Tu nueva oficina digital como corredor de seguros
@@ -136,7 +135,7 @@ const HeroTitle = memo<{ theme: import('@mui/material/styles').Theme }>(({ theme
 
 HeroTitle.displayName = 'HeroTitle';
 
-const HeroSubtitle = memo<{ theme: import('@mui/material/styles').Theme }>(({ theme }) => (
+const HeroSubtitle = memo(({ theme }: { theme: any }) => (
   <Typography
     variant="h2"
     component="p"
@@ -153,74 +152,61 @@ const HeroSubtitle = memo<{ theme: import('@mui/material/styles').Theme }>(({ th
 
 HeroSubtitle.displayName = 'HeroSubtitle';
 
-// Componente principal optimizado
+// Main optimized component
 const HeroSection = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
-  // Renderizado estático para el contenido principal
   return (
-    <>
-      {/* Precargar la imagen crítica para LCP */}
-      <Head>
-        <link 
-          rel="preload" 
-          href="/assets/LandingLogo.svg" 
-          as="image" 
-          type="image/svg+xml"
-        />
-      </Head>
-
-            <Box
-        id="hero-section"
+    <Box
         component="section"
               sx={{
                 position: 'relative',
-          minHeight: { xs: '80vh', md: '90vh' },
+        minHeight: { xs: '70vh', md: '90vh' }, // Reduced for mobile
                 display: 'flex',
           alignItems: 'center',
           background: isDarkMode
             ? theme.palette.background.default
             : alpha(theme.palette.primary.light, 0.05),
                   overflow: 'hidden',
-          pt: { xs: 8, md: 10 },
-          pb: { xs: 4, md: 8 },
+        pt: { xs: 6, md: 10 }, // Reduced for mobile
+        pb: { xs: 3, md: 8 }, // Reduced for mobile
                 }}
               >
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-          <Stack spacing={4}>
-            {/* Etiqueta superior - Estática */}
-            <Stack alignItems="center">
+        <Stack spacing={3}> {/* Reduced spacing */}
+          {/* Top badge - Static */}
+          <Stack alignItems="center">
               <StyledBadge
                 icon={<RocketLaunch weight="duotone" />}
                 label="Nuevo en Latinoamérica • Más de 500 corredores activos"
                   />
             </Stack>
 
-            {/* Contenido principal */}
+          {/* Main content */}
             <Stack
               direction={{ xs: 'column', lg: 'row' }}
-              spacing={{ xs: 4, lg: 6 }}
+            spacing={{ xs: 3, lg: 5 }} // Reduced spacing
               alignItems="center"
               justifyContent="space-between"
             >
-              {/* Columna izquierda */}
+            {/* Left column */}
               <Stack
-                spacing={2}
-                sx={{
+              spacing={1.5} // Reduced spacing
+              sx={{
                   maxWidth: { xs: '100%', lg: '50%' },
                   textAlign: { xs: 'center', lg: 'left' },
                 }}
               >
-                {/* Título y subtítulo memoizados */}
+              {/* Memoized title and subtitle */}
                 <HeroTitle theme={theme} />
                 <HeroSubtitle theme={theme} />
 
-                {/* Beneficios */}
+              {/* Benefits */}
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
-                  spacing={1.5}
+                spacing={1} // Reduced spacing
                   justifyContent={{ xs: 'center', lg: 'flex-start' }}
-                  sx={{ mb: 2 }}
+                sx={{ mb: 1.5 }} // Reduced margin
                 >
                   {benefits.map((benefit, index) => (
                     <BenefitChip key={index}>
@@ -230,10 +216,10 @@ const HeroSection = () => {
                   ))}
                 </Stack>
 
-                {/* Botones de acción */}
+              {/* Action buttons */}
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
-                  spacing={1.5}
+                spacing={1} // Reduced spacing
                   justifyContent={{ xs: 'center', lg: 'flex-start' }}
                 >
                   <Link href="/pricing" style={{ textDecoration: 'none' }}>
@@ -242,10 +228,10 @@ const HeroSection = () => {
                       size="large"
                       endIcon={<ArrowRight weight="bold" />}
                       sx={{
-                        px: 3,
-                        py: 1.5,
-                        borderRadius: '12px',
-                        fontSize: '1rem',
+                      px: 2.5, // Reduced padding
+                      py: 1.25, // Reduced padding
+                      borderRadius: '12px',
+                      fontSize: '0.95rem', // Reduced font size
                         fontWeight: FONT_WEIGHTS.semibold,
                         textTransform: 'none',
                         backgroundColor: theme.palette.primary.main,
@@ -260,10 +246,10 @@ const HeroSection = () => {
                       variant="outlined"
                       size="large"
                       sx={{
-                        px: 3,
-                        py: 1.5,
-                        borderRadius: '12px',
-                        fontSize: '1rem',
+                      px: 2.5, // Reduced padding
+                      py: 1.25, // Reduced padding
+                      borderRadius: '12px',
+                      fontSize: '0.95rem', // Reduced font size
                         fontWeight: FONT_WEIGHTS.semibold,
                         textTransform: 'none',
                         borderWidth: 2,
@@ -277,9 +263,10 @@ const HeroSection = () => {
                 <Typography
                   variant="body2"
                   sx={{
-                    mt: 1,
+                  mt: 0.5,
                     color: 'text.secondary',
                     textAlign: { xs: 'center', lg: 'left' },
+                  fontSize: '0.75rem', // Reduced font size
                   }}
                 >
                   Sin compromiso. Cancelá cuando quieras.
@@ -288,9 +275,9 @@ const HeroSection = () => {
                 {/* Trust badges */}
                 <Stack
                   direction="row"
-                  spacing={1.5}
+                spacing={1} // Reduced spacing
                   justifyContent={{ xs: 'center', lg: 'flex-start' }}
-                  sx={{ mt: 2 }}
+                sx={{ mt: 1.5 }} // Reduced margin
                 >
                   {trustBadges.map((badge, index) => (
                     <Tooltip key={index} title={badge.tooltip} arrow>
@@ -301,6 +288,7 @@ const HeroSection = () => {
                           sx={{
                             fontWeight: FONT_WEIGHTS.medium,
                             color: 'text.primary',
+                          fontSize: '0.7rem', // Reduced font size
                           }}
                         >
                           {badge.label}
@@ -311,32 +299,27 @@ const HeroSection = () => {
                 </Stack>
               </Stack>
 
-              {/* Columna derecha - Imagen optimizada para LCP */}
+            {/* Right column - Optimized image */}
               <Box
                 sx={{
                   position: 'relative',
                   width: '100%',
                   maxWidth: { xs: '100%', lg: '50%' },
-                  height: 'auto',
-                  aspectRatio: '4/3',
-                  borderRadius: '24px',
+                height: { xs: '220px', sm: '300px', md: 'auto' }, // Fixed height for mobile
+                aspectRatio: { md: '4/3' },
+                borderRadius: '16px',
                   overflow: 'hidden',
                 }}
               >
-                {/* Imagen optimizada para LCP */}
                 <Image
                   src="/assets/LandingLogo.svg"
                   alt="Dashboard de la plataforma"
-                  width={600}
-                  height={450}
-                  priority={true}
-                  quality={100}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+                priority={true}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 600px"
                   style={{
-                    width: '100%',
-                    height: 'auto',
-                    objectFit: 'contain',
-                    borderRadius: '24px',
+                  objectFit: 'contain',
+                  objectPosition: 'center',
                     filter: isDarkMode ? 'brightness(0.9)' : 'none',
                   }}
                 />
@@ -345,7 +328,6 @@ const HeroSection = () => {
           </Stack>
         </Container>
       </Box>
-    </>
   );
 };
 
