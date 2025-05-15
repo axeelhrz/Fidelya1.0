@@ -11,13 +11,8 @@ fix_imports() {
   # Create a backup of the original file
   cp "$file" "${file}.bak"
   
-  # Replace import statements
-  # This changes from:
-  # import IconName from '@phosphor-icons/react/dist/ssr/IconName'
-  # to:
-  # import { IconName } from '@phosphor-icons/react'
-  
-  sed -i '' -E 's/import ([A-Za-z]+) from '"'"'@phosphor-icons\/react\/dist\/ssr\/\1'"'"';/import { \1 } from '"'"'@phosphor-icons\/react'"'"';/g' "$file"
+  # Replace import statements for direct imports from dist/ssr
+  sed -i '' -E 's/import ([A-Za-z]+) from '"'"'@phosphor-icons\/react\/dist\/ssr\/([A-Za-z]+)'"'"';/import { \2 } from '"'"'@phosphor-icons\/react'"'"';/g' "$file"
   
   # Check if the file was modified
   if cmp -s "$file" "${file}.bak"; then
@@ -28,7 +23,7 @@ fix_imports() {
   fi
 }
 
-# Find all files with phosphor imports
+# Find all files with phosphor imports from dist/ssr
 find src -type f -name "*.tsx" -o -name "*.ts" | xargs grep -l "@phosphor-icons/react/dist/ssr" | while read file; do
   fix_imports "$file"
 done
