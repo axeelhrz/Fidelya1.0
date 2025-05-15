@@ -1,24 +1,12 @@
 import { type Metadata } from 'next'
+import { Analytics } from "@vercel/analytics/react"
 import Script from 'next/script'
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Plus_Jakarta_Sans, Work_Sans, Inter, Sora } from 'next/font/google'
 import { PlanProvider } from '@/context/planContext'
 import ThemeContextProvider from '@/context/themeContext'
 import { AuthProvider } from '@/context/auth-context'
 import './globals.css';
-
-// Importar Analytics y SpeedInsights solo en producción
-let Analytics: React.ComponentType<object> = () => null;
-let SpeedInsights: React.ComponentType<object> = () => null;
-
-if (process.env.NODE_ENV === 'production') {
-  // Importaciones dinámicas solo en producción
-  import('@vercel/analytics/react').then((mod) => {
-    Analytics = mod.Analytics;
-  });
-  import('@vercel/speed-insights/react').then((mod) => {
-    SpeedInsights = mod.SpeedInsights;
-  });
-}
 
 export const metadata: Metadata = {
   title: 'Assuriva',
@@ -28,55 +16,63 @@ export const metadata: Metadata = {
     shortcut: '/favicon.ico',
   },
 }
-
-// Optimizar carga de fuentes
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   weight: ['400', '600', '700', '800'],
-  display: 'swap',
-  preload: true,
-  variable: '--font-plus-jakarta',
 })
 
 const sora = Sora({
   weight: ['400', '600', '700'],
   subsets: ['latin'],
-  display: 'swap',
-  preload: true,
   variable: '--font-sora'
 });
 
 const workSans = Work_Sans({
   subsets: ['latin'],
   weight: ['400', '600', '700'],
-  display: 'swap',
-  preload: true,
-  variable: '--font-work-sans',
 })
 
 const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
-  display: 'swap',
-  preload: true,
-  variable: '--font-inter',
 })
+
+// Function to load non-critical resources
+const loadNonCriticalResources = (callback: () => void) => {
+  // Use requestIdleCallback or setTimeout as a fallback
+  if (typeof window !== 'undefined') {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(callback);
+    } else {
+      setTimeout(callback, 1000);
+    }
+  }
+};
+
+// Function to load Google Tag Manager
+const loadGTM = () => {
+  if (typeof window !== 'undefined') {
+    // Google Tag Manager initialization code would go here
+    console.log('GTM loaded');
+  }
+};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // Cargar GTM de forma diferida
+  if (typeof window !== 'undefined') {
+    loadNonCriticalResources(() => {
+      loadGTM();
+    });
+  }
+  
   return (
-    <html className={`${plusJakarta.variable} ${workSans.variable} ${inter.variable} ${sora.variable}`} lang="es">
+    <html className={`${plusJakarta.className} ${workSans.className} ${inter.className} ${sora.className}`} lang="es">
       <head>
-        {/* Preconectar con dominios críticos */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Precargar recursos críticos */}
-        <link rel="preload" as="image" href="/assets/LandingLogo.svg" />
-        
-        {/* Scripts críticos - Optimizados */}
+        {/* Scripts críticos */}
         <Script
           id="performance-optimization"
           strategy="beforeInteractive"
@@ -90,24 +86,21 @@ export default function RootLayout({
               if (connection && (connection.saveData || connection.effectiveType.includes('2g'))) {
                 document.documentElement.classList.add('save-data');
               }
-              
-              // Optimización para dispositivos móviles
-              if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                document.documentElement.classList.add('mobile-device');
-              }
             `,
           }}
         />
       </head>
       <body>
         <div className="flex flex-col min-h-screen">
-          <AuthProvider>
-            <ThemeContextProvider>
-              <PlanProvider>
-                {children}
-              </PlanProvider>
-            </ThemeContextProvider>
-          </AuthProvider>
+                    <AuthProvider>
+        <ThemeContextProvider>
+        <PlanProvider>
+          <Analytics />
+          {process.env.NODE_ENV === 'production' && <SpeedInsights />}
+          {children}
+        </PlanProvider>
+        </ThemeContextProvider>
+        </AuthProvider>
         </div>
         
         {/* Scripts no críticos cargados de forma diferida */}
@@ -122,11 +115,7 @@ export default function RootLayout({
             `,
           }}
         />
-        
-        {/* Añadir componentes de Analytics */}
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   )
-}
+};

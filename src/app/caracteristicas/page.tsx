@@ -16,8 +16,8 @@ import {
   Lightning,
   ChartPieSlice,
   Brain,
-  CircleWavyCheck,
 } from '@phosphor-icons/react';
+import { CircleWavyCheck } from '@phosphor-icons/react/dist/ssr';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 
@@ -1138,7 +1138,7 @@ export default function Features() {
         </Box>
         
         {/* Features Section */}
-        <Container id="features" maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
           <motion.div
             initial="initial"
             whileInView="animate"
