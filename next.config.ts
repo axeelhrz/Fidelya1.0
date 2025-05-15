@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
     // turbo: {} // Solo para desarrollo
   },
   // Optimizaciones para producción
-  swcMinify: true, // Usar SWC para minificación (más rápido que Terser)
+  // swcMinify ya no es necesario en Next.js 15.2.4, se usa por defecto
   compiler: {
     // Eliminar console.logs en producción
     removeConsole: process.env.NODE_ENV === 'production' ? {
@@ -36,19 +36,9 @@ const nextConfig: NextConfig = {
     },
   },
   // Añadir optimización de paquetes
-  webpack: async (config, { dev, isServer }) => {
+  webpack: (config, { dev, isServer }) => {
     // Optimizaciones solo para producción
     if (!dev && !isServer) {
-      // Añadir análisis de paquetes en producción
-      const { BundleAnalyzerPlugin } = (await import('webpack-bundle-analyzer')).default;
-      config.plugins.push(
-        new BundleAnalyzerPlugin({
-          analyzerMode: 'disabled', // Cambiar a 'server' para ver el análisis
-          generateStatsFile: true,
-          statsFilename: 'bundle-stats.json',
-        })
-      );
-      
       // Optimizar chunks
       config.optimization.splitChunks = {
         chunks: 'all',
