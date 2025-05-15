@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script fixes the import statements for @phosphor-icons/react
-# It changes from default imports to named imports
+# It changes imports from dist/ssr to the main package
 
 # Function to process a file
 fix_imports() {
@@ -11,8 +11,8 @@ fix_imports() {
   # Create a backup of the original file
   cp "$file" "${file}.bak"
   
-  # Replace import statements for direct imports from dist/ssr
-  sed -i '' -E 's/import ([A-Za-z]+) from '"'"'@phosphor-icons\/react\/dist\/ssr\/([A-Za-z]+)'"'"';/import { \2 } from '"'"'@phosphor-icons\/react'"'"';/g' "$file"
+  # Replace import statements for named imports from dist/ssr
+  sed -i '' -E 's/import \{ ([A-Za-z, ]+) \} from '"'"'@phosphor-icons\/react\/dist\/ssr'"'"';/import { \1 } from '"'"'@phosphor-icons\/react'"'"';/g' "$file"
   
   # Check if the file was modified
   if cmp -s "$file" "${file}.bak"; then
