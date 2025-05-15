@@ -21,7 +21,6 @@ import {
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 
-
 // Animation variants
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -1139,7 +1138,7 @@ export default function Features() {
         </Box>
         
         {/* Features Section */}
-        <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
+        <Container id="features" maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
           <motion.div
             initial="initial"
             whileInView="animate"
