@@ -20,12 +20,7 @@ import {
 } from '@phosphor-icons/react';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
-  ChartPieSlice,
-  Brain,
-} from '@phosphor-icons/react';
-import { CircleWavyCheck } from '@phosphor-icons/react';
-import Header from '@/components/ui/header';
-import Footer from '@/components/ui/footer';
+
 
 // Animation variants
 const fadeInUp = {
