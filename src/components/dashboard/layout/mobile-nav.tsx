@@ -369,7 +369,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ onClose, open }) => {
   // Renderizar ítems de navegación
   const renderNavItems = (items: NavItem[]) => {
     return items.map((item, index) => {
-      const isActive = isNavItemActive({ href: item.path, pathname });
+      const isActive = isNavItemActive({ href: item.path, pathname: pathname || '' });
       const hasAccess = canAccess(item.requiredPlan);
       
       return (

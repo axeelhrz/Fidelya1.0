@@ -197,25 +197,27 @@ export function MainNav({ isSidebarOpen = true, onToggleSidebar }: MainNavProps)
                 color: theme.palette.text.primary,
               }}
             >
-              {pathname === '/dashboard'
+              {!pathname 
                 ? 'Dashboard'
-                : pathname.includes('/dashboard/analisis')
-                  ? 'Análisis'
-                  : pathname.includes('/dashboard/policies')
-                    ? 'Pólizas'
-                    : pathname.includes('/dashboard/customers')
-                      ? 'Clientes'
-                      : pathname.includes('/dashboard/tasks')
-                        ? 'Tareas'
-                        : pathname.includes('/dashboard/contactos')
-                          ? 'Contactos'
-                          : pathname.includes('/dashboard/chat')
-                            ? 'Chat'
-                            : pathname.includes('/dashboard/soporte')
-                              ? 'Soporte'
-                              : pathname.includes('/dashboard/configuracion')
-                                ? 'Configuración'
-                                : 'Dashboard'}
+                : pathname === '/dashboard'
+                  ? 'Dashboard'
+                  : pathname.includes('/dashboard/analisis')
+                    ? 'Análisis'
+                    : pathname.includes('/dashboard/policies')
+                      ? 'Pólizas'
+                      : pathname.includes('/dashboard/customers')
+                        ? 'Clientes'
+                        : pathname.includes('/dashboard/tasks')
+                          ? 'Tareas'
+                          : pathname.includes('/dashboard/contactos')
+                            ? 'Contactos'
+                            : pathname.includes('/dashboard/chat')
+                              ? 'Chat'
+                              : pathname.includes('/dashboard/soporte')
+                                ? 'Soporte'
+                                : pathname.includes('/dashboard/configuracion')
+                                  ? 'Configuración'
+                                  : 'Dashboard'}
             </Typography>
           </Box>
 

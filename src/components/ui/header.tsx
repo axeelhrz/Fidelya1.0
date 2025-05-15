@@ -479,7 +479,7 @@ const MobileDrawerContent = ({
   theme
 }: { 
   navItems: NavItem[]; 
-  pathname: string; 
+  pathname: string | null; 
   handleNavigation: (path: string) => void; 
   profile: { displayName?: string } | null;
   getFirstName: () => string | null;
@@ -506,7 +506,7 @@ const MobileDrawerContent = ({
                             mb: 1.5,
                             position: 'relative',
                             overflow: 'hidden',
-                            backgroundColor: pathname === item.path
+                            backgroundColor: pathname && pathname === item.path
                               ? theme.palette.mode === 'light'
                                 ? alpha(theme.palette.primary.main, 0.08)
                                 : alpha(theme.palette.primary.main, 0.15)
@@ -539,17 +539,17 @@ const MobileDrawerContent = ({
                             sx={{
                               '& .MuiTypography-root': {
                                 fontFamily: '"Inter", sans-serif',
-                                fontWeight: pathname === item.path ? 700 : 600,
+                                fontWeight: pathname && pathname === item.path ? 700 : 600,
                                 fontSize: '1rem',
                                 letterSpacing: '0.3px',
-                                color: pathname === item.path
+                                color: pathname && pathname === item.path
                                   ? theme.palette.primary.main
                                   : theme.palette.text.primary,
                               },
                             }}
                           />
                           {/* Efecto de resplandor para elementos del drawer */}
-                          {pathname !== item.path && (
+                          {(!pathname || pathname !== item.path) && (
                             <GlowEffect
                               variants={glowVariants}
                               initial="initial"

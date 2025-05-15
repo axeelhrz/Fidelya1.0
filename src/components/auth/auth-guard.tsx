@@ -42,7 +42,7 @@ export default function AuthGuard({
     const hasPlan = userData?.planStatus === 'active';
     
     // Si no tiene un plan activo y no está en la página de suscripción
-    if (!hasPlan && !pathname.startsWith('/subscribe') && !pathname.startsWith('/pricing')) {
+    if (!hasPlan && pathname && !pathname.startsWith('/subscribe') && !pathname.startsWith('/pricing')) {
       // Si el plan es básico, activarlo automáticamente
       if (userData?.plan === 'basic') {
           try {
