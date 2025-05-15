@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postbuild": "next-sitemap"
+    "postbuild": "next-sitemap",
+    "analyze": "ANALYZE=true next build",
+    "analyze:server": "BUNDLE_ANALYZE=server next build",
+    "analyze:browser": "BUNDLE_ANALYZE=browser next build"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -103,6 +106,7 @@
     "eslint-config-next": "15.2.4",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "webpack-bundle-analyzer": "^4.10.2"
+    "webpack-bundle-analyzer": "^4.10.2",
+    "@next/bundle-analyzer": "^13.4.19"
   }
 }

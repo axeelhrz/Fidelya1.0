@@ -16,30 +16,36 @@ export const metadata: Metadata = {
     shortcut: '/favicon.ico',
   },
 }
+
+// Optimización: Cargar fuentes con display swap para evitar bloqueo de renderizado
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   weight: ['400', '600', '700', '800'],
+  display: 'swap',
 })
 
 const sora = Sora({
   weight: ['400', '600', '700'],
   subsets: ['latin'],
-  variable: '--font-sora'
+  variable: '--font-sora',
+  display: 'swap',
 });
 
 const workSans = Work_Sans({
   subsets: ['latin'],
   weight: ['400', '600', '700'],
+  display: 'swap',
 })
 
 const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
+  display: 'swap',
 })
 
-// Function to load non-critical resources
+// Función para cargar recursos no críticos
 const loadNonCriticalResources = (callback: () => void) => {
-  // Use requestIdleCallback or setTimeout as a fallback
+  // Usar requestIdleCallback o setTimeout como fallback
   if (typeof window !== 'undefined') {
     if ('requestIdleCallback' in window) {
       window.requestIdleCallback(callback);
@@ -49,7 +55,7 @@ const loadNonCriticalResources = (callback: () => void) => {
   }
 };
 
-// Function to load Google Tag Manager
+// Función para cargar Google Tag Manager
 const loadGTM = () => {
   if (typeof window !== 'undefined') {
     // Google Tag Manager initialization code would go here
@@ -86,12 +92,27 @@ export default function RootLayout({
               if (connection && (connection.saveData || connection.effectiveType.includes('2g'))) {
                 document.documentElement.classList.add('save-data');
               }
+              
+              // Optimización: Precargar recursos críticos
+              const preloadLinks = [
+                { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+                { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' }
+              ];
+              
+              preloadLinks.forEach(link => {
+                const linkEl = document.createElement('link');
+                linkEl.rel = link.rel;
+                linkEl.href = link.href;
+                if (link.crossOrigin) linkEl.crossOrigin = link.crossOrigin;
+                document.head.appendChild(linkEl);
+              });
             `,
           }}
         />
       </head>
       <body>
         <div className="flex flex-col min-h-screen">
+          {/* Optimización: Reducir anidamiento de contextos */}
                     <AuthProvider>
         <ThemeContextProvider>
         <PlanProvider>
@@ -117,5 +138,5 @@ export default function RootLayout({
         />
       </body>
     </html>
-  )
-};
+  );
+}
