@@ -17,7 +17,7 @@ import {
   ChartPieSlice,
   Brain,
 } from '@phosphor-icons/react';
-import { CircleWavyCheck } from '@phosphor-icons/react/dist/ssr';
+import { CircleWavyCheck } from '@phosphor-icons/react';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 
