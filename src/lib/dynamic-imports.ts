@@ -36,7 +36,7 @@ export const createDynamicComponent = <T extends React.ComponentType<P>, P = obj
  * @param options Configuration options for the dynamic import
  * @returns Dynamically imported component with intersection observer
  */
-export const createLazyComponent = <T extends React.ComponentType<P>, P = object>(
+export const createLazyComponent = <T extends React.ComponentType<any>>(
   importFunc: () => Promise<{ default: T } | T>,
   options?: {
     loading?: React.ReactNode | (() => React.ReactNode);
@@ -46,38 +46,44 @@ export const createLazyComponent = <T extends React.ComponentType<P>, P = object
 ) => {
   const { loading, threshold = 0.1, rootMargin = '200px' } = options || {};
   
-  const DynamicComponent = createDynamicComponent(importFunc, {
-    loading,
+  // Use dynamic import with proper typing
+  const DynamicComponent = dynamic(importFunc, {
+    loading: loading 
+      ? typeof loading === 'function' 
+        ? loading 
+        : () => loading
+      : () => React.createElement('div', { className: "loading-placeholder" }, null),
     ssr: false
   });
   
-  // Create a wrapper component that uses IntersectionObserver
-  return function LazyLoadedComponent(props: P) {
-    const [isVisible, setIsVisible] = React.useState(false);
-    const ref = React.useRef<HTMLDivElement>(null);
+// Create a wrapper component that uses IntersectionObserver
+  // Use React.ComponentProps<T> to correctly type the props
+  return function LazyLoadedComponent(props: React.ComponentProps<T>) {
+  const [isVisible, setIsVisible] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  
+  React.useEffect(() => {
+    if (!ref.current) return;
     
-    React.useEffect(() => {
-      if (!ref.current) return;
-      
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-            observer.disconnect();
-          }
-        },
-        { threshold, rootMargin }
-);
-
-      observer.observe(ref.current);
-      
-      return () => {
-        if (ref.current) {
-          observer.unobserve(ref.current);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
         }
-      };
-    }, []);
+      },
+      { threshold, rootMargin }
+    );
+
+    observer.observe(ref.current);
     
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, []);
+  
     return (
       <div ref={ref}>
         {isVisible ? (
@@ -90,9 +96,9 @@ export const createLazyComponent = <T extends React.ComponentType<P>, P = object
           )
         )}
       </div>
-);
+    );
   };
-};
+  };
 
 // Importaciones dinámicas para componentes pesados
 export const DynamicChart = dynamic(
