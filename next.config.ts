@@ -35,6 +35,65 @@ const nextConfig: NextConfig = {
       transform: 'react-icons/{{member}}',
     },
   },
+  // Añadir optimización de paquetes
+  webpack: async (config, { dev, isServer }) => {
+    // Optimizaciones solo para producción
+    if (!dev && !isServer) {
+      // Añadir análisis de paquetes en producción
+      const { BundleAnalyzerPlugin } = (await import('webpack-bundle-analyzer')).default;
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'disabled', // Cambiar a 'server' para ver el análisis
+          generateStatsFile: true,
+          statsFilename: 'bundle-stats.json',
+        })
+      );
+      
+      // Optimizar chunks
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        maxInitialRequests: 25,
+        minSize: 20000,
+        cacheGroups: {
+          default: false,
+          vendors: false,
+          framework: {
+            name: 'framework',
+            chunks: 'all',
+            test: /[\\/]node_modules[\\/](react|react-dom|next|@next)[\\/]/,
+            priority: 40,
+            enforce: true,
+          },
+          mui: {
+            name: 'mui-chunk',
+            test: /[\\/]node_modules[\\/](@mui)[\\/]/,
+            chunks: 'all',
+            priority: 30,
+          },
+          commons: {
+            name: 'commons',
+            chunks: 'all',
+            minChunks: 2,
+            priority: 20,
+          },
+          lib: {
+            test: /[\\/]node_modules[\\/]/,
+            chunks: 'async',
+            name(module: { context: string }) {
+              const match = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/);
+              const packageName = match ? match[1] : 'unknown';
+              return `npm.${packageName.replace('@', '')}`;
+            },
+            priority: 10,
+            minChunks: 1,
+            reuseExistingChunk: true,
+          },
+        },
+      };
+    }
+
+    return config;
+  },
 };
 
 export default nextConfig;
