@@ -6,7 +6,7 @@ export {
   User, 
   Calendar, 
   ChartLine 
-} from '@phosphor-icons/react/dist/ssr';
+} from '@phosphor-icons/react';
 
 // Importaciones optimizadas para date-fns (solo lo que se usa)
 export { format, parseISO } from 'date-fns';
