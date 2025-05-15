@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo, Suspense } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState, useEffect, useMemo, Suspense } from 'react'
+import { motion } from 'framer-motion'
 import {
   AppBar,
   Toolbar,
@@ -19,14 +19,10 @@ import {
   alpha,
   Typography,
   Tooltip,
-  Menu,
-  MenuItem,
-  Divider,
 } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import Logo from './logo'
 import { useUser } from '@/hooks/use-user'
@@ -41,11 +37,7 @@ import {
   ChatCircle,
   SignIn,
   RocketLaunch,
-  Bell,
   Globe,
-  CaretDown,
-  Check,
-  Translate,
   ArrowRight,
 } from '@phosphor-icons/react'
 
@@ -77,6 +69,17 @@ const LANGUAGES: Language[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
 ]
+
+// Context for language, to avoid prop drilling
+const LanguageContext = React.createContext<{
+  currentLanguage: Language;
+  handleLanguageChange: (language: Language) => void;
+}>({
+  currentLanguage: LANGUAGES[0],
+  handleLanguageChange: () => {},
+});
+
+const useLanguageContext = () => React.useContext(LanguageContext);
 
 // Styled Components
 const StyledAppBar = styled(motion(AppBar))(({ theme }) => ({
@@ -310,7 +313,9 @@ const ThemeIcon = styled(Box)(({ theme }) => ({
     : alpha(theme.palette.text.primary, 0.7),
 }))
 
-// Botón de idioma mejorado con diseño más moderno
+// This component is removed since it's not being used
+// If you need a language button in the future, you can uncomment this code
+/*
 const LanguageButton = styled(motion(Button))(({ theme }) => ({
   borderRadius: '14px',
   textTransform: 'none',
@@ -342,8 +347,11 @@ const LanguageButton = styled(motion(Button))(({ theme }) => ({
     outlineOffset: '2px',
   },
 }))
+*/
 
-// Elementos de menú de idioma mejorados
+// Note: This component was commented out as it's not currently used,
+// but may be needed for future language selection implementation
+/*
 const LanguageMenuItem = styled(MenuItem)(({ theme }) => ({
   fontSize: '0.9rem',
   fontFamily: '"Inter", sans-serif',
@@ -370,16 +378,8 @@ const LanguageMenuItem = styled(MenuItem)(({ theme }) => ({
     outlineOffset: '2px',
   },
 }))
+*/
 
-const ScrollProgressBar = styled(motion.div)(({ theme }) => ({
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  right: 0,
-  height: '3px',
-  background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary?.main || theme.palette.primary.dark} 100%)`,
-  transformOrigin: '0%',
-}))
 
 // Botón de chat flotante mejorado
 const ChatButton = styled(motion.div)(({ theme }) => ({
@@ -404,22 +404,7 @@ const ChatButton = styled(motion.div)(({ theme }) => ({
   },
 }))
 
-const NotificationBadge = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  top: '-5px',
-  right: '-5px',
-  width: '20px',
-  height: '20px',
-  borderRadius: '50%',
-  backgroundColor: theme.palette.error.main,
-  color: '#fff',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '0.7rem',
-  fontWeight: 'bold',
-  boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
-}))
+
 
 // Componente para el efecto de resplandor en los enlaces
 const GlowEffect = styled(motion.div)(({ theme }) => ({
@@ -437,33 +422,6 @@ const GlowEffect = styled(motion.div)(({ theme }) => ({
   backgroundPosition: '100% 0',
 }))
 
-// Animation Variants
-const headerVariants = {
-  hidden: { y: -100, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      type: 'spring',
-      stiffness: 260,
-      damping: 20,
-    },
-  },
-}
-
-// Variantes para los enlaces de navegación
-const linkVariants = {
-  hover: { 
-    scale: 1.05, 
-    y: -2,
-    transition: {
-      type: 'spring',
-      stiffness: 400,
-      damping: 10
-    }
-  },
-  tap: { scale: 0.97 },
-}
 
 // Variantes para el efecto de resplandor
 const glowVariants = {
@@ -506,33 +464,30 @@ const chatButtonVariants = {
       damping: 20
     }
   },
-  hover: {
-    scale: 1.1,
-    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-    transition: { type: 'spring', stiffness: 400, damping: 10 }
-  },
-  tap: { scale: 0.9 }
-}
+  hover: { scale: 1.05, boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)' },
+  tap: { scale: 0.95 }
+};
 
-const themeToggleVariants = {
-  light: { x: 4 },
-  dark: { x: 48 },
-}
-
-// Variantes para microinteracciones de iconos
-const iconButtonVariants = {
-  hover: { rotate: 5, scale: 1.1 },
-  tap: { rotate: -5, scale: 0.95 }
-}
-
-// Variantes para el nombre del idioma
-const languageNameVariants = {
-  hidden: { opacity: 0, width: 0 },
-  visible: { opacity: 1, width: 'auto' }
-}
-
-// Componente para el menú móvil
-const MobileDrawerContent = ({ navItems, pathname, handleNavigation, profile, getFirstName, mode, toggleColorMode }) => {
+const MobileDrawerContent = ({ 
+  navItems, 
+  pathname, 
+  handleNavigation, 
+  profile, 
+  getFirstName, 
+  mode, 
+  toggleColorMode,
+  theme
+}: { 
+  navItems: NavItem[]; 
+  pathname: string; 
+  handleNavigation: (path: string) => void; 
+  profile: { displayName?: string } | null;
+  getFirstName: () => string | null;
+  mode: 'light' | 'dark';
+  toggleColorMode: () => void;
+  theme: import('@mui/material/styles').Theme;
+}) => {
+  const { currentLanguage, handleLanguageChange } = useLanguageContext();
   return (
     <List>
       {navItems.map((item, index) => (
@@ -703,19 +658,15 @@ const MobileDrawerContent = ({ navItems, pathname, handleNavigation, profile, ge
                         border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                       }}>
                         <Stack direction="row" spacing={1.5} alignItems="center">
-                          {mode === 'light' ? (
-                            <Sun size={20} weight="fill" color={theme.palette.primary.main} />
-                          ) : (
-                            <Moon size={20} weight="fill" color={theme.palette.primary.main} />
-                          )}
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {mode === 'light' ? 'Modo claro' : 'Modo oscuro'}
-                          </Typography>
-                        </Stack>
-                        
-                        <ThemeModeToggle
-                          onClick={toggleColorMode}
-            mode={mode}
+              {mode === 'light' ? (
+                <Sun size={20} weight="fill" color={theme.palette.primary.main} />
+              ) : (
+                <Moon size={20} weight="fill" color={theme.palette.primary.main} />
+              )}
+            </Stack>
+            
+            <ThemeModeToggle
+              onClick={toggleColorMode}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           sx={{ width: '60px', height: '30px' }}
@@ -829,12 +780,8 @@ const MobileDrawerContent = ({ navItems, pathname, handleNavigation, profile, ge
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-  const [scrollProgress, setScrollProgress] = useState(0)
   const [showChatModal, setShowChatModal] = useState(false)
-  const hasNotifications = true
-  const [languageAnchorEl, setLanguageAnchorEl] = useState<null | HTMLElement>(null)
   const [currentLanguage, setCurrentLanguage] = useState<Language>(LANGUAGES[0])
-  const [showLanguageName, setShowLanguageName] = useState(false)
   
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -858,15 +805,9 @@ export const Header = () => {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: theme.spacing(isMobile ? 1 : 1.5),
-    height: '100%',
-  }), [theme, isMobile])
-
-  // Handle navigation
-  const handleNavigation = (path: string) => {
-    setIsDrawerOpen(false)
-    router.push(path)
-  }
+    width: '100%',
+    padding: isMobile ? '0 8px' : '0 16px',
+  }), [isMobile])
 
   // Get first name for greeting
   const getFirstName = () => {
@@ -874,202 +815,214 @@ export const Header = () => {
     return profile.displayName.split(' ')[0]
   }
 
+  // Handle navigation
+  const handleNavigation = (path: string) => {
+    setIsDrawerOpen(false)
+    router.push(path)
+  }
+
+  // Context value for language
+  const languageContextValue = useMemo(() => ({
+    currentLanguage,
+    handleLanguageChange: (language: Language) => {
+      setCurrentLanguage(language);
+    }
+  }), [currentLanguage]);
   return (
     <>
-      <StyledAppBar className={isScrolled ? 'scrolled' : ''}>
-        <Container maxWidth="xl">
-          <Toolbar disableGutters sx={containerStyles}>
-            {/* Logo */}
-            <Link href="/" passHref>
-              <Box
-                sx={{
-                  '&:hover': {
-                    opacity: 0.9,
-                  }
-                }}
-              >
-                <Logo />
-              </Box>
-            </Link>
-
-            {/* Desktop Navigation */}
-            {!isMobile && (
-              <Stack 
-                direction="row" 
-                spacing={1}
-                alignItems="center"
-                sx={{ mx: 'auto', px: 2 }}
-              >
-                {NAV_ITEMS.map((item) => (
-                  <Link key={item.path} href={item.path} passHref>
-                    <NavLink className={pathname === item.path ? 'active' : ''}>
-                      {item.label}
-                      {item.badge && (
-                        <BadgeLabel>
-                          {item.badge}
-                        </BadgeLabel>
-                      )}
-                    </NavLink>
-                  </Link>
-                ))}
-              </Stack>
-            )}
-
-            {/* Right Side Actions */}
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              {/* Theme Selector */}
-              <Tooltip title={mode === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}>
-                <ThemeModeToggle onClick={toggleColorMode} mode={mode} />
-              </Tooltip>
-
-              {/* User Actions */}
-              {!isMobile && (
-                <>
-                  {profile ? (
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                      {/* User Greeting */}
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          fontWeight: 600,
-                          display: { xs: 'none', md: 'block' },
-                        }}
-                      >
-                        Hola, {getFirstName()}
-                      </Typography>
-                      
-                      {/* Dashboard Button */}
-                      <Button
-                        variant="contained"
-                        onClick={() => handleNavigation('/dashboard')}
-                        startIcon={<RocketLaunch weight="bold" />}
-                        sx={{
-                          borderRadius: '10px',
-                          textTransform: 'none',
-                          px: 2,
-                          py: 0.75,
-                        }}
-                      >
-                        Dashboard
-                      </Button>
-                    </Stack>
-                  ) : (
-                    <>
-                      <Button
-                        variant="outlined"
-                        onClick={() => handleNavigation('/auth/sign-in')}
-                        startIcon={<SignIn weight="bold" />}
-                        sx={{
-                          borderRadius: '10px',
-                          textTransform: 'none',
-                          px: 2,
-                          py: 0.75,
-                        }}
-                      >
-                        Iniciar sesión
-                      </Button>
-                      <Button
-                        variant="contained"
-                        onClick={() => handleNavigation('/auth/sign-up')}
-                        startIcon={<RocketLaunch weight="bold" />}
-                        endIcon={<ArrowRight weight="bold" />}
-                        sx={{
-                          borderRadius: '10px',
-                          textTransform: 'none',
-                          px: 2,
-                          py: 0.75,
-                        }}
-                      >
-                        Comenzar ahora
-                      </Button>
-                    </>
-                  )}
-                </>
-              )}
-
-              {/* Mobile Menu Button */}
-              {isMobile && (
-                <IconButton
-                  onClick={() => setIsDrawerOpen(true)}
+      <LanguageContext.Provider value={languageContextValue}>
+        <StyledAppBar className={isScrolled ? 'scrolled' : ''}>
+          <Container maxWidth="xl">
+            <Toolbar disableGutters sx={containerStyles}>
+              {/* Logo */}
+              <Link href="/" passHref>
+                <Box
                   sx={{
-                    color: 'text.primary'
+                    '&:hover': {
+                      opacity: 0.9,
+                    }
                   }}
-                  aria-label="abrir menú"
                 >
-                  <ListIcon size={24} weight="bold" />
-                </IconButton>
-              )}
-            </Stack>
-
-            {/* Mobile Drawer */}
-            <Drawer
-              anchor="right"
-              open={isDrawerOpen}
-              onClose={() => setIsDrawerOpen(false)}
-              PaperProps={{
-                sx: {
-                  width: '100%',
-                  maxWidth: '320px',
-                  background: theme.palette.mode === 'light'
-                    ? alpha(theme.palette.background.paper, 0.98)
-                    : alpha(theme.palette.background.paper, 0.98),
-                  backdropFilter: 'blur(15px)',
-                  borderTopLeftRadius: '16px',
-                  borderBottomLeftRadius: '16px',
-                  boxShadow: '-8px 0px 32px rgba(0,0,0,0.15)',
-                },
-              }}
-            >
-              <Box sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                   <Logo />
-                  <IconButton
-                    onClick={() => setIsDrawerOpen(false)}
-                    aria-label="cerrar menú"
-                  >
-                    <XIcon size={24} weight="bold" />
-                  </IconButton>
                 </Box>
-                
-                <Suspense fallback={<Box sx={{ height: '400px' }}><Typography>Cargando...</Typography></Box>}>
-                  <MobileDrawerContent 
-                    navItems={NAV_ITEMS} 
-                    pathname={pathname} 
-                    handleNavigation={handleNavigation}
-                    profile={profile}
-                    getFirstName={getFirstName}
-                    mode={mode}
-                    toggleColorMode={toggleColorMode}
-                  />
-                </Suspense>
-              </Box>
-            </Drawer>
-          </Toolbar>
-        </Container>
-      </StyledAppBar>
+              </Link>
+
+              {/* Desktop Navigation */}
+              {!isMobile && (
+                <Stack 
+                  direction="row" 
+                  spacing={1}
+                  alignItems="center"
+                  sx={{ mx: 'auto', px: 2 }}
+                >
+                  {NAV_ITEMS.map((item) => (
+                    <Link key={item.path} href={item.path} passHref>
+                      <NavLink className={pathname === item.path ? 'active' : ''}>
+                        {item.label}
+                        {item.badge && (
+                          <BadgeLabel>
+                            {item.badge}
+                          </BadgeLabel>
+                        )}
+                      </NavLink>
+                    </Link>
+                  ))}
+                </Stack>
+              )}
+
+              {/* Right Side Actions */}
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                {/* Theme Selector */}
+                <Tooltip title={mode === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}>
+                  <ThemeModeToggle onClick={toggleColorMode} />
+                </Tooltip>
+                {/* User Actions */}
+                {!isMobile && (
+                  <>
+                    {profile ? (
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        {/* User Greeting */}
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontWeight: 600,
+                            display: { xs: 'none', md: 'block' },
+                          }}
+                        >
+                          Hola, {getFirstName()}
+                        </Typography>
+                        
+                        {/* Dashboard Button */}
+                        <Button
+                          variant="contained"
+                          onClick={() => handleNavigation('/dashboard')}
+                          startIcon={<RocketLaunch weight="bold" />}
+                          sx={{
+                            borderRadius: '10px',
+                            textTransform: 'none',
+                            px: 2,
+                            py: 0.75,
+                          }}
+                        >
+                          Dashboard
+                        </Button>
+                      </Stack>
+                    ) : (
+                      <>
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleNavigation('/auth/sign-in')}
+                          startIcon={<SignIn weight="bold" />}
+                          sx={{
+                            borderRadius: '10px',
+                            textTransform: 'none',
+                            px: 2,
+                            py: 0.75,
+                          }}
+                        >
+                          Iniciar sesión
+                        </Button>
+                        <Button
+                          variant="contained"
+                          onClick={() => handleNavigation('/auth/sign-up')}
+                          startIcon={<RocketLaunch weight="bold" />}
+                          endIcon={<ArrowRight weight="bold" />}
+                          sx={{
+                            borderRadius: '10px',
+                            textTransform: 'none',
+                            px: 2,
+                            py: 0.75,
+                          }}
+                        >
+                          Comenzar ahora
+                        </Button>
+                      </>
+                    )}
+                  </>
+                )}
+
+                {/* Mobile Menu Button */}
+                {isMobile && (
+                  <IconButton
+                    onClick={() => setIsDrawerOpen(true)}
+                    sx={{
+                      color: 'text.primary'
+                    }}
+                    aria-label="abrir menú"
+                  >
+                    <ListIcon size={24} weight="bold" />
+                  </IconButton>
+                )}
+              </Stack>
+            </Toolbar>
+          </Container>
+        </StyledAppBar>
+
+        {/* Mobile Drawer */}
+        <Drawer
+          anchor="right"
+          open={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          PaperProps={{
+            sx: {
+              width: '100%',
+              maxWidth: '320px',
+              borderTopLeftRadius: '16px',
+              borderBottomLeftRadius: '16px',
+              padding: '16px',
+            }
+          }}
+        >
+          <IconButton
+            onClick={() => setIsDrawerOpen(false)}
+            aria-label="cerrar menú"
+            sx={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              color: 'text.primary',
+            }}
+          >
+            <XIcon size={24} weight="bold" />
+          </IconButton>
+          
+          <Suspense fallback={<Box sx={{ height: '400px' }}><Typography>Cargando...</Typography></Box>}>
+            <MobileDrawerContent 
+              navItems={NAV_ITEMS} 
+              pathname={pathname} 
+              handleNavigation={handleNavigation}
+              profile={profile}
+              getFirstName={getFirstName}
+              mode={mode}
+              toggleColorMode={toggleColorMode}
+              theme={theme}
+            />
+          </Suspense>
+        </Drawer>
+  
+        {/* Spacer to prevent content from hiding behind the fixed header */}
+        <Box sx={{ height: '70px', [theme.breakpoints.down('md')]: { height: '60px' } }} />
+  
+        {/* Chat Button */}
+        <ChatButton
+          variants={chatButtonVariants}
+          initial="initial"
+          animate="animate"
+          whileHover="hover"
+          whileTap="tap"
+          onClick={() => setShowChatModal(true)}
+        >
+          <ChatCircle size={28} weight="fill" />
+        </ChatButton>
       
-      {/* Spacer to prevent content from hiding behind the fixed header */}
-      <Box sx={{ height: { xs: '60px', md: '70px' } }} />
-      
-      {/* Botón de Chat */}
-      <ChatButton
-        variants={chatButtonVariants}
-        initial="initial"
-        animate="animate"
-        whileHover="hover"
-        whileTap="tap"
-        onClick={() => setShowChatModal(true)}
-      >
-        <ChatCircle size={28} weight="fill" />
-      </ChatButton>
-      
-      {/* Modal de Chat (implementación futura) */}
-      {showChatModal && (
-        // Placeholder para implementación del modal de chat
-        <Box sx={{ display: 'none' }}>Chat Modal</Box>
-      )}
+        {/* Modal de Chat (implementación futura) */}
+        {showChatModal && (
+          // Placeholder para implementación del modal de chat
+          <Box sx={{ display: 'none' }}>Chat Modal</Box>
+        )}
+      </LanguageContext.Provider>
     </>
   )
 }
 
-export default Header
+export default Header;

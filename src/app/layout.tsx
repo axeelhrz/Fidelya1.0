@@ -1,7 +1,5 @@
 import { type Metadata } from 'next'
-import { Analytics } from "@vercel/analytics/react"
 import Script from 'next/script'
-import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Plus_Jakarta_Sans, Work_Sans, Inter, Sora } from 'next/font/google'
 import './globals.css';
 
@@ -103,7 +101,7 @@ export default function RootLayout({
         />
         
         {/* Analytics loaded with lazyOnload strategy */}
-        <Script strategy="lazyOnload">
+        <Script id="analytics-script" strategy="lazyOnload">
           {`
             window.addEventListener('load', () => {
               if (typeof window !== 'undefined') {

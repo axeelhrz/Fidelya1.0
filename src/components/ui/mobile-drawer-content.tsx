@@ -31,7 +31,7 @@ interface MobileDrawerContentProps {
   navItems: NavItem[]
   pathname: string
   handleNavigation: (path: string) => void
-  profile: any
+  profile: Record<string, unknown> | null
   getFirstName: () => string | null
   mode: string
   toggleColorMode: () => void

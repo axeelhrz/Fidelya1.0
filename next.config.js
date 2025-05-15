@@ -59,10 +59,10 @@ const nextConfig = {
 
 // Add bundle analyzer if ANALYZE is set
 if (process.env.ANALYZE === 'true') {
-  const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  const { default: withBundleAnalyzer } = await import('@next/bundle-analyzer');
+  module.exports = withBundleAnalyzer({
     enabled: true,
-  });
-  module.exports = withBundleAnalyzer(nextConfig);
+  })(nextConfig);
 } else {
   module.exports = nextConfig;
 }

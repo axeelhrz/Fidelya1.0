@@ -116,7 +116,7 @@ const BenefitChip = styled(Box)(({ theme }) => ({
 }));
 
 // Memoized components to avoid re-renders
-const HeroTitle = memo(({ theme }: { theme: any }) => (
+const HeroTitle = memo(({ theme }: { theme: import('@mui/material').Theme }) => (
   <Typography
     variant="h1"
     component="h1"
@@ -135,7 +135,7 @@ const HeroTitle = memo(({ theme }: { theme: any }) => (
 
 HeroTitle.displayName = 'HeroTitle';
 
-const HeroSubtitle = memo(({ theme }: { theme: any }) => (
+const HeroSubtitle = memo(({ theme }: { theme: import('@mui/material').Theme }) => (
   <Typography
     variant="h2"
     component="p"
