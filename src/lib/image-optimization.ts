@@ -100,3 +100,98 @@ export const loadProgressiveImage = (
   };
   lowQualityImg.src = lowQualitySrc;
 };
+
+/**
+ * Checks if the current device supports WebP
+ * @returns Boolean indicating if WebP is supported
+ */
+export const isWebPSupported = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  
+  // Check for WebP support
+  const canvas = document.createElement('canvas');
+  if (canvas.getContext && canvas.getContext('2d')) {
+    return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+  }
+  
+  return false;
+};
+
+/**
+ * Gets the appropriate image path based on device and format support
+ * @param path Base image path
+ * @param isMobile Whether the device is mobile
+ * @returns Optimized image path
+ */
+export const getOptimizedImagePath = (path: string, isMobile = false): string => {
+  if (!path) return '';
+  
+  // Extract file name and extension
+  const lastSlashIndex = path.lastIndexOf('/');
+  const fileName = path.substring(lastSlashIndex + 1);
+  const basePath = path.substring(0, lastSlashIndex + 1);
+  
+  // Check if it's already an optimized path
+  if (path.includes('/optimized/')) {
+    return path;
+  }
+  
+  // For SVG files, return the original path (SVGs are already optimized)
+  if (path.endsWith('.svg')) {
+    return path;
+  }
+  
+  // Determine the appropriate path based on device
+  const devicePath = isMobile ? 'mobile/' : '';
+  
+  // Create the optimized path
+  return `/assets/optimized/${devicePath}${fileName}`;
+};
+
+/**
+ * Generates optimized image props for Next.js Image component
+ * @param src Image source path
+ * @param options Additional options
+ * @returns Optimized image props
+ */
+export const getOptimizedImageProps = (
+  src: string,
+  options: {
+    width?: number;
+    height?: number;
+    priority?: boolean;
+    quality?: number;
+    isMobile?: boolean;
+  } = {}
+): Partial<ImageProps> => {
+  const {
+    width,
+    height,
+    priority = false,
+    quality = 80,
+    isMobile = false,
+  } = options;
+  
+  // Determine if this is a critical image (above the fold)
+  const isCritical = priority;
+  
+  return {
+    src: getOptimizedImagePath(src, isMobile),
+    width: width,
+    height: height,
+    priority: isCritical,
+    quality: isMobile ? Math.min(quality, 70) : quality, // Lower quality for mobile
+    loading: isCritical ? 'eager' : 'lazy',
+    sizes: getResponsiveSizes(),
+  };
+};
+
+/**
+ * Detects if the current device is mobile
+ * @returns Boolean indicating if the device is mobile
+ */
+export const isMobileDevice = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+};
