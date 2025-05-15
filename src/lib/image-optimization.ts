@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ImageProps } from 'next/image';
 
 // Hook para cargar imágenes de forma diferida
 export const useLazyImage = (src: string, placeholder: string = '') => {
@@ -129,7 +130,6 @@ export const getOptimizedImagePath = (path: string, isMobile = false): string =>
   // Extract file name and extension
   const lastSlashIndex = path.lastIndexOf('/');
   const fileName = path.substring(lastSlashIndex + 1);
-  const basePath = path.substring(0, lastSlashIndex + 1);
   
   // Check if it's already an optimized path
   if (path.includes('/optimized/')) {
@@ -194,4 +194,12 @@ export const isMobileDevice = (): boolean => {
   if (typeof window === 'undefined') return false;
   
   return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+};
+
+/**
+ * Generates responsive size hints for images
+ * @returns String with responsive size breakpoints
+ */
+export const getResponsiveSizes = (): string => {
+  return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw';
 };
