@@ -91,6 +91,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@next/bundle-analyzer": "^13.5.11",
     "@tailwindcss/postcss": "^4",
     "@types/aos": "^3.0.7",
     "@types/lodash": "^4.17.16",
@@ -106,7 +107,6 @@
     "eslint-config-next": "15.2.4",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "webpack-bundle-analyzer": "^4.10.2",
-    "@next/bundle-analyzer": "^13.4.19"
+    "webpack-bundle-analyzer": "^4.10.2"
   }
 }
