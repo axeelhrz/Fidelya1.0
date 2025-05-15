@@ -164,9 +164,9 @@ const HeroSection = () => {
     // Usar requestIdleCallback para cargar la imagen cuando el navegador esté inactivo
     if (typeof window !== 'undefined') {
       const loadImage = () => {
-        const img = new Image();
-      img.src = '/assets/LandingLogo.svg';
-      img.onload = () => setImageLoaded(true);
+        const img = new window.Image();
+        img.src = '/assets/LandingLogo.svg';
+        img.onload = () => setImageLoaded(true);
       };
       
       if ('requestIdleCallback' in window) {

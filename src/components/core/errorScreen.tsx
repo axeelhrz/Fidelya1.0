@@ -1,281 +1,107 @@
 'use client';
 
-import { useState } from 'react';
-import {
-  Box,
-  Button,
-  Typography,
-  useTheme,
-  Container,
-  Paper,
-  Stack,
-  Collapse,
-  alpha,
-} from '@mui/material';
-import {
-  Error as ErrorIcon,
-  Refresh as RefreshIcon,
-  KeyboardArrowDown as ExpandMoreIcon,
-  KeyboardArrowUp as ExpandLessIcon,
-  Home as HomeIcon,
-  ContactSupport as SupportIcon,
-} from '@mui/icons-material';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/router';
-
+import React from 'react';
+import { Box, Button, Container, Paper, Stack, Typography, alpha } from '@mui/material';
+import { House, ArrowClockwise, WarningCircle } from '@phosphor-icons/react';
+import Link from 'next/link';
 interface ErrorScreenProps {
-  message?: string;
-  error?: Error;
+  title?: string;
+  message: string;
+  error?: Error & { digest?: string };
+  onRetry?: () => void;
   fullScreen?: boolean;
   showHomeButton?: boolean;
   showRefreshButton?: boolean;
-  showSupportButton?: boolean;
-  onRetry?: () => void;
 }
 
-export default function ErrorScreen({
-  message = 'Ha ocurrido un error inesperado',
+export function ErrorScreen({
+  title = 'Error Inesperado',
+  message,
   error,
-  fullScreen = false,
-  showHomeButton = true,
-  showRefreshButton = true,
-  showSupportButton = true,
   onRetry,
+  fullScreen = false,
+  showHomeButton = false,
+  showRefreshButton = false,
 }: ErrorScreenProps) {
-  const theme = useTheme();
-  const router = useRouter();
-  const [showDetails, setShowDetails] = useState(false);
-
-  const handleRetry = () => {
-    if (onRetry) {
-      onRetry();
-    } else {
-      router.reload();
-    }
-  };
-
-  const handleGoHome = () => {
-    router.push('/');
-  };
-
-  const handleContactSupport = () => {
-    // Implementar lógica para contactar soporte
-    window.open('/ayuda', '_blank');
-  };
-
-  return (
-    <Container maxWidth="sm">
-      <Box
-        component={motion.div}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        sx={{
-          minHeight: fullScreen ? '100vh' : 400,
+  const containerStyles = fullScreen
+    ? {
+        minHeight: '100vh',
           display: 'flex',
+        flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          py: 4,
+        p: 3,
+      }
+    : { p: 3 };
+  return (
+    <Container maxWidth="sm" sx={containerStyles}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 3, sm: 4 },
+          textAlign: 'center',
+          borderRadius: '16px',
+          border: (theme) => `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+          backgroundColor: (theme) => alpha(theme.palette.error.light, 0.05),
         }}
       >
-        <Paper
-          elevation={3}
-          sx={{
-            p: 4,
-            borderRadius: 2,
-            width: '100%',
-            backgroundColor: theme.palette.mode === 'dark'
-              ? alpha(theme.palette.background.paper, 0.8)
-              : theme.palette.background.paper,
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          <Stack spacing={3} alignItems="center">
-            {/* Icono de Error Animado */}
+        <Stack spacing={3} alignItems="center">
+          <WarningCircle size={64} color="var(--mui-palette-error-main)" weight="duotone" />
+          <Typography variant="h4" component="h1" fontWeight="bold" color="error.dark">
+            {title}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            {message}
+          </Typography>
+          {error && (
             <Box
-              component={motion.div}
-              animate={{
-                scale: [1, 1.1, 1],
-                rotate: [0, 5, -5, 0],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatType: "reverse",
+              sx={{
+                mt: 2,
+                p: 2,
+                borderRadius: '8px',
+                backgroundColor: (theme) => alpha(theme.palette.grey[500], 0.1),
+                maxHeight: '150px',
+                overflowY: 'auto',
+                textAlign: 'left',
+                width: '100%',
               }}
             >
-              <ErrorIcon
-                sx={{
-                  fontSize: 64,
-                  color: theme.palette.error.main,
-                  mb: 2,
-                }}
-              />
-            </Box>
-
-            {/* Mensaje de Error */}
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography
-                variant="h5"
-                component={motion.h5}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                gutterBottom
-                sx={{ fontWeight: 600 }}
-              >
-                ¡Ups! Algo salió mal
-              </Typography>
-              <Typography
-                color="text.secondary"
-                component={motion.p}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                {message}
+              <Typography variant="caption" component="pre" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                <strong>Detalles del error:</strong>
+                {error.digest && `\nDigest: ${error.digest}`}
+                {`\nName: ${error.name}`}
+                {`\nMessage: ${error.message}`}
+                {error.stack && `\nStack: ${error.stack.substring(0, 300)}...`}
               </Typography>
             </Box>
-
-            {/* Detalles del Error (Expandible) */}
-            {error && (
-              <Box sx={{ width: '100%' }}>
-                <Button
-                  variant="text"
-                  size="small"
-                  onClick={() => setShowDetails(!showDetails)}
-                  endIcon={showDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  sx={{ textTransform: 'none' }}
-                >
-                  {showDetails ? 'Ocultar detalles' : 'Mostrar detalles'}
-                </Button>
-                <Collapse in={showDetails}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      mt: 1,
-                      p: 2,
-                      backgroundColor: alpha(theme.palette.error.main, 0.05),
-                      borderColor: alpha(theme.palette.error.main, 0.1),
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      component="pre"
-                      sx={{
-                        fontFamily: 'monospace',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word',
-                        color: theme.palette.error.main,
-                        m: 0,
-                      }}
-                    >
-                      {error.message}
-                      {error.stack && (
-                        <>
-                          {'\n\n'}
-                          {error.stack}
-                        </>
-                      )}
-                    </Typography>
-                  </Paper>
-                </Collapse>
-              </Box>
-            )}
-
-            {/* Botones de Acción */}
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={2}
-              sx={{ mt: 2 }}
-            >
-              {showRefreshButton && (
-                <Button
-                  variant="contained"
-                  startIcon={<RefreshIcon />}
-                  onClick={handleRetry}
-                  sx={{
-                    borderRadius: '8px',
-                    textTransform: 'none',
-                    minWidth: 140,
-                  }}
-                >
-                  Intentar de nuevo
-                </Button>
-              )}
-
-              {showHomeButton && (
+          )}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center" sx={{ width: '100%', mt: 2 }}>
+            {showHomeButton && (
+              <Link href="/" passHref legacyBehavior>
                 <Button
                   variant="outlined"
-                  startIcon={<HomeIcon />}
-                  onClick={handleGoHome}
-                  sx={{
-                    borderRadius: '8px',
-                    textTransform: 'none',
-                    minWidth: 140,
-                  }}
+                  color="primary"
+                  startIcon={<House />}
+                  sx={{ borderRadius: '8px', textTransform: 'none' }}
                 >
-                  Ir al inicio
+                  Ir al Inicio
                 </Button>
-              )}
-
-              {showSupportButton && (
-                <Button
-                  variant="text"
-                  startIcon={<SupportIcon />}
-                  onClick={handleContactSupport}
-                  sx={{
-                    borderRadius: '8px',
-                    textTransform: 'none',
-                    minWidth: 140,
-                  }}
-                >
-                  Contactar soporte
-                </Button>
-              )}
-            </Stack>
-
-            {/* Mensaje de Ayuda */}
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              align="center"
-              sx={{ mt: 2 }}
-            >
-              Si el problema persiste, por favor contacta con nuestro equipo de soporte.
-            </Typography>
+              </Link>
+            )}
+            {showRefreshButton && onRetry && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={onRetry}
+                startIcon={<ArrowClockwise />}
+                sx={{ borderRadius: '8px', textTransform: 'none' }}
+              >
+                Intentar de Nuevo
+              </Button>
+            )}
           </Stack>
-        </Paper>
-      </Box>
+        </Stack>
+      </Paper>
     </Container>
-  );
-}
-
-// Ejemplos de uso
-export function NotFoundError() {
-  return (
-    <ErrorScreen
-      message="La página que buscas no existe o ha sido movida."
-      showRefreshButton={false}
-    />
-  );
-}
-
-export function NetworkError() {
-  return (
-    <ErrorScreen
-      message="No se pudo conectar con el servidor. Por favor, verifica tu conexión a internet."
-      error={new Error('Network request failed')}
-    />
-  );
-}
-
-export function PermissionError() {
-  return (
-    <ErrorScreen
-      message="No tienes permisos para acceder a este recurso."
-      showRefreshButton={false}
-      showHomeButton={true}
-    />
   );
 }
