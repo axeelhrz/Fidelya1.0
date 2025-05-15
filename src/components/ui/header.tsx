@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   AppBar,
@@ -531,443 +531,11 @@ const languageNameVariants = {
   visible: { opacity: 1, width: 'auto' }
 }
 
-export const Header = () => {
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-  const [scrollProgress, setScrollProgress] = useState(0)
-  const [showChatModal, setShowChatModal] = useState(false)
-  const hasNotifications = true
-  const [languageAnchorEl, setLanguageAnchorEl] = useState<null | HTMLElement>(null)
-  const [currentLanguage, setCurrentLanguage] = useState<Language>(LANGUAGES[0])
-  const [showLanguageName, setShowLanguageName] = useState(false)
-  
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-  const pathname = usePathname()
-  const router = useRouter()
-  const { profile } = useUser()
-  const { mode, toggleColorMode } = useThemeContext()
-
-  // Manejar eventos de scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      // Actualizar estado de scroll
-      setIsScrolled(window.scrollY > 10)
-      
-      // Calcular progreso de scroll
-      const totalHeight = document.body.scrollHeight - window.innerHeight
-      const progress = (window.scrollY / totalHeight) || 0
-      setScrollProgress(progress)
-    }
-    
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  // Configurar NProgress
-  useEffect(() => {
-    NProgress.configure({
-      showSpinner: false,
-      trickleSpeed: 200,
-      minimum: 0.08,
-      easing: 'ease',
-      speed: 200,
-    })
-  }, [])
-
-  // Agregar transición de color al body para cambio de tema suave
-  useEffect(() => {
-    document.body.style.transition = 'background-color 0.5s ease, color 0.5s ease'
-    return () => {
-      document.body.style.transition = ''
-    }
-  }, [])
-
-  // Memorizar estilos del contenedor para mejor rendimiento
-  const containerStyles = useMemo(() => ({
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: theme.spacing(isMobile ? 1 : 2),
-    transition: 'all 0.3s ease',
-    height: isScrolled ? (isMobile ? '60px' : '70px') : (isMobile ? '60px' : '70px'),
-  }), [theme, isScrolled, isMobile])
-
-  // Manejar navegación
-  const handleNavigation = (path: string) => {
-    setIsDrawerOpen(false)
-    router.push(path)
-    NProgress.start()
-  }
-
-  // Obtener nombre para saludo
-  const getFirstName = () => {
-    if (!profile?.displayName) return null
-    return profile.displayName.split(' ')[0]
-  }
-
-  // Manejadores del menú de idiomas
-  const handleLanguageMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setLanguageAnchorEl(event.currentTarget)
-  }
-
-  const handleLanguageMenuClose = () => {
-    setLanguageAnchorEl(null)
-  }
-
-  const handleLanguageChange = (language: Language) => {
-    setCurrentLanguage(language)
-    handleLanguageMenuClose()
-    // Aquí implementarías la lógica real de cambio de idioma
-    // Por ejemplo: i18n.changeLanguage(language.code)
-    
-    // Guardar preferencia en localStorage para persistencia
-    localStorage.setItem('preferredLanguage', language.code)
-  }
-
-  // Cargar idioma preferido al iniciar
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('preferredLanguage')
-    if (savedLanguage) {
-      const language = LANGUAGES.find(lang => lang.code === savedLanguage)
-      if (language) {
-        setCurrentLanguage(language)
-      }
-    }
-  }, [])
-
+// Componente para el menú móvil
+const MobileDrawerContent = ({ navItems, pathname, handleNavigation, profile, getFirstName, mode, toggleColorMode }) => {
   return (
-    <>
-      <StyledAppBar
-        position="fixed"
-        className={isScrolled ? 'scrolled' : ''}
-        variants={headerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Barra de Progreso de Scroll con efecto bounce */}
-        <ScrollProgressBar
-          initial={{ scaleX: 0 }}
-          animate={{ 
-            scaleX: scrollProgress, 
-            transition: { 
-              type: 'spring', 
-              stiffness: 400, 
-              damping: 30 
-            } 
-          }}
-        />
-        
-        <Container maxWidth="xl">
-          <Toolbar disableGutters sx={containerStyles}>
-            {/* Logo */}
-            <Link href="/" passHref>
-              <Box
-                component={motion.div}
-                whileHover={{ scale: 1.03, y: -2, filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.1))' }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <Logo />
-              </Box>
-            </Link>
-
-            {/* Navegación Desktop con enlaces futuristas */}
-            {!isMobile && (
-              <Stack 
-                direction="row" 
-                spacing={1.5}
-                alignItems="center"
-                sx={{ mx: 'auto', px: 4 }}
-              >
-                {NAV_ITEMS.map((item) => (
-                  <Link key={item.path} href={item.path} passHref>
-                    <NavLink
-                      className={pathname === item.path ? 'active' : ''}
-                      variants={linkVariants}
-                      whileHover="hover"
-                      whileTap="tap"
-                    >
-                      <motion.span
-                        initial={{ opacity: 0.85 }}
-                        whileHover={{ opacity: 1 }}
-                      >
-                        {item.label}
-                      </motion.span>
-                      
-                      {item.badge && (
-                        <BadgeLabel>
-                          {item.badge}
-                        </BadgeLabel>
-                      )}
-                      
-                      <GlowEffect
-                        variants={glowVariants}
-                        initial="initial"
-                        whileHover="hover"
-                      />
-                    </NavLink>
-                  </Link>
-                ))}
-              </Stack>
-            )}
-
-            {/* Acciones del Lado Derecho */}
-            <Stack direction="row" spacing={2} alignItems="center">
-              {/* Selector de Idioma con nombre animado */}
-              <Box 
-                component={motion.div} 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onHoverStart={() => setShowLanguageName(true)}
-                onHoverEnd={() => setShowLanguageName(false)}
-              >
-                <LanguageButton
-                  onClick={handleLanguageMenuOpen}
-                  endIcon={<CaretDown size={14} weight="bold" />}
-                  startIcon={<Globe size={18} weight="fill" />}
-                >
-                  <Typography component="span" sx={{ mr: 0.5 }}>
-                    {currentLanguage.flag}
-                  </Typography>
-                  {!isMobile && (
-                    <Box sx={{ display: 'flex', overflow: 'hidden' }}>
-                      <motion.div
-                        variants={languageNameVariants}
-                        initial="hidden"
-                        animate={showLanguageName ? "visible" : "hidden"}
-                        transition={{ duration: 0.2 }}
-                      >
-                        {showLanguageName ? currentLanguage.name : currentLanguage.code.toUpperCase()}
-                      </motion.div>
-                    </Box>
-                  )}
-                </LanguageButton>
-                <Menu
-                  anchorEl={languageAnchorEl}
-                  open={Boolean(languageAnchorEl)}
-                  onClose={handleLanguageMenuClose}
-                  transitionDuration={{ enter: 200, exit: 100 }}
-                  PaperProps={{
-                    elevation: 3,
-                    sx: {
-                      mt: 1.5,
-                      borderRadius: '16px',
-                      minWidth: '180px',
-                      overflow: 'visible',
-                      filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.15))',
-                      '&:before': {
-                        content: '""',
-                        display: 'block',
-                        position: 'absolute',
-                        top: 0,
-                        right: 14,
-                        width: 10,
-                        height: 10,
-                        bgcolor: theme.palette.background.paper,
-                        transform: 'translateY(-50%) rotate(45deg)',
-                        zIndex: 0,
-                      },
-                    },
-                  }}
-                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    sx={{
-                      px: 2,
-                      pt: 2,
-                      pb: 1,
-                      fontWeight: 700,
-                      color: theme.palette.text.secondary,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1
-                    }}
-                  >
-                    <Translate size={16} weight="bold" />
-                    Seleccionar idioma
-                  </Typography>
-                  <Divider sx={{ my: 1 }} />
-                  {LANGUAGES.map((language) => (
-                    <LanguageMenuItem
-                      key={language.code}
-                      onClick={() => handleLanguageChange(language)}
-                      className={currentLanguage.code === language.code ? 'active' : ''}
-                    >
-                      <Typography component="span" sx={{ fontSize: '1.2rem', mr: 1 }}>
-                        {language.flag}
-                      </Typography>
-                      {language.name}
-                      {currentLanguage.code === language.code && (
-                        <Box sx={{ ml: 'auto' }}>
-                          <Check size={16} weight="bold" />
-                        </Box>
-                      )}
-                    </LanguageMenuItem>
-                  ))}
-                </Menu>
-              </Box>
-
-              {/* Selector de Tema */}
-              <Tooltip title={mode === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}>
-                <ThemeModeToggle
-                  onClick={toggleColorMode}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <ThemeIcon>
-                    <Sun size={18} weight="fill" />
-                  </ThemeIcon>
-                  <ThemeIcon>
-                    <Moon size={18} weight="fill" />
-                  </ThemeIcon>
-                  <ThemeToggleIndicator
-                    variants={themeToggleVariants}
-                    animate={mode === 'light' ? 'light' : 'dark'}
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  >
-                    {mode === 'light' ? (
-                      <Sun size={16} weight="fill" color="#FFF" />
-                    ) : (
-                      <Moon size={16} weight="fill" color="#FFF" />
-                    )}
-                  </ThemeToggleIndicator>
-                </ThemeModeToggle>
-              </Tooltip>
-
-              {/* Acciones de Usuario */}
-              {!isMobile && (
-                <>
-                  {profile ? (
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      {/* Icono de Notificaciones con microinteracción */}
-                      <Tooltip title="Notificaciones">
-                        <Box component={motion.div} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} sx={{ position: 'relative' }}>
-                          <IconButton 
-                            color="primary"
-                            component={motion.button}
-                            variants={iconButtonVariants}
-                            whileHover="hover"
-                            whileTap="tap"
-                          >
-                            <Bell size={24} weight="fill" />
-                            {hasNotifications && (
-                              <NotificationBadge>3</NotificationBadge>
-                            )}
-                          </IconButton>
-                        </Box>
-                      </Tooltip>
-                      
-                      {/* Saludo al Usuario */}
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          fontFamily: '"Plus Jakarta Sans", sans-serif',
-                          fontWeight: 600,
-                          display: { xs: 'none', md: 'block' },
-                          color: theme.palette.mode === 'light' ? 'black' : 'white'
-                        }}
-                      >
-                        Hola, {getFirstName()}
-                      </Typography>
-                      
-                      {/* Botón de Dashboard */}
-                      <StyledButton
-                        variants={buttonVariants}
-                        whileHover="hover"
-                        whileTap="tap"
-                        variant="contained"
-                        onClick={() => handleNavigation('/dashboard')}
-                        startIcon={<RocketLaunch weight="bold" />}
-                      >
-                        Dashboard
-                      </StyledButton>
-                    </Stack>
-                  ) : (
-                    <>
-                      <StyledButton
-                        variants={buttonVariants}
-                        whileHover="hover"
-                        whileTap="tap"
-                        variant="outlined"
-                        onClick={() => handleNavigation('/auth/sign-in')}
-                        startIcon={<SignIn weight="bold" />}
-                      >
-                        Iniciar sesión
-                      </StyledButton>
-                      <StyledButton
-                        variants={buttonVariants}
-                        whileHover="hover"
-                        whileTap="tap"
-                        variant="contained"
-                        onClick={() => handleNavigation('/auth/sign-up')}
-                        startIcon={<RocketLaunch weight="bold" />}
-                        endIcon={<ArrowRight weight="bold" />}
-                      >
-                        Comenzar ahora
-                      </StyledButton>
-                    </>
-                  )}
-                </>
-              )}
-
-              {/* Botón de Menú Móvil con microinteracción */}
-              {isMobile && (
-                <IconButton
-                  component={motion.button}
-                  variants={iconButtonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
-                  onClick={() => setIsDrawerOpen(true)}
-                  sx={{
-                    color: theme.palette.text.primary
-                  }}
-                  aria-label="abrir menú"
-                >
-                  <ListIcon size={24} weight="bold" />
-                </IconButton>
-              )}
-            </Stack>
-
-            {/* Drawer Móvil con sombra mejorada */}
-            <Drawer
-              anchor="right"
-              open={isDrawerOpen}
-              onClose={() => setIsDrawerOpen(false)}
-              PaperProps={{
-                sx: {
-                  width: '100%',
-                  maxWidth: '320px',
-                  background: theme.palette.mode === 'light'
-                    ? alpha(theme.palette.background.paper, 0.98)
-                    : alpha(theme.palette.background.paper, 0.98),
-                  backdropFilter: 'blur(15px)',
-                  borderTopLeftRadius: '16px',
-                  borderBottomLeftRadius: '16px',
-                  boxShadow: '-8px 0px 32px rgba(0,0,0,0.15)',
-                },
-              }}
-              transitionDuration={{ enter: 300, exit: 200 }}
-            >
-              <Box sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <Logo />
-                  <IconButton
-                    component={motion.button}
-                    variants={iconButtonVariants}
-                    whileHover="hover"
-                    whileTap="tap"
-                    onClick={() => setIsDrawerOpen(false)}
-                    aria-label="cerrar menú"
-                  >
-                    <XIcon size={24} weight="bold" />
-                  </IconButton>
-                </Box>
-                
-                <AnimatePresence>
-                  <List>
-                    {NAV_ITEMS.map((item, index) => (
+    <List>
+      {navItems.map((item, index) => (
                       <motion.div
                         key={item.path}
                         custom={index}
@@ -1039,11 +607,11 @@ export const Header = () => {
                     
                     {/* Selector de Idioma en Menú Móvil */}
                     <Box sx={{ mt: 3, mb: 2 }}>
-                      <Typography 
-                        variant="subtitle2" 
-                        sx={{ 
-                          fontWeight: 600, 
-                          mb: 2, 
+        <Typography 
+          variant="subtitle2" 
+          sx={{ 
+            fontWeight: 600, 
+            mb: 2, 
                           pl: 2,
                           display: 'flex',
                           alignItems: 'center',
@@ -1104,11 +672,11 @@ export const Header = () => {
                     </Box>
                     
                     {/* Selector de Tema en Menú Móvil */}
-                    <Box sx={{ 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: 2, 
-                      my: 3, 
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 2, 
+        my: 3, 
                       px: 2,
                       pb: 2,
                       borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`
@@ -1123,9 +691,9 @@ export const Header = () => {
                         Tema
                       </Typography>
                       
-                      <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
                         justifyContent: 'space-between',
                         backgroundColor: theme.palette.mode === 'light'
                           ? alpha(theme.palette.background.default, 0.5)
@@ -1147,6 +715,7 @@ export const Header = () => {
                         
                         <ThemeModeToggle
                           onClick={toggleColorMode}
+            mode={mode}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           sx={{ width: '60px', height: '30px' }}
@@ -1181,9 +750,9 @@ export const Header = () => {
                       {profile ? (
                         <>
                           {/* Saludo al Usuario en Móvil */}
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
+            <Typography 
+              variant="body1" 
+              sx={{ 
                               fontFamily: '"Plus Jakarta Sans", sans-serif',
                               fontWeight: 600,
                               mb: 2,
@@ -1194,11 +763,11 @@ export const Header = () => {
                               color: theme.palette.mode === 'light' ? 'black' : 'white'
                             }}
                           >
-                            <Box 
-                              sx={{ 
-                                width: 32, 
-                                height: 32, 
-                                borderRadius: '50%', 
+              <Box 
+                sx={{ 
+                  width: 32, 
+                  height: 32, 
+                  borderRadius: '50%', 
                                 backgroundColor: alpha(theme.palette.primary.main, 0.1),
                                 display: 'flex',
                                 alignItems: 'center',
@@ -1254,12 +823,233 @@ export const Header = () => {
                       )}
                     </Box>
                   </List>
-                </AnimatePresence>
+  )
+}
+
+export const Header = () => {
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [showChatModal, setShowChatModal] = useState(false)
+  const hasNotifications = true
+  const [languageAnchorEl, setLanguageAnchorEl] = useState<null | HTMLElement>(null)
+  const [currentLanguage, setCurrentLanguage] = useState<Language>(LANGUAGES[0])
+  const [showLanguageName, setShowLanguageName] = useState(false)
+  
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  const pathname = usePathname()
+  const router = useRouter()
+  const { profile } = useUser()
+  const { mode, toggleColorMode } = useThemeContext()
+
+  // Handle scroll events
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10)
+    }
+    
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Memoize container styles for better performance
+  const containerStyles = useMemo(() => ({
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: theme.spacing(isMobile ? 1 : 1.5),
+    height: '100%',
+  }), [theme, isMobile])
+
+  // Handle navigation
+  const handleNavigation = (path: string) => {
+    setIsDrawerOpen(false)
+    router.push(path)
+  }
+
+  // Get first name for greeting
+  const getFirstName = () => {
+    if (!profile?.displayName) return null
+    return profile.displayName.split(' ')[0]
+  }
+
+  return (
+    <>
+      <StyledAppBar className={isScrolled ? 'scrolled' : ''}>
+        <Container maxWidth="xl">
+          <Toolbar disableGutters sx={containerStyles}>
+            {/* Logo */}
+            <Link href="/" passHref>
+              <Box
+                sx={{
+                  '&:hover': {
+                    opacity: 0.9,
+                  }
+                }}
+              >
+                <Logo />
+              </Box>
+            </Link>
+
+            {/* Desktop Navigation */}
+            {!isMobile && (
+              <Stack 
+                direction="row" 
+                spacing={1}
+                alignItems="center"
+                sx={{ mx: 'auto', px: 2 }}
+              >
+                {NAV_ITEMS.map((item) => (
+                  <Link key={item.path} href={item.path} passHref>
+                    <NavLink className={pathname === item.path ? 'active' : ''}>
+                      {item.label}
+                      {item.badge && (
+                        <BadgeLabel>
+                          {item.badge}
+                        </BadgeLabel>
+                      )}
+                    </NavLink>
+                  </Link>
+                ))}
+              </Stack>
+            )}
+
+            {/* Right Side Actions */}
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              {/* Theme Selector */}
+              <Tooltip title={mode === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}>
+                <ThemeModeToggle onClick={toggleColorMode} mode={mode} />
+              </Tooltip>
+
+              {/* User Actions */}
+              {!isMobile && (
+                <>
+                  {profile ? (
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      {/* User Greeting */}
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          fontWeight: 600,
+                          display: { xs: 'none', md: 'block' },
+                        }}
+                      >
+                        Hola, {getFirstName()}
+                      </Typography>
+                      
+                      {/* Dashboard Button */}
+                      <Button
+                        variant="contained"
+                        onClick={() => handleNavigation('/dashboard')}
+                        startIcon={<RocketLaunch weight="bold" />}
+                        sx={{
+                          borderRadius: '10px',
+                          textTransform: 'none',
+                          px: 2,
+                          py: 0.75,
+                        }}
+                      >
+                        Dashboard
+                      </Button>
+                    </Stack>
+                  ) : (
+                    <>
+                      <Button
+                        variant="outlined"
+                        onClick={() => handleNavigation('/auth/sign-in')}
+                        startIcon={<SignIn weight="bold" />}
+                        sx={{
+                          borderRadius: '10px',
+                          textTransform: 'none',
+                          px: 2,
+                          py: 0.75,
+                        }}
+                      >
+                        Iniciar sesión
+                      </Button>
+                      <Button
+                        variant="contained"
+                        onClick={() => handleNavigation('/auth/sign-up')}
+                        startIcon={<RocketLaunch weight="bold" />}
+                        endIcon={<ArrowRight weight="bold" />}
+                        sx={{
+                          borderRadius: '10px',
+                          textTransform: 'none',
+                          px: 2,
+                          py: 0.75,
+                        }}
+                      >
+                        Comenzar ahora
+                      </Button>
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* Mobile Menu Button */}
+              {isMobile && (
+                <IconButton
+                  onClick={() => setIsDrawerOpen(true)}
+                  sx={{
+                    color: 'text.primary'
+                  }}
+                  aria-label="abrir menú"
+                >
+                  <ListIcon size={24} weight="bold" />
+                </IconButton>
+              )}
+            </Stack>
+
+            {/* Mobile Drawer */}
+            <Drawer
+              anchor="right"
+              open={isDrawerOpen}
+              onClose={() => setIsDrawerOpen(false)}
+              PaperProps={{
+                sx: {
+                  width: '100%',
+                  maxWidth: '320px',
+                  background: theme.palette.mode === 'light'
+                    ? alpha(theme.palette.background.paper, 0.98)
+                    : alpha(theme.palette.background.paper, 0.98),
+                  backdropFilter: 'blur(15px)',
+                  borderTopLeftRadius: '16px',
+                  borderBottomLeftRadius: '16px',
+                  boxShadow: '-8px 0px 32px rgba(0,0,0,0.15)',
+                },
+              }}
+            >
+              <Box sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Logo />
+                  <IconButton
+                    onClick={() => setIsDrawerOpen(false)}
+                    aria-label="cerrar menú"
+                  >
+                    <XIcon size={24} weight="bold" />
+                  </IconButton>
+                </Box>
+                
+                <Suspense fallback={<Box sx={{ height: '400px' }}><Typography>Cargando...</Typography></Box>}>
+                  <MobileDrawerContent 
+                    navItems={NAV_ITEMS} 
+                    pathname={pathname} 
+                    handleNavigation={handleNavigation}
+                    profile={profile}
+                    getFirstName={getFirstName}
+                    mode={mode}
+                    toggleColorMode={toggleColorMode}
+                  />
+                </Suspense>
               </Box>
             </Drawer>
           </Toolbar>
         </Container>
       </StyledAppBar>
+      
+      {/* Spacer to prevent content from hiding behind the fixed header */}
+      <Box sx={{ height: { xs: '60px', md: '70px' } }} />
       
       {/* Botón de Chat */}
       <ChatButton
