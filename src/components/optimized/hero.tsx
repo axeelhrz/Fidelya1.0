@@ -320,7 +320,8 @@ const HeroSection = () => {
                   style={{
                   objectFit: 'contain',
                   objectPosition: 'center',
-                    filter: isDarkMode ? 'brightness(0.9)' : 'none',
+                  filter: isDarkMode ? 'invert(1) brightness(1.2)' : 'none', // Añadido invert(1) para modo oscuro
+                  transition: 'filter 0.3s ease', // Añadido transición suave
                   }}
                 />
     </Box>
