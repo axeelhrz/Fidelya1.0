@@ -11,7 +11,6 @@ import {
   CircularProgress,
   Box
 } from '@mui/material';
-import { motion } from 'framer-motion';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import VerifiedIcon from '@mui/icons-material/Verified';
 

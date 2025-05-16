@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import {
   Box,
   Typography,
@@ -11,36 +11,17 @@ import {
   CardContent,
   Switch,
   FormControlLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Slider,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   useTheme,
   Tooltip,
-  Tabs,
-  Tab,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  alpha,
   Avatar,
   Chip,
   Divider,
   CircularProgress,
+  Paper,
+  Slider,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import StarIcon from '@mui/icons-material/Star';
 import CalculateIcon from '@mui/icons-material/Calculate';
@@ -55,6 +36,24 @@ import Head from 'next/head';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+
+// Lazy load components that are not immediately visible
+const EnterpriseContactModal = dynamic(() => import('@/components/pricing/optimized/EnterpriseModal'), {
+  loading: () => <CircularProgress />,
+  ssr: false
+});
+
+const ComparisonTable = dynamic(() => import('@/components/pricing/optimized/ComparisonTable'), {
+  loading: () => <div className="loading-placeholder" style={{ height: '400px' }}></div>,
+  ssr: false
+});
+
+const FAQSection = dynamic(() => import('@/components/pricing/optimized/FAQSection'), {
+  loading: () => <div className="loading-placeholder" style={{ height: '300px' }}></div>,
+  ssr: false
+});
+
 // Tipos para los planes
 interface PlanFeature {
   text: string;
@@ -79,10 +78,13 @@ interface Plan {
   paypalPlanId?: string;
 }
 
-// Componente de partículas para el fondo
+// Componente de partículas para el fondo - Optimizado para reducir carga
 const ParticlesBackground = () => {
   const { palette } = useTheme();
   const isDark = palette.mode === 'dark';
+  
+  // Reducir el número de partículas para móviles
+  const particleCount = typeof window !== 'undefined' && window.innerWidth < 768 ? 15 : 30;
   
   return (
     <Box
@@ -98,7 +100,7 @@ const ParticlesBackground = () => {
         pointerEvents: 'none',
       }}
     >
-      {Array.from({ length: 50 }).map((_, index) => (
+      {Array.from({ length: particleCount }).map((_, index) => (
         <motion.div
           key={index}
           style={{
@@ -107,18 +109,18 @@ const ParticlesBackground = () => {
               ? `radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0) 70%)`
               : `radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0) 70%)`,
             borderRadius: '50%',
-            width: Math.random() * 100 + 50,
-            height: Math.random() * 100 + 50,
+            width: Math.random() * 80 + 40,
+            height: Math.random() * 80 + 40,
             top: `${Math.random() * 100}%`,
             left: `${Math.random() * 100}%`,
           }}
           animate={{
-            x: [0, Math.random() * 100 - 50],
-            y: [0, Math.random() * 100 - 50],
-            opacity: [0.1, 0.3, 0.1],
+            x: [0, Math.random() * 50 - 25],
+            y: [0, Math.random() * 50 - 25],
+            opacity: [0.1, 0.2, 0.1],
           }}
           transition={{
-            duration: Math.random() * 20 + 10,
+            duration: Math.random() * 15 + 10,
             repeat: Infinity,
             repeatType: 'reverse',
             ease: 'easeInOut',
@@ -129,8 +131,15 @@ const ParticlesBackground = () => {
   );
 };
 
-// Componente de texto animado para el CTA final
+// Componente de texto animado para el CTA final - Optimizado
 const AnimatedText = ({ text }: { text: string }) => {
+  // Reducir la complejidad de la animación en móviles
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  
+  if (isMobile) {
+    return <span>{text}</span>;
+  }
+  
   const words = text.split(' ');
   return (
     <Box sx={{ display: 'inline-block' }}>
@@ -138,11 +147,11 @@ const AnimatedText = ({ text }: { text: string }) => {
         <motion.span
           key={i}
           style={{ display: 'inline-block', marginRight: '8px' }}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
-            duration: 0.5,
-            delay: i * 0.1,
+            duration: 0.3,
+            delay: i * 0.05,
             ease: [0.43, 0.13, 0.23, 0.96]
           }}
         >
@@ -153,7 +162,7 @@ const AnimatedText = ({ text }: { text: string }) => {
   );
 };
 
-// Componente de contador regresivo para ofertas limitadas
+// Componente de contador regresivo para ofertas limitadas - Optimizado
 const CountdownTimer = () => {
   const [timeLeft, setTimeLeft] = useState({
     hours: 23,
@@ -162,7 +171,7 @@ const CountdownTimer = () => {
   });
   
   useEffect(() => {
-    // Simulamos un contador que se reinicia cada día
+    // Usar un intervalo más largo para reducir actualizaciones
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev.seconds > 0) {
@@ -172,7 +181,6 @@ const CountdownTimer = () => {
         } else if (prev.hours > 0) {
           return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
         } else {
-          // Reiniciar cuando llega a cero
           return { hours: 23, minutes: 59, seconds: 59 };
         }
       });
@@ -186,9 +194,9 @@ const CountdownTimer = () => {
   
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
+      initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.3 }}
     >
       <Box
         sx={{
@@ -209,32 +217,31 @@ const CountdownTimer = () => {
           sx={{ color: 'error.main', mr: 1 }} 
         />
         <Typography variant="body2" fontWeight={600} color="error.main">
-          Oferta especial termina en: {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
+          Oferta: {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
         </Typography>
       </Box>
     </motion.div>
   );
 };
 
-// Componente de testimonio visual
+// Componente de testimonio visual - Optimizado
 const TestimonialCard = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
+      transition={{ duration: 0.3 }}
     >
       <Paper
         elevation={0}
         sx={{
           p: 3,
           borderRadius: 4,
-          bgcolor: isDark ? alpha(theme.palette.background.paper, 0.4) : alpha(theme.palette.background.paper, 0.7),
-          backdropFilter: 'blur(10px)',
-          border: `1px solid ${isDark ? alpha(theme.palette.divider, 0.1) : alpha(theme.palette.divider, 0.1)}`,
+          bgcolor: isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(248, 250, 252, 0.7)',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
           display: 'flex',
           flexDirection: { xs: 'column', sm: 'row' },
           alignItems: { xs: 'center', sm: 'flex-start' },
@@ -267,7 +274,7 @@ const TestimonialCard = () => {
   );
 };
 
-// Componente de detección de país
+// Componente de detección de país - Optimizado
 const CountryDetection = () => {
   const [country, setCountry] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -276,10 +283,11 @@ const CountryDetection = () => {
     // Simulamos detección de país (en producción usaríamos una API real)
     const detectCountry = async () => {
       try {
-        // Simulación de llamada a API
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setCountry('España');
-        setLoading(false);
+        // Simulación simplificada
+        setTimeout(() => {
+          setCountry('España');
+          setLoading(false);
+        }, 500);
       } catch (error) {
         console.error('Error detectando país:', error);
         setLoading(false);
@@ -290,14 +298,13 @@ const CountryDetection = () => {
   }, []);
   
   if (loading) return null;
-  
   if (!country) return null;
   
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.3 }}
     >
       <Box
         sx={{
@@ -319,149 +326,6 @@ const CountryDetection = () => {
   );
 };
 
-// Componente de modal para Enterprise
-const EnterpriseContactModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
-    phone: '',
-    message: '',
-  });
-  
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    
-    // Simulamos envío del formulario
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setSubmitting(false);
-    setSubmitted(true);
-    
-    // Reiniciar después de 3 segundos
-    setTimeout(() => {
-      setSubmitted(false);
-      onClose();
-    }, 3000);
-  };
-  
-  return (
-    <Dialog 
-      open={open} 
-      onClose={!submitting ? onClose : undefined}
-      maxWidth="sm"
-      fullWidth
-    >
-      <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
-        Solicitar información sobre plan Enterprise
-      </DialogTitle>
-      
-      <DialogContent>
-        {!submitted ? (
-          <form onSubmit={handleSubmit}>
-            <Stack spacing={3} sx={{ mt: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                Completa el formulario y un asesor especializado te contactará en menos de 24 horas para diseñar una solución personalizada para tu correduría.
-              </Typography>
-              
-              <TextField
-                label="Nombre completo"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                fullWidth
-                required
-                variant="outlined"
-              />
-              
-              <TextField
-                label="Email profesional"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                fullWidth
-                required
-                variant="outlined"
-              />
-              
-              <TextField
-                label="Empresa"
-                name="company"
-                value={formData.company}
-                onChange={handleChange}
-                fullWidth
-                required
-                variant="outlined"
-              />
-              
-              <TextField
-                label="Teléfono"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                fullWidth
-                variant="outlined"
-              />
-              
-              <TextField
-                label="Mensaje (opcional)"
-                name="message"
-                value={formData.message}
-                onChange={handleChange}
-                fullWidth
-                multiline
-                rows={4}
-                variant="outlined"
-                placeholder="Cuéntanos sobre tu correduría y necesidades específicas"
-              />
-            </Stack>
-          </form>
-        ) : (
-          <Box sx={{ textAlign: 'center', py: 3 }}>
-            <VerifiedIcon sx={{ fontSize: 60, color: 'success.main', mb: 2 }} />
-            <Typography variant="h6" gutterBottom>
-              ¡Solicitud enviada con éxito!
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Nos pondremos en contacto contigo en menos de 24 horas.
-            </Typography>
-          </Box>
-        )}
-      </DialogContent>
-      
-      {!submitted && (
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button 
-            onClick={onClose} 
-            disabled={submitting}
-            variant="outlined"
-          >
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained"
-            disabled={submitting}
-            startIcon={submitting ? <CircularProgress size={20} /> : <ArrowForwardIcon />}
-          >
-            {submitting ? 'Enviando...' : 'Enviar solicitud'}
-          </Button>
-        </DialogActions>
-      )}
-    </Dialog>
-  );
-};
-
 // Componente principal de la página
 export default function PricingPage() {
   const theme = useTheme();
@@ -469,8 +333,6 @@ export default function PricingPage() {
   const router = useRouter();
   
   const [isAnnual, setIsAnnual] = useState(true);
-  const [activeAccordion, setActiveAccordion] = useState<number | null>(null);
-  const [calculatorMode, setCalculatorMode] = useState(0);
   const [enterpriseModalOpen, setEnterpriseModalOpen] = useState(false);
   
   // Estados para la calculadora
@@ -502,11 +364,11 @@ export default function PricingPage() {
       };
       
       localStorage.setItem('selectedPlan', JSON.stringify(selectedPlan));
-            router.push('/auth/sign-up');
+      router.push('/auth/sign-up');
     }
   };
   
-  // Calcular ROI basado en los inputs
+  // Calcular ROI basado en los inputs - Optimizado
   const calculateROI = () => {
     const timeBeforeHours = numClients * hoursPerClient;
     const timeAfterHours = numClients * (hoursPerClient * 0.4); // Asumimos 60% de ahorro de tiempo
@@ -601,130 +463,6 @@ export default function PricingPage() {
       paypalPlanId: "undefinded",
     }
   ];
-  
-  // Características para la tabla comparativa
-  const features = [
-    { 
-      name: "Clientes", 
-      basic: "Hasta 10", 
-      pro: "Ilimitados", 
-      enterprise: "Ilimitados",
-      tooltip: "Número máximo de clientes que puedes gestionar en la plataforma"
-    },
-    { 
-      name: "Usuarios", 
-      basic: "1", 
-      pro: "Hasta 5", 
-      enterprise: "Ilimitados",
-      tooltip: "Número de cuentas de usuario con acceso al sistema"
-    },
-    { 
-      name: "Gestión de pólizas", 
-      basic: true, 
-      pro: true, 
-      enterprise: true,
-      tooltip: "Registro y seguimiento de pólizas de seguros"
-    },
-    { 
-      name: "Recordatorios automáticos", 
-      basic: true, 
-      pro: true, 
-      enterprise: true,
-      tooltip: "Notificaciones para vencimientos y renovaciones"
-    },
-    { 
-      name: "Automatización de renovaciones", 
-      basic: false, 
-      pro: true, 
-      enterprise: true,
-      tooltip: "Flujos de trabajo automatizados para el proceso de renovación"
-    },
-    { 
-      name: "Análisis de rentabilidad", 
-      basic: false, 
-      pro: true, 
-      enterprise: true,
-      tooltip: "Informes y métricas de rendimiento financiero"
-    },
-    { 
-      name: "Integración con CRM", 
-      basic: false, 
-      pro: true, 
-      enterprise: true,
-      tooltip: "Conexión con sistemas de gestión de relaciones con clientes"
-    },
-    { 
-      name: "Personalización de documentos", 
-      basic: false, 
-      pro: true, 
-      enterprise: true,
-      tooltip: "Plantillas personalizables para comunicaciones y documentos"
-    },
-    { 
-      name: "API personalizada", 
-      basic: false, 
-      pro: false, 
-      enterprise: true,
-      tooltip: "Acceso a API para desarrollar integraciones propias"
-    },
-    { 
-      name: "Gestor de cuenta dedicado", 
-      basic: false, 
-      pro: false, 
-      enterprise: true,
-      tooltip: "Un representante exclusivo para atender tus necesidades"
-    },
-    { 
-      name: "Formación personalizada", 
-      basic: false, 
-      pro: false, 
-      enterprise: true,
-      tooltip: "Sesiones de formación adaptadas a tu equipo y procesos"
-    },
-    { 
-      name: "Integraciones a medida", 
-      basic: false, 
-      pro: false, 
-      enterprise: true,
-      tooltip: "Desarrollo de integraciones específicas para tu negocio"
-    },
-  ];
-  
-  // Preguntas frecuentes
-  const faqs = [
-    {
-      question: "¿Puedo cancelar mi suscripción en cualquier momento?",
-      answer: "Sí, puedes cancelar tu suscripción en cualquier momento sin penalización. Si cancelas, mantendrás el acceso hasta el final del período facturado."
-    },
-    {
-      question: "¿Cómo funciona el período de prueba?",
-      answer: "Ofrecemos un período de prueba gratuito de 7 días para el plan Profesional. No necesitas introducir datos de pago para comenzar. Te enviaremos un recordatorio antes de que finalice tu prueba."
-    },
-    {
-      question: "¿Qué métodos de pago aceptan?",
-      answer: "Aceptamos todas las principales tarjetas de crédito (Visa, Mastercard, American Express), PayPal y transferencia bancaria para planes anuales."
-    },
-    {
-      question: "¿Ofrecen soporte técnico?",
-      answer: "Sí, todos los planes incluyen soporte técnico. El plan Básico incluye soporte por email con respuesta en 24h. Los planes Profesional y Enterprise incluyen soporte prioritario 24/7 por email, chat y teléfono."
-    },
-    {
-      question: "¿Cómo puedo cambiar de plan?",
-      answer: "Puedes actualizar tu plan en cualquier momento desde el panel de control. La diferencia se prorrateará automáticamente. Para bajar de plan, el cambio se aplicará al final del período de facturación actual."
-    },
-    {
-      question: "¿Mis datos están seguros?",
-      answer: "Absolutamente. Utilizamos encriptación de nivel bancario, cumplimos con GDPR y LOPD, y realizamos copias de seguridad diarias. Nunca compartimos tus datos con terceros sin tu consentimiento explícito."
-    },
-    {
-      question: "¿Necesito instalar algún software?",
-      answer: "No, Assuriva es una solución 100% en la nube. Solo necesitas un navegador web moderno y conexión a internet para acceder desde cualquier dispositivo."
-    },
-    {
-      question: "¿Puedo importar mis datos actuales?",
-      answer: "Sí, ofrecemos herramientas de importación para datos desde Excel, CSV y otros sistemas de gestión comunes. Para migraciones más complejas, nuestro equipo de soporte te asistirá en el proceso."
-    }
-  ];
 
   // Generar URL de WhatsApp con mensaje personalizado según el plan
   const getWhatsAppUrl = (planName?: string) => {
@@ -772,16 +510,16 @@ export default function PricingPage() {
         {/* Hero Section */}
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.4 }}
           >
             <Stack spacing={3} alignItems="center" textAlign="center" sx={{ mb: 6 }}>
               <Typography
                 variant="h1"
                 component="h1"
                 sx={{
-                  fontSize: { xs: '2.5rem', md: '3.5rem' },
+                  fontSize: { xs: '2.25rem', md: '3.5rem' },
                   fontWeight: 800,
                   letterSpacing: '0.5px',
                   background: isDark
@@ -800,7 +538,7 @@ export default function PricingPage() {
                 variant="h2"
                 component="p"
                 sx={{
-                  fontSize: { xs: '1.25rem', md: '1.5rem' },
+                  fontSize: { xs: '1.125rem', md: '1.5rem' },
                   fontWeight: 400,
                   maxWidth: '800px',
                   mb: 2,
@@ -821,7 +559,7 @@ export default function PricingPage() {
                 spacing={2}
                 sx={{ mb: 4 }}
               >
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
                   <Button
                     variant="contained"
                     size="large"
@@ -838,7 +576,7 @@ export default function PricingPage() {
                       '&:hover': {
                         background: 'linear-gradient(90deg, #1D4ED8 0%, #2563EB 100%)',
                       },
-                      transition: 'all 0.4s ease'
+                      transition: 'all 0.3s ease'
                     }}
                     onClick={() => {
                       if (calculatorRef.current) {
@@ -850,7 +588,7 @@ export default function PricingPage() {
                   </Button>
                 </motion.div>
                 
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
                   <Button
                     variant="outlined"
                     href='/contact'
@@ -869,7 +607,7 @@ export default function PricingPage() {
                         borderColor: isDark ? '#60A5FA' : '#3B82F6',
                         background: isDark ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
                       },
-                      transition: 'all 0.4s ease'
+                      transition: 'all 0.3s ease'
                     }}
                   >
                     Solicitar demo <ArrowForwardIcon sx={{ ml: 1 }} />
@@ -887,7 +625,6 @@ export default function PricingPage() {
                   px: { xs: 2, md: 3 },
                   borderRadius: '16px',
                   background: isDark ? 'rgba(15, 23, 42, 0.6)' : 'rgba(248, 250, 252, 0.6)',
-                  backdropFilter: 'blur(10px)',
                   border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
                   flexWrap: { xs: 'wrap', md: 'nowrap' },
                 }}
@@ -926,9 +663,9 @@ export default function PricingPage() {
           {/* Pricing Toggle */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 6 }}>
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 0.3 }}
             >
               <FormControlLabel
                 control={
@@ -945,7 +682,7 @@ export default function PricingPage() {
                       sx={{
                         fontWeight: !isAnnual ? 600 : 400,
                         color: !isAnnual ? (isDark ? '#60A5FA' : '#2563EB') : 'inherit',
-                        transition: 'all 0.4s ease',
+                        transition: 'all 0.3s ease',
                       }}
                     >
                       Mensual
@@ -955,7 +692,7 @@ export default function PricingPage() {
                       sx={{
                         fontWeight: isAnnual ? 600 : 400,
                         color: isAnnual ? (isDark ? '#60A5FA' : '#2563EB') : 'inherit',
-                        transition: 'all 0.4s ease',
+                        transition: 'all 0.3s ease',
                       }}
                     >
                       Anual
@@ -964,7 +701,7 @@ export default function PricingPage() {
                       <Box
                         component={motion.div}
                         animate={{
-                          scale: [1, 1.05, 1],
+                          scale: [1, 1.03, 1],
                         }}
                         transition={{
                           duration: 1.5,
@@ -1001,18 +738,18 @@ export default function PricingPage() {
             {plans.map((plan, index) => (
               <motion.div
                 key={plan.name}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 * (index + 1) }}
+                transition={{ duration: 0.3, delay: 0.05 * (index + 1) }}
                 style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
               >
                 <Card
                   component={motion.div}
                   whileHover={{
-                    y: -10,
+                    y: -5,
                     boxShadow: isDark
-                      ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-                      : '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                      ? '0 15px 30px -5px rgba(0, 0, 0, 0.5)'
+                      : '0 15px 30px -5px rgba(0, 0, 0, 0.25)',
                   }}
                   sx={{
                     height: '100%',
@@ -1024,9 +761,9 @@ export default function PricingPage() {
                     background: isDark ? plan.darkColor : plan.color,
                     border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
                     boxShadow: isDark
-                      ? '0 10px 25px -5px rgba(0, 0, 0, 0.3)'
-                      : '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
-                    transition: 'all 0.4s ease',
+                      ? '0 10px 15px -5px rgba(0, 0, 0, 0.3)'
+                      : '0 10px 15px -5px rgba(0, 0, 0, 0.1)',
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   {plan.badge && (
@@ -1047,8 +784,7 @@ export default function PricingPage() {
                       }}
                       component={motion.div}
                       animate={{
-                        y: [0, -5, 0],
-                        scale: [1, 1.05, 1],
+                        y: [0, -3, 0],
                       }}
                       transition={{
                         duration: 2,
@@ -1134,7 +870,7 @@ export default function PricingPage() {
                         >
                           <Box
                             component={motion.div}
-                            whileHover={{ x: 5 }}
+                            whileHover={{ x: 3 }}
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
@@ -1156,8 +892,8 @@ export default function PricingPage() {
                     </Stack>
                     
                     <motion.div
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
                       <Button
                         variant={plan.popular ? "contained" : "outlined"}
@@ -1168,7 +904,7 @@ export default function PricingPage() {
                           borderRadius: '50px',
                           py: 1.5,
                           fontWeight: 600,
-                          transition: 'all 0.4s ease',
+                          transition: 'all 0.3s ease',
                           ...(plan.popular && {
                             background: 'linear-gradient(90deg, #3B82F6 0%, #2563EB 100%)',
                             boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.5)',
@@ -1188,9 +924,9 @@ export default function PricingPage() {
           <Box
             ref={calculatorRef}
             component={motion.div}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            transition={{ duration: 0.3 }}
             sx={{
               mb: 10,
               p: { xs: 3, md: 5 },
@@ -1200,8 +936,8 @@ export default function PricingPage() {
                 : 'linear-gradient(135deg, rgba(219, 234, 254, 0.7) 0%, rgba(191, 219, 254, 0.7) 100%)',
               border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
               boxShadow: isDark
-                ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-                : '0 25px 50px -12px rgba(0, 0, 0, 0.1)',
+                ? '0 15px 30px -5px rgba(0, 0, 0, 0.5)'
+                : '0 15px 30px -5px rgba(0, 0, 0, 0.1)',
               position: 'relative',
               overflow: 'hidden',
             }}
@@ -1228,6 +964,7 @@ export default function PricingPage() {
                   mb: 3,
                   textAlign: 'center',
                   fontWeight: 700,
+                  fontSize: { xs: '1.75rem', md: '2.5rem' },
                   background: isDark
                     ? 'linear-gradient(90deg, #93C5FD 0%, #60A5FA 100%)'
                     : 'linear-gradient(90deg, #1E40AF 0%, #3B82F6 100%)',
@@ -1251,27 +988,6 @@ export default function PricingPage() {
               >
                 Descubre cuánto tiempo y dinero puedes ahorrar con Assuriva. Personaliza los valores según tu correduría.
               </Typography>
-              
-              <Tabs
-                value={calculatorMode}
-                onChange={(_, newValue) => setCalculatorMode(newValue)}
-                centered
-                sx={{
-                  mb: 4,
-                  '& .MuiTabs-indicator': {
-                    backgroundColor: isDark ? '#60A5FA' : '#3B82F6',
-                  },
-                  '& .MuiTab-root': {
-                    color: isDark ? '#CBD5E1' : '#334155',
-                    '&.Mui-selected': {
-                      color: isDark ? '#60A5FA' : '#3B82F6',
-                    },
-                  },
-                }}
-              >
-                <Tab label="Modo Básico" />
-                <Tab label="Modo Avanzado" />
-              </Tabs>
               
               <Stack
                 direction={{ xs: 'column', md: 'row' }}
@@ -1333,58 +1049,54 @@ export default function PricingPage() {
                       />
                     </Box>
                     
-                    {calculatorMode === 1 && (
-                      <>
-                        <Box>
-                          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                            <Stack direction="row" spacing={0.5} alignItems="center">
-                              <Typography variant="body2">
-                                Horas por cliente al año
-                              </Typography>
-                              <Tooltip title="Incluye gestión de pólizas, renovaciones, incidencias y atención al cliente">
-                                <InfoOutlinedIcon sx={{ fontSize: '1rem', color: 'text.secondary', cursor: 'help' }} />
-                              </Tooltip>
-                            </Stack>
-                            <Typography variant="body2" fontWeight="600">
-                              {hoursPerClient}h
-                            </Typography>
-                          </Stack>
-                          
-                          <Slider
-                            value={hoursPerClient}
-                            onChange={(_, value) => setHoursPerClient(value as number)}
-                            min={1}
-                            max={10}
-                            step={0.5}
-                            sx={{
-                              color: isDark ? '#60A5FA' : '#3B82F6',
-                            }}
-                          />
-                        </Box>
-                        
-                        <Box>
-                          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                            <Typography variant="body2">
-                              Coste por hora ($)
-                            </Typography>
-                            <Typography variant="body2" fontWeight="600">
-                              {hourlyRate}$
-                            </Typography>
-                          </Stack>
-                          
-                          <Slider
-                            value={hourlyRate}
-                            onChange={(_, value) => setHourlyRate(value as number)}
-                            min={10}
-                            max={50}
-                            step={1}
-                            sx={{
-                              color: isDark ? '#60A5FA' : '#3B82F6',
-                            }}
-                          />
-                        </Box>
-                      </>
-                    )}
+                    <Box>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                          <Typography variant="body2">
+                            Horas por cliente al año
+                          </Typography>
+                          <Tooltip title="Incluye gestión de pólizas, renovaciones, incidencias y atención al cliente">
+                            <InfoOutlinedIcon sx={{ fontSize: '1rem', color: 'text.secondary', cursor: 'help' }} />
+                          </Tooltip>
+                        </Stack>
+                        <Typography variant="body2" fontWeight="600">
+                          {hoursPerClient}h
+                        </Typography>
+                      </Stack>
+                      
+                      <Slider
+                        value={hoursPerClient}
+                        onChange={(_, value) => setHoursPerClient(value as number)}
+                        min={1}
+                        max={10}
+                        step={0.5}
+                        sx={{
+                          color: isDark ? '#60A5FA' : '#3B82F6',
+                        }}
+                      />
+                    </Box>
+                    
+                    <Box>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                        <Typography variant="body2">
+                          Coste por hora ($)
+                        </Typography>
+                        <Typography variant="body2" fontWeight="600">
+                          {hourlyRate}$
+                        </Typography>
+                      </Stack>
+                      
+                      <Slider
+                        value={hourlyRate}
+                        onChange={(_, value) => setHourlyRate(value as number)}
+                        min={10}
+                        max={50}
+                        step={1}
+                        sx={{
+                          color: isDark ? '#60A5FA' : '#3B82F6',
+                        }}
+                      />
+                    </Box>
                   </Stack>
                 </Box>
                 
@@ -1464,8 +1176,8 @@ export default function PricingPage() {
               
               <Box sx={{ textAlign: 'center' }}>
                 <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                 >
                   <a
                     href={getWhatsAppUrl('Profesional')}
@@ -1488,7 +1200,7 @@ export default function PricingPage() {
                           background: 'linear-gradient(90deg, #059669 0%, #047857 100%)',
                           boxShadow: '0 15px 20px -3px rgba(16, 185, 129, 0.4)',
                         },
-                        transition: 'all 0.4s ease',
+                        transition: 'all 0.3s ease',
                       }}
                     >
                       Consulta personalizada
@@ -1502,261 +1214,22 @@ export default function PricingPage() {
             </Box>
           </Box>
           
-          {/* Comparison Table */}
-          <Box
-            component={motion.div}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            sx={{ mb: 10 }}
-          >
-            <Typography
-              variant="h3"
-              component="h2"
-              sx={{
-                mb: 4,
-                textAlign: 'center',
-                fontWeight: 700,
-              }}
-            >
-              Comparativa de planes
-            </Typography>
-            
-            <TableContainer
-              component={Paper}
-              sx={{
-                borderRadius: '24px',
-                background: isDark
-                  ? 'rgba(15, 23, 42, 0.6)'
-                  : 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(10px)',
-                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
-                boxShadow: isDark
-                  ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-                  : '0 25px 50px -12px rgba(0, 0, 0, 0.1)',
-                overflow: 'hidden',
-              }}
-            >
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell
-                      sx={{
-                        fontWeight: 600,
-                        borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                      }}
-                    >
-                      Características
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{
-                        fontWeight: 600,
-                        borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                      }}
-                    >
-                      Básico
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{
-                        fontWeight: 600,
-                        borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                        background: isDark
-                          ? 'rgba(30, 58, 138, 0.3)'
-                          : 'rgba(219, 234, 254, 0.5)',
-                      }}
-                    >
-                      Profesional
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{
-                        fontWeight: 600,
-                        borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                      }}
-                    >
-                      Enterprise
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {features.map((feature, index) => (
-                    <TableRow
-                      key={feature.name}
-                      component={motion.tr}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.05 * index }}
-                      sx={{
-                        '&:nth-of-type(odd)': {
-                          background: isDark
-                            ? 'rgba(30, 41, 59, 0.3)'
-                            : 'rgba(248, 250, 252, 0.5)',
-                        },
-                        '&:hover': {
-                          background: isDark
-                            ? 'rgba(30, 41, 59, 0.5)'
-                            : 'rgba(219, 234, 254, 0.3)',
-                        },
-                        transition: 'background 0.3s ease',
-                      }}
-                    >
-                      <TableCell
-                        component="th"
-                        scope="row"
-                        sx={{
-                          borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
-                        }}
-                      >
-                        <Tooltip title={feature.tooltip || ""} placement="top" arrow>
-                          <Box sx={{ display: 'flex', alignItems: 'center', cursor: feature.tooltip ? 'help' : 'default' }}>
-                            {feature.name}
-                            {feature.tooltip && (
-                              <InfoOutlinedIcon sx={{ fontSize: '1rem', ml: 0.5, color: 'text.secondary' }} />
-                            )}
-                          </Box>
-                        </Tooltip>
-                      </TableCell>
-                      
-                      <TableCell
-                        align="center"
-                        sx={{
-                          borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
-                        }}
-                      >
-                        {typeof feature.basic === 'boolean' ? (
-                          feature.basic ? (
-                            <CheckIcon sx={{ color: '#10B981' }} />
-                          ) : (
-                            <CloseIcon sx={{ color: '#EF4444' }} />
-                          )
-                        ) : (
-                          feature.basic
-                        )}
-                      </TableCell>
-                      
-                      <TableCell
-                        align="center"
-                        sx={{
-                          borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
-                          background: isDark
-                            ? 'rgba(30, 58, 138, 0.3)'
-                            : 'rgba(219, 234, 254, 0.5)',
-                        }}
-                      >
-                        {typeof feature.pro === 'boolean' ? (
-                          feature.pro ? (
-                            <CheckIcon sx={{ color: '#10B981' }} />
-                          ) : (
-                            <CloseIcon sx={{ color: '#EF4444' }} />
-                          )
-                        ) : (
-                          feature.pro
-                        )}
-                      </TableCell>
-                      
-                      <TableCell
-                        align="center"
-                        sx={{
-                          borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
-                        }}
-                      >
-                        {typeof feature.enterprise === 'boolean' ? (
-                          feature.enterprise ? (
-                            <CheckIcon sx={{ color: '#10B981' }} />
-                          ) : (
-                            <CloseIcon sx={{ color: '#EF4444' }} />
-                          )
-                        ) : (
-                          feature.enterprise
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
+          {/* Comparison Table - Lazy loaded */}
+          <Suspense fallback={<div style={{ height: '400px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CircularProgress /></div>}>
+            <ComparisonTable />
+          </Suspense>
           
-          {/* FAQ Section */}
-          <Box
-            component={motion.div}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            sx={{ mb: 10 }}
-          >
-            <Typography
-              variant="h3"
-              component="h2"
-              sx={{
-                mb: 4,
-                textAlign: 'center',
-                fontWeight: 700,
-              }}
-            >
-              Preguntas frecuentes
-            </Typography>
-            
-            <Box sx={{ maxWidth: '800px', mx: 'auto' }}>
-              {faqs.map((faq, index) => (
-                <Accordion
-                  key={index}
-                  expanded={activeAccordion === index}
-                  onChange={() => setActiveAccordion(activeAccordion === index ? null : index)}
-                  component={motion.div}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.05 * index }}
-                  sx={{
-                    mb: 2,
-                    background: isDark
-                      ? 'rgba(15, 23, 42, 0.6)'
-                      : 'rgba(255, 255, 255, 0.8)',
-                    backdropFilter: 'blur(10px)',
-                    border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
-                    borderRadius: '12px',
-                    boxShadow: 'none',
-                    '&:before': {
-                      display: 'none',
-                    },
-                    '&.Mui-expanded': {
-                      boxShadow: isDark
-                        ? '0 10px 25px -5px rgba(0, 0, 0, 0.3)'
-                        : '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
-                    },
-                    transition: 'all 0.4s ease',
-                  }}
-                >
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreIcon sx={{ color: isDark ? '#60A5FA' : '#3B82F6' }} />}
-                    sx={{
-                      '& .MuiAccordionSummary-content': {
-                        margin: '12px 0',
-                      },
-                    }}
-                  >
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      {faq.question}
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Typography variant="body1" sx={{ color: isDark ? '#CBD5E1' : '#334155' }}>
-                      {faq.answer}
-                    </Typography>
-                  </AccordionDetails>
-                </Accordion>
-              ))}
-            </Box>
-          </Box>
+          {/* FAQ Section - Lazy loaded */}
+          <Suspense fallback={<div style={{ height: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CircularProgress /></div>}>
+            <FAQSection />
+          </Suspense>
           
           {/* Final CTA */}
           <Box
             component={motion.div}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+            transition={{ duration: 0.3 }}
             sx={{
               mb: 10,
               p: { xs: 3, md: 6 },
@@ -1779,28 +1252,6 @@ export default function PricingPage() {
               }}
             />
             
-            <motion.div
-              animate={{
-                background: [
-                  'linear-gradient(45deg, rgba(59, 130, 246, 0) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(59, 130, 246, 0) 100%)',
-                  'linear-gradient(45deg, rgba(59, 130, 246, 0) 100%, rgba(37, 99, 235, 0.3) 50%, rgba(59, 130, 246, 0) 0%)',
-                ],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 0,
-              }}
-            />
-            
             <Box sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
               <Typography
                 variant="h2"
@@ -1809,7 +1260,7 @@ export default function PricingPage() {
                   color: 'white',
                   fontWeight: 800,
                   mb: 3,
-                  fontSize: { xs: '2rem', md: '2.5rem' },
+                  fontSize: { xs: '1.75rem', md: '2.5rem' },
                 }}
               >
                 <AnimatedText text="¡Da el salto hacia el futuro de tu correduría!" />
@@ -1823,14 +1274,15 @@ export default function PricingPage() {
                   mb: 4,
                   maxWidth: '800px',
                   mx: 'auto',
+                  fontSize: { xs: '1rem', md: '1.25rem' },
                 }}
               >
                 Únete a cientos de corredores que ya han transformado su negocio con Assuriva
               </Typography>
               
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
               >
                 <Button
                   variant="contained"
@@ -1838,9 +1290,9 @@ export default function PricingPage() {
                   endIcon={<ArrowForwardIcon />}
                   sx={{
                     borderRadius: '50px',
-                    px: 5,
-                    py: 2,
-                    fontSize: '1.25rem',
+                    px: { xs: 3, md: 5 },
+                    py: { xs: 1.5, md: 2 },
+                    fontSize: { xs: '1rem', md: '1.25rem' },
                     fontWeight: 700,
                     background: 'white',
                     color: '#2563EB',
@@ -1849,7 +1301,7 @@ export default function PricingPage() {
                       background: 'white',
                       boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
                     },
-                    transition: 'all 0.4s ease',
+                    transition: 'all 0.3s ease',
                   }}
                   onClick={() => selectPlan('pro')}
                 >
@@ -1872,9 +1324,9 @@ export default function PricingPage() {
           {/* Trust Section */}
           <Box
             component={motion.div}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
+            transition={{ duration: 0.3 }}
             sx={{ mb: 10 }}
           >
             <Typography
@@ -1899,18 +1351,17 @@ export default function PricingPage() {
             >
               <Box
                 component={motion.div}
-                whileHover={{ y: -5 }}
+                whileHover={{ y: -3 }}
                 sx={{
                   p: 3,
                   borderRadius: '12px',
                   background: isDark
                     ? 'rgba(15, 23, 42, 0.6)'
                     : 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(10px)',
                   border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
                   textAlign: 'center',
                   width: { xs: '100%', md: '200px' },
-                  transition: 'all 0.4s ease',
+                  transition: 'all 0.3s ease',
                 }}
               >
                 <Typography variant="h3" sx={{ fontWeight: 800, color: isDark ? '#60A5FA' : '#3B82F6' }}>
@@ -1923,18 +1374,17 @@ export default function PricingPage() {
               
               <Box
                 component={motion.div}
-                whileHover={{ y: -5 }}
+                whileHover={{ y: -3 }}
                 sx={{
                   p: 3,
                   borderRadius: '12px',
                   background: isDark
                     ? 'rgba(15, 23, 42, 0.6)'
                     : 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(10px)',
                   border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
                   textAlign: 'center',
                   width: { xs: '100%', md: '200px' },
-                  transition: 'all 0.4s ease',
+                  transition: 'all 0.3s ease',
                 }}
               >
                 <Typography variant="h3" sx={{ fontWeight: 800, color: isDark ? '#60A5FA' : '#3B82F6' }}>
@@ -1947,18 +1397,17 @@ export default function PricingPage() {
               
               <Box
                 component={motion.div}
-                whileHover={{ y: -5 }}
+                whileHover={{ y: -3 }}
                 sx={{
                   p: 3,
                   borderRadius: '12px',
                   background: isDark
                     ? 'rgba(15, 23, 42, 0.6)'
                     : 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(10px)',
                   border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
                   textAlign: 'center',
                   width: { xs: '100%', md: '200px' },
-                  transition: 'all 0.4s ease',
+                  transition: 'all 0.3s ease',
                 }}
               >
                 <Typography variant="h3" sx={{ fontWeight: 800, color: isDark ? '#60A5FA' : '#3B82F6' }}>
@@ -1971,18 +1420,17 @@ export default function PricingPage() {
               
               <Box
                 component={motion.div}
-                whileHover={{ y: -5 }}
+                whileHover={{ y: -3 }}
                 sx={{
                   p: 3,
                   borderRadius: '12px',
                   background: isDark
                     ? 'rgba(15, 23, 42, 0.6)'
                     : 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(10px)',
                   border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
                   textAlign: 'center',
                   width: { xs: '100%', md: '200px' },
-                  transition: 'all 0.4s ease',
+                  transition: 'all 0.3s ease',
                 }}
               >
                 <Typography variant="h3" sx={{ fontWeight: 800, color: isDark ? '#60A5FA' : '#3B82F6' }}>
@@ -2018,7 +1466,6 @@ export default function PricingPage() {
                   p: 2,
                   borderRadius: 2,
                   bgcolor: isDark ? 'rgba(15, 23, 42, 0.4)' : 'rgba(255, 255, 255, 0.6)',
-                  backdropFilter: 'blur(8px)',
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -2053,11 +1500,15 @@ export default function PricingPage() {
       
       <Footer />
       
-      {/* Modal para plan Enterprise */}
-      <EnterpriseContactModal 
-        open={enterpriseModalOpen} 
-        onClose={() => setEnterpriseModalOpen(false)} 
-      />
+      {/* Modal para plan Enterprise - Lazy loaded */}
+      <Suspense fallback={null}>
+        {enterpriseModalOpen && (
+          <EnterpriseContactModal 
+            open={enterpriseModalOpen} 
+            onClose={() => setEnterpriseModalOpen(false)} 
+          />
+        )}
+      </Suspense>
     </>
   );
 }
