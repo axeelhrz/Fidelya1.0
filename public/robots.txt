@@ -1,9 +1,0 @@
-# *
-User-agent: *
-Allow: /
-
-# Host
-Host: https://assuriva.com
-
-# Sitemaps
-Sitemap: https://assuriva.com/sitemap.xml
