@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { 
   Box, 
   Button, 
@@ -8,80 +8,101 @@ import {
   CardContent, 
   CardMedia, 
   Container, 
-  Grid, 
   Typography, 
-  Tabs,
-  Tab,
   useTheme,
   Chip,
+  Stack,
+  IconButton,
+  useMediaQuery
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
-import { IconArrowRight } from "@tabler/icons-react";
+import { IconArrowRight, IconExternalLink, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 
-// Datos de proyectos
+// Datos de proyectos freelance y colaboraciones
 const projects = [
   {
     id: 1,
-    title: "Assuriva",
-    category: "Web App",
-    description: "Plataforma de gestión para compañías de seguros que automatiza procesos y mejora la experiencia del cliente.",
-    image: "/images/portfolio/assuriva.jpg",
-    problem: "La compañía necesitaba digitalizar sus procesos manuales y ofrecer una mejor experiencia a sus clientes.",
-    solution: "Desarrollé una plataforma web completa con panel de administración, gestión de pólizas y área de clientes.",
-    result: "Reducción del 70% en tiempo de gestión y aumento del 45% en satisfacción del cliente.",
-    technologies: ["React", "Node.js", "PostgreSQL", "AWS"],
-    link: "https://assuriva.com",
+    title: "Reserva Express",
+    client: "Cadena de Restaurantes Sabor Latino",
+    description: "Sistema de reservas online con integración de pagos PSE que incrementó las reservas en un 45% y redujo las cancelaciones en un 30%.",
+    image: "/images/portfolio/reserva-express.jpg",
+    technologies: ["Next.js", "TypeScript", "Firebase", "Stripe", "PWA"],
+    result: "+400 reservas/mes",
+    link: "#",
   },
   {
     id: 2,
-    title: "TuVeterinaria",
-    category: "E-commerce",
-    description: "Tienda online para clínica veterinaria con sistema de citas, historial médico y venta de productos.",
-    image: "/images/portfolio/tuveterinaria.jpg",
-    problem: "La clínica necesitaba centralizar sus servicios y ofrecer una experiencia digital completa a sus clientes.",
-    solution: "Implementé una plataforma con e-commerce, sistema de citas y acceso a historial médico de mascotas.",
-    result: "Incremento del 120% en ventas online y reducción del 30% en carga administrativa.",
-    technologies: ["Next.js", "Strapi", "MongoDB", "Vercel"],
-    link: "https://tuveterinaria.com",
+    title: "VetConnect",
+    client: "Clínica Veterinaria PetCare",
+    description: "Plataforma de gestión veterinaria con historias clínicas digitales e integración con laboratorios. Redujo tiempos administrativos en un 60%.",
+    image: "/images/portfolio/vetconnect.jpg",
+    technologies: ["React", "Node.js", "MongoDB", "AWS", "Material UI"],
+    result: "Ahorro de 25 horas/semana en procesos",
+    link: "#",
   },
   {
     id: 3,
-    title: "FinTrack",
-    category: "Mobile App",
-    description: "Aplicación móvil para seguimiento de finanzas personales con análisis de gastos e inversiones.",
-    image: "/images/portfolio/fintrack.jpg",
-    problem: "Los usuarios necesitaban una herramienta simple pero potente para gestionar sus finanzas personales.",
-    solution: "Diseñé y desarrollé una app intuitiva con visualización de datos, categorización automática y alertas.",
-    result: "Más de 50,000 descargas en 3 meses y calificación promedio de 4.8/5 en tiendas de aplicaciones.",
-    technologies: ["React Native", "Firebase", "TensorFlow", "Google Cloud"],
-    link: "https://fintrack.app",
+    title: "InmoCRM",
+    client: "Grupo Inmobiliario Horizonte",
+    description: "CRM especializado para sector inmobiliario con seguimiento de leads y pipeline de ventas que aumentó la conversión en un 28%.",
+    image: "/images/portfolio/inmocrm.jpg",
+    technologies: ["Vue.js", "Laravel", "PostgreSQL", "Docker", "Tailwind"],
+    result: "Incremento de 28% en conversión",
+    link: "#",
   },
   {
     id: 4,
-    title: "EduLearn",
-    category: "Web App",
-    description: "Plataforma educativa para cursos online con sistema de evaluación y certificación automática.",
-    image: "/images/portfolio/edulearn.jpg",
-    problem: "La institución educativa necesitaba digitalizar sus cursos y ofrecer una experiencia de aprendizaje moderna.",
-    solution: "Desarrollé una plataforma LMS completa con contenido multimedia, evaluaciones y certificaciones.",
-    result: "Aumento del 200% en inscripciones y expansión a mercados internacionales.",
-    technologies: ["Vue.js", "Laravel", "MySQL", "Digital Ocean"],
-    link: "https://edulearn.org",
+    title: "FinTech Dashboard",
+    client: "Startup Fintech Internacional",
+    description: "Dashboard analítico para visualización de datos financieros con integraciones API a múltiples fuentes y reportes automatizados.",
+    image: "/images/portfolio/fintech-dashboard.jpg",
+    technologies: ["React", "D3.js", "Python", "FastAPI", "Redis"],
+    result: "90+ en Lighthouse Performance",
+    link: "#",
   },
+  {
+    id: 5,
+    title: "EduPlanner",
+    client: "Instituto Educativo Nacional",
+    description: "Sistema de planificación académica con gestión de horarios, asistencia y evaluaciones que optimizó la carga administrativa docente.",
+    image: "/images/portfolio/eduplanner.jpg",
+    technologies: ["Next.js", "TypeScript", "Prisma", "PostgreSQL", "Framer Motion"],
+    result: "Reducción del 40% en tiempo de planificación",
+    link: "#",
+  },
+  {
+    id: 6,
+    title: "MediConnect",
+    client: "Red de Clínicas Especializadas",
+    description: "Plataforma de telemedicina con agendamiento, videoconsultas y recetas digitales que expandió el alcance geográfico en un 200%.",
+    image: "/images/portfolio/mediconnect.jpg",
+    technologies: ["React Native", "Node.js", "WebRTC", "MongoDB", "AWS"],
+    result: "+1,200 consultas mensuales",
+    link: "#",
+  },
+];
+
+// Categorías para filtrado
+const categories = [
+  { value: "all", label: "Todos" },
+  { value: "web", label: "Web Apps" },
+  { value: "ecommerce", label: "E-commerce" },
+  { value: "mobile", label: "Mobile Apps" },
+  { value: "integration", label: "Integraciones API" },
 ];
 
 export function PortfolioSection() {
   const theme = useTheme();
   const [filter, setFilter] = useState("all");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   
-  const handleFilterChange = (event: React.SyntheticEvent, newValue: string) => {
-    setFilter(newValue);
-  };
+  // Filtrado de proyectos (simulado, ajustar según categorías reales)
+  const filteredProjects = projects;
   
-  const filteredProjects = filter === "all" 
-    ? projects 
-    : projects.filter(project => project.category.toLowerCase() === filter.toLowerCase());
-  
+  // Variantes de animación para Framer Motion
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -93,25 +114,60 @@ export function PortfolioSection() {
   };
   
   const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
+  };
+  
+  const cardVariants = {
     hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
       transition: { duration: 0.6, ease: "easeOut" },
-    },
-  };
-  
-  const cardVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
+                },
     hover: {
       y: -10,
+      boxShadow: theme.palette.mode === "dark" 
+        ? "0 20px 40px rgba(0, 0, 0, 0.5)" 
+        : "0 20px 40px rgba(0, 0, 0, 0.1)",
       transition: { duration: 0.3 },
-    },
+                  },
+  };
+
+  // Navegación del carrusel
+  const handlePrev = () => {
+    if (activeIndex > 0) {
+      setActiveIndex(activeIndex - 1);
+      scrollToCard(activeIndex - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (activeIndex < filteredProjects.length - 1) {
+      setActiveIndex(activeIndex + 1);
+      scrollToCard(activeIndex + 1);
+    }
+  };
+
+  const scrollToCard = (index: number) => {
+    if (carouselRef.current) {
+      const cardWidth = carouselRef.current.scrollWidth / filteredProjects.length;
+      carouselRef.current.scrollTo({
+        left: cardWidth * index,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Determinar cuántos proyectos mostrar por fila según el tamaño de pantalla
+  const getCardWidth = () => {
+    if (isMobile) return '85vw';
+    if (isTablet) return '400px';
+    return '380px';
   };
   
   return (
@@ -120,9 +176,12 @@ export function PortfolioSection() {
       id="portafolio"
       sx={{ 
         py: { xs: 10, md: 16 },
-      }}
-    >
-      <Container maxWidth="lg">
+        background: theme.palette.mode === "dark" 
+          ? "linear-gradient(180deg, #0A0A0A 0%, #111111 100%)" 
+          : "linear-gradient(180deg, #F7F7F7 0%, #FFFFFF 100%)",
+                        }}
+                    >
+      <Container maxWidth="xl">
         <Box 
           component={motion.div}
           variants={containerVariants}
@@ -131,7 +190,7 @@ export function PortfolioSection() {
           viewport={{ once: true, amount: 0.2 }}
           sx={{ 
             textAlign: "center",
-            mb: { xs: 6, md: 8 },
+            mb: { xs: 6, md: 10 },
           }}
         >
           <Typography 
@@ -141,7 +200,12 @@ export function PortfolioSection() {
             sx={{ 
               fontWeight: 700,
               mb: 2,
-              fontSize: { xs: "2rem", md: "3rem" },
+              fontSize: { xs: "2.5rem", md: "3.5rem" },
+              background: "linear-gradient(90deg, #5D5FEF 0%, #3D5AFE 100%)",
+              backgroundClip: "text",
+              textFillColor: "transparent",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
             }}
           >
             Portafolio
@@ -153,64 +217,134 @@ export function PortfolioSection() {
             variant="h6" 
             color="text.secondary"
             sx={{ 
-              maxWidth: "700px",
+              maxWidth: "800px",
               mx: "auto",
-              mb: 4,
+              mb: 6,
               fontWeight: 400,
+              fontSize: { xs: "1rem", md: "1.25rem" },
+              lineHeight: 1.6,
             }}
           >
-            Proyectos destacados que han generado resultados excepcionales para mis clientes.
+            Proyectos destacados desarrollados para clientes que demuestran mi experiencia
+            en diversas tecnologías y soluciones digitales de alto impacto.
           </Typography>
           
-          <Box 
+          {/* Filtros de categorías */}
+          <Stack 
             component={motion.div}
             variants={itemVariants}
-            sx={{ 
-              display: "flex",
-              justifyContent: "center",
-              mb: 6,
+            direction="row" 
+            spacing={1} 
+            useFlexGap 
+            flexWrap="wrap"
+            justifyContent="center"
+            sx={{ mb: 8 }}
+          >
+            {categories.map((category) => (
+              <Chip
+                key={category.value}
+                label={category.label}
+                onClick={() => setFilter(category.value)}
+                sx={{
+                  px: 2,
+                  py: 2.5,
+                  fontSize: "0.9rem",
+                  fontWeight: 500,
+                  background: filter === category.value 
+                    ? "linear-gradient(90deg, #5D5FEF 0%, #3D5AFE 100%)" 
+                    : theme.palette.mode === "dark" 
+                      ? "rgba(255, 255, 255, 0.05)" 
+                      : "rgba(0, 0, 0, 0.05)",
+                  color: filter === category.value 
+                    ? "#FFFFFF" 
+                    : theme.palette.text.primary,
+                  '&:hover': {
+                    background: filter === category.value 
+                      ? "linear-gradient(90deg, #5D5FEF 0%, #3D5AFE 100%)" 
+                      : theme.palette.mode === "dark" 
+                        ? "rgba(255, 255, 255, 0.1)" 
+                        : "rgba(0, 0, 0, 0.1)",
+                  },
+                  transition: 'all 0.3s ease',
+                }}
+              />
+            ))}
+          </Stack>
+    </Box>
+        
+        {/* Controles de navegación del carrusel */}
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'center',
+            alignItems: 'center',
+            mb: 4,
+            gap: 2
+          }}
+        >
+          <IconButton 
+            onClick={handlePrev}
+            disabled={activeIndex === 0}
+            sx={{
+              background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)",
+              '&:hover': {
+                background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+              },
+              '&.Mui-disabled': {
+                opacity: 0.3,
+}
             }}
           >
-            <Tabs 
-              value={filter} 
-              onChange={handleFilterChange}
-              sx={{
-                '& .MuiTabs-indicator': {
-                  backgroundColor: 'primary.main',
-                },
-                '& .MuiTab-root': {
-                  textTransform: 'none',
-                  fontWeight: 500,
-                  fontSize: '1rem',
-                  minWidth: 100,
-                  '&.Mui-selected': {
-                    color: 'primary.main',
-                  },
-                },
-              }}
-            >
-              <Tab label="Todos" value="all" />
-              <Tab label="Web App" value="web app" />
-              <Tab label="E-commerce" value="e-commerce" />
-              <Tab label="Mobile App" value="mobile app" />
-            </Tabs>
-          </Box>
+            <IconChevronLeft />
+          </IconButton>
+          
+          <Typography variant="body2" color="text.secondary">
+            {activeIndex + 1} / {filteredProjects.length}
+          </Typography>
+          
+          <IconButton 
+            onClick={handleNext}
+            disabled={activeIndex === filteredProjects.length - 1}
+            sx={{
+              background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)",
+              '&:hover': {
+                background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+              },
+              '&.Mui-disabled': {
+                opacity: 0.3,
+              }
+            }}
+          >
+            <IconChevronRight />
+          </IconButton>
         </Box>
         
-        <AnimatePresence mode="wait">
-          <Grid 
-            container 
-            spacing={4}
-            component={motion.div}
-            key={filter}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            {filteredProjects.map((project) => (
-              <Grid key={project.id}>
+        {/* Carrusel de proyectos */}
+        <Box
+          ref={carouselRef}
+          sx={{
+            display: 'flex',
+            overflowX: 'auto',
+            scrollbarWidth: 'none', // Firefox
+            '&::-webkit-scrollbar': { // Chrome, Safari, etc.
+              display: 'none'
+            },
+            pb: 4,
+            px: { xs: 2, md: 0 },
+            scrollSnapType: 'x mandatory',
+            scrollBehavior: 'smooth',
+            '-webkit-overflow-scrolling': 'touch',
+          }}
+        >
+          <AnimatePresence mode="wait">
+            <Stack
+              direction="row"
+              spacing={4}
+              sx={{ px: 2 }}
+            >
+              {filteredProjects.map((project) => (
                 <Card 
+                  key={project.id}
                   component={motion.div}
                   variants={cardVariants}
                   initial="hidden"
@@ -218,68 +352,99 @@ export function PortfolioSection() {
                   whileHover="hover"
                   viewport={{ once: true, amount: 0.1 }}
                   sx={{ 
-                    height: "100%",
+                    width: getCardWidth(),
+                    minWidth: getCardWidth(),
+                    height: '100%',
                     display: "flex",
                     flexDirection: "column",
                     overflow: "hidden",
+                    scrollSnapAlign: 'center',
+                    background: theme.palette.mode === "dark" 
+                      ? "linear-gradient(145deg, #171717 0%, #0F0F0F 100%)" 
+                      : "linear-gradient(145deg, #FFFFFF 0%, #F7F7F7 100%)",
+                    border: theme.palette.mode === "dark" 
+                      ? "1px solid rgba(255, 255, 255, 0.05)" 
+                      : "1px solid rgba(0, 0, 0, 0.05)",
                   }}
                 >
-                  <CardMedia
-                    component="img"
-                    height="300"
-                    image={project.image}
-                    alt={project.title}
-                    sx={{ 
-                      objectFit: "cover",
-                    }}
-                  />
+                  <Box sx={{ position: 'relative', overflow: 'hidden' }}>
+                    <CardMedia
+                      component={motion.img}
+                      whileHover={{ 
+                        scale: 1.05,
+                        transition: { duration: 0.5 }
+                      }}
+                      height="240"
+                      image={project.image}
+                      alt={project.title}
+                      sx={{ 
+                        objectFit: "cover",
+                        transition: 'transform 0.5s ease',
+                      }}
+                    />
+                    
+                    {/* Overlay con resultado destacado */}
+                    {project.result && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: 16,
+                          right: 16,
+                          background: 'linear-gradient(90deg, #5D5FEF 0%, #3D5AFE 100%)',
+                          color: 'white',
+                          borderRadius: '100px',
+                          px: 2,
+                          py: 0.5,
+                          fontWeight: 600,
+                          fontSize: '0.8rem',
+                          boxShadow: '0 4px 12px rgba(93, 95, 239, 0.3)',
+                        }}
+                      >
+                        {project.result}
+                      </Box>
+                    )}
+                  </Box>
                   
                   <CardContent sx={{ p: 4, flexGrow: 1 }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                      <Typography variant="h5" component="h3" fontWeight={700}>
-                        {project.title}
-                      </Typography>
-                      <Chip 
-                        label={project.category} 
-                        size="small"
-                        sx={{ 
-                          background: theme.palette.mode === "dark" 
-                            ? "rgba(0, 112, 243, 0.15)" 
-                            : "rgba(0, 112, 243, 0.1)",
-                          color: "primary.main",
-                          fontWeight: 500,
-                        }}
-                      />
-                    </Box>
+                    <Typography 
+                      variant="subtitle2" 
+                      color="primary"
+                      sx={{ 
+                        mb: 1,
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      {project.client}
+                    </Typography>
                     
-                    <Typography variant="body2" color="text.secondary" paragraph>
+                    <Typography 
+                      variant="h5" 
+                      component="h3" 
+                      sx={{ 
+                        fontWeight: 700,
+                        mb: 2,
+                        fontSize: '1.5rem',
+                      }}
+                    >
+                      {project.title}
+                    </Typography>
+                    
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary" 
+                      sx={{ 
+                        mb: 3,
+                        lineHeight: 1.6,
+                        fontSize: '0.95rem',
+                      }}
+                    >
                       {project.description}
                     </Typography>
                     
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                        Problema:
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" paragraph>
-                        {project.problem}
-                      </Typography>
-                      
-                      <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                        Solución:
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" paragraph>
-                        {project.solution}
-                      </Typography>
-                      
-                      <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                        Resultado:
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" paragraph>
-                        {project.result}
-                      </Typography>
-                    </Box>
-                    
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 3, mb: 3 }}>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 'auto', mb: 3 }}>
                       {project.technologies.map((tech) => (
                         <Chip 
                           key={tech} 
@@ -287,34 +452,65 @@ export function PortfolioSection() {
                           size="small"
                           sx={{ 
                             background: theme.palette.mode === "dark" 
-                              ? "rgba(255, 255, 255, 0.1)" 
+                              ? "rgba(255, 255, 255, 0.05)" 
                               : "rgba(0, 0, 0, 0.05)",
                             fontWeight: 500,
+                            fontSize: '0.7rem',
+                            height: '24px',
                           }}
                         />
                       ))}
                     </Box>
                     
                     <Button
-                      variant="outlined"
+                      variant="contained"
                       color="primary"
-                      endIcon={<IconArrowRight size={18} />}
+                      endIcon={<IconExternalLink size={16} />}
                       href={project.link}
                       target="_blank"
                       rel="noopener noreferrer"
                       sx={{ 
                         mt: 1,
-                        fontWeight: 500,
+                        fontWeight: 600,
+                        background: 'linear-gradient(90deg, #5D5FEF 0%, #3D5AFE 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(90deg, #4A4CD6 0%, #2A3EB1 100%)',
+                        },
                       }}
                     >
-                      Ver proyecto
+                      Ver detalles
                     </Button>
                   </CardContent>
                 </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </AnimatePresence>
+              ))}
+            </Stack>
+          </AnimatePresence>
+        </Box>
+        
+        {/* Botón para ver todos los proyectos */}
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'center',
+            mt: 6 
+          }}
+        >
+          <Button
+            variant="outlined"
+            color="primary"
+            endIcon={<IconArrowRight size={18} />}
+            href="#contacto"
+            sx={{ 
+              fontWeight: 600,
+              borderWidth: 2,
+              '&:hover': {
+                borderWidth: 2,
+              },
+            }}
+          >
+            ¿Tienes un proyecto en mente? Contáctame
+          </Button>
+        </Box>
       </Container>
     </Box>
   );
