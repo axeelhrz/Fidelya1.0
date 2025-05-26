@@ -1,208 +1,76 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Importar fuente Satoshi */
-@font-face {
-  font-family: 'Satoshi';
-  src: url('/fonts/Satoshi-Regular.woff2') format('woff2'),
-       url('/fonts/Satoshi-Regular.woff') format('woff');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Satoshi';
-  src: url('/fonts/Satoshi-Medium.woff2') format('woff2'),
-       url('/fonts/Satoshi-Medium.woff') format('woff');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Satoshi';
-  src: url('/fonts/Satoshi-Bold.woff2') format('woff2'),
-       url('/fonts/Satoshi-Bold.woff') format('woff');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Satoshi';
-  src: url('/fonts/Satoshi-Black.woff2') format('woff2'),
-       url('/fonts/Satoshi-Black.woff') format('woff');
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #5D5FEF; /* Morado digital */
-  --primary-alt: #3D5AFE; /* Azul eléctrico */
-  --primary-foreground: #ffffff;
-  --secondary: #171717;
-  --secondary-foreground: #ffffff;
-  --muted: #f5f5f5;
-  --muted-foreground: #737373;
-  --accent: #f5f5f5;
-  --accent-foreground: #171717;
-  --card: #ffffff;
-  --card-foreground: #171717;
-  --border: #e5e5e5;
-  --input: #e5e5e5;
-  --ring: #5D5FEF;
-  
-  /* Glassmorphism */
-  --glass-background: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-shadow: rgba(0, 0, 0, 0.05);
-  --glass-blur: 10px;
-  
-  /* Neumorphism */
-  --neumorph-bg: #f0f0f3;
-  --neumorph-shadow-light: rgba(255, 255, 255, 0.9);
-  --neumorph-shadow-dark: rgba(0, 0, 0, 0.05);
-  
-  /* Fuentes */
-  --font-satoshi: 'Satoshi', sans-serif;
-  --font-space-grotesk: 'Space Grotesk', sans-serif;
+  --primary-color: #3B82F6;
+  --secondary-color: #F59E0B;
+  --success-color: #10B981;
+  --background-color: #FFFFFF;
+  --paper-color: #F5F5F5;
+  --text-color: #111827;
+  --text-secondary-color: #4B5563;
+  --border-color: #E5E7EB;
 }
 
-.dark {
-  --background: #0A0A0A;
-  --foreground: #ffffff;
-  --primary: #5D5FEF; /* Mantenemos el morado digital */
-  --primary-alt: #3D5AFE; /* Azul eléctrico */
-  --primary-foreground: #ffffff;
-  --secondary: #ffffff;
-  --secondary-foreground: #0A0A0A;
-  --muted: #262626;
-  --muted-foreground: #a3a3a3;
-  --accent: #262626;
-  --accent-foreground: #ffffff;
-  --card: #171717;
-  --card-foreground: #ffffff;
-  --border: #262626;
-  --input: #262626;
-  --ring: #5D5FEF;
-  
-  /* Glassmorphism en modo oscuro */
-  --glass-background: rgba(23, 23, 23, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: rgba(0, 0, 0, 0.2);
-  --glass-blur: 10px;
-  
-  /* Neumorphism en modo oscuro */
-  --neumorph-bg: #171717;
-  --neumorph-shadow-light: rgba(30, 30, 30, 0.7);
-  --neumorph-shadow-dark: rgba(0, 0, 0, 0.5);
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
 }
 
-.no-transitions * {
-  transition: none !important;
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: var(--font-plus-jakarta-sans), 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: var(--font-satoshi), system-ui, sans-serif;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  }
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
-/* Glassmorphism */
-.glass {
-  background: var(--glass-background);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 32px 0 var(--glass-shadow);
-}
-
-/* Neumorphism */
-.neumorph {
-  background: var(--neumorph-bg);
-  box-shadow: 
-    8px 8px 16px var(--neumorph-shadow-dark),
-    -8px -8px 16px var(--neumorph-shadow-light);
-  border-radius: 24px;
-}
-
-.neumorph-inset {
-  background: var(--neumorph-bg);
-  box-shadow: 
-    inset 8px 8px 16px var(--neumorph-shadow-dark),
-    inset -8px -8px 16px var(--neumorph-shadow-light);
-  border-radius: 24px;
-}
-
-/* Estilos para badges */
-.badge {
-  @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium;
-  background: rgba(93, 95, 239, 0.1);
-  color: var(--primary);
-  border: 1px solid rgba(93, 95, 239, 0.2);
-}
-
-.dark .badge {
-  background: rgba(93, 95, 239, 0.15);
-  border: 1px solid rgba(93, 95, 239, 0.3);
-}
-
-/* Animaciones suaves */
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
+/* Animaciones globales */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
     transform: translateY(0);
+    opacity: 1;
   }
 }
 
-/* Animación de gradiente */
-.animated-gradient {
-  background: linear-gradient(-45deg, #5D5FEF, #3D5AFE, #0070F3, #5D5FEF);
-  background-size: 400% 400%;
-  animation: gradient 15s ease infinite;
-}
-
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
+@keyframes scaleIn {
+  from {
+    transform: scale(0.98);
+    opacity: 0;
   }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
-/* Estilos para secciones */
-.section {
-  @apply py-16 md:py-24;
+/* Clases de utilidad */
+.fadeIn {
+  animation: fadeIn 0.6s ease-out forwards;
 }
 
-/* Estilos para contenedores */
-.container-custom {
-  @apply mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
+.slideUp {
+  animation: slideUp 0.6s ease-out forwards;
+}
+
+.scaleIn {
+  animation: scaleIn 0.5s ease-out forwards;
 }
 
 /* Efectos de hover */
@@ -211,22 +79,26 @@
 }
 
 .hover-lift:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
-.dark .hover-lift:hover {
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-/* Efectos de texto */
-.text-gradient {
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-image: linear-gradient(90deg, var(--primary), var(--primary-alt));
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
 }
 
-.dark .text-gradient {
-  background-image: linear-gradient(90deg, var(--primary-alt), var(--primary));
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.15);
 }

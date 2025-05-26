@@ -1,50 +1,17 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, DM_Sans } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
+import { Plus_Jakarta_Sans } from "next/font/google";
+import ThemeRegistry from './components/ThemeRegistry';
 import "./globals.css";
 
-// Configuración de fuentes
-const spaceGrotesk = Space_Grotesk({
+const plusJakartaSans = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
-  variable: "--font-space-grotesk",
-  display: "swap",
-});
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-satoshi", // Usamos el mismo nombre de variable para mantener compatibilidad
-  display: "swap",
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-plus-jakarta-sans',
 });
 
 export const metadata: Metadata = {
-  title: "Axel Hernández | Desarrollo de plataformas digitales de alto impacto",
-  description: "Desarrollo plataformas que venden más y mejor. Soluciones digitales pensadas para convertir visitantes en clientes.",
-  keywords: ["desarrollo web", "diseño web", "conversión", "plataformas digitales", "Next.js", "React"],
-  authors: [{ name: "Axel Hernández" }],
-  creator: "Axel Hernández",
-  openGraph: {
-    type: "website",
-    locale: "es_ES",
-    url: "https://axel.dev",
-    siteName: "Axel Hernández",
-    title: "Axel Hernández | Desarrollo de plataformas digitales de alto impacto",
-    description: "Desarrollo plataformas que venden más y mejor. Soluciones digitales pensadas para convertir visitantes en clientes.",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Axel Hernández",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Axel Hernández | Desarrollo de plataformas digitales de alto impacto",
-    description: "Desarrollo plataformas que venden más y mejor. Soluciones digitales pensadas para convertir visitantes en clientes.",
-    images: ["/og-image.jpg"],
-    creator: "@axelhernandez",
-  },
+  title: "MenuQR - Experiencia Gastronómica Digital",
+  description: "Menú digital de alta gama para una experiencia gastronómica excepcional",
 };
 
 export default function RootLayout({
@@ -53,16 +20,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning>
-      <body className={`${spaceGrotesk.variable} ${dmSans.variable} antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+    <html lang="es">
+      <body className={plusJakartaSans.className}>
+        <ThemeRegistry>
           {children}
-        </ThemeProvider>
+        </ThemeRegistry>
       </body>
     </html>
   );
