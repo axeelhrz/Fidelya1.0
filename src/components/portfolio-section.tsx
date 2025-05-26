@@ -17,6 +17,8 @@ import {
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconArrowRight, IconExternalLink, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import Image from "next/image";
+import { useTheme as useNextTheme } from "@/components/theme-provider";
 
 // Datos de proyectos específicos
 const projects = [
@@ -25,10 +27,11 @@ const projects = [
     title: "Assuriva",
     client: "Producto Propio - InsurTech",
     description: "Plataforma SaaS para compañías de seguros que automatiza procesos, mejora la experiencia del cliente y reduce costos operativos en un 70%.",
-    image: "/images/portfolio/assuriva.jpg",
+    image: "/images/portfolio/assuriva.jpg", // Imagen por defecto (fallback)
     technologies: ["Next.js", "TypeScript", "Node.js", "PostgreSQL", "AWS", "Material UI"],
     result: "Reducción 70% en costos operativos",
     link: "https://assuriva.com",
+    useThemeImage: true, // Marca este proyecto para usar imágenes según el tema
   },
   {
     id: 2,
@@ -62,6 +65,7 @@ const categories = [
 
 export function PortfolioSection() {
   const theme = useTheme();
+  const { theme: nextTheme } = useNextTheme();
   const [filter, setFilter] = useState("all");
   const [activeIndex, setActiveIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -336,21 +340,38 @@ export function PortfolioSection() {
                       : "1px solid rgba(0, 0, 0, 0.05)",
                   }}
                 >
-                  <Box sx={{ position: 'relative', overflow: 'hidden' }}>
-                    <CardMedia
-                      component={motion.img}
-                      whileHover={{ 
-                        scale: 1.05,
-                        transition: { duration: 0.5 }
+                  <Box sx={{ position: 'relative', overflow: 'hidden', height: '240px' }}>
+                    {project.useThemeImage ? (
+                      // Usar imagen dinámica basada en el tema para Assuriva
+                      <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+                        <Image
+                          src={nextTheme === "dark" ? "/images/Assuriva-night.png" : "/images/Assuriva-light.png"}
+                          alt={project.title}
+                          fill
+                          style={{ 
+                            objectFit: "contain",
+                            padding: "20px"
                       }}
-                      height="240"
-                      image={project.image}
-                      alt={project.title}
-                      sx={{ 
-                        objectFit: "cover",
-                        transition: 'transform 0.5s ease',
-                      }}
-                    />
+                          priority
+                        />
+                      </Box>
+                    ) : (
+                      // Usar imagen normal para otros proyectos
+                      <CardMedia
+                        component={motion.img}
+                        whileHover={{ 
+                          scale: 1.05,
+                          transition: { duration: 0.5 }
+                        }}
+                        height="240"
+                        image={project.image}
+                        alt={project.title}
+                        sx={{ 
+                          objectFit: "cover",
+                          transition: 'transform 0.5s ease',
+                        }}
+                      />
+                    )}
                     
                     {/* Overlay con resultado destacado */}
                     {project.result && (
@@ -359,7 +380,7 @@ export function PortfolioSection() {
                           position: 'absolute',
                           top: 16,
                           right: 16,
-                          background: 'linear-gradient(90deg, #5D5FEF 0%, #3D5AFE 100%)',
+                        background: 'linear-gradient(90deg, #5D5FEF 0%, #3D5AFE 100%)',
                           color: 'white',
                           borderRadius: '100px',
                           px: 2,
@@ -377,15 +398,15 @@ export function PortfolioSection() {
                   <CardContent sx={{ p: 4, flexGrow: 1 }}>
                     <Typography 
                       variant="subtitle2" 
-                      color="primary"
+            color="primary"
                       sx={{ 
                         mb: 1,
-                        fontWeight: 600,
+              fontWeight: 600,
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                         fontSize: '0.75rem',
-                      }}
-                    >
+            }}
+          >
                       {project.client}
                     </Typography>
                     
@@ -429,7 +450,7 @@ export function PortfolioSection() {
                           }}
                         />
                       ))}
-                    </Box>
+        </Box>
                     
                     <Button
                       variant="contained"
@@ -454,7 +475,7 @@ export function PortfolioSection() {
               ))}
             </Stack>
           </AnimatePresence>
-        </Box>
+    </Box>
         
         {/* Botón para ver todos los proyectos */}
         <Box 
