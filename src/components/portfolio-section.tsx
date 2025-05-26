@@ -18,77 +18,46 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { IconArrowRight, IconExternalLink, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 
-// Datos de proyectos freelance y colaboraciones
+// Datos de proyectos específicos
 const projects = [
   {
     id: 1,
-    title: "Reserva Express",
-    client: "Cadena de Restaurantes Sabor Latino",
-    description: "Sistema de reservas online con integración de pagos PSE que incrementó las reservas en un 45% y redujo las cancelaciones en un 30%.",
-    image: "/images/portfolio/reserva-express.jpg",
-    technologies: ["Next.js", "TypeScript", "Firebase", "Stripe", "PWA"],
-    result: "+400 reservas/mes",
-    link: "#",
+    title: "Assuriva",
+    client: "Producto Propio - InsurTech",
+    description: "Plataforma SaaS para compañías de seguros que automatiza procesos, mejora la experiencia del cliente y reduce costos operativos en un 70%.",
+    image: "/images/portfolio/assuriva.jpg",
+    technologies: ["Next.js", "TypeScript", "Node.js", "PostgreSQL", "AWS", "Material UI"],
+    result: "Reducción 70% en costos operativos",
+    link: "https://assuriva.com",
   },
   {
     id: 2,
-    title: "VetConnect",
-    client: "Clínica Veterinaria PetCare",
-    description: "Plataforma de gestión veterinaria con historias clínicas digitales e integración con laboratorios. Redujo tiempos administrativos en un 60%.",
-    image: "/images/portfolio/vetconnect.jpg",
-    technologies: ["React", "Node.js", "MongoDB", "AWS", "Material UI"],
-    result: "Ahorro de 25 horas/semana en procesos",
+    title: "TuVeterinaria",
+    client: "Clínica Veterinaria Regional",
+    description: "Sistema integral para clínicas veterinarias con historias clínicas digitales, agenda online y tienda de productos que incrementó ingresos en un 45%.",
+    image: "/images/portfolio/tuveterinaria.jpg",
+    technologies: ["React", "Firebase", "Stripe", "PWA", "Tailwind CSS"],
+    result: "+120% en ventas online",
     link: "#",
   },
   {
     id: 3,
-    title: "InmoCRM",
-    client: "Grupo Inmobiliario Horizonte",
-    description: "CRM especializado para sector inmobiliario con seguimiento de leads y pipeline de ventas que aumentó la conversión en un 28%.",
-    image: "/images/portfolio/inmocrm.jpg",
-    technologies: ["Vue.js", "Laravel", "PostgreSQL", "Docker", "Tailwind"],
-    result: "Incremento de 28% en conversión",
+    title: "MenuQR",
+    client: "Cadena de Restaurantes",
+    description: "Sistema de menú digital con QR, pedidos online y pagos integrados que mejoró la eficiencia del servicio y redujo errores en pedidos en un 90%.",
+    image: "/images/portfolio/menuqr.jpg",
+    technologies: ["Vue.js", "Node.js", "MongoDB", "PWA", "Framer Motion"],
+    result: "Aumento de 35% en ticket promedio",
     link: "#",
-  },
-  {
-    id: 4,
-    title: "FinTech Dashboard",
-    client: "Startup Fintech Internacional",
-    description: "Dashboard analítico para visualización de datos financieros con integraciones API a múltiples fuentes y reportes automatizados.",
-    image: "/images/portfolio/fintech-dashboard.jpg",
-    technologies: ["React", "D3.js", "Python", "FastAPI", "Redis"],
-    result: "90+ en Lighthouse Performance",
-    link: "#",
-  },
-  {
-    id: 5,
-    title: "EduPlanner",
-    client: "Instituto Educativo Nacional",
-    description: "Sistema de planificación académica con gestión de horarios, asistencia y evaluaciones que optimizó la carga administrativa docente.",
-    image: "/images/portfolio/eduplanner.jpg",
-    technologies: ["Next.js", "TypeScript", "Prisma", "PostgreSQL", "Framer Motion"],
-    result: "Reducción del 40% en tiempo de planificación",
-    link: "#",
-  },
-  {
-    id: 6,
-    title: "MediConnect",
-    client: "Red de Clínicas Especializadas",
-    description: "Plataforma de telemedicina con agendamiento, videoconsultas y recetas digitales que expandió el alcance geográfico en un 200%.",
-    image: "/images/portfolio/mediconnect.jpg",
-    technologies: ["React Native", "Node.js", "WebRTC", "MongoDB", "AWS"],
-    result: "+1,200 consultas mensuales",
-    link: "#",
-  },
+  }
 ];
 
 // Categorías para filtrado
 const categories = [
   { value: "all", label: "Todos" },
+  { value: "saas", label: "SaaS" },
   { value: "web", label: "Web Apps" },
-  { value: "ecommerce", label: "E-commerce" },
   { value: "mobile", label: "Mobile Apps" },
-  { value: "integration", label: "Integraciones API" },
 ];
 
 export function PortfolioSection() {
@@ -225,8 +194,8 @@ export function PortfolioSection() {
               lineHeight: 1.6,
             }}
           >
-            Proyectos destacados desarrollados para clientes que demuestran mi experiencia
-            en diversas tecnologías y soluciones digitales de alto impacto.
+            Proyectos destacados que demuestran mi experiencia en diversas tecnologías 
+            y soluciones digitales de alto impacto para clientes reales.
           </Typography>
           
           {/* Filtros de categorías */}
