@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Importar fuente Satoshi */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Regular.woff2') format('woff2'),
+       url('/fonts/Satoshi-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Medium.woff2') format('woff2'),
+       url('/fonts/Satoshi-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Bold.woff2') format('woff2'),
+       url('/fonts/Satoshi-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Black.woff2') format('woff2'),
+       url('/fonts/Satoshi-Black.woff') format('woff');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -30,6 +67,10 @@
   --neumorph-bg: #f0f0f3;
   --neumorph-shadow-light: rgba(255, 255, 255, 0.9);
   --neumorph-shadow-dark: rgba(0, 0, 0, 0.05);
+  
+  /* Fuentes */
+  --font-satoshi: 'Satoshi', sans-serif;
+  --font-space-grotesk: 'Space Grotesk', sans-serif;
 }
 
 .dark {
@@ -73,7 +114,7 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-satoshi), system-ui, sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-space-grotesk), system-ui, sans-serif;

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Space_Grotesk, DM_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
@@ -10,9 +10,9 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-satoshi", // Usamos el mismo nombre de variable para mantener compatibilidad
   display: "swap",
 });
 
@@ -54,7 +54,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${spaceGrotesk.variable} ${inter.variable} antialiased`}>
+      <body className={`${spaceGrotesk.variable} ${dmSans.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -62,8 +62,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          {/* Temporalmente comentado hasta resolver problemas de build */}
-          {/* <AIChatbot /> */}
         </ThemeProvider>
       </body>
     </html>
