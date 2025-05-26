@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-import { AIChatbot } from "@/components/ai-chatbot";
 import "./globals.css";
 
 // Configuración de fuentes
@@ -13,9 +12,8 @@ const spaceGrotesk = Space_Grotesk({
 
 const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-satoshi", // Mantenemos el mismo nombre de variable para compatibilidad
+  variable: "--font-inter",
   display: "swap",
-  weight: ["400", "500", "700", "900"],
 });
 
 export const metadata: Metadata = {
@@ -64,7 +62,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <AIChatbot />
+          {/* Temporalmente comentado hasta resolver problemas de build */}
+          {/* <AIChatbot /> */}
         </ThemeProvider>
       </body>
     </html>

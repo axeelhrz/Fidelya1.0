@@ -1,3 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;
@@ -63,11 +66,19 @@
   transition: none !important;
 }
 
-
-
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-space-grotesk), system-ui, sans-serif;
   }
+}
 
 /* Glassmorphism */
 .glass {
@@ -97,6 +108,7 @@
 
 /* Estilos para badges */
 .badge {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium;
   background: rgba(93, 95, 239, 0.1);
   color: var(--primary);
   border: 1px solid rgba(93, 95, 239, 0.2);
@@ -143,10 +155,14 @@
 }
 
 /* Estilos para secciones */
-
+.section {
+  @apply py-16 md:py-24;
+}
 
 /* Estilos para contenedores */
-
+.container-custom {
+  @apply mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
+}
 
 /* Efectos de hover */
 .hover-lift {
