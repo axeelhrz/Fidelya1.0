@@ -5,7 +5,7 @@ import { ProductsSection } from "@/components/products-section";
 import { PortfolioSection } from "@/components/portfolio-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { ContactSection } from "@/components/contact-section";
-import { Footer } from "@/components/footer";
+import { FooterSection } from "@/components/footer";
 import { MUITheme } from "@/theme/mui-theme";
 
 export default function Home() {
@@ -20,7 +20,7 @@ export default function Home() {
         <TestimonialsSection />
         <ContactSection />
       </main>
-      <Footer />
+      <FooterSection />
     </MUITheme>
   );
 }

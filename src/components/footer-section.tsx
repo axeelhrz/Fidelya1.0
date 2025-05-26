@@ -525,5 +525,3 @@ export function FooterSection() {
     </Box>
   );
 }
-
-export default FooterSection;

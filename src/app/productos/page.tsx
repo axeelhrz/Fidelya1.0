@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { ProductsSection } from "@/components/products-section";
-import { Footer } from "@/components/footer";
+import { FooterSection } from "@/components/footer";
 import { MUITheme } from "@/theme/mui-theme";
 import { Metadata } from "next";
 
@@ -16,7 +16,7 @@ export default function ProductosPage() {
       <main>
         <ProductsSection />
       </main>
-      <Footer />
+      <FooterSection />
     </MUITheme>
   );
 }

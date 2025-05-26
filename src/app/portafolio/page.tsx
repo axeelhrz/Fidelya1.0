@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { PortfolioSection } from "@/components/portfolio-section";
-import { Footer } from "@/components/footer";
+import { FooterSection } from "@/components/footer-section";
 import { MUITheme } from "@/theme/mui-theme";
 import { Metadata } from "next";
 
@@ -16,7 +16,7 @@ export default function PortafolioPage() {
       <main>
         <PortfolioSection />
       </main>
-      <Footer />
+      <FooterSection />
     </MUITheme>
   );
 }

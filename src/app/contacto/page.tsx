@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { ContactSection } from "@/components/contact-section";
-import { Footer } from "@/components/footer";
+import { FooterSection } from "@/components/footer";
 import { MUITheme } from "@/theme/mui-theme";
 import { Metadata } from "next";
 
@@ -16,7 +16,7 @@ export default function ContactoPage() {
       <main>
         <ContactSection />
       </main>
-      <Footer />
+      <FooterSection />
     </MUITheme>
   );
 }
