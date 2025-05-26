@@ -4,207 +4,201 @@ import { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
-  Paper, 
-  TextField, 
-  Button, 
   Stack, 
-  MenuItem, 
-  Select, 
-  FormControl, 
-  InputLabel,
-  Alert
+  Button,
+  Paper,
 } from '@mui/material';
+import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { initialProducts } from '../../data/initialProducts';
 import { Product, ProductCategory } from '../../types';
+import ProductForm from '../../components/ProductForm';
 import ProductCard from '../../components/ProductCard';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
+
+const MotionBox = motion(Box);
+const MotionTypography = motion(Typography);
+const MotionPaper = motion(Paper);
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [formError, setFormError] = useState('');
-  
-  // Form state
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<ProductCategory>('Entrada');
-
-  const categories: ProductCategory[] = ['Entrada', 'Principal', 'Bebida', 'Postre'];
-
   useEffect(() => {
     // Simulamos la carga de productos
     setProducts(initialProducts);
   }, []);
 
-  const resetForm = () => {
-    setName('');
-    setPrice('');
-    setDescription('');
-    setCategory('Entrada');
-    setEditingProduct(null);
-    setFormError('');
+  const handleAddProduct = (productData: Omit<Product, 'id'> & { id?: string }) => {
+    if (productData.id) {
+      // Actualizar producto existente
+      setProducts(products.map(p => 
+        p.id === productData.id
+          ? { ...productData, id: productData.id } as Product
+          : p
+      ));
+      setEditingProduct(null);
+    } else {
+      // Agregar nuevo producto
+      const newProduct: Product = {
+        ...productData,
+        id: Date.now().toString(),
+      };
+      setProducts([...products, newProduct]);
+    }
   };
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
-    setName(product.name);
-    setPrice(product.price.toString());
-    setDescription(product.description);
-    setCategory(product.category);
+    // Scroll al formulario
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeleteProduct = (id: string) => {
     setProducts(products.filter(p => p.id !== id));
+    if (editingProduct?.id === id) {
+      setEditingProduct(null);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validación básica
-    if (!name.trim() || !description.trim() || !price.trim()) {
-      setFormError('Todos los campos son obligatorios');
-      return;
-    }
-    
-    const priceValue = parseFloat(price);
-    if (isNaN(priceValue) || priceValue <= 0) {
-      setFormError('El precio debe ser un número positivo');
-      return;
-    }
-
-    if (editingProduct) {
-      // Actualizar producto existente
-      setProducts(products.map(p => 
-        p.id === editingProduct.id 
-          ? { ...p, name, price: priceValue, description, category } 
-          : p
-      ));
-    } else {
-      // Agregar nuevo producto
-      const newProduct: Product = {
-        id: Date.now().toString(),
-        name,
-        price: priceValue,
-        description,
-        category
-      };
-      setProducts([...products, newProduct]);
-    }
-    
-    resetForm();
+  const handleCancelEdit = () => {
+    setEditingProduct(null);
   };
+
+  // Agrupamos los productos por categoría para mostrarlos
+  const categories: ProductCategory[] = ['Entrada', 'Principal', 'Bebida', 'Postre'];
+  const productsByCategory = categories.map(category => ({
+    category,
+    products: products.filter(p => p.category === category)
+  }));
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1">
-          Gestión de Menú
-        </Typography>
-        <Button variant="outlined" onClick={() => router.push('/')}>
-          Volver al Inicio
-        </Button>
-      </Stack>
+    <Box sx={{ maxWidth: 1000, mx: 'auto', p: { xs: 2, sm: 3, md: 4 }, pb: 8 }}>
+      <MotionBox
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          justifyContent="space-between"
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          sx={{ mb: 4 }}
+        >
+          <Box>
+            <MotionTypography
+              variant="h3"
+              sx={{ fontWeight: 700, mb: 1 }}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+            >
+              Panel de Administración
+            </MotionTypography>
+            <MotionTypography
+              variant="subtitle1"
+              color="text.secondary"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              Gestiona tu menú digital de forma sencilla
+            </MotionTypography>
+          </Box>
 
-      <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h6" component="h2" gutterBottom>
-          {editingProduct ? 'Editar Producto' : 'Agregar Nuevo Producto'}
-        </Typography>
-        
-        {formError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {formError}
-          </Alert>
-        )}
-        
-        <Box component="form" onSubmit={handleSubmit}>
-          <Stack spacing={2}>
-            <TextField
-              label="Nombre del Producto"
-              fullWidth
-              value={name}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-            />
-            
-            <TextField
-              label="Precio"
-              fullWidth
-              type="number"
-              inputProps={{ step: "0.01", min: "0" }}
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-            />
-            
-            <TextField
-              label="Descripción"
-              fullWidth
-              multiline
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-            
-            <FormControl fullWidth>
-              <InputLabel>Categoría</InputLabel>
-              <Select
-                value={category}
-                label="Categoría"
-                onChange={(e) => setCategory(e.target.value as ProductCategory)}
+          <Stack direction="row" spacing={2} sx={{ mt: { xs: 2, sm: 0 } }}>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+                onClick={() => router.push('/')}
               >
-                {categories.map((cat) => (
-                  <MenuItem key={cat} value={cat}>{cat}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            
-            <Stack direction="row" spacing={2}>
-              <Button 
-                type="submit" 
-                variant="contained" 
-                fullWidth
-              >
-                {editingProduct ? 'Guardar Cambios' : 'Agregar Producto'}
+                Inicio
               </Button>
-              
-              {editingProduct && (
-                <Button 
-                  variant="outlined" 
-                  color="secondary" 
-                  fullWidth
-                  onClick={resetForm}
-                >
-                  Cancelar
-                </Button>
-              )}
-            </Stack>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant="contained"
+                startIcon={<RestaurantMenuIcon />}
+                onClick={() => router.push('/menu')}
+                sx={{
+                  boxShadow: '0 4px 14px rgba(59, 130, 246, 0.25)',
+                }}
+              >
+                Ver Menú
+              </Button>
+            </motion.div>
           </Stack>
-        </Box>
-      </Paper>
-
-      <Typography variant="h5" component="h2" gutterBottom>
-        Productos Actuales
-      </Typography>
-      
-      {products.length === 0 ? (
-        <Paper sx={{ p: 3, textAlign: 'center' }}>
-          <Typography color="text.secondary">
-            No hay productos disponibles. Agrega algunos usando el formulario.
-          </Typography>
-        </Paper>
-      ) : (
-        <Stack spacing={2}>
-          {products.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              isAdmin={true}
-              onEdit={handleEditProduct}
-              onDelete={handleDeleteProduct}
-            />
-          ))}
         </Stack>
-      )}
+
+        <ProductForm
+          onSubmit={handleAddProduct}
+          editingProduct={editingProduct}
+          onCancelEdit={handleCancelEdit}
+        />
+
+        <MotionTypography
+          variant="h4"
+          sx={{ mb: 3, fontWeight: 600 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          Productos Actuales
+        </MotionTypography>
+
+        {products.length === 0 ? (
+          <MotionPaper
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}
+          >
+            <Typography color="text.secondary">
+              No hay productos disponibles. Agrega algunos usando el formulario.
+            </Typography>
+          </MotionPaper>
+        ) : (
+          <Box>
+            {productsByCategory.map((group, index) => {
+              if (group.products.length === 0) return null;
+              
+              return (
+                <Box key={group.category} sx={{ mb: 5 }}>
+                  <MotionTypography
+                    variant="h5"
+                    sx={{
+                      mb: 2,
+                      pb: 1,
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      fontWeight: 600,
+                    }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 + index * 0.1, duration: 0.5 }}
+                  >
+                    {group.category}
+                  </MotionTypography>
+                  
+                  <Stack spacing={2}>
+                    {group.products.map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        isAdmin={true}
+                        onEdit={handleEditProduct}
+                        onDelete={handleDeleteProduct}
+                      />
+                    ))}
+                  </Stack>
+                </Box>
+              );
+            })}
+          </Box>
+        )}
+      </MotionBox>
     </Box>
   );
 }
