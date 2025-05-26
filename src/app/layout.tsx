@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Space_Grotesk } from "next/font/google";
-import localFont from 'next/font/local';
+import { Space_Grotesk, Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AIChatbot } from "@/components/ai-chatbot";
 import "./globals.css";
@@ -11,31 +10,12 @@ const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
   display: "swap",
 });
-const satoshi = localFont({
-  src: [
-    {
-      path: '../fonts/Satoshi-Regular.woff2',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../fonts/Satoshi-Medium.woff2',
-      weight: '500',
-      style: 'normal',
-    },
-    {
-      path: '../fonts/Satoshi-Bold.woff2',
-      weight: '700',
-      style: 'normal',
-    },
-    {
-      path: '../fonts/Satoshi-Black.woff2',
-      weight: '900',
-      style: 'normal',
-    },
-  ],
-  variable: "--font-satoshi",
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-satoshi", // Mantenemos el mismo nombre de variable para compatibilidad
   display: "swap",
+  weight: ["400", "500", "700", "900"],
 });
 
 export const metadata: Metadata = {
@@ -76,7 +56,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${spaceGrotesk.variable} ${satoshi.variable} antialiased`}>
+      <body className={`${spaceGrotesk.variable} ${inter.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
