@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import theme from './theme';
+import ThemeRegistry from './components/ThemeRegistry';
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
+
 export const metadata: Metadata = {
   title: "MenuQR - Gestión de Menú Digital",
   description: "Aplicación para gestionar menús digitales con QR",
@@ -19,10 +18,9 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={inter.className}>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
+        <ThemeRegistry>
         {children}
-          </ThemeProvider>
+        </ThemeRegistry>
       </body>
     </html>
   );
