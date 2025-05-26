@@ -1,91 +1,83 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { 
   Box, 
-  Button, 
-  Card, 
-  CardContent, 
-  CardActions, 
-  Container, 
-  Divider, 
-  Grid, 
   Typography, 
-  List, 
-  ListItem, 
-  ListItemIcon, 
-  ListItemText,
-  TextField,
-  InputAdornment,
-  Slider,
-  useTheme,
+  Container, 
+  Button, 
+  Stack, 
+  useTheme, 
+  alpha
 } from "@mui/material";
-import { motion } from "framer-motion";
-import { IconCheck, IconBrandWhatsapp, IconArrowUpRight } from "@tabler/icons-react";
+import { motion, useInView } from "framer-motion";
+import { 
+  IconRocket, 
+  IconDevices, 
+  IconCreditCard, 
+  IconRobot, 
+  IconChartBar, 
+  IconArrowUpRight,
+  IconBrandReact,
+  IconBrandFirebase,
+  IconBrandNextjs,
+  IconApi
+} from "@tabler/icons-react";
 
-// Tipos de servicios
+// Definición de los servicios
 const services = [
   {
-    name: "Starter",
-    price: "1,500",
-    description: "Ideal para emprendedores y pequeñas empresas que buscan establecer su presencia online.",
-    features: [
-      "Diseño web responsive",
-      "Hasta 5 páginas",
-      "SEO básico",
-      "Formulario de contacto",
-      "Integración con redes sociales",
-      "1 mes de soporte",
-    ],
-    highlighted: false,
+    id: 1,
+    icon: <IconRocket size={32} />,
+    title: "Desarrollo de SaaS",
+    description: "Plataformas escalables y de alto rendimiento que automatizan procesos y generan ingresos recurrentes.",
+    benefit: "+200% ROI promedio",
+    technologies: [<IconBrandReact key="react" />, <IconBrandNextjs key="next" />, <IconBrandFirebase key="firebase" />],
+    color: "#5D5FEF", // Morado digital
   },
   {
-    name: "Pro",
-    price: "3,000",
-    description: "Perfecto para negocios en crecimiento que necesitan una plataforma más completa y personalizada.",
-    features: [
-      "Todo lo del plan Starter",
-      "Hasta 10 páginas",
-      "Diseño personalizado avanzado",
-      "Blog integrado",
-      "SEO avanzado",
-      "Integración con CRM",
-      "Análisis de conversión",
-      "3 meses de soporte",
-    ],
-    highlighted: true,
+    id: 2,
+    icon: <IconDevices size={32} />,
+    title: "Aplicaciones Web & Móviles",
+    description: "Soluciones multiplataforma con experiencias de usuario excepcionales y alto rendimiento.",
+    benefit: "+35% conversión",
+    technologies: [<IconBrandReact key="react" />, <IconBrandNextjs key="next" />],
+    color: "#3D5AFE", // Azul eléctrico
   },
   {
-    name: "Elite",
-    price: "5,000+",
-    description: "Solución completa para empresas que requieren una plataforma digital de alto rendimiento.",
-    features: [
-      "Todo lo del plan Pro",
-      "Páginas ilimitadas",
-      "E-commerce completo",
-      "Panel de administración",
-      "Integraciones API personalizadas",
-      "Optimización de velocidad avanzada",
-      "Estrategia de conversión",
-      "6 meses de soporte",
-    ],
-    highlighted: false,
+    id: 3,
+    icon: <IconCreditCard size={32} />,
+    title: "Integraciones de Pago",
+    description: "Implementación de pasarelas de pago seguras y optimizadas para maximizar conversiones.",
+    benefit: "+45% en ventas",
+    technologies: [<IconApi key="api" />, <IconBrandFirebase key="firebase" />],
+    color: "#00C853", // Verde éxito
+  },
+  {
+    id: 4,
+    icon: <IconRobot size={32} />,
+    title: "Automatización con IA",
+    description: "Flujos de trabajo inteligentes que reducen costos operativos y mejoran la eficiencia.",
+    benefit: "-70% tiempo operativo",
+    technologies: [<IconApi key="api" />, <IconBrandNextjs key="next" />],
+    color: "#FF6D00", // Naranja energía
+  },
+  {
+    id: 5,
+    icon: <IconChartBar size={32} />,
+    title: "Optimización de Performance",
+    description: "Mejora de velocidad, SEO y experiencia de usuario para aumentar conversiones y retención.",
+    benefit: "+85% velocidad",
+    technologies: [<IconBrandNextjs key="next" />, <IconBrandReact key="react" />],
+    color: "#2979FF", // Azul brillante
   },
 ];
 
 export function ServicesSection() {
   const theme = useTheme();
-  const [investment, setInvestment] = useState<number>(3000);
-  const [clientValue, setClientValue] = useState<number>(500);
-  const [conversionRate, setConversionRate] = useState<number>(10);
-  
-  // Cálculo del ROI
-  const monthlyVisitors = 1000; // Asumimos este número
-  const monthlyLeads = Math.round(monthlyVisitors * (conversionRate / 100));
-  const monthlyRevenue = monthlyLeads * clientValue;
-  const annualRevenue = monthlyRevenue * 12;
-  const roi = ((annualRevenue - investment) / investment) * 100;
-  
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.2 });
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -106,7 +98,7 @@ export function ServicesSection() {
   };
   
   const cardVariants = {
-    hidden: { opacity: 0, y: 50 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
@@ -114,10 +106,29 @@ export function ServicesSection() {
     },
     hover: {
       y: -10,
-      boxShadow: theme.palette.mode === "dark"
-        ? "0 20px 40px rgba(0, 0, 0, 0.3)"
-        : "0 20px 40px rgba(0, 0, 0, 0.1)",
-      transition: { duration: 0.3 },
+      transition: { duration: 0.3, ease: "easeOut" },
+    },
+  };
+  
+  const iconVariants = {
+    hidden: { scale: 0.8, opacity: 0 },
+    visible: { 
+      scale: 1, 
+      opacity: 1,
+      transition: { duration: 0.4, ease: "easeOut" }
+    },
+    hover: { 
+      scale: 1.1,
+      transition: { duration: 0.2, ease: "easeOut", repeat: Infinity, repeatType: "reverse" as const }
+    }
+  };
+  
+  const techBadgeVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      transition: { duration: 0.3, ease: "easeOut" }
     },
   };
   
@@ -130,20 +141,38 @@ export function ServicesSection() {
         background: theme.palette.mode === "dark" 
           ? "linear-gradient(180deg, rgba(10,10,10,1) 0%, rgba(20,20,20,1) 100%)"
           : "linear-gradient(180deg, rgba(250,250,250,1) 0%, rgba(255,255,255,1) 100%)",
-      }}
-    >
-      <Container maxWidth="lg">
+                  position: "relative",
+        overflow: "hidden",
+                }}
+      ref={ref}
+              >
+      {/* Fondo decorativo */}
+      <Box 
+                    sx={{ 
+                      position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 0,
+          opacity: 0.4,
+          background: theme.palette.mode === "dark" 
+            ? "radial-gradient(circle at 80% 20%, rgba(93, 95, 239, 0.15), transparent 40%), radial-gradient(circle at 20% 80%, rgba(61, 90, 254, 0.1), transparent 30%)"
+            : "radial-gradient(circle at 80% 20%, rgba(93, 95, 239, 0.1), transparent 40%), radial-gradient(circle at 20% 80%, rgba(61, 90, 254, 0.05), transparent 30%)",
+          }}
+      />
+      
+      <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
         <Box 
-          component={motion.div}
+                component={motion.div} 
           variants={containerVariants}
           initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
+          animate={isInView ? "visible" : "hidden"}
           sx={{ 
             textAlign: "center",
             mb: { xs: 8, md: 12 },
-          }}
-        >
+                }}
+              >
           <Typography 
             component={motion.h2}
             variants={itemVariants}
@@ -152,11 +181,12 @@ export function ServicesSection() {
               fontWeight: 700,
               mb: 2,
               fontSize: { xs: "2rem", md: "3rem" },
-            }}
-          >
-            Servicios a medida
-          </Typography>
-          
+              fontFamily: "var(--font-space-grotesk)",
+                  }}
+            className="text-gradient"
+                >
+            Servicios que impulsan tu negocio digital
+                  </Typography>
           <Typography 
             component={motion.p}
             variants={itemVariants}
@@ -167,282 +197,239 @@ export function ServicesSection() {
               mx: "auto",
               mb: 4,
               fontWeight: 400,
-            }}
-          >
-            Soluciones digitales diseñadas para maximizar tu presencia online y convertir visitantes en clientes.
+                  }}
+                >
+            Soluciones tecnológicas de alto impacto diseñadas para maximizar resultados y generar crecimiento sostenible.
           </Typography>
-        </Box>
-        
-        {/* Tarjetas de servicios */}
-        <Grid container spacing={4} sx={{ mb: 12 }}>
-          {services.map((service) => (
-            <Grid key={service.name}>
-              <Card 
-                component={motion.div}
-                variants={cardVariants}
-                initial="hidden"
-                whileInView="visible"
-                whileHover="hover"
-                viewport={{ once: true, amount: 0.1 }}
-                sx={{ 
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  position: "relative",
-                  overflow: "visible",
-                  border: service.highlighted ? 2 : 1,
-                  borderColor: service.highlighted 
-                    ? "primary.main" 
-                    : "divider",
-                  ...(service.highlighted && {
-                    mt: { md: -2 },
-                    mb: { md: -2 },
-                  }),
-                }}
-              >
-                {service.highlighted && (
-                  <Box 
-                    sx={{ 
-                      position: "absolute",
-                      top: -12,
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      background: "primary.main",
-                      color: "primary.contrastText",
-                      py: 0.5,
-                      px: 2,
-                      borderRadius: 100,
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      letterSpacing: 1,
-                    }}
-                  >
-                    Recomendado
-                  </Box>
-                )}
-                
-                <CardContent sx={{ p: 4, flexGrow: 1 }}>
-                  <Typography variant="h5" component="h3" fontWeight={700} gutterBottom>
-                    {service.name}
-                  </Typography>
-                  
-                  <Box sx={{ display: "flex", alignItems: "baseline", mb: 2 }}>
-                    <Typography variant="h3" component="span" fontWeight={700}>
-                      ${service.price}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                      USD
-                    </Typography>
-                  </Box>
-                  
-                  <Typography variant="body2" color="text.secondary" paragraph>
-                    {service.description}
-                  </Typography>
-                  
-                  <Divider sx={{ my: 3 }} />
-                  
-                  <List disablePadding>
-                    {service.features.map((feature) => (
-                      <ListItem key={feature} disablePadding sx={{ mb: 1 }}>
-                        <ListItemIcon sx={{ minWidth: 32 }}>
-                          <IconCheck size={20} color={theme.palette.primary.main} />
-                        </ListItemIcon>
-                        <ListItemText 
-                          primary={feature} 
-                          primaryTypographyProps={{ 
-                            variant: "body2",
-                            fontWeight: 500,
-                          }} 
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </CardContent>
-                
-                <CardActions sx={{ p: 4, pt: 0 }}>
-                  <Button 
-                    variant={service.highlighted ? "contained" : "outlined"}
-                    color={service.highlighted ? "primary" : "secondary"}
-                    fullWidth
-                    size="large"
-                    endIcon={<IconBrandWhatsapp />}
-                    href={`https://wa.me/1234567890?text=Hola%20Axel,%20estoy%20interesado%20en%20el%20plan%20${service.name}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{ 
-                      py: 1.5,
-                      fontWeight: 500,
-                    }}
-                  >
-                    Contactar por WhatsApp
-                  </Button>
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-        
-        {/* Calculadora de ROI */}
+              </Box>
         <Box 
-          component={motion.div}
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
           sx={{ 
-            background: theme.palette.mode === "dark" 
-              ? "rgba(0, 0, 0, 0.2)" 
-              : "rgba(0, 0, 0, 0.02)",
-            borderRadius: 4,
-            p: { xs: 3, md: 6 },
-            border: "1px solid",
-            borderColor: "divider",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: { xs: 3, md: 4 },
+            justifyContent: "center",
           }}
         >
-          <Grid container spacing={4}>
-            <Grid>
-              <Box component={motion.div} variants={itemVariants}>
-                <Typography variant="h4" fontWeight={700} gutterBottom>
-                  Calculadora de ROI
-                </Typography>
-                
-                <Typography variant="body1" color="text.secondary" paragraph>
-                  Calcula el retorno de inversión que podrías obtener con nuestras soluciones digitales.
-                </Typography>
-                
-                <Box sx={{ mt: 4 }}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Inversión inicial ($)
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    value={investment}
-                    onChange={(e) => setInvestment(Number(e.target.value))}
-                    type="number"
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                    }}
-                    sx={{ mb: 3 }}
-                  />
-                  
-                  <Typography variant="subtitle2" gutterBottom>
-                    Valor promedio por cliente ($)
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    value={clientValue}
-                    onChange={(e) => setClientValue(Number(e.target.value))}
-                    type="number"
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                    }}
-                    sx={{ mb: 3 }}
-                  />
-                  
-                  <Typography variant="subtitle2" gutterBottom>
-                    Tasa de conversión esperada (%)
-                  </Typography>
-                  <Box sx={{ px: 1 }}>
-                    <Slider
-                      value={conversionRate}
-                      onChange={(_, newValue) => setConversionRate(newValue as number)}
-                      min={1}
-                      max={20}
-                      step={0.5}
-                      marks={[
-                        { value: 1, label: '1%' },
-                        { value: 10, label: '10%' },
-                        { value: 20, label: '20%' },
-                      ]}
-                      sx={{ mb: 3 }}
-                    />
-                  </Box>
-                </Box>
-              </Box>
-            </Grid>
-            
-            <Grid>
-              <Box 
-                component={motion.div} 
-                variants={itemVariants}
-                sx={{ 
-                  height: "100%",
+          {services.map((service) => (
+            <Box
+              key={service.id}
+              component={motion.div}
+              variants={cardVariants}
+              initial="hidden"
+              animate={isInView ? "visible" : "hidden"}
+              whileHover="hover"
+              onMouseEnter={() => setHoveredCard(service.id)}
+              onMouseLeave={() => setHoveredCard(null)}
+              sx={{
+                width: { xs: "100%", sm: "calc(50% - 16px)", lg: "calc(33.333% - 22px)" },
+                height: { xs: "auto", md: 360 },
+                p: 4,
+                borderRadius: 6,
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                overflow: "hidden",
+                transition: "all 0.3s ease",
+                background: theme.palette.mode === "dark" 
+                  ? alpha(theme.palette.background.paper, 0.6)
+                  : alpha(theme.palette.background.paper, 0.6),
+                backdropFilter: "blur(10px)",
+                border: "1px solid",
+                borderColor: theme.palette.mode === "dark" 
+                  ? "rgba(255, 255, 255, 0.1)"
+                  : "rgba(0, 0, 0, 0.05)",
+                boxShadow: hoveredCard === service.id
+                  ? theme.palette.mode === "dark"
+                    ? `0 20px 40px ${alpha(service.color, 0.2)}`
+                    : `0 20px 40px ${alpha(service.color, 0.1)}`
+                  : "none",
+              }}
+              className="glass"
+            >
+              {/* Círculo decorativo de fondo */}
+              <Box
+                component={motion.div}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ 
+                  scale: hoveredCard === service.id ? 1 : 0, 
+                  opacity: hoveredCard === service.id ? 0.05 : 0 
+                }}
+                transition={{ duration: 0.5 }}
+                sx={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  width: 300,
+                  height: 300,
+                  borderRadius: "50%",
+                  background: service.color,
+                  transform: "translate(-50%, -50%)",
+                  zIndex: -1,
+                }}
+              />
+              
+              {/* Icono */}
+              <Box
+                component={motion.div}
+                variants={iconVariants}
+                animate={hoveredCard === service.id ? "hover" : "visible"}
+                sx={{
                   display: "flex",
-                  flexDirection: "column",
+                  alignItems: "center",
                   justifyContent: "center",
+                  width: 64,
+                  height: 64,
+                  borderRadius: "50%",
+                  background: alpha(service.color, theme.palette.mode === "dark" ? 0.2 : 0.1),
+                  color: service.color,
+                  mb: 3,
+                }}
+              >
+                {service.icon}
+    </Box>
+              
+              {/* Badge de beneficio */}
+              <Box
+                component={motion.div}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.4 }}
+                sx={{
+                  position: "absolute",
+                  top: 16,
+                  right: 16,
+                  py: 0.5,
+                  px: 1.5,
+                  borderRadius: 100,
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  background: alpha(service.color, theme.palette.mode === "dark" ? 0.2 : 0.1),
+                  color: service.color,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
                 }}
               >
                 <Box 
+                  component="span" 
                   sx={{ 
-                    background: theme.palette.mode === "dark" 
-                      ? "rgba(0, 112, 243, 0.1)" 
-                      : "rgba(0, 112, 243, 0.05)",
-                    borderRadius: 3,
-                    p: 4,
-                    border: "1px solid",
-                    borderColor: "primary.main",
-                    borderWidth: "1px",
-                    mb: 3,
-                  }}
-                >
-                  <Typography variant="h3" fontWeight={700} color="primary.main" gutterBottom>
-                    {roi.toFixed(0)}%
-                  </Typography>
-                  <Typography variant="subtitle1" fontWeight={500}>
-                    ROI estimado en 12 meses
-                  </Typography>
-                </Box>
-                
-                <Grid container spacing={2}>
-                  <Grid>
-                    <Box sx={{ p: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Leads mensuales
-                      </Typography>
-                      <Typography variant="h6" fontWeight={600}>
-                        {monthlyLeads}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid>
-                    <Box sx={{ p: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Ingresos mensuales
-                      </Typography>
-                      <Typography variant="h6" fontWeight={600}>
-                        ${monthlyRevenue.toLocaleString()}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid>
-                    <Box sx={{ p: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Ingresos anuales estimados
-                      </Typography>
-                      <Typography variant="h6" fontWeight={600}>
-                        ${annualRevenue.toLocaleString()}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-                
-                <Button 
-                  variant="contained" 
-                  color="primary"
-                  endIcon={<IconArrowUpRight size={18} />}
-                  href="/contacto"
-                  sx={{ 
-                    mt: 3,
-                    py: 1.5,
-                    fontWeight: 500,
-                  }}
-                >
-                  Maximiza tu inversión
-                </Button>
+                    width: 6, 
+                    height: 6, 
+                    borderRadius: "50%", 
+                    background: service.color 
+                  }} 
+                />
+                {service.benefit}
               </Box>
-            </Grid>
-          </Grid>
+              
+              {/* Título */}
+              <Typography
+                variant="h5"
+                component="h3"
+                sx={{
+                  fontWeight: 700,
+                  mb: 2,
+                  fontFamily: "var(--font-space-grotesk)",
+                  color: hoveredCard === service.id ? service.color : "text.primary",
+                  transition: "color 0.3s ease",
+                }}
+              >
+                {service.title}
+              </Typography>
+              
+              {/* Descripción */}
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mb: 4, lineHeight: 1.7 }}
+              >
+                {service.description}
+              </Typography>
+              
+              {/* Tecnologías */}
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{ mt: "auto", mb: 3 }}
+              >
+                {service.technologies.map((tech, index) => (
+                  <Box
+                    key={index}
+                    component={motion.div}
+                    variants={techBadgeVariants}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      background: theme.palette.mode === "dark" 
+                        ? "rgba(255, 255, 255, 0.1)" 
+                        : "rgba(0, 0, 0, 0.05)",
+                      color: "text.secondary",
+                    }}
+                  >
+                    {tech}
+                  </Box>
+                ))}
+              </Stack>
+              
+              {/* CTA */}
+              <Button
+                component={motion.button}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                variant="text"
+                color="primary"
+                endIcon={<IconArrowUpRight size={18} />}
+                sx={{
+                  alignSelf: "flex-start",
+                  p: 0,
+                  "&:hover": {
+                    background: "transparent",
+                    color: service.color,
+                  },
+                  color: hoveredCard === service.id ? service.color : "primary.main",
+                  transition: "color 0.3s ease",
+                }}
+              >
+                Saber más
+              </Button>
+            </Box>
+          ))}
+        </Box>
+        
+        {/* CTA final */}
+        <Box
+          component={motion.div}
+          variants={itemVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            mt: 8,
+          }}
+        >
+          <Button
+            component={motion.button}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            variant="contained"
+            color="primary"
+            size="large"
+            href="/contacto"
+            sx={{
+              py: 1.5,
+              px: 4,
+              borderRadius: 100,
+              background: "linear-gradient(90deg, #5D5FEF, #3D5AFE)",
+              boxShadow: "0 10px 20px rgba(93, 95, 239, 0.3)",
+            }}
+          >
+            Discutamos tu proyecto
+          </Button>
         </Box>
       </Container>
     </Box>
