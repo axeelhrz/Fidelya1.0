@@ -17,7 +17,7 @@ import {
   useTheme as useMuiTheme
 } from "@mui/material";
 import { IconMenu2, IconX } from "@tabler/icons-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -49,22 +49,68 @@ export function Navbar() {
     },
     scrolled: { 
       backgroundColor: muiTheme.palette.mode === "dark" 
-        ? "rgba(10, 10, 10, 0.8)" 
-        : "rgba(255, 255, 255, 0.8)",
-      backdropFilter: "blur(10px)",
-      boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
+        ? "rgba(10, 10, 10, 0.7)" 
+        : "rgba(255, 255, 255, 0.7)",
+      backdropFilter: "blur(20px)",
+      boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
     },
+  };
+
+  const logoVariants = {
+    initial: { opacity: 1 },
+    hover: { 
+      scale: 1.05,
+      transition: { duration: 0.3, ease: "easeInOut" }
+    }
+  };
+
+  const linkVariants = {
+    initial: { y: 0 },
+    hover: { 
+      y: -3,
+      transition: { duration: 0.2, ease: "easeInOut" }
+    }
   };
 
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 2 }}>
-        <Box component={Link} href="/" sx={{ textDecoration: "none", color: "text.primary" }}>
-          <Box component="span" sx={{ fontFamily: "var(--font-plus-jakarta)", fontWeight: 700, fontSize: "1.5rem" }}>
+        <Box 
+          component={Link} 
+          href="/" 
+          sx={{ 
+            textDecoration: "none", 
+            color: "text.primary",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <Box 
+            component={motion.span}
+            initial="initial"
+            whileHover="hover"
+            variants={logoVariants}
+            sx={{ 
+              fontFamily: "var(--font-space-grotesk)", 
+              fontWeight: 700, 
+              fontSize: "1.5rem",
+              background: "linear-gradient(90deg, #5D5FEF, #3D5AFE)",
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
             axel.dev
           </Box>
         </Box>
-        <IconButton edge="end" onClick={handleDrawerToggle} aria-label="close menu">
+        <IconButton 
+          edge="end" 
+          onClick={handleDrawerToggle} 
+          aria-label="close menu"
+          component={motion.button}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
           <IconX />
         </IconButton>
       </Box>
@@ -83,7 +129,7 @@ export function Navbar() {
                 primary={item.name} 
                 primaryTypographyProps={{
                   fontWeight: 500,
-                  fontFamily: "var(--font-plus-jakarta)",
+                  fontFamily: "var(--font-satoshi)",
                 }}
               />
             </ListItemButton>
@@ -96,7 +142,12 @@ export function Navbar() {
           color="primary"
           component={Link}
           href="/contacto"
-          sx={{ borderRadius: 100, px: 4, py: 1.5 }}
+          sx={{ 
+            borderRadius: 100, 
+            px: 4, 
+            py: 1.5,
+            background: "linear-gradient(90deg, #5D5FEF, #3D5AFE)",
+          }}
         >
           Contáctame
         </Button>
@@ -113,7 +164,8 @@ export function Navbar() {
         variants={navbarVariants}
         initial="initial"
         animate={trigger ? "scrolled" : "initial"}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.4 }}
+        className={trigger ? "glass" : ""}
         sx={{ 
           borderBottom: "1px solid",
           borderColor: trigger 
@@ -125,18 +177,29 @@ export function Navbar() {
       >
         <Container maxWidth="xl">
           <Toolbar disableGutters sx={{ height: 80 }}>
-            <Box component={Link} href="/" sx={{ 
-              textDecoration: "none", 
-              color: "text.primary",
-              display: "flex",
-              alignItems: "center",
-            }}>
+            <Box 
+              component={Link} 
+              href="/" 
+              sx={{ 
+                textDecoration: "none", 
+                color: "text.primary",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
               <Box 
-                component="span" 
+                component={motion.span}
+                initial="initial"
+                whileHover="hover"
+                variants={logoVariants}
                 sx={{ 
-                  fontFamily: "var(--font-plus-jakarta)", 
+                  fontFamily: "var(--font-space-grotesk)", 
                   fontWeight: 700, 
-                  fontSize: { xs: "1.5rem", md: "1.75rem" } 
+                  fontSize: { xs: "1.5rem", md: "1.75rem" },
+                  background: "linear-gradient(90deg, #5D5FEF, #3D5AFE)",
+                  backgroundClip: "text",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
                 }}
               >
                 axel.dev
@@ -147,38 +210,69 @@ export function Navbar() {
 
             <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1 }}>
               {navItems.map((item) => (
-                <Button
+                <motion.div
                   key={item.name}
-                  component={Link}
-                  href={item.href}
-                  sx={{ 
-                    color: "text.primary",
-                    fontFamily: "var(--font-plus-jakarta)",
-                    fontWeight: 500,
-                    mx: 1,
-                  }}
+                  initial="initial"
+                  whileHover="hover"
+                  variants={linkVariants}
                 >
-                  {item.name}
-                </Button>
+                  <Button
+                    component={Link}
+                    href={item.href}
+                    sx={{ 
+                      color: "text.primary",
+                      fontFamily: "var(--font-satoshi)",
+                      fontWeight: 500,
+                      mx: 1,
+                      position: "relative",
+                      "&::after": {
+                        content: '""',
+                        position: "absolute",
+                        bottom: 0,
+                        left: "50%",
+                        width: "0%",
+                        height: "2px",
+                        backgroundColor: "primary.main",
+                        transition: "all 0.3s ease",
+                        transform: "translateX(-50%)",
+                      },
+                      "&:hover::after": {
+                        width: "80%",
+                      }
+                    }}
+                  >
+                    {item.name}
+                  </Button>
+                </motion.div>
               ))}
               <Box sx={{ ml: 1 }}>
                 <ThemeToggle />
               </Box>
-              <Button 
-                variant="contained" 
-                color="primary"
-                component={Link}
-                href="/contacto"
-                sx={{ 
-                  ml: 2,
-                  borderRadius: 100,
-                  px: 3,
-                  py: 1,
-                  fontWeight: 500,
-                }}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Contáctame
-              </Button>
+                <Button 
+                  variant="contained" 
+                  color="primary"
+                  component={Link}
+                  href="/contacto"
+                  sx={{ 
+                    ml: 2,
+                    borderRadius: 100,
+                    px: 3,
+                    py: 1,
+                    fontWeight: 500,
+                    background: "linear-gradient(90deg, #5D5FEF, #3D5AFE)",
+                    boxShadow: "0 4px 15px rgba(93, 95, 239, 0.3)",
+                    "&:hover": {
+                      boxShadow: "0 8px 25px rgba(93, 95, 239, 0.5)",
+                    }
+                  }}
+                >
+                  Contáctame
+                </Button>
+              </motion.div>
             </Box>
 
             <Box sx={{ display: { xs: "flex", md: "none" }, alignItems: "center" }}>
@@ -189,6 +283,9 @@ export function Navbar() {
                 edge="end"
                 onClick={handleDrawerToggle}
                 sx={{ ml: 1 }}
+                component={motion.button}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
                 <IconMenu2 />
               </IconButton>
@@ -197,26 +294,31 @@ export function Navbar() {
         </Container>
       </AppBar>
       
-      <Box component="nav">
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}
-          sx={{
-            display: { xs: "block", md: "none" },
-            "& .MuiDrawer-paper": { 
-              boxSizing: "border-box", 
-              width: "100%",
-              background: muiTheme.palette.background.default,
-            },
-          }}
-        >
-          {drawer}
-        </Drawer>
-      </Box>
+      <AnimatePresence>
+        {mobileOpen && (
+          <Drawer
+            variant="temporary"
+            open={mobileOpen}
+            onClose={handleDrawerToggle}
+            ModalProps={{
+              keepMounted: true, // Better open performance on mobile.
+            }}
+            sx={{
+              display: { xs: "block", md: "none" },
+              "& .MuiDrawer-paper": { 
+                boxSizing: "border-box", 
+                width: "100%",
+                background: muiTheme.palette.mode === "dark"
+                  ? "rgba(10, 10, 10, 0.95)"
+                  : "rgba(255, 255, 255, 0.95)",
+                backdropFilter: "blur(10px)",
+              },
+            }}
+          >
+            {drawer}
+          </Drawer>
+        )}
+      </AnimatePresence>
       
       {/* Spacer para compensar la altura del AppBar */}
       <Toolbar sx={{ height: 80 }} />
