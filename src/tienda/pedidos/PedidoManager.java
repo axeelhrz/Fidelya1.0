@@ -3,14 +3,13 @@ package tienda.pedidos;
 import tienda.empleados.Empleado;
 import tienda.productos.Producto;
 import java.util.Scanner;
+import tienda.utils.Constantes;
 import tienda.utils.Validador;
 
 /**
  * Clase para gestionar la creación y manipulación de pedidos.
- * Versión adaptada para trabajar con base de datos.
  */
 public class PedidoManager {
-    private static final int MAX_DETALLES_PEDIDO = 10;
     
     /**
      * Crea un nuevo pedido interactivamente
@@ -27,12 +26,12 @@ public class PedidoManager {
             return null;
 }
 
-        Pedido pedido = new Pedido(empleado, MAX_DETALLES_PEDIDO);
+        Pedido pedido = new Pedido(empleado, Constantes.MAX_DETALLES_PEDIDO);
         boolean seguirAgregando = true;
         
         System.out.println("\n=== CREAR NUEVO PEDIDO ===");
         
-        while (seguirAgregando && pedido.getNumDetalles() < MAX_DETALLES_PEDIDO) {
+        while (seguirAgregando && pedido.getNumDetalles() < Constantes.MAX_DETALLES_PEDIDO) {
             // Mostrar productos disponibles
             System.out.println("\nProductos disponibles:");
             for (int i = 0; i < numProductos; i++) {
@@ -61,7 +60,7 @@ public class PedidoManager {
             pedido.agregarDetalle(detalle);
             
             // Preguntar si desea seguir añadiendo productos
-            if (pedido.getNumDetalles() < MAX_DETALLES_PEDIDO) {
+            if (pedido.getNumDetalles() < Constantes.MAX_DETALLES_PEDIDO) {
                 seguirAgregando = Validador.confirmar(scanner, "¿Desea añadir más productos?");
             } else {
                 System.out.println("Ha alcanzado el máximo de productos por pedido.");

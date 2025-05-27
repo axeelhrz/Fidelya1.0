@@ -2,7 +2,6 @@ package tienda.utils;
 
 /**
  * Clase que contiene constantes utilizadas en toda la aplicación.
- * Versión adaptada para incluir constantes de base de datos.
  */
 public class Constantes {
     // Opciones del menú principal
