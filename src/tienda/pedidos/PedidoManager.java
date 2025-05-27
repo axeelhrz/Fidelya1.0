@@ -7,6 +7,7 @@ import tienda.utils.Validador;
 
 /**
  * Clase para gestionar la creación y manipulación de pedidos.
+ * Versión adaptada para trabajar con base de datos.
  */
 public class PedidoManager {
     private static final int MAX_DETALLES_PEDIDO = 10;
@@ -58,9 +59,6 @@ public class PedidoManager {
             // Crear detalle y añadir al pedido
             DetallePedido detalle = new DetallePedido(productoSeleccionado, cantidad);
             pedido.agregarDetalle(detalle);
-            
-            // Reducir stock
-            productoSeleccionado.reducirStock(cantidad);
             
             // Preguntar si desea seguir añadiendo productos
             if (pedido.getNumDetalles() < MAX_DETALLES_PEDIDO) {
