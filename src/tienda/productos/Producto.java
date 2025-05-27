@@ -4,7 +4,7 @@ package tienda.productos;
  * Clase abstracta que representa un producto genérico en la tienda.
  * Sirve como base para los productos perecederos y no perecederos.
  */
-public abstract class Producto {
+public abstract class Producto implements Cloneable {
     protected int codigo;
     protected String nombre;
     protected double precio;
@@ -83,5 +83,16 @@ public abstract class Producto {
                ", Nombre: " + nombre + 
                ", Precio: " + precio + 
                "€, Stock: " + stock;
+    }
+    
+    @Override
+    public Object clone() {
+        Object obj = null;
+        try {
+            obj = super.clone();
+        } catch (CloneNotSupportedException ex) {
+            System.out.println("No se puede duplicar el producto");
+}
+        return obj;
     }
 }

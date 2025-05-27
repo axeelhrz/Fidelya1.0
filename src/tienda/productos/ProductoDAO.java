@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import tienda.utils.DatabaseConnection;
 import tienda.utils.DatabaseException;
 
@@ -54,43 +53,58 @@ public class ProductoDAO {
      * Actualiza un producto en la base de datos
      * @param producto Producto a actualizar
      * @throws DatabaseException Si hay un error de base de datos
+     * @throws ProductoException Si el nombre o código ya existe
      */
-    public void actualizarProducto(Producto producto) throws DatabaseException {
+    public void actualizarProducto(Producto producto) throws DatabaseException, ProductoException {
         Connection conn = null;
         PreparedStatement stmt = null;
+        ResultSet rs = null;
         
         try {
             conn = DatabaseConnection.getConnection();
             
-            String sql = "UPDATE productos SET nombre = ?, precio = ?, unidades = ? WHERE id_producto = ?";
-            stmt = conn.prepareStatement(sql);
+            // Verificar si el nombre ya existe en otro producto
+            String sqlVerificarNombre = "SELECT COUNT(*) FROM productos WHERE nombre = ? AND id_producto != ?";
+            stmt = conn.prepareStatement(sqlVerificarNombre);
             stmt.setString(1, producto.getNombre());
-            stmt.setDouble(2, producto.getPrecio());
-            stmt.setInt(3, producto.getStock());
-            stmt.setInt(4, producto.getCodigo());
+            stmt.setInt(2, producto.getCodigo());
+            rs = stmt.executeQuery();
             
-            int filasAfectadas = stmt.executeUpdate();
-            if (filasAfectadas == 0) {
-                throw new DatabaseException("No se pudo actualizar el producto. Producto no encontrado.");
+            if (rs.next() && rs.getInt(1) > 0) {
+                throw new ProductoException(444, "Error. El nombre del producto ya existe");
             }
             
-            // Si es un producto perecedero, actualizar días para caducar
+            // Cerrar recursos
+            rs.close();
+            stmt.close();
+            
+            // Actualizar el producto
+            String sql;
             if (producto instanceof ProductoPerecedero) {
-                ProductoPerecedero perecedero = (ProductoPerecedero) producto;
-                
-                sql = "UPDATE productos SET dias_para_caducar = ? WHERE id_producto = ?";
-                stmt.close();
+                sql = "UPDATE productos SET nombre = ?, precio = ?, unidades = ?, dias_para_caducar = ? " +
+                      "WHERE id_producto = ?";
+            stmt = conn.prepareStatement(sql);
+                stmt.setString(1, producto.getNombre());
+                stmt.setDouble(2, producto.getPrecio());
+                stmt.setInt(3, producto.getStock());
+                stmt.setInt(4, ((ProductoPerecedero) producto).getDiasParaCaducar());
+                stmt.setInt(5, producto.getCodigo());
+        } else {
+                sql = "UPDATE productos SET nombre = ?, precio = ?, unidades = ? " +
+                      "WHERE id_producto = ?";
                 stmt = conn.prepareStatement(sql);
-                stmt.setInt(1, perecedero.getDiasParaCaducar());
-                stmt.setInt(2, perecedero.getCodigo());
-                
-                stmt.executeUpdate();
+                stmt.setString(1, producto.getNombre());
+                stmt.setDouble(2, producto.getPrecio());
+                stmt.setInt(3, producto.getStock());
+                stmt.setInt(4, producto.getCodigo());
             }
+            
+            stmt.executeUpdate();
             
         } catch (SQLException e) {
             throw new DatabaseException("Error al actualizar producto", e);
         } finally {
-            DatabaseConnection.close(conn, stmt, null);
+            DatabaseConnection.close(conn, stmt, rs);
         }
     }
     
@@ -131,6 +145,72 @@ public class ProductoDAO {
     }
     
     /**
+     * Verifica si un código de producto ya existe
+     * @param codigo Código a verificar
+     * @return true si el código ya existe, false en caso contrario
+     * @throws DatabaseException Si hay un error de base de datos
+     */
+    public boolean existeCodigo(int codigo) throws DatabaseException {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DatabaseConnection.getConnection();
+            
+            String sql = "SELECT COUNT(*) FROM productos WHERE id_producto = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, codigo);
+            
+            rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+            
+            return false;
+            
+        } catch (SQLException e) {
+            throw new DatabaseException("Error al verificar código de producto", e);
+        } finally {
+            DatabaseConnection.close(conn, stmt, rs);
+        }
+    }
+    
+    /**
+     * Verifica si un nombre de producto ya existe
+     * @param nombre Nombre a verificar
+     * @return true si el nombre ya existe, false en caso contrario
+     * @throws DatabaseException Si hay un error de base de datos
+     */
+    public boolean existeNombre(String nombre) throws DatabaseException {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DatabaseConnection.getConnection();
+            
+            String sql = "SELECT COUNT(*) FROM productos WHERE nombre = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, nombre);
+            
+            rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+            
+            return false;
+            
+        } catch (SQLException e) {
+            throw new DatabaseException("Error al verificar nombre de producto", e);
+        } finally {
+            DatabaseConnection.close(conn, stmt, rs);
+        }
+    }
+    
+    /**
      * Actualiza el stock de un producto
      * @param idProducto ID del producto
      * @param nuevoStock Nuevo valor de stock
@@ -148,10 +228,7 @@ public class ProductoDAO {
             stmt.setInt(1, nuevoStock);
             stmt.setInt(2, idProducto);
             
-            int filasAfectadas = stmt.executeUpdate();
-            if (filasAfectadas == 0) {
-                throw new DatabaseException("No se pudo actualizar el stock. Producto no encontrado.");
-            }
+            stmt.executeUpdate();
             
         } catch (SQLException e) {
             throw new DatabaseException("Error al actualizar stock", e);

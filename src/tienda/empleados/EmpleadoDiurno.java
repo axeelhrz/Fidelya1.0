@@ -1,5 +1,7 @@
 package tienda.empleados;
 
+import tienda.utils.GratificacionConstants;
+
 public class EmpleadoDiurno extends Empleado {
     private double retencion;
 
@@ -14,10 +16,24 @@ public class EmpleadoDiurno extends Empleado {
 
     @Override
     public double calcularGratificacion(double montoPedido) {
-        double gratificacion = nivel; // 1€, 2€, 3€ según nivel
-
-        // Si es nivel 2 y pedido > 300€, no se aplica retención
-        if (nivel == 2 && montoPedido > 300) {
+        double gratificacion;
+        
+        // Asignar gratificación según nivel usando las constantes
+        switch (nivel) {
+            case 1:
+                gratificacion = GratificacionConstants.GRATIFICACION_NIVEL_1;
+                break;
+            case 2:
+                gratificacion = GratificacionConstants.GRATIFICACION_NIVEL_2;
+                break;
+            case 3:
+                gratificacion = GratificacionConstants.GRATIFICACION_NIVEL_3;
+                break;
+            default:
+                gratificacion = 0;
+        }
+        // Si es nivel 2 y pedido > límite diurno, no se aplica retención
+        if (nivel == 2 && montoPedido > GratificacionConstants.LIMITE_PEDIDO_DIURNO) {
             // sin retención
         } else if (nivel == 1) {
             retencion = 0; // nivel 1 nunca tiene retención

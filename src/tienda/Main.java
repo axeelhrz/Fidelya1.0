@@ -14,6 +14,7 @@ import tienda.productos.ProductoDAO;
 import tienda.utils.Constantes;
 import tienda.utils.DatabaseException;
 import tienda.utils.Validador;
+import tienda.productos.ProductoException;
 
 /**
  * Clase principal del sistema de gestión de tienda.
@@ -327,6 +328,12 @@ public class Main {
             switch (opcion) {
                 case 1:
                     String nuevoNombre = Validador.solicitarCadena(scanner, "Introduzca el nuevo nombre");
+                    
+                    // Verificar si el nombre ya existe
+                    if (productoDAO.existeNombre(nuevoNombre)) {
+                        System.out.println("Error: Ya existe un producto con ese nombre.");
+                        return;
+                    }
                     producto.setNombre(nuevoNombre);
                     break;
                 case 2:
@@ -341,11 +348,12 @@ public class Main {
             
             // Actualizar producto en la base de datos
             productoDAO.actualizarProducto(producto);
-            
             System.out.println("Producto actualizado: " + producto.toString());
             
         } catch (DatabaseException e) {
             System.out.println("Error de base de datos: " + e.getMessage());
+        } catch (ProductoException e) {
+            System.out.println("Error " + e.getCodigo() + ": " + e.getMessage());
         }
     }
 }
