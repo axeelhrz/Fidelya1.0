@@ -30,35 +30,47 @@ public class EmpleadoDAO {
         ResultSet rs = null;
         
         try {
+            System.out.println("Intentando conectar a la base de datos...");
             conn = DatabaseConnection.getConnection();
+            System.out.println("Conexión establecida.");
             
             // Consulta para buscar el empleado por código
             String sql = "SELECT * FROM empleados WHERE id_empleado = ?";
+            System.out.println("Ejecutando consulta: " + sql + " con código: " + codigo);
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, codigo);
             
             rs = stmt.executeQuery();
+            System.out.println("Consulta ejecutada.");
             
             // Si no existe el empleado, lanzar excepción
             if (!rs.next()) {
+                System.out.println("No se encontró ningún empleado con el código: " + codigo);
                 throw AutenticacionException.loginIncorrecto();
             }
             
+            System.out.println("Empleado encontrado. Verificando contraseña...");
             // Verificar la contraseña
             String passwordAlmacenada = rs.getString("password");
             if (!passwordAlmacenada.equals(password)) {
+                System.out.println("Contraseña incorrecta.");
                 throw AutenticacionException.passwordIncorrecto();
             }
             
+            System.out.println("Contraseña correcta. Creando objeto Empleado...");
             // Crear y devolver el empleado autenticado
-            return crearEmpleadoDesdeResultSet(rs);
+            Empleado empleado = crearEmpleadoDesdeResultSet(rs);
+            System.out.println("Objeto Empleado creado correctamente.");
+        return empleado;
             
         } catch (SQLException e) {
+            System.out.println("Error SQL: " + e.getMessage());
+            e.printStackTrace();
             throw new DatabaseException("Error al autenticar empleado", e);
         } finally {
             DatabaseConnection.close(conn, stmt, rs);
-        }
     }
+}
     
     /**
      * Actualiza la contraseña de un empleado
