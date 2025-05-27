@@ -6,21 +6,26 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * Clase utilitaria para gestionar la conexión a la base de datos.
+ * Proporciona métodos estáticos para abrir y cerrar conexiones.
+ */
 public class DatabaseConnection {
-    // Constantes de conexión - AJUSTA ESTOS VALORES SEGÚN TU CONFIGURACIÓN
-    private static final String URL = "jdbc:mysql://localhost:3306/tienda?useSSL=false&serverTimezone=UTC";
+    // Constantes de conexión
+    private static final String URL = "jdbc:mysql://localhost:3306/tienda?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC";
     private static final String USER = "root";
-    private static final String PASSWORD = "admin"; // Cambia esto a tu contraseña
+    private static final String PASSWORD = "Missifu2565711-9"; // Cambia esto a tu contraseña real
     
     static {
-            try {
+        try {
             // Cargar el driver explícitamente
             Class.forName("com.mysql.cj.jdbc.Driver");
             System.out.println("Driver JDBC cargado correctamente.");
         } catch (ClassNotFoundException e) {
             System.err.println("Error al cargar el driver JDBC: " + e.getMessage());
-            }
         }
+    }
+    
     /**
      * Obtiene una conexión a la base de datos
      * @return Conexión a la base de datos
@@ -28,8 +33,11 @@ public class DatabaseConnection {
      */
     public static Connection getConnection() throws SQLException {
             try {
-            return DriverManager.getConnection(URL, USER, PASSWORD);
-        } catch (SQLException e) {
+            System.out.println("Intentando conectar a: " + URL);
+            Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+            System.out.println("Conexión establecida correctamente.");
+            return conn;
+            } catch (SQLException e) {
             System.err.println("Error al conectar a la base de datos: " + e.getMessage());
             throw e;
         }
@@ -45,8 +53,8 @@ public class DatabaseConnection {
                 conn.close();
             } catch (SQLException e) {
                 System.err.println("Error al cerrar la conexión: " + e.getMessage());
-            }
-        }
+    }
+}
     }
     
     /**
@@ -59,8 +67,8 @@ public class DatabaseConnection {
                 stmt.close();
             } catch (SQLException e) {
                 System.err.println("Error al cerrar el statement: " + e.getMessage());
-    }
-}
+            }
+        }
     }
     
     /**

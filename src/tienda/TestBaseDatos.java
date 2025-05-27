@@ -13,19 +13,24 @@ public class TestBaseDatos {
         ResultSet rs = null;
         
         try {
+            System.out.println("=== TEST DE CONEXIÓN A LA BASE DE DATOS ===");
             System.out.println("Conectando a la base de datos...");
             conn = DatabaseConnection.getConnection();
             System.out.println("Conexión exitosa.");
             
+            // Verificar si la base de datos existe
+            System.out.println("\n=== INFORMACIÓN DE LA BASE DE DATOS ===");
+            System.out.println("URL: " + conn.getMetaData().getURL());
+            System.out.println("Usuario: " + conn.getMetaData().getUserName());
+            System.out.println("Versión de MySQL: " + conn.getMetaData().getDatabaseProductVersion());
+            
             // Verificar si la tabla empleados existe
-            System.out.println("Verificando tabla empleados...");
-            stmt = conn.prepareStatement("SHOW TABLES LIKE 'empleados'");
+            System.out.println("\n=== VERIFICACIÓN DE TABLAS ===");
+            stmt = conn.prepareStatement("SHOW TABLES");
             rs = stmt.executeQuery();
-            if (rs.next()) {
-                System.out.println("La tabla empleados existe.");
-            } else {
-                System.out.println("La tabla empleados NO existe.");
-                return;
+            System.out.println("Tablas en la base de datos:");
+            while (rs.next()) {
+                System.out.println("- " + rs.getString(1));
             }
             
             // Verificar si hay datos en la tabla empleados
@@ -35,7 +40,7 @@ public class TestBaseDatos {
             rs = stmt.executeQuery();
             if (rs.next()) {
                 int count = rs.getInt(1);
-                System.out.println("La tabla empleados tiene " + count + " registros.");
+                System.out.println("\nLa tabla empleados tiene " + count + " registros.");
             }
             
             // Mostrar los empleados
@@ -43,7 +48,7 @@ public class TestBaseDatos {
             stmt.close();
             stmt = conn.prepareStatement("SELECT * FROM empleados");
             rs = stmt.executeQuery();
-            System.out.println("\nEmpleados en la base de datos:");
+            System.out.println("\n=== EMPLEADOS EN LA BASE DE DATOS ===");
             System.out.println("ID | Nombre | Password | Nivel | Turno");
             System.out.println("----------------------------------");
             while (rs.next()) {
@@ -56,16 +61,22 @@ public class TestBaseDatos {
                 );
             }
             
+            System.out.println("\n=== TEST COMPLETADO CON ÉXITO ===");
+            
         } catch (SQLException e) {
-            System.out.println("Error: " + e.getMessage());
+            System.out.println("\n=== ERROR DE BASE DE DATOS ===");
+            System.out.println("Mensaje: " + e.getMessage());
+            System.out.println("Código SQL: " + e.getSQLState());
+            System.out.println("Código de error: " + e.getErrorCode());
             e.printStackTrace();
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
+                System.out.println("\nRecursos cerrados correctamente.");
             } catch (SQLException e) {
-                e.printStackTrace();
+                System.out.println("Error al cerrar recursos: " + e.getMessage());
             }
         }
     }
