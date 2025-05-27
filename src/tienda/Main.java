@@ -4,11 +4,16 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Scanner;
-import tienda.empleados.Empleado;
-import tienda.empleados.EmpleadoManager;
-import tienda.empleados.AutenticacionException;
 import java.util.ArrayList;
 import java.util.List;
+import tienda.empleados.Empleado;
+import tienda.pedidos.PedidoManager;
+import tienda.productos.Oferta;
+import tienda.productos.Producto;
+import tienda.productos.ProductoDAO;
+import tienda.utils.Clonador;
+import tienda.utils.Validador;
+import tienda.utils.DatabaseException;
 import java.util.Scanner;
 import tienda.empleados.AutenticacionException;
 import tienda.empleados.Empleado;
@@ -16,12 +21,9 @@ import tienda.empleados.EmpleadoDAO;
 import tienda.pedidos.Pedido;
 import tienda.pedidos.PedidoDAO;
 import tienda.pedidos.PedidoManager;
-import tienda.productos.Oferta;
 import tienda.productos.Producto;
 import tienda.productos.ProductoDAO;
-import tienda.utils.Clonador;
 import tienda.utils.Constantes;
-import tienda.utils.Validador;
 import tienda.utils.DatabaseException;
 import tienda.utils.Validador;
 
@@ -30,27 +32,35 @@ import tienda.utils.Validador;
  * Versión adaptada para usar base de datos MySQL.
  */
 public class Main {
-    private static final int MAX_EMPLEADOS = 20;
-    private static final int MAX_OFERTAS = 10;
+    private static final int MAX_PRODUCTOS = 100; // Añadido para definir MAX_PRODUCTOS
 
-    private static EmpleadoManager empleadoManager;
-    private static Producto[] productos;
-    private static int numProductos;
-    private static EmpleadoManager empleadoManager;
+    private static EmpleadoDAO empleadoDAO;
+    private static ProductoDAO productoDAO;
+    private static PedidoDAO pedidoDAO;
+    
+    private static Empleado empleadoActual;
+    private static List<Producto> productos;
     private static Producto[] productosArray;
     private static int numProductos;
     private static Oferta[] ofertas;
     private static int numOfertas;
-    private static EmpleadoDAO empleadoDAO;
-        // Inicializar gestores y arrays
-        empleadoManager = new EmpleadoManager(MAX_EMPLEADOS);
-        productos = new Producto[MAX_PRODUCTOS];
-        // Inicializar gestores y arrays
-        empleadoManager = new EmpleadoManager(MAX_EMPLEADOS);
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        
+        // Inicializar DAOs
+        empleadoDAO = new EmpleadoDAO();
+        productoDAO = new ProductoDAO();
+        pedidoDAO = new PedidoDAO();
+
+        // Inicializar arrays
         productosArray = new Producto[MAX_PRODUCTOS];
         numProductos = 0;
         ofertas = new Oferta[MAX_OFERTAS];
         numOfertas = 0;
+
+        System.out.println("Iniciando sistema de gestión de tienda...");
+        try {
             cargarDatos();
         } catch (IOException e) {
             System.out.println("Error al cargar los datos: " + e.getMessage());
@@ -61,8 +71,8 @@ public class Main {
         boolean salir = false;
         while (!salir) {
             // Si no hay empleado con sesión, solicitar login
-            if (empleadoManager.getEmpleadoActual() == null) {
-                boolean loginExitoso = empleadoManager.login(scanner);
+            if (empleadoActual == null) {
+                boolean loginExitoso = login(scanner);
                 if (!loginExitoso) {
                     // Preguntar si desea intentar de nuevo o salir
                     if (!Validador.confirmar(scanner, "¿Desea intentar de nuevo?")) {
@@ -95,64 +105,29 @@ public class Main {
         System.out.println("¡Gracias por utilizar el sistema de gestión de tienda!");
         scanner.close();
     }
-
     /**
-     * Muestra el menú principal de la aplicación
+     * Busca una oferta por su código
+     * @param codigo Código de la oferta a buscar
+     * @return Oferta encontrada o null si no existe
      */
-    private static void mostrarMenu() {
-        Empleado empleado = empleadoManager.getEmpleadoActual();
-        System.out.println("\n=================================================");
-    private static void mostrarMenu() {
-        Empleado empleado = empleadoManager.getEmpleadoActual();
-        System.out.println("\n=================================================");
-        System.out.println("      SISTEMA DE GESTIÓN DE TIENDA - MENÚ        ");
-        System.out.println("=================================================");
-        System.out.println("Empleado: " + empleado.getNombre() + " (Nivel: " + empleado.getNivel() + ")");
-        System.out.println("Productividad actual: " + String.format("%.2f", empleado.getProductividad()) + "€");
-        System.out.println("-------------------------------------------------");
-        System.out.println("1. Hacer pedido");
-        System.out.println("2. Modificar productos");
-        System.out.println("3. Cambiar contraseña");
-        System.out.println("4. Cerrar sesión");
-        System.out.println("=================================================");
+    private static Oferta buscarOfertaPorCodigo(int codigo) {
+        for (int i = 0; i < numOfertas; i++) {
+            if (ofertas[i].getCodigo() == codigo) {
+                return ofertas[i];
+            }
+        }
+        return null;
     }
-     * @throws IOException Si hay error al leer los archivos
-     */
     private static void cargarDatos() throws IOException {
-        // Cargar ofertas
-        cargarOfertas();
-
-    private static EmpleadoDAO empleadoDAO;
-    private static ProductoDAO productoDAO;
-    private static PedidoDAO pedidoDAO;
-    private static Empleado empleadoActual;
-    private static List<Producto> productos;
-    
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        // Inicializar DAOs
-        empleadoDAO = new EmpleadoDAO();
-        productoDAO = new ProductoDAO();
-        pedidoDAO = new PedidoDAO();
-        empleadoManager.cargarEmpleados(Constantes.RUTA_EMPLEADOS);
+    private static void cargarDatos() throws IOException {
+            // Cargar ofertas
+            cargarOfertas();
+            // Cargar productos
+            cargarProductos();
     }
-
-    /**
-     * Carga las ofertas desde el archivo
-     * @throws IOException Si hay error al leer el archivo
-     */
-    private static void cargarOfertas() throws IOException {
         try (BufferedReader br = new BufferedReader(new FileReader(Constantes.RUTA_OFERTAS))) {
             String linea;
             while ((linea = br.readLine()) != null && numOfertas < ofertas.length) {
-                String[] datos = linea.split(Constantes.SEPARADOR);
-                if (datos.length >= 2) {
-                    int codigo = Integer.parseInt(datos[0]);
-                    String tipo = datos[1];
-
-                    Oferta oferta = null;
-                    if (tipo.equals(Constantes.OFERTA_2X1)) {
-                        oferta = new Oferta2x1(codigo);
                     } else if (tipo.equals(Constantes.OFERTA_3X2)) {
                         oferta = new Oferta3x2(codigo);
                     } else if (tipo.equals(Constantes.OFERTA_PORCENTAJE) && datos.length >= 4) {
@@ -204,10 +179,7 @@ public class Main {
 
                         producto = new ProductoNoPerecedero(codigo, nombre, precio, stock, oferta);
                     }
-
-                    if (producto != null) {
-                        productosArray[numProductos++] = producto;
-            System.out.println("Se han cargado " + numProductos + " productos.");
+                    } else if (tipo.equals(Constantes.TIPO_NO_PERECEDERO) && datos.length >= 6) {
         }
     }
 
@@ -222,10 +194,13 @@ public class Main {
                 return ofertas[i];
             }
         }
-        return null;
-    }
-
-    /**
+                    if (producto != null) {
+                        productosArray[numProductos++] = producto;
+                    }
+                }
+            }
+            System.out.println("Se han cargado " + numProductos + " productos.");
+        }
      * Proceso para hacer un pedido
      * @param scanner Scanner para leer entrada del usuario
      */
@@ -243,78 +218,80 @@ public class Main {
         PedidoManager.crearPedido(scanner, empleadoManager.getEmpleadoActual(), productosCopia, numProductos);
 
         // Confirmar cambios en el stock
-        if (Validador.confirmar(scanner, "¿Confirmar pedido y actualizar stock?")) {
-            // Actualizar stock en los productos originales
-            for (int i = 0; i < numProductos; i++) {
-                productosArray[i].setStock(productosCopia[i].getStock());
-            }
+    private static void hacerPedido(Scanner scanner) {
+        // Crear copias de los productos para no afectar al stock original hasta confirmar
+        Producto[] productosCopia = new Producto[numProductos];
+        for (int i = 0; i < numProductos; i++) {
+            productosCopia[i] = Clonador.clonarProducto(productosArray[i]);
         }
-    }
-
-    /**
      * Proceso para modificar productos
      * @param scanner Scanner para leer entrada del usuario
      */
     private static void modificarProductos(Scanner scanner) {
-        System.out.println("\n=== MODIFICAR PRODUCTOS ===");
-
+        // Crear pedido
+        PedidoManager.crearPedido(scanner, empleadoActual, productosCopia, numProductos);
 private static void modificarProductos(Scanner scanner) {
     System.out.println("\n=== MODIFICAR PRODUCTOS ===");
 
     try {
         // Recargar productos para tener datos actualizados
-        
+
+            // Inicializar DAOs
+            empleadoDAO = new EmpleadoDAO();
+            productoDAO = new ProductoDAO();
+            pedidoDAO = new PedidoDAO();
         // Inicializar lista de productos
         productos = new ArrayList<>();
         
-        // Cargar productos
-        try {
+/**
+ * Carga los productos desde el archivo
+ * @throws IOException Si hay error al leer el archivo
+ */
+private static void cargarProductos() throws IOException {
+    try (BufferedReader br = new BufferedReader(new FileReader(Constantes.RUTA_PRODUCTOS))) {
+        String linea;
+        while ((linea = br.readLine()) != null && numProductos < productosArray.length) {
+private static void modificarProductos(Scanner scanner) {
+    System.out.println("\n=== MODIFICAR PRODUCTOS ===");
+
+    try {
+        // Recargar productos para tener datos actualizados
+            // Cargar productos
         productos = productoDAO.obtenerTodos();
-
-        if (productos.isEmpty()) {
-            System.out.println("No hay productos disponibles para modificar.");
-            return;
-        }
-
-        // Mostrar productos disponibles
-        System.out.println("\nProductos disponibles:");
-        for (int i = 0; i < productos.size(); i++) {
-            System.out.println((i + 1) + ". " + productos.get(i).toString());
-        }
-        if (indiceProducto == -1) {
-            System.out.println("Operación cancelada.");
-            return;
-        }
-
-        Producto producto = productos.get(indiceProducto);
-
-        // Mostrar menú de modificación
-        System.out.println("\nModificando: " + producto.toString());
-        System.out.println("1. Modificar nombre");
-        System.out.println("2. Modificar precio");
-        System.out.println("3. Modificar stock");
-
-        }
-
-        // Actualizar producto en la base de datos
-        productoDAO.actualizarProducto(producto);
-
             System.out.println("Se han cargado " + productos.size() + " productos.");
-    } catch (DatabaseException e) {
-        System.out.println("Error de base de datos: " + e.getMessage());
-            System.out.println("Error al cargar productos: " + e.getMessage());
-            e.printStackTrace();
-            return;
-    }
         
-        // Bucle principal
-        boolean salir = false;
-        while (!salir) {
-            // Si no hay empleado con sesión, solicitar login
-            if (empleadoActual == null) {
-                boolean loginExitoso = login(scanner);
-                if (!loginExitoso) {
-                    // Preguntar si desea intentar de nuevo o salir
+        // Resto del código de modificarProductos
+        System.out.println("Función en desarrollo...");
+    } catch (Exception e) {
+        System.out.println("Error: " + e.getMessage());
+    }
+}
+                Producto producto = null;
+
+                    if (!codigoOferta.equals(Constantes.SIN_OFERTA)) {
+                        int codOferta = Integer.parseInt(codigoOferta);
+                        oferta = buscarOfertaPorCodigo(codOferta);
+                    }
+
+                    producto = new ProductoNoPerecedero(codigo, nombre, precio, stock, oferta);
+                }
+
+                if (producto != null) {
+                    productosArray[numProductos++] = producto;
+                }
+            }
+        }
+        System.out.println("Se han cargado " + numProductos + " productos.");
+    }
+}
+            // Bucle principal
+            boolean salir = false;
+            while (!salir) {
+                // Si no hay empleado con sesión, solicitar login
+                if (empleadoActual == null) {
+                    boolean loginExitoso = login(scanner);
+                    if (!loginExitoso) {
+                        // Preguntar si desea intentar de nuevo o salir
                     if (!Validador.confirmar(scanner, "¿Desea intentar de nuevo?")) {
                         salir = true;
 }
@@ -328,27 +305,43 @@ private static void modificarProductos(Scanner scanner) {
             // Mostrar menú principal
             mostrarMenu();
             int opcion = Validador.solicitarEntero(scanner, "Seleccione una opción", 1, 4);
-            
+                
+            switch (opcion) {
+                case Constantes.OPCION_HACER_PEDIDO:
+                    modificarProductos(scanner);
             switch (opcion) {
                 case Constantes.OPCION_HACER_PEDIDO:
                     hacerPedido(scanner);
+                        hacerPedido(scanner);
                     break;
-                case Constantes.OPCION_MODIFICAR_PRODUCTOS:
-                    modificarProductos(scanner);
-                    break;
-                case Constantes.OPCION_CAMBIAR_PASSWORD:
-                    cambiarPassword(scanner);
-                    break;
-                case Constantes.OPCION_CERRAR_SESION:
-                    cerrarSesion();
-                    break;
+        System.out.println("Empleado: " + empleadoActual.getNombre() + " (Nivel: " + empleadoActual.getNivel() + ")");
+        System.out.println("Productividad actual: " + String.format("%.2f", empleadoActual.getProductividad()) + "€");
+        System.out.println("-------------------------------------------------");
+        System.out.println("1. Hacer pedido");
+                    case Constantes.OPCION_MODIFICAR_PRODUCTOS:
+                        modificarProductos(scanner);
+                        break;
+                    case Constantes.OPCION_CAMBIAR_PASSWORD:
+                        cambiarPassword(scanner);
+                        break;
+                    case Constantes.OPCION_CERRAR_SESION:
+                        cerrarSesion();
+                        break;
+                }
             }
+        } catch (DatabaseException e) {
+            System.out.println("Error crítico de base de datos: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Error inesperado: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            System.out.println("¡Gracias por utilizar el sistema de gestión de tienda!");
+            scanner.close();
         }
-        
-        System.out.println("¡Gracias por utilizar el sistema de gestión de tienda!");
-        scanner.close();
     }
     /**
+     * Método para realizar el login del empleado
      * Muestra el menú principal de la aplicación
      */
     private static void mostrarMenu() {
@@ -358,7 +351,6 @@ private static void modificarProductos(Scanner scanner) {
         System.out.println("Empleado: " + empleadoActual.getNombre() + " (Nivel: " + empleadoActual.getNivel() + ")");
         System.out.println("Productividad actual: " + String.format("%.2f", empleadoActual.getProductividad()) + "€");
         System.out.println("-------------------------------------------------");
-        System.out.println("3. Cambiar contraseña");
         System.out.println("1. Hacer pedido");
         System.out.println("2. Modificar productos");
         System.out.println("3. Cambiar contraseña");
@@ -373,11 +365,11 @@ private static void modificarProductos(Scanner scanner) {
      */
     private static boolean login(Scanner scanner) {
         System.out.println("\n=== LOGIN DE EMPLEADO ===");
-
+        
         try {
             // Solicitar código de empleado
             int codigo = Validador.solicitarEntero(scanner, "Introduzca su código de empleado", 1, 9999);
-            
+
             // Solicitar contraseña
             String password = Validador.solicitarCadena(scanner, "Introduzca su contraseña");
             
