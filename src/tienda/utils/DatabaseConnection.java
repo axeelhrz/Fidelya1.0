@@ -6,23 +6,33 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * Clase utilitaria para gestionar la conexión a la base de datos.
- * Proporciona métodos estáticos para abrir y cerrar conexiones.
- */
 public class DatabaseConnection {
-    // Constantes de conexión
-    private static final String URL = "jdbc:mysql://localhost:3306/tienda";
+    // Constantes de conexión - AJUSTA ESTOS VALORES SEGÚN TU CONFIGURACIÓN
+    private static final String URL = "jdbc:mysql://localhost:3306/tienda?useSSL=false&serverTimezone=UTC";
     private static final String USER = "root";
-    private static final String PASSWORD = "admin";
+    private static final String PASSWORD = "admin"; // Cambia esto a tu contraseña
     
+    static {
+            try {
+            // Cargar el driver explícitamente
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            System.out.println("Driver JDBC cargado correctamente.");
+        } catch (ClassNotFoundException e) {
+            System.err.println("Error al cargar el driver JDBC: " + e.getMessage());
+            }
+        }
     /**
      * Obtiene una conexión a la base de datos
      * @return Conexión a la base de datos
      * @throws SQLException Si hay un error al conectar
      */
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+            try {
+            return DriverManager.getConnection(URL, USER, PASSWORD);
+        } catch (SQLException e) {
+            System.err.println("Error al conectar a la base de datos: " + e.getMessage());
+            throw e;
+        }
     }
     
     /**
@@ -33,8 +43,8 @@ public class DatabaseConnection {
         if (conn != null) {
             try {
                 conn.close();
-            } catch (SQLException ignored) {
-                // Ignoramos la excepción al cerrar
+            } catch (SQLException e) {
+                System.err.println("Error al cerrar la conexión: " + e.getMessage());
             }
         }
     }
@@ -47,10 +57,10 @@ public class DatabaseConnection {
         if (stmt != null) {
             try {
                 stmt.close();
-            } catch (SQLException ignored) {
-                // Ignoramos la excepción al cerrar
-            }
-        }
+            } catch (SQLException e) {
+                System.err.println("Error al cerrar el statement: " + e.getMessage());
+    }
+}
     }
     
     /**
@@ -61,8 +71,8 @@ public class DatabaseConnection {
         if (rs != null) {
             try {
                 rs.close();
-            } catch (SQLException ignored) {
-                // Ignoramos la excepción al cerrar
+            } catch (SQLException e) {
+                System.err.println("Error al cerrar el resultset: " + e.getMessage());
             }
         }
     }
