@@ -18,8 +18,8 @@ public class ProductoPerecedero extends Producto {
     public ProductoPerecedero(int codigo, String nombre, double precio, int stock, int diasParaCaducar) {
         super(codigo, nombre, precio, stock);
         this.diasParaCaducar = diasParaCaducar;
-}
-
+    }
+    
     public int getDiasParaCaducar() {
         return diasParaCaducar;
     }

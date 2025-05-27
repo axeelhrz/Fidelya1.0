@@ -66,8 +66,8 @@ public class Main {
     private static void actualizarListaProductos() throws DatabaseException {
         productos = productoDAO.obtenerTodos();
         System.out.println("Se han cargado " + productos.size() + " productos.");
-}
-
+    }
+    
     /**
      * Ejecuta el bucle principal de la aplicación
      */
@@ -307,8 +307,8 @@ public class Main {
             
             // Seleccionar producto
             int indiceProducto = Validador.solicitarEntero(scanner, 
-                                "Seleccione un producto a modificar (0 para cancelar)", 
-                                0, productos.size()) - 1;
+                            "Seleccione un producto a modificar (0 para cancelar)", 
+                            0, productos.size()) - 1;
             
             if (indiceProducto == -1) {
                 System.out.println("Operación cancelada.");
@@ -319,41 +319,111 @@ public class Main {
             
             // Mostrar menú de modificación
             System.out.println("\nModificando: " + producto.toString());
-            System.out.println("1. Modificar nombre");
-            System.out.println("2. Modificar precio");
-            System.out.println("3. Modificar stock");
+            System.out.println("1. Modificar código");
+            System.out.println("2. Modificar nombre");
+            System.out.println("3. Modificar precio");
+            System.out.println("4. Modificar stock");
             
-            int opcion = Validador.solicitarEntero(scanner, "Seleccione qué desea modificar", 1, 3);
+            // Agregar opción específica para productos perecederos
+            if (producto instanceof ProductoPerecedero) {
+                System.out.println("5. Modificar días para caducar");
+            }
+            
+            int maxOpcion = (producto instanceof ProductoPerecedero) ? 5 : 4;
+            int opcion = Validador.solicitarEntero(scanner, "Seleccione qué desea modificar", 1, maxOpcion);
             
             switch (opcion) {
                 case 1:
-                    String nuevoNombre = Validador.solicitarCadena(scanner, "Introduzca el nuevo nombre");
-                    
-                    // Verificar si el nombre ya existe
-                    if (productoDAO.existeNombre(nuevoNombre)) {
-                        System.out.println("Error: Ya existe un producto con ese nombre.");
-                        return;
-                    }
-                    producto.setNombre(nuevoNombre);
+                    modificarCodigoProducto(scanner, producto);
                     break;
                 case 2:
-                    double nuevoPrecio = Validador.solicitarDouble(scanner, "Introduzca el nuevo precio");
-                    producto.setPrecio(nuevoPrecio);
+                    String nuevoNombre = Validador.solicitarCadena(scanner, "Introduzca el nuevo nombre");
+                    producto.setNombre(nuevoNombre);
+                    productoDAO.actualizarProducto(producto);
+                    System.out.println("Nombre modificado con éxito.");
                     break;
                 case 3:
+                    double nuevoPrecio = Validador.solicitarDouble(scanner, "Introduzca el nuevo precio");
+                    producto.setPrecio(nuevoPrecio);
+                    productoDAO.actualizarProducto(producto);
+                    System.out.println("Precio modificado con éxito.");
+                    break;
+                case 4:
                     int nuevoStock = Validador.solicitarEntero(scanner, "Introduzca el nuevo stock", 0, 1000);
                     producto.setStock(nuevoStock);
+                    productoDAO.actualizarProducto(producto);
+                    System.out.println("Stock modificado con éxito.");
+                    break;
+                case 5:
+                    if (producto instanceof ProductoPerecedero) {
+                        ProductoPerecedero perecedero = (ProductoPerecedero) producto;
+                        int nuevosDias = Validador.solicitarEntero(scanner, "Introduzca los nuevos días para caducar", 1, 365);
+                        perecedero.setDiasParaCaducar(nuevosDias);
+                        productoDAO.actualizarProducto(perecedero);
+                        System.out.println("Días para caducar modificados con éxito.");
+                    }
                     break;
             }
             
-            // Actualizar producto en la base de datos
-            productoDAO.actualizarProducto(producto);
-            System.out.println("Producto actualizado: " + producto.toString());
+            // Recargar la lista de productos para mostrar los cambios
+            actualizarListaProductos();
+            
+            // Buscar el producto actualizado en la nueva lista
+            Producto productoActualizado = null;
+            for (Producto p : productos) {
+                if (p.getCodigo() == producto.getCodigo()) {
+                    productoActualizado = p;
+                    break;
+                }
+            }
+            
+            if (productoActualizado != null) {
+                System.out.println("Producto actualizado: " + productoActualizado.toString());
+            }
             
         } catch (DatabaseException e) {
             System.out.println("Error de base de datos: " + e.getMessage());
-        } catch (ProductoException e) {
-            System.out.println("Error " + e.getCodigo() + ": " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Modifica el código de un producto
+     * @param scanner Scanner para leer entrada del usuario
+     * @param producto Producto cuyo código se va a modificar
+     */
+    private static void modificarCodigoProducto(Scanner scanner, Producto producto) {
+        try {
+            System.out.println("Código actual: " + producto.getCodigo());
+            
+            int nuevoCodigo = Validador.solicitarEntero(scanner, 
+                         "Introduzca el nuevo código (debe ser único)", 
+                         1, 999999);
+            
+            // Verificar que el nuevo código no existe
+            if (productoDAO.existeCodigo(nuevoCodigo)) {
+                System.out.println("Error: El código " + nuevoCodigo + " ya existe. Elija un código diferente.");
+                return;
+            }
+            
+            // Confirmar el cambio
+            if (Validador.confirmar(scanner, 
+                "¿Está seguro de cambiar el código de " + producto.getCodigo() + " a " + nuevoCodigo + "?")) {
+                
+                int codigoAntiguo = producto.getCodigo();
+                
+                // Actualizar el código en la base de datos
+                productoDAO.actualizarCodigoProducto(codigoAntiguo, nuevoCodigo);
+                
+                // Actualizar el código en el objeto
+                producto.setCodigo(nuevoCodigo);
+                
+                System.out.println("Código modificado con éxito de " + codigoAntiguo + " a " + nuevoCodigo + ".");
+            } else {
+                System.out.println("Cambio de código cancelado.");
+            }
+            
+        } catch (DatabaseException e) {
+            System.out.println("Error de base de datos: " + e.getMessage());
         }
     }
 }
