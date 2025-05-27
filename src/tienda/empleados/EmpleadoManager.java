@@ -34,7 +34,7 @@ public class EmpleadoManager {
         try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
             String linea;
             while ((linea = br.readLine()) != null && numEmpleados < empleados.length) {
-                String[] datos = linea.split(Constantes.SEPARADOR);
+                String[] datos = linea.split(","); // Using comma as default separator
                 if (datos.length >= 5) {
                     int codigo = Integer.parseInt(datos[0]);
                     String nombre = datos[1];
