@@ -1,5 +1,6 @@
 package tienda;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -10,11 +11,11 @@ import tienda.pedidos.Pedido;
 import tienda.pedidos.PedidoDAO;
 import tienda.pedidos.PedidoManager;
 import tienda.productos.Producto;
+import tienda.productos.ProductoPerecedero;
 import tienda.productos.ProductoDAO;
 import tienda.utils.Constantes;
 import tienda.utils.DatabaseException;
 import tienda.utils.Validador;
-import tienda.productos.ProductoException;
 
 /**
  * Clase principal del sistema de gestión de tienda.
@@ -30,6 +31,7 @@ public class Main {
     // Estado de la aplicación
     private static Empleado empleadoActual;
     private static List<Producto> productos;
+    
     /**
      * Punto de entrada principal de la aplicación
      */
@@ -37,17 +39,22 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         
         System.out.println("Iniciando sistema de gestión de tienda...");
+        
         try {
             // Inicializar DAOs
             empleadoDAO = new EmpleadoDAO();
             productoDAO = new ProductoDAO();
             pedidoDAO = new PedidoDAO();
             
+            // Inicializar lista de productos
+            productos = new ArrayList<>();
+            
             // Cargar productos iniciales
             actualizarListaProductos();
-
+            
             // Bucle principal de la aplicación
             ejecutarBuclePrincipal(scanner);
+            
         } catch (DatabaseException e) {
             System.out.println("Error crítico de base de datos: " + e.getMessage());
             e.printStackTrace();
@@ -307,8 +314,8 @@ public class Main {
             
             // Seleccionar producto
             int indiceProducto = Validador.solicitarEntero(scanner, 
-                            "Seleccione un producto a modificar (0 para cancelar)", 
-                            0, productos.size()) - 1;
+                                "Seleccione un producto a modificar (0 para cancelar)", 
+                                0, productos.size()) - 1;
             
             if (indiceProducto == -1) {
                 System.out.println("Operación cancelada.");
@@ -396,8 +403,8 @@ public class Main {
             System.out.println("Código actual: " + producto.getCodigo());
             
             int nuevoCodigo = Validador.solicitarEntero(scanner, 
-                         "Introduzca el nuevo código (debe ser único)", 
-                         1, 999999);
+                             "Introduzca el nuevo código (debe ser único)", 
+                             1, 999999);
             
             // Verificar que el nuevo código no existe
             if (productoDAO.existeCodigo(nuevoCodigo)) {
