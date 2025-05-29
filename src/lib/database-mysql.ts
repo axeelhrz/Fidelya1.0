@@ -22,7 +22,7 @@ const createConnection = async () => {
 };
 
 // Función para inicializar las tablas
-const initializeTables = async (connection: mysql.Connection) => {
+const initializeTables = async (connection: any) => {
   try {
     // Crear tabla de menús
     await connection.execute(`
@@ -93,24 +93,21 @@ export const DatabaseAPI = {
 
         // Insertar productos
         if (menuData.products.length > 0) {
-          const productValues = menuData.products.map(product => [
-            product.id,
-            menuData.id,
-            product.name,
-            product.price,
-            product.description,
-            product.category,
-            product.isRecommended || false,
-            product.isVegan || false
-          ]);
-
-          const placeholders = productValues.map(() => '(?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
-          const flatValues = productValues.flat();
-
+          for (const product of menuData.products) {
           await connection.execute(
-            `INSERT INTO products (id, menu_id, name, price, description, category, is_recommended, is_vegan) VALUES ${placeholders}`,
-            flatValues
-          );
+              'INSERT INTO products (id, menu_id, name, price, description, category, is_recommended, is_vegan) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+              [
+                product.id,
+                menuData.id,
+                product.name,
+                product.price,
+                product.description,
+                product.category,
+                product.isRecommended || false,
+                product.isVegan || false
+              ]
+            );
+          }
         }
 
         await connection.commit();
@@ -131,31 +128,28 @@ export const DatabaseAPI = {
       
       try {
         // Obtener menú
-        const [menuRows] = await connection.execute(
+        const [menuRows]: any = await connection.execute(
           'SELECT * FROM menus WHERE id = ?',
           [id]
         );
 
-        const menuRowsArray = menuRows as any[];
-        if (menuRowsArray.length === 0) {
+        if (menuRows.length === 0) {
         return null;
       }
 
-        const menu = menuRowsArray[0];
+        const menu = menuRows[0];
 
         // Obtener productos
-        const [productRows] = await connection.execute(
+        const [productRows]: any = await connection.execute(
           'SELECT * FROM products WHERE menu_id = ? ORDER BY category, name',
           [id]
         );
-
-        const productRowsArray = productRows as any[];
 
         const menuData: MenuData = {
           id: menu.id,
           name: menu.name,
           description: menu.description,
-          products: productRowsArray.map((product: any) => ({
+          products: productRows.map((product: any) => ({
           id: product.id,
           name: product.name,
           price: product.price,
@@ -181,25 +175,22 @@ export const DatabaseAPI = {
       
       try {
         // Obtener todos los menús
-        const [menuRows] = await connection.execute(
+        const [menuRows]: any = await connection.execute(
           'SELECT * FROM menus ORDER BY name'
         );
 
-        const menuRowsArray = menuRows as any[];
-        if (menuRowsArray.length === 0) {
+        if (menuRows.length === 0) {
           return [];
   }
 
         // Obtener todos los productos
-        const [productRows] = await connection.execute(
+        const [productRows]: any = await connection.execute(
           'SELECT * FROM products ORDER BY menu_id, category, name'
         );
 
-        const productRowsArray = productRows as any[];
-
         // Agrupar productos por menú
         const productsByMenu: Record<string, Product[]> = {};
-        productRowsArray.forEach((product: any) => {
+        productRows.forEach((product: any) => {
           if (!productsByMenu[product.menu_id]) {
             productsByMenu[product.menu_id] = [];
           }
@@ -215,7 +206,7 @@ export const DatabaseAPI = {
         });
 
         // Construir menús completos
-        const menus: MenuData[] = menuRowsArray.map((menu: any) => ({
+        const menus: MenuData[] = menuRows.map((menu: any) => ({
           id: menu.id,
           name: menu.name,
           description: menu.description,
@@ -237,13 +228,12 @@ export const DatabaseAPI = {
       const connection = await createConnection();
       
       try {
-        const [result] = await connection.execute(
+        const [result]: any = await connection.execute(
           'UPDATE menus SET name = ?, description = ? WHERE id = ?',
           [menuData.name, menuData.description, menuData.id]
         );
 
-        const resultObj = result as any;
-        return resultObj.affectedRows > 0;
+        return result.affectedRows > 0;
       } catch (error) {
         console.error('Error actualizando menú en MySQL:', error);
         return false;
@@ -257,13 +247,12 @@ export const DatabaseAPI = {
       const connection = await createConnection();
       
       try {
-        const [result] = await connection.execute(
+        const [result]: any = await connection.execute(
           'DELETE FROM menus WHERE id = ?',
           [id]
         );
 
-        const resultObj = result as any;
-        return resultObj.affectedRows > 0;
+        return result.affectedRows > 0;
       } catch (error) {
         console.error('Error eliminando menú de MySQL:', error);
         return false;
@@ -298,13 +287,12 @@ export const DatabaseAPI = {
       const connection = await createConnection();
       
       try {
-        const [result] = await connection.execute(
+        const [result]: any = await connection.execute(
           'UPDATE products SET name = ?, price = ?, description = ?, category = ?, is_recommended = ?, is_vegan = ? WHERE id = ?',
           [product.name, product.price, product.description, product.category, product.isRecommended || false, product.isVegan || false, product.id]
         );
 
-        const resultObj = result as any;
-        return resultObj.affectedRows > 0;
+        return result.affectedRows > 0;
       } catch (error) {
         console.error('Error actualizando producto en MySQL:', error);
         return false;
@@ -318,13 +306,12 @@ export const DatabaseAPI = {
       const connection = await createConnection();
       
       try {
-        const [result] = await connection.execute(
+        const [result]: any = await connection.execute(
           'DELETE FROM products WHERE id = ?',
           [id]
         );
 
-        const resultObj = result as any;
-        return resultObj.affectedRows > 0;
+        return result.affectedRows > 0;
       } catch (error) {
         console.error('Error eliminando producto de MySQL:', error);
         return false;
@@ -338,13 +325,12 @@ export const DatabaseAPI = {
       const connection = await createConnection();
       
       try {
-        const [rows] = await connection.execute(
+        const [rows]: any = await connection.execute(
           'SELECT * FROM products WHERE menu_id = ? ORDER BY category, name',
           [menuId]
         );
 
-        const rowsArray = rows as any[];
-        const products: Product[] = rowsArray.map((product: any) => ({
+        const products: Product[] = rows.map((product: any) => ({
           id: product.id,
           name: product.name,
           price: product.price,
@@ -417,12 +403,11 @@ export const DatabaseAPI = {
       const connection = await createConnection();
       
       try {
-        const [rows] = await connection.execute(
+        const [rows]: any = await connection.execute(
           'SELECT COUNT(*) as count FROM menus'
         );
 
-        const rowsArray = rows as any[];
-        const hasData = rowsArray[0].count > 0;
+        const hasData = rows[0].count > 0;
         console.log('La base de datos tiene datos:', hasData);
         return hasData;
       } catch (error) {
@@ -464,21 +449,18 @@ export const DatabaseAPI = {
       
       try {
         // Contar menús
-        const [menuRows] = await connection.execute(
+        const [menuRows]: any = await connection.execute(
           'SELECT COUNT(*) as count FROM menus'
         );
 
         // Contar productos
-        const [productRows] = await connection.execute(
+        const [productRows]: any = await connection.execute(
           'SELECT COUNT(*) as count FROM products'
         );
 
-        const menuRowsArray = menuRows as any[];
-        const productRowsArray = productRows as any[];
-
         const info = {
-          menusCount: menuRowsArray[0].count,
-          productsCount: productRowsArray[0].count,
+          menusCount: menuRows[0].count,
+          productsCount: productRows[0].count,
           dbType: 'mysql',
           environment: 'production',
           hasMenuData: true,
