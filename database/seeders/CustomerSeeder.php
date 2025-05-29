@@ -18,8 +18,9 @@ class CustomerSeeder extends Seeder
                 'email' => 'ana.garcia@email.com',
                 'address' => 'Av. Corrientes 1234',
                 'city' => 'Buenos Aires',
-                'preferred_payment' => 'efectivo',
+                'payment_preference' => 'efectivo',
                 'credit_limit' => 5000.00,
+                'customer_category' => 'regular',
             ],
             [
                 'name' => 'Carlos',
@@ -29,8 +30,9 @@ class CustomerSeeder extends Seeder
                 'email' => 'carlos.rodriguez@email.com',
                 'address' => 'Calle Florida 567',
                 'city' => 'Buenos Aires',
-                'preferred_payment' => 'tarjeta',
+                'payment_preference' => 'tarjeta',
                 'credit_limit' => 3000.00,
+                'customer_category' => 'regular',
             ],
             [
                 'name' => 'María',
@@ -40,8 +42,10 @@ class CustomerSeeder extends Seeder
                 'email' => 'maria.lopez@email.com',
                 'address' => 'Av. Santa Fe 890',
                 'city' => 'Buenos Aires',
-                'preferred_payment' => 'efectivo',
+                'payment_preference' => 'efectivo',
                 'credit_limit' => 2000.00,
+                'customer_category' => 'vip',
+                'discount_percentage' => 5.00,
             ],
             [
                 'name' => 'Restaurante El Buen Sabor',
@@ -52,8 +56,10 @@ class CustomerSeeder extends Seeder
                 'email' => 'compras@elbuensabor.com',
                 'address' => 'Av. Rivadavia 1500',
                 'city' => 'Buenos Aires',
-                'preferred_payment' => 'transferencia',
+                'payment_preference' => 'transferencia',
                 'credit_limit' => 25000.00,
+                'customer_category' => 'mayorista',
+                'discount_percentage' => 10.00,
             ],
             [
                 'name' => 'Supermercado Los Andes',
@@ -64,8 +70,10 @@ class CustomerSeeder extends Seeder
                 'email' => 'gerencia@losandes.com',
                 'address' => 'Av. San Martín 2000',
                 'city' => 'Buenos Aires',
-                'preferred_payment' => 'cuenta_corriente',
+                'payment_preference' => 'transferencia',
                 'credit_limit' => 50000.00,
+                'customer_category' => 'mayorista',
+                'discount_percentage' => 15.00,
             ],
             [
                 'name' => 'Pedro',
@@ -75,8 +83,9 @@ class CustomerSeeder extends Seeder
                 'email' => 'pedro.martinez@email.com',
                 'address' => 'Calle Defensa 789',
                 'city' => 'Buenos Aires',
-                'preferred_payment' => 'efectivo',
+                'payment_preference' => 'efectivo',
                 'credit_limit' => 1500.00,
+                'customer_category' => 'regular',
             ],
             [
                 'name' => 'Laura',
@@ -86,8 +95,10 @@ class CustomerSeeder extends Seeder
                 'email' => 'laura.fernandez@email.com',
                 'address' => 'Av. Belgrano 456',
                 'city' => 'Buenos Aires',
-                'preferred_payment' => 'tarjeta',
+                'payment_preference' => 'tarjeta',
                 'credit_limit' => 4000.00,
+                'customer_category' => 'vip',
+                'discount_percentage' => 3.00,
             ],
         ];
 
@@ -96,8 +107,9 @@ class CustomerSeeder extends Seeder
                 ['email' => $customerData['email']],
                 array_merge($customerData, [
                     'is_active' => true,
-                    'total_purchases' => 0,
-                    'total_orders' => 0,
+                    'current_balance' => 0,
+                    'loyalty_points' => 0,
+                    'accepts_marketing' => false,
                 ])
             );
         }
