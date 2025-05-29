@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 200);
             $table->string('slug', 200)->unique();
+            $table->string('code', 50)->unique()->nullable(); // Código interno del producto
             $table->string('sku', 50)->unique()->nullable();
             $table->string('barcode', 50)->unique()->nullable();
             $table->text('description')->nullable();
