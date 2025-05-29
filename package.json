@@ -3,20 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "prebuild": "mkdir -p data",
-    "postinstall": "mkdir -p data"
+    "lint": "next lint"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.14.19",
     "@mui/material": "^5.14.20",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^11.10.0",
     "framer-motion": "^10.16.16",
-    "next": "15.3.2",
+    "next": "14.2.5",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
