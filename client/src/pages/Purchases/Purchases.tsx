@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -34,7 +34,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { es } from 'date-fns/locale';
 import axios from 'axios';
 import PurchaseForm from '../../components/Purchases/PurchaseForm';
-import PurchaseDetails from '../../components/Purchases/PurchaseDetails';
+import PurchaseDetails from '../../components/Purchases/PurchaseDetails/page';
 
 interface Purchase {
   id: string;
@@ -71,12 +71,7 @@ const Purchases: React.FC = () => {
   const [purchaseDetailsOpen, setPurchaseDetailsOpen] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
 
-  useEffect(() => {
-    fetchPurchases();
-    fetchSuppliers();
-  }, [page, searchTerm, selectedSupplier, startDate, endDate]);
-
-  const fetchPurchases = async () => {
+  const fetchPurchases = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -96,7 +91,7 @@ const Purchases: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchTerm, selectedSupplier, startDate, endDate]);
 
   const fetchSuppliers = async () => {
     try {
@@ -106,6 +101,11 @@ const Purchases: React.FC = () => {
       console.error('Error fetching suppliers:', error);
     }
   };
+
+  useEffect(() => {
+    fetchPurchases();
+    fetchSuppliers();
+  }, [fetchPurchases]);
 
   const handleViewPurchase = (purchase: Purchase) => {
     setSelectedPurchase(purchase);
@@ -175,14 +175,28 @@ const Purchases: React.FC = () => {
                   label="Fecha Inicio"
                   value={startDate}
                   onChange={setStartDate}
-                  renderInput={(params) => <TextField {...params} sx={{ minWidth: 150 }} />}
+                  slots={{
+                    textField: TextField,
+                  }}
+                  slotProps={{
+                    textField: {
+                      sx: { minWidth: 150 },
+                    },
+                  }}
                 />
 
                 <DatePicker
                   label="Fecha Fin"
                   value={endDate}
                   onChange={setEndDate}
-                  renderInput={(params) => <TextField {...params} sx={{ minWidth: 150 }} />}
+                  slots={{
+                    textField: TextField,
+                  }}
+                  slotProps={{
+                    textField: {
+                      sx: { minWidth: 150 },
+                    },
+                  }}
                 />
 
                 <Button
@@ -231,7 +245,6 @@ const Purchases: React.FC = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
-                        component={TableRow}
                       >
                         <TableCell>
                           <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>

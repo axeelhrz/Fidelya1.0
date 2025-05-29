@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -45,8 +45,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
 } from 'recharts';
 import axios from 'axios';
 
@@ -92,11 +90,7 @@ const Reports: React.FC = () => {
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [inventoryData, setInventoryData] = useState<any>(null);
 
-  useEffect(() => {
-    generateReport();
-  }, [reportType, groupBy, startDate, endDate]);
-
-  const generateReport = async () => {
+  const generateReport = useCallback(async () => {
     if (!startDate || !endDate) return;
 
     setLoading(true);
@@ -130,13 +124,15 @@ const Reports: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate, reportType, groupBy]);
 
   const exportReport = () => {
-    // Implementar exportación a PDF/Excel
-    console.log('Exportando reporte...');
+    // TODO: Implement export functionality
   };
 
+  useEffect(() => {
+    generateReport();
+  }, [reportType, groupBy, startDate, endDate, generateReport]);
   const getReportTitle = () => {
     switch (reportType) {
       case 'sales':
@@ -215,14 +211,28 @@ const Reports: React.FC = () => {
                       label="Fecha Inicio"
                       value={startDate}
                       onChange={setStartDate}
-                      renderInput={(params) => <TextField {...params} sx={{ minWidth: 150 }} />}
+                      slots={{
+                        textField: TextField,
+                      }}
+                      slotProps={{
+                        textField: {
+                          sx: { minWidth: 150 },
+                        },
+                      }}
                     />
 
                     <DatePicker
                       label="Fecha Fin"
                       value={endDate}
                       onChange={setEndDate}
-                      renderInput={(params) => <TextField {...params} sx={{ minWidth: 150 }} />}
+                      slots={{
+                        textField: TextField,
+                      }}
+                      slotProps={{
+                        textField: {
+                          sx: { minWidth: 150 },
+                        },
+                      }}
                     />
                   </>
                 )}

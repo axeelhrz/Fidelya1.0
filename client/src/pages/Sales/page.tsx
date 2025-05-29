@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -15,7 +15,6 @@ import {
   Paper,
   Chip,
   IconButton,
-  Dialog,
   Pagination,
   TextField,
   FormControl,
@@ -38,7 +37,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { es } from 'date-fns/locale';
 import axios from 'axios';
 import SaleForm from '../../components/Sales/SaleForm';
-import SaleDetails from '../../components/Sales/SaleDetails';
+import SaleDetails from '../../pages/Sales/SalesDetails/page';
 
 interface Sale {
   id: string;
@@ -79,12 +78,7 @@ const Sales: React.FC = () => {
   const [saleDetailsOpen, setSaleDetailsOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
-  useEffect(() => {
-    fetchSales();
-    fetchClients();
-  }, [page, searchTerm, selectedClient, selectedPaymentMethod, startDate, endDate]);
-
-  const fetchSales = async () => {
+  const fetchSales = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -105,16 +99,21 @@ const Sales: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchTerm, selectedClient, selectedPaymentMethod, startDate, endDate]);
 
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     try {
       const response = await axios.get('/clients');
       setClients(response.data);
     } catch (error) {
       console.error('Error fetching clients:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchSales();
+    fetchClients();
+  }, [fetchSales, fetchClients]);
 
   const handleDeleteSale = async (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres cancelar esta venta? Esta acción restaurará el stock.')) {
@@ -241,14 +240,28 @@ const Sales: React.FC = () => {
                   label="Fecha Inicio"
                   value={startDate}
                   onChange={setStartDate}
-                  renderInput={(params) => <TextField {...params} sx={{ minWidth: 150 }} />}
+                  slots={{
+                    textField: TextField,
+                  }}
+                  slotProps={{
+                    textField: {
+                      sx: { minWidth: 150 }
+                    }
+                  }}
                 />
 
                 <DatePicker
                   label="Fecha Fin"
                   value={endDate}
                   onChange={setEndDate}
-                  renderInput={(params) => <TextField {...params} sx={{ minWidth: 150 }} />}
+                  slots={{
+                    textField: TextField,
+                  }}
+                  slotProps={{
+                    textField: {
+                      sx: { minWidth: 150 }
+                    }
+                  }}
                 />
 
                 <Button
@@ -299,7 +312,6 @@ const Sales: React.FC = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
-                        component={TableRow}
                       >
                         <TableCell>
                           <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>

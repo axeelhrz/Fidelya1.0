@@ -10,9 +10,9 @@ import Inventory from './pages/Inventory/Inventory';
 import Sales from './pages/Sales/page';
 import Purchases from './pages/Purchases/Purchases';
 import Reports from './pages/Reports/Reports';
-import Clients from './pages/Clients/Clients';
+import Clients from './pages/Clients/page';
 import Suppliers from './pages/Suppliers/Suppliers';
-import Settings from './pages/Settings/Settings';
+import Settings from './pages/Settings/page';
 import Notifications from './pages/Notifications/Notifications';
 import { CircularProgress, Box } from '@mui/material';
 

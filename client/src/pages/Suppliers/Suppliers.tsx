@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -89,11 +89,7 @@ const Suppliers: React.FC = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, [page, searchTerm]);
-
-  const fetchSuppliers = async () => {
+  const fetchSuppliers = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -103,13 +99,18 @@ const Suppliers: React.FC = () => {
       });
 
       const response = await axios.get(`/suppliers?${params}`);
-      setSuppliers(response.data);
+      setSuppliers(response.data.suppliers || response.data);
+      setTotalPages(response.data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching suppliers:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchTerm]);
+
+  useEffect(() => {
+    fetchSuppliers();
+  }, [fetchSuppliers]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -253,7 +254,6 @@ const Suppliers: React.FC = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.1 }}
-                      component={TableRow}
                     >
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

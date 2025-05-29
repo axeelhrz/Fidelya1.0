@@ -188,7 +188,7 @@ const SaleForm: React.FC<SaleFormProps> = ({ open, onClose, onSuccess }) => {
     setError('');
 
     try {
-      const { subtotal, discountAmount, taxAmount, total } = calculateTotals();
+      const {  discountAmount, taxAmount } = calculateTotals();
       
       const saleData = {
         clientId: selectedClient || null,

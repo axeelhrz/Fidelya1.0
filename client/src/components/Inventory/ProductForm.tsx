@@ -277,7 +277,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 label="Fecha de Vencimiento (Opcional)"
                 value={formData.expiryDate}
                 onChange={(date) => handleChange('expiryDate', date)}
-                renderInput={(params) => <TextField {...params} fullWidth />}
+                slots={{
+                  textField: TextField,
+                }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                  },
+                }}
               />
             </Stack>
           </DialogContent>

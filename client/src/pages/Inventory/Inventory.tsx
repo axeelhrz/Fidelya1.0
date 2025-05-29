@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -16,13 +16,11 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Dialog,
   Pagination,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Alert,
 } from '@mui/material';
 import {
   Add,
@@ -52,6 +50,8 @@ interface Product {
   expiryDate?: string;
   category: { name: string };
   supplier: { name: string };
+  categoryId: string;
+  supplierId: string;
   isActive: boolean;
 }
 
@@ -80,13 +80,7 @@ const Inventory: React.FC = () => {
   const [stockAdjustmentOpen, setStockAdjustmentOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-    fetchSuppliers();
-  }, [page, searchTerm, selectedCategory, selectedSupplier, stockFilter]);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -106,7 +100,7 @@ const Inventory: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchTerm, selectedCategory, selectedSupplier, stockFilter]);
 
   const fetchCategories = async () => {
     try {
@@ -116,6 +110,12 @@ const Inventory: React.FC = () => {
       console.error('Error fetching categories:', error);
     }
   };
+
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+    fetchSuppliers();
+  }, [fetchProducts]);
 
   const fetchSuppliers = async () => {
     try {
@@ -311,12 +311,12 @@ const Inventory: React.FC = () => {
                     const nearExpiry = isNearExpiry(product.expiryDate);
 
                     return (
-                      <motion.tr
+                      <TableRow
                         key={product.id}
+                        component={motion.tr}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
-                        component={TableRow}
                       >
                         <TableCell>
                           <Box>
@@ -410,7 +410,7 @@ const Inventory: React.FC = () => {
                             </IconButton>
                           </Stack>
                         </TableCell>
-                      </motion.tr>
+                      </TableRow>
                     );
                   })
                 )}
