@@ -3,13 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Product, MenuData } from '../app/types';
 
-interface DatabaseInfo {
-  initialized: boolean;
-  menusCount: number;
-  productsCount: number;
-  lastUpdated?: string;
-}
-
 interface DatabaseHook {
   // Estados
   loading: boolean;
@@ -31,7 +24,7 @@ interface DatabaseHook {
   // Utilidades
   initializeDatabase: (force?: boolean) => Promise<boolean>;
   refreshMenus: () => Promise<void>;
-  getDatabaseInfo: () => Promise<DatabaseInfo | null>;
+  getDatabaseInfo: () => Promise<object | null>;
 }
 
 export const useDatabase = (): DatabaseHook => {
@@ -144,7 +137,7 @@ export const useDatabase = (): DatabaseHook => {
     } finally {
       setLoading(false);
     }
-};
+  };
 
   // Eliminar un menú
   const deleteMenu = async (id: string): Promise<boolean> => {
@@ -253,7 +246,7 @@ export const useDatabase = (): DatabaseHook => {
   };
 
   // Obtener información de la base de datos
-  const getDatabaseInfo = async (): Promise<DatabaseInfo | null> => {
+  const getDatabaseInfo = async () => {
     try {
       const data = await apiRequest('/api/database/seed');
       return data.data;

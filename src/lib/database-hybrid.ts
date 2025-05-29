@@ -2,31 +2,68 @@ import fs from 'fs';
 import path from 'path';
 import { Product, MenuData } from '../app/types';
 
-// Intentar importar SQLite solo si está disponible
-let Database: any = null;
-try {
-  Database = require('better-sqlite3');
-} catch (error) {
-  console.log('SQLite not available, using JSON database');
-}
-
 // Estructura de la base de datos JSON
 interface DatabaseStructure {
   menus: Record<string, MenuData>;
   lastUpdated: string;
 }
 
+// Interfaces para SQLite
+interface MenuRow {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ProductRow {
+  id: string;
+  menu_id: string;
+  name: string;
+  price: number;
+  description: string;
+  category: string;
+  is_recommended: number;
+  is_vegan: number;
+  created_at: string;
+  updated_at: string;
+}
+
 // Variables para SQLite
-let db: any = null;
-let statements: any = null;
+let Database: typeof import('better-sqlite3') | null = null;
+let db: import('better-sqlite3').Database | null = null;
+let statements: {
+  insertMenu: import('better-sqlite3').Statement<[string, string, string]>;
+  getMenu: import('better-sqlite3').Statement<[string]>;
+  getAllMenus: import('better-sqlite3').Statement<[]>;
+  deleteMenu: import('better-sqlite3').Statement<[string]>;
+  insertProduct: import('better-sqlite3').Statement<[string, string, string, number, string, string, number, number]>;
+  getProductsByMenu: import('better-sqlite3').Statement<[string]>;
+  deleteProduct: import('better-sqlite3').Statement<[string]>;
+  deleteProductsByMenu: import('better-sqlite3').Statement<[string]>;
+} | null = null;
 
 // Variables para JSON
 const dataDir = path.join(process.cwd(), 'data');
 const dbPath = path.join(dataDir, 'menu.json');
 const sqlitePath = path.join(dataDir, 'menu.db');
 
+// Función para cargar SQLite dinámicamente
+const loadSQLite = async () => {
+  if (Database) return Database;
+  try {
+    const sqlite = await import('better-sqlite3');
+    Database = sqlite.default;
+    return Database;
+    } catch {
+    console.log('SQLite not available, using JSON database');
+    return null;
+    }
+    };
+
 // Inicializar base de datos
-const initDatabase = () => {
+const initDatabase = async () => {
   if (typeof window !== 'undefined') return true;
 
   // Crear directorio si no existe
@@ -34,78 +71,81 @@ const initDatabase = () => {
     fs.mkdirSync(dataDir, { recursive: true });
   }
 
-  // Intentar usar SQLite si está disponible
-  if (Database && !process.env.VERCEL) {
+  // Intentar usar SQLite si está disponible y no estamos en Vercel
+  if (!process.env.VERCEL) {
+    const SQLiteClass = await loadSQLite();
+    
+    if (SQLiteClass) {
     try {
-      db = new Database(sqlitePath);
-      db.pragma('journal_mode = WAL');
-      
-      // Crear tablas
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS menus (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          description TEXT NOT NULL,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
+        db = new SQLiteClass(sqlitePath);
+        db.pragma('journal_mode = WAL');
+        
+        // Crear tablas
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS menus (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
 
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS products (
-          id TEXT PRIMARY KEY,
-          menu_id TEXT NOT NULL,
-          name TEXT NOT NULL,
-          price INTEGER NOT NULL,
-          description TEXT NOT NULL,
-          category TEXT NOT NULL CHECK (category IN ('Entrada', 'Principal', 'Bebida', 'Postre')),
-          is_recommended BOOLEAN DEFAULT FALSE,
-          is_vegan BOOLEAN DEFAULT FALSE,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (menu_id) REFERENCES menus (id) ON DELETE CASCADE
-        )
-      `);
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS products (
+            id TEXT PRIMARY KEY,
+            menu_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            price INTEGER NOT NULL,
+            description TEXT NOT NULL,
+            category TEXT NOT NULL CHECK (category IN ('Entrada', 'Principal', 'Bebida', 'Postre')),
+            is_recommended BOOLEAN DEFAULT FALSE,
+            is_vegan BOOLEAN DEFAULT FALSE,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (menu_id) REFERENCES menus (id) ON DELETE CASCADE
+          )
+        `);
 
-      // Preparar statements
-      statements = {
-        insertMenu: db.prepare(`INSERT OR REPLACE INTO menus (id, name, description, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`),
-        getMenu: db.prepare(`SELECT * FROM menus WHERE id = ?`),
-        getAllMenus: db.prepare(`SELECT * FROM menus ORDER BY created_at ASC`),
-        deleteMenu: db.prepare(`DELETE FROM menus WHERE id = ?`),
-        insertProduct: db.prepare(`INSERT OR REPLACE INTO products (id, menu_id, name, price, description, category, is_recommended, is_vegan, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`),
-        getProductsByMenu: db.prepare(`SELECT * FROM products WHERE menu_id = ? ORDER BY category, name`),
-        deleteProduct: db.prepare(`DELETE FROM products WHERE id = ?`),
-        deleteProductsByMenu: db.prepare(`DELETE FROM products WHERE menu_id = ?`),
-      };
+        // Preparar statements
+        statements = {
+          insertMenu: db.prepare(`INSERT OR REPLACE INTO menus (id, name, description, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`),
+          getMenu: db.prepare(`SELECT * FROM menus WHERE id = ?`),
+          getAllMenus: db.prepare(`SELECT * FROM menus ORDER BY created_at ASC`),
+          deleteMenu: db.prepare(`DELETE FROM menus WHERE id = ?`),
+          insertProduct: db.prepare(`INSERT OR REPLACE INTO products (id, menu_id, name, price, description, category, is_recommended, is_vegan, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`),
+          getProductsByMenu: db.prepare(`SELECT * FROM products WHERE menu_id = ? ORDER BY category, name`),
+          deleteProduct: db.prepare(`DELETE FROM products WHERE id = ?`),
+          deleteProductsByMenu: db.prepare(`DELETE FROM products WHERE menu_id = ?`),
+};
 
-      console.log('SQLite database initialized');
-      return true;
-    } catch (error) {
-      console.error('Error initializing SQLite, falling back to JSON:', error);
-      db = null;
-      statements = null;
+        console.log('SQLite database initialized');
+    return true;
+  } catch (error) {
+        console.error('Error initializing SQLite, falling back to JSON:', error);
+        db = null;
+        statements = null;
+  }
     }
   }
-
-  // Fallback a JSON
+      // Fallback a JSON
   if (!fs.existsSync(dbPath)) {
     const defaultData: DatabaseStructure = {
       menus: {},
-      lastUpdated: new Date().toISOString()
-    };
+          lastUpdated: new Date().toISOString()
+        };
     fs.writeFileSync(dbPath, JSON.stringify(defaultData, null, 2));
   }
 
   console.log('JSON database initialized');
   return true;
-};
+        };
 
 // Funciones para JSON
 const readJSONDatabase = (): DatabaseStructure => {
   if (typeof window !== 'undefined') {
     return { menus: {}, lastUpdated: new Date().toISOString() };
-  }
+}
 
   // En Vercel, usar variable de entorno
   if (process.env.VERCEL === '1' && process.env.MENU_DATA) {
@@ -145,8 +185,8 @@ const writeJSONDatabase = (data: DatabaseStructure): boolean => {
 
 // API unificada
 export const DatabaseAPI = {
-  init: () => {
-    return initDatabase();
+  init: async () => {
+    return await initDatabase();
   },
 
   menus: {
@@ -154,6 +194,15 @@ export const DatabaseAPI = {
       if (db && statements) {
         try {
           statements.insertMenu.run(menuData.id, menuData.name, menuData.description);
+          
+          // Insert products
+          for (const product of menuData.products) {
+            statements.insertProduct.run(
+              product.id, menuData.id, product.name, product.price, 
+              product.description, product.category, 
+              product.isRecommended ? 1 : 0, product.isVegan ? 1 : 0
+            );
+          }
           return true;
         } catch (error) {
           console.error('Error creating menu in SQLite:', error);
@@ -174,24 +223,25 @@ export const DatabaseAPI = {
     get: (id: string): MenuData | null => {
       if (db && statements) {
         try {
-          const menu = statements.getMenu.get(id);
+          const menu = statements.getMenu.get(id) as MenuRow | undefined;
           if (menu) {
-            const products = statements.getProductsByMenu.all(id);
+            const products = statements.getProductsByMenu.all(id) as ProductRow[];
             return {
               id: menu.id,
               name: menu.name,
               description: menu.description,
-              products: products.map((p: any) => ({
+              products: products.map((p: ProductRow) => ({
                 id: p.id,
                 name: p.name,
                 price: p.price,
                 description: p.description,
-                category: p.category,
+                category: p.category as Product['category'],
                 isRecommended: Boolean(p.is_recommended),
                 isVegan: Boolean(p.is_vegan),
               }))
             };
           }
+          return null;
         } catch (error) {
           console.error('Error getting menu from SQLite:', error);
         }
@@ -210,19 +260,19 @@ export const DatabaseAPI = {
     getAll: (): MenuData[] => {
       if (db && statements) {
         try {
-          const menus = statements.getAllMenus.all();
-          return menus.map((menu: any) => {
-            const products = statements.getProductsByMenu.all(menu.id);
+          const menus = statements.getAllMenus.all() as MenuRow[];
+          return menus.map((menu: MenuRow) => {
+            const products = statements!.getProductsByMenu.all(menu.id) as ProductRow[];
             return {
               id: menu.id,
               name: menu.name,
               description: menu.description,
-              products: products.map((p: any) => ({
+              products: products.map((p: ProductRow) => ({
                 id: p.id,
                 name: p.name,
                 price: p.price,
                 description: p.description,
-                category: p.category,
+                category: p.category as Product['category'],
                 isRecommended: Boolean(p.is_recommended),
                 isVegan: Boolean(p.is_vegan),
               }))
@@ -244,7 +294,7 @@ export const DatabaseAPI = {
     },
 
     update: (menuData: MenuData): boolean => {
-      return this.create(menuData); // Usar la misma lógica
+      return DatabaseAPI.menus.create(menuData); // Usar la misma lógica
     },
 
     delete: (id: string): boolean => {
@@ -302,7 +352,7 @@ export const DatabaseAPI = {
     },
 
     update: (product: Product, menuId: string): boolean => {
-      return this.create(product, menuId); // Usar la misma lógica
+      return DatabaseAPI.products.create(product, menuId); // Usar la misma lógica
     },
 
     delete: (id: string): boolean => {
@@ -343,7 +393,7 @@ export const DatabaseAPI = {
       try {
         const { menus } = await import('../data/menu');
         
-        for (const [menuId, menuData] of Object.entries(menus)) {
+        for (const [, menuData] of Object.entries(menus)) {
           DatabaseAPI.menus.create(menuData);
         }
         
@@ -412,7 +462,7 @@ export const DatabaseAPI = {
           dbType: db ? 'sqlite' : 'json',
           environment: process.env.VERCEL === '1' ? 'vercel' : 'development',
           hasMenuData: !!process.env.MENU_DATA,
-          dbExists: db ? true : fs.existsSync(dbPath),
+          dbExists: db ? true : (typeof window === 'undefined' ? fs.existsSync(dbPath) : false),
           lastUpdated: new Date().toISOString()
         };
       } catch (error) {
@@ -431,9 +481,9 @@ export const DatabaseAPI = {
   },
 };
 
-// Inicializar
+// Inicializar (pero como init ahora es async, lo llamamos cuando sea necesario)
 if (typeof window === 'undefined') {
-  DatabaseAPI.init();
+  DatabaseAPI.init().catch(console.error);
 }
 
 export default DatabaseAPI;
