@@ -240,11 +240,23 @@ export default function AdminDashboard() {
         <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, maxWidth: 500 }}>
           <DatabaseIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
           <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
-            Base de Datos Vacía
+            {process.env.VERCEL === '1' ? 'Configuración Requerida' : 'Base de Datos Vacía'}
                 </Typography>
+          
+          {process.env.VERCEL === '1' ? (
+            <>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            No se encontraron menús en la base de datos. ¿Deseas inicializar con los datos por defecto?
+                Para usar el panel de administración en producción, necesitas configurar la variable de entorno MENU_DATA en Vercel.
                 </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                En desarrollo local, puedes inicializar la base de datos con los datos por defecto.
+          </Typography>
+            </>
+          ) : (
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+              No se encontraron menús en la base de datos. ¿Deseas inicializar con los datos por defecto?
+            </Typography>
+          )}
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {error}
@@ -255,21 +267,23 @@ export default function AdminDashboard() {
             <Button 
               variant="outlined" 
               onClick={() => router.push('/admin')}
-              disabled={initLoading}
-              >
+            disabled={initLoading}
+          >
               Volver al Login
-              </Button>
-            <Button 
-              variant="contained" 
-              startIcon={initLoading ? <CircularProgress size={20} /> : <DatabaseIcon />}
-            onClick={handleInitializeDatabase}
-              disabled={initLoading}
-              sx={{
-                background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
-              }}
-            >
-              {initLoading ? 'Inicializando...' : 'Inicializar Base de Datos'}
           </Button>
+            {process.env.VERCEL !== '1' && (
+              <Button 
+                variant="contained" 
+                startIcon={initLoading ? <CircularProgress size={20} /> : <DatabaseIcon />}
+                onClick={handleInitializeDatabase}
+                disabled={initLoading}
+                sx={{
+                  background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
+                }}
+              >
+                {initLoading ? 'Inicializando...' : 'Inicializar Base de Datos'}
+              </Button>
+            )}
           </Stack>
         </Paper>
       </Box>
