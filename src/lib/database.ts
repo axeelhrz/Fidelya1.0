@@ -1,9 +1,24 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import fs from 'fs';
 import { Product, MenuData } from '../app/types';
 
+interface MenuRow {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Crear el directorio data si no existe
+const dataDir = path.join(process.cwd(), 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
 // Crear la base de datos en el directorio del proyecto
-const dbPath = path.join(process.cwd(), 'data', 'menu.db');
+const dbPath = path.join(dataDir, 'menu.db');
 const db = new Database(dbPath);
 
 // Habilitar WAL mode para mejor concurrencia
@@ -11,40 +26,47 @@ db.pragma('journal_mode = WAL');
 
 // Crear las tablas si no existen
 const initDatabase = () => {
-  // Tabla de menús
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS menus (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      description TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+  try {
+    // Tabla de menús
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS menus (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  // Tabla de productos
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS products (
-      id TEXT PRIMARY KEY,
-      menu_id TEXT NOT NULL,
-      name TEXT NOT NULL,
-      price INTEGER NOT NULL,
-      description TEXT NOT NULL,
-      category TEXT NOT NULL CHECK (category IN ('Entrada', 'Principal', 'Bebida', 'Postre')),
-      is_recommended BOOLEAN DEFAULT FALSE,
-      is_vegan BOOLEAN DEFAULT FALSE,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (menu_id) REFERENCES menus (id) ON DELETE CASCADE
-    )
-  `);
+    // Tabla de productos
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS products (
+        id TEXT PRIMARY KEY,
+        menu_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        price INTEGER NOT NULL,
+        description TEXT NOT NULL,
+        category TEXT NOT NULL CHECK (category IN ('Entrada', 'Principal', 'Bebida', 'Postre')),
+        is_recommended BOOLEAN DEFAULT FALSE,
+        is_vegan BOOLEAN DEFAULT FALSE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (menu_id) REFERENCES menus (id) ON DELETE CASCADE
+      )
+    `);
 
-  // Índices para mejor rendimiento
-  db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_products_menu_id ON products (menu_id);
-    CREATE INDEX IF NOT EXISTS idx_products_category ON products (category);
-  `);
-};
+    // Índices para mejor rendimiento
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_products_menu_id ON products (menu_id);
+      CREATE INDEX IF NOT EXISTS idx_products_category ON products (category);
+    `);
+      console.log('Base de datos inicializada correctamente');
+      return true;
+    } catch (error) {
+      console.error('Error inicializando la base de datos:', error);
+      return false;
+    }
+        };
 
 // Preparar statements para mejor rendimiento
 const statements = {
@@ -88,21 +110,14 @@ const statements = {
   deleteProductsByMenu: db.prepare(`
     DELETE FROM products WHERE menu_id = ?
   `),
-};
+          };
 
 // Funciones de la API de base de datos
 export const DatabaseAPI = {
   // Inicializar la base de datos
   init: () => {
-    try {
-      initDatabase();
-      console.log('Base de datos inicializada correctamente');
-      return true;
-    } catch (error) {
-      console.error('Error inicializando la base de datos:', error);
-      return false;
-    }
-  },
+    return initDatabase();
+    },
 
   // Operaciones de menús
   menus: {
@@ -120,21 +135,19 @@ export const DatabaseAPI = {
       try {
         const menu = statements.getMenu.get(id) as any;
         if (!menu) return null;
-
         const products = statements.getProductsByMenu.all(id) as any[];
-        
         return {
           id: menu.id,
           name: menu.name,
           description: menu.description,
           products: products.map(p => ({
-            id: p.id,
-            name: p.name,
-            price: p.price,
-            description: p.description,
-            category: p.category as any,
-            isRecommended: Boolean(p.is_recommended),
-            isVegan: Boolean(p.is_vegan),
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          description: p.description,
+          category: p.category as any,
+          isRecommended: Boolean(p.is_recommended),
+          isVegan: Boolean(p.is_vegan),
           }))
         };
       } catch (error) {
@@ -161,7 +174,7 @@ export const DatabaseAPI = {
               isRecommended: Boolean(p.is_recommended),
               isVegan: Boolean(p.is_vegan),
             }))
-          };
+};
         });
       } catch (error) {
         console.error('Error obteniendo todos los menús:', error);
@@ -313,6 +326,19 @@ export const DatabaseAPI = {
       }
     },
 
+    // Limpiar toda la base de datos
+    clearAll: (): boolean => {
+      try {
+        db.exec('DELETE FROM products');
+        db.exec('DELETE FROM menus');
+        console.log('Base de datos limpiada correctamente');
+        return true;
+      } catch (error) {
+        console.error('Error limpiando la base de datos:', error);
+        return false;
+      }
+    },
+
     // Cerrar la conexión de la base de datos
     close: (): void => {
       try {
@@ -320,6 +346,29 @@ export const DatabaseAPI = {
         console.log('Conexión de base de datos cerrada');
       } catch (error) {
         console.error('Error cerrando la base de datos:', error);
+      }
+    },
+
+    // Obtener información de la base de datos
+    getInfo: () => {
+      try {
+        const menusCount = statements.getAllMenus.all().length;
+        const productsCount = db.prepare('SELECT COUNT(*) as count FROM products').get() as any;
+        
+        return {
+          menusCount,
+          productsCount: productsCount.count,
+          dbPath,
+          dbExists: fs.existsSync(dbPath)
+        };
+      } catch (error) {
+        console.error('Error obteniendo información de la base de datos:', error);
+        return {
+          menusCount: 0,
+          productsCount: 0,
+          dbPath,
+          dbExists: false
+        };
       }
     },
   },

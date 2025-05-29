@@ -119,9 +119,9 @@ export default function AdminDashboard() {
   };
 
   const handleInitializeDatabase = async () => {
-    const success = await initializeDatabase();
+    const success = await initializeDatabase(true); // Forzar la inicialización
     if (success) {
-      setSaveMessage('Base de datos inicializada correctamente');
+      setSaveMessage('Base de datos reinicializada correctamente');
       setTimeout(() => setSaveMessage(''), 3000);
       setShowInitDialog(false);
     }

@@ -22,8 +22,9 @@ interface DatabaseHook {
   deleteProduct: (id: string) => Promise<boolean>;
   
   // Utilidades
-  initializeDatabase: () => Promise<boolean>;
+  initializeDatabase: (force?: boolean) => Promise<boolean>;
   refreshMenus: () => Promise<void>;
+  getDatabaseInfo: () => Promise<any>;
 }
 
 export const useDatabase = (): DatabaseHook => {
@@ -215,13 +216,14 @@ export const useDatabase = (): DatabaseHook => {
   };
 
   // Inicializar la base de datos con datos del archivo
-  const initializeDatabase = async (): Promise<boolean> => {
+  const initializeDatabase = async (force: boolean = false): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
       
       await apiRequest('/api/database/seed', {
         method: 'POST',
+        body: JSON.stringify({ force }),
       });
       
       await refreshMenus();
@@ -231,6 +233,17 @@ export const useDatabase = (): DatabaseHook => {
       return false;
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Obtener información de la base de datos
+  const getDatabaseInfo = async () => {
+    try {
+      const data = await apiRequest('/api/database/seed');
+      return data.data;
+    } catch (error) {
+      console.error('Error obteniendo información de la base de datos:', error);
+      return null;
     }
   };
 
@@ -258,5 +271,6 @@ export const useDatabase = (): DatabaseHook => {
     deleteProduct,
     initializeDatabase,
     refreshMenus,
-  };
+    getDatabaseInfo,
+};
 };
