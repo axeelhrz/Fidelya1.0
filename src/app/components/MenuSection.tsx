@@ -11,6 +11,7 @@ interface MenuSectionProps {
   index: number;
 }
 
+
 const MotionBox = motion(Box);
 const MotionTypography = motion(Typography);
 const MotionDivider = motion(Divider);
@@ -24,19 +25,19 @@ export default function MenuSection({ title, products, index }: MenuSectionProps
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.15,
         delayChildren: index * 0.2,
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 30 },
     visible: { 
       opacity: 1, 
       y: 0,
       transition: { 
-        duration: 0.6, 
+        duration: 0.8, 
         ease: [0.04, 0.62, 0.23, 0.98] 
       } 
     }
@@ -44,25 +45,27 @@ export default function MenuSection({ title, products, index }: MenuSectionProps
 
   // Determinar productos recomendados (simulado - en una app real esto vendría de la base de datos)
   // Aquí simplemente marcamos el primer producto de cada categoría como recomendado
-  const recommendedProductIds = products.length > 0 ? [products[0].id] : [];
 
   return (
     <MotionBox
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      sx={{ mb: 8 }}
+      sx={{ mb: 10 }}
     >
       <MotionBox
         variants={itemVariants}
-        sx={{ mb: 4 }}
+        sx={{ mb: 6 }}
       >
         <MotionTypography
           variant="h4"
           sx={{
             fontWeight: 700,
+            fontSize: { xs: '1.75rem', sm: '2rem' },
+            color: '#F5F5F7',
             display: 'inline-block',
             position: 'relative',
+            mb: 1,
           }}
         >
           {title}
@@ -70,11 +73,11 @@ export default function MenuSection({ title, products, index }: MenuSectionProps
             component="span"
             sx={{
               position: 'absolute',
-              bottom: -2,
+              bottom: -4,
               left: 0,
-              width: '40%',
-              height: 3,
-              backgroundColor: 'secondary.main',
+              width: '50%',
+              height: 4,
+              background: 'linear-gradient(90deg, #F59E0B 0%, rgba(245, 158, 11, 0.3) 100%)',
               borderRadius: 4,
             }}
           />
@@ -84,12 +87,13 @@ export default function MenuSection({ title, products, index }: MenuSectionProps
       <MotionDivider 
         variants={itemVariants}
         sx={{ 
-          mb: 4,
-          opacity: 0.1,
+          mb: 6,
+          borderColor: '#3A3A3C',
+          opacity: 0.3,
         }} 
       />
 
-      <Stack spacing={3}>
+      <Stack spacing={2.5}>
         {products.map((product, productIndex) => (
           <motion.div
             key={product.id}
@@ -98,7 +102,6 @@ export default function MenuSection({ title, products, index }: MenuSectionProps
           >
             <ProductCard
               product={product}
-              isRecommended={recommendedProductIds.includes(product.id)}
             />
           </motion.div>
         ))}

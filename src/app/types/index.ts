@@ -6,4 +6,6 @@ export interface Product {
   price: number;
   description: string;
   category: ProductCategory;
+  isRecommended?: boolean;
+  isVegan?: boolean;
 }

@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
-// Componentes con motion
 const MotionBox = motion(Box);
 const MotionTypography = motion(Typography);
 const MotionStack = motion(Stack);
@@ -14,20 +13,19 @@ const MotionStack = motion(Stack);
 export default function HeroSection() {
   const router = useRouter();
 
-  // Variantes de animación
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.3,
+        staggerChildren: 0.3,
+        delayChildren: 0.2,
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 30 },
     visible: { 
       opacity: 1, 
       y: 0,
@@ -35,6 +33,17 @@ export default function HeroSection() {
         duration: 0.8, 
         ease: [0.04, 0.62, 0.23, 0.98] 
       } 
+    }
+  };
+
+  const floatingVariants = {
+    animate: {
+      y: [-10, 10, -10],
+      transition: {
+        duration: 6,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }
     }
   };
 
@@ -48,43 +57,54 @@ export default function HeroSection() {
         alignItems: 'center',
         position: 'relative',
         overflow: 'hidden',
-        background: 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(245,245,245,1) 100%)',
+        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
       }}
     >
-      {/* Elementos decorativos de fondo */}
-      <Box
+      {/* Elementos decorativos de fondo con blur */}
+      <MotionBox
+        variants={floatingVariants}
+        animate="animate"
         sx={{
           position: 'absolute',
-          top: '10%',
-          right: '5%',
+          top: '15%',
+          right: '10%',
+          width: '400px',
+          height: '400px',
+          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0) 70%)',
+          borderRadius: '50%',
+          filter: 'blur(40px)',
+          zIndex: 0,
+        }}
+      />
+      <MotionBox
+        variants={floatingVariants}
+        animate="animate"
+        style={{ animationDelay: '2s' }}
+        sx={{
+          position: 'absolute',
+          bottom: '20%',
+          left: '5%',
           width: '300px',
           height: '300px',
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0) 70%)',
+          background: 'radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, rgba(245, 158, 11, 0) 70%)',
           borderRadius: '50%',
+          filter: 'blur(40px)',
           zIndex: 0,
         }}
       />
-      <Box
+      <MotionBox
+        variants={floatingVariants}
+        animate="animate"
+        style={{ animationDelay: '4s' }}
         sx={{
           position: 'absolute',
-          bottom: '10%',
-          left: '5%',
-          width: '250px',
-          height: '250px',
-          background: 'radial-gradient(circle, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0) 70%)',
-          borderRadius: '50%',
-          zIndex: 0,
-        }}
-      />
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '40%',
-          left: '15%',
-          width: '150px',
-          height: '150px',
+          top: '50%',
+          left: '20%',
+          width: '200px',
+          height: '200px',
           background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0) 70%)',
           borderRadius: '50%',
+          filter: 'blur(30px)',
           zIndex: 0,
         }}
       />
@@ -96,46 +116,50 @@ export default function HeroSection() {
           animate="visible"
           sx={{
             textAlign: 'center',
-            px: { xs: 2, sm: 4 },
+            px: { xs: 3, sm: 4 },
           }}
         >
           <MotionTypography
             variant="titleLarge"
             variants={itemVariants}
             sx={{
-              mb: 2,
+              mb: 3,
               fontWeight: 800,
-              background: 'linear-gradient(135deg, #3B82F6 0%, #60a5fa 100%)',
+              fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
+              background: 'linear-gradient(135deg, #3B82F6 0%, #60a5fa 50%, #F59E0B 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              textShadow: '0 10px 30px rgba(59, 130, 246, 0.15)',
+              backgroundClip: 'text',
+              textShadow: '0 0 40px rgba(59, 130, 246, 0.3)',
             }}
           >
             MenuQR
           </MotionTypography>
 
           <MotionTypography
-            variant="h4"
+            variant="h5"
             color="text.secondary"
             variants={itemVariants}
             sx={{ 
-              mb: 6, 
-              fontWeight: 500,
+              mb: 8, 
+              fontWeight: 400,
               maxWidth: '600px',
               mx: 'auto',
-              lineHeight: 1.4,
+              lineHeight: 1.6,
+              fontSize: { xs: '1.1rem', sm: '1.25rem' },
             }}
           >
-            Una experiencia gastronómica digital de alto nivel
+            Experiencia gastronómica digital de alto nivel. 
+            Diseño premium, navegación intuitiva, sabores excepcionales.
           </MotionTypography>
 
           <MotionStack
             direction={{ xs: 'column', sm: 'row' }}
-            spacing={3}
+            spacing={4}
             justifyContent="center"
             alignItems="center"
             variants={itemVariants}
-            sx={{ mt: 4 }}
+            sx={{ mt: 6 }}
           >
             <motion.div 
               whileHover={{ scale: 1.05 }} 
@@ -148,17 +172,19 @@ export default function HeroSection() {
                 startIcon={<RestaurantMenuIcon />}
                 onClick={() => router.push('/menu')}
                 sx={{
-                  py: 1.8,
-                  px: 4,
-                  fontSize: '1rem',
-                  boxShadow: '0 10px 30px rgba(59, 130, 246, 0.2)',
+                  py: 2,
+                  px: 5,
+                  fontSize: '1.1rem',
+                  minWidth: { xs: '280px', sm: 'auto' },
                   background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
+                  boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)',
                   '&:hover': {
                     background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                    boxShadow: '0 12px 40px rgba(59, 130, 246, 0.4)',
                   },
                 }}
               >
-                Ver Menú
+                Explorar Menú
               </Button>
             </motion.div>
             
@@ -173,14 +199,22 @@ export default function HeroSection() {
                 startIcon={<AdminPanelSettingsIcon />}
                 onClick={() => router.push('/admin')}
                 sx={{
-                  py: 1.8,
-                  px: 4,
-                  fontSize: '1rem',
-                  borderWidth: '1.5px',
-                  borderColor: 'primary.main',
+                  py: 2,
+                  px: 5,
+                  fontSize: '1.1rem',
+                  minWidth: { xs: '280px', sm: 'auto' },
+                  borderColor: '#3B82F6',
+                  color: '#3B82F6',
+                  backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                  backdropFilter: 'blur(10px)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: '#2563eb',
+                    boxShadow: '0 8px 32px rgba(59, 130, 246, 0.2)',
+                  },
                 }}
               >
-                Administración
+                Panel Admin
               </Button>
             </motion.div>
           </MotionStack>
@@ -188,14 +222,19 @@ export default function HeroSection() {
           <MotionBox
             variants={itemVariants}
             sx={{ 
-              mt: 12,
-              opacity: 0.6,
-              fontSize: '0.75rem',
-              color: 'text.secondary',
+              mt: 16,
+              opacity: 0.4,
             }}
           >
-            <Typography variant="caption">
-              Potenciado por Assuriva
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                fontSize: '0.8rem',
+                color: 'text.secondary',
+                letterSpacing: '0.1em',
+              }}
+            >
+              POWERED BY ASSURIVA
             </Typography>
           </MotionBox>
         </MotionBox>
