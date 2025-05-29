@@ -4,10 +4,11 @@ import DatabaseAPI from '../../../../lib/database';
 // GET /api/menus/[id] - Obtener un menú específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const menu = DatabaseAPI.menus.get(params.id);
+    const { id } = await params;
+    const menu = DatabaseAPI.menus.get(id);
     
     if (!menu) {
       return NextResponse.json(
@@ -29,16 +30,17 @@ export async function GET(
 // PUT /api/menus/[id] - Actualizar un menú
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const menuData = await request.json();
-    menuData.id = params.id;
+    menuData.id = id;
 
     const success = DatabaseAPI.menus.update(menuData);
     
     if (success) {
-      const updatedMenu = DatabaseAPI.menus.get(params.id);
+      const updatedMenu = DatabaseAPI.menus.get(id);
       return NextResponse.json({ success: true, data: updatedMenu });
     } else {
       return NextResponse.json(
@@ -58,10 +60,11 @@ export async function PUT(
 // DELETE /api/menus/[id] - Eliminar un menú
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const success = DatabaseAPI.menus.delete(params.id);
+    const { id } = await params;
+    const success = DatabaseAPI.menus.delete(id);
     
     if (success) {
       return NextResponse.json({ success: true, message: 'Menú eliminado correctamente' });

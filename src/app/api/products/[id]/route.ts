@@ -4,11 +4,12 @@ import DatabaseAPI from '../../../../lib/database';
 // PUT /api/products/[id] - Actualizar un producto
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { product, menuId } = await request.json();
-    product.id = params.id;
+    product.id = id;
 
     const success = DatabaseAPI.products.update(product, menuId);
     
@@ -32,10 +33,11 @@ export async function PUT(
 // DELETE /api/products/[id] - Eliminar un producto
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const success = DatabaseAPI.products.delete(params.id);
+    const { id } = await params;
+    const success = DatabaseAPI.products.delete(id);
     
     if (success) {
       return NextResponse.json({ success: true, message: 'Producto eliminado correctamente' });
