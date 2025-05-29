@@ -30,7 +30,7 @@ export const DatabaseAPI = {
     console.log('Initializing Supabase database...');
     try {
       // Verificar conexión
-      const {error } = await supabase.from('menus').select('count').limit(1);
+      const { error } = await supabase.from('menus').select('count').limit(1);
       if (error) {
         console.error('Supabase connection error:', error);
         return false;
