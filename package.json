@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@types/mysql2": "^3.0.0",
+    "@types/mysql": "^2.15.26",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
