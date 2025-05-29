@@ -1,4 +1,62 @@
 import mysql from 'mysql2/promise';
+import { Product, MenuData } from '../app/types';
+
+// Configuración optimizada para Vercel
+const createConnection = async () => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.MYSQL_HOST || 'localhost',
+      port: parseInt(process.env.MYSQL_PORT || '3306'),
+      user: process.env.MYSQL_USER || 'root',
+      password: process.env.MYSQL_PASSWORD || '',
+      database: process.env.MYSQL_DATABASE || 'menuqr',
+      charset: 'utf8mb4',
+      // Configuraciones específicas para Vercel
+      ssl: process.env.MYSQL_SSL === 'true' ? {
+        rejectUnauthorized: false
+      } : false,
+      connectTimeout: 20000,
+      acquireTimeout: 20000,
+      timeout: 20000,
+      // Importante: cerrar conexiones rápidamente en serverless
+      idleTimeout: 1000,
+      // Configuraciones para PlanetScale u otros proveedores cloud
+      ...(process.env.MYSQL_SSL === 'true' && {
+        ssl: {
+          rejectUnauthorized: true
+        }
+      })
+    });
+      console.log('Conexión MySQL establecida correctamente');
+      return connection;
+    } catch (error) {
+    console.error('Error conectando a MySQL:', error);
+    throw error;
+    }
+};
+
+// Función helper para manejar conexiones en Vercel
+const withConnection = async <T>(
+  operation: (connection: mysql.Connection) => Promise<T>
+): Promise<T> => {
+  let connection: mysql.Connection | null = null;
+  try {
+    connection = await createConnection();
+    const result = await operation(connection);
+    return result;
+  } catch (error) {
+    console.error('Error en operación de base de datos:', error);
+    throw error;
+  } finally {
+    if (connection) {
+      try {
+        await connection.end();
+      } catch (closeError) {
+        console.error('Error cerrando conexión:', closeError);
+  }
+    }
+  }
+};
 
 // Crear un pool de conexiones para mejor rendimiento
 const pool = mysql.createPool({
@@ -21,7 +79,7 @@ const getConnection = async () => {
 };
 
 // Función para inicializar las tablas
-const initializeTables = async (connection: any) => {
+const initializeTables = async (connection: mysql.Connection) => {
   try {
     // Crear tabla de menús
     await connection.execute(`
@@ -61,139 +119,252 @@ const initializeTables = async (connection: any) => {
   }
 };
 
-// API de la base de datos MySQL
+// API de la base de datos MySQL optimizada para Vercel
 export const DatabaseAPI = {
   init: async (): Promise<boolean> => {
     console.log('Inicializando base de datos MySQL...');
-    try {
-      const connection = await getConnection();
-      const success = await initializeTables(connection);
-      await connection.release();
-      return success;
-    } catch (error) {
-      console.error('Error inicializando MySQL:', error);
-      return false;
-    }
+    return withConnection(async (connection) => {
+      return await initializeTables(connection);
+    });
   },
 
   menus: {
     create: async (menuData: MenuData): Promise<boolean> => {
       console.log('Creando menú en MySQL:', menuData.id);
-      const connection = await getConnection();
-      
-      try {
-        await connection.beginTransaction();
+      return withConnection(async (connection) => {
+        try {
+          await connection.beginTransaction();
 
-        // Insertar menú
-        await connection.execute(
-          'INSERT INTO menus (id, name, description) VALUES (?, ?, ?)',
-          [menuData.id, menuData.name, menuData.description]
-        );
-
-        // Insertar productos
-        if (menuData.products.length > 0) {
-          for (const product of menuData.products) {
+          // Insertar menú
           await connection.execute(
-              'INSERT INTO products (id, menu_id, name, price, description, category, is_recommended, is_vegan) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-              [
-                product.id,
-                menuData.id,
-                product.name,
-                product.price,
-                product.description,
-                product.category,
-                product.isRecommended || false,
-                product.isVegan || false
-              ]
-            );
-          }
-        }
+            'INSERT INTO menus (id, name, description) VALUES (?, ?, ?)',
+            [menuData.id, menuData.name, menuData.description]
+          );
 
-        await connection.commit();
-        console.log('Menú creado exitosamente en MySQL');
-        return true;
-      } catch (error) {
-        await connection.rollback();
-        console.error('Error creando menú en MySQL:', error);
-        return false;
-      } finally {
-        await connection.release();
-      }
+          // Insertar productos
+          if (menuData.products.length > 0) {
+            for (const product of menuData.products) {
+              await connection.execute(
+                'INSERT INTO products (id, menu_id, name, price, description, category, is_recommended, is_vegan) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                  product.id,
+                  menuData.id,
+                  product.name,
+                  product.price,
+                  product.description,
+                  product.category,
+                  product.isRecommended || false,
+                  product.isVegan || false
+                ]
+              );
+            }
+          }
+
+          await connection.commit();
+          console.log('Menú creado exitosamente en MySQL');
+          return true;
+        } catch (error) {
+          await connection.rollback();
+          console.error('Error creando menú en MySQL:', error);
+          return false;
+        }
+      });
     },
 
     get: async (id: string): Promise<MenuData | null> => {
       console.log('Obteniendo menú de MySQL:', id);
-      const connection = await getConnection();
-      
-      try {
-        // Obtener menú
-        const [menuRows]: any = await connection.execute(
-          'SELECT * FROM menus WHERE id = ?',
-          [id]
-        );
+      return withConnection(async (connection) => {
+        try {
+          // Obtener menú
+          const [menuRows]: any = await connection.execute(
+            'SELECT * FROM menus WHERE id = ?',
+            [id]
+          );
 
-        if (menuRows.length === 0) {
-        return null;
-      }
+          if (menuRows.length === 0) {
+            return null;
+          }
 
-        const menu = menuRows[0];
+          const menu = menuRows[0];
 
-        // Obtener productos
-        const [productRows]: any = await connection.execute(
-          'SELECT * FROM products WHERE menu_id = ? ORDER BY category, name',
-          [id]
-        );
+          // Obtener productos
+          const [productRows]: any = await connection.execute(
+            'SELECT * FROM products WHERE menu_id = ? ORDER BY category, name',
+            [id]
+          );
 
-        const menuData: MenuData = {
-          id: menu.id,
-          name: menu.name,
-          description: menu.description,
-          products: productRows.map((product: any) => ({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          description: product.description,
-          category: product.category,
-          isRecommended: product.is_recommended,
-          isVegan: product.is_vegan
-          }))
-        };
+          const menuData: MenuData = {
+            id: menu.id,
+            name: menu.name,
+            description: menu.description,
+            products: productRows.map((product: any) => ({
+              id: product.id,
+              name: product.name,
+              price: product.price,
+              description: product.description,
+              category: product.category,
+              isRecommended: product.is_recommended,
+              isVegan: product.is_vegan
+            }))
+          };
 
-        return menuData;
-      } catch (error) {
-        console.error('Error obteniendo menú de MySQL:', error);
-        return null;
-      } finally {
-        await connection.release();
-      }
+          return menuData;
+        } catch (error) {
+          console.error('Error obteniendo menú de MySQL:', error);
+          return null;
+        }
+      });
     },
 
     getAll: async (): Promise<MenuData[]> => {
       console.log('Obteniendo todos los menús de MySQL...');
-      const connection = await getConnection();
-      
-      try {
-        // Obtener todos los menús
-        const [menuRows]: any = await connection.execute(
-          'SELECT * FROM menus ORDER BY name'
-        );
+      return withConnection(async (connection) => {
+        try {
+          // Obtener todos los menús
+          const [menuRows]: any = await connection.execute(
+            'SELECT * FROM menus ORDER BY name'
+          );
 
-        if (menuRows.length === 0) {
-          return [];
-  }
-
-        // Obtener todos los productos
-        const [productRows]: any = await connection.execute(
-          'SELECT * FROM products ORDER BY menu_id, category, name'
-        );
-
-        // Agrupar productos por menú
-        const productsByMenu: Record<string, Product[]> = {};
-        productRows.forEach((product: any) => {
-          if (!productsByMenu[product.menu_id]) {
-            productsByMenu[product.menu_id] = [];
+          if (menuRows.length === 0) {
+            return [];
           }
-          productsByMenu[product.menu_id].push({
+
+          // Obtener todos los productos
+          const [productRows]: any = await connection.execute(
+            'SELECT * FROM products ORDER BY menu_id, category, name'
+          );
+
+          // Agrupar productos por menú
+          const productsByMenu: Record<string, Product[]> = {};
+          productRows.forEach((product: any) => {
+            if (!productsByMenu[product.menu_id]) {
+              productsByMenu[product.menu_id] = [];
+            }
+            productsByMenu[product.menu_id].push({
+              id: product.id,
+              name: product.name,
+              price: product.price,
+              description: product.description,
+              category: product.category,
+              isRecommended: product.is_recommended,
+              isVegan: product.is_vegan
+            });
+          });
+
+          // Construir menús completos
+          const menus: MenuData[] = menuRows.map((menu: any) => ({
+            id: menu.id,
+            name: menu.name,
+            description: menu.description,
+            products: productsByMenu[menu.id] || []
+          }));
+
+          console.log('Encontrados', menus.length, 'menús en MySQL');
+          return menus;
+        } catch (error) {
+          console.error('Error obteniendo menús de MySQL:', error);
+          return [];
+        }
+      });
+    },
+
+    update: async (menuData: MenuData): Promise<boolean> => {
+      console.log('Actualizando menú en MySQL:', menuData.id);
+      return withConnection(async (connection) => {
+        try {
+          const [result]: any = await connection.execute(
+            'UPDATE menus SET name = ?, description = ? WHERE id = ?',
+            [menuData.name, menuData.description, menuData.id]
+          );
+
+          return result.affectedRows > 0;
+        } catch (error) {
+          console.error('Error actualizando menú en MySQL:', error);
+          return false;
+        }
+      });
+    },
+
+    delete: async (id: string): Promise<boolean> => {
+      console.log('Eliminando menú de MySQL:', id);
+      return withConnection(async (connection) => {
+        try {
+          const [result]: any = await connection.execute(
+            'DELETE FROM menus WHERE id = ?',
+            [id]
+          );
+
+          return result.affectedRows > 0;
+        } catch (error) {
+          console.error('Error eliminando menú de MySQL:', error);
+          return false;
+        }
+      });
+    }
+  },
+
+  products: {
+    create: async (product: Product, menuId: string): Promise<boolean> => {
+      console.log('Creando producto en MySQL:', product.id);
+      return withConnection(async (connection) => {
+        try {
+          await connection.execute(
+            'INSERT INTO products (id, menu_id, name, price, description, category, is_recommended, is_vegan) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [product.id, menuId, product.name, product.price, product.description, product.category, product.isRecommended || false, product.isVegan || false]
+          );
+
+          return true;
+        } catch (error) {
+          console.error('Error creando producto en MySQL:', error);
+          return false;
+        }
+      });
+    },
+
+    update: async (product: Product): Promise<boolean> => {
+      console.log('Actualizando producto en MySQL:', product.id);
+      return withConnection(async (connection) => {
+        try {
+          const [result]: any = await connection.execute(
+            'UPDATE products SET name = ?, price = ?, description = ?, category = ?, is_recommended = ?, is_vegan = ? WHERE id = ?',
+            [product.name, product.price, product.description, product.category, product.isRecommended || false, product.isVegan || false, product.id]
+          );
+
+          return result.affectedRows > 0;
+        } catch (error) {
+          console.error('Error actualizando producto en MySQL:', error);
+          return false;
+        }
+      });
+    },
+
+    delete: async (id: string): Promise<boolean> => {
+      console.log('Eliminando producto de MySQL:', id);
+      return withConnection(async (connection) => {
+        try {
+          const [result]: any = await connection.execute(
+            'DELETE FROM products WHERE id = ?',
+            [id]
+          );
+
+          return result.affectedRows > 0;
+        } catch (error) {
+          console.error('Error eliminando producto de MySQL:', error);
+          return false;
+        }
+      });
+    },
+
+    getByMenu: async (menuId: string): Promise<Product[]> => {
+      console.log('Obteniendo productos del menú de MySQL:', menuId);
+      return withConnection(async (connection) => {
+        try {
+          const [rows]: any = await connection.execute(
+            'SELECT * FROM products WHERE menu_id = ? ORDER BY category, name',
+            [menuId]
+          );
+
+          const products: Product[] = rows.map((product: any) => ({
             id: product.id,
             name: product.name,
             price: product.price,
@@ -201,151 +372,14 @@ export const DatabaseAPI = {
             category: product.category,
             isRecommended: product.is_recommended,
             isVegan: product.is_vegan
-          });
-        });
+          }));
 
-        // Construir menús completos
-        const menus: MenuData[] = menuRows.map((menu: any) => ({
-          id: menu.id,
-          name: menu.name,
-          description: menu.description,
-          products: productsByMenu[menu.id] || []
-        }));
-
-        console.log('Encontrados', menus.length, 'menús en MySQL');
-        return menus;
-      } catch (error) {
-        console.error('Error obteniendo menús de MySQL:', error);
-        return [];
-      } finally {
-        await connection.release();
-      }
-    },
-
-    update: async (menuData: MenuData): Promise<boolean> => {
-      console.log('Actualizando menú en MySQL:', menuData.id);
-      const connection = await getConnection();
-      
-      try {
-        const [result]: any = await connection.execute(
-          'UPDATE menus SET name = ?, description = ? WHERE id = ?',
-          [menuData.name, menuData.description, menuData.id]
-        );
-
-        return result.affectedRows > 0;
-      } catch (error) {
-        console.error('Error actualizando menú en MySQL:', error);
-        return false;
-      } finally {
-        await connection.release();
-      }
-    },
-
-    delete: async (id: string): Promise<boolean> => {
-      console.log('Eliminando menú de MySQL:', id);
-      const connection = await getConnection();
-      
-      try {
-        const [result]: any = await connection.execute(
-          'DELETE FROM menus WHERE id = ?',
-          [id]
-        );
-
-        return result.affectedRows > 0;
-      } catch (error) {
-        console.error('Error eliminando menú de MySQL:', error);
-        return false;
-      } finally {
-        await connection.release();
-      }
-    }
-  },
-
-  products: {
-    create: async (product: Product, menuId: string): Promise<boolean> => {
-      console.log('Creando producto en MySQL:', product.id);
-      const connection = await getConnection();
-      
-      try {
-        await connection.execute(
-          'INSERT INTO products (id, menu_id, name, price, description, category, is_recommended, is_vegan) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [product.id, menuId, product.name, product.price, product.description, product.category, product.isRecommended || false, product.isVegan || false]
-        );
-
-        return true;
-      } catch (error) {
-        console.error('Error creando producto en MySQL:', error);
-        return false;
-      } finally {
-        await connection.release();
-      }
-    },
-
-    update: async (product: Product): Promise<boolean> => {
-      console.log('Actualizando producto en MySQL:', product.id);
-      const connection = await getConnection();
-      
-      try {
-        const [result]: any = await connection.execute(
-          'UPDATE products SET name = ?, price = ?, description = ?, category = ?, is_recommended = ?, is_vegan = ? WHERE id = ?',
-          [product.name, product.price, product.description, product.category, product.isRecommended || false, product.isVegan || false, product.id]
-        );
-
-        return result.affectedRows > 0;
-      } catch (error) {
-        console.error('Error actualizando producto en MySQL:', error);
-        return false;
-      } finally {
-        await connection.release();
-      }
-    },
-
-    delete: async (id: string): Promise<boolean> => {
-      console.log('Eliminando producto de MySQL:', id);
-      const connection = await getConnection();
-      
-      try {
-        const [result]: any = await connection.execute(
-          'DELETE FROM products WHERE id = ?',
-          [id]
-        );
-
-        return result.affectedRows > 0;
-      } catch (error) {
-        console.error('Error eliminando producto de MySQL:', error);
-        return false;
-      } finally {
-        await connection.release();
-      }
-    },
-
-    getByMenu: async (menuId: string): Promise<Product[]> => {
-      console.log('Obteniendo productos del menú de MySQL:', menuId);
-      const connection = await getConnection();
-      
-      try {
-        const [rows]: any = await connection.execute(
-          'SELECT * FROM products WHERE menu_id = ? ORDER BY category, name',
-          [menuId]
-        );
-
-        const products: Product[] = rows.map((product: any) => ({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          description: product.description,
-          category: product.category,
-          isRecommended: product.is_recommended,
-          isVegan: product.is_vegan
-        }));
-
-        return products;
-      } catch (error) {
-        console.error('Error obteniendo productos de MySQL:', error);
-        return [];
-      } finally {
-        await connection.release();
-      }
+          return products;
+        } catch (error) {
+          console.error('Error obteniendo productos de MySQL:', error);
+          return [];
+        }
+      });
     }
   },
 
@@ -399,92 +433,86 @@ export const DatabaseAPI = {
 
     hasData: async (): Promise<boolean> => {
       console.log('Verificando si la base de datos MySQL tiene datos...');
-      const connection = await getConnection();
-      
-      try {
-        const [rows]: any = await connection.execute(
-          'SELECT COUNT(*) as count FROM menus'
-        );
+      return withConnection(async (connection) => {
+        try {
+          const [rows]: any = await connection.execute(
+            'SELECT COUNT(*) as count FROM menus'
+          );
 
-        const hasData = rows[0].count > 0;
-        console.log('La base de datos tiene datos:', hasData);
-        return hasData;
-      } catch (error) {
-        console.error('Error verificando datos en MySQL:', error);
-        return false;
-      } finally {
-        await connection.release();
-      }
+          const hasData = rows[0].count > 0;
+          console.log('La base de datos tiene datos:', hasData);
+          return hasData;
+        } catch (error) {
+          console.error('Error verificando datos en MySQL:', error);
+          return false;
+        }
+      });
     },
 
     clearAll: async (): Promise<boolean> => {
       console.log('Limpiando todos los datos de MySQL...');
-      const connection = await getConnection();
-      
-      try {
-        await connection.beginTransaction();
-        
-        // Eliminar productos primero (por la clave foránea)
-        await connection.execute('DELETE FROM products');
-        
-        // Eliminar menús
-        await connection.execute('DELETE FROM menus');
-        
-        await connection.commit();
-        console.log('Base de datos MySQL limpiada exitosamente');
-        return true;
-      } catch (error) {
-        await connection.rollback();
-        console.error('Error limpiando base de datos MySQL:', error);
-        return false;
-      } finally {
-        await connection.release();
-      }
+      return withConnection(async (connection) => {
+        try {
+          await connection.beginTransaction();
+          
+          // Eliminar productos primero (por la clave foránea)
+          await connection.execute('DELETE FROM products');
+          
+          // Eliminar menús
+          await connection.execute('DELETE FROM menus');
+          
+          await connection.commit();
+          console.log('Base de datos MySQL limpiada exitosamente');
+          return true;
+        } catch (error) {
+          await connection.rollback();
+          console.error('Error limpiando base de datos MySQL:', error);
+          return false;
+        }
+      });
     },
 
     getInfo: async () => {
       console.log('Obteniendo información de la base de datos MySQL...');
-      const connection = await getConnection();
-      
-      try {
-        // Contar menús
-        const [menuRows]: any = await connection.execute(
-          'SELECT COUNT(*) as count FROM menus'
-        );
+      return withConnection(async (connection) => {
+        try {
+          // Contar menús
+          const [menuRows]: any = await connection.execute(
+            'SELECT COUNT(*) as count FROM menus'
+          );
 
-        // Contar productos
-        const [productRows]: any = await connection.execute(
-          'SELECT COUNT(*) as count FROM products'
-        );
+          // Contar productos
+          const [productRows]: any = await connection.execute(
+            'SELECT COUNT(*) as count FROM products'
+          );
 
-        const info = {
-          menusCount: menuRows[0].count,
-          productsCount: productRows[0].count,
-          dbType: 'mysql',
-          environment: 'production',
-          hasMenuData: true,
-          dbExists: true,
-          dbPath: 'mysql-database',
-          lastUpdated: new Date().toISOString()
-};
+          const info = {
+            menusCount: menuRows[0].count,
+            productsCount: productRows[0].count,
+            dbType: 'mysql',
+            environment: 'production',
+            hasMenuData: true,
+            dbExists: true,
+            dbPath: 'mysql-database',
+            lastUpdated: new Date().toISOString()
+          };
 
-        console.log('Información de la base de datos MySQL:', info);
-        return info;
-      } catch (error) {
-        console.error('Error obteniendo información de MySQL:', error);
-        return {
-          menusCount: 0,
-          productsCount: 0,
-          dbType: 'mysql-error',
-          environment: 'error',
-          hasMenuData: false,
-          dbExists: false,
-          dbPath: 'error',
-          lastUpdated: null
-        };
-      } finally {
-        await connection.release();
-      }
+          console.log('Información de la base de datos MySQL:', info);
+          return info;
+        } catch (error) {
+          console.error('Error obteniendo información de MySQL:', error);
+          return {
+            menusCount: 0,
+            productsCount: 0,
+            dbType: 'mysql-error',
+            environment: 'error',
+            hasMenuData: false,
+            dbExists: false,
+            dbPath: 'error',
+            lastUpdated: null
+          };
+        }
+      });
     }
   }
 };

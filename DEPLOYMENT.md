@@ -1,7 +1,14 @@
-# 🚀 Guía de Deployment en Vercel
+# 🚀 Guía de Deployment en Vercel con MySQL
 
-## Configuración inicial
+## Proveedores de MySQL recomendados para Vercel
 
-### 1. Configurar variable de entorno
+### 1. **PlanetScale** (Recomendado)
+- ✅ Optimizado para serverless
+- ✅ Escalado automático
+- ✅ SSL por defecto
+- ✅ Plan gratuito disponible
 
-1. Ejecuta el script para generar la variable de entorno:
+### 2. **MySQL** (Alternativa)
+- ✅ Escalado manual
+- ✅ SSL por defecto
+- ✅ Plan gratuito disponible

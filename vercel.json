@@ -1,8 +1,17 @@
 {
   "functions": {
     "src/app/api/**/*.ts": {
-      "maxDuration": 10
+      "maxDuration": 30
     }
+  },
+  "env": {
+    "DATABASE_TYPE": "mysql",
+    "MYSQL_HOST": "@mysql_host",
+    "MYSQL_PORT": "@mysql_port", 
+    "MYSQL_USER": "@mysql_user",
+    "MYSQL_PASSWORD": "@mysql_password",
+    "MYSQL_DATABASE": "@mysql_database",
+    "MYSQL_SSL": "@mysql_ssl"
   },
   "headers": [
     {
