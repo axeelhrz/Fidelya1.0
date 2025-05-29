@@ -327,26 +327,6 @@ export default function LoginForm() {
               </motion.div>
             </Box>
           </MotionPaper>
-
-          <MotionBox
-            variants={itemVariants}
-            sx={{ 
-              mt: 6,
-              textAlign: 'center',
-            }}
-          >
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                color: 'text.secondary',
-                fontSize: '0.8rem',
-                letterSpacing: '0.1em',
-                opacity: 0.6,
-              }}
-            >
-              POWERED BY ASSURIVA • ADMIN PANEL
-            </Typography>
-          </MotionBox>
         </MotionBox>
       </Container>
     </Box>

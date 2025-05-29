@@ -76,6 +76,7 @@ export default function HeroSection() {
           zIndex: 0,
         }}
       />
+      
       <MotionBox
         variants={floatingVariants}
         animate="animate"
@@ -92,6 +93,7 @@ export default function HeroSection() {
           zIndex: 0,
         }}
       />
+
       <MotionBox
         variants={floatingVariants}
         animate="animate"
@@ -218,25 +220,6 @@ export default function HeroSection() {
               </Button>
             </motion.div>
           </MotionStack>
-
-          <MotionBox
-            variants={itemVariants}
-            sx={{ 
-              mt: 16,
-              opacity: 0.4,
-            }}
-          >
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                fontSize: '0.8rem',
-                color: 'text.secondary',
-                letterSpacing: '0.1em',
-              }}
-            >
-              POWERED BY ASSURIVA
-            </Typography>
-          </MotionBox>
         </MotionBox>
       </Container>
     </Box>

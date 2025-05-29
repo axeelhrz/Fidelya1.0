@@ -5,7 +5,7 @@ export const initialProducts: Product[] = [
   {
     id: '1',
     name: 'Tartar de Atún Rojo',
-    price: 24.99,
+    price: 8500,
     description: 'Atún rojo de almadraba, aguacate, mango, sésamo negro y vinagreta de yuzu',
     category: 'Entrada',
     isRecommended: true,
@@ -14,7 +14,7 @@ export const initialProducts: Product[] = [
   {
     id: '2',
     name: 'Burrata Trufada',
-    price: 18.50,
+    price: 6200,
     description: 'Burrata artesanal con trufa negra, rúcula salvaje y reducción de balsámico',
     category: 'Entrada',
     isRecommended: false,
@@ -23,7 +23,7 @@ export const initialProducts: Product[] = [
   {
     id: '3',
     name: 'Carpaccio de Remolacha',
-    price: 16.00,
+    price: 4800,
     description: 'Láminas de remolacha, queso de cabra, nueces confitadas y aceite de hierbas',
     category: 'Entrada',
     isRecommended: false,
@@ -32,7 +32,7 @@ export const initialProducts: Product[] = [
   {
     id: '4',
     name: 'Ceviche Nikkei',
-    price: 22.00,
+    price: 7200,
     description: 'Pescado del día, leche de tigre, ají amarillo, camote y cancha serrana',
     category: 'Entrada',
     isRecommended: true,
@@ -43,7 +43,7 @@ export const initialProducts: Product[] = [
   {
     id: '5',
     name: 'Wagyu A5 Japonés',
-    price: 89.99,
+    price: 28500,
     description: 'Filete de wagyu A5, puré de wasabi, shiitakes salteados y salsa teriyaki',
     category: 'Principal',
     isRecommended: true,
@@ -52,7 +52,7 @@ export const initialProducts: Product[] = [
   {
     id: '6',
     name: 'Lubina en Costra de Sal',
-    price: 32.50,
+    price: 12800,
     description: 'Lubina salvaje, costra de sal marina, verduras de temporada y salsa verde',
     category: 'Principal',
     isRecommended: false,
@@ -61,7 +61,7 @@ export const initialProducts: Product[] = [
   {
     id: '7',
     name: 'Risotto de Trufa Blanca',
-    price: 28.00,
+    price: 9500,
     description: 'Arroz carnaroli, trufa blanca de Alba, parmesano 24 meses y mantequilla clarificada',
     category: 'Principal',
     isRecommended: false,
@@ -70,7 +70,7 @@ export const initialProducts: Product[] = [
   {
     id: '8',
     name: 'Buddha Bowl Supremo',
-    price: 19.50,
+    price: 5800,
     description: 'Quinoa, aguacate, edamame, kimchi, tahini, semillas y proteína vegetal',
     category: 'Principal',
     isRecommended: true,
@@ -79,7 +79,7 @@ export const initialProducts: Product[] = [
   {
     id: '9',
     name: 'Cordero Patagónico',
-    price: 42.00,
+    price: 15200,
     description: 'Rack de cordero, puré de berenjenas ahumadas, chimichurri y papas confitadas',
     category: 'Principal',
     isRecommended: false,
@@ -90,7 +90,7 @@ export const initialProducts: Product[] = [
   {
     id: '10',
     name: 'Agua San Pellegrino',
-    price: 4.50,
+    price: 1200,
     description: 'Agua mineral italiana con gas natural, botella de cristal 750ml',
     category: 'Bebida',
     isRecommended: false,
@@ -99,7 +99,7 @@ export const initialProducts: Product[] = [
   {
     id: '11',
     name: 'Kombucha Artesanal',
-    price: 8.00,
+    price: 2800,
     description: 'Fermentado probiótico de té verde, jengibre y limón orgánico',
     category: 'Bebida',
     isRecommended: true,
@@ -108,8 +108,8 @@ export const initialProducts: Product[] = [
   {
     id: '12',
     name: 'Vino Tinto Reserva',
-    price: 12.50,
-    description: 'Copa de Tempranillo reserva, D.O. Ribera del Duero, notas a frutos rojos',
+    price: 4200,
+    description: 'Copa de Malbec reserva, D.O. Mendoza, notas a frutos rojos',
     category: 'Bebida',
     isRecommended: false,
     isVegan: true,
@@ -117,7 +117,7 @@ export const initialProducts: Product[] = [
   {
     id: '13',
     name: 'Cóctel Signature',
-    price: 15.00,
+    price: 3800,
     description: 'Gin premium, tónica artesanal, pepino, albahaca y twist de lima',
     category: 'Bebida',
     isRecommended: true,
@@ -128,7 +128,7 @@ export const initialProducts: Product[] = [
   {
     id: '14',
     name: 'Soufflé de Chocolate',
-    price: 14.50,
+    price: 4500,
     description: 'Soufflé tibio de chocolate Valrhona 70%, helado de vainilla bourbon',
     category: 'Postre',
     isRecommended: true,
@@ -137,7 +137,7 @@ export const initialProducts: Product[] = [
   {
     id: '15',
     name: 'Tiramisú Deconstructado',
-    price: 12.00,
+    price: 3800,
     description: 'Mascarpone, café etíope, cacao en polvo y bizcocho de soletilla',
     category: 'Postre',
     isRecommended: false,
@@ -146,7 +146,7 @@ export const initialProducts: Product[] = [
   {
     id: '16',
     name: 'Tarta de Limón Yuzu',
-    price: 11.50,
+    price: 3500,
     description: 'Base de galleta, crema de yuzu, merengue italiano y ralladura de limón',
     category: 'Postre',
     isRecommended: false,
@@ -155,7 +155,7 @@ export const initialProducts: Product[] = [
   {
     id: '17',
     name: 'Helado Vegano de Coco',
-    price: 9.00,
+    price: 2800,
     description: 'Helado artesanal de coco, coulis de mango y granola de almendras',
     category: 'Postre',
     isRecommended: true,

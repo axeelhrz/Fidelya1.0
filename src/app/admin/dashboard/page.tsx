@@ -32,6 +32,7 @@ const MotionBox = motion(Box);
 const MotionTypography = motion(Typography);
 const MotionPaper = motion(Paper);
 const MotionContainer = motion(Container);
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
@@ -170,6 +171,7 @@ export default function AdminDashboardPage() {
           zIndex: 0,
           }}
       />
+
       <MotionBox
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 0.3, scale: 1 }}
@@ -671,7 +673,7 @@ export default function AdminDashboardPage() {
               opacity: 0.6,
             }}
           >
-            POWERED BY ASSURIVA • ADMIN DASHBOARD 2025
+            PANEL ADMINISTRATIVO • MENÚ DIGITAL 2025
           </Typography>
         </MotionBox>
       </MotionContainer>

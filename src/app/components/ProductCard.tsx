@@ -24,6 +24,15 @@ export default function ProductCard({
   onEdit, 
   onDelete 
 }: ProductCardProps) {
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
   return (
     <MotionPaper
       initial={{ opacity: 0, y: 30 }}
@@ -161,7 +170,7 @@ export default function ProductCard({
                 textAlign: 'right',
               }}
             >
-              €{product.price.toFixed(2)}
+              {formatPrice(product.price)}
             </Typography>
           </Stack>
           
