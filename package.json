@@ -16,6 +16,7 @@
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.14.19",
     "@mui/material": "^5.14.20",
+    "@supabase/supabase-js": "^2.49.8",
     "framer-motion": "^10.16.16",
     "next": "15.3.2",
     "qrcode.react": "^4.2.0",

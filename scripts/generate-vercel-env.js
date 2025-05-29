@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Importar los datos del menú
 const menuDataPath = path.join(__dirname, '../src/data/menu.ts');
@@ -83,8 +83,8 @@ MENU_DATA=${jsonData}
 }
 
 // Ejecutar si se llama directamente
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   generateVercelEnv();
 }
 
-module.exports = { generateVercelEnv, extractMenuData };
+export { generateVercelEnv, extractMenuData };

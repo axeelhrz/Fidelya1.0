@@ -5,7 +5,7 @@ import DatabaseAPI from '../../../lib/database-json';
 export async function GET() {
   try {
     console.log('=== GET /api/menus ===');
-    const menus = DatabaseAPI.menus.getAll();
+    const menus = await DatabaseAPI.menus.getAll();
     console.log('Returning menus:', menus.length);
     return NextResponse.json({ success: true, data: menus });
   } catch (error) {
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const success = DatabaseAPI.menus.create(menuData);
+    const success = await DatabaseAPI.menus.create(menuData);
     
     if (success) {
       return NextResponse.json({ success: true, data: menuData });

@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import DatabaseAPI from '../../../../lib/database-json';
-
 // POST /api/database/seed - Inicializar la base de datos con datos del archivo
 export async function POST(request: NextRequest) {
   try {
@@ -9,8 +7,11 @@ export async function POST(request: NextRequest) {
     const { force = false } = body;
     console.log('Seed request with force:', force);
 
+    const DatabaseAPI = await import('../../../../lib/database').then(m => m.default);
+    const db = await DatabaseAPI;
+
     // Verificar si ya hay datos (solo si no es forzado)
-    if (!force && DatabaseAPI.utils.hasData()) {
+    if (!force && await db.utils.hasData()) {
       console.log('Database already has data, not seeding');
       return NextResponse.json({
         success: false,
@@ -21,15 +22,15 @@ export async function POST(request: NextRequest) {
     // Si es forzado, limpiar la base de datos primero
     if (force) {
       console.log('Force flag set, clearing database first');
-      DatabaseAPI.utils.clearAll();
+      await db.utils.clearAll();
     }
 
     console.log('Starting database seeding...');
-    const success = await DatabaseAPI.utils.seedFromFile();
+    const success = await db.utils.seedFromFile();
     console.log('Seeding result:', success);
     
     if (success) {
-      const info = DatabaseAPI.utils.getInfo();
+      const info = await db.utils.getInfo();
       console.log('Database info after seeding:', info);
       return NextResponse.json({
         success: true,
@@ -55,7 +56,9 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     console.log('=== GET /api/database/seed ===');
-    const info = DatabaseAPI.utils.getInfo();
+    const DatabaseAPI = await import('../../../../lib/database').then(m => m.default);
+    const db = await DatabaseAPI;
+    const info = await db.utils.getInfo();
     console.log('Database info:', info);
     return NextResponse.json({
       success: true,
