@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import DatabaseAPI from '../../../lib/database-hybrid';
+import DatabaseAPI from '../../../lib/database-json';
 
 // GET /api/menus - Obtener todos los menús
 export async function GET() {
   try {
+    console.log('=== GET /api/menus ===');
     const menus = DatabaseAPI.menus.getAll();
+    console.log('Returning menus:', menus.length);
     return NextResponse.json({ success: true, data: menus });
   } catch (error) {
     console.error('Error en GET /api/menus:', error);
@@ -18,7 +20,9 @@ export async function GET() {
 // POST /api/menus - Crear un nuevo menú
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== POST /api/menus ===');
     const menuData = await request.json();
+    console.log('Creating menu:', menuData);
     
     if (!menuData.id || !menuData.name || !menuData.description) {
       return NextResponse.json(

@@ -2,71 +2,100 @@ import fs from 'fs';
 import path from 'path';
 import { Product, MenuData } from '../app/types';
 
-// Estructura de la base de datos
+// Estructura de la base de datos JSON
 interface DatabaseStructure {
   menus: Record<string, MenuData>;
   lastUpdated: string;
 }
 
-// En producción, usaremos una variable de entorno para almacenar los datos
-const isProduction = process.env.NODE_ENV === 'production';
-const isVercel = process.env.VERCEL === '1';
-
-// Función para obtener datos desde variable de entorno o archivo
-const getStoredData = (): DatabaseStructure => {
-  // En Vercel, intentar leer desde variable de entorno
-  if (isVercel && process.env.MENU_DATA) {
-    try {
-      return JSON.parse(process.env.MENU_DATA);
-      } catch (error) {
-      console.error('Error parsing MENU_DATA from environment:', error);
-  }
-  }
-
-  // En desarrollo o si no hay variable de entorno, usar archivo
-if (typeof window === 'undefined') {
-    try {
+// Variables para el sistema de archivos
       const dataDir = path.join(process.cwd(), 'data');
       const dbPath = path.join(dataDir, 'menu.json');
       
-      if (fs.existsSync(dbPath)) {
-        const data = fs.readFileSync(dbPath, 'utf8');
-        return JSON.parse(data);
-}
-    } catch (error) {
-      console.error('Error reading local database:', error);
+// Función para asegurar que el directorio existe
+const ensureDataDir = () => {
+  if (typeof window !== 'undefined') return;
+  try {
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+      console.log('Data directory created:', dataDir);
     }
+  } catch (error) {
+    console.error('Error creating data directory:', error);
   }
-
-  // Datos por defecto
-  return {
-    menus: {},
-    lastUpdated: new Date().toISOString()
-  };
 };
 
-// Función para guardar datos (solo funciona en desarrollo)
-const saveData = (data: DatabaseStructure): boolean => {
-  if (isVercel) {
-    console.warn('Cannot save data in Vercel production environment');
+// Leer la base de datos
+const readDatabase = (): DatabaseStructure => {
+  if (typeof window !== 'undefined') {
+    return { menus: {}, lastUpdated: new Date().toISOString() };
+  }
+
+  // En Vercel, usar variable de entorno
+  if (process.env.VERCEL === '1' && process.env.MENU_DATA) {
+      try {
+      console.log('Reading from MENU_DATA environment variable');
+      return JSON.parse(process.env.MENU_DATA);
+      } catch (error) {
+      console.error('Error parsing MENU_DATA:', error);
+      }
+  }
+      try {
+    ensureDataDir();
+    
+    if (fs.existsSync(dbPath)) {
+      console.log('Reading database from file:', dbPath);
+      const data = fs.readFileSync(dbPath, 'utf8');
+      const parsed = JSON.parse(data);
+      console.log('Database loaded, menus:', Object.keys(parsed.menus || {}));
+      return parsed;
+    } else {
+      console.log('Database file does not exist, creating default');
+    }
+      } catch (error) {
+    console.error('Error reading database:', error);
+      }
+
+  // Datos por defecto
+  const defaultData: DatabaseStructure = {
+    menus: {},
+    lastUpdated: new Date().toISOString()
+        };
+  
+  // Intentar crear el archivo por defecto
+  if (typeof window === 'undefined' && process.env.VERCEL !== '1') {
+    try {
+      ensureDataDir();
+      fs.writeFileSync(dbPath, JSON.stringify(defaultData, null, 2));
+      console.log('Default database file created');
+      } catch (error) {
+      console.error('Error creating default database file:', error);
+    }
+  }
+  
+  return defaultData;
+        };
+
+// Escribir a la base de datos
+const writeDatabase = (data: DatabaseStructure): boolean => {
+  if (typeof window !== 'undefined') {
+    console.warn('Cannot write database on client side');
+    return false;
+}
+
+  if (process.env.VERCEL === '1') {
+    console.warn('Cannot write database in Vercel production environment');
     return false;
   }
 
-  if (typeof window !== 'undefined') return false;
-
   try {
-    const dataDir = path.join(process.cwd(), 'data');
-    const dbPath = path.join(dataDir, 'menu.json');
-    
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-    
+    ensureDataDir();
     data.lastUpdated = new Date().toISOString();
     fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
+    console.log('Database written successfully, menus:', Object.keys(data.menus));
     return true;
   } catch (error) {
-    console.error('Error saving data:', error);
+    console.error('Error writing database:', error);
     return false;
   }
 };
@@ -74,25 +103,27 @@ const saveData = (data: DatabaseStructure): boolean => {
 // API de la base de datos
 export const DatabaseAPI = {
   init: () => {
-    console.log('Database API initialized for environment:', {
-      isProduction,
-      isVercel,
-      hasMenuData: !!process.env.MENU_DATA
-    });
-    return true;
+    console.log('Initializing JSON database...');
+    try {
+      ensureDataDir();
+      const data = readDatabase();
+      console.log('Database initialized with', Object.keys(data.menus).length, 'menus');
+      return true;
+    } catch (error) {
+      console.error('Error initializing database:', error);
+      return false;
+    }
   },
 
   menus: {
     create: (menuData: MenuData): boolean => {
-      if (isVercel) {
-        console.warn('Cannot create menu in production environment');
-        return false;
-      }
-      
+      console.log('Creating menu:', menuData.id);
       try {
-        const db = getStoredData();
+        const db = readDatabase();
         db.menus[menuData.id] = menuData;
-        return saveData(db);
+        const success = writeDatabase(db);
+        console.log('Menu created:', success);
+        return success;
       } catch (error) {
         console.error('Error creating menu:', error);
         return false;
@@ -100,9 +131,12 @@ export const DatabaseAPI = {
     },
 
     get: (id: string): MenuData | null => {
+      console.log('Getting menu:', id);
       try {
-        const db = getStoredData();
-        return db.menus[id] || null;
+        const db = readDatabase();
+        const menu = db.menus[id] || null;
+        console.log('Menu found:', !!menu);
+        return menu;
       } catch (error) {
         console.error('Error getting menu:', error);
         return null;
@@ -110,9 +144,12 @@ export const DatabaseAPI = {
     },
 
     getAll: (): MenuData[] => {
+      console.log('Getting all menus...');
       try {
-        const db = getStoredData();
-        return Object.values(db.menus);
+        const db = readDatabase();
+        const menus = Object.values(db.menus);
+        console.log('Found', menus.length, 'menus');
+        return menus;
       } catch (error) {
         console.error('Error getting all menus:', error);
         return [];
@@ -120,17 +157,16 @@ export const DatabaseAPI = {
     },
 
     update: (menuData: MenuData): boolean => {
-      if (isVercel) {
-        console.warn('Cannot update menu in production environment');
-        return false;
-      }
-      
+      console.log('Updating menu:', menuData.id);
       try {
-        const db = getStoredData();
+        const db = readDatabase();
         if (db.menus[menuData.id]) {
           db.menus[menuData.id] = { ...db.menus[menuData.id], ...menuData };
-          return saveData(db);
+          const success = writeDatabase(db);
+          console.log('Menu updated:', success);
+          return success;
         }
+        console.log('Menu not found for update');
         return false;
       } catch (error) {
         console.error('Error updating menu:', error);
@@ -139,17 +175,16 @@ export const DatabaseAPI = {
     },
 
     delete: (id: string): boolean => {
-      if (isVercel) {
-        console.warn('Cannot delete menu in production environment');
-        return false;
-      }
-      
+      console.log('Deleting menu:', id);
       try {
-        const db = getStoredData();
+        const db = readDatabase();
         if (db.menus[id]) {
           delete db.menus[id];
-          return saveData(db);
+          const success = writeDatabase(db);
+          console.log('Menu deleted:', success);
+          return success;
         }
+        console.log('Menu not found for deletion');
         return false;
       } catch (error) {
         console.error('Error deleting menu:', error);
@@ -160,17 +195,16 @@ export const DatabaseAPI = {
 
   products: {
     create: (product: Product, menuId: string): boolean => {
-      if (isVercel) {
-        console.warn('Cannot create product in production environment');
-        return false;
-      }
-      
+      console.log('Creating product:', product.id, 'in menu:', menuId);
       try {
-        const db = getStoredData();
+        const db = readDatabase();
         if (db.menus[menuId]) {
           db.menus[menuId].products.push(product);
-          return saveData(db);
+          const success = writeDatabase(db);
+          console.log('Product created:', success);
+          return success;
         }
+        console.log('Menu not found for product creation');
         return false;
       } catch (error) {
         console.error('Error creating product:', error);
@@ -179,20 +213,20 @@ export const DatabaseAPI = {
     },
 
     update: (product: Product, menuId: string): boolean => {
-      if (isVercel) {
-        console.warn('Cannot update product in production environment');
-        return false;
-      }
-      
+      console.log('Updating product:', product.id, 'in menu:', menuId);
       try {
-        const db = getStoredData();
+        const db = readDatabase();
         if (db.menus[menuId]) {
           const productIndex = db.menus[menuId].products.findIndex(p => p.id === product.id);
           if (productIndex !== -1) {
             db.menus[menuId].products[productIndex] = product;
-            return saveData(db);
+            const success = writeDatabase(db);
+            console.log('Product updated:', success);
+            return success;
           }
+          console.log('Product not found for update');
         }
+        console.log('Menu not found for product update');
         return false;
       } catch (error) {
         console.error('Error updating product:', error);
@@ -201,20 +235,19 @@ export const DatabaseAPI = {
     },
 
     delete: (id: string): boolean => {
-      if (isVercel) {
-        console.warn('Cannot delete product in production environment');
-        return false;
-      }
-      
+      console.log('Deleting product:', id);
       try {
-        const db = getStoredData();
+        const db = readDatabase();
         for (const menuId in db.menus) {
           const productIndex = db.menus[menuId].products.findIndex(p => p.id === id);
           if (productIndex !== -1) {
             db.menus[menuId].products.splice(productIndex, 1);
-            return saveData(db);
+            const success = writeDatabase(db);
+            console.log('Product deleted:', success);
+            return success;
           }
         }
+        console.log('Product not found for deletion');
         return false;
       } catch (error) {
         console.error('Error deleting product:', error);
@@ -223,9 +256,12 @@ export const DatabaseAPI = {
     },
 
     getByMenu: (menuId: string): Product[] => {
+      console.log('Getting products for menu:', menuId);
       try {
-        const db = getStoredData();
-        return db.menus[menuId]?.products || [];
+        const db = readDatabase();
+        const products = db.menus[menuId]?.products || [];
+        console.log('Found', products.length, 'products');
+        return products;
       } catch (error) {
         console.error('Error getting products:', error);
         return [];
@@ -235,20 +271,21 @@ export const DatabaseAPI = {
 
   utils: {
     seedFromFile: async (): Promise<boolean> => {
-      if (isVercel) {
-        console.warn('Cannot seed database in production environment');
-        return false;
-      }
-      
+      console.log('Seeding database from file...');
       try {
         const { menus } = await import('../data/menu');
-        const db = getStoredData();
+        console.log('Loaded menus from file:', Object.keys(menus));
+        
+        const db = readDatabase();
         
         for (const [menuId, menuData] of Object.entries(menus)) {
+          console.log('Adding menu to database:', menuId);
           db.menus[menuId] = menuData;
         }
         
-        return saveData(db);
+        const success = writeDatabase(db);
+        console.log('Database seeded successfully:', success);
+        return success;
       } catch (error) {
         console.error('Error seeding database:', error);
         return false;
@@ -256,9 +293,12 @@ export const DatabaseAPI = {
     },
 
     exportToJSON: (): string => {
+      console.log('Exporting database to JSON...');
       try {
-        const db = getStoredData();
-        return JSON.stringify(db.menus, null, 2);
+        const db = readDatabase();
+        const exported = JSON.stringify(db.menus, null, 2);
+        console.log('Database exported successfully');
+        return exported;
       } catch (error) {
         console.error('Error exporting database:', error);
         return '{}';
@@ -266,9 +306,12 @@ export const DatabaseAPI = {
     },
 
     hasData: (): boolean => {
+      console.log('Checking if database has data...');
       try {
-        const db = getStoredData();
-        return Object.keys(db.menus).length > 0;
+        const db = readDatabase();
+        const hasData = Object.keys(db.menus).length > 0;
+        console.log('Database has data:', hasData);
+        return hasData;
       } catch (error) {
         console.error('Error checking database data:', error);
         return false;
@@ -276,15 +319,13 @@ export const DatabaseAPI = {
     },
 
     clearAll: (): boolean => {
-      if (isVercel) {
-        console.warn('Cannot clear database in production environment');
-        return false;
-      }
-      
+      console.log('Clearing all database data...');
       try {
-        const db = getStoredData();
+        const db = readDatabase();
         db.menus = {};
-        return saveData(db);
+        const success = writeDatabase(db);
+        console.log('Database cleared successfully:', success);
+        return success;
       } catch (error) {
         console.error('Error clearing database:', error);
         return false;
@@ -292,27 +333,35 @@ export const DatabaseAPI = {
     },
 
     getInfo: () => {
+      console.log('Getting database info...');
       try {
-        const db = getStoredData();
+        const db = readDatabase();
         const menusCount = Object.keys(db.menus).length;
         const productsCount = Object.values(db.menus).reduce((total, menu) => total + menu.products.length, 0);
         
-        return {
+        const info = {
           menusCount,
           productsCount,
-          environment: isVercel ? 'vercel' : 'development',
+          dbType: 'json',
+          environment: process.env.VERCEL === '1' ? 'vercel' : 'development',
           hasMenuData: !!process.env.MENU_DATA,
-          dbExists: !isVercel,
+          dbExists: typeof window === 'undefined' ? fs.existsSync(dbPath) : false,
+          dbPath: typeof window === 'undefined' ? dbPath : 'client-side',
           lastUpdated: db.lastUpdated
         };
+        
+        console.log('Database info:', info);
+        return info;
       } catch (error) {
         console.error('Error getting database info:', error);
         return {
           menusCount: 0,
           productsCount: 0,
+          dbType: 'error',
           environment: 'error',
           hasMenuData: false,
           dbExists: false,
+          dbPath: 'error',
           lastUpdated: null
         };
       }
@@ -320,8 +369,9 @@ export const DatabaseAPI = {
   },
 };
 
-// Inicializar la base de datos
+// Inicializar la base de datos al importar el módulo
 if (typeof window === 'undefined') {
+  console.log('Initializing database on module load...');
   DatabaseAPI.init();
 }
 
