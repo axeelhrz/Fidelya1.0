@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Stack, Container, Chip, IconButton, CircularProgress } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, Paper, Stack, Container, Chip, IconButton } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams } from 'next/navigation';
 import { ProductCategory, MenuData } from '../types';
 import MenuSection from '../components/MenuSection';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -18,44 +17,13 @@ const MotionPaper = motion(Paper);
 const MotionTypography = motion(Typography);
 const MotionContainer = motion(Container);
 
-export default function MenuContent() {
+export default function MenuContent({ menu }: MenuContentProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const menuId = searchParams.get('id') || 'menu-bar-noche';
-  
-  const [menuData, setMenuData] = useState<MenuData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
   const categories: ProductCategory[] = ['Entrada', 'Principal', 'Bebida', 'Postre'];
 
-  useEffect(() => {
-    const loadMenu = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await fetch(`/api/menus/${menuId}`);
-        const data = await response.json();
-        
-        if (data.success) {
-          setMenuData(data.data);
-        } else {
-          setError(data.error || 'Menú no encontrado');
-        }
-      } catch (error) {
-        console.error('Error cargando menú:', error);
-        setError('Error cargando el menú');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMenu();
-  }, [menuId]);
-
-  const products = menuData?.products || [];
+  const products = menu?.products || [];
   const productsByCategory = categories.map(category => ({
     category,
     products: products.filter(p => p.category === category)
@@ -92,62 +60,10 @@ export default function MenuContent() {
     ? productsByCategory
     : productsByCategory.filter(group => group.category === activeCategory);
 
-  if (loading) {
-    return (
-      <Box sx={{ 
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
-      }}>
-        <Stack alignItems="center" spacing={2}>
-          <CircularProgress size={60} />
-          <Typography variant="h6" color="text.secondary">
-            Cargando menú...
-          </Typography>
-        </Stack>
-      </Box>
-    );
-  }
-
-  if (error || !menuData) {
-    return (
-      <Box sx={{ 
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
-        p: 4,
-      }}>
-        <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, maxWidth: 400 }}>
-          <RestaurantMenuIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
-          <Typography variant="h6" color="error" sx={{ mb: 2 }}>
-            {error || 'Menú no encontrado'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            El menú que buscas no existe o no está disponible en este momento.
-          </Typography>
-          <IconButton 
-            onClick={() => router.push('/')}
-            sx={{ 
-              color: '#3B82F6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.2)' }
-            }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-        </Paper>
-      </Box>
-    );
-  }
-
   return (
     <Box sx={{ 
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
       pb: 4,
     }}>
       <MotionContainer 
@@ -188,10 +104,10 @@ export default function MenuContent() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                {menuData.name}
+                {menu.name}
               </MotionTypography>
               <Typography variant="body2" color="text.secondary">
-                {menuData.description}
+                {menu.description}
               </Typography>
             </Box>
           </Stack>
