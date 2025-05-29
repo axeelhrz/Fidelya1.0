@@ -125,13 +125,11 @@ export default function LoginForm() {
               <Typography variant="body1" color="text.secondary" textAlign="center">
                 Ingresa tu contraseña para acceder
               </Typography>
-              </motion.div>
-            <motion.form 
-              variants={itemVariants}
-              onSubmit={handleLogin}
-              style={{ width: '100%' }}
-            >
-              <Stack spacing={3}>
+            </motion.div>
+            
+            <motion.div variants={itemVariants} style={{ width: '100%' }}>
+              <form onSubmit={handleLogin} style={{ width: '100%' }}>
+                <Stack spacing={3}>
                 <TextField
                   label="Contraseña"
                   type={showPassword ? 'text' : 'password'}
@@ -187,13 +185,13 @@ export default function LoginForm() {
                     }
                   }}
                 >
-                  {isLoading ? 'Verificando...' : 'Ingresar'}
                 </Button>
-              </Stack>
-            </motion.form>
-
+                </Stack>
+              </form>
+            </motion.div>
+            
             <motion.div variants={itemVariants}>
-              <Typography variant="caption" color="text.secondary" textAlign="center">
+              <Typography variant="body2" color="text.secondary" textAlign="center">
                 Contraseña por defecto: admin123
               </Typography>
             </motion.div>

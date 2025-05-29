@@ -3,12 +3,30 @@ import path from 'path';
 import fs from 'fs';
 import { Product, MenuData } from '../app/types';
 
+// Database result interfaces
 interface MenuRow {
   id: string;
   name: string;
   description: string;
   created_at: string;
   updated_at: string;
+}
+
+interface ProductRow {
+  id: string;
+  menu_id: string;
+  name: string;
+  price: number;
+  description: string;
+  category: string;
+  is_recommended: number;
+  is_vegan: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CountResult {
+  count: number;
 }
 
 // Crear el directorio data si no existe
@@ -60,6 +78,7 @@ const initDatabase = () => {
       CREATE INDEX IF NOT EXISTS idx_products_menu_id ON products (menu_id);
       CREATE INDEX IF NOT EXISTS idx_products_category ON products (category);
     `);
+
       console.log('Base de datos inicializada correctamente');
       return true;
     } catch (error) {
@@ -68,7 +87,9 @@ const initDatabase = () => {
     }
         };
 
-// Preparar statements para mejor rendimiento
+// Inicializar la base de datos ANTES de preparar los statements
+initDatabase();
+// Preparar statements para mejor rendimiento (DESPUÉS de crear las tablas)
 const statements = {
   // Menús
   insertMenu: db.prepare(`
@@ -110,7 +131,16 @@ const statements = {
   deleteProductsByMenu: db.prepare(`
     DELETE FROM products WHERE menu_id = ?
   `),
-          };
+
+  // Statements para utilidades
+  countMenus: db.prepare(`
+    SELECT COUNT(*) as count FROM menus
+  `),
+
+  countProducts: db.prepare(`
+    SELECT COUNT(*) as count FROM products
+  `),
+};
 
 // Funciones de la API de base de datos
 export const DatabaseAPI = {
@@ -133,9 +163,11 @@ export const DatabaseAPI = {
 
     get: (id: string): MenuData | null => {
       try {
-        const menu = statements.getMenu.get(id) as any;
+        const menu = statements.getMenu.get(id) as MenuRow | undefined;
         if (!menu) return null;
-        const products = statements.getProductsByMenu.all(id) as any[];
+
+        const products = statements.getProductsByMenu.all(id) as ProductRow[];
+        
         return {
           id: menu.id,
           name: menu.name,
@@ -145,7 +177,7 @@ export const DatabaseAPI = {
           name: p.name,
           price: p.price,
           description: p.description,
-          category: p.category as any,
+          category: p.category as Product['category'],
           isRecommended: Boolean(p.is_recommended),
           isVegan: Boolean(p.is_vegan),
           }))
@@ -158,9 +190,9 @@ export const DatabaseAPI = {
 
     getAll: (): MenuData[] => {
       try {
-        const menus = statements.getAllMenus.all() as any[];
+        const menus = statements.getAllMenus.all() as MenuRow[];
         return menus.map(menu => {
-          const products = statements.getProductsByMenu.all(menu.id) as any[];
+          const products = statements.getProductsByMenu.all(menu.id) as ProductRow[];
           return {
             id: menu.id,
             name: menu.name,
@@ -170,7 +202,7 @@ export const DatabaseAPI = {
               name: p.name,
               price: p.price,
               description: p.description,
-              category: p.category as any,
+              category: p.category as Product['category'],
               isRecommended: Boolean(p.is_recommended),
               isVegan: Boolean(p.is_vegan),
             }))
@@ -256,13 +288,13 @@ export const DatabaseAPI = {
 
     getByMenu: (menuId: string): Product[] => {
       try {
-        const products = statements.getProductsByMenu.all(menuId) as any[];
+        const products = statements.getProductsByMenu.all(menuId) as ProductRow[];
         return products.map(p => ({
           id: p.id,
           name: p.name,
           price: p.price,
           description: p.description,
-          category: p.category as any,
+          category: p.category as Product['category'],
           isRecommended: Boolean(p.is_recommended),
           isVegan: Boolean(p.is_vegan),
         }));
@@ -311,15 +343,15 @@ export const DatabaseAPI = {
         return JSON.stringify(exportData, null, 2);
       } catch (error) {
         console.error('Error exportando datos:', error);
-        return '{}';
+        return '';
       }
     },
 
     // Verificar si la base de datos tiene datos
     hasData: (): boolean => {
       try {
-        const menus = statements.getAllMenus.all();
-        return menus.length > 0;
+        const result = statements.countMenus.get() as CountResult;
+        return result.count > 0;
       } catch (error) {
         console.error('Error verificando datos:', error);
         return false;
@@ -352,12 +384,12 @@ export const DatabaseAPI = {
     // Obtener información de la base de datos
     getInfo: () => {
       try {
-        const menusCount = statements.getAllMenus.all().length;
-        const productsCount = db.prepare('SELECT COUNT(*) as count FROM products').get() as any;
+        const menusResult = statements.countMenus.get() as CountResult;
+        const productsResult = statements.countProducts.get() as CountResult;
         
         return {
-          menusCount,
-          productsCount: productsCount.count,
+          menusCount: menusResult.count,
+          productsCount: productsResult.count,
           dbPath,
           dbExists: fs.existsSync(dbPath)
         };
@@ -369,6 +401,28 @@ export const DatabaseAPI = {
           dbPath,
           dbExists: false
         };
+      }
+    },
+
+    // Verificar la integridad de la base de datos
+    checkIntegrity: (): boolean => {
+      try {
+        const result = db.pragma('integrity_check') as string[];
+        return result[0] === 'ok';
+      } catch (error) {
+        console.error('Error verificando integridad de la base de datos:', error);
+        return false;
+      }
+  },
+
+    // Obtener el esquema de la base de datos
+    getSchema: () => {
+      try {
+        const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+        return tables;
+      } catch (error) {
+        console.error('Error obteniendo esquema de la base de datos:', error);
+        return [];
       }
     },
   },

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Product, MenuData } from '../app/types';
 
 interface DatabaseHook {
@@ -24,7 +24,7 @@ interface DatabaseHook {
   // Utilidades
   initializeDatabase: (force?: boolean) => Promise<boolean>;
   refreshMenus: () => Promise<void>;
-  getDatabaseInfo: () => Promise<any>;
+  getDatabaseInfo: () => Promise<{ menusCount: number; productsCount: number } | null>;
 }
 
 export const useDatabase = (): DatabaseHook => {
@@ -33,9 +33,9 @@ export const useDatabase = (): DatabaseHook => {
   const [menus, setMenus] = useState<MenuData[]>([]);
 
   // Función para manejar errores
-  const handleError = (error: any, defaultMessage: string) => {
+  const handleError = (error: Error | unknown, defaultMessage: string) => {
     console.error(error);
-    setError(error?.message || defaultMessage);
+    setError(error instanceof Error ? error.message : defaultMessage);
     setLoading(false);
   };
 
@@ -59,7 +59,7 @@ export const useDatabase = (): DatabaseHook => {
   };
 
   // Obtener todos los menús
-  const getAllMenus = async (): Promise<MenuData[]> => {
+  const getAllMenus = useCallback(async (): Promise<MenuData[]> => {
     try {
       setLoading(true);
       setError(null);
@@ -73,7 +73,7 @@ export const useDatabase = (): DatabaseHook => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Obtener un menú específico
   const getMenu = async (id: string): Promise<MenuData | null> => {
@@ -255,7 +255,7 @@ export const useDatabase = (): DatabaseHook => {
   // Cargar menús al montar el componente
   useEffect(() => {
     getAllMenus();
-  }, []);
+  }, [getAllMenus]);
 
   return {
     loading,
