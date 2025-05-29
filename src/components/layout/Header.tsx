@@ -21,7 +21,7 @@ import {
   DarkMode,
   LightMode,
 } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuthContext } from '../../contexts/AuthContext';
 import { useTheme as useCustomTheme } from '../../contexts/ThemeContext';
 
 interface HeaderProps {
@@ -31,7 +31,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout } = useAuthContext();
   const { isDarkMode, toggleTheme } = useCustomTheme();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 

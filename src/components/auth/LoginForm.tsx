@@ -40,8 +40,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, isRegisterMo
       } else {
         await login(email, password);
       }
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }

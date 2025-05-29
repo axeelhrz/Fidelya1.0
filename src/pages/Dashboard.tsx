@@ -17,13 +17,12 @@ import {
   ShoppingCart,
   AttachMoney,
   Warning,
-  People,
   Receipt,
   Add,
   Refresh,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { Product, Sale } from '../types';
+import type { Product, Sale } from '../types';
 
 // Mock data
 const mockProducts: Product[] = [
@@ -244,7 +243,7 @@ const RecentSales: React.FC<{
             </Typography>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {recentSales.map((sale, index) => (
+              {recentSales.map((sale) => (
                 <Box
                   key={sale.id}
                   sx={{
@@ -298,7 +297,7 @@ const RecentSales: React.FC<{
 const TopProducts: React.FC<{
   sales: Sale[];
   products: Product[];
-}> = ({ sales, products }) => {
+}> = ({ sales }) => {
   const topProducts = useMemo(() => {
     const productSales: { [key: string]: { name: string; quantity: number; revenue: number } } = {};
     
@@ -383,7 +382,6 @@ export const Dashboard: React.FC = () => {
   // Calcular métricas
   const totalProducts = products.length;
   const lowStockProducts = products.filter(p => p.stock <= p.minStock).length;
-  const totalInventoryValue = products.reduce((sum, product) => sum + (product.price * product.stock), 0);
   
   const today = new Date();
   const todaySales = sales.filter(sale => {
@@ -392,7 +390,6 @@ export const Dashboard: React.FC = () => {
   });
   
   const todayRevenue = todaySales.reduce((sum, sale) => sum + sale.total, 0);
-  const totalSales = sales.length;
 
   const handleRefresh = async () => {
     setRefreshing(true);

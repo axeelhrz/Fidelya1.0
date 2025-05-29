@@ -1,14 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  User as FirebaseUser,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../services/firebase';
-import { User } from '../types';
+import React, { createContext, useEffect, useState } from 'react';
+import type { User } from '../types';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -18,56 +9,113 @@ interface AuthContextType {
   loading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
-  }
-  return context;
-};
+// Mock users data
+const mockUsers: User[] = [
+  {
+    id: '1',
+    email: 'admin@fruteria.com',
+    name: 'Administrador',
+      role: 'admin',
+    createdAt: new Date('2024-01-01'),
+  },
+  {
+    id: '2',
+    email: 'empleado@fruteria.com',
+    name: 'Juan Pérez',
+    role: 'employee',
+    createdAt: new Date('2024-01-15'),
+  },
+];
+
+// Mock passwords (en una app real, esto estaría en el backend)
+const mockPasswords: { [email: string]: string } = {
+  'admin@fruteria.com': 'admin123',
+  'empleado@fruteria.com': 'empleado123',
+  };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Simular delay de autenticación
+  const simulateAuthDelay = () => new Promise(resolve => setTimeout(resolve, 1000));
+
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
-  };
+    await simulateAuthDelay();
+    
+    // Verificar credenciales
+    const mockPassword = mockPasswords[email];
+    if (!mockPassword || mockPassword !== password) {
+      throw new Error('Credenciales inválidas');
+    }
+
+    // Buscar usuario
+    const user = mockUsers.find(u => u.email === email);
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    // Guardar en localStorage
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    setCurrentUser(user);
+};
 
   const register = async (email: string, password: string, name: string) => {
-    const { user } = await createUserWithEmailAndPassword(auth, email, password);
+    await simulateAuthDelay();
     
-    const userData: User = {
-      id: user.uid,
-      email: user.email!,
+    // Verificar si el usuario ya existe
+    const existingUser = mockUsers.find(u => u.email === email);
+    if (existingUser) {
+      throw new Error('El usuario ya existe');
+    }
+
+    // Crear nuevo usuario
+    const newUser: User = {
+      id: Date.now().toString(),
+      email,
       name,
-      role: 'admin',
+      role: 'admin', // Por defecto admin para el demo
       createdAt: new Date()
     };
 
-    await setDoc(doc(db, 'users', user.uid), userData);
+    // Agregar a la lista de usuarios mock (en memoria)
+    mockUsers.push(newUser);
+    mockPasswords[email] = password;
+
+    // Guardar en localStorage
+    localStorage.setItem('currentUser', JSON.stringify(newUser));
+    setCurrentUser(newUser);
   };
 
   const logout = async () => {
-    await signOut(auth);
+    await simulateAuthDelay();
+    
+    // Limpiar localStorage
+    localStorage.removeItem('currentUser');
+    setCurrentUser(null);
   };
 
+  // Verificar si hay un usuario guardado al cargar la app
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (userDoc.exists()) {
-          setCurrentUser(userDoc.data() as User);
+    const checkAuthState = async () => {
+      try {
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+          const user = JSON.parse(savedUser) as User;
+          setCurrentUser(user);
         }
-      } else {
-        setCurrentUser(null);
+      } catch (error) {
+        console.error('Error al cargar usuario guardado:', error);
+        localStorage.removeItem('currentUser');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
 
-    return unsubscribe;
+    // Simular delay de carga inicial
+    setTimeout(checkAuthState, 500);
   }, []);
 
   const value = {
