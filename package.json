@@ -16,8 +16,8 @@
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.14.19",
     "@mui/material": "^5.14.20",
-    "@supabase/supabase-js": "^2.49.8",
     "framer-motion": "^10.16.16",
+    "mysql2": "^3.11.4",
     "next": "15.3.2",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
@@ -25,16 +25,12 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@types/better-sqlite3": "^7.6.13",
+    "@types/mysql2": "^3.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "typescript": "^5"
-  },
-  "optionalDependencies": {
-    "@types/better-sqlite3": "^7.6.8",
-    "better-sqlite3": "^9.6.0"
   }
 }
