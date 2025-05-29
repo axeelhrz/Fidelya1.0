@@ -1,56 +1,60 @@
 import React from 'react';
 import {
   Drawer,
+  Box,
+  Typography,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Box,
-  Typography,
   Divider,
-  useTheme,
   useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import {
-  Dashboard,
-  Inventory,
+  Dashboard as DashboardIcon,
+  Inventory as InventoryIcon,
   ShoppingCart,
-  ShoppingBag,
-  Assessment,
-  People,
-  Settings,
   Store,
 } from '@mui/icons-material';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
+  onPageChange: (page: 'dashboard' | 'inventory' | 'sales') => void;
+  currentPage: string;
 }
 
-const menuItems = [
-  { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
-  { text: 'Inventario', icon: <Inventory />, path: '/inventory' },
-  { text: 'Ventas', icon: <ShoppingCart />, path: '/sales' },
-  { text: 'Compras', icon: <ShoppingBag />, path: '/purchases' },
-  { text: 'Reportes', icon: <Assessment />, path: '/reports' },
-  { text: 'Clientes', icon: <People />, path: '/customers' },
-  { text: 'Proveedores', icon: <Store />, path: '/suppliers' },
-  { text: 'Configuración', icon: <Settings />, path: '/settings' },
-];
-
-export const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, onPageChange, currentPage }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const location = useLocation();
-  const navigate = useNavigate();
-
   const drawerWidth = 280;
 
-  const handleNavigation = (path: string) => {
-    navigate(path);
+  const menuItems = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: <DashboardIcon />,
+      page: 'dashboard' as const,
+    },
+    {
+      id: 'inventory',
+      label: 'Inventario',
+      icon: <InventoryIcon />,
+      page: 'inventory' as const,
+    },
+    {
+      id: 'sales',
+      label: 'Ventas',
+      icon: <ShoppingCart />,
+      page: 'sales' as const,
+    },
+  ];
+
+  const handleNavigation = (page: 'dashboard' | 'inventory' | 'sales') => {
+    onPageChange(page);
     if (isMobile) {
       onClose();
     }
@@ -91,53 +95,44 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       <Divider />
 
       {/* Menú de navegación */}
-      <List sx={{ flex: 1, px: 2, py: 1 }}>
-        {menuItems.map((item, index) => (
-          <motion.div
-            key={item.path}
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-          >
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
-              <ListItemButton
-                onClick={() => handleNavigation(item.path)}
-                selected={location.pathname === item.path}
-                sx={{
-                  borderRadius: 2,
-                  '&.Mui-selected': {
-                    backgroundColor: theme.palette.primary.main,
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: theme.palette.primary.dark,
-                    },
-                    '& .MuiListItemIcon-root': {
-                      color: 'white',
-                    },
-                  },
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                  },
-                }}
-              >
-                <ListItemIcon
+      <Box sx={{ flexGrow: 1, p: 2 }}>
+        <List>
+          {menuItems.map((item, index) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              <ListItem disablePadding sx={{ mb: 1 }}>
+                <ListItemButton
+                  onClick={() => handleNavigation(item.page)}
+                  selected={currentPage === item.id}
                   sx={{
-                    color: location.pathname === item.path ? 'white' : 'inherit',
+                    borderRadius: 2,
+                    '&.Mui-selected': {
+                      backgroundColor: 'primary.light',
+                      color: 'primary.contrastText',
+                      '&:hover': {
+                        backgroundColor: 'primary.main',
+                      },
+                    },
                   }}
                 >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  primaryTypographyProps={{
-                    fontWeight: location.pathname === item.path ? 600 : 400,
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
-          </motion.div>
-        ))}
-      </List>
+                  <ListItemIcon
+                    sx={{
+                      color: currentPage === item.id ? 'inherit' : 'text.secondary',
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
+            </motion.div>
+          ))}
+        </List>
+      </Box>
     </Box>
   );
 

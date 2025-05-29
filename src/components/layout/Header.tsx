@@ -5,53 +5,27 @@ import {
   IconButton,
   Typography,
   Box,
-  Avatar,
-  Menu,
-  MenuItem,
-  Switch,
-  FormControlLabel,
-  useTheme,
   useMediaQuery,
+  useTheme,
+  Button,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
+  Brightness4,
+  Brightness7,
   AccountCircle,
-  Logout,
-  Settings,
-  DarkMode,
-  LightMode,
 } from '@mui/icons-material';
-import { useAuthContext } from '../../contexts/AuthContext';
 import { useTheme as useCustomTheme } from '../../contexts/ThemeContext';
 
 interface HeaderProps {
   onMenuClick: () => void;
+  sidebarOpen: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
+export const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { currentUser, logout } = useAuthContext();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { isDarkMode, toggleTheme } = useCustomTheme();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      handleClose();
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-    }
-  };
-
   return (
     <AppBar
       position="fixed"
@@ -79,60 +53,16 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={isDarkMode}
-                onChange={toggleTheme}
-                icon={<LightMode />}
-                checkedIcon={<DarkMode />}
-              />
-            }
-            label=""
-            sx={{ mr: 1 }}
-          />
-
-          <IconButton
-            size="large"
-            aria-label="cuenta del usuario"
-            aria-controls="menu-appbar"
-            aria-haspopup="true"
-            onClick={handleMenu}
-            color="inherit"
-          >
-            <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.primary.main }}>
-              {currentUser?.name?.charAt(0).toUpperCase()}
-            </Avatar>
+          <IconButton color="inherit" onClick={toggleTheme}>
+            {isDarkMode ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
-
-          <Menu
-            id="menu-appbar"
-            anchorEl={anchorEl}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
-            }}
-            keepMounted
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
+          <Button
+            color="inherit"
+            startIcon={<AccountCircle />}
+            sx={{ display: { xs: 'none', sm: 'flex' } }}
           >
-            <MenuItem onClick={handleClose}>
-              <AccountCircle sx={{ mr: 1 }} />
-              {currentUser?.name}
-            </MenuItem>
-            <MenuItem onClick={handleClose}>
-              <Settings sx={{ mr: 1 }} />
-              Configuración
-            </MenuItem>
-            <MenuItem onClick={handleLogout}>
-              <Logout sx={{ mr: 1 }} />
-              Cerrar Sesión
-            </MenuItem>
-          </Menu>
+            Usuario Demo
+          </Button>
         </Box>
       </Toolbar>
     </AppBar>
