@@ -243,7 +243,7 @@ const RecentSales: React.FC<{
             </Typography>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {recentSales.map((sale) => (
+              {recentSales.map((sale, index) => (
                 <Box
                   key={sale.id}
                   sx={{
@@ -297,7 +297,7 @@ const RecentSales: React.FC<{
 const TopProducts: React.FC<{
   sales: Sale[];
   products: Product[];
-}> = ({ sales }) => {
+}> = ({ sales, products }) => {
   const topProducts = useMemo(() => {
     const productSales: { [key: string]: { name: string; quantity: number; revenue: number } } = {};
     
@@ -393,7 +393,6 @@ export const Dashboard: React.FC = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    // Simular carga de datos
     await new Promise(resolve => setTimeout(resolve, 1000));
     setRefreshing(false);
   };

@@ -69,7 +69,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           }),
         }}
       >
-        <Header onMenuClick={handleSidebarToggle} sidebarOpen={sidebarOpen} />
+        <Header onMenuClick={handleSidebarToggle} />
         <Box
           component="main"
           sx={{

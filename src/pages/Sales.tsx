@@ -117,7 +117,7 @@ const mockSales: Sale[] = [
     subtotal: 6000,
     discount: 0,
     paymentMethod: 'card',
-    createdAt: new Date(Date.now() - 86400000), // Ayer
+    createdAt: new Date(Date.now() - 86400000),
     userId: '1',
   },
   {
@@ -135,6 +135,7 @@ const mockSales: Sale[] = [
     userId: '1',
   },
 ];
+
 const QuickSaleForm: React.FC<{
   products: Product[];
   onSaleComplete: (sale: Omit<Sale, 'id' | 'createdAt'>) => void;
@@ -205,7 +206,7 @@ const QuickSaleForm: React.FC<{
       paymentMethod,
       customerName: customerName || undefined,
       customerPhone: customerPhone || undefined,
-      userId: '1', // Mock user ID
+      userId: '1',
     };
 
     onSaleComplete(sale);
@@ -227,8 +228,8 @@ const QuickSaleForm: React.FC<{
 
         {/* Agregar productos */}
         <Box sx={{ mb: 3 }}>
-          <Box sx={{ 
-            display: 'flex', 
+          <Box sx={{
+            display: 'flex',
             flexDirection: { xs: 'column', md: 'row' },
             gap: 2,
             alignItems: { xs: 'stretch', md: 'center' }
@@ -349,8 +350,8 @@ const QuickSaleForm: React.FC<{
         {/* Información del cliente y pago */}
         {cart.length > 0 && (
           <Box sx={{ mb: 3 }}>
-            <Box sx={{ 
-              display: 'flex', 
+            <Box sx={{
+              display: 'flex',
               flexDirection: { xs: 'column', md: 'row' },
               gap: 2
             }}>
@@ -371,6 +372,9 @@ const QuickSaleForm: React.FC<{
               </Box>
               <Box sx={{ flex: 1 }}>
                 <TextField
+                
+
+
                   fullWidth
                   label="Teléfono (opcional)"
                   value={customerPhone}
@@ -406,8 +410,8 @@ const QuickSaleForm: React.FC<{
         {cart.length > 0 && (
           <Box>
             <Divider sx={{ mb: 2 }} />
-            <Box sx={{ 
-              display: 'flex', 
+            <Box sx={{
+              display: 'flex',
               flexDirection: { xs: 'column', md: 'row' },
               gap: 2,
               alignItems: { xs: 'stretch', md: 'flex-end' }
@@ -422,34 +426,34 @@ const QuickSaleForm: React.FC<{
                   inputProps={{ min: 0, max: 100 }}
                 />
               </Box>
-              <Box sx={{ 
+              <Box sx={{
                 flex: { xs: '1', md: '1' },
                 textAlign: { xs: 'center', md: 'right' }
               }}>
+                <Typography variant="body2" color="text.secondary">
+                  Subtotal: ${subtotal.toLocaleString()}
+                </Typography>
+                {discount > 0 && (
                   <Typography variant="body2" color="text.secondary">
-                    Subtotal: ${subtotal.toLocaleString()}
+                    Descuento ({discount}%): -${discountAmount.toLocaleString()}
                   </Typography>
-                  {discount > 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      Descuento ({discount}%): -${discountAmount.toLocaleString()}
-                    </Typography>
-                  )}
-                  <Typography variant="h6" color="primary.main">
-                    Total: ${total.toLocaleString()}
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={handleCompleteSale}
-                    startIcon={<Receipt />}
-                    sx={{ 
-                      mt: 2,
-                      width: { xs: '100%', md: 'auto' }
-                    }}
-                  >
-                    Completar Venta
-                  </Button>
-                </Box>
+                )}
+                <Typography variant="h6" color="primary.main">
+                  Total: ${total.toLocaleString()}
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={handleCompleteSale}
+                  startIcon={<Receipt />}
+                  sx={{
+                    mt: 2,
+                    width: { xs: '100%', md: 'auto' }
+                  }}
+                >
+                  Completar Venta
+                </Button>
+              </Box>
             </Box>
           </Box>
         )}
@@ -470,7 +474,7 @@ export const Sales: React.FC = () => {
         ...saleData,
         id: Date.now().toString(),
         createdAt: new Date(),
-  };
+      };
       setSales([newSale, ...sales]);
 
       // Actualizar el stock de los productos
@@ -480,7 +484,7 @@ export const Sales: React.FC = () => {
           return {
             ...product,
             stock: product.stock - saleItem.quantity,
-    };
+          };
         }
         return product;
       }));
@@ -497,7 +501,7 @@ export const Sales: React.FC = () => {
       cash: 'Efectivo',
       card: 'Tarjeta',
       transfer: 'Transferencia',
-};
+    };
     return labels[method as keyof typeof labels] || method;
   };
 
