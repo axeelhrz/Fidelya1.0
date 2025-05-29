@@ -1,13 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  output: 'standalone',
-  experimental: {
-    outputFileTracingIncludes: {
-      '/api/**/*': ['./data/**/*'],
-    },
-  },
+  // Configuración básica para producción
 };
 
 export default nextConfig;

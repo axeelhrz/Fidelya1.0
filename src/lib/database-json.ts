@@ -3,65 +3,74 @@ import path from 'path';
 import { Product, MenuData } from '../app/types';
 
 // Ruta del archivo de base de datos JSON
-const dataDir = path.join(process.cwd(), 'data');
-const dbPath = path.join(dataDir, 'menu.json');
+const getDataDir = () => {
+  if (typeof window !== 'undefined') return '';
+  return path.join(process.cwd(), 'data');
+};
 
-console.log('Database path:', dbPath);
+const getDbPath = () => {
+  if (typeof window !== 'undefined') return '';
+  return path.join(getDataDir(), 'menu.json');
+};
 
-// Crear el directorio data si no existe (solo en servidor)
-if (typeof window === 'undefined') {
-  try {
-    if (!fs.existsSync(dataDir)) {
-      console.log('Creating data directory...');
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-  } catch (error) {
-    console.error('Error creating data directory:', error);
-  }
-}
 // Estructura de la base de datos
 interface DatabaseStructure {
   menus: Record<string, MenuData>;
   lastUpdated: string;
 }
 
+// Crear el directorio data si no existe (solo en servidor)
+const ensureDataDir = () => {
+  if (typeof window !== 'undefined') return;
+  
+  try {
+    const dataDir = getDataDir();
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+      } catch (error) {
+    console.error('Error creating data directory:', error);
+  }
+        };
+
 // Inicializar la base de datos si no existe
 const initDatabase = (): DatabaseStructure => {
   const defaultData: DatabaseStructure = {
     menus: {},
     lastUpdated: new Date().toISOString()
-  };
+};
 
-  if (typeof window === 'undefined') {
+  if (typeof window !== 'undefined') return defaultData;
+    
     try {
-      if (!fs.existsSync(dbPath)) {
-        console.log('Database file does not exist, creating...');
-        fs.writeFileSync(dbPath, JSON.stringify(defaultData, null, 2));
-      }
-    } catch (error) {
-      console.error('Error initializing database:', error);
+    ensureDataDir();
+    const dbPath = getDbPath();
+    
+    if (!fs.existsSync(dbPath)) {
+      fs.writeFileSync(dbPath, JSON.stringify(defaultData, null, 2));
     }
-  }
+      } catch (error) {
+    console.error('Error initializing database:', error);
+      }
 
   return defaultData;
-};
+        };
 
 // Leer la base de datos
 const readDatabase = (): DatabaseStructure => {
   if (typeof window !== 'undefined') {
-    // En el cliente, retornar datos vacíos
     return { menus: {}, lastUpdated: new Date().toISOString() };
   }
 
   try {
+    const dbPath = getDbPath();
+    
     if (!fs.existsSync(dbPath)) {
-      console.log('Database file not found, initializing...');
       return initDatabase();
     }
     
     const data = fs.readFileSync(dbPath, 'utf8');
-    const parsed = JSON.parse(data);
-    return parsed;
+    return JSON.parse(data);
       } catch (error) {
     console.error('Error reading database:', error);
     return initDatabase();
@@ -70,24 +79,22 @@ const readDatabase = (): DatabaseStructure => {
 
 // Escribir a la base de datos
 const writeDatabase = (data: DatabaseStructure): boolean => {
-  if (typeof window !== 'undefined') {
-    // No escribir en el cliente
-    return false;
-      }
+  if (typeof window !== 'undefined') return false;
 
   try {
+    ensureDataDir();
     data.lastUpdated = new Date().toISOString();
+    const dbPath = getDbPath();
     fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
     return true;
   } catch (error) {
     console.error('Error writing database:', error);
     return false;
-  }
+      }
 };
 
 // API de la base de datos
 export const DatabaseAPI = {
-  // Inicializar la base de datos
   init: () => {
     if (typeof window !== 'undefined') return true;
     
@@ -97,10 +104,9 @@ export const DatabaseAPI = {
     } catch (error) {
       console.error('Error initializing database API:', error);
       return false;
-    }
+}
   },
 
-  // Operaciones de menús
   menus: {
     create: (menuData: MenuData): boolean => {
       try {
@@ -162,7 +168,6 @@ export const DatabaseAPI = {
     },
   },
 
-  // Operaciones de productos
   products: {
     create: (product: Product, menuId: string): boolean => {
       try {
@@ -223,9 +228,7 @@ export const DatabaseAPI = {
     },
   },
 
-  // Utilidades
   utils: {
-    // Importar datos iniciales desde el archivo menu.ts
     seedFromFile: async (): Promise<boolean> => {
       try {
         const { menus } = await import('../data/menu');
@@ -242,7 +245,6 @@ export const DatabaseAPI = {
       }
     },
 
-    // Exportar datos a formato JSON
     exportToJSON: (): string => {
       try {
         const db = readDatabase();
@@ -253,7 +255,6 @@ export const DatabaseAPI = {
       }
     },
 
-    // Verificar si la base de datos tiene datos
     hasData: (): boolean => {
       try {
         const db = readDatabase();
@@ -264,7 +265,6 @@ export const DatabaseAPI = {
       }
     },
 
-    // Limpiar toda la base de datos
     clearAll: (): boolean => {
       try {
         const db = readDatabase();
@@ -276,7 +276,6 @@ export const DatabaseAPI = {
       }
     },
 
-    // Obtener información de la base de datos
     getInfo: () => {
       try {
         const db = readDatabase();
@@ -286,8 +285,8 @@ export const DatabaseAPI = {
         return {
           menusCount,
           productsCount,
-          dbPath: typeof window === 'undefined' ? dbPath : 'client-side',
-          dbExists: typeof window === 'undefined' ? fs.existsSync(dbPath) : false,
+          dbPath: typeof window === 'undefined' ? getDbPath() : 'client-side',
+          dbExists: typeof window === 'undefined' ? fs.existsSync(getDbPath()) : false,
           lastUpdated: db.lastUpdated
         };
       } catch (error) {
@@ -306,7 +305,7 @@ export const DatabaseAPI = {
 
 // Inicializar la base de datos al importar el módulo (solo en servidor)
 if (typeof window === 'undefined') {
-DatabaseAPI.init();
+  DatabaseAPI.init();
 }
 
 export default DatabaseAPI;

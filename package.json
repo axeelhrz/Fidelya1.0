@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "mkdir -p data && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "prebuild": "mkdir -p data",
     "postinstall": "mkdir -p data"
   },
   "dependencies": {

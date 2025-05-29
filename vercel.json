@@ -1,13 +1,7 @@
 {
   "functions": {
     "src/app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 10
     }
-  },
-  "rewrites": [
-    {
-      "source": "/menu",
-      "destination": "/menu"
-    }
-  ]
+  }
 }
