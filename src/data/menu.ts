@@ -1,0 +1,232 @@
+import { Product } from '../app/types';
+
+export interface MenuData {
+  id: string;
+  name: string;
+  description: string;
+  products: Product[];
+}
+
+export const menus: Record<string, MenuData> = {
+  'menu-bar-noche': {
+    id: 'menu-bar-noche',
+    name: 'Carta Premium Nocturna',
+    description: 'Experiencia culinaria de alta gama para la noche',
+    products: [
+      // Entradas Premium
+      {
+        id: '1',
+        name: 'Tartar de Atún Rojo',
+        price: 8500,
+        description: 'Atún rojo de almadraba, aguacate, mango, sésamo negro y vinagreta de yuzu',
+        category: 'Entrada',
+        isRecommended: true,
+        isVegan: false,
+      },
+      {
+        id: '2',
+        name: 'Burrata Trufada',
+        price: 6200,
+        description: 'Burrata artesanal con trufa negra, rúcula salvaje y reducción de balsámico',
+        category: 'Entrada',
+        isRecommended: false,
+        isVegan: false,
+      },
+      {
+        id: '3',
+        name: 'Carpaccio de Remolacha',
+        price: 4800,
+        description: 'Láminas de remolacha, queso de cabra, nueces confitadas y aceite de hierbas',
+        category: 'Entrada',
+        isRecommended: false,
+        isVegan: true,
+      },
+      {
+        id: '4',
+        name: 'Ceviche Nikkei',
+        price: 7200,
+        description: 'Pescado del día, leche de tigre, ají amarillo, camote y cancha serrana',
+        category: 'Entrada',
+        isRecommended: true,
+        isVegan: false,
+      },
+
+      // Platos Principales
+      {
+        id: '5',
+        name: 'Wagyu A5 Japonés',
+        price: 28500,
+        description: 'Filete de wagyu A5, puré de wasabi, shiitakes salteados y salsa teriyaki',
+        category: 'Principal',
+        isRecommended: true,
+        isVegan: false,
+      },
+      {
+        id: '6',
+        name: 'Lubina en Costra de Sal',
+        price: 12800,
+        description: 'Lubina salvaje, costra de sal marina, verduras de temporada y salsa verde',
+        category: 'Principal',
+        isRecommended: false,
+        isVegan: false,
+      },
+      {
+        id: '7',
+        name: 'Risotto de Trufa Blanca',
+        price: 9500,
+        description: 'Arroz carnaroli, trufa blanca de Alba, parmesano 24 meses y mantequilla clarificada',
+        category: 'Principal',
+        isRecommended: false,
+        isVegan: false,
+      },
+      {
+        id: '8',
+        name: 'Buddha Bowl Supremo',
+        price: 5800,
+        description: 'Quinoa, aguacate, edamame, kimchi, tahini, semillas y proteína vegetal',
+        category: 'Principal',
+        isRecommended: true,
+        isVegan: true,
+      },
+      {
+        id: '9',
+        name: 'Cordero Patagónico',
+        price: 15200,
+        description: 'Rack de cordero, puré de berenjenas ahumadas, chimichurri y papas confitadas',
+        category: 'Principal',
+        isRecommended: false,
+        isVegan: false,
+      },
+
+      // Bebidas Premium
+      {
+        id: '10',
+        name: 'Agua San Pellegrino',
+        price: 1200,
+        description: 'Agua mineral italiana con gas natural, botella de cristal 750ml',
+        category: 'Bebida',
+        isRecommended: false,
+        isVegan: true,
+      },
+      {
+        id: '11',
+        name: 'Kombucha Artesanal',
+        price: 2800,
+        description: 'Fermentado probiótico de té verde, jengibre y limón orgánico',
+        category: 'Bebida',
+        isRecommended: true,
+        isVegan: true,
+      },
+      {
+        id: '12',
+        name: 'Vino Tinto Reserva',
+        price: 4200,
+        description: 'Copa de Malbec reserva, D.O. Mendoza, notas a frutos rojos',
+        category: 'Bebida',
+        isRecommended: false,
+        isVegan: true,
+      },
+      {
+        id: '13',
+        name: 'Cóctel Signature',
+        price: 3800,
+        description: 'Gin premium, tónica artesanal, pepino, albahaca y twist de lima',
+        category: 'Bebida',
+        isRecommended: true,
+        isVegan: true,
+      },
+
+      // Postres Gourmet
+      {
+        id: '14',
+        name: 'Soufflé de Chocolate',
+        price: 4500,
+        description: 'Soufflé tibio de chocolate Valrhona 70%, helado de vainilla bourbon',
+        category: 'Postre',
+        isRecommended: true,
+        isVegan: false,
+      },
+      {
+        id: '15',
+        name: 'Tiramisú Deconstructado',
+        price: 3800,
+        description: 'Mascarpone, café etíope, cacao en polvo y bizcocho de soletilla',
+        category: 'Postre',
+        isRecommended: false,
+        isVegan: false,
+      },
+      {
+        id: '16',
+        name: 'Tarta de Limón Yuzu',
+        price: 3500,
+        description: 'Base de galleta, crema de yuzu, merengue italiano y ralladura de limón',
+        category: 'Postre',
+        isRecommended: false,
+        isVegan: false,
+      },
+      {
+        id: '17',
+        name: 'Helado Vegano de Coco',
+        price: 2800,
+        description: 'Helado artesanal de coco, coulis de mango y granola de almendras',
+        category: 'Postre',
+        isRecommended: true,
+        isVegan: true,
+      },
+    ]
+  },
+
+  'menu-almuerzo': {
+    id: 'menu-almuerzo',
+    name: 'Menú Ejecutivo',
+    description: 'Opciones ligeras y nutritivas para el almuerzo',
+    products: [
+      {
+        id: '18',
+        name: 'Ensalada César Premium',
+        price: 3200,
+        description: 'Lechuga romana, pollo grillado, crutones artesanales, parmesano y aderezo césar',
+        category: 'Entrada',
+        isRecommended: true,
+        isVegan: false,
+      },
+      {
+        id: '19',
+        name: 'Salmón Teriyaki',
+        price: 8900,
+        description: 'Filete de salmón, salsa teriyaki, arroz jazmín y vegetales al wok',
+        category: 'Principal',
+        isRecommended: true,
+        isVegan: false,
+      },
+      {
+        id: '20',
+        name: 'Agua Saborizada',
+        price: 800,
+        description: 'Agua con gas saborizada con frutas naturales',
+        category: 'Bebida',
+        isRecommended: false,
+        isVegan: true,
+      },
+      {
+        id: '21',
+        name: 'Mousse de Maracuyá',
+        price: 2500,
+        description: 'Mousse ligero de maracuyá con coulis de frutos rojos',
+        category: 'Postre',
+        isRecommended: true,
+        isVegan: false,
+      },
+    ]
+  }
+};
+
+// Función para obtener un menú por ID
+export const getMenuById = (id: string): MenuData | null => {
+  return menus[id] || null;
+};
+
+// Función para obtener todos los IDs de menús disponibles
+export const getAvailableMenuIds = (): string[] => {
+  return Object.keys(menus);
+};

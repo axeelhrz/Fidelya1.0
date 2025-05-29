@@ -2,455 +2,264 @@
 
 import { useState, useEffect } from 'react';
 import {
-  Box,
-  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   TextField,
   Button,
-  Stack,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Alert,
-  Paper,
-  Divider,
   FormControlLabel,
   Switch,
+  Stack,
+  Box,
+  Typography,
+  IconButton,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { Product, ProductCategory } from '../types';
-import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Cancel';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-
-const MotionPaper = motion(Paper);
-const MotionBox = motion(Box);
-
+import { Product, ProductCategory, AdminFormData } from '../types';
 interface ProductFormProps {
-  onSubmit: (product: Omit<Product, 'id'> & { id?: string }) => void;
-  editingProduct: Product | null;
-  onCancelEdit: () => void;
+  open: boolean;
+  onClose: () => void;
+  onSave: (product: Product) => void;
+  product?: Product | null;
+  menuId: string;
 }
-
-export default function ProductForm({ onSubmit, editingProduct, onCancelEdit }: ProductFormProps) {
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<ProductCategory>('Entrada');
-  const [isRecommended, setIsRecommended] = useState(false);
-  const [isVegan, setIsVegan] = useState(false);
-  const [error, setError] = useState('');
 
   const categories: ProductCategory[] = ['Entrada', 'Principal', 'Bebida', 'Postre'];
 
-  useEffect(() => {
-    if (editingProduct) {
-      setName(editingProduct.name);
-      setPrice(editingProduct.price.toString());
-      setDescription(editingProduct.description);
-      setCategory(editingProduct.category);
-      setIsRecommended(editingProduct.isRecommended || false);
-      setIsVegan(editingProduct.isVegan || false);
-    } else {
-      resetForm();
-    }
-  }, [editingProduct]);
+export default function ProductForm({ 
+  open, 
+  onClose, 
+  onSave, 
+  product, 
+  menuId 
+}: ProductFormProps) {
+  const [formData, setFormData] = useState<AdminFormData>({
+    name: '',
+    price: 0,
+    description: '',
+    category: 'Entrada',
+    isRecommended: false,
+    isVegan: false,
+  });
 
-  const resetForm = () => {
-    setName('');
-    setPrice('');
-    setDescription('');
-    setCategory('Entrada');
-    setIsRecommended(false);
-    setIsVegan(false);
-    setError('');
+  const [errors, setErrors] = useState<Partial<AdminFormData>>({});
+
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.name,
+        price: product.price,
+        description: product.description,
+        category: product.category,
+        isRecommended: product.isRecommended || false,
+        isVegan: product.isVegan || false,
+      });
+    } else {
+      setFormData({
+        name: '',
+        price: 0,
+        description: '',
+        category: 'Entrada',
+        isRecommended: false,
+        isVegan: false,
+      });
+    }
+    setErrors({});
+  }, [product, open]);
+
+  const validateForm = (): boolean => {
+    const newErrors: Partial<AdminFormData> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'El nombre es requerido';
+    }
+
+    if (formData.price <= 0) {
+      newErrors.price = 'El precio debe ser mayor a 0';
+    }
+
+    if (!formData.description.trim()) {
+      newErrors.description = 'La descripción es requerida';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  const handleSubmit = () => {
+    if (!validateForm()) return;
 
-    if (!name.trim() || !description.trim() || !price.trim()) {
-      setError('Todos los campos son obligatorios');
-      return;
-    }
-
-    const priceValue = parseFloat(price);
-    if (isNaN(priceValue) || priceValue <= 0) {
-      setError('El precio debe ser un número positivo');
-      return;
-    }
-
-    const productData = {
-      ...(editingProduct ? { id: editingProduct.id } : {}),
-      name: name.trim(),
-      price: priceValue,
-      description: description.trim(),
-      category,
-      isRecommended,
-      isVegan,
+    const newProduct: Product = {
+      id: product?.id || `${menuId}-${Date.now()}`,
+      name: formData.name.trim(),
+      price: formData.price,
+      description: formData.description.trim(),
+      category: formData.category,
+      isRecommended: formData.isRecommended,
+      isVegan: formData.isVegan,
     };
 
-    onSubmit(productData);
-    if (!editingProduct) {
-      resetForm();
+    onSave(newProduct);
+    onClose();
+  };
+
+  const handleChange = (field: keyof AdminFormData) => (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | any
+  ) => {
+    const value = event.target.type === 'checkbox' 
+      ? event.target.checked 
+      : event.target.value;
+    
+    setFormData(prev => ({
+      ...prev,
+      [field]: field === 'price' ? Number(value) : value
+    }));
+
+    // Limpiar error del campo cuando el usuario empiece a escribir
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined
+      }));
     }
   };
 
   return (
-    <MotionPaper
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98] }}
-      elevation={0}
-      sx={{ 
-        p: { xs: 4, sm: 5 }, 
-        mb: 6, 
-        borderRadius: 4,
-        backgroundColor: '#2C2C2E',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
-        position: 'relative',
-        overflow: 'hidden',
-        border: '1px solid rgba(255,255,255,0.05)',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `
-            linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.02) 49%, rgba(255,255,255,0.02) 51%, transparent 52%),
-            radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.03) 0%, transparent 50%)
-          `,
-          backgroundSize: '20px 20px, 300px 300px',
-          zIndex: 0,
+    <Dialog 
+      open={open} 
+      onClose={onClose}
+      maxWidth="sm"
+            fullWidth
+      PaperProps={{
+                    sx: {
+                borderRadius: 3,
+          background: 'linear-gradient(135deg, #2C2C2E 0%, #3A3A3C 100%)',
         }
-      }}
-    >
-      <MotionBox
-        initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.6 }}
-        sx={{ position: 'relative', zIndex: 1 }}
-        >
-        <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 4 }}>
-          <Box
-            sx={{ 
-              width: 50,
-              height: 50,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%)',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              border: '2px solid rgba(59, 130, 246, 0.2)',
             }}
           >
-            <RestaurantIcon sx={{ color: '#3B82F6', fontSize: 24 }} />
-          </Box>
-          <Box>
-            <Typography variant="h5" component="h2" sx={{ fontWeight: 700, color: '#F5F5F7' }}>
-              {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#A1A1AA', mt: 0.5 }}>
-              {editingProduct ? 'Modifica los detalles del producto' : 'Agrega un nuevo elemento al menú'}
-            </Typography>
+      <DialogTitle sx={{ pb: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" fontWeight={600}>
+            {product ? 'Editar Producto' : 'Agregar Producto'}
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
       </Box>
-        </Stack>
+      </DialogTitle>
 
-        <Divider sx={{ mb: 5, borderColor: '#3A3A3C' }} />
-      </MotionBox>
-
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 4, 
-              borderRadius: 3,
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              color: '#ef4444',
-              '& .MuiAlert-icon': {
-                color: '#ef4444',
-}
-            }}
-          >
-            {error}
-          </Alert>
-        </motion.div>
-      )}
-
-      <Box component="form" onSubmit={handleSubmit} sx={{ position: 'relative', zIndex: 1 }}>
-        <Stack spacing={4}>
+      <DialogContent>
+        <Stack spacing={3} sx={{ mt: 1 }}>
           <TextField
             label="Nombre del Producto"
+            value={formData.name}
+            onChange={handleChange('name')}
+            error={!!errors.name}
+            helperText={errors.name}
             fullWidth
-            value={name}
-            onChange={(e) => setName(e.target.value)}
             variant="outlined"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 3,
-                backgroundColor: 'rgba(28, 28, 30, 0.6)',
-                color: '#F5F5F7',
-                '& fieldset': {
-                  borderColor: 'rgba(255,255,255,0.1)',
-                },
-                '&:hover fieldset': {
-                  borderColor: 'rgba(59, 130, 246, 0.3)',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#3B82F6',
-                },
-              },
-              '& .MuiInputLabel-root': {
-                color: '#A1A1AA',
-                '&.Mui-focused': {
-                  color: '#3B82F6',
-                }
-              }
+          />
+
+          <TextField
+            label="Precio"
+            type="number"
+            value={formData.price}
+            onChange={handleChange('price')}
+            error={!!errors.price}
+            helperText={errors.price}
+            fullWidth
+            variant="outlined"
+            InputProps={{
+              startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>$</Typography>
             }}
           />
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-            <TextField
-              label="Precio (€)"
-              type="number"
-              inputProps={{ step: "0.01", min: "0" }}
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              variant="outlined"
-              sx={{
-                flex: 1,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 3,
-                  backgroundColor: 'rgba(28, 28, 30, 0.6)',
-                  color: '#F5F5F7',
-                  '& fieldset': {
-                    borderColor: 'rgba(255,255,255,0.1)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(59, 130, 246, 0.3)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#3B82F6',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: '#A1A1AA',
-                  '&.Mui-focused': {
-                    color: '#3B82F6',
-                  }
-                }
-              }}
-            />
-
-            <FormControl variant="outlined" sx={{ flex: 1 }}>
-              <InputLabel 
-                id="category-label"
-                sx={{ 
-                  color: '#A1A1AA',
-                  '&.Mui-focused': {
-                    color: '#3B82F6',
-                  }
-                }}
-              >
-                Categoría
-              </InputLabel>
-              <Select
-                labelId="category-label"
-                value={category}
-                label="Categoría"
-                onChange={(e) => setCategory(e.target.value as ProductCategory)}
-                sx={{ 
-                  borderRadius: 3,
-                  backgroundColor: 'rgba(28, 28, 30, 0.6)',
-                  color: '#F5F5F7',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255,255,255,0.1)',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(59, 130, 246, 0.3)',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#3B82F6',
-                  },
-                }}
-                MenuProps={{
-                  PaperProps: {
-                    sx: {
-                      backgroundColor: '#2C2C2E',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      '& .MuiMenuItem-root': {
-                        color: '#F5F5F7',
-                        '&:hover': {
-                          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        },
-                        '&.Mui-selected': {
-                          backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                        }
-                      }
-                    }
-                  }
-                }}
-              >
-                {categories.map((cat) => (
-                  <MenuItem key={cat} value={cat}>{cat}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
+          <FormControl fullWidth>
+            <InputLabel>Categoría</InputLabel>
+            <Select
+              value={formData.category}
+              onChange={handleChange('category')}
+              label="Categoría"
+            >
+              {categories.map((category) => (
+                <MenuItem key={category} value={category}>
+                  {category}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           <TextField
             label="Descripción"
+            value={formData.description}
+            onChange={handleChange('description')}
+            error={!!errors.description}
+            helperText={errors.description}
             fullWidth
             multiline
-            rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
             variant="outlined"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 3,
-                backgroundColor: 'rgba(28, 28, 30, 0.6)',
-                color: '#F5F5F7',
-                '& fieldset': {
-                  borderColor: 'rgba(255,255,255,0.1)',
-                },
-                '&:hover fieldset': {
-                  borderColor: 'rgba(59, 130, 246, 0.3)',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#3B82F6',
-                },
-              },
-              '& .MuiInputLabel-root': {
-                color: '#A1A1AA',
-                '&.Mui-focused': {
-                  color: '#3B82F6',
-                }
-              }
-            }}
           />
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
+          <Box>
             <FormControlLabel
               control={
                 <Switch
-                  checked={isRecommended}
-                  onChange={(e) => setIsRecommended(e.target.checked)}
-                  sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: '#10B981',
-                    },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#10B981',
-                    },
-                  }}
+                  checked={formData.isRecommended}
+                  onChange={handleChange('isRecommended')}
+                  color="primary"
                 />
-              }
+}
               label="Producto Recomendado"
-              sx={{ 
-                color: '#F5F5F7',
-                '& .MuiFormControlLabel-label': {
-                  fontSize: '0.95rem',
-                }
-              }}
             />
+          </Box>
 
+          <Box>
             <FormControlLabel
               control={
                 <Switch
-                  checked={isVegan}
-                  onChange={(e) => setIsVegan(e.target.checked)}
-                  sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: '#22c55e',
-                    },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#22c55e',
-                    },
-                  }}
+                  checked={formData.isVegan}
+                  onChange={handleChange('isVegan')}
+                  color="success"
                 />
               }
               label="Producto Vegano"
-              sx={{ 
-                color: '#F5F5F7',
-                '& .MuiFormControlLabel-label': {
-                  fontSize: '0.95rem',
-                }
-              }}
             />
-          </Stack>
-
-          <Stack 
-            direction={{ xs: 'column', sm: 'row' }} 
-            spacing={3}
-            sx={{ mt: 4 }}
-          >
-            <motion.div 
-              whileHover={{ scale: 1.02 }} 
-              whileTap={{ scale: 0.98 }} 
-              style={{ flex: 1 }}
-            >
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                startIcon={editingProduct ? <SaveIcon /> : <AddIcon />}
-                sx={{
-                  py: 2,
-                  fontSize: '1.1rem',
-                  fontWeight: 600,
-                  background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
-                  boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                    boxShadow: '0 12px 40px rgba(59, 130, 246, 0.4)',
-                  },
-                }}
-              >
-                {editingProduct ? 'Guardar Cambios' : 'Agregar al Menú'}
-              </Button>
-            </motion.div>
-
-            {editingProduct && (
-              <motion.div 
-                whileHover={{ scale: 1.02 }} 
-                whileTap={{ scale: 0.98 }} 
-                style={{ flex: 1 }}
-              >
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  startIcon={<CancelIcon />}
-                  onClick={onCancelEdit}
-                  sx={{ 
-                    py: 2,
-                    fontSize: '1.1rem',
-                    borderWidth: '1.5px',
-                    borderColor: 'rgba(239, 68, 68, 0.5)',
-                    color: '#ef4444',
-                    '&:hover': {
-                      borderColor: '#ef4444',
-                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    }
-                  }}
-                >
-                  Cancelar Edición
-                </Button>
-              </motion.div>
-            )}
-          </Stack>
+          </Box>
         </Stack>
-      </Box>
-    </MotionPaper>
+      </DialogContent>
+
+      <DialogActions sx={{ p: 3, pt: 2 }}>
+        <Button 
+          onClick={onClose}
+          variant="outlined"
+          sx={{ mr: 1 }}
+        >
+          Cancelar
+        </Button>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            startIcon={<SaveIcon />}
+            sx={{
+              background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+              }
+            }}
+          >
+            {product ? 'Actualizar' : 'Agregar'}
+          </Button>
+        </motion.div>
+      </DialogActions>
+    </Dialog>
   );
 }
