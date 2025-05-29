@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import DatabaseAPI from '../../../lib/database-json';
+import { getDatabaseAPI } from '../../../lib/database';
 
 // GET /api/menus - Obtener todos los menús
 export async function GET() {
   try {
     console.log('=== GET /api/menus ===');
+    const DatabaseAPI = await getDatabaseAPI();
+    
     const menus = await DatabaseAPI.menus.getAll();
     console.log('Returning menus:', menus.length);
     return NextResponse.json({ success: true, data: menus });
@@ -31,6 +33,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const DatabaseAPI = await getDatabaseAPI();
     const success = await DatabaseAPI.menus.create(menuData);
     
     if (success) {

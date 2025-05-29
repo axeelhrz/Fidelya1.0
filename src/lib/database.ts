@@ -3,39 +3,42 @@ const getDatabaseType = (): 'supabase' | 'json' | 'static' => {
   // Prioridad: variable de entorno > detección automática
   const envType = process.env.DATABASE_TYPE as 'supabase' | 'json' | 'static';
   if (envType) {
+    console.log('Database type from env:', envType);
     return envType;
   }
 
   // Auto-detección
   if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.log('Database type auto-detected: supabase');
     return 'supabase';
   }
 
   if (process.env.VERCEL === '1') {
+    console.log('Database type auto-detected: static (Vercel)');
     return 'static'; // En Vercel sin Supabase, usar datos estáticos
   }
 
+  console.log('Database type auto-detected: json (development)');
   return 'json'; // Desarrollo local por defecto
 };
 
-// Importar el adaptador correcto
+// Función para obtener el adaptador correcto
+export const getDatabaseAPI = async () => {
 const databaseType = getDatabaseType();
-console.log('Using database type:', databaseType);
-
-let DatabaseAPI;
+  console.log('Loading database adapter:', databaseType);
 
 switch (databaseType) {
   case 'supabase':
-    DatabaseAPI = import('./database-supabase').then(module => module.default);
-    break;
+      const supabaseModule = await import('./database-supabase');
+      return supabaseModule.default;
   case 'json':
-    DatabaseAPI = import('./database-json').then(module => module.default);
-    break;
+      const jsonModule = await import('./database-json');
+      return jsonModule.default;
   case 'static':
   default:
-    DatabaseAPI = import('./database-static').then(module => module.default);
-    break;
+      const staticModule = await import('./database-static');
+      return staticModule.default;
 }
+};
 
-export default DatabaseAPI;
-export { databaseType };
+export { getDatabaseType };

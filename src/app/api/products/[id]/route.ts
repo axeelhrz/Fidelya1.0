@@ -1,18 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import DatabaseAPI from '../../../../lib/database-json';
+import { getDatabaseAPI } from '../../../../lib/database';
 
 // PUT /api/products/[id] - Actualizar un producto
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    console.log('=== PUT /api/products/[id] ===');
+    const { id } = params;
     const { product, menuId } = await request.json();
+    console.log('Updating product:', id, product, 'in menu:', menuId);
+    
+    if (!product || !menuId) {
+      return NextResponse.json(
+        { success: false, error: 'Datos del producto incompletos' },
+        { status: 400 }
+      );
+    }
+
+    // Asegurar que el ID coincida
     product.id = id;
 
-    const success = DatabaseAPI.products.update(product, menuId);
-    
+    const DatabaseAPI = await getDatabaseAPI();
+    const success = await DatabaseAPI.products.update(product, menuId);
     if (success) {
       return NextResponse.json({ success: true, data: product });
     } else {
@@ -33,11 +44,15 @@ export async function PUT(
 // DELETE /api/products/[id] - Eliminar un producto
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
-    const success = DatabaseAPI.products.delete(id);
+    console.log('=== DELETE /api/products/[id] ===');
+    const { id } = params;
+    console.log('Deleting product:', id);
+    
+    const DatabaseAPI = await getDatabaseAPI();
+    const success = await DatabaseAPI.products.delete(id);
     
     if (success) {
       return NextResponse.json({ success: true, message: 'Producto eliminado correctamente' });

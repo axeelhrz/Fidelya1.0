@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getDatabaseAPI } from '../../../../lib/database';
+
 // POST /api/database/seed - Inicializar la base de datos con datos del archivo
 export async function POST(request: NextRequest) {
   try {
@@ -7,11 +9,10 @@ export async function POST(request: NextRequest) {
     const { force = false } = body;
     console.log('Seed request with force:', force);
 
-    const DatabaseAPI = await import('../../../../lib/database').then(m => m.default);
-    const db = await DatabaseAPI;
+    const DatabaseAPI = await getDatabaseAPI();
 
     // Verificar si ya hay datos (solo si no es forzado)
-    if (!force && await db.utils.hasData()) {
+    if (!force && await DatabaseAPI.utils.hasData()) {
       console.log('Database already has data, not seeding');
       return NextResponse.json({
         success: false,
@@ -22,15 +23,15 @@ export async function POST(request: NextRequest) {
     // Si es forzado, limpiar la base de datos primero
     if (force) {
       console.log('Force flag set, clearing database first');
-      await db.utils.clearAll();
+      await DatabaseAPI.utils.clearAll();
     }
 
     console.log('Starting database seeding...');
-    const success = await db.utils.seedFromFile();
+    const success = await DatabaseAPI.utils.seedFromFile();
     console.log('Seeding result:', success);
     
     if (success) {
-      const info = await db.utils.getInfo();
+      const info = await DatabaseAPI.utils.getInfo();
       console.log('Database info after seeding:', info);
       return NextResponse.json({
         success: true,
@@ -56,9 +57,8 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     console.log('=== GET /api/database/seed ===');
-    const DatabaseAPI = await import('../../../../lib/database').then(m => m.default);
-    const db = await DatabaseAPI;
-    const info = await db.utils.getInfo();
+    const DatabaseAPI = await getDatabaseAPI();
+    const info = await DatabaseAPI.utils.getInfo();
     console.log('Database info:', info);
     return NextResponse.json({
       success: true,

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getDatabaseAPI } from '../../../lib/database';
+
 // POST /api/products - Crear un nuevo producto
 export async function POST(request: NextRequest) {
   try {
@@ -13,9 +15,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const DatabaseAPI = await import('../../../lib/database').then(m => m.default);
-    const db = await DatabaseAPI;
-    const success = await db.products.create(product, menuId);
+    const DatabaseAPI = await getDatabaseAPI();
+    const success = await DatabaseAPI.products.create(product, menuId);
     
     if (success) {
       return NextResponse.json({ success: true, data: product });

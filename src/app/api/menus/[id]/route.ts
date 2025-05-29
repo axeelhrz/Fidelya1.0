@@ -1,23 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import DatabaseAPI from '../../../../lib/database-json';
+import { getDatabaseAPI } from '../../../../lib/database';
 
 // GET /api/menus/[id] - Obtener un menú específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
-    const menu = DatabaseAPI.menus.get(id);
+    console.log('=== GET /api/menus/[id] ===');
+    const { id } = params;
+    console.log('Getting menu:', id);
     
-    if (!menu) {
+    const DatabaseAPI = await getDatabaseAPI();
+    const menu = await DatabaseAPI.menus.get(id);
+    
+    if (menu) {
+    return NextResponse.json({ success: true, data: menu });
+    } else {
       return NextResponse.json(
         { success: false, error: 'Menú no encontrado' },
         { status: 404 }
       );
     }
-
-    return NextResponse.json({ success: true, data: menu });
   } catch (error) {
     console.error('Error en GET /api/menus/[id]:', error);
     return NextResponse.json(
@@ -30,41 +34,56 @@ export async function GET(
 // PUT /api/menus/[id] - Actualizar un menú
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    console.log('=== PUT /api/menus/[id] ===');
+    const { id } = params;
     const menuData = await request.json();
-    menuData.id = id;
-
-    const success = DatabaseAPI.menus.update(menuData);
+    console.log('Updating menu:', id, menuData);
     
-    if (success) {
-      const updatedMenu = DatabaseAPI.menus.get(id);
-      return NextResponse.json({ success: true, data: updatedMenu });
-    } else {
+    if (!menuData.name || !menuData.description) {
       return NextResponse.json(
-        { success: false, error: 'Error actualizando el menú' },
-        { status: 500 }
+        { success: false, error: 'Datos del menú incompletos' },
+        { status: 400 }
       );
     }
+
+    // Asegurar que el ID coincida
+    menuData.id = id;
+
+    const DatabaseAPI = await getDatabaseAPI();
+    const success = await DatabaseAPI.menus.update(menuData);
+    
+    if (success) {
+      return NextResponse.json({ success: true, data: menuData });
+    } else {
+    return NextResponse.json(
+        { success: false, error: 'Error actualizando el menú' },
+      { status: 500 }
+    );
+  }
   } catch (error) {
     console.error('Error en PUT /api/menus/[id]:', error);
     return NextResponse.json(
       { success: false, error: 'Error interno del servidor' },
       { status: 500 }
     );
-  }
+}
 }
 
 // DELETE /api/menus/[id] - Eliminar un menú
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
-    const success = DatabaseAPI.menus.delete(id);
+    console.log('=== DELETE /api/menus/[id] ===');
+    const { id } = params;
+    console.log('Deleting menu:', id);
+    
+    const DatabaseAPI = await getDatabaseAPI();
+    const success = await DatabaseAPI.menus.delete(id);
     
     if (success) {
       return NextResponse.json({ success: true, message: 'Menú eliminado correctamente' });
