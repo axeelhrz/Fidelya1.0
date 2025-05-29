@@ -3,29 +3,31 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Stack, Container, Chip, IconButton } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Product, ProductCategory } from '../types';
+
+interface MenuData {
+  name: string;
+  description: string;
+  products: Product[];
+}
 import { getMenuById } from '../../data/menu';
 import MenuSection from '../components/MenuSection';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import { useRouter } from 'next/navigation';
 
 const MotionPaper = motion(Paper);
-const MotionBox = motion(Box);
 const MotionTypography = motion(Typography);
 const MotionContainer = motion(Container);
 
 export default function MenuPage() {
-  const router = useRouter();
+  const [menuData, setMenuData] = useState<MenuData | null>(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const menuId = searchParams.get('id') || 'menu-bar-noche';
   
   const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [showFilters, setShowFilters] = useState(false);
-  const [menuData, setMenuData] = useState<any>(null);
 
   const categories: ProductCategory[] = ['Entrada', 'Principal', 'Bebida', 'Postre'];
 
@@ -75,11 +77,7 @@ export default function MenuPage() {
 
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category);
-    if (typeof window !== 'undefined' && window.innerWidth < 600) {
-      setShowFilters(false);
-    }
   };
-
   const filteredCategories = activeCategory === 'all'
     ? productsByCategory
     : productsByCategory.filter(group => group.category === activeCategory);

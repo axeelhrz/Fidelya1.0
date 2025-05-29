@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Box, 
   Container,
@@ -22,20 +22,21 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  CircularProgress,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import QrCodeIcon from '@mui/icons-material/QrCode';
-import SaveIcon from '@mui/icons-material/Save';
-import RestoreIcon from '@mui/icons-material/Restore';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import CodeIcon from '@mui/icons-material/Code';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
+import DatabaseIcon from '@mui/icons-material/Storage';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useRouter } from 'next/navigation';
-import { Product, ProductCategory } from '../../types';
-import { getMenuById, getAvailableMenuIds } from '../../../data/menu';
+import { Product, ProductCategory, MenuData } from '../../types';
+import { useDatabase } from '../../../hooks/useDatabase';
 import ProductForm from '../../components/ProductForm';
 import QRGenerator from '../../components/QRGenerator';
 
@@ -45,36 +46,24 @@ const MotionContainer = motion(Container);
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const availableMenus = getAvailableMenuIds();
-  const [selectedMenuId, setSelectedMenuId] = useState(availableMenus[0] || 'menu-bar-noche');
-  const [products, setProducts] = useState<Product[]>([]);
-  const [originalProducts, setOriginalProducts] = useState<Product[]>([]);
+  const {
+    loading,
+    error,
+    menus,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    initializeDatabase,
+    refreshMenus,
+  } = useDatabase();
+  const [selectedMenuId, setSelectedMenuId] = useState('');
+  const [currentMenu, setCurrentMenu] = useState<MenuData | null>(null);
   const [showProductForm, setShowProductForm] = useState(false);
   const [showQRGenerator, setShowQRGenerator] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Product | null>(null);
-  const [hasChanges, setHasChanges] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
-
-  const currentMenu = getMenuById(selectedMenuId);
-
-  const loadMenuData = useCallback(() => {
-    // Cargar desde localStorage si existe, sino desde el archivo
-    const storageKey = `menu-${selectedMenuId}`;
-    const savedData = localStorage.getItem(storageKey);
-    
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      setProducts(parsedData);
-    } else if (currentMenu) {
-      setProducts([...currentMenu.products]);
-    }
-    
-    // Guardar estado original
-    if (currentMenu) {
-      setOriginalProducts([...currentMenu.products]);
-    }
-  }, [selectedMenuId, currentMenu]);
+  const [showInitDialog, setShowInitDialog] = useState(false);
 
   useEffect(() => {
     // Verificar autenticación
@@ -83,53 +72,71 @@ export default function AdminDashboard() {
       router.push('/admin');
       return;
     }
-    loadMenuData();
-  }, [selectedMenuId, router, loadMenuData]);
+  }, [router]);
+  useEffect(() => {
+    // Seleccionar el primer menú disponible
+    if (menus.length > 0 && !selectedMenuId) {
+      setSelectedMenuId(menus[0].id);
+    }
+  }, [menus, selectedMenuId]);
 
   useEffect(() => {
-    // Verificar si hay cambios
-    const hasModifications = JSON.stringify(products) !== JSON.stringify(originalProducts);
-    setHasChanges(hasModifications);
-  }, [products, originalProducts]);
+    // Cargar el menú seleccionado
+    if (selectedMenuId) {
+      const menu = menus.find(m => m.id === selectedMenuId);
+      setCurrentMenu(menu || null);
+    }
+  }, [selectedMenuId, menus]);
 
-  const saveToLocalStorage = () => {
-    const storageKey = `menu-${selectedMenuId}`;
-    localStorage.setItem(storageKey, JSON.stringify(products));
-    setSaveMessage('Cambios guardados en localStorage');
+  const handleAddProduct = async (product: Product) => {
+    if (!selectedMenuId) return;
+    
+    const success = await createProduct(product, selectedMenuId);
+    if (success) {
+      setSaveMessage('Producto agregado correctamente');
       setTimeout(() => setSaveMessage(''), 3000);
+    }
   };
 
-  const restoreOriginal = () => {
-    setProducts([...originalProducts]);
-    const storageKey = `menu-${selectedMenuId}`;
-    localStorage.removeItem(storageKey);
-    setSaveMessage('Menú restaurado al original');
+  const handleEditProduct = async (product: Product) => {
+    if (!selectedMenuId) return;
+    
+    const success = await updateProduct(product, selectedMenuId);
+    if (success) {
+      setSaveMessage('Producto actualizado correctamente');
     setTimeout(() => setSaveMessage(''), 3000);
-  };
-
-  const handleAddProduct = (product: Product) => {
-    setProducts(prev => [...prev, product]);
-  };
-
-  const handleEditProduct = (product: Product) => {
-    setProducts(prev => prev.map(p => p.id === product.id ? product : p));
           setEditingProduct(null);
+    }
   };
 
-  const handleDeleteProduct = (productId: string) => {
-    setProducts(prev => prev.filter(p => p.id !== productId));
-    setDeleteConfirm(null);
+  const handleDeleteProduct = async (productId: string) => {
+    const success = await deleteProduct(productId);
+    if (success) {
+      setSaveMessage('Producto eliminado correctamente');
+      setTimeout(() => setSaveMessage(''), 3000);
+      setDeleteConfirm(null);
+    }
+  };
+
+  const handleInitializeDatabase = async () => {
+    const success = await initializeDatabase();
+    if (success) {
+      setSaveMessage('Base de datos inicializada correctamente');
+      setTimeout(() => setSaveMessage(''), 3000);
+      setShowInitDialog(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    await refreshMenus();
+    setSaveMessage('Datos actualizados');
+    setTimeout(() => setSaveMessage(''), 2000);
   };
 
   const exportMenuCode = () => {
-    const menuData = {
-      id: selectedMenuId,
-      name: currentMenu?.name || 'Menú',
-      description: currentMenu?.description || 'Descripción del menú',
-      products: products
-    };
+    if (!currentMenu) return;
 
-    const codeString = `'${selectedMenuId}': ${JSON.stringify(menuData, null, 2)},`;
+    const codeString = `'${selectedMenuId}': ${JSON.stringify(currentMenu, null, 2)},`;
     
     navigator.clipboard.writeText(codeString).then(() => {
       setSaveMessage('Código del menú copiado al portapapeles');
@@ -150,6 +157,7 @@ export default function AdminDashboard() {
     }).format(price);
   };
 
+  const products = currentMenu?.products || [];
   const productsByCategory = ['Entrada', 'Principal', 'Bebida', 'Postre'].map(category => ({
     category: category as ProductCategory,
     products: products.filter(p => p.category === category)
@@ -175,6 +183,68 @@ export default function AdminDashboard() {
     }
   };
 
+  // Mostrar pantalla de carga
+  if (loading && menus.length === 0) {
+    return (
+      <Box sx={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <Stack alignItems="center" spacing={2}>
+          <CircularProgress size={60} />
+          <Typography variant="h6" color="text.secondary">
+            Cargando panel de administración...
+          </Typography>
+            </Stack>
+          </Box>
+                      );
+  }
+
+  // Mostrar opción de inicializar si no hay menús
+  if (menus.length === 0 && !loading) {
+    return (
+      <Box sx={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: 4 
+              }}>
+        <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, maxWidth: 500 }}>
+          <DatabaseIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
+          <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
+            Base de Datos Vacía
+                </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            No se encontraron menús en la base de datos. ¿Deseas inicializar con los datos por defecto?
+                </Typography>
+          <Stack direction="row" spacing={2} justifyContent="center">
+            <Button 
+              variant="outlined" 
+              onClick={() => router.push('/admin')}
+            >
+              Volver al Login
+                      </Button>
+            <Button 
+              variant="contained" 
+              startIcon={<DatabaseIcon />}
+              onClick={() => setShowInitDialog(true)}
+              sx={{
+                background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
+              }}
+            >
+              Inicializar Base de Datos
+          </Button>
+          </Stack>
+        </Paper>
+      </Box>
+  );
+}
+
   if (!currentMenu) {
     return (
       <Box sx={{ 
@@ -192,23 +262,25 @@ export default function AdminDashboard() {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             El menú seleccionado no existe o no se pudo cargar.
           </Typography>
-          <Button 
-            variant="contained" 
-            onClick={() => router.push('/admin')}
-            sx={{ mr: 2 }}
-          >
-            Volver al Login
-          </Button>
-          <Button 
-            variant="outlined" 
-            onClick={() => setSelectedMenuId('menu-bar-noche')}
-          >
-            Cargar Menú por Defecto
-          </Button>
+          <Stack direction="row" spacing={2} justifyContent="center">
+            <Button 
+              variant="outlined" 
+              onClick={() => router.push('/admin')}
+            >
+              Volver al Login
+            </Button>
+            <Button 
+              variant="contained" 
+              onClick={handleRefresh}
+              startIcon={<RefreshIcon />}
+            >
+              Actualizar
+            </Button>
+          </Stack>
         </Paper>
       </Box>
-  );
-}
+    );
+  }
 
   return (
     <Box sx={{ 
@@ -243,6 +315,16 @@ export default function AdminDashboard() {
               <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
                 Gestiona el menú: {currentMenu.name}
               </Typography>
+              <Chip 
+                label="Base de Datos Activa" 
+                size="small" 
+                sx={{ 
+                  mt: 1,
+                  backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                  color: '#10B981',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }} 
+              />
             </Box>
             <Stack direction="row" spacing={2}>
               <Button
@@ -295,42 +377,23 @@ export default function AdminDashboard() {
                     onChange={(e) => setSelectedMenuId(e.target.value)}
                     label="Seleccionar Menú"
                   >
-                    {availableMenus.map((menuId) => {
-                      const menu = getMenuById(menuId);
-                      return (
-                        <MenuItem key={menuId} value={menuId}>
-                          {menu?.name || menuId}
-                        </MenuItem>
-                      );
-                    })}
+                    {menus.map((menu) => (
+                      <MenuItem key={menu.id} value={menu.id}>
+                        {menu.name}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Box>
               
               <Stack direction="row" spacing={2} sx={{ flex: 1, justifyContent: { md: 'flex-end' } }} flexWrap="wrap">
-                {hasChanges && (
-                  <Button
-                    variant="contained"
-                    startIcon={<SaveIcon />}
-                    onClick={saveToLocalStorage}
-                    sx={{
-                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                      }
-                    }}
-                  >
-                    Guardar Cambios
-                  </Button>
-                )}
-                
                 <Button
                   variant="outlined"
-                  startIcon={<RestoreIcon />}
-                  onClick={restoreOriginal}
-                  disabled={!hasChanges}
+                  startIcon={<RefreshIcon />}
+                  onClick={handleRefresh}
+                  disabled={loading}
                 >
-                  Restaurar Original
+                  {loading ? 'Actualizando...' : 'Actualizar'}
                 </Button>
                 
                 <Button
@@ -339,6 +402,15 @@ export default function AdminDashboard() {
                   onClick={exportMenuCode}
                 >
                   Exportar Código
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  startIcon={<DatabaseIcon />}
+                  onClick={() => setShowInitDialog(true)}
+                  color="warning"
+                >
+                  Reinicializar DB
                 </Button>
               </Stack>
             </Box>
@@ -360,6 +432,30 @@ export default function AdminDashboard() {
                 onClose={() => setSaveMessage('')}
               >
                 {saveMessage}
+              </Alert>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Error de la base de datos */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Alert 
+                severity="error" 
+                sx={{ mb: 3, borderRadius: 2 }}
+                action={
+                  <Button color="inherit" size="small" onClick={handleRefresh}>
+                    Reintentar
+                  </Button>
+                }
+              >
+                {error}
               </Alert>
             </motion.div>
           )}
@@ -411,7 +507,7 @@ export default function AdminDashboard() {
         </MotionPaper>
 
         {/* Productos por Categoría */}
-        {productsByCategory.map((group, groupIndex) => (
+        {productsByCategory.map((group) => (
           <MotionPaper
             key={group.category}
             variants={itemVariants}
@@ -446,7 +542,7 @@ export default function AdminDashboard() {
                   No hay productos en esta categoría
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  Haz clic en "Agregar" para crear el primer producto
+                  Haz clic en &quot;Agregar&quot; para crear el primer producto
                 </Typography>
               </Box>
             ) : (
@@ -511,6 +607,7 @@ export default function AdminDashboard() {
                           setEditingProduct(product);
                           setShowProductForm(true);
                         }}
+                        disabled={loading}
                       >
                         Editar
                       </Button>
@@ -519,6 +616,7 @@ export default function AdminDashboard() {
                         color="error"
                         startIcon={<DeleteIcon />}
                         onClick={() => setDeleteConfirm(product)}
+                        disabled={loading}
                       >
                         Eliminar
                       </Button>
@@ -543,6 +641,7 @@ export default function AdminDashboard() {
             }
           }}
           onClick={() => setShowProductForm(true)}
+          disabled={loading}
         >
           <AddIcon />
         </Fab>
@@ -603,22 +702,63 @@ export default function AdminDashboard() {
         </DialogTitle>
         <DialogContent>
           <Typography>
-            ¿Estás seguro de que quieres eliminar "{deleteConfirm?.name}"?
+            ¿Estás seguro de que quieres eliminar &quot;{deleteConfirm?.name}&quot;?
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Esta acción no se puede deshacer.
+            Esta acción no se puede deshacer y se eliminará permanentemente de la base de datos.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteConfirm(null)}>
+          <Button onClick={() => setDeleteConfirm(null)} disabled={loading}>
             Cancelar
           </Button>
           <Button
             color="error"
             variant="contained"
             onClick={() => deleteConfirm && handleDeleteProduct(deleteConfirm.id)}
+            disabled={loading}
           >
-            Eliminar
+            {loading ? 'Eliminando...' : 'Eliminar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo de inicialización de base de datos */}
+      <Dialog
+        open={showInitDialog}
+        onClose={() => setShowInitDialog(false)}
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle>
+          <Typography variant="h6" fontWeight={600}>
+            Inicializar Base de Datos
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>
+            Esta acción inicializará la base de datos con los datos por defecto del archivo menu.ts.
+          </Typography>
+          <Typography variant="body2" color="warning.main" sx={{ mb: 2 }}>
+            ⚠️ Advertencia: Esto puede sobrescribir datos existentes.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            ¿Estás seguro de que quieres continuar?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowInitDialog(false)} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button
+            color="warning"
+            variant="contained"
+            onClick={handleInitializeDatabase}
+            disabled={loading}
+            startIcon={<DatabaseIcon />}
+          >
+            {loading ? 'Inicializando...' : 'Inicializar'}
           </Button>
         </DialogActions>
       </Dialog>
