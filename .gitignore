@@ -5,6 +5,7 @@
 /.pnp
 .pnp.js
 .yarn/install-state.gz
+
 # testing
 /coverage
 
@@ -26,6 +27,7 @@ yarn-error.log*
 
 # local env files
 .env*.local
+
 # vercel
 .vercel
 
@@ -34,6 +36,7 @@ yarn-error.log*
 next-env.d.ts
 
 # Database files (development)
+/data/*.json
 /data/*.db
 /data/*.db-shm
 /data/*.db-wal

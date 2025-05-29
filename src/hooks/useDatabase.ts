@@ -3,6 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Product, MenuData } from '../app/types';
 
+interface DatabaseInfo {
+  initialized: boolean;
+  menusCount: number;
+  productsCount: number;
+  lastUpdated?: string;
+}
+
 interface DatabaseHook {
   // Estados
   loading: boolean;
@@ -24,7 +31,7 @@ interface DatabaseHook {
   // Utilidades
   initializeDatabase: (force?: boolean) => Promise<boolean>;
   refreshMenus: () => Promise<void>;
-  getDatabaseInfo: () => Promise<{ menusCount: number; productsCount: number } | null>;
+  getDatabaseInfo: () => Promise<DatabaseInfo | null>;
 }
 
 export const useDatabase = (): DatabaseHook => {
@@ -33,14 +40,16 @@ export const useDatabase = (): DatabaseHook => {
   const [menus, setMenus] = useState<MenuData[]>([]);
 
   // Función para manejar errores
-  const handleError = (error: Error | unknown, defaultMessage: string) => {
-    console.error(error);
+  const handleError = (error: unknown, defaultMessage: string) => {
+    console.error('Database Error:', error);
     setError(error instanceof Error ? error.message : defaultMessage);
     setLoading(false);
   };
 
   // Función para hacer peticiones HTTP
   const apiRequest = async (url: string, options: RequestInit = {}) => {
+    console.log('API Request:', url, options);
+    
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
@@ -49,7 +58,10 @@ export const useDatabase = (): DatabaseHook => {
       ...options,
     });
 
+    console.log('API Response Status:', response.status);
+    
     const data = await response.json();
+    console.log('API Response Data:', data);
     
     if (!data.success) {
       throw new Error(data.error || 'Error en la operación');
@@ -63,8 +75,10 @@ export const useDatabase = (): DatabaseHook => {
     try {
       setLoading(true);
       setError(null);
+      console.log('Getting all menus...');
       
       const data = await apiRequest('/api/menus');
+      console.log('Menus loaded:', data.data);
       setMenus(data.data);
       return data.data;
     } catch (error) {
@@ -101,7 +115,6 @@ export const useDatabase = (): DatabaseHook => {
         method: 'POST',
         body: JSON.stringify(menu),
       });
-      
       await refreshMenus();
       return true;
     } catch (error) {
@@ -131,7 +144,7 @@ export const useDatabase = (): DatabaseHook => {
     } finally {
       setLoading(false);
     }
-  };
+};
 
   // Eliminar un menú
   const deleteMenu = async (id: string): Promise<boolean> => {
@@ -151,7 +164,7 @@ export const useDatabase = (): DatabaseHook => {
     } finally {
       setLoading(false);
     }
-  };
+};
 
   // Crear un producto
   const createProduct = async (product: Product, menuId: string): Promise<boolean> => {
@@ -218,17 +231,20 @@ export const useDatabase = (): DatabaseHook => {
   // Inicializar la base de datos con datos del archivo
   const initializeDatabase = async (force: boolean = false): Promise<boolean> => {
     try {
+      console.log('Initializing database with force:', force);
       setLoading(true);
       setError(null);
       
-      await apiRequest('/api/database/seed', {
+      const data = await apiRequest('/api/database/seed', {
         method: 'POST',
         body: JSON.stringify({ force }),
       });
       
+      console.log('Database initialized successfully:', data);
       await refreshMenus();
       return true;
     } catch (error) {
+      console.error('Database initialization failed:', error);
       handleError(error, 'Error inicializando la base de datos');
       return false;
     } finally {
@@ -237,7 +253,7 @@ export const useDatabase = (): DatabaseHook => {
   };
 
   // Obtener información de la base de datos
-  const getDatabaseInfo = async () => {
+  const getDatabaseInfo = async (): Promise<DatabaseInfo | null> => {
     try {
       const data = await apiRequest('/api/database/seed');
       return data.data;
@@ -249,11 +265,13 @@ export const useDatabase = (): DatabaseHook => {
 
   // Refrescar la lista de menús
   const refreshMenus = async (): Promise<void> => {
+    console.log('Refreshing menus...');
     await getAllMenus();
   };
 
   // Cargar menús al montar el componente
   useEffect(() => {
+    console.log('useDatabase mounted, loading menus...');
     getAllMenus();
   }, [getAllMenus]);
 
@@ -272,5 +290,5 @@ export const useDatabase = (): DatabaseHook => {
     initializeDatabase,
     refreshMenus,
     getDatabaseInfo,
-};
+  };
 };

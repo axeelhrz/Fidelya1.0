@@ -56,6 +56,7 @@ export default function AdminDashboard() {
     initializeDatabase,
     refreshMenus,
   } = useDatabase();
+
   const [selectedMenuId, setSelectedMenuId] = useState('');
   const [currentMenu, setCurrentMenu] = useState<MenuData | null>(null);
   const [showProductForm, setShowProductForm] = useState(false);
@@ -64,6 +65,7 @@ export default function AdminDashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState<Product | null>(null);
   const [saveMessage, setSaveMessage] = useState('');
   const [showInitDialog, setShowInitDialog] = useState(false);
+  const [initLoading, setInitLoading] = useState(false);
 
   useEffect(() => {
     // Verificar autenticación
@@ -73,9 +75,11 @@ export default function AdminDashboard() {
       return;
     }
   }, [router]);
+
   useEffect(() => {
     // Seleccionar el primer menú disponible
     if (menus.length > 0 && !selectedMenuId) {
+      console.log('Setting first menu as selected:', menus[0].id);
       setSelectedMenuId(menus[0].id);
     }
   }, [menus, selectedMenuId]);
@@ -84,6 +88,7 @@ export default function AdminDashboard() {
     // Cargar el menú seleccionado
     if (selectedMenuId) {
       const menu = menus.find(m => m.id === selectedMenuId);
+      console.log('Current menu updated:', menu);
       setCurrentMenu(menu || null);
     }
   }, [selectedMenuId, menus]);
@@ -119,11 +124,30 @@ export default function AdminDashboard() {
   };
 
   const handleInitializeDatabase = async () => {
+    console.log('Initialize database button clicked');
+    setInitLoading(true);
+    
+    try {
     const success = await initializeDatabase(true); // Forzar la inicialización
+      console.log('Initialize result:', success);
+      
     if (success) {
-      setSaveMessage('Base de datos reinicializada correctamente');
+        setSaveMessage('Base de datos inicializada correctamente');
       setTimeout(() => setSaveMessage(''), 3000);
       setShowInitDialog(false);
+        
+        // Refrescar los datos después de la inicialización
+    await refreshMenus();
+      } else {
+        setSaveMessage('Error al inicializar la base de datos');
+        setTimeout(() => setSaveMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Error in handleInitializeDatabase:', error);
+      setSaveMessage('Error al inicializar la base de datos');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } finally {
+      setInitLoading(false);
     }
   };
 
@@ -182,8 +206,7 @@ export default function AdminDashboard() {
       transition: { duration: 0.5 } 
     }
   };
-
-  // Mostrar pantalla de carga
+  // Mostrar pantalla de carga inicial
   if (loading && menus.length === 0) {
     return (
       <Box sx={{ 
@@ -222,22 +245,30 @@ export default function AdminDashboard() {
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
             No se encontraron menús en la base de datos. ¿Deseas inicializar con los datos por defecto?
                 </Typography>
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+              </Alert>
+          )}
+          
           <Stack direction="row" spacing={2} justifyContent="center">
             <Button 
               variant="outlined" 
               onClick={() => router.push('/admin')}
-            >
+              disabled={initLoading}
+              >
               Volver al Login
-                      </Button>
+              </Button>
             <Button 
               variant="contained" 
-              startIcon={<DatabaseIcon />}
-              onClick={() => setShowInitDialog(true)}
+              startIcon={initLoading ? <CircularProgress size={20} /> : <DatabaseIcon />}
+            onClick={handleInitializeDatabase}
+              disabled={initLoading}
               sx={{
                 background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
               }}
             >
-              Inicializar Base de Datos
+              {initLoading ? 'Inicializando...' : 'Inicializar Base de Datos'}
           </Button>
           </Stack>
         </Paper>
@@ -316,7 +347,7 @@ export default function AdminDashboard() {
                 Gestiona el menú: {currentMenu.name}
               </Typography>
               <Chip 
-                label="Base de Datos Activa" 
+                label="Base de Datos JSON Activa" 
                 size="small" 
                 sx={{ 
                   mt: 1,
@@ -427,7 +458,7 @@ export default function AdminDashboard() {
               transition={{ duration: 0.3 }}
             >
               <Alert 
-                severity="success" 
+                severity={saveMessage.includes('Error') ? 'error' : 'success'}
                 sx={{ mb: 3, borderRadius: 2 }}
                 onClose={() => setSaveMessage('')}
               >
@@ -726,39 +757,39 @@ export default function AdminDashboard() {
       {/* Diálogo de inicialización de base de datos */}
       <Dialog
         open={showInitDialog}
-        onClose={() => setShowInitDialog(false)}
+        onClose={() => !initLoading && setShowInitDialog(false)}
         PaperProps={{
           sx: { borderRadius: 3 }
         }}
       >
         <DialogTitle>
           <Typography variant="h6" fontWeight={600}>
-            Inicializar Base de Datos
+            Reinicializar Base de Datos
           </Typography>
         </DialogTitle>
         <DialogContent>
           <Typography sx={{ mb: 2 }}>
-            Esta acción inicializará la base de datos con los datos por defecto del archivo menu.ts.
+            Esta acción reinicializará la base de datos con los datos por defecto del archivo menu.ts.
           </Typography>
           <Typography variant="body2" color="warning.main" sx={{ mb: 2 }}>
-            ⚠️ Advertencia: Esto puede sobrescribir datos existentes.
+            ⚠️ Advertencia: Esto sobrescribirá todos los datos existentes.
           </Typography>
           <Typography variant="body2" color="text.secondary">
             ¿Estás seguro de que quieres continuar?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowInitDialog(false)} disabled={loading}>
+          <Button onClick={() => setShowInitDialog(false)} disabled={initLoading}>
             Cancelar
           </Button>
           <Button
             color="warning"
             variant="contained"
             onClick={handleInitializeDatabase}
-            disabled={loading}
-            startIcon={<DatabaseIcon />}
+            disabled={initLoading}
+            startIcon={initLoading ? <CircularProgress size={20} /> : <DatabaseIcon />}
           >
-            {loading ? 'Inicializando...' : 'Inicializar'}
+            {initLoading ? 'Inicializando...' : 'Reinicializar'}
           </Button>
         </DialogActions>
       </Dialog>
