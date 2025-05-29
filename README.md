@@ -1,53 +1,36 @@
-# Sistema Contable para Frutería
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Sistema web profesional y moderno para la gestión completa de una frutería, incluyendo inventario, ventas, compras, reportes y más.
+## Getting Started
 
-## 🚀 Características
+First, run the development server:
 
-### ✨ Funcionalidades Principales
-- **Dashboard Interactivo**: KPIs, gráficos y alertas en tiempo real
-- **Gestión de Inventario**: Control completo de productos, stock y vencimientos
-- **Punto de Venta**: Sistema de ventas rápido e intuitivo
-- **Gestión de Compras**: Registro y control de compras a proveedores
-- **Reportes Financieros**: Análisis de ventas, ganancias y rendimiento
-- **Gestión de Clientes y Proveedores**: ABM completo con historial
-- **Sistema de Notificaciones**: Alertas automáticas de stock y vencimientos
-- **Configuración Avanzada**: Personalización completa del sistema
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-### 🎨 Diseño y UX
-- **Diseño Minimalista**: Interfaz limpia inspirada en Linear, Stripe y Vercel
-- **Responsive**: Optimizado para móviles, tablets y escritorio
-- **Tema Claro/Oscuro**: Cambio dinámico de tema
-- **Animaciones Suaves**: Transiciones con Framer Motion
-- **Sin Grids**: Uso de Box, Stack y Container de Material-UI
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### 🔐 Seguridad
-- **Autenticación JWT**: Sistema seguro de login/registro
-- **Roles de Usuario**: Administrador y Empleado
-- **Rutas Protegidas**: Control de acceso por roles
-- **Validaciones**: Backend y frontend validados
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## 🛠️ Stack Tecnológico
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### Backend
-- **Node.js** + **Express**: Servidor y API REST
-- **Prisma ORM**: Gestión de base de datos
-- **SQLite**: Base de datos (configurable a PostgreSQL)
-- **JWT**: Autenticación
-- **bcrypt**: Encriptación de contraseñas
+## Learn More
 
-### Frontend
-- **React 19** + **TypeScript**: Interfaz de usuario
-- **Material-UI (MUI)**: Componentes UI
-- **Framer Motion**: Animaciones
-- **Recharts**: Gráficos y visualizaciones
-- **Axios**: Cliente HTTP
-- **React Router**: Navegación
+To learn more about Next.js, take a look at the following resources:
 
-## 📦 Instalación
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-### Prerrequisitos
-- Node.js 18+
-- npm o yarn
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-### 1. Clonar el repositorio
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
