@@ -1,47 +1,44 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Container, Alert, CircularProgress, Box } from '@mui/material';
+import { Box, CircularProgress, Container, Alert, Button, Stack } from '@mui/material';
 import { motion } from 'framer-motion';
 import { MenuData } from '../types';
 import MenuContent from './MenuContent';
 
 const MotionContainer = motion(Container);
 export default function MenuPage() {
-  const searchParams = useSearchParams();
-  const menuId = searchParams.get('id') || 'menu-bar-noche'; // ID por defecto
-  
-  const [menu, setMenu] = useState<MenuData | null>(null);
+  const [menus, setMenus] = useState<MenuData[]>([]);
+  const [selectedMenu, setSelectedMenu] = useState<MenuData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchMenu = async () => {
+    const fetchMenus = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        const response = await fetch(`/api/menus/${menuId}`);
+        const response = await fetch('/api/menus');
         const data = await response.json();
         
-        if (data.success) {
-          setMenu(data.data);
+        if (data.success && data.data.length > 0) {
+          setMenus(data.data);
+          // Seleccionar el primer menú por defecto
+          setSelectedMenu(data.data[0]);
         } else {
-          setError(data.error || 'Error cargando el menú');
+          setError('No se encontraron menús disponibles');
         }
       } catch (err) {
-        console.error('Error fetching menu:', err);
+        console.error('Error fetching menus:', err);
         setError('Error de conexión');
       } finally {
         setLoading(false);
       }
     };
-  
-    if (menuId) {
-      fetchMenu();
-    }
-  }, [menuId]);
+
+    fetchMenus();
+  }, []);
 
   if (loading) {
     return (
@@ -71,7 +68,7 @@ export default function MenuPage() {
     );
   }
 
-  if (!menu) {
+  if (!selectedMenu) {
     return (
       <MotionContainer
         initial={{ opacity: 0 }}
@@ -79,11 +76,39 @@ export default function MenuPage() {
         sx={{ py: 4 }}
       >
         <Alert severity="warning" sx={{ borderRadius: 2 }}>
-          Menú no encontrado
+          No hay menús disponibles
         </Alert>
       </MotionContainer>
     );
   }
 
-  return <MenuContent menu={menu} />;
+  // Si hay múltiples menús, mostrar selector
+  if (menus.length > 1) {
+    return (
+      <Box sx={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
+      }}>
+        {/* Selector de menús */}
+        <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <Stack direction="row" spacing={2} sx={{ justifyContent: 'center', flexWrap: 'wrap' }}>
+            {menus.map((menu) => (
+              <Button
+                key={menu.id}
+                variant={selectedMenu.id === menu.id ? 'contained' : 'outlined'}
+                onClick={() => setSelectedMenu(menu)}
+                size="small"
+              >
+                {menu.name}
+              </Button>
+            ))}
+          </Stack>
+        </Box>
+        
+        <MenuContent menu={selectedMenu} />
+      </Box>
+    );
+  }
+
+  return <MenuContent menu={selectedMenu} />;
 }
