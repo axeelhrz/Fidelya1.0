@@ -92,25 +92,6 @@ const mockProducts: Product[] = [
   },
 ];
 
-// Mock hook for Firestore - replace with your actual implementation
-const useFirestore = <T,>(_collection: string) => {
-  const [data, setData] = useState<T[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const addItem = async (item: Omit<T, 'id' | 'createdAt' | 'updatedAt'>) => {
-    console.log('Adding item:', item);
-  };
-
-  const updateItem = async (id: string, updates: Partial<T>) => {
-    console.log('Updating item:', id, updates);
-  };
-
-  const deleteItem = async (id: string) => {
-    console.log('Deleting item:', id);
-  };
-
-  return { data, loading, addItem, updateItem, deleteItem };
-};
 
 // ProductCard component
 const ProductCard: React.FC<{
@@ -333,7 +314,7 @@ const ProductDialog: React.FC<{
 export const Inventory: React.FC = () => {
   // State management
   const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);

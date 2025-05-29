@@ -26,12 +26,11 @@ import { useTheme as useCustomTheme } from '../../contexts/ThemeContext';
 
 interface HeaderProps {
   onMenuClick: () => void;
-  sidebarOpen: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen }) => {
+export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { currentUser, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useCustomTheme();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);

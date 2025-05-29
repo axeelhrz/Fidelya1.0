@@ -35,15 +35,110 @@ import {
   Phone,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { useFirestore } from '../hooks/useFirestore';
 import type { Product, Sale, SaleItem } from '../types';
-import { useAuth } from '../contexts/AuthContext';
 
+// Mock data
+const mockProducts: Product[] = [
+  {
+    id: '1',
+    name: 'Manzanas Rojas',
+    category: 'Frutas',
+    price: 2500,
+    cost: 1500,
+    stock: 50,
+    minStock: 10,
+    supplier: 'Frutería Central',
+    imageUrl: '',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: '2',
+    name: 'Bananos',
+    category: 'Frutas',
+    price: 1800,
+    cost: 1000,
+    stock: 30,
+    minStock: 5,
+    supplier: 'Distribuidora Tropical',
+    imageUrl: '',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: '3',
+    name: 'Naranjas',
+    category: 'Frutas',
+    price: 2000,
+    cost: 1200,
+    stock: 25,
+    minStock: 8,
+    supplier: 'Frutería Central',
+    imageUrl: '',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: '4',
+    name: 'Lechuga',
+    category: 'Verduras',
+    price: 1500,
+    cost: 800,
+    stock: 20,
+    minStock: 5,
+    supplier: 'Verduras Frescas',
+    imageUrl: '',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
+
+const mockSales: Sale[] = [
+  {
+    id: '1',
+    products: [
+      { productId: '1', productName: 'Manzanas Rojas', quantity: 2, price: 2500, total: 5000 },
+      { productId: '2', productName: 'Bananos', quantity: 1, price: 1800, total: 1800 },
+    ],
+    total: 6800,
+    subtotal: 6800,
+    discount: 0,
+    paymentMethod: 'cash',
+    customerName: 'Juan Pérez',
+    createdAt: new Date(),
+    userId: '1',
+  },
+  {
+    id: '2',
+    products: [
+      { productId: '3', productName: 'Naranjas', quantity: 3, price: 2000, total: 6000 },
+    ],
+    total: 6000,
+    subtotal: 6000,
+    discount: 0,
+    paymentMethod: 'card',
+    createdAt: new Date(Date.now() - 86400000), // Ayer
+    userId: '1',
+  },
+  {
+    id: '3',
+    products: [
+      { productId: '4', productName: 'Lechuga', quantity: 2, price: 1500, total: 3000 },
+    ],
+    total: 3000,
+    subtotal: 3000,
+    discount: 0,
+    paymentMethod: 'transfer',
+    customerName: 'María García',
+    customerPhone: '123456789',
+    createdAt: new Date(),
+    userId: '1',
+  },
+];
 const QuickSaleForm: React.FC<{
   products: Product[];
   onSaleComplete: (sale: Omit<Sale, 'id' | 'createdAt'>) => void;
 }> = ({ products, onSaleComplete }) => {
-  const { currentUser } = useAuth();
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -110,7 +205,7 @@ const QuickSaleForm: React.FC<{
       paymentMethod,
       customerName: customerName || undefined,
       customerPhone: customerPhone || undefined,
-      userId: currentUser?.id || '',
+      userId: '1', // Mock user ID
     };
 
     onSaleComplete(sale);
@@ -294,7 +389,7 @@ const QuickSaleForm: React.FC<{
                   <InputLabel>Método de Pago</InputLabel>
                   <Select
                     value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value as any)}
+                    onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'card' | 'transfer')}
                     label="Método de Pago"
                   >
                     <MenuItem value="cash">Efectivo</MenuItem>
@@ -347,8 +442,10 @@ const QuickSaleForm: React.FC<{
                     size="large"
                     onClick={handleCompleteSale}
                     startIcon={<Receipt />}
-                    sx={{ mt: 2 }}
-                  fullWidth={{ xs: true, md: false }}
+                    sx={{ 
+                      mt: 2,
+                      width: { xs: '100%', md: 'auto' }
+                    }}
                   >
                     Completar Venta
                   </Button>
@@ -362,24 +459,31 @@ const QuickSaleForm: React.FC<{
 };
 
 export const Sales: React.FC = () => {
-  const { data: products, updateItem: updateProduct } = useFirestore<Product>('products');
-  const { data: sales, addItem: addSale } = useFirestore<Sale>('sales');
+  const [products, setProducts] = useState<Product[]>(mockProducts);
+  const [sales, setSales] = useState<Sale[]>(mockSales);
   const [showHistory, setShowHistory] = useState(false);
 
-  const handleSaleComplete = async (saleData: Omit<Sale, 'id' | 'createdAt'>) => {
+  const handleSaleComplete = (saleData: Omit<Sale, 'id' | 'createdAt'>) => {
     try {
       // Agregar la venta
-      await addSale(saleData);
+      const newSale: Sale = {
+        ...saleData,
+        id: Date.now().toString(),
+        createdAt: new Date(),
+  };
+      setSales([newSale, ...sales]);
 
       // Actualizar el stock de los productos
-      for (const item of saleData.products) {
-        const product = products.find(p => p.id === item.productId);
-        if (product) {
-          await updateProduct(product.id, {
-            stock: product.stock - item.quantity,
-          });
+      setProducts(products.map(product => {
+        const saleItem = saleData.products.find(item => item.productId === product.id);
+        if (saleItem) {
+          return {
+            ...product,
+            stock: product.stock - saleItem.quantity,
+    };
         }
-      }
+        return product;
+      }));
 
       alert('Venta registrada exitosamente');
     } catch (error) {
@@ -393,7 +497,7 @@ export const Sales: React.FC = () => {
       cash: 'Efectivo',
       card: 'Tarjeta',
       transfer: 'Transferencia',
-    };
+};
     return labels[method as keyof typeof labels] || method;
   };
 
@@ -412,10 +516,10 @@ export const Sales: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           mb: 3,
           flexDirection: { xs: 'column', md: 'row' },
           gap: { xs: 2, md: 0 }
@@ -444,8 +548,8 @@ export const Sales: React.FC = () => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        <Box sx={{ 
-          display: 'flex', 
+        <Box sx={{
+          display: 'flex',
           flexDirection: { xs: 'column', md: 'row' },
           gap: 3,
           mb: 3
