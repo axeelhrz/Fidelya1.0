@@ -27,14 +27,16 @@ return new class extends Migration
             $table->decimal('new_stock', 10, 3);
             $table->decimal('unit_cost', 10, 2)->nullable();
             
-            // Referencias
-            $table->morphs('reference'); // Puede ser sale_id, purchase_id, etc.
+            // Referencias - using individual columns instead of morphs to avoid index conflicts
+            $table->string('reference_type')->nullable();
+            $table->unsignedBigInteger('reference_id')->nullable();
             $table->string('reference_number', 50)->nullable();
             
             $table->text('notes')->nullable();
             $table->timestamp('movement_date');
             $table->timestamps();
             
+            // Indexes
             $table->index(['product_id', 'movement_date']);
             $table->index(['type', 'movement_date']);
             $table->index(['reference_type', 'reference_id']);
