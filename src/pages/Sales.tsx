@@ -5,7 +5,6 @@ import {
   Button,
   Card,
   CardContent,
-  Grid,
   TextField,
   Table,
   TableBody,
@@ -15,10 +14,6 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   FormControl,
   InputLabel,
   Select,
@@ -39,9 +34,9 @@ import {
   Person,
   Phone,
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useFirestore } from '../hooks/useFirestore';
-import { Product, Sale, SaleItem } from '../types';
+import type { Product, Sale, SaleItem } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
 const QuickSaleForm: React.FC<{
@@ -137,8 +132,13 @@ const QuickSaleForm: React.FC<{
 
         {/* Agregar productos */}
         <Box sx={{ mb: 3 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={6}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 2,
+            alignItems: { xs: 'stretch', md: 'center' }
+          }}>
+            <Box sx={{ flex: { xs: '1', md: '2' } }}>
               <Autocomplete
                 options={products}
                 getOptionLabel={(option) => `${option.name} - $${option.price}`}
@@ -169,8 +169,8 @@ const QuickSaleForm: React.FC<{
                   </Box>
                 )}
               />
-            </Grid>
-            <Grid item xs={12} md={3}>
+            </Box>
+            <Box sx={{ flex: { xs: '1', md: '1' } }}>
               <TextField
                 fullWidth
                 label="Cantidad"
@@ -179,8 +179,8 @@ const QuickSaleForm: React.FC<{
                 onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
                 inputProps={{ min: 1 }}
               />
-            </Grid>
-            <Grid item xs={12} md={3}>
+            </Box>
+            <Box sx={{ flex: { xs: '1', md: '1' } }}>
               <Button
                 fullWidth
                 variant="contained"
@@ -190,8 +190,8 @@ const QuickSaleForm: React.FC<{
               >
                 Agregar
               </Button>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Box>
 
         {/* Carrito */}
@@ -254,8 +254,12 @@ const QuickSaleForm: React.FC<{
         {/* Información del cliente y pago */}
         {cart.length > 0 && (
           <Box sx={{ mb: 3 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: 2
+            }}>
+              <Box sx={{ flex: 1 }}>
                 <TextField
                   fullWidth
                   label="Nombre del cliente (opcional)"
@@ -269,8 +273,8 @@ const QuickSaleForm: React.FC<{
                     ),
                   }}
                 />
-              </Grid>
-              <Grid item xs={12} md={4}>
+              </Box>
+              <Box sx={{ flex: 1 }}>
                 <TextField
                   fullWidth
                   label="Teléfono (opcional)"
@@ -284,8 +288,8 @@ const QuickSaleForm: React.FC<{
                     ),
                   }}
                 />
-              </Grid>
-              <Grid item xs={12} md={4}>
+              </Box>
+              <Box sx={{ flex: 1 }}>
                 <FormControl fullWidth>
                   <InputLabel>Método de Pago</InputLabel>
                   <Select
@@ -298,8 +302,8 @@ const QuickSaleForm: React.FC<{
                     <MenuItem value="transfer">Transferencia</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </Box>
         )}
 
@@ -307,8 +311,13 @@ const QuickSaleForm: React.FC<{
         {cart.length > 0 && (
           <Box>
             <Divider sx={{ mb: 2 }} />
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={8}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: 2,
+              alignItems: { xs: 'stretch', md: 'flex-end' }
+            }}>
+              <Box sx={{ flex: { xs: '1', md: '2' } }}>
                 <TextField
                   fullWidth
                   label="Descuento (%)"
@@ -317,9 +326,11 @@ const QuickSaleForm: React.FC<{
                   onChange={(e) => setDiscount(Math.max(0, Math.min(100, Number(e.target.value))))}
                   inputProps={{ min: 0, max: 100 }}
                 />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Box sx={{ textAlign: 'right' }}>
+              </Box>
+              <Box sx={{ 
+                flex: { xs: '1', md: '1' },
+                textAlign: { xs: 'center', md: 'right' }
+              }}>
                   <Typography variant="body2" color="text.secondary">
                     Subtotal: ${subtotal.toLocaleString()}
                   </Typography>
@@ -337,12 +348,12 @@ const QuickSaleForm: React.FC<{
                     onClick={handleCompleteSale}
                     startIcon={<Receipt />}
                     sx={{ mt: 2 }}
+                  fullWidth={{ xs: true, md: false }}
                   >
                     Completar Venta
                   </Button>
                 </Box>
-              </Grid>
-            </Grid>
+            </Box>
           </Box>
         )}
       </CardContent>
@@ -401,8 +412,15 @@ export const Sales: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Box>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 3,
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 2, md: 0 }
+        }}>
+          <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
             <Typography variant="h4" fontWeight="bold" gutterBottom>
               Ventas
             </Typography>
@@ -426,8 +444,13 @@ export const Sales: React.FC = () => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} md={6}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: 3,
+          mb: 3
+        }}>
+          <Box sx={{ flex: 1 }}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -443,8 +466,8 @@ export const Sales: React.FC = () => {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
-          <Grid item xs={12} md={6}>
+          </Box>
+          <Box sx={{ flex: 1 }}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -460,8 +483,8 @@ export const Sales: React.FC = () => {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </motion.div>
 
       {!showHistory ? (
