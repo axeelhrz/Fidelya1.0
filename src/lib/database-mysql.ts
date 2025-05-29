@@ -1,24 +1,23 @@
 import mysql from 'mysql2/promise';
-import { Product, MenuData } from '../app/types';
 
-// Configuración de la conexión MySQL
-const createConnection = async () => {
-  try {
-    const connection = await mysql.createConnection({
+// Crear un pool de conexiones para mejor rendimiento
+const pool = mysql.createPool({
       host: process.env.MYSQL_HOST || 'localhost',
       port: parseInt(process.env.MYSQL_PORT || '3306'),
       user: process.env.MYSQL_USER || 'root',
       password: process.env.MYSQL_PASSWORD || '',
       database: process.env.MYSQL_DATABASE || 'menuqr',
-      charset: 'utf8mb4'
+  charset: 'utf8mb4',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  acquireTimeout: 60000,
+  timeout: 60000
     });
     
-    console.log('Conexión MySQL establecida correctamente');
-    return connection;
-  } catch (error) {
-    console.error('Error conectando a MySQL:', error);
-    throw error;
-  }
+// Reemplazar createConnection() con:
+const getConnection = async () => {
+  return await pool.getConnection();
 };
 
 // Función para inicializar las tablas
@@ -67,9 +66,9 @@ export const DatabaseAPI = {
   init: async (): Promise<boolean> => {
     console.log('Inicializando base de datos MySQL...');
     try {
-      const connection = await createConnection();
+      const connection = await getConnection();
       const success = await initializeTables(connection);
-      await connection.end();
+      await connection.release();
       return success;
     } catch (error) {
       console.error('Error inicializando MySQL:', error);
@@ -80,7 +79,7 @@ export const DatabaseAPI = {
   menus: {
     create: async (menuData: MenuData): Promise<boolean> => {
       console.log('Creando menú en MySQL:', menuData.id);
-      const connection = await createConnection();
+      const connection = await getConnection();
       
       try {
         await connection.beginTransaction();
@@ -118,13 +117,13 @@ export const DatabaseAPI = {
         console.error('Error creando menú en MySQL:', error);
         return false;
       } finally {
-        await connection.end();
+        await connection.release();
       }
     },
 
     get: async (id: string): Promise<MenuData | null> => {
       console.log('Obteniendo menú de MySQL:', id);
-      const connection = await createConnection();
+      const connection = await getConnection();
       
       try {
         // Obtener menú
@@ -165,13 +164,13 @@ export const DatabaseAPI = {
         console.error('Error obteniendo menú de MySQL:', error);
         return null;
       } finally {
-        await connection.end();
+        await connection.release();
       }
     },
 
     getAll: async (): Promise<MenuData[]> => {
       console.log('Obteniendo todos los menús de MySQL...');
-      const connection = await createConnection();
+      const connection = await getConnection();
       
       try {
         // Obtener todos los menús
@@ -219,13 +218,13 @@ export const DatabaseAPI = {
         console.error('Error obteniendo menús de MySQL:', error);
         return [];
       } finally {
-        await connection.end();
+        await connection.release();
       }
     },
 
     update: async (menuData: MenuData): Promise<boolean> => {
       console.log('Actualizando menú en MySQL:', menuData.id);
-      const connection = await createConnection();
+      const connection = await getConnection();
       
       try {
         const [result]: any = await connection.execute(
@@ -238,13 +237,13 @@ export const DatabaseAPI = {
         console.error('Error actualizando menú en MySQL:', error);
         return false;
       } finally {
-        await connection.end();
+        await connection.release();
       }
     },
 
     delete: async (id: string): Promise<boolean> => {
       console.log('Eliminando menú de MySQL:', id);
-      const connection = await createConnection();
+      const connection = await getConnection();
       
       try {
         const [result]: any = await connection.execute(
@@ -257,7 +256,7 @@ export const DatabaseAPI = {
         console.error('Error eliminando menú de MySQL:', error);
         return false;
       } finally {
-        await connection.end();
+        await connection.release();
       }
     }
   },
@@ -265,7 +264,7 @@ export const DatabaseAPI = {
   products: {
     create: async (product: Product, menuId: string): Promise<boolean> => {
       console.log('Creando producto en MySQL:', product.id);
-      const connection = await createConnection();
+      const connection = await getConnection();
       
       try {
         await connection.execute(
@@ -278,13 +277,13 @@ export const DatabaseAPI = {
         console.error('Error creando producto en MySQL:', error);
         return false;
       } finally {
-        await connection.end();
+        await connection.release();
       }
     },
 
     update: async (product: Product): Promise<boolean> => {
       console.log('Actualizando producto en MySQL:', product.id);
-      const connection = await createConnection();
+      const connection = await getConnection();
       
       try {
         const [result]: any = await connection.execute(
@@ -297,13 +296,13 @@ export const DatabaseAPI = {
         console.error('Error actualizando producto en MySQL:', error);
         return false;
       } finally {
-        await connection.end();
+        await connection.release();
       }
     },
 
     delete: async (id: string): Promise<boolean> => {
       console.log('Eliminando producto de MySQL:', id);
-      const connection = await createConnection();
+      const connection = await getConnection();
       
       try {
         const [result]: any = await connection.execute(
@@ -316,13 +315,13 @@ export const DatabaseAPI = {
         console.error('Error eliminando producto de MySQL:', error);
         return false;
       } finally {
-        await connection.end();
+        await connection.release();
       }
     },
 
     getByMenu: async (menuId: string): Promise<Product[]> => {
       console.log('Obteniendo productos del menú de MySQL:', menuId);
-      const connection = await createConnection();
+      const connection = await getConnection();
       
       try {
         const [rows]: any = await connection.execute(
@@ -345,7 +344,7 @@ export const DatabaseAPI = {
         console.error('Error obteniendo productos de MySQL:', error);
         return [];
       } finally {
-        await connection.end();
+        await connection.release();
       }
     }
   },
@@ -400,7 +399,7 @@ export const DatabaseAPI = {
 
     hasData: async (): Promise<boolean> => {
       console.log('Verificando si la base de datos MySQL tiene datos...');
-      const connection = await createConnection();
+      const connection = await getConnection();
       
       try {
         const [rows]: any = await connection.execute(
@@ -414,13 +413,13 @@ export const DatabaseAPI = {
         console.error('Error verificando datos en MySQL:', error);
         return false;
       } finally {
-        await connection.end();
+        await connection.release();
       }
     },
 
     clearAll: async (): Promise<boolean> => {
       console.log('Limpiando todos los datos de MySQL...');
-      const connection = await createConnection();
+      const connection = await getConnection();
       
       try {
         await connection.beginTransaction();
@@ -439,13 +438,13 @@ export const DatabaseAPI = {
         console.error('Error limpiando base de datos MySQL:', error);
         return false;
       } finally {
-        await connection.end();
+        await connection.release();
       }
     },
 
     getInfo: async () => {
       console.log('Obteniendo información de la base de datos MySQL...');
-      const connection = await createConnection();
+      const connection = await getConnection();
       
       try {
         // Contar menús
@@ -484,10 +483,58 @@ export const DatabaseAPI = {
           lastUpdated: null
         };
       } finally {
-        await connection.end();
+        await connection.release();
       }
     }
   }
 };
 
 export default DatabaseAPI;
+
+const createConnectionWithRetry = async (retries = 3): Promise<any> => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const connection = await pool.getConnection();
+      console.log('Conexión MySQL establecida correctamente');
+      return connection;
+    } catch (error) {
+      console.error(`Intento ${i + 1} fallido:`, error);
+      if (i === retries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
+    }
+  }
+};
+
+const validateSchema = async (connection: any): Promise<boolean> => {
+  try {
+    // Verificar que las tablas existen
+    const [tables]: any = await connection.execute(
+      "SHOW TABLES LIKE 'menus'"
+    );
+    
+    if (tables.length === 0) {
+      console.log('Esquema no encontrado, inicializando...');
+      return await initializeTables(connection);
+    }
+    
+    // Verificar estructura de columnas
+    const [columns]: any = await connection.execute(
+      "DESCRIBE menus"
+    );
+    
+    const requiredColumns = ['id', 'name', 'description', 'created_at', 'updated_at'];
+    const existingColumns = columns.map((col: any) => col.Field);
+    
+    for (const col of requiredColumns) {
+      if (!existingColumns.includes(col)) {
+        console.error(`Columna faltante: ${col}`);
+        return false;
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error validando esquema:', error);
+    return false;
+  }
+};
