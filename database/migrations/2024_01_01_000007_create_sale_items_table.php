@@ -8,37 +8,50 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('sale_items', function (Blueprint $table) {
+        Schema::create('sales', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sale_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('restrict');
+            $table->string('sale_number', 20)->unique();
+            $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('user_id')->constrained()->onDelete('restrict'); // Vendedor
             
-            // Información del producto al momento de la venta
-            $table->string('product_name', 200); // Snapshot del nombre
-            $table->string('product_code', 50); // Snapshot del código
-            $table->decimal('unit_price', 10, 2); // Precio unitario al momento de venta
-            $table->decimal('unit_cost', 10, 2); // Costo unitario al momento de venta
-            $table->decimal('quantity', 10, 3);
-            $table->string('unit', 20);
+            // Fechas
+            $table->timestamp('sale_date');
+            $table->date('due_date')->nullable();
             
-            // Descuentos por ítem
-            $table->decimal('discount_percentage', 5, 2)->default(0);
-            $table->decimal('discount_amount', 10, 2)->default(0);
+            // Montos
+            $table->decimal('subtotal', 12, 2);
+            $table->decimal('tax_amount', 12, 2)->default(0);
+            $table->decimal('discount_amount', 12, 2)->default(0);
+            $table->decimal('total_amount', 12, 2);
+            $table->decimal('paid_amount', 12, 2)->default(0);
+            $table->decimal('change_amount', 12, 2)->default(0);
             
-            // Totales calculados
-            $table->decimal('subtotal', 10, 2); // quantity * unit_price
-            $table->decimal('total', 10, 2); // subtotal - discount_amount
-            $table->decimal('profit', 10, 2)->storedAs('(total - (unit_cost * quantity))');
+            // Estado y tipo
+            $table->enum('status', ['pendiente', 'completada', 'cancelada', 'devuelta'])->default('completada');
+            $table->enum('sale_type', ['mostrador', 'delivery', 'pickup', 'mayorista'])->default('mostrador');
+            $table->enum('payment_method', ['efectivo', 'tarjeta_debito', 'tarjeta_credito', 'transferencia', 'cheque', 'mixto'])->default('efectivo');
+            $table->enum('payment_status', ['pendiente', 'parcial', 'pagado', 'vencido'])->default('pagado');
             
+            // Información adicional
+            $table->text('notes')->nullable();
+            $table->string('receipt_number', 50)->nullable();
+            $table->json('payment_details')->nullable(); // Detalles del pago mixto
+            $table->string('delivery_address')->nullable();
+            $table->timestamp('delivery_date')->nullable();
+            $table->decimal('delivery_cost', 8, 2)->default(0);
+            
+            $table->softDeletes(); // Add soft deletes support
             $table->timestamps();
             
-            $table->index(['sale_id', 'product_id']);
-            $table->index('product_id');
+            $table->index(['sale_date', 'status']);
+            $table->index(['customer_id', 'sale_date']);
+            $table->index(['user_id', 'sale_date']);
+            $table->index(['payment_status', 'due_date']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('sale_items');
+        Schema::dropIfExists('sales');
     }
 };

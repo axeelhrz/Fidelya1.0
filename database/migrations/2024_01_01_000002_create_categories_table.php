@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('color', 7)->default('#66BB6A'); // Verde por defecto
             $table->string('icon', 50)->default('🍎');
             $table->boolean('is_active')->default(true);
+            $table->softDeletes(); // Add soft deletes support
             $table->timestamps();
             
             $table->index(['is_active', 'name']);

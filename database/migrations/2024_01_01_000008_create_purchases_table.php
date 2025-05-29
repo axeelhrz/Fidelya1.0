@@ -14,34 +14,35 @@ return new class extends Migration
             $table->foreignId('supplier_id')->constrained()->onDelete('restrict');
             $table->foreignId('user_id')->constrained()->onDelete('restrict'); // Usuario que registra
             
-            // Información de la factura del proveedor
-            $table->string('supplier_invoice_number', 50)->nullable();
-            $table->date('supplier_invoice_date')->nullable();
+            // Fechas
+            $table->date('purchase_date');
+            $table->date('delivery_date')->nullable();
+            $table->date('due_date')->nullable();
             
-            // Totales
+            // Montos
             $table->decimal('subtotal', 12, 2);
-            $table->decimal('tax_amount', 10, 2)->default(0);
-            $table->decimal('discount_amount', 10, 2)->default(0);
+            $table->decimal('tax_amount', 12, 2)->default(0);
+            $table->decimal('discount_amount', 12, 2)->default(0);
+            $table->decimal('shipping_cost', 12, 2)->default(0);
             $table->decimal('total_amount', 12, 2);
+            $table->decimal('paid_amount', 12, 2)->default(0);
             
-            // Estado y fechas
-            $table->enum('status', ['borrador', 'ordenada', 'recibida', 'facturada', 'pagada', 'cancelada'])->default('recibida');
-            $table->timestamp('purchase_date');
-            $table->timestamp('expected_date')->nullable();
-            $table->timestamp('received_date')->nullable();
-            $table->timestamp('paid_date')->nullable();
+            // Estado
+            $table->enum('status', ['pendiente', 'parcial', 'recibida', 'cancelada'])->default('pendiente');
+            $table->enum('payment_status', ['pendiente', 'parcial', 'pagado', 'vencido'])->default('pendiente');
+            $table->enum('payment_method', ['efectivo', 'transferencia', 'cheque', 'credito'])->default('credito');
             
-            // Pago
-            $table->enum('payment_method', ['efectivo', 'transferencia', 'cheque', 'cuenta_corriente'])->default('cuenta_corriente');
-            $table->enum('payment_status', ['pendiente', 'pagado', 'parcial'])->default('pendiente');
-            $table->decimal('amount_paid', 12, 2)->default(0);
-            
+            // Información adicional
+            $table->string('supplier_invoice', 50)->nullable();
             $table->text('notes')->nullable();
+            $table->json('payment_details')->nullable();
+            
+            $table->softDeletes(); // Add soft deletes support
             $table->timestamps();
             
             $table->index(['purchase_date', 'status']);
             $table->index(['supplier_id', 'purchase_date']);
-            $table->index(['payment_status', 'purchase_date']);
+            $table->index(['payment_status', 'due_date']);
         });
     }
 
