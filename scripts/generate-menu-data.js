@@ -1,5 +1,9 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Datos del menú (copiados desde src/data/menu.ts)
 const menus = {
@@ -217,23 +221,88 @@ const menuData = {
 // Generar el JSON compacto para la variable de entorno
 const jsonData = JSON.stringify(menuData);
 
-console.log('='.repeat(80));
-console.log('VARIABLE DE ENTORNO PARA VERCEL:');
-console.log('='.repeat(80));
+// Estadísticas
+const totalMenus = Object.keys(menus).length;
+const totalProducts = Object.values(menus).reduce((total, menu) => total + menu.products.length, 0);
+const jsonSize = (new Blob([jsonData]).size / 1024).toFixed(2);
+
+console.log('🍽️  MenuQR - Generador de Datos para Vercel');
+console.log('='.repeat(60));
+console.log(`📊 Estadísticas:`);
+console.log(`   • Menús: ${totalMenus}`);
+console.log(`   • Productos: ${totalProducts}`);
+console.log(`   • Tamaño JSON: ${jsonSize} KB`);
+console.log('='.repeat(60));
+console.log('');
+
+console.log('📋 VARIABLE DE ENTORNO PARA VERCEL:');
+console.log('='.repeat(60));
 console.log('Name: MENU_DATA');
 console.log('Value:');
+console.log('');
 console.log(jsonData);
-console.log('='.repeat(80));
+console.log('');
+console.log('='.repeat(60));
 
-// Guardar en un archivo para fácil copia
-const outputPath = path.join(__dirname, 'menu-data.json');
+// Guardar en archivos para fácil acceso
+const outputDir = path.join(__dirname, '..', 'data');
+const outputPath = path.join(outputDir, 'menu-data.json');
+const envPath = path.join(outputDir, 'vercel-env.txt');
+
+// Crear directorio si no existe
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir, { recursive: true });
+}
+
+// Guardar JSON formateado
 fs.writeFileSync(outputPath, JSON.stringify(menuData, null, 2));
 
-console.log(`\nDatos guardados en: ${outputPath}`);
-console.log('\nPasos para configurar en Vercel:');
+// Guardar variable de entorno
+const envContent = `# Variable de entorno para Vercel
+# Copia el valor de abajo y pégalo en Vercel Dashboard > Settings > Environment Variables
+
+MENU_DATA=${jsonData}
+`;
+fs.writeFileSync(envPath, envContent);
+
+console.log('💾 Archivos generados:');
+console.log(`   • JSON formateado: ${outputPath}`);
+console.log(`   • Variable de entorno: ${envPath}`);
+console.log('');
+console.log('🚀 Pasos para configurar en Vercel:');
+console.log('');
 console.log('1. Ve a tu proyecto en Vercel Dashboard');
-console.log('2. Ve a Settings > Environment Variables');
+console.log('   https://vercel.com/dashboard');
+console.log('');
+console.log('2. Navega a Settings > Environment Variables');
+console.log('');
 console.log('3. Agrega una nueva variable:');
-console.log('   - Name: MENU_DATA');
-console.log('   - Value: [copia el JSON de arriba]');
-console.log('4. Redeploy tu aplicación');
+console.log('   • Name: MENU_DATA');
+console.log('   • Value: [copia el JSON de arriba]');
+console.log('   • Environment: Production');
+console.log('');
+console.log('4. Redeploy tu aplicación:');
+console.log('   • Ve a Deployments');
+console.log('   • Haz clic en "Redeploy" en el último deployment');
+console.log('');
+console.log('5. Verifica que funcione:');
+console.log('   • Visita tu-app.vercel.app/admin');
+console.log('   • Deberías ver los menús cargados');
+console.log('');
+
+console.log('⚠️  Notas importantes:');
+console.log('');
+console.log('• En Vercel, el panel de administración funciona en modo solo lectura');
+console.log('• Para editar el menú, modifica src/data/menu.ts y redeploy');
+console.log('• El JSON debe estar en una sola línea (sin saltos de línea)');
+console.log('• Vercel tiene un límite de 4KB por variable de entorno');
+console.log(`• Tu JSON actual: ${jsonSize} KB (${jsonSize > 4 ? '⚠️ EXCEDE EL LÍMITE' : '✅ OK'})`);
+console.log('');
+
+if (parseFloat(jsonSize) > 4) {
+  console.log('🚨 ADVERTENCIA: El JSON excede el límite de 4KB de Vercel');
+  console.log('   Considera reducir el número de productos o usar una base de datos externa');
+  console.log('');
+}
+
+console.log('✅ ¡Configuración lista para Vercel!');

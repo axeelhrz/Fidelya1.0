@@ -157,15 +157,6 @@
           "category": "Postre",
           "isRecommended": true,
           "isVegan": true
-        },
-        {
-          "id": "menu-bar-noche-1748549087706",
-          "name": "123w",
-          "price": 2,
-          "description": "123",
-          "category": "Entrada",
-          "isRecommended": false,
-          "isVegan": false
         }
       ]
     },
@@ -213,5 +204,5 @@
       ]
     }
   },
-  "lastUpdated": "2025-05-29T20:04:49.234Z"
+  "lastUpdated": "2025-05-29T20:17:21.979Z"
 }

@@ -1,24 +1,26 @@
-# MenuQR - Aplicación de Menú Digital
+# MenuQR - Sistema de Menú Digital
 
-Una aplicación moderna de menú digital para restaurantes con panel de administración y generación de códigos QR.
+Una aplicación moderna de menú digital construida con Next.js 15, TypeScript y Material UI, diseñada para restaurantes que desean ofrecer menús accesibles vía códigos QR.
+## 🚀 Características
 
-## Características
+- **Menú Digital Responsivo**: Visualización optimizada para dispositivos móviles y desktop
+- **Códigos QR**: Generación automática de códigos QR para acceso directo al menú
+- **Panel de Administración**: Gestión completa de menús y productos
+- **Animaciones Fluidas**: Interfaz moderna con Framer Motion
+- **Modo Oscuro**: Diseño elegante y profesional
+- **Categorización**: Organización por categorías (Entradas, Principales, Bebidas, Postres)
+- **Filtros**: Productos recomendados y opciones veganas
 
-- 🍽️ Menú digital responsive y moderno
-- 👨‍💼 Panel de administración para gestionar productos
-- 📱 Códigos QR para acceso directo al menú
-- 🌙 Diseño oscuro y profesional
-- 💾 Base de datos JSON local (sin dependencias externas)
-- 🚀 Listo para producción
+## 🛠️ Tecnologías
 
-## Tecnologías
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **UI/UX**: Material UI v5, Framer Motion
+- **Base de Datos**: JSON local (desarrollo) / Variables de entorno (producción)
+- **Deployment**: Vercel
+- **QR Codes**: qrcode.react
 
-- Next.js 15 con App Router
-- TypeScript
-- Material-UI (MUI) v5
-- Framer Motion para animaciones
-- qrcode.react para códigos QR
+## 📦 Instalación
 
-## Instalación
+### Desarrollo Local
 
-1. Clona el repositorio:
+1. **Clonar el repositorio**
