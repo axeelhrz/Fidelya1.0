@@ -4,11 +4,11 @@ import { getDatabaseAPI } from '../../../../lib/database';
 // GET /api/menus/[id] - Obtener un menú específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     console.log('=== GET /api/menus/[id] ===');
-    const { id } = params;
+    const { id } = await context.params;
     console.log('Getting menu:', id);
     
     const DatabaseAPI = await getDatabaseAPI();
@@ -34,11 +34,11 @@ export async function GET(
 // PUT /api/menus/[id] - Actualizar un menú
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     console.log('=== PUT /api/menus/[id] ===');
-    const { id } = params;
+    const { id } = await context.params;
     const menuData = await request.json();
     console.log('Updating menu:', id, menuData);
     
@@ -75,11 +75,11 @@ export async function PUT(
 // DELETE /api/menus/[id] - Eliminar un menú
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     console.log('=== DELETE /api/menus/[id] ===');
-    const { id } = params;
+    const { id } = await context.params;
     console.log('Deleting menu:', id);
     
     const DatabaseAPI = await getDatabaseAPI();

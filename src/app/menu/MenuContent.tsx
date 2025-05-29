@@ -10,6 +10,10 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import { useRouter } from 'next/navigation';
 
+export interface MenuContentProps {
+  menu: MenuData;
+}
+
 const MotionPaper = motion(Paper);
 const MotionTypography = motion(Typography);
 const MotionContainer = motion(Container);
