@@ -25,7 +25,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 50.000,
                 'min_stock' => 10.000,
                 'unit' => 'kg',
-                'is_perishable' => true,
+                'requires_refrigeration' => true,
                 'shelf_life_days' => 15,
             ],
             [
@@ -37,7 +37,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 30.000,
                 'min_stock' => 8.000,
                 'unit' => 'kg',
-                'is_perishable' => true,
+                'requires_refrigeration' => true,
                 'shelf_life_days' => 7,
             ],
             [
@@ -49,7 +49,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 25.000,
                 'min_stock' => 5.000,
                 'unit' => 'kg',
-                'is_perishable' => true,
+                'requires_refrigeration' => true,
                 'shelf_life_days' => 12,
             ],
             [
@@ -61,7 +61,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 15.000,
                 'min_stock' => 3.000,
                 'unit' => 'kg',
-                'is_perishable' => true,
+                'requires_refrigeration' => true,
                 'shelf_life_days' => 10,
             ],
 
@@ -75,7 +75,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 40.000,
                 'min_stock' => 10.000,
                 'unit' => 'kg',
-                'is_perishable' => true,
+                'requires_refrigeration' => true,
                 'shelf_life_days' => 8,
             ],
             [
@@ -87,7 +87,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 100.000,
                 'min_stock' => 20.000,
                 'unit' => 'kg',
-                'is_perishable' => false,
+                'requires_refrigeration' => false,
                 'shelf_life_days' => 30,
             ],
             [
@@ -99,7 +99,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 60.000,
                 'min_stock' => 15.000,
                 'unit' => 'kg',
-                'is_perishable' => false,
+                'requires_refrigeration' => false,
                 'shelf_life_days' => 45,
             ],
             [
@@ -111,7 +111,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 35.000,
                 'min_stock' => 8.000,
                 'unit' => 'kg',
-                'is_perishable' => false,
+                'requires_refrigeration' => false,
                 'shelf_life_days' => 20,
             ],
 
@@ -125,7 +125,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 45.000,
                 'min_stock' => 12.000,
                 'unit' => 'kg',
-                'is_perishable' => true,
+                'requires_refrigeration' => true,
                 'shelf_life_days' => 20,
             ],
             [
@@ -137,7 +137,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 20.000,
                 'min_stock' => 5.000,
                 'unit' => 'kg',
-                'is_perishable' => true,
+                'requires_refrigeration' => true,
                 'shelf_life_days' => 25,
             ],
 
@@ -151,7 +151,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 25.000,
                 'min_stock' => 5.000,
                 'unit' => 'unidad',
-                'is_perishable' => true,
+                'requires_refrigeration' => true,
                 'shelf_life_days' => 5,
             ],
             [
@@ -163,7 +163,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 15.000,
                 'min_stock' => 3.000,
                 'unit' => 'kg',
-                'is_perishable' => true,
+                'requires_refrigeration' => true,
                 'shelf_life_days' => 4,
             ],
 
@@ -177,7 +177,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 10.000,
                 'min_stock' => 2.000,
                 'unit' => 'kg',
-                'is_perishable' => false,
+                'requires_refrigeration' => false,
                 'shelf_life_days' => 180,
             ],
             [
@@ -189,7 +189,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 8.000,
                 'min_stock' => 1.500,
                 'unit' => 'kg',
-                'is_perishable' => false,
+                'requires_refrigeration' => false,
                 'shelf_life_days' => 200,
             ],
 
@@ -203,7 +203,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 20.000,
                 'min_stock' => 5.000,
                 'unit' => 'unidad',
-                'is_perishable' => true,
+                'requires_refrigeration' => true,
                 'shelf_life_days' => 7,
             ],
             [
@@ -215,7 +215,7 @@ class ProductSeeder extends Seeder
                 'stock_quantity' => 15.000,
                 'min_stock' => 3.000,
                 'unit' => 'unidad',
-                'is_perishable' => true,
+                'requires_refrigeration' => true,
                 'shelf_life_days' => 6,
             ],
         ];
@@ -237,9 +237,9 @@ class ProductSeeder extends Seeder
                         'min_stock' => $productData['min_stock'],
                         'max_stock' => $productData['stock_quantity'] * 2,
                         'unit' => $productData['unit'],
-                        'is_perishable' => $productData['is_perishable'],
+                        'requires_refrigeration' => $productData['requires_refrigeration'],
                         'shelf_life_days' => $productData['shelf_life_days'],
-                        'expiry_date' => $productData['is_perishable'] 
+                        'expiry_date' => $productData['requires_refrigeration'] 
                             ? now()->addDays($productData['shelf_life_days']) 
                             : null,
                         'is_active' => true,
