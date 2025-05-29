@@ -38,12 +38,15 @@ import { Product, ProductCategory } from '../../types';
 import { getMenuById, getAvailableMenuIds } from '../../../data/menu';
 import ProductForm from '../../components/ProductForm';
 import QRGenerator from '../../components/QRGenerator';
+
 const MotionPaper = motion(Paper);
 const MotionCard = motion(Card);
 const MotionContainer = motion(Container);
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const availableMenus = getAvailableMenuIds();
+  const [selectedMenuId, setSelectedMenuId] = useState(availableMenus[0] || 'menu-bar-noche');
   const [products, setProducts] = useState<Product[]>([]);
   const [originalProducts, setOriginalProducts] = useState<Product[]>([]);
   const [showProductForm, setShowProductForm] = useState(false);
@@ -52,10 +55,8 @@ export default function AdminDashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState<Product | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
-  const [selectedMenuId, setSelectedMenuId] = useState<string>('default');
 
   const currentMenu = getMenuById(selectedMenuId);
-  const availableMenus = getAvailableMenuIds();
 
   const loadMenuData = useCallback(() => {
     // Cargar desde localStorage si existe, sino desde el archivo
@@ -75,21 +76,6 @@ export default function AdminDashboard() {
     }
   }, [selectedMenuId, currentMenu]);
 
-  const saveToLocalStorage = () => {
-    const storageKey = `menu-${selectedMenuId}`;
-    localStorage.setItem(storageKey, JSON.stringify(products));
-    setSaveMessage('Cambios guardados en localStorage');
-    setTimeout(() => setSaveMessage(''), 3000);
-  };
-
-  const restoreOriginal = useCallback(() => {
-    setProducts([...originalProducts]);
-    // Guardar estado original
-    if (currentMenu) {
-      setOriginalProducts([...currentMenu.products]);
-    }
-  }, [originalProducts, currentMenu]);
-
   useEffect(() => {
     // Verificar autenticación
     const isAuthenticated = localStorage.getItem('admin-authenticated');
@@ -106,13 +92,28 @@ export default function AdminDashboard() {
     setHasChanges(hasModifications);
   }, [products, originalProducts]);
 
+  const saveToLocalStorage = () => {
+    const storageKey = `menu-${selectedMenuId}`;
+    localStorage.setItem(storageKey, JSON.stringify(products));
+    setSaveMessage('Cambios guardados en localStorage');
+      setTimeout(() => setSaveMessage(''), 3000);
+  };
+
+  const restoreOriginal = () => {
+    setProducts([...originalProducts]);
+    const storageKey = `menu-${selectedMenuId}`;
+    localStorage.removeItem(storageKey);
+    setSaveMessage('Menú restaurado al original');
+    setTimeout(() => setSaveMessage(''), 3000);
+  };
+
   const handleAddProduct = (product: Product) => {
     setProducts(prev => [...prev, product]);
   };
 
   const handleEditProduct = (product: Product) => {
     setProducts(prev => prev.map(p => p.id === product.id ? product : p));
-    setEditingProduct(null);
+          setEditingProduct(null);
   };
 
   const handleDeleteProduct = (productId: string) => {
@@ -176,13 +177,38 @@ export default function AdminDashboard() {
 
   if (!currentMenu) {
     return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Typography variant="h6" color="error">
-          Menú no encontrado
-              </Typography>
-            </Box>
-                  );
-  }
+      <Box sx={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: 4 
+      }}>
+        <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
+          <Typography variant="h6" color="error" sx={{ mb: 2 }}>
+            Menú no encontrado
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            El menú seleccionado no existe o no se pudo cargar.
+          </Typography>
+          <Button 
+            variant="contained" 
+            onClick={() => router.push('/admin')}
+            sx={{ mr: 2 }}
+          >
+            Volver al Login
+          </Button>
+          <Button 
+            variant="outlined" 
+            onClick={() => setSelectedMenuId('menu-bar-noche')}
+          >
+            Cargar Menú por Defecto
+          </Button>
+        </Paper>
+      </Box>
+  );
+}
 
   return (
     <Box sx={{ 
@@ -196,24 +222,24 @@ export default function AdminDashboard() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-                  >
+      >
         {/* Header */}
         <MotionPaper
           variants={itemVariants}
           elevation={3}
-            sx={{ 
+          sx={{
             p: 4,
             mb: 4,
             borderRadius: 3,
             background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
             color: '#FFFFFF',
-            }}
-          >
+          }}
+        >
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
             <Box>
               <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
                 Panel de Administración
-          </Typography>
+              </Typography>
               <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
                 Gestiona el menú: {currentMenu.name}
               </Typography>
@@ -229,7 +255,7 @@ export default function AdminDashboard() {
                   '&:hover': {
                     borderColor: 'rgba(255,255,255,0.5)',
                     backgroundColor: 'rgba(255,255,255,0.1)',
-}
+                  }
                 }}
               >
                 Generar QR
@@ -375,7 +401,7 @@ export default function AdminDashboard() {
             </Box>
             <Box sx={{ textAlign: 'center', minWidth: 120 }}>
               <Typography variant="h4" color="info.main" fontWeight="bold">
-                {formatPrice(Math.round(products.reduce((sum, p) => sum + p.price, 0) / products.length))}
+                {products.length > 0 ? formatPrice(Math.round(products.reduce((sum, p) => sum + p.price, 0) / products.length)) : '$0'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Precio Promedio
@@ -385,7 +411,7 @@ export default function AdminDashboard() {
         </MotionPaper>
 
         {/* Productos por Categoría */}
-        {productsByCategory.map((group) => (
+        {productsByCategory.map((group, groupIndex) => (
           <MotionPaper
             key={group.category}
             variants={itemVariants}
@@ -420,7 +446,7 @@ export default function AdminDashboard() {
                   No hay productos en esta categoría
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  Haz clic en &quot;Agregar&quot; para crear el primer producto
+                  Haz clic en "Agregar" para crear el primer producto
                 </Typography>
               </Box>
             ) : (
@@ -577,7 +603,7 @@ export default function AdminDashboard() {
         </DialogTitle>
         <DialogContent>
           <Typography>
-            ¿Estás seguro de que quieres eliminar &quot;{deleteConfirm?.name}&quot;?
+            ¿Estás seguro de que quieres eliminar "{deleteConfirm?.name}"?
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             Esta acción no se puede deshacer.
