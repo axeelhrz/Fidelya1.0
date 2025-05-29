@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import DatabaseAPI from '../../../../lib/database';
+import DatabaseAPI from '../../../../lib/database-json';
 
 // POST /api/database/seed - Inicializar la base de datos con datos del archivo
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const { force = false } = body;
+
     // Verificar si ya hay datos (solo si no es forzado)
     if (!force && DatabaseAPI.utils.hasData()) {
       return NextResponse.json({
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     const success = await DatabaseAPI.utils.seedFromFile();
+    
     if (success) {
       const info = DatabaseAPI.utils.getInfo();
       return NextResponse.json({

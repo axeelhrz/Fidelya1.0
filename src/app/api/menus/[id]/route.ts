@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import DatabaseAPI from '../../../../lib/database';
+import DatabaseAPI from '../../../../lib/database-json';
 
 // GET /api/menus/[id] - Obtener un menú específico
 export async function GET(

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import DatabaseAPI from '../../../../lib/database';
+import DatabaseAPI from '../../../../lib/database-json';
 
 // PUT /api/products/[id] - Actualizar un producto
 export async function PUT(

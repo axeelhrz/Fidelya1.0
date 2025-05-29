@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import DatabaseAPI from '../../../lib/database';
+import DatabaseAPI from '../../../lib/database-json';
 
 // POST /api/products - Crear un nuevo producto
 export async function POST(request: NextRequest) {
