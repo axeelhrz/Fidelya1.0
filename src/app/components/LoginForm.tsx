@@ -42,19 +42,19 @@ export default function LoginForm() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
+        staggerChildren: 0.2,
+        delayChildren: 0.1,
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 30 },
     visible: { 
       opacity: 1, 
       y: 0,
       transition: { 
-        duration: 0.6, 
+        duration: 0.8, 
         ease: [0.04, 0.62, 0.23, 0.98] 
       } 
     }
@@ -68,92 +68,107 @@ export default function LoginForm() {
         justifyContent: 'center',
         alignItems: 'center',
         p: 3,
-        background: 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(245,245,245,0.5) 100%)',
+        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
         position: 'relative',
         overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: `
+            radial-gradient(circle at 20% 80%, rgba(245, 158, 11, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+            linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.01) 49%, rgba(255,255,255,0.01) 51%, transparent 52%),
+            linear-gradient(-45deg, transparent 48%, rgba(255,255,255,0.01) 49%, rgba(255,255,255,0.01) 51%, transparent 52%)
+          `,
+          backgroundSize: '400px 400px, 300px 300px, 20px 20px, 20px 20px',
+          zIndex: 0,
+        }
       }}
     >
-      {/* Elementos decorativos de fondo */}
-      <Box
-        sx={{
+      {/* Elementos decorativos flotantes */}
+        <MotionBox
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 0.4, scale: 1 }}
+        transition={{ delay: 0.5, duration: 2 }}
+          sx={{
           position: 'absolute',
-          top: '10%',
-          right: '5%',
+          top: '15%',
+          right: '10%',
           width: '300px',
           height: '300px',
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0) 70%)',
-          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0) 70%)',
+                  borderRadius: '50%',
+          filter: 'blur(40px)',
           zIndex: 0,
-        }}
-      />
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: '10%',
-          left: '5%',
-          width: '250px',
-          height: '250px',
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, rgba(59, 130, 246, 0) 70%)',
-          borderRadius: '50%',
-          zIndex: 0,
-        }}
-      />
+                }}
+                  />
 
       <Container maxWidth="sm">
-        <MotionBox
+          <MotionBox
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          sx={{
+            sx={{ 
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            position: 'relative',
+            zIndex: 1,
           }}
         >
-          <MotionBox variants={itemVariants} sx={{ mb: 2, width: '100%' }}>
+          <MotionBox variants={itemVariants} sx={{ mb: 3, width: '100%' }}>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <IconButton
                 onClick={() => router.push('/')}
                 sx={{
                   mb: 2,
-                  backgroundColor: 'rgba(59, 130, 246, 0.08)',
-                  color: 'primary.main',
+                  backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                  color: '#3B82F6',
+                  minHeight: 48,
+                  minWidth: 48,
+                  '&:hover': {
+                    backgroundColor: 'rgba(59, 130, 246, 0.25)',
+                  }
                 }}
               >
                 <ArrowBackIcon />
               </IconButton>
             </motion.div>
-          </MotionBox>
+        </MotionBox>
 
           <MotionPaper
             variants={itemVariants}
             elevation={0}
             sx={{
-              p: 5,
+              p: { xs: 4, sm: 6 },
               maxWidth: 450,
               width: '100%',
               borderRadius: 4,
-              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.06)',
+              backgroundColor: '#2C2C2E',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
               position: 'relative',
               overflow: 'hidden',
-              background: 'rgba(255, 255, 255, 0.9)',
-              backdropFilter: 'blur(10px)',
-            }}
-          >
-            {/* Elemento decorativo */}
-            <Box
-              sx={{
+              border: '1px solid rgba(255,255,255,0.05)',
+              '&::before': {
+                content: '""',
                 position: 'absolute',
                 top: 0,
+                left: 0,
                 right: 0,
-                width: '150px',
-                height: '150px',
-                background: 'radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0) 70%)',
-                borderRadius: '0 0 0 100%',
+                bottom: 0,
+                backgroundImage: `
+                  linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.02) 49%, rgba(255,255,255,0.02) 51%, transparent 52%),
+                  radial-gradient(circle at 30% 70%, rgba(245, 158, 11, 0.03) 0%, transparent 50%)
+                `,
+                backgroundSize: '15px 15px, 200px 200px',
                 zIndex: 0,
-              }}
-            />
-
+}
+            }}
+          >
             <MotionBox
               variants={itemVariants}
               sx={{
@@ -166,14 +181,15 @@ export default function LoginForm() {
             >
               <Box
                 sx={{
-                  width: 70,
-                  height: 70,
+                  width: 80,
+                  height: 80,
                   borderRadius: '50%',
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%)',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  mb: 3,
+                  mb: 4,
+                  border: '2px solid rgba(59, 130, 246, 0.2)',
                 }}
               >
                 <motion.div
@@ -183,13 +199,13 @@ export default function LoginForm() {
                     type: "spring", 
                     stiffness: 400, 
                     damping: 17,
-                    delay: 0.4
+                    delay: 0.6
                   }}
                 >
                   <LockIcon 
                     sx={{ 
-                      fontSize: 32,
-                      color: 'primary.main',
+                      fontSize: 36,
+                      color: '#3B82F6',
                     }} 
                   />
                 </motion.div>
@@ -200,22 +216,23 @@ export default function LoginForm() {
                 align="center"
                 sx={{ 
                   fontWeight: 700, 
-                  mb: 1,
-                  background: 'linear-gradient(135deg, #3B82F6 0%, #60a5fa 100%)',
+                  mb: 2,
+                  fontSize: { xs: '1.75rem', sm: '2rem' },
+                  background: 'linear-gradient(135deg, #3B82F6 0%, #F59E0B 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                Acceso Administrativo
+                Panel Administrativo
               </MotionTypography>
 
               <MotionTypography
                 variant="body1"
                 color="text.secondary"
                 align="center"
-                sx={{ mb: 4 }}
+                sx={{ mb: 5, lineHeight: 1.6 }}
               >
-                Ingresa la contraseña para acceder al panel
+                Acceso exclusivo para gestión del menú digital
               </MotionTypography>
             </MotionBox>
 
@@ -228,10 +245,13 @@ export default function LoginForm() {
                 <Alert 
                   severity="error" 
                   sx={{ 
-                    mb: 3, 
-                    borderRadius: 2,
+                    mb: 4, 
+                    borderRadius: 3,
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                    color: '#ef4444',
                     '& .MuiAlert-icon': {
-                      color: 'error.main',
+                      color: '#ef4444',
                     }
                   }}
                 >
@@ -240,27 +260,39 @@ export default function LoginForm() {
               </motion.div>
             )}
 
-            <Box component="form" onSubmit={handleLogin}>
+            <Box component="form" onSubmit={handleLogin} sx={{ position: 'relative', zIndex: 1 }}>
               <TextField
                 fullWidth
                 type="password"
-                placeholder="Contraseña"
+                placeholder="Contraseña de administrador"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 sx={{ 
-                  mb: 3,
+                  mb: 4,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 3,
-                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                    '&.Mui-focused': {
+                    backgroundColor: 'rgba(28, 28, 30, 0.6)',
+                    color: '#F5F5F7',
+                    '& fieldset': {
+                      borderColor: 'rgba(255,255,255,0.1)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(59, 130, 246, 0.3)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#3B82F6',
                       boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
                     },
+                  },
+                  '& .MuiInputBase-input::placeholder': {
+                    color: '#A1A1AA',
+                    opacity: 1,
                   }
                 }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <LockIcon sx={{ color: 'text.secondary' }} />
+                      <LockIcon sx={{ color: '#A1A1AA' }} />
                     </InputAdornment>
                   ),
                 }}
@@ -277,15 +309,20 @@ export default function LoginForm() {
                   disabled={isLoading}
                   startIcon={<LoginIcon />}
                   sx={{
-                    py: 1.8,
+                    py: 2,
+                    fontSize: '1.1rem',
                     background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
-                    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.2)',
+                    boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)',
                     '&:hover': {
                       background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                      boxShadow: '0 12px 40px rgba(59, 130, 246, 0.4)',
                     },
+                    '&:disabled': {
+                      background: 'rgba(59, 130, 246, 0.3)',
+                    }
                   }}
                 >
-                  {isLoading ? 'Verificando...' : 'Ingresar'}
+                  {isLoading ? 'Verificando acceso...' : 'Ingresar al Panel'}
                 </Button>
               </motion.div>
             </Box>
@@ -294,13 +331,20 @@ export default function LoginForm() {
           <MotionBox
             variants={itemVariants}
             sx={{ 
-              mt: 4,
-              opacity: 0.6,
+              mt: 6,
               textAlign: 'center',
             }}
           >
-            <Typography variant="caption" color="text.secondary">
-              Potenciado por Assuriva • Diseño 2025
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: 'text.secondary',
+                fontSize: '0.8rem',
+                letterSpacing: '0.1em',
+                opacity: 0.6,
+              }}
+            >
+              POWERED BY ASSURIVA • ADMIN PANEL
             </Typography>
           </MotionBox>
         </MotionBox>
