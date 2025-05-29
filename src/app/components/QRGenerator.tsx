@@ -13,7 +13,7 @@ import {
   Tooltip
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import DownloadIcon from '@mui/icons-material/Download';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import QrCodeIcon from '@mui/icons-material/QrCode';
@@ -101,7 +101,7 @@ export default function QRGenerator({ menuId, menuName }: QRGeneratorProps) {
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             }}
           >
-            <QRCode
+            <QRCodeSVG
               id="qr-code"
               value={menuUrl}
               size={200}

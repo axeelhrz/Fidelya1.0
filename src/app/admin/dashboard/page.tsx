@@ -1,682 +1,601 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Box, 
-  Typography, 
-  Stack, 
+  Container,
+  Typography,
   Button,
   Paper,
-  Container,
-  Divider,
-  IconButton,
+  Stack,
   Chip,
-  Badge,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Card,
+  CardContent,
+  CardActions,
+  Fab,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { initialProducts } from '../../data/initialProducts';
-import { Product, ProductCategory } from '../../types';
-import ProductForm from '../../components/ProductForm';
-import ProductCard from '../../components/ProductCard';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import QrCodeIcon from '@mui/icons-material/QrCode';
+import SaveIcon from '@mui/icons-material/Save';
+import RestoreIcon from '@mui/icons-material/Restore';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import CodeIcon from '@mui/icons-material/Code';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import CategoryIcon from '@mui/icons-material/Category';
-import FastfoodIcon from '@mui/icons-material/Fastfood';
-import LocalDiningIcon from '@mui/icons-material/LocalDining';
-import LocalCafeIcon from '@mui/icons-material/LocalCafe';
-import CakeIcon from '@mui/icons-material/Cake';
-
-const MotionBox = motion(Box);
-const MotionTypography = motion(Typography);
+import { useRouter } from 'next/navigation';
+import { Product, ProductCategory } from '../../types';
+import { getMenuById, getAvailableMenuIds } from '../../../data/menu';
+import ProductForm from '../../components/ProductForm';
+import QRGenerator from '../../components/QRGenerator';
 const MotionPaper = motion(Paper);
+const MotionCard = motion(Card);
 const MotionContainer = motion(Container);
 
-export default function AdminDashboardPage() {
+export default function AdminDashboard() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
+  const [originalProducts, setOriginalProducts] = useState<Product[]>([]);
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [showQRGenerator, setShowQRGenerator] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [deleteConfirm, setDeleteConfirm] = useState<Product | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [selectedMenuId, setSelectedMenuId] = useState<string>('default');
+
+  const currentMenu = getMenuById(selectedMenuId);
+  const availableMenus = getAvailableMenuIds();
+
+  const loadMenuData = useCallback(() => {
+    // Cargar desde localStorage si existe, sino desde el archivo
+    const storageKey = `menu-${selectedMenuId}`;
+    const savedData = localStorage.getItem(storageKey);
+    
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      setProducts(parsedData);
+    } else if (currentMenu) {
+      setProducts([...currentMenu.products]);
+    }
+    
+    // Guardar estado original
+    if (currentMenu) {
+      setOriginalProducts([...currentMenu.products]);
+    }
+  }, [selectedMenuId, currentMenu]);
+
+  const saveToLocalStorage = () => {
+    const storageKey = `menu-${selectedMenuId}`;
+    localStorage.setItem(storageKey, JSON.stringify(products));
+    setSaveMessage('Cambios guardados en localStorage');
+    setTimeout(() => setSaveMessage(''), 3000);
+  };
+
+  const restoreOriginal = useCallback(() => {
+    setProducts([...originalProducts]);
+    // Guardar estado original
+    if (currentMenu) {
+      setOriginalProducts([...currentMenu.products]);
+    }
+  }, [originalProducts, currentMenu]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-    setProducts(initialProducts);
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleAddProduct = (productData: Omit<Product, 'id'> & { id?: string }) => {
-    if (productData.id) {
-      setProducts(products.map(p => 
-        p.id === productData.id
-          ? { ...productData, id: productData.id } as Product
-          : p
-      ));
-      setEditingProduct(null);
-    } else {
-      const newProduct: Product = {
-        ...productData,
-        id: Date.now().toString(),
-      };
-      setProducts([...products, newProduct]);
+    // Verificar autenticación
+    const isAuthenticated = localStorage.getItem('admin-authenticated');
+    if (!isAuthenticated) {
+      router.push('/admin');
+      return;
     }
+    loadMenuData();
+  }, [selectedMenuId, router, loadMenuData]);
+
+  useEffect(() => {
+    // Verificar si hay cambios
+    const hasModifications = JSON.stringify(products) !== JSON.stringify(originalProducts);
+    setHasChanges(hasModifications);
+  }, [products, originalProducts]);
+
+  const handleAddProduct = (product: Product) => {
+    setProducts(prev => [...prev, product]);
   };
 
   const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleDeleteProduct = (id: string) => {
-    setProducts(products.filter(p => p.id !== id));
-    if (editingProduct?.id === id) {
-      setEditingProduct(null);
-    }
-  };
-
-  const handleCancelEdit = () => {
+    setProducts(prev => prev.map(p => p.id === product.id ? product : p));
     setEditingProduct(null);
   };
 
-  const handleCategoryChange = (category: string) => {
-    setActiveCategory(category);
+  const handleDeleteProduct = (productId: string) => {
+    setProducts(prev => prev.filter(p => p.id !== productId));
+    setDeleteConfirm(null);
   };
 
-  const categories: ProductCategory[] = ['Entrada', 'Principal', 'Bebida', 'Postre'];
-  const productsByCategory = categories.map(category => ({
-    category,
+  const exportMenuCode = () => {
+    const menuData = {
+      id: selectedMenuId,
+      name: currentMenu?.name || 'Menú',
+      description: currentMenu?.description || 'Descripción del menú',
+      products: products
+    };
+
+    const codeString = `'${selectedMenuId}': ${JSON.stringify(menuData, null, 2)},`;
+    
+    navigator.clipboard.writeText(codeString).then(() => {
+      setSaveMessage('Código del menú copiado al portapapeles');
+      setTimeout(() => setSaveMessage(''), 3000);
+    });
+  };
+
+  const logout = () => {
+    localStorage.removeItem('admin-authenticated');
+    router.push('/admin');
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const productsByCategory = ['Entrada', 'Principal', 'Bebida', 'Postre'].map(category => ({
+    category: category as ProductCategory,
     products: products.filter(p => p.category === category)
   }));
 
-  const filteredCategories = activeCategory === 'all'
-    ? productsByCategory
-    : productsByCategory.filter(group => group.category === activeCategory);
-
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1, 
-      transition: { 
+    visible: {
+      opacity: 1,
+      transition: {
         staggerChildren: 0.1,
         delayChildren: 0.2,
-      } 
+      }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { 
-        duration: 0.8, 
-        ease: [0.04, 0.62, 0.23, 0.98] 
-      } 
+      transition: { duration: 0.5 } 
     }
   };
 
-  const getCategoryIcon = (category: ProductCategory) => {
-    switch(category) {
-      case 'Entrada': return <LocalDiningIcon />;
-      case 'Principal': return <FastfoodIcon />;
-      case 'Bebida': return <LocalCafeIcon />;
-      case 'Postre': return <CakeIcon />;
-      default: return <CategoryIcon />;
-    }
-  };
+  if (!currentMenu) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography variant="h6" color="error">
+          Menú no encontrado
+              </Typography>
+            </Box>
+                  );
+  }
 
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
-        position: 'relative',
-        overflow: 'hidden',
-        pb: 12,
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-              top: 0,
-          left: 0,
-          right: 0,
-              bottom: 0,
-          backgroundImage: `
-            radial-gradient(circle at 25% 25%, rgba(245, 158, 11, 0.03) 0%, transparent 50%),
-            radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
-            linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.01) 49%, rgba(255,255,255,0.01) 51%, transparent 52%),
-            linear-gradient(-45deg, transparent 48%, rgba(255,255,255,0.01) 49%, rgba(255,255,255,0.01) 51%, transparent 52%)
-          `,
-          backgroundSize: '400px 400px, 300px 300px, 25px 25px, 25px 25px',
-          zIndex: 0,
-        }
-            }}
-            >
-      {/* Elementos decorativos flotantes */}
-        <MotionBox
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 0.4, scale: 1 }}
-        transition={{ delay: 0.3, duration: 2 }}
-          sx={{ 
-          position: 'absolute',
-          top: '10%',
-          right: '5%',
-          width: '350px',
-          height: '350px',
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, rgba(59, 130, 246, 0) 70%)',
-          borderRadius: '50%',
-          filter: 'blur(60px)',
-          zIndex: 0,
-          }}
-      />
-
-      <MotionBox
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 0.3, scale: 1 }}
-        transition={{ delay: 0.6, duration: 2 }}
-        sx={{
-          position: 'absolute',
-          bottom: '15%',
-          left: '5%',
-          width: '280px',
-          height: '280px',
-          background: 'radial-gradient(circle, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0) 70%)',
-          borderRadius: '50%',
-          filter: 'blur(50px)',
-          zIndex: 0,
-        }}
-      />
+    <Box sx={{ 
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
+      pb: 10,
+    }}>
       <MotionContainer 
         maxWidth="lg" 
-        sx={{ 
-          pt: { xs: 4, sm: 6, md: 8 },
-          px: { xs: 3, sm: 4 },
-          position: 'relative',
-          zIndex: 1,
-        }}
+        sx={{ pt: 4 }}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-      >
-        {/* Header con navegación */}
-        <MotionBox variants={itemVariants} sx={{ mb: 4 }}>
-          <Stack 
-            direction={{ xs: 'column', sm: 'row' }} 
-            spacing={3} 
-            alignItems={{ xs: 'flex-start', sm: 'center' }}
-            sx={{ mb: 6 }}
+                  >
+        {/* Header */}
+        <MotionPaper
+          variants={itemVariants}
+          elevation={3}
+            sx={{ 
+            p: 4,
+            mb: 4,
+            borderRadius: 3,
+            background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
+            color: '#FFFFFF',
+            }}
           >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <IconButton
-                onClick={() => router.push('/')}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Box>
+              <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
+                Panel de Administración
+          </Typography>
+              <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
+                Gestiona el menú: {currentMenu.name}
+              </Typography>
+            </Box>
+            <Stack direction="row" spacing={2}>
+              <Button
+                variant="outlined"
+                startIcon={<QrCodeIcon />}
+                onClick={() => setShowQRGenerator(true)}
                 sx={{
-                  backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                  color: '#3B82F6',
-                  minHeight: 48,
-                  minWidth: 48,
+                  borderColor: 'rgba(255,255,255,0.3)',
+                  color: '#FFFFFF',
                   '&:hover': {
-                    backgroundColor: 'rgba(59, 130, 246, 0.25)',
+                    borderColor: 'rgba(255,255,255,0.5)',
+                    backgroundColor: 'rgba(255,255,255,0.1)',
 }
                 }}
               >
-                <ArrowBackIcon />
-              </IconButton>
-            </motion.div>
-            
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                Generar QR
+              </Button>
               <Button
                 variant="outlined"
-                startIcon={<RestaurantMenuIcon />}
-                onClick={() => router.push('/menu')}
+                startIcon={<ExitToAppIcon />}
+                onClick={logout}
                 sx={{
-                  borderWidth: '1.5px',
-                  borderColor: '#3B82F6',
-                  color: '#3B82F6',
-                  py: 1.5,
-                  px: 3,
+                  borderColor: 'rgba(255,255,255,0.3)',
+                  color: '#FFFFFF',
                   '&:hover': {
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: 'rgba(255,255,255,0.5)',
+                    backgroundColor: 'rgba(255,255,255,0.1)',
                   }
                 }}
               >
-                Ver Menú Público
+                Salir
               </Button>
-            </motion.div>
-            
-            <Box sx={{ flexGrow: 1 }} />
-            
-            {/* Estadísticas rápidas */}
-            <Stack 
-              direction="row" 
-              spacing={2} 
-              sx={{ 
-                display: { xs: 'none', md: 'flex' },
-              }}
-            >
-              {categories.map((category) => {
-                const count = products.filter(p => p.category === category).length;
-                return (
-                  <motion.div key={category} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Badge 
-                      badgeContent={count} 
-                      sx={{ 
-                        '& .MuiBadge-badge': { 
-                          backgroundColor: '#F59E0B',
-                          color: '#1C1C1E',
-                          fontWeight: 600,
-                          fontSize: '0.7rem' 
-                        } 
-                      }}
-                    >
-                      <Chip
-                        icon={getCategoryIcon(category)}
-                        label={category}
-                        variant="outlined"
-                        sx={{ 
-                          borderWidth: '1.5px',
-                          borderColor: 'rgba(245, 158, 11, 0.3)',
-                          color: '#F59E0B',
-                          backgroundColor: 'rgba(245, 158, 11, 0.05)',
-                          '& .MuiChip-icon': { 
-                            color: '#F59E0B',
-                          },
-                          '&:hover': {
-                            borderColor: '#F59E0B',
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                          }
-                        }}
-                      />
-                    </Badge>
-                  </motion.div>
-                );
-              })}
             </Stack>
-          </Stack>
-        </MotionBox>
+          </Box>
+        </MotionPaper>
 
-        {/* Hero del dashboard */}
+        {/* Selector de Menú y Controles */}
         <MotionPaper
           variants={itemVariants}
-          elevation={0}
-          sx={{
-            p: { xs: 4, sm: 6 },
-            mb: 8,
-            borderRadius: 4,
-            background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
-            color: '#FFFFFF',
-            position: 'relative',
-            overflow: 'hidden',
-            boxShadow: '0 12px 40px rgba(59, 130, 246, 0.25)',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundImage: `
-                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                radial-gradient(circle at 20% 80%, rgba(255,255,255,0.05) 0%, transparent 50%),
-                linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.02) 49%, rgba(255,255,255,0.02) 51%, transparent 52%)
-              `,
-              backgroundSize: '300px 300px, 200px 200px, 30px 30px',
-              zIndex: 0,
-            }
-          }}
+          elevation={2}
+          sx={{ p: 3, mb: 4, borderRadius: 3 }}
         >
-          <Stack 
-            direction={{ xs: 'column', sm: 'row' }} 
-            alignItems={{ xs: 'flex-start', sm: 'center' }} 
-            spacing={3} 
-            sx={{ position: 'relative', zIndex: 1 }}
-          >
-            <Box
-              sx={{
-                width: { xs: 60, sm: 70 },
-                height: { xs: 60, sm: 70 },
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.15)',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                border: '2px solid rgba(255,255,255,0.2)',
-              }}
-            >
-              <DashboardIcon sx={{ fontSize: { xs: 28, sm: 36 } }} />
-            </Box>
-            
-            <Box sx={{ flex: 1 }}>
-              <MotionTypography
-                variant="h3"
-                fontWeight="bold"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
-                sx={{ 
-                  fontSize: { xs: '1.75rem', sm: '2.25rem' },
-                  mb: 1,
-                }}
-              >
-                Panel de Control
-              </MotionTypography>
+          <Stack spacing={3}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, alignItems: { md: 'center' } }}>
+              <Box sx={{ minWidth: 250 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Seleccionar Menú</InputLabel>
+                  <Select
+                    value={selectedMenuId}
+                    onChange={(e) => setSelectedMenuId(e.target.value)}
+                    label="Seleccionar Menú"
+                  >
+                    {availableMenus.map((menuId) => {
+                      const menu = getMenuById(menuId);
+                      return (
+                        <MenuItem key={menuId} value={menuId}>
+                          {menu?.name || menuId}
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+              </Box>
               
-              <Typography 
-                variant="subtitle1" 
-                sx={{ 
-                  opacity: 0.9, 
-                  fontWeight: 400,
-                  fontSize: { xs: '0.9rem', sm: '1rem' },
-                  lineHeight: 1.6,
-                  mb: 3,
-                }}
-              >
-                Gestiona tu carta digital con herramientas profesionales
-              </Typography>
-              
-              <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                <Chip
-                  label={`${products.length} productos`}
-                  size="small"
-                  sx={{ 
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    color: 'white',
-                    fontWeight: 500,
-                    border: '1px solid rgba(255,255,255,0.2)',
-                  }}
-                />
+              <Stack direction="row" spacing={2} sx={{ flex: 1, justifyContent: { md: 'flex-end' } }} flexWrap="wrap">
+                {hasChanges && (
+                  <Button
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    onClick={saveToLocalStorage}
+                    sx={{
+                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                      }
+                    }}
+                  >
+                    Guardar Cambios
+                  </Button>
+                )}
                 
-                <Chip
-                  label={`${categories.length} categorías`}
-                  size="small"
-                  sx={{ 
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    color: 'white',
-                    fontWeight: 500,
-                    border: '1px solid rgba(255,255,255,0.2)',
-                  }}
-                />
-
-                <Chip
-                  label={`${products.filter(p => p.isRecommended).length} recomendados`}
-                  size="small"
-                  sx={{ 
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    color: 'white',
-                    fontWeight: 500,
-                    border: '1px solid rgba(255,255,255,0.2)',
-                  }}
-                />
+                <Button
+                  variant="outlined"
+                  startIcon={<RestoreIcon />}
+                  onClick={restoreOriginal}
+                  disabled={!hasChanges}
+                >
+                  Restaurar Original
+                </Button>
+                
+                <Button
+                  variant="outlined"
+                  startIcon={<CodeIcon />}
+                  onClick={exportMenuCode}
+                >
+                  Exportar Código
+                </Button>
               </Stack>
             </Box>
           </Stack>
         </MotionPaper>
 
-        {/* Formulario de productos */}
-        <MotionBox variants={itemVariants}>
-          <ProductForm 
-            onSubmit={handleAddProduct} 
-            editingProduct={editingProduct}
-            onCancelEdit={handleCancelEdit}
-          />
-        </MotionBox>
+        {/* Mensaje de estado */}
+        <AnimatePresence>
+          {saveMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Alert 
+                severity="success" 
+                sx={{ mb: 3, borderRadius: 2 }}
+                onClose={() => setSaveMessage('')}
+              >
+                {saveMessage}
+              </Alert>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Sección de productos */}
-        <MotionBox variants={itemVariants} sx={{ mt: 8 }}>
-          <Stack 
-            direction={{ xs: 'column', sm: 'row' }} 
-            justifyContent="space-between" 
-            alignItems={{ xs: 'flex-start', sm: 'center' }}
-            sx={{ mb: 6 }}
-          >
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                fontWeight: 700,
-                fontSize: { xs: '1.5rem', sm: '2rem' },
-                color: '#F5F5F7',
-                mb: { xs: 3, sm: 0 },
-              }}
-            >
-              Gestión de Productos
-            </Typography>
-            
-            <Stack 
-              direction="row" 
-              spacing={1.5} 
-              sx={{ 
-                flexWrap: 'wrap', 
-                gap: 1.5,
-              }}
-            >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Chip
-                  label="Todos"
-                  onClick={() => handleCategoryChange('all')}
-                  sx={{ 
-                    fontWeight: 500,
-                    minHeight: 36,
-                    backgroundColor: activeCategory === 'all' ? '#3B82F6' : 'rgba(59, 130, 246, 0.15)',
-                    color: activeCategory === 'all' ? '#FFFFFF' : '#3B82F6',
-                    border: activeCategory === 'all' ? 'none' : '1px solid rgba(59, 130, 246, 0.3)',
-                    '&:hover': {
-                      backgroundColor: activeCategory === 'all' ? '#2563eb' : 'rgba(59, 130, 246, 0.25)',
-                    }
-                  }}
-                />
-              </motion.div>
-              
-              {categories.map((category) => (
-                <motion.div key={category} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Chip
-                    label={category}
-                    onClick={() => handleCategoryChange(category)}
-                    sx={{ 
-                      fontWeight: 500,
-                      minHeight: 36,
-                      backgroundColor: activeCategory === category ? '#3B82F6' : 'rgba(59, 130, 246, 0.15)',
-                      color: activeCategory === category ? '#FFFFFF' : '#3B82F6',
-                      border: activeCategory === category ? 'none' : '1px solid rgba(59, 130, 246, 0.3)',
-                      '&:hover': {
-                        backgroundColor: activeCategory === category ? '#2563eb' : 'rgba(59, 130, 246, 0.25)',
-                      }
-                    }}
-                  />
-                </motion.div>
-              ))}
-            </Stack>
+        {/* Estadísticas */}
+        <MotionPaper
+          variants={itemVariants}
+          elevation={2}
+          sx={{ p: 3, mb: 4, borderRadius: 3 }}
+        >
+          <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
+            Estadísticas del Menú
+          </Typography>
+          <Stack direction="row" spacing={4} sx={{ flexWrap: 'wrap', gap: 2 }}>
+            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+              <Typography variant="h4" color="primary" fontWeight="bold">
+                {products.length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Productos
+              </Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+              <Typography variant="h4" color="secondary" fontWeight="bold">
+                {products.filter(p => p.isRecommended).length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Recomendados
+              </Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+              <Typography variant="h4" color="success.main" fontWeight="bold">
+                {products.filter(p => p.isVegan).length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Veganos
+              </Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+              <Typography variant="h4" color="info.main" fontWeight="bold">
+                {formatPrice(Math.round(products.reduce((sum, p) => sum + p.price, 0) / products.length))}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Precio Promedio
+              </Typography>
+            </Box>
           </Stack>
+        </MotionPaper>
 
-          <Divider sx={{ mb: 6, borderColor: '#3A3A3C' }} />
+        {/* Productos por Categoría */}
+        {productsByCategory.map((group) => (
+          <MotionPaper
+            key={group.category}
+            variants={itemVariants}
+            elevation={2}
+            sx={{ p: 3, mb: 4, borderRadius: 3 }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" fontWeight={600}>
+                {group.category} ({group.products.length})
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={() => setShowProductForm(true)}
+                size="small"
+              >
+                Agregar
+              </Button>
+            </Box>
 
-          <AnimatePresence>
-            {isLoading ? (
-              <MotionPaper
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-                sx={{ 
-                  p: 6, 
-                  textAlign: 'center', 
-                  borderRadius: 4,
-                  backgroundColor: '#2C2C2E',
-                  border: '1px solid rgba(255,255,255,0.05)',
-                }}
-              >
-                <Typography color="text.secondary" sx={{ fontSize: '1.1rem' }}>
-                  Cargando productos...
+            {group.products.length === 0 ? (
+              <Box sx={{ 
+                textAlign: 'center', 
+                py: 4, 
+                color: 'text.secondary',
+                border: '2px dashed',
+                borderColor: 'divider',
+                borderRadius: 2,
+              }}>
+                <RestaurantMenuIcon sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+                <Typography variant="body1">
+                  No hay productos en esta categoría
                 </Typography>
-              </MotionPaper>
-            ) : products.length === 0 ? (
-              <MotionPaper
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-                sx={{ 
-                  p: 6, 
-                  textAlign: 'center', 
-                  borderRadius: 4,
-                  backgroundColor: '#2C2C2E',
-                  border: '1px solid rgba(255,255,255,0.05)',
-                }}
-              >
-                <Typography color="text.secondary" sx={{ fontSize: '1.1rem' }}>
-                  No hay productos disponibles. Agrega algunos usando el formulario superior.
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Haz clic en &quot;Agregar&quot; para crear el primer producto
                 </Typography>
-              </MotionPaper>
+              </Box>
             ) : (
-              <Box>
-                {filteredCategories.map((group, index) => {
-                  if (group.products.length === 0) return null;
-                  
-                  return (
-                    <Box key={group.category} sx={{ mb: 8 }}>
-                      <MotionPaper
-                        elevation={0}
-                        sx={{
-                          p: 4,
-                          mb: 4,
-                          borderRadius: 4,
-                          backgroundColor: '#2C2C2E',
-                          border: '1px solid rgba(245, 158, 11, 0.2)',
-                          position: 'relative',
-                          overflow: 'hidden',
-                          '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundImage: `
-                              radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.03) 0%, transparent 50%),
-                              linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.01) 49%, rgba(255,255,255,0.01) 51%, transparent 52%)
-                            `,
-                            backgroundSize: '200px 200px, 15px 15px',
-                            zIndex: 0,
-                          }
-                        }}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 + index * 0.1, duration: 0.6 }}
-                      >
-                        <Stack direction="row" spacing={3} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
-                          <Box
-                            sx={{
-                              width: 50,
-                              height: 50,
-                              borderRadius: '50%',
-                              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%)',
-                              display: 'flex',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              border: '2px solid rgba(245, 158, 11, 0.3)',
-                            }}
-                          >
-                            {getCategoryIcon(group.category)}
-                          </Box>
-                          
-                          <Box>
-                            <Typography
-                              variant="h5"
-                              sx={{
-                                fontWeight: 700,
-                                color: '#F5F5F7',
-                                fontSize: { xs: '1.25rem', sm: '1.5rem' },
-                              }}
-                            >
-                              {group.category}
-                            </Typography>
-                            
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{ mt: 0.5 }}
-                            >
-                              {group.products.length} {group.products.length === 1 ? 'producto' : 'productos'} • 
-                              {group.products.filter(p => p.isRecommended).length} recomendados
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      </MotionPaper>
-                      
-                      <Stack spacing={3}>
-                        <AnimatePresence>
-                          {group.products.map((product, productIndex) => (
-                            <motion.div
-                              key={product.id}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -20 }}
-                              transition={{ 
-                                delay: 0.3 + index * 0.1 + productIndex * 0.05, 
-                                duration: 0.6 
-                              }}
-                            >
-                              <ProductCard
-                                product={product}
-                                isAdmin={true}
-                                onEdit={handleEditProduct}
-                                onDelete={handleDeleteProduct}
-                              />
-                            </motion.div>
-                          ))}
-                        </AnimatePresence>
-                      </Stack>
-                    </Box>
-                  );
-                })}
-                
-                {filteredCategories.length === 0 && (
-                  <MotionPaper
+              <Stack spacing={2}>
+                {group.products.map((product, index) => (
+                  <MotionCard
+                    key={product.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.5 }}
-                    sx={{ 
-                      p: 6, 
-                      textAlign: 'center', 
-                      borderRadius: 4,
-                      backgroundColor: '#2C2C2E',
-                      border: '1px solid rgba(255,255,255,0.05)',
+                    transition={{ delay: index * 0.1 }}
+                    elevation={1}
+                    sx={{
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      '&:hover': {
+                        borderColor: 'primary.main',
+                        transform: 'translateY(-2px)',
+                        transition: 'all 0.3s ease',
+                      }
                     }}
                   >
-                    <Typography color="text.secondary" sx={{ fontSize: '1.1rem' }}>
-                      No hay productos en esta categoría. Agrega algunos usando el formulario superior.
-                    </Typography>
-                  </MotionPaper>
-                )}
-              </Box>
+                    <CardContent sx={{ pb: 1 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1, gap: 2 }}>
+                        <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
+                          {product.name}
+                        </Typography>
+                        <Typography variant="h6" color="secondary.main" fontWeight="bold">
+                          {formatPrice(product.price)}
+                        </Typography>
+                      </Box>
+                      
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.4 }}>
+                        {product.description}
+                      </Typography>
+                      
+                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        {product.isRecommended && (
+                          <Chip 
+                            label="Recomendado" 
+                            size="small" 
+                            color="secondary"
+                            sx={{ fontSize: '0.7rem' }}
+                          />
+                        )}
+                        {product.isVegan && (
+                          <Chip 
+                            label="Vegano" 
+                            size="small" 
+                            color="success"
+                            sx={{ fontSize: '0.7rem' }}
+                          />
+                        )}
+                      </Stack>
+                    </CardContent>
+                    
+                    <CardActions sx={{ pt: 0, px: 2, pb: 2 }}>
+                      <Button
+                        size="small"
+                        startIcon={<EditIcon />}
+                        onClick={() => {
+                          setEditingProduct(product);
+                          setShowProductForm(true);
+                        }}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        size="small"
+                        color="error"
+                        startIcon={<DeleteIcon />}
+                        onClick={() => setDeleteConfirm(product)}
+                      >
+                        Eliminar
+                      </Button>
+                    </CardActions>
+                  </MotionCard>
+                ))}
+              </Stack>
             )}
-          </AnimatePresence>
-        </MotionBox>
+          </MotionPaper>
+        ))}
 
-        {/* Footer */}
-        <MotionBox
-          variants={itemVariants}
-          sx={{ 
-            textAlign: 'center',
-            mt: 12,
-            pt: 6,
-            borderTop: '1px solid #3A3A3C',
+        {/* FAB para agregar producto */}
+        <Fab
+          color="primary"
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+            }
           }}
+          onClick={() => setShowProductForm(true)}
         >
-          <Typography 
-            variant="caption" 
-            sx={{ 
-              color: 'text.secondary',
-              fontSize: '0.8rem',
-              letterSpacing: '0.1em',
-              opacity: 0.6,
-            }}
-          >
-            PANEL ADMINISTRATIVO • MENÚ DIGITAL 2025
-          </Typography>
-        </MotionBox>
+          <AddIcon />
+        </Fab>
       </MotionContainer>
+
+      {/* Formulario de Producto */}
+      <ProductForm
+        open={showProductForm}
+        onClose={() => {
+          setShowProductForm(false);
+          setEditingProduct(null);
+        }}
+        onSave={editingProduct ? handleEditProduct : handleAddProduct}
+        product={editingProduct}
+        menuId={selectedMenuId}
+      />
+
+      {/* Generador de QR */}
+      <Dialog
+        open={showQRGenerator}
+        onClose={() => setShowQRGenerator(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle>
+          <Typography variant="h6" fontWeight={600}>
+            Código QR del Menú
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <QRGenerator 
+            menuId={selectedMenuId} 
+            menuName={currentMenu.name}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowQRGenerator(false)}>
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirmación de eliminación */}
+      <Dialog
+        open={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle>
+          <Typography variant="h6" fontWeight={600}>
+            Confirmar Eliminación
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            ¿Estás seguro de que quieres eliminar &quot;{deleteConfirm?.name}&quot;?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Esta acción no se puede deshacer.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirm(null)}>
+            Cancelar
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => deleteConfirm && handleDeleteProduct(deleteConfirm.id)}
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

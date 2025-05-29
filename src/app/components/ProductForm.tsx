@@ -18,6 +18,7 @@ import {
   Box,
   Typography,
   IconButton,
+  SelectChangeEvent,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import CloseIcon from '@mui/icons-material/Close';
@@ -49,7 +50,7 @@ export default function ProductForm({
     isVegan: false,
   });
 
-  const [errors, setErrors] = useState<Partial<AdminFormData>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof AdminFormData, string>>>({});
 
   useEffect(() => {
     if (product) {
@@ -75,7 +76,7 @@ export default function ProductForm({
   }, [product, open]);
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<AdminFormData> = {};
+    const newErrors: Partial<Record<keyof AdminFormData, string>> = {};
 
     if (!formData.name.trim()) {
       newErrors.name = 'El nombre es requerido';
@@ -111,11 +112,12 @@ export default function ProductForm({
   };
 
   const handleChange = (field: keyof AdminFormData) => (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | any
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.SyntheticEvent<Element, Event>
   ) => {
-    const value = event.target.type === 'checkbox' 
-      ? event.target.checked 
-      : event.target.value;
+    const target = event.target as HTMLInputElement;
+    const value = target.type === 'checkbox' 
+      ? target.checked 
+      : target.value;
     
     setFormData(prev => ({
       ...prev,
@@ -130,6 +132,25 @@ export default function ProductForm({
       }));
     }
   };
+  const handleSelectChange = (field: keyof AdminFormData) => (
+    event: SelectChangeEvent
+  ) => {
+    const value = event.target.value;
+    
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+
+    // Limpiar error del campo cuando el usuario empiece a escribir
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined
+      }));
+    }
+  };
+
 
   return (
     <Dialog 
@@ -176,16 +197,13 @@ export default function ProductForm({
             helperText={errors.price}
             fullWidth
             variant="outlined"
-            InputProps={{
-              startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>$</Typography>
-            }}
           />
 
           <FormControl fullWidth>
             <InputLabel>Categoría</InputLabel>
             <Select
               value={formData.category}
-              onChange={handleChange('category')}
+              onChange={handleSelectChange('category')}
               label="Categoría"
             >
               {categories.map((category) => (
