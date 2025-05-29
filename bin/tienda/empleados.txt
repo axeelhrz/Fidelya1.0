@@ -1,5 +1,0 @@
-1234;Arturo;art1+;2;Nocturno;10.5
-1235;Manuel;man2-;1;Diurno;0.0
-1236;Laura;lau3*;3;Nocturno;15.0
-1237;Carlos;car1#;1;Diurno;5.0
-1238;Elena;ele2@;2;Nocturno;12.5
