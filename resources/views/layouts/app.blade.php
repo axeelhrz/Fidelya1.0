@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-bind:class="{ 'dark': darkMode }">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <title>@yield('title', 'Dashboard') - {{ config('app.name', 'Sistema Frutería') }}</title>
-    
-    <!-- Fonts -->
+        <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <!-- Styles -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -25,14 +24,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     @stack('styles')
-</head>
+    </head>
 <body class="font-poppins antialiased bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <div class="min-h-screen flex" x-data="{ sidebarOpen: false }">
         <!-- Sidebar -->
         <div class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0"
              x-bind:class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }">
             @include('layouts.sidebar')
-        </div>
+                    </div>
         
         <!-- Overlay para móvil -->
         <div class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
@@ -52,7 +51,7 @@
             <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
                 @include('layouts.header')
             </header>
-            
+
             <!-- Main content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-900">
                 <div class="container mx-auto px-6 py-8">
@@ -61,7 +60,7 @@
                             <div class="flex items-center">
                                 <i class="fas fa-check-circle mr-2"></i>
                                 <span>{{ session('success') }}</span>
-                            </div>
+        </div>
                         </div>
                     @endif
                     
