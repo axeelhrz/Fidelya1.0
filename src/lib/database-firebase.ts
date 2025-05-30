@@ -15,7 +15,8 @@ import {
   writeBatch,
   DocumentSnapshot,
   QuerySnapshot,
-  Unsubscribe
+  Unsubscribe,
+  Firestore
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Menu, Product, MenuData, ProductCategory } from '../app/types';
@@ -33,6 +34,14 @@ class FirebaseDatabaseAPI {
   // Verificar si Firebase está disponible
   private isFirebaseAvailable(): boolean {
     return !!db;
+  }
+
+  // Obtener instancia de Firestore con tipo seguro
+  private getFirestore(): Firestore {
+    if (!db) {
+      throw new Error('Firebase no está configurado correctamente');
+    }
+    return db;
   }
 
   // Manejar errores de Firebase
@@ -59,9 +68,10 @@ class FirebaseDatabaseAPI {
     }
 
     try {
-      const menuRef = doc(db, this.menusCollection, menuId);
+      const firestore = this.getFirestore();
+      const menuRef = doc(firestore, this.menusCollection, menuId);
       const productsQuery = query(
-        collection(db, this.productsCollection),
+        collection(firestore, this.productsCollection),
         where('menuId', '==', menuId),
         orderBy('category'),
         orderBy('name')
@@ -128,8 +138,9 @@ class FirebaseDatabaseAPI {
     }
 
     try {
+      const firestore = this.getFirestore();
       const menusQuery = query(
-        collection(db, this.menusCollection),
+        collection(firestore, this.menusCollection),
         orderBy('createdAt', 'desc')
       );
 
@@ -157,8 +168,9 @@ class FirebaseDatabaseAPI {
     }
 
     try {
+      const firestore = this.getFirestore();
       const productsQuery = query(
-        collection(db, this.productsCollection),
+        collection(firestore, this.productsCollection),
         where('menuId', '==', menuId),
         orderBy('category'),
         orderBy('name')
@@ -186,7 +198,8 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
-      const q = query(collection(db, this.menusCollection), orderBy('createdAt', 'desc'));
+      const firestore = this.getFirestore();
+      const q = query(collection(firestore, this.menusCollection), orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -227,7 +240,8 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
-      const docRef = doc(db, this.menusCollection, id);
+      const firestore = this.getFirestore();
+      const docRef = doc(firestore, this.menusCollection, id);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
@@ -250,6 +264,7 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
+      const firestore = this.getFirestore();
       const menuData = {
         ...menu,
         createdAt: serverTimestamp(),
@@ -257,7 +272,7 @@ class FirebaseDatabaseAPI {
         isActive: menu.isActive ?? true
       };
       
-      const docRef = await addDoc(collection(db, this.menusCollection), menuData);
+      const docRef = await addDoc(collection(firestore, this.menusCollection), menuData);
       
       return {
         id: docRef.id,
@@ -277,7 +292,8 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
-      const docRef = doc(db, this.menusCollection, id);
+      const firestore = this.getFirestore();
+      const docRef = doc(firestore, this.menusCollection, id);
       const updateData = {
         ...menu,
         updatedAt: serverTimestamp()
@@ -303,11 +319,12 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
-      const batch = writeBatch(db);
+      const firestore = this.getFirestore();
+      const batch = writeBatch(firestore);
       
       // Eliminar todos los productos del menú
       const productsQuery = query(
-        collection(db, this.productsCollection),
+        collection(firestore, this.productsCollection),
         where('menuId', '==', id)
       );
       const productsSnapshot = await getDocs(productsQuery);
@@ -317,7 +334,7 @@ class FirebaseDatabaseAPI {
       });
       
       // Eliminar el menú
-      batch.delete(doc(db, this.menusCollection, id));
+      batch.delete(doc(firestore, this.menusCollection, id));
       
       await batch.commit();
     } catch (error) {
@@ -332,8 +349,9 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
+      const firestore = this.getFirestore();
       const q = query(
-        collection(db, this.productsCollection),
+        collection(firestore, this.productsCollection),
         orderBy('category'),
         orderBy('name')
       );
@@ -354,7 +372,8 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
-      const docRef = doc(db, this.productsCollection, id);
+      const firestore = this.getFirestore();
+      const docRef = doc(firestore, this.productsCollection, id);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
@@ -376,6 +395,7 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
+      const firestore = this.getFirestore();
       const productData = {
         ...product,
         isAvailable: product.isAvailable ?? true,
@@ -383,7 +403,7 @@ class FirebaseDatabaseAPI {
         updatedAt: serverTimestamp()
       };
       
-      const docRef = await addDoc(collection(db, this.productsCollection), productData);
+      const docRef = await addDoc(collection(firestore, this.productsCollection), productData);
       
       return {
         id: docRef.id,
@@ -401,7 +421,8 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
-      const docRef = doc(db, this.productsCollection, id);
+      const firestore = this.getFirestore();
+      const docRef = doc(firestore, this.productsCollection, id);
       const updateData = {
         ...product,
         updatedAt: serverTimestamp()
@@ -426,7 +447,8 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
-      await deleteDoc(doc(db, this.productsCollection, id));
+      const firestore = this.getFirestore();
+      await deleteDoc(doc(firestore, this.productsCollection, id));
     } catch (error) {
       this.handleError(error, 'eliminar producto');
     }
@@ -437,8 +459,9 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
+      const firestore = this.getFirestore();
       const q = query(
-        collection(db, this.productsCollection),
+        collection(firestore, this.productsCollection),
         where('menuId', '==', menuId),
         orderBy('category'),
         orderBy('name')
@@ -462,10 +485,11 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
-      const batch = writeBatch(db);
+      const firestore = this.getFirestore();
+      const batch = writeBatch(firestore);
       
       productIds.forEach(productId => {
-        const productRef = doc(db, this.productsCollection, productId);
+        const productRef = doc(firestore, this.productsCollection, productId);
         batch.update(productRef, {
           isAvailable,
           updatedAt: serverTimestamp()
@@ -498,9 +522,10 @@ class FirebaseDatabaseAPI {
       });
 
       // Crear productos duplicados
-      const batch = writeBatch(db);
+      const firestore = this.getFirestore();
+      const batch = writeBatch(firestore);
       products.forEach(product => {
-        const newProductRef = doc(collection(db, this.productsCollection));
+        const newProductRef = doc(collection(firestore, this.productsCollection));
         batch.set(newProductRef, {
           ...product,
           menuId: newMenu.id,
@@ -524,7 +549,8 @@ class FirebaseDatabaseAPI {
       return ['Entrada', 'Principal', 'Bebida', 'Postre'];
     }
     try {
-      const querySnapshot = await getDocs(collection(db, this.categoriesCollection));
+      const firestore = this.getFirestore();
+      const querySnapshot = await getDocs(collection(firestore, this.categoriesCollection));
       if (querySnapshot.empty) {
         return ['Entrada', 'Principal', 'Bebida', 'Postre'];
       }
@@ -540,7 +566,8 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
-      await setDoc(doc(db, this.categoriesCollection, name), {
+      const firestore = this.getFirestore();
+      await setDoc(doc(firestore, this.categoriesCollection, name), {
         name,
         createdAt: serverTimestamp()
       });
@@ -556,6 +583,8 @@ class FirebaseDatabaseAPI {
       throw new Error('Firebase no está configurado');
     }
     try {
+      const firestore = this.getFirestore();
+      
       // Datos iniciales para el restaurante
       const initialMenu = {
         name: 'Carta Principal',
@@ -565,7 +594,7 @@ class FirebaseDatabaseAPI {
         updatedAt: serverTimestamp()
       };
 
-      const menuRef = await addDoc(collection(db, this.menusCollection), initialMenu);
+      const menuRef = await addDoc(collection(firestore, this.menusCollection), initialMenu);
       
       // Productos iniciales más completos
       const initialProducts = [
@@ -655,9 +684,9 @@ class FirebaseDatabaseAPI {
         }
       ];
 
-      const batch = writeBatch(db);
+      const batch = writeBatch(firestore);
       initialProducts.forEach(product => {
-        const productRef = doc(collection(db, this.productsCollection));
+        const productRef = doc(collection(firestore, this.productsCollection));
         batch.set(productRef, {
           ...product,
           createdAt: serverTimestamp(),
@@ -669,9 +698,9 @@ class FirebaseDatabaseAPI {
 
       // Inicializar categorías
       const categories: ProductCategory[] = ['Entrada', 'Principal', 'Bebida', 'Postre'];
-      const categoryBatch = writeBatch(db);
+      const categoryBatch = writeBatch(firestore);
       categories.forEach(category => {
-        const categoryRef = doc(db, this.categoriesCollection, category);
+        const categoryRef = doc(firestore, this.categoriesCollection, category);
         categoryBatch.set(categoryRef, {
           name: category,
           createdAt: serverTimestamp()
