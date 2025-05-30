@@ -25,7 +25,7 @@ export default function HomePage() {
   const handleViewMenu = () => {
     // Cambiar a clase que permite scroll antes de navegar
     document.body.className = 'menu-page-scroll';
-    router.push('/menu?id=xs-reset-menu');
+    router.push('/menu?id=IYlJgNP6l4itTBTuem0H');
   };
 
   return (
