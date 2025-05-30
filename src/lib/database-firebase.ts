@@ -1,555 +1,285 @@
 import { 
   collection, 
   doc, 
-  getDoc, 
   getDocs, 
-  setDoc, 
+  getDoc, 
+  addDoc, 
   updateDoc, 
   deleteDoc, 
-  onSnapshot, 
+  setDoc,
   query, 
-  orderBy, 
-  serverTimestamp,
-  writeBatch,
-  Timestamp,
+  where
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Product, MenuData, FirebaseMenuItem, FirebaseMenu } from '../app/types';
+import { Menu, Product } from '../app/types';
 
-// Función para convertir producto de Firebase a formato de la app
-const convertFirebaseProductToProduct = (fbProduct: FirebaseMenuItem): Product => ({
-  id: fbProduct.id,
-  name: fbProduct.name,
-  price: fbProduct.price,
-  description: fbProduct.description,
-  category: fbProduct.category,
-  isRecommended: fbProduct.isRecommended ?? false,
-  isVegan: fbProduct.isVegan ?? false,
-});
+class FirebaseDatabaseAPI {
+  private menusCollection = 'menus';
+  private productsCollection = 'products';
 
-// Función para convertir producto de la app a formato de Firebase
-const convertProductToFirebaseProduct = (product: Product): Omit<FirebaseMenuItem, 'id' | 'createdAt' | 'updatedAt'> => ({
-  name: product.name,
-  price: product.price,
-  description: product.description,
-  category: product.category,
-  isRecommended: product.isRecommended ?? false,
-  isVegan: product.isVegan ?? false,
-});
+  // Verificar si Firebase está disponible
+  private isFirebaseAvailable(): boolean {
+    return !!db;
+  }
 
-// API de la base de datos Firebase
-export const DatabaseAPI = {
-  init: async (): Promise<boolean> => {
-    console.log('Inicializando base de datos Firebase...');
-    try {
-      // Verificar conexión intentando leer un documento
-      const testDoc = doc(db, 'test', 'connection');
-      await getDoc(testDoc);
-      console.log('Base de datos Firebase inicializada correctamente');
-      return true;
-    } catch (error) {
-      console.error('Error inicializando Firebase:', error);
-      return false;
+  // Manejar errores de Firebase
+  private handleError(error: any, operation: string) {
+    console.error(`Error en ${operation}:`, error);
+    throw new Error(`Error en ${operation}: ${error.message}`);
+  }
+
+  async getMenus(): Promise<Menu[]> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
     }
-  },
+    try {
+      const querySnapshot = await getDocs(collection(db, this.menusCollection));
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Menu));
+    } catch (error) {
+      this.handleError(error, 'obtener menús');
+      return [];
+    }
+  }
 
-  menus: {
-    create: async (menuData: MenuData): Promise<boolean> => {
-      console.log('Creando menú en Firebase:', menuData.id);
-      try {
-        const batch = writeBatch(db);
-        
-        // Crear el documento del menú
-        const menuRef = doc(db, 'menus', menuData.id);
-        const menuDoc: FirebaseMenu = {
-          id: menuData.id,
-          name: menuData.name,
-          description: menuData.description,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
-        batch.set(menuRef, menuDoc);
-
-        // Crear los productos del menú
-        for (const product of menuData.products) {
-          const productRef = doc(db, 'menus', menuData.id, 'items', product.id);
-          const productDoc: Omit<FirebaseMenuItem, 'id'> = {
-            ...convertProductToFirebaseProduct(product),
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          };
-          batch.set(productRef, productDoc);
-        }
-
-        await batch.commit();
-        console.log('Menú creado exitosamente en Firebase');
-        return true;
-      } catch (error) {
-        console.error('Error creando menú en Firebase:', error);
-        return false;
+  async getMenu(id: string): Promise<Menu | null> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
+    }
+    try {
+      const docRef = doc(db, this.menusCollection, id);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as Menu;
       }
-    },
-
-    get: async (id: string): Promise<MenuData | null> => {
-      console.log('Obteniendo menú de Firebase:', id);
-      try {
-        // Obtener el menú
-        const menuRef = doc(db, 'menus', id);
-        const menuSnap = await getDoc(menuRef);
-
-        if (!menuSnap.exists()) {
-          console.log('Menú no encontrado:', id);
           return null;
-        }
-
-        const menuData = menuSnap.data() as FirebaseMenu;
-
-        // Obtener los productos del menú
-        const itemsRef = collection(db, 'menus', id, 'items');
-        const itemsQuery = query(itemsRef, orderBy('category'), orderBy('name'));
-        const itemsSnap = await getDocs(itemsQuery);
-
-        const products: Product[] = itemsSnap.docs.map(doc => {
-          const data = doc.data() as Omit<FirebaseMenuItem, 'id'>;
-          return convertFirebaseProductToProduct({ ...data, id: doc.id });
-        });
-        const menu: MenuData = {
-          id: menuData.id,
-          name: menuData.name,
-          description: menuData.description,
-          products,
-          createdAt: menuData.createdAt instanceof Timestamp ? menuData.createdAt.toDate().toISOString() : undefined,
-          updatedAt: menuData.updatedAt instanceof Timestamp ? menuData.updatedAt.toDate().toISOString() : undefined,
-        };
-
-        console.log('Menú obtenido exitosamente:', menu.id);
-        return menu;
       } catch (error) {
-        console.error('Error obteniendo menú de Firebase:', error);
+      this.handleError(error, 'obtener menú');
         return null;
       }
-    },
+  }
 
-    getAll: async (): Promise<MenuData[]> => {
-      console.log('Obteniendo todos los menús de Firebase...');
+  async createMenu(menu: Omit<Menu, 'id'>): Promise<Menu> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
+    }
       try {
-        const menusRef = collection(db, 'menus');
-        const menusQuery = query(menusRef, orderBy('name'));
-        const menusSnap = await getDocs(menusQuery);
-
-        const menus: MenuData[] = [];
-
-        for (const menuDoc of menusSnap.docs) {
-          const menuData = menuDoc.data() as FirebaseMenu;
-          
-          // Obtener productos para cada menú
-          const itemsRef = collection(db, 'menus', menuDoc.id, 'items');
-          const itemsQuery = query(itemsRef, orderBy('category'), orderBy('name'));
-          const itemsSnap = await getDocs(itemsQuery);
-
-          const products: Product[] = itemsSnap.docs.map(doc => {
-            const data = doc.data() as Omit<FirebaseMenuItem, 'id'>;
-            return convertFirebaseProductToProduct({ ...data, id: doc.id });
-          });
-          menus.push({
-            id: menuData.id,
-            name: menuData.name,
-            description: menuData.description,
-            products,
-            createdAt: menuData.createdAt instanceof Timestamp ? menuData.createdAt.toDate().toISOString() : undefined,
-            updatedAt: menuData.updatedAt instanceof Timestamp ? menuData.updatedAt.toDate().toISOString() : undefined,
-          });
-        }
-
-        console.log('Encontrados', menus.length, 'menús');
-        return menus;
+      const docRef = await addDoc(collection(db, this.menusCollection), menu);
+      return { id: docRef.id, ...menu };
       } catch (error) {
-        console.error('Error obteniendo menús de Firebase:', error);
-        return [];
+      this.handleError(error, 'crear menú');
+      throw error;
       }
-    },
+  }
 
-    update: async (menuData: MenuData): Promise<boolean> => {
-      console.log('Actualizando menú en Firebase:', menuData.id);
+  async updateMenu(id: string, menu: Partial<Menu>): Promise<Menu> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
+    }
       try {
-        const menuRef = doc(db, 'menus', menuData.id);
-        await updateDoc(menuRef, {
-          name: menuData.name,
-          description: menuData.description,
-          updatedAt: serverTimestamp(),
-        });
-
-        console.log('Menú actualizado exitosamente');
-        return true;
-      } catch (error) {
-        console.error('Error actualizando menú en Firebase:', error);
-        return false;
-      }
-    },
-
-    delete: async (id: string): Promise<boolean> => {
-      console.log('Eliminando menú de Firebase:', id);
-      try {
-        const batch = writeBatch(db);
-
-        // Eliminar todos los productos del menú
-        const itemsRef = collection(db, 'menus', id, 'items');
-        const itemsSnap = await getDocs(itemsRef);
-        
-        itemsSnap.docs.forEach(doc => {
-          batch.delete(doc.ref);
-        });
-
-        // Eliminar el menú
-        const menuRef = doc(db, 'menus', id);
-        batch.delete(menuRef);
-
-        await batch.commit();
-        console.log('Menú eliminado exitosamente');
-        return true;
-      } catch (error) {
-        console.error('Error eliminando menú de Firebase:', error);
-        return false;
-      }
-    },
-  },
-
-  products: {
-    create: async (product: Product, menuId: string): Promise<boolean> => {
-      console.log('Creando producto en Firebase:', product.id, 'en menú:', menuId);
-      try {
-        const productRef = doc(db, 'menus', menuId, 'items', product.id);
-        const productDoc: Omit<FirebaseMenuItem, 'id'> = {
-          ...convertProductToFirebaseProduct(product),
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
-
-        await setDoc(productRef, productDoc);
-        console.log('Producto creado exitosamente');
-        return true;
-      } catch (error) {
-        console.error('Error creando producto en Firebase:', error);
-        return false;
-      }
-    },
-
-    update: async (product: Product, menuId: string): Promise<boolean> => {
-      console.log('Actualizando producto en Firebase:', product.id);
-      try {
-        const productRef = doc(db, 'menus', menuId, 'items', product.id);
-        await updateDoc(productRef, {
-          ...convertProductToFirebaseProduct(product),
-          updatedAt: serverTimestamp(),
-        });
-
-        console.log('Producto actualizado exitosamente');
-        return true;
-      } catch (error) {
-        console.error('Error actualizando producto en Firebase:', error);
-        return false;
-      }
-    },
-
-    delete: async (productId: string, menuId?: string): Promise<boolean> => {
-      console.log('Eliminando producto de Firebase:', productId);
-      try {
-        if (menuId) {
-          const productRef = doc(db, 'menus', menuId, 'items', productId);
-          await deleteDoc(productRef);
-        } else {
-          // Si no se proporciona menuId, buscar en todos los menús
-          const menusRef = collection(db, 'menus');
-          const menusSnap = await getDocs(menusRef);
-          
-          for (const menuDoc of menusSnap.docs) {
-            const productRef = doc(db, 'menus', menuDoc.id, 'items', productId);
-            const productSnap = await getDoc(productRef);
-            
-            if (productSnap.exists()) {
-              await deleteDoc(productRef);
-              break;
-            }
-          }
-        }
-
-        console.log('Producto eliminado exitosamente');
-        return true;
-      } catch (error) {
-        console.error('Error eliminando producto de Firebase:', error);
-        return false;
-      }
-    },
-
-    getByMenu: async (menuId: string): Promise<Product[]> => {
-      console.log('Obteniendo productos del menú:', menuId);
-      try {
-        const itemsRef = collection(db, 'menus', menuId, 'items');
-        const itemsQuery = query(itemsRef, orderBy('category'), orderBy('name'));
-        const itemsSnap = await getDocs(itemsQuery);
-
-        const products: Product[] = itemsSnap.docs.map(doc => {
-          const data = doc.data() as Omit<FirebaseMenuItem, 'id'>;
-          return convertFirebaseProductToProduct({ ...data, id: doc.id });
-        });
-
-        console.log('Encontrados', products.length, 'productos');
-        return products;
-      } catch (error) {
-        console.error('Error obteniendo productos de Firebase:', error);
-        return [];
-      }
-    },
-  },
-
-  utils: {
-    seedFromFile: async (): Promise<boolean> => {
-      console.log('Sembrando base de datos Firebase desde archivo...');
-      try {
-        const { menus } = await import('../data/menu');
-        console.log('Menús cargados desde archivo:', Object.keys(menus));
-
-        for (const [menuId, menuData] of Object.entries(menus)) {
-          console.log('Sembrando menú:', menuId);
-          
-          // Verificar si el menú ya existe
-          const existingMenu = await DatabaseAPI.menus.get(menuId);
-          if (existingMenu) {
-            console.log('Menú ya existe, omitiendo:', menuId);
-            continue;
-          }
-
-          // Crear el menú
-          const success = await DatabaseAPI.menus.create(menuData);
-          if (!success) {
-            console.error('Error sembrando menú:', menuId);
-            return false;
-          }
-        }
-
-        console.log('Base de datos Firebase sembrada exitosamente');
-        return true;
-      } catch (error) {
-        console.error('Error sembrando base de datos Firebase:', error);
-        return false;
-      }
-    },
-
-    exportToJSON: async (): Promise<string> => {
-      console.log('Exportando base de datos Firebase a JSON...');
-      try {
-        const menus = await DatabaseAPI.menus.getAll();
-        const menusObject = menus.reduce((acc, menu) => {
-          acc[menu.id] = menu;
-          return acc;
-        }, {} as Record<string, MenuData>);
-
-        const exported = JSON.stringify(menusObject, null, 2);
-        console.log('Base de datos exportada exitosamente');
-        return exported;
-      } catch (error) {
-        console.error('Error exportando base de datos Firebase:', error);
-        return '{}';
-      }
-    },
-
-    hasData: async (): Promise<boolean> => {
-      console.log('Verificando si Firebase tiene datos...');
-      try {
-        const menusRef = collection(db, 'menus');
-        const menusSnap = await getDocs(query(menusRef, orderBy('name')));
-        
-        const hasData = !menusSnap.empty;
-        console.log('Firebase tiene datos:', hasData);
-        return hasData;
-      } catch (error) {
-        console.error('Error verificando datos en Firebase:', error);
-        return false;
-      }
-    },
-
-    clearAll: async (): Promise<boolean> => {
-      console.log('Limpiando todos los datos de Firebase...');
-      try {
-        const batch = writeBatch(db);
-        
-        // Obtener todos los menús
-        const menusRef = collection(db, 'menus');
-        const menusSnap = await getDocs(menusRef);
-
-        // Eliminar todos los productos de cada menú
-        for (const menuDoc of menusSnap.docs) {
-          const itemsRef = collection(db, 'menus', menuDoc.id, 'items');
-          const itemsSnap = await getDocs(itemsRef);
-          
-          itemsSnap.docs.forEach(doc => {
-            batch.delete(doc.ref);
-          });
-
-          // Eliminar el menú
-          batch.delete(menuDoc.ref);
-        }
-
-        await batch.commit();
-        console.log('Base de datos Firebase limpiada exitosamente');
-        return true;
-      } catch (error) {
-        console.error('Error limpiando base de datos Firebase:', error);
-        return false;
-      }
-    },
-
-    getInfo: async () => {
-      console.log('Obteniendo información de Firebase...');
-      try {
-        // Contar menús
-        const menusRef = collection(db, 'menus');
-        const menusSnap = await getDocs(menusRef);
-        const menusCount = menusSnap.size;
-
-        // Contar productos
-        let productsCount = 0;
-        for (const menuDoc of menusSnap.docs) {
-          const itemsRef = collection(db, 'menus', menuDoc.id, 'items');
-          const itemsSnap = await getDocs(itemsRef);
-          productsCount += itemsSnap.size;
-        }
-
-        const info = {
-          menusCount,
-          productsCount,
-          dbType: 'firebase',
-          environment: 'production',
-          hasMenuData: true,
-          dbExists: true,
-          dbPath: 'firebase-firestore',
-          lastUpdated: new Date().toISOString(),
-        };
-
-        console.log('Información de Firebase:', info);
-        return info;
-      } catch (error) {
-        console.error('Error obteniendo información de Firebase:', error);
-        return {
-          menusCount: 0,
-          productsCount: 0,
-          dbType: 'firebase-error',
-          environment: 'error',
-          hasMenuData: false,
-          dbExists: false,
-          dbPath: 'error',
-          lastUpdated: null,
-        };
-      }
-    },
-  },
-
-  // Funciones específicas para tiempo real
-  realtime: {
-    subscribeToMenu: (menuId: string, callback: (menu: MenuData | null) => void) => {
-      console.log('Suscribiéndose a cambios del menú:', menuId);
+      const docRef = doc(db, this.menusCollection, id);
+      await updateDoc(docRef, menu);
       
-      const menuRef = doc(db, 'menus', menuId);
-      const itemsRef = collection(db, 'menus', menuId, 'items');
-      const itemsQuery = query(itemsRef, orderBy('category'), orderBy('name'));
+      const updatedDoc = await getDoc(docRef);
+      return { id: updatedDoc.id, ...updatedDoc.data() } as Menu;
+      } catch (error) {
+      this.handleError(error, 'actualizar menú');
+      throw error;
+      }
+  }
 
-      // Suscribirse a cambios en el menú
-      const unsubscribeMenu = onSnapshot(menuRef, async (menuSnap) => {
-        if (!menuSnap.exists()) {
-          callback(null);
-          return;
-        }
+  async deleteMenu(id: string): Promise<void> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
+    }
+      try {
+      await deleteDoc(doc(db, this.menusCollection, id));
+      } catch (error) {
+      this.handleError(error, 'eliminar menú');
+      }
+  }
 
-        const menuData = menuSnap.data() as FirebaseMenu;
+  async getProducts(): Promise<Product[]> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
+    }
+      try {
+      const querySnapshot = await getDocs(collection(db, this.productsCollection));
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Product));
+      } catch (error) {
+      this.handleError(error, 'obtener productos');
+      return [];
+      }
+  }
 
-        // Obtener productos actualizados
-        const itemsSnap = await getDocs(itemsQuery);
-        const products: Product[] = itemsSnap.docs.map(doc => {
-          const data = doc.data() as Omit<FirebaseMenuItem, 'id'>;
-          return convertFirebaseProductToProduct({ ...data, id: doc.id });
-        });
-        const menu: MenuData = {
-          id: menuData.id,
-          name: menuData.name,
-          description: menuData.description,
-          products,
-          createdAt: menuData.createdAt instanceof Timestamp ? menuData.createdAt.toDate().toISOString() : undefined,
-          updatedAt: menuData.updatedAt instanceof Timestamp ? menuData.updatedAt.toDate().toISOString() : undefined,
+  async getProduct(id: string): Promise<Product | null> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
+    }
+      try {
+      const docRef = doc(db, this.productsCollection, id);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as Product;
+      }
+      return null;
+      } catch (error) {
+      this.handleError(error, 'obtener producto');
+      return null;
+      }
+  }
+
+  async createProduct(product: Omit<Product, 'id'>): Promise<Product> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
+    }
+      try {
+      const docRef = await addDoc(collection(db, this.productsCollection), product);
+      return { id: docRef.id, ...product };
+      } catch (error) {
+      this.handleError(error, 'crear producto');
+      throw error;
+      }
+  }
+
+  async updateProduct(id: string, product: Partial<Product>): Promise<Product> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
+    }
+      try {
+      const docRef = doc(db, this.productsCollection, id);
+      await updateDoc(docRef, product);
+      
+      const updatedDoc = await getDoc(docRef);
+      return { id: updatedDoc.id, ...updatedDoc.data() } as Product;
+      } catch (error) {
+      this.handleError(error, 'actualizar producto');
+      throw error;
+      }
+  }
+
+  async deleteProduct(id: string): Promise<void> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
+    }
+      try {
+      await deleteDoc(doc(db, this.productsCollection, id));
+      } catch (error) {
+      this.handleError(error, 'eliminar producto');
+      }
+  }
+
+  async getProductsByMenu(menuId: string): Promise<Product[]> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
+    }
+      try {
+      const q = query(
+        collection(db, this.productsCollection), 
+        where('menuId', '==', menuId)
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Product));
+      } catch (error) {
+      this.handleError(error, 'obtener productos por menú');
+      return [];
+      }
+  }
+
+  async initializeDatabase(): Promise<void> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
+    }
+      try {
+      // Datos iniciales para el bar
+      const initialMenu = {
+        name: 'Carta Principal',
+        description: 'Nuestra selección completa de bebidas y comidas',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
         };
 
-        callback(menu);
-        callback(menu);
-      });
-
-      // Suscribirse a cambios en los productos
-      const unsubscribeItems = onSnapshot(itemsQuery, async () => {
-        // Cuando cambien los productos, volver a obtener el menú completo
-        const menuSnap = await getDoc(menuRef);
-        if (menuSnap.exists()) {
-          const menuData = menuSnap.data() as FirebaseMenu;
-          const itemsSnap = await getDocs(itemsQuery);
-          
-          const products: Product[] = itemsSnap.docs.map(doc => {
-            const data = doc.data() as Omit<FirebaseMenuItem, 'id'>;
-            return convertFirebaseProductToProduct({ ...data, id: doc.id });
-          });
-
-          const menu: MenuData = {
-            id: menuData.id,
-            name: menuData.name,
-            description: menuData.description,
-            products,
-            createdAt: menuData.createdAt instanceof Timestamp ? menuData.createdAt.toDate().toISOString() : undefined,
-            updatedAt: menuData.updatedAt instanceof Timestamp ? menuData.updatedAt.toDate().toISOString() : undefined,
-          };
-
-          callback(menu);
-        }
-      });
-
-      // Retornar función para cancelar suscripciones
-      return () => {
-        unsubscribeMenu();
-        unsubscribeItems();
-      };
-    },
-
-    subscribeToMenus: (callback: (menus: MenuData[]) => void) => {
-      console.log('Suscribiéndose a cambios de todos los menús');
+      const menuRef = await addDoc(collection(db, this.menusCollection), initialMenu);
       
-      const menusRef = collection(db, 'menus');
-      const menusQuery = query(menusRef, orderBy('name'));
-
-      return onSnapshot(menusQuery, async (menusSnap) => {
-        const menus: MenuData[] = [];
-
-        for (const menuDoc of menusSnap.docs) {
-          const menuData = menuDoc.data() as FirebaseMenu;
-          
-          // Obtener productos para cada menú
-          const itemsRef = collection(db, 'menus', menuDoc.id, 'items');
-          const itemsQuery = query(itemsRef, orderBy('category'), orderBy('name'));
-          const itemsSnap = await getDocs(itemsQuery);
-
-          const products: Product[] = itemsSnap.docs.map(doc => {
-            const data = doc.data() as Omit<FirebaseMenuItem, 'id'>;
-            return convertFirebaseProductToProduct({ ...data, id: doc.id });
-          });
-
-          menus.push({
-            id: menuData.id,
-            name: menuData.name,
-            description: menuData.description,
-            products,
-            createdAt: menuData.createdAt instanceof Timestamp ? menuData.createdAt.toDate().toISOString() : undefined,
-            updatedAt: menuData.updatedAt instanceof Timestamp ? menuData.updatedAt.toDate().toISOString() : undefined,
-          });
-        }
-
-        callback(menus);
-      });
+      // Productos iniciales
+      const initialProducts = [
+        {
+          name: 'Cerveza Artesanal',
+          price: 2800,
+          description: 'Cerveza artesanal local, 500ml',
+          category: 'Bebidas',
+          isRecommended: true,
+          isVegan: true,
+          isAvailable: true,
+          menuId: menuRef.id
     },
-  },
-};
+        {
+          name: 'Hamburguesa Clásica',
+          price: 4200,
+          description: 'Carne, lechuga, tomate, queso y papas fritas',
+          category: 'Principales',
+          isRecommended: true,
+          isVegan: false,
+          isAvailable: true,
+          menuId: menuRef.id
+        }
+      ];
 
-export default DatabaseAPI;
+      for (const product of initialProducts) {
+        await addDoc(collection(db, this.productsCollection), product);
+      }
+
+      console.log('✅ Base de datos inicializada con datos del bar');
+    } catch (error) {
+      this.handleError(error, 'inicializar base de datos');
+    }
+  }
+
+  async exportData(): Promise<{ menus: Menu[], products: Product[] }> {
+    if (!this.isFirebaseAvailable()) {
+      throw new Error('Firebase no está configurado');
+    }
+
+    try {
+      const [menus, products] = await Promise.all([
+        this.getMenus(),
+        this.getProducts()
+      ]);
+
+      return { menus, products };
+    } catch (error) {
+      this.handleError(error, 'exportar datos');
+      return { menus: [], products: [] };
+    }
+  }
+
+  getSchemaInfo(): any {
+    return {
+      collections: [
+        {
+          name: this.menusCollection,
+          fields: ['name', 'description', 'isActive', 'createdAt', 'updatedAt']
+  },
+        {
+          name: this.productsCollection,
+          fields: ['name', 'price', 'description', 'category', 'isRecommended', 'isVegan', 'isAvailable', 'menuId']
+        }
+      ],
+      provider: 'Firebase Firestore',
+      status: this.isFirebaseAvailable() ? 'Conectado' : 'Desconectado'
+        };
+  }
+}
+
+export default new FirebaseDatabaseAPI();
