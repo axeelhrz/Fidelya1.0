@@ -33,7 +33,7 @@ const MotionFab = motion(Fab);
 
 const MenuViewer: React.FC<MenuViewerProps> = ({
   products,
-  menuDescription = 'Experiencia gastronómica premium en el corazón de la ciudad'
+  menuDescription = 'Tragos de autor, picadas y buena onda en el corazón de la ciudad'
 }) => {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
@@ -42,6 +42,21 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
 
   const { scrollY } = useScroll();
   const headerY = useTransform(scrollY, [0, 100], [0, -100]);
+
+  // Habilitar scroll cuando se monta el componente
+  useEffect(() => {
+    // Restaurar scroll para la página del menú
+    document.body.style.overflow = 'auto';
+    document.body.style.position = 'static';
+    document.body.style.width = 'auto';
+    document.body.style.height = 'auto';
+    
+    // Cleanup: mantener scroll habilitado
+    return () => {
+      // No restaurar el bloqueo de scroll al desmontar
+      // porque queremos mantener el scroll en esta página
+    };
+  }, []);
 
   // Controlar visibilidad del header
   useEffect(() => {
@@ -108,9 +123,10 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
 
   return (
     <Box sx={{ 
-      minHeight: '100vh', 
+      minHeight: '100vh', // Cambio de height fijo a minHeight
       backgroundColor: '#0A0A0A',
-      position: 'relative'
+      position: 'relative',
+      overflow: 'visible' // Permitir overflow
     }}>
       {/* Fondo elegante minimalista */}
       <Box
@@ -210,13 +226,12 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                 <Box>
                   <Typography 
                     sx={{ 
-                      fontFamily: "'Playfair Display', serif",
+                      fontFamily: "'Inter', sans-serif",
                       fontWeight: 700,
                       color: '#F8F8F8',
-                      letterSpacing: '0.05em',
+                      letterSpacing: '0.02em',
                       fontSize: { xs: '1.25rem', sm: '1.5rem' },
-                      lineHeight: 1,
-                      textTransform: 'uppercase'
+                      lineHeight: 1
                     }}
                   >
                     Xs Reset
@@ -235,7 +250,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                       mt: 0.5
                     }}
                   >
-                    Bar & Lounge
+                    Bar & Resto
                   </Typography>
                 </Box>
               </Box>
@@ -398,7 +413,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
             }}>
               <Typography 
                 sx={{ 
-                  fontFamily: "'Playfair Display', serif",
+                  fontFamily: "'Inter', sans-serif",
                   fontWeight: 600,
                   color: '#F8F8F8',
                   fontSize: '1.25rem',
@@ -490,7 +505,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Contenido principal */}
+      {/* Contenido principal con scroll habilitado */}
       <MotionContainer 
         maxWidth="lg" 
         sx={{ 
@@ -522,14 +537,13 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
 
           <Typography 
             sx={{ 
-              fontFamily: "'Playfair Display', serif",
+              fontFamily: "'Inter', sans-serif",
               fontSize: { xs: '2.5rem', sm: '3.5rem' },
               fontWeight: 700,
-              letterSpacing: '0.05em',
+              letterSpacing: '0.02em',
               lineHeight: 0.9,
               color: '#F8F8F8',
-              mb: 2,
-              textTransform: 'uppercase'
+              mb: 2
             }}
           >
             Xs Reset
@@ -547,7 +561,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               opacity: 0.9
             }}
           >
-            Bar & Lounge Experience
+            Bar & Resto Experience
           </Typography>
           
           <Typography 
@@ -617,7 +631,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                 }}>
                   <Typography 
                     sx={{ 
-                      fontFamily: "'Playfair Display', serif",
+                      fontFamily: "'Inter', sans-serif",
                       fontWeight: 600,
                       color: '#F8F8F8',
                       fontSize: { xs: '1.125rem', sm: '1.25rem' },
@@ -805,13 +819,12 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           >
             <Typography 
               sx={{ 
-                fontFamily: "'Playfair Display', serif",
+                fontFamily: "'Inter', sans-serif",
                 color: '#F8F8F8',
                 fontSize: '1.25rem',
                 fontWeight: 600,
                 mb: 1,
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase'
+                letterSpacing: '0.02em'
               }}
             >
               Xs Reset
