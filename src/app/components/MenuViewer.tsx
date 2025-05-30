@@ -17,7 +17,6 @@ import {
   FilterList,
   Close,
   AccessTime,
-  Star
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { Product } from '../types';

@@ -26,14 +26,14 @@ const MenuSection: React.FC<MenuSectionProps> = ({ title, products, index = 0 })
   if (!products || products.length === 0) return null;
 
   const sectionVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
       y: 0,
       transition: { 
-        duration: 0.8, 
+        duration: 0.6, 
         ease: [0.04, 0.62, 0.23, 0.98],
-        delay: index * 0.15
+        delay: index * 0.1
       } 
     }
   };
@@ -43,134 +43,132 @@ const MenuSection: React.FC<MenuSectionProps> = ({ title, products, index = 0 })
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.3 + (index * 0.15),
+        staggerChildren: 0.05,
+        delayChildren: 0.2 + (index * 0.1),
       },
     },
   };
 
   const recommendedCount = products.filter(p => p.isRecommended).length;
+
   // Determinar el icono según la categoría
   const getCategoryIcon = () => {
     const category = title.toLowerCase();
-    if (category.includes('cocktail') || category.includes('gin') || category.includes('whisky') || category.includes('destilado')) {
-      return <LocalBar sx={{ fontSize: 24, color: '#D4AF37' }} />;
+    if (category.includes('trago') || category.includes('whisky') || category.includes('vino')) {
+      return <LocalBar sx={{ fontSize: 18, color: '#D4AF37' }} />;
     }
     if (category.includes('café') || category.includes('cafetería')) {
-      return <Coffee sx={{ fontSize: 24, color: '#D4AF37' }} />;
+      return <Coffee sx={{ fontSize: 18, color: '#D4AF37' }} />;
     }
     if (category.includes('postre')) {
-      return <Cake sx={{ fontSize: 24, color: '#D4AF37' }} />;
+      return <Cake sx={{ fontSize: 18, color: '#D4AF37' }} />;
     }
-    return <Restaurant sx={{ fontSize: 24, color: '#D4AF37' }} />;
+    return <Restaurant sx={{ fontSize: 18, color: '#D4AF37' }} />;
   };
+
   return (
     <MotionBox
       variants={sectionVariants}
       initial="hidden"
       animate="visible"
-      sx={{ mb: { xs: 10, sm: 12 } }}
+      sx={{ mb: { xs: 6, sm: 8 } }}
     >
-      {/* Título de sección estilo menú clásico */}
-      <Box sx={{ mb: { xs: 6, sm: 8 } }}>
+      {/* Título de sección minimalista */}
+      <Box sx={{ mb: { xs: 3, sm: 4 } }}>
         <MotionBox
-          initial={{ opacity: 0, x: -30 }}
+          initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98] }}
+          transition={{ duration: 0.6, ease: [0.04, 0.62, 0.23, 0.98] }}
           sx={{
-            textAlign: 'center',
-            position: 'relative',
-            py: 4
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            pb: 2,
+            borderBottom: '1px solid rgba(212, 175, 55, 0.2)'
           }}
         >
-          {/* Líneas decorativas superiores */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '200px',
-              height: '1px',
-              background: 'linear-gradient(90deg, transparent 0%, #D4AF37 50%, transparent 100%)',
-            }}
-          />
-
-          {/* Icono de categoría */}
-          <Box sx={{ mb: 2 }}>
+          {/* Sección izquierda: Icono y título */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {/* Icono minimalista */}
+            <Box
+              sx={{
+                p: 1,
+                backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                border: '1px solid rgba(212, 175, 55, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
             {getCategoryIcon()}
           </Box>
 
-          {/* Título principal */}
+            {/* Título y contador */}
+            <Box>
           <MotionTypography
-            initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
             variant="categoryTitle"
             sx={{
-              fontFamily: "'Playfair Display', serif",
-              fontWeight: 700,
-              fontSize: { xs: '1.75rem', sm: '2.25rem' },
+                  fontFamily: "'Inter', sans-serif",
+                  fontWeight: 600,
+                  fontSize: { xs: '1.1rem', sm: '1.25rem' },
               color: '#D4AF37',
               letterSpacing: '0.05em',
               textTransform: 'uppercase',
-              mb: 1,
-              textAlign: 'center'
+                  lineHeight: 1.2,
+                  mb: 0.25
             }}
           >
             {title}
           </MotionTypography>
 
-          {/* Contador de productos */}
           <Typography
             sx={{
-              fontFamily: "'Inter', sans-serif",
-              fontSize: '0.875rem',
-              fontWeight: 500,
+                  fontSize: '0.7rem',
+                  fontWeight: 400,
               color: '#B8B8B8',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
+                  letterSpacing: '0.02em',
               opacity: 0.8,
-              mb: 2
-            }}
-          >
-            {products.length} {products.length === 1 ? 'Opción' : 'Opciones'}
-            {recommendedCount > 0 && (
-              <Box component="span" sx={{ ml: 2, color: '#D4AF37' }}>
-                <Star sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'middle' }} />
-                {recommendedCount} Recomendado{recommendedCount > 1 ? 's' : ''}
-              </Box>
-            )}
+                  fontFamily: "'Inter', sans-serif"
+                }}
+              >
+                {products.length} {products.length === 1 ? 'opción' : 'opciones'}
           </Typography>
+            </Box>
+          </Box>
 
-          {/* Líneas decorativas inferiores */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 0,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '120px',
-              height: '1px',
-              background: 'linear-gradient(90deg, transparent 0%, #D4AF37 50%, transparent 100%)',
-            }}
-          />
-
-          {/* Ornamento central */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: -2,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              background: '#D4AF37',
-              boxShadow: '0 0 12px rgba(212, 175, 55, 0.5)'
-            }}
-          />
+          {/* Sección derecha: Indicador de destacados */}
+          {recommendedCount > 0 && (
+            <MotionBox
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
+            >
+              <Box sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                px: 1.5, 
+                py: 0.5, 
+                backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                border: '1px solid rgba(212, 175, 55, 0.2)'
+              }}>
+                <Star sx={{ fontSize: 12, color: '#D4AF37' }} />
+                <Typography sx={{ 
+                  color: '#D4AF37', 
+                  fontSize: '0.65rem', 
+                  fontWeight: 500,
+                  letterSpacing: '0.02em',
+                  fontFamily: "'Inter', sans-serif"
+                }}>
+                  {recommendedCount}
+                </Typography>
+              </Box>
       </MotionBox>
+          )}
+        </MotionBox>
       </Box>
 
       {/* Lista de productos */}
@@ -179,7 +177,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({ title, products, index = 0 })
         initial="hidden"
         animate="visible"
       >
-        <Stack spacing={{ xs: 3, sm: 4 }}>
+        <Stack spacing={{ xs: 2, sm: 2.5 }}>
           {products.map((product, productIndex) => (
             <ProductCard 
               key={product.id} 

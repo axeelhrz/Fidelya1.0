@@ -34,7 +34,16 @@ const MenuPageContent: React.FC = () => {
         const staticMenu = getMenuById(menuId);
         
         if (staticMenu) {
-          setMenuData(staticMenu);
+          // Transform the data to match our local types
+          const transformedMenu: MenuData = {
+            ...staticMenu,
+            products: staticMenu.products.map(product => ({
+              ...product,
+              description: product.description || '',
+              category: product.category as Product['category']
+            }))
+          };
+          setMenuData(transformedMenu);
         } else {
             setError('Menú no encontrado');
           }
