@@ -31,6 +31,7 @@ const MotionButton = motion(Button);
 
 // Contraseña de administrador estándar
 const ADMIN_PASSWORD = 'admin123';
+
 const AdminLogin: React.FC = () => {
   const router = useRouter();
   const [password, setPassword] = useState('');
@@ -55,7 +56,7 @@ const AdminLogin: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 800));
 
     if (password === ADMIN_PASSWORD) {
-      localStorage.setItem('admin-authenticated', 'true');
+      // Redirigir directamente al dashboard sin guardar en localStorage
       router.push('/admin/dashboard');
     } else {
       setError('Contraseña incorrecta');

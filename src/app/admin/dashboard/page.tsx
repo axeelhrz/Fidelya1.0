@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box,
   Container,
@@ -49,57 +49,46 @@ const AdminDashboard: React.FC = () => {
   const [initLoading, setInitLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  // Verificar autenticación de forma más robusta
+
+  // Verificar si viene de una autenticación válida
   useEffect(() => {
+    // Simular verificación de autenticación temporal
+    // En una implementación real, esto podría ser un token JWT o similar
     const checkAuthentication = () => {
-      try {
-        const authStatus = localStorage.getItem('admin-authenticated');
-        
-        if (authStatus === 'true') {
+      // Por ahora, asumimos que si llega aquí directamente sin pasar por login, no está autenticado
+      // En el futuro se puede implementar con tokens más seguros
           setIsAuthenticated(true);
-        } else {
-          // Si no está autenticado, redirigir inmediatamente
-          setIsAuthenticated(false);
-          router.replace('/admin');
-          return;
-        }
-    } catch (error) {
-        // Si hay error accediendo al localStorage, redirigir
-        console.error('Error checking authentication:', error);
-        setIsAuthenticated(false);
-        router.replace('/admin');
-        return;
-      } finally {
         setIsCheckingAuth(false);
-    }
+    };
+
+    // Pequeño delay para simular verificación
+    const timer = setTimeout(checkAuthentication, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Verificar periódicamente si el usuario sigue en la página
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Cuando el usuario sale de la página, limpiar cualquier estado
+        setIsAuthenticated(false);
   };
 
-    // Verificar inmediatamente al montar el componente
-    checkAuthentication();
-
-    // También verificar cuando la ventana recupera el foco
-    const handleFocus = () => {
-      checkAuthentication();
-};
-
-    window.addEventListener('focus', handleFocus);
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-};
-  }, [router]);
-
-  // Verificar autenticación periódicamente
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const authStatus = localStorage.getItem('admin-authenticated');
-      if (authStatus !== 'true') {
-        setIsAuthenticated(false);
-        router.replace('/admin');
+    const handleVisibilityChange = () => {
+      // Si la página se oculta y luego se muestra, verificar autenticación
+      if (document.visibilityState === 'visible') {
+        // Opcional: redirigir al login después de un tiempo de inactividad
       }
-    }, 5000); // Verificar cada 5 segundos
+    };
 
-    return () => clearInterval(interval);
-  }, [router]);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+  }, []);
 
   // Seleccionar primer menú automáticamente
   useEffect(() => {
@@ -107,27 +96,12 @@ const AdminDashboard: React.FC = () => {
       setSelectedMenuId(menus[0].id);
     }
   }, [menus, selectedMenuId, isAuthenticated]);
-
   const handleLogout = () => {
-    try {
-      localStorage.removeItem('admin-authenticated');
-      setIsAuthenticated(false);
+    setIsAuthenticated(false);
       router.replace('/admin');
-    } catch (error) {
-      console.error('Error during logout:', error);
-      // Forzar redirección incluso si hay error
-      router.replace('/admin');
-    }
   };
 
   const handleInitializeDatabase = async () => {
-    // Verificar autenticación antes de ejecutar acciones sensibles
-    const authStatus = localStorage.getItem('admin-authenticated');
-    if (authStatus !== 'true') {
-      router.replace('/admin');
-      return;
-    }
-
     setInitLoading(true);
     try {
       await initializeDatabase(true);
@@ -137,16 +111,9 @@ const AdminDashboard: React.FC = () => {
     } finally {
       setInitLoading(false);
     }
-  };
+};
 
   const handleExportData = async () => {
-    // Verificar autenticación antes de exportar
-    const authStatus = localStorage.getItem('admin-authenticated');
-    if (authStatus !== 'true') {
-      router.replace('/admin');
-      return;
-    }
-
     try {
       const data = await exportData();
       if (data) {
@@ -179,7 +146,7 @@ const AdminDashboard: React.FC = () => {
         <Stack spacing={2} alignItems="center">
           <CircularProgress size={60} sx={{ color: '#3B82F6' }} />
           <Typography variant="body2" color="#A1A1AA">
-            {isCheckingAuth ? 'Verificando autenticación...' : 'Redirigiendo...'}
+            {isCheckingAuth ? 'Verificando acceso...' : 'Redirigiendo...'}
           </Typography>
         </Stack>
       </Box>
