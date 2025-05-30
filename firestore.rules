@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Reglas para la colección de menús
+    match /menus/{menuId} {
+      // Permitir lectura a todos (para mostrar el menú público)
+      allow read: if true;
+      
+      // Permitir escritura solo a usuarios autenticados (administradores)
+      allow write: if request.auth != null && request.auth.token.email == 'admin@menuqr.com';
+      
+      // Validar estructura de datos para menús
+      allow create, update: if request.auth != null 
+        && request.auth.token.email == 'admin@menuqr.com'
+        && validateMenuData(request.resource.data);
+    }
+    
+    // Reglas para la colección de productos
+    match /products/{productId} {
+      // Permitir lectura a todos (para mostrar productos en el menú)
+      allow read: if true;
+      
+      // Permitir escritura solo a usuarios autenticados (administradores)
+      allow write: if request.auth != null && request.auth.token.email == 'admin@menuqr.com';
+      
+      // Validar estructura de datos para productos
+      allow create, update: if request.auth != null 
+        && request.auth.token.email == 'admin@menuqr.com'
+        && validateProductData(request.resource.data);
+    }
+    
+    // Reglas para otras colecciones (categorías, etc.)
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'admin@menuqr.com';
+    }
+    
+    // Función para validar datos de menú
+    function validateMenuData(data) {
+      return data.keys().hasAll(['name', 'description', 'isActive']) &&
+             data.name is string &&
+             data.description is string &&
+             data.isActive is bool &&
+             (data.categories == null || data.categories is list);
+    }
+    
+    // Función para validar datos de producto
+    function validateProductData(data) {
+      return data.keys().hasAll(['name', 'price', 'category', 'menuId']) &&
+             data.name is string &&
+             data.price is number &&
+             data.price >= 0 &&
+             data.category is string &&
+             data.menuId is string &&
+             (data.description == null || data.description is string) &&
+             (data.isAvailable == null || data.isAvailable is bool) &&
+             (data.image == null || data.image is string);
+    }
+  }
+}

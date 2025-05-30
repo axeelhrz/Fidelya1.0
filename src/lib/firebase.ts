@@ -13,6 +13,20 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
+// Validar configuración
+const validateConfig = () => {
+  const requiredKeys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+  const missingKeys = requiredKeys.filter(key => !firebaseConfig[key as keyof typeof firebaseConfig]);
+  
+  if (missingKeys.length > 0) {
+    console.error('Missing Firebase configuration keys:', missingKeys);
+    throw new Error(`Firebase configuration incomplete. Missing: ${missingKeys.join(', ')}`);
+  }
+};
+
+// Validar configuración antes de inicializar
+validateConfig();
+
 // Inicializar Firebase solo si no existe una instancia
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
@@ -21,26 +35,44 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 
+// Variables para controlar la conexión de emuladores
+let emulatorsConnected = false;
+
 // Configurar emuladores en desarrollo
-if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !emulatorsConnected) {
   try {
     // Solo conectar emuladores si no están ya conectados
-    try {
-      connectAuthEmulator(auth, 'http://localhost:9099');
-    } catch {
-      // Auth emulator already connected
+    if (!auth.config.emulator) {
+      connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
     }
-    try {
+    
+    if (!(db as any)._delegate._databaseId.projectId.includes('demo-')) {
       connectFirestoreEmulator(db, 'localhost', 8080);
-    } catch {
-      // Firestore emulator already connected
     }
+    
     if (!storage.app.options.storageBucket?.includes('demo-')) {
       connectStorageEmulator(storage, 'localhost', 9199);
     }
-  } catch {
-    console.log('Emuladores ya conectados o no disponibles');
+    
+    emulatorsConnected = true;
+    console.log('Firebase emulators connected');
+  } catch (error) {
+    console.log('Emuladores ya conectados o no disponibles:', error);
   }
 }
+
+// Función para verificar conexión
+export const checkFirebaseConnection = async (): Promise<boolean> => {
+  try {
+    // Intentar una operación simple para verificar la conexión
+    await import('firebase/firestore').then(({ doc, getDoc }) => 
+      getDoc(doc(db, 'test', 'connection'))
+    );
+    return true;
+  } catch (error) {
+    console.error('Firebase connection failed:', error);
+    return false;
+  }
+};
 
 export default app;

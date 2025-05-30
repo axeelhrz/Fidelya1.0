@@ -10,7 +10,12 @@ import {
   orderBy, 
   where,
   writeBatch,
-  serverTimestamp
+  serverTimestamp,
+  onSnapshot,
+  Unsubscribe,
+  DocumentData,
+  QuerySnapshot,
+  DocumentSnapshot
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Menu, Product } from '../app/types';
@@ -18,11 +23,163 @@ import { Menu, Product } from '../app/types';
 // Export db for use in other modules
 export { db };
 
+export interface RealtimeCallbacks {
+  onMenusChange?: (menus: Menu[]) => void;
+  onProductsChange?: (products: Product[]) => void;
+  onMenuChange?: (menu: Menu | null) => void;
+  onProductChange?: (product: Product | null) => void;
+  onError?: (error: Error) => void;
+}
+
 export class FirebaseDatabase {
   // Collections
   private static MENUS_COLLECTION = 'menus';
   private static PRODUCTS_COLLECTION = 'products';
   private static CATEGORIES_COLLECTION = 'categories';
+
+  // Realtime listeners storage
+  private static listeners: Map<string, Unsubscribe> = new Map();
+
+  // Helper method to convert Firestore document to Menu
+  private static docToMenu(doc: DocumentSnapshot<DocumentData>): Menu | null {
+    if (!doc.exists()) return null;
+    
+    const data = doc.data();
+    return {
+        id: doc.id,
+      ...data,
+      createdAt: data?.createdAt?.toDate?.() || new Date(),
+      updatedAt: data?.updatedAt?.toDate?.() || new Date()
+    } as Menu;
+    }
+
+  // Helper method to convert Firestore document to Product
+  private static docToProduct(doc: DocumentSnapshot<DocumentData>): Product | null {
+    if (!doc.exists()) return null;
+    
+    const data = doc.data();
+      return {
+      id: doc.id,
+      ...data,
+      createdAt: data?.createdAt?.toDate?.() || new Date(),
+      updatedAt: data?.updatedAt?.toDate?.() || new Date()
+    } as Product;
+    }
+
+  // Helper method to convert QuerySnapshot to Menu array
+  private static queryToMenus(snapshot: QuerySnapshot<DocumentData>): Menu[] {
+    return snapshot.docs.map(doc => this.docToMenu(doc)).filter(Boolean) as Menu[];
+  }
+
+  // Helper method to convert QuerySnapshot to Product array
+  private static queryToProducts(snapshot: QuerySnapshot<DocumentData>): Product[] {
+    return snapshot.docs.map(doc => this.docToProduct(doc)).filter(Boolean) as Product[];
+  }
+
+  // Realtime listeners
+  static subscribeToMenus(callback: (menus: Menu[]) => void, onError?: (error: Error) => void): Unsubscribe {
+    try {
+      const menusRef = collection(db, this.MENUS_COLLECTION);
+      const q = query(menusRef, orderBy('createdAt', 'desc'));
+      
+      const unsubscribe = onSnapshot(q, 
+        (snapshot) => {
+          const menus = this.queryToMenus(snapshot);
+          callback(menus);
+        },
+        (error) => {
+          console.error('Error in menus subscription:', error);
+          onError?.(error);
+        }
+      );
+      
+      // Store listener for cleanup
+      const listenerId = `menus_${Date.now()}`;
+      this.listeners.set(listenerId, unsubscribe);
+      return () => {
+        unsubscribe();
+        this.listeners.delete(listenerId);
+      };
+    } catch (error) {
+      console.error('Error setting up menus subscription:', error);
+      onError?.(error as Error);
+      return () => {};
+    }
+  }
+
+  static subscribeToProducts(
+    callback: (products: Product[]) => void, 
+    menuId?: string,
+    onError?: (error: Error) => void
+  ): Unsubscribe {
+    try {
+      const productsRef = collection(db, this.PRODUCTS_COLLECTION);
+      let q = query(productsRef, orderBy('createdAt', 'desc'));
+      
+      if (menuId) {
+        q = query(productsRef, where('menuId', '==', menuId), orderBy('createdAt', 'desc'));
+      }
+      
+      const unsubscribe = onSnapshot(q,
+        (snapshot) => {
+          const products = this.queryToProducts(snapshot);
+          callback(products);
+        },
+        (error) => {
+          console.error('Error in products subscription:', error);
+          onError?.(error);
+        }
+      );
+
+      // Store listener for cleanup
+      const listenerId = `products_${menuId || 'all'}_${Date.now()}`;
+      this.listeners.set(listenerId, unsubscribe);
+      
+      return () => {
+        unsubscribe();
+        this.listeners.delete(listenerId);
+      };
+    } catch (error) {
+      console.error('Error setting up products subscription:', error);
+      onError?.(error as Error);
+      return () => {};
+    }
+  }
+
+  static subscribeToMenu(id: string, callback: (menu: Menu | null) => void, onError?: (error: Error) => void): Unsubscribe {
+    try {
+      const menuRef = doc(db, this.MENUS_COLLECTION, id);
+      
+      const unsubscribe = onSnapshot(menuRef,
+        (snapshot) => {
+          const menu = this.docToMenu(snapshot);
+          callback(menu);
+        },
+        (error) => {
+          console.error('Error in menu subscription:', error);
+          onError?.(error);
+      }
+      );
+
+      // Store listener for cleanup
+      const listenerId = `menu_${id}_${Date.now()}`;
+      this.listeners.set(listenerId, unsubscribe);
+      return () => {
+        unsubscribe();
+        this.listeners.delete(listenerId);
+      };
+    } catch (error) {
+      console.error('Error setting up menu subscription:', error);
+      onError?.(error as Error);
+      return () => {};
+    }
+  }
+
+  // Cleanup all listeners
+  static unsubscribeAll(): void {
+    this.listeners.forEach(unsubscribe => unsubscribe());
+    this.listeners.clear();
+  }
 
   // Menu operations
   static async getMenus(): Promise<Menu[]> {
@@ -31,12 +188,7 @@ export class FirebaseDatabase {
       const q = query(menusRef, orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
       
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate?.() || new Date()
-      })) as Menu[];
+      return this.queryToMenus(snapshot);
     } catch (error) {
       console.error('Error getting menus:', error);
       throw new Error('Failed to fetch menus');
@@ -48,16 +200,7 @@ export class FirebaseDatabase {
       const menuRef = doc(db, this.MENUS_COLLECTION, id);
       const snapshot = await getDoc(menuRef);
       
-      if (!snapshot.exists()) {
-        return null;
-      }
-
-      return {
-        id: snapshot.id,
-        ...snapshot.data(),
-        createdAt: snapshot.data().createdAt?.toDate?.() || new Date(),
-        updatedAt: snapshot.data().updatedAt?.toDate?.() || new Date()
-      } as Menu;
+      return this.docToMenu(snapshot);
     } catch (error) {
       console.error('Error getting menu:', error);
       throw new Error('Failed to fetch menu');
@@ -69,9 +212,9 @@ export class FirebaseDatabase {
       const menusRef = collection(db, this.MENUS_COLLECTION);
       const docRef = await addDoc(menusRef, {
         ...menuData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
       
       return docRef.id;
     } catch (error) {
@@ -85,8 +228,8 @@ export class FirebaseDatabase {
       const menuRef = doc(db, this.MENUS_COLLECTION, id);
       await updateDoc(menuRef, {
         ...menuData,
-          updatedAt: serverTimestamp() 
-        });
+        updatedAt: serverTimestamp() 
+      });
     } catch (error) {
       console.error('Error updating menu:', error);
       throw new Error('Failed to update menu');
@@ -100,7 +243,7 @@ export class FirebaseDatabase {
     } catch (error) {
       console.error('Error deleting menu:', error);
       throw new Error('Failed to delete menu');
-    }
+}
   }
 
   // Product operations
@@ -115,12 +258,7 @@ export class FirebaseDatabase {
       
       const snapshot = await getDocs(q);
       
-      return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate?.() || new Date()
-        })) as Product[];
+      return this.queryToProducts(snapshot);
     } catch (error) {
       console.error('Error getting products:', error);
       throw new Error('Failed to fetch products');
@@ -132,16 +270,7 @@ export class FirebaseDatabase {
       const productRef = doc(db, this.PRODUCTS_COLLECTION, id);
       const snapshot = await getDoc(productRef);
       
-      if (!snapshot.exists()) {
-        return null;
-      }
-
-      return {
-        id: snapshot.id,
-        ...snapshot.data(),
-        createdAt: snapshot.data().createdAt?.toDate?.() || new Date(),
-        updatedAt: snapshot.data().updatedAt?.toDate?.() || new Date()
-      } as Product;
+      return this.docToProduct(snapshot);
     } catch (error) {
       console.error('Error getting product:', error);
       throw new Error('Failed to fetch product');
