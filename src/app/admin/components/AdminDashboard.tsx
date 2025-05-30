@@ -451,15 +451,15 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <CardActionArea 
               onClick={() => setCurrentView('products')}
               disabled={!selectedMenuId}
-              sx={{ height: '100%' }}
+              sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <CardContent sx={{ 
                 textAlign: 'center', 
-                height: '100%', 
+                width: '100%',
                 display: 'flex', 
                 flexDirection: 'column', 
-                    justifyContent: 'center',
-                    alignItems: 'center',
+                alignItems: 'center',
+                justifyContent: 'center',
                 p: { xs: 3, md: 4 }
               }}>
                 <Box
@@ -477,20 +477,35 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Inventory2 sx={{ fontSize: { xs: 28, md: 40 }, color: '#D4AF37' }} />
                 </Box>
                 
-                <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ fontWeight: 600, textAlign: 'center' }}>
+                <Typography 
+                  variant={isMobile ? "h6" : "h5"} 
+                  sx={{ 
+                    fontWeight: 600, 
+                textAlign: 'center', 
+                    width: '100%',
+                    mb: 1
+                  }}
+                >
                   Productos
                 </Typography>
                 
-                <Typography variant="body2" color="text.secondary" sx={{ 
-                  mb: 2, 
-                  fontSize: { xs: '0.8rem', md: '0.875rem' },
-                  textAlign: 'center'
-                }}>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ 
+                    fontSize: { xs: '0.8rem', md: '0.875rem' },
+                    textAlign: 'center',
+                    width: '100%',
+                    mb: 2,
+                    lineHeight: 1.4
+                  }}
+                >
                   Gestiona los productos de tu menú
                 </Typography>
+                
                 <Chip 
                   label={`${menuProducts.length} productos`}
-                  color="primary"
+            color="primary"
                   variant="outlined"
                   size={isMobile ? "small" : "medium"}
                 />
@@ -505,7 +520,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             whileHover={{ scale: isMobile ? 1 : 1.02, y: isMobile ? 0 : -4 }}
             whileTap={{ scale: 0.98 }}
             transition={{ duration: 0.2 }}
-        sx={{
+            sx={{
               height: '100%',
               background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(26, 26, 26, 0.8) 100%)',
               border: '1px solid rgba(212, 175, 55, 0.2)',
@@ -519,15 +534,15 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <CardActionArea 
               onClick={() => setCurrentView('categories')}
               disabled={!selectedMenuId}
-              sx={{ height: '100%' }}
+              sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <CardContent sx={{ 
-                textAlign: 'center', 
-                height: '100%', 
+                textAlign: 'center',
+                width: '100%',
                 display: 'flex', 
                 flexDirection: 'column', 
-                justifyContent: 'center',
                 alignItems: 'center',
+                justifyContent: 'center',
                 p: { xs: 3, md: 4 }
               }}>
                 <Box
@@ -545,15 +560,29 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Category sx={{ fontSize: { xs: 28, md: 40 }, color: '#D4AF37' }} />
     </Box>
                 
-                <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ fontWeight: 600, textAlign: 'center' }}>
+                <Typography 
+                  variant={isMobile ? "h6" : "h5"} 
+                  sx={{ 
+                    fontWeight: 600, 
+                    textAlign: 'center',
+                    width: '100%',
+                    mb: 1
+                  }}
+                >
                   Categorías
                 </Typography>
                 
-                <Typography variant="body2" color="text.secondary" sx={{ 
-                  mb: 2, 
-                  fontSize: { xs: '0.8rem', md: '0.875rem' },
-                  textAlign: 'center'
-                }}>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ 
+                    fontSize: { xs: '0.8rem', md: '0.875rem' },
+                    textAlign: 'center',
+                    width: '100%',
+                    mb: 2,
+                    lineHeight: 1.4
+                  }}
+                >
                   Organiza las categorías de tu menú
                 </Typography>
                 
@@ -588,15 +617,15 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <CardActionArea 
               onClick={() => setCurrentView('qr')}
               disabled={!selectedMenuId}
-              sx={{ height: '100%' }}
+              sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <CardContent sx={{ 
-                textAlign: 'center', 
-                height: '100%', 
+                textAlign: 'center',
+                width: '100%',
                 display: 'flex', 
                 flexDirection: 'column', 
-                justifyContent: 'center',
                 alignItems: 'center',
+                justifyContent: 'center',
                 p: { xs: 3, md: 4 }
               }}>
                 <Box
@@ -613,16 +642,30 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 >
                   <QrCode sx={{ fontSize: { xs: 28, md: 40 }, color: '#3B82F6' }} />
                 </Box>
-
-                <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ fontWeight: 600, textAlign: 'center' }}>
+                
+                <Typography 
+                  variant={isMobile ? "h6" : "h5"} 
+                  sx={{ 
+                    fontWeight: 600, 
+                    textAlign: 'center',
+                    width: '100%',
+                    mb: 1
+                  }}
+                >
                   Códigos QR
                 </Typography>
                 
-                <Typography variant="body2" color="text.secondary" sx={{ 
-                  mb: 2, 
-                  fontSize: { xs: '0.8rem', md: '0.875rem' },
-                  textAlign: 'center'
-                }}>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ 
+                    fontSize: { xs: '0.8rem', md: '0.875rem' },
+                    textAlign: 'center',
+                    width: '100%',
+                    mb: 2,
+                    lineHeight: 1.4
+                  }}
+                >
                   Genera códigos QR para tus menús
                 </Typography>
                 
@@ -660,15 +703,15 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <CardActionArea 
               onClick={() => setCurrentView('stats')}
               disabled={!selectedMenuId}
-              sx={{ height: '100%' }}
+              sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <CardContent sx={{ 
-                textAlign: 'center', 
-                height: '100%', 
+                textAlign: 'center',
+                width: '100%',
                 display: 'flex', 
                 flexDirection: 'column', 
-                justifyContent: 'center',
                 alignItems: 'center',
+                justifyContent: 'center',
                 p: { xs: 3, md: 4 }
               }}>
                 <Box
@@ -686,15 +729,29 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Assessment sx={{ fontSize: { xs: 28, md: 40 }, color: '#10B981' }} />
                 </Box>
                 
-                <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ fontWeight: 600, textAlign: 'center' }}>
+                <Typography 
+                  variant={isMobile ? "h6" : "h5"} 
+                  sx={{ 
+                    fontWeight: 600, 
+                    textAlign: 'center',
+                    width: '100%',
+                    mb: 1
+                  }}
+                >
                   Estadísticas
                 </Typography>
                 
-                <Typography variant="body2" color="text.secondary" sx={{ 
-                  mb: 2, 
-                  fontSize: { xs: '0.8rem', md: '0.875rem' },
-                  textAlign: 'center'
-                }}>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ 
+                    fontSize: { xs: '0.8rem', md: '0.875rem' },
+                    textAlign: 'center',
+                    width: '100%',
+                    mb: 2,
+                    lineHeight: 1.4
+                  }}
+                >
                   Analiza el rendimiento de tu menú
                 </Typography>
                 
