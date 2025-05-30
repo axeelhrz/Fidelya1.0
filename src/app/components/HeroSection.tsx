@@ -3,13 +3,12 @@
 import { Box, Typography, Button, Stack, Container } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
+import LocalBarIcon from '@mui/icons-material/LocalBar';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import QrCodeIcon from '@mui/icons-material/QrCode';
 
 const MotionBox = motion(Box);
 const MotionTypography = motion(Typography);
-const MotionStack = motion(Stack);
-
 export default function HeroSection() {
   const router = useRouter();
 
@@ -36,17 +35,6 @@ export default function HeroSection() {
     }
   };
 
-  const floatingVariants = {
-    animate: {
-      y: [-10, 10, -10],
-      transition: {
-        duration: 6,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  };
-
   return (
     <Box
       sx={{
@@ -55,171 +43,138 @@ export default function HeroSection() {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        position: 'relative',
-        overflow: 'hidden',
         background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
       }}
     >
-      {/* Elementos decorativos de fondo con blur */}
+      <Container maxWidth="sm" sx={{ textAlign: 'center' }}>
       <MotionBox
-        variants={floatingVariants}
-        animate="animate"
-        sx={{
-          position: 'absolute',
-          top: '15%',
-          right: '10%',
-          width: '400px',
-          height: '400px',
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0) 70%)',
-          borderRadius: '50%',
-          filter: 'blur(40px)',
-          zIndex: 0,
-        }}
-      />
-      
-      <MotionBox
-        variants={floatingVariants}
-        animate="animate"
-        style={{ animationDelay: '2s' }}
-        sx={{
-          position: 'absolute',
-          bottom: '20%',
-          left: '5%',
-          width: '300px',
-          height: '300px',
-          background: 'radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, rgba(245, 158, 11, 0) 70%)',
-          borderRadius: '50%',
-          filter: 'blur(40px)',
-          zIndex: 0,
-        }}
-      />
-
-      <MotionBox
-        variants={floatingVariants}
-        animate="animate"
-        style={{ animationDelay: '4s' }}
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '20%',
-          width: '200px',
-          height: '200px',
-          background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0) 70%)',
-          borderRadius: '50%',
-          filter: 'blur(30px)',
-          zIndex: 0,
-        }}
-      />
-
-      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
-        <MotionBox
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          sx={{
-            textAlign: 'center',
-            px: { xs: 3, sm: 4 },
-          }}
         >
+          {/* Logo */}
+          <MotionBox variants={itemVariants} sx={{ mb: 4 }}>
+            <motion.div 
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ duration: 1, type: "spring", stiffness: 200 }}
+            >
+              <Box
+                sx={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #3B82F6 0%, #10B981 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto',
+                  boxShadow: '0 20px 60px rgba(59, 130, 246, 0.3)',
+                }}
+              >
+                <LocalBarIcon sx={{ fontSize: 50, color: 'white' }} />
+              </Box>
+            </motion.div>
+          </MotionBox>
+            
+          {/* Título */}
           <MotionTypography
-            variant="titleLarge"
+            variant="h2"
             variants={itemVariants}
             sx={{
-              mb: 3,
+              mb: 2,
               fontWeight: 800,
-              fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
-              background: 'linear-gradient(135deg, #3B82F6 0%, #60a5fa 50%, #F59E0B 100%)',
+              fontSize: { xs: '2.5rem', sm: '3.5rem' },
+              background: 'linear-gradient(135deg, #3B82F6 0%, #F59E0B 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-              textShadow: '0 0 40px rgba(59, 130, 246, 0.3)',
-            }}
-          >
+                }}
+              >
             MenuQR
           </MotionTypography>
 
+          {/* Subtítulo */}
           <MotionTypography
-            variant="h5"
+            variant="h6"
             color="text.secondary"
             variants={itemVariants}
             sx={{ 
-              mb: 8, 
+              mb: 6, 
               fontWeight: 400,
-              maxWidth: '600px',
-              mx: 'auto',
-              lineHeight: 1.6,
               fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              lineHeight: 1.5,
             }}
           >
-            Experiencia gastronómica digital de alto nivel. 
-            Diseño premium, navegación intuitiva, sabores excepcionales.
+            Menú digital para tu bar
           </MotionTypography>
-
-          <MotionStack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={4}
-            justifyContent="center"
-            alignItems="center"
-            variants={itemVariants}
-            sx={{ mt: 6 }}
-          >
-            <motion.div 
-              whileHover={{ scale: 1.05 }} 
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<RestaurantMenuIcon />}
-                onClick={() => router.push('/menu')}
-                sx={{
-                  py: 2,
-                  px: 5,
-                  fontSize: '1.1rem',
-                  minWidth: { xs: '280px', sm: 'auto' },
-                  background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
-                  boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                    boxShadow: '0 12px 40px rgba(59, 130, 246, 0.4)',
-                  },
-                }}
+          {/* Botones */}
+          <MotionBox variants={itemVariants}>
+            <Stack spacing={3} alignItems="center">
+              <motion.div 
+                whileHover={{ scale: 1.05 }} 
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                Explorar Menú
-              </Button>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ scale: 1.05 }} 
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Button
-                variant="outlined"
-                size="large"
-                startIcon={<AdminPanelSettingsIcon />}
-                onClick={() => router.push('/admin')}
-                sx={{
-                  py: 2,
-                  px: 5,
-                  fontSize: '1.1rem',
-                  minWidth: { xs: '280px', sm: 'auto' },
-                  borderColor: '#3B82F6',
-                  color: '#3B82F6',
-                  backgroundColor: 'rgba(59, 130, 246, 0.05)',
-                  backdropFilter: 'blur(10px)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderColor: '#2563eb',
-                    boxShadow: '0 8px 32px rgba(59, 130, 246, 0.2)',
-                  },
-                }}
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<QrCodeIcon />}
+                  onClick={() => router.push('/menu')}
+                  sx={{
+                    py: 2.5,
+                    px: 6,
+                    fontSize: '1.2rem',
+                    minWidth: 280,
+                    borderRadius: 3,
+                    background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
+                    boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)',
+                    fontWeight: 600,
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                      boxShadow: '0 12px 40px rgba(59, 130, 246, 0.4)',
+                    },
+                  }}
+                >
+                  Ver Menú
+                </Button>
+              </motion.div>
+              
+              <motion.div 
+                whileHover={{ scale: 1.05 }} 
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                Panel Admin
-              </Button>
-            </motion.div>
-          </MotionStack>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  startIcon={<AdminPanelSettingsIcon />}
+                  onClick={() => router.push('/admin')}
+                  sx={{
+                    py: 2.5,
+                    px: 6,
+                    fontSize: '1.1rem',
+                    minWidth: 280,
+                    borderRadius: 3,
+                    borderWidth: 2,
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    color: 'text.primary',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    backdropFilter: 'blur(10px)',
+                    fontWeight: 600,
+                    '&:hover': {
+                      borderWidth: 2,
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                      boxShadow: '0 8px 32px rgba(255, 255, 255, 0.1)',
+                    },
+                  }}
+                >
+                  Administración
+                </Button>
+              </motion.div>
+            </Stack>
+          </MotionBox>
         </MotionBox>
       </Container>
     </Box>
