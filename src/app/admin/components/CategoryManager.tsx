@@ -29,7 +29,14 @@ import {
   DragIndicator,
   SwapVert,
   KeyboardArrowUp,
-  KeyboardArrowDown
+  KeyboardArrowDown,
+  LocalBar,
+  Coffee,
+  Restaurant,
+  Cake,
+  LocalDining,
+  LocalOffer,
+  WineBar
 } from '@mui/icons-material';
 import { ProductCategory } from '../../types';
 
@@ -191,7 +198,20 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
       ...category,
       order: index + 1
     }));
-    setCategories(updatedCategories);
+    
+    // Actualizar el estado con las nuevas posiciones
+    setCategories(prev => {
+      const newCategories = [...prev];
+      updatedCategories.forEach(updatedCat => {
+        const index = newCategories.findIndex(cat => cat.id === updatedCat.id);
+        if (index !== -1) {
+          newCategories[index] = updatedCat;
+        }
+      });
+      return newCategories;
+    });
+    
+    setAlert({ type: 'success', message: 'Orden actualizado correctamente' });
   };
 
   // Auto-hide alert
@@ -203,16 +223,26 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
   }, [alert]);
 
   const getCategoryIcon = (categoryName: string) => {
-    const icons: Record<string, string> = {
-      'Bebidas': '🍺',
-      'Sin Alcohol': '🥤',
-      'Tapas': '🍤',
-      'Principales': '🥩',
-      'Postres': '🍰',
-      'Café': '☕',
-      'Promociones': '🎉'
-    };
-    return icons[categoryName] || '📋';
+    const iconProps = { sx: { fontSize: 28, color: '#D4AF37' } };
+    
+    switch (categoryName) {
+      case 'Bebidas':
+        return <LocalBar {...iconProps} />;
+      case 'Sin Alcohol':
+        return <WineBar {...iconProps} />;
+      case 'Tapas':
+        return <LocalDining {...iconProps} />;
+      case 'Principales':
+        return <Restaurant {...iconProps} />;
+      case 'Postres':
+        return <Cake {...iconProps} />;
+      case 'Café':
+        return <Coffee {...iconProps} />;
+      case 'Promociones':
+        return <LocalOffer {...iconProps} />;
+      default:
+        return <Category {...iconProps} />;
+    }
   };
 
   return (
@@ -363,23 +393,29 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
       {/* Lista de categorías */}
       {dragMode ? (
         // Modo drag and drop
-        <Reorder.Group 
-          axis="y" 
-          values={sortedCategories} 
-          onReorder={handleReorder}
-          style={{ listStyle: 'none', padding: 0, margin: 0 }}
-        >
-          <Stack spacing={2}>
+        <Box sx={{ userSelect: 'none' }}>
+          <Reorder.Group 
+            axis="y" 
+            values={sortedCategories} 
+            onReorder={handleReorder}
+            style={{ listStyle: 'none', padding: 0, margin: 0 }}
+          >
             {sortedCategories.map((category) => (
               <Reorder.Item 
                 key={category.id} 
                 value={category}
-                style={{ listStyle: 'none' }}
+                style={{ 
+                  listStyle: 'none',
+                  marginBottom: '8px'
+                }}
                 whileDrag={{ 
                   scale: 1.02,
-                  boxShadow: '0 8px 32px rgba(212, 175, 55, 0.3)',
-                  zIndex: 1000
+                  boxShadow: '0 8px 32px rgba(212, 175, 55, 0.4)',
+                  zIndex: 1000,
+                  rotate: 1
                 }}
+                dragListener={true}
+                dragControls={undefined}
               >
                 <Card
                   sx={{
@@ -388,6 +424,11 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
                     border: '2px solid rgba(212, 175, 55, 0.4)',
                     borderRadius: 0,
                     cursor: 'grab',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      borderColor: 'rgba(212, 175, 55, 0.6)',
+                      background: 'rgba(26, 26, 26, 0.9)',
+                    },
                     '&:active': {
                       cursor: 'grabbing'
                     }
@@ -401,23 +442,26 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          p: 1,
+                          p: 1.5,
                           backgroundColor: 'rgba(212, 175, 55, 0.2)',
-                          border: '1px solid rgba(212, 175, 55, 0.4)'
+                          border: '2px solid rgba(212, 175, 55, 0.4)',
+                          cursor: 'grab',
+                          '&:active': {
+                            cursor: 'grabbing'
+                          }
                         }}
                       >
-                        <DragIndicator sx={{ color: '#D4AF37', fontSize: 24 }} />
+                        <DragIndicator sx={{ color: '#D4AF37', fontSize: 28 }} />
                       </Box>
 
                       {/* Icono de categoría */}
                       <Box
                         sx={{
-                          width: 60,
-                          height: 60,
+                          width: 70,
+                          height: 70,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '2rem',
                           background: 'rgba(212, 175, 55, 0.1)',
                           border: '1px solid rgba(212, 175, 55, 0.3)',
                         }}
@@ -473,8 +517,8 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
                 </Card>
               </Reorder.Item>
             ))}
-          </Stack>
-        </Reorder.Group>
+          </Reorder.Group>
+        </Box>
       ) : (
         // Modo normal con botones de orden
         <Stack spacing={2}>
@@ -505,8 +549,8 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
                           color: index === 0 ? '#6B7280' : '#D4AF37',
                           border: `1px solid ${index === 0 ? 'rgba(107, 114, 128, 0.3)' : 'rgba(212, 175, 55, 0.3)'}`,
                           borderRadius: 0,
-                          width: 28,
-                          height: 28,
+                          width: 32,
+                          height: 32,
                           '&:hover': {
                             backgroundColor: index === 0 
                               ? 'rgba(107, 114, 128, 0.1)' 
@@ -518,7 +562,7 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
                           }
                         }}
                       >
-                        <KeyboardArrowUp sx={{ fontSize: 16 }} />
+                        <KeyboardArrowUp sx={{ fontSize: 18 }} />
                       </IconButton>
                       
                       <IconButton
@@ -529,8 +573,8 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
                           color: index === sortedCategories.length - 1 ? '#6B7280' : '#D4AF37',
                           border: `1px solid ${index === sortedCategories.length - 1 ? 'rgba(107, 114, 128, 0.3)' : 'rgba(212, 175, 55, 0.3)'}`,
                           borderRadius: 0,
-                          width: 28,
-                          height: 28,
+                          width: 32,
+                          height: 32,
                           '&:hover': {
                             backgroundColor: index === sortedCategories.length - 1 
                               ? 'rgba(107, 114, 128, 0.1)' 
@@ -542,19 +586,18 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
                           }
                         }}
                       >
-                        <KeyboardArrowDown sx={{ fontSize: 16 }} />
+                        <KeyboardArrowDown sx={{ fontSize: 18 }} />
                       </IconButton>
                     </Stack>
 
                     {/* Icono de categoría */}
                     <Box
                       sx={{
-                        width: 60,
-                        height: 60,
+                        width: 70,
+                        height: 70,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '2rem',
                         background: 'rgba(212, 175, 55, 0.1)',
                         border: '1px solid rgba(212, 175, 55, 0.3)',
                       }}
