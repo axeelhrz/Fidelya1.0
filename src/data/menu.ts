@@ -1,10 +1,20 @@
-import { Product } from '../app/types';
-
 export interface MenuData {
   id: string;
   name: string;
   description: string;
   products: Product[];
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  category: string;
+  isRecommended?: boolean;
+  isNew?: boolean;
+  isVegetarian?: boolean;
+  isVegan?: boolean;
 }
 
 export const menus: Record<string, MenuData> = {
@@ -19,7 +29,7 @@ export const menus: Record<string, MenuData> = {
         name: 'Gin Tonic Premium',
         price: 4500,
         description: 'Gin Bombay Sapphire, tónica Schweppes, pepino y enebro fresco',
-        category: 'Cocktails & Gin',
+        category: 'Beverages',
         isRecommended: true,
         isVegan: true,
       },
@@ -28,7 +38,7 @@ export const menus: Record<string, MenuData> = {
         name: 'Negroni Clásico',
         price: 4200,
         description: 'Gin, Campari, Vermouth rosso, twist de naranja',
-        category: 'Cocktails & Gin',
+        category: 'Cocktails',
         isRecommended: false,
         isVegan: true,
       },
@@ -46,7 +56,7 @@ export const menus: Record<string, MenuData> = {
         name: 'Moscow Mule',
         price: 4000,
         description: 'Vodka premium, ginger beer, lima, menta fresca',
-        category: 'Cocktails & Gin',
+        category: 'Cocktails',
         isRecommended: false,
         isVegan: true,
       },
@@ -55,7 +65,7 @@ export const menus: Record<string, MenuData> = {
         name: 'Old Fashioned',
         price: 5200,
         description: 'Bourbon whiskey, azúcar demerara, bitter de angostura',
-        category: 'Cocktails & Gin',
+        category: 'Cocktails',
         isRecommended: true,
         isVegan: true,
       },
@@ -66,7 +76,7 @@ export const menus: Record<string, MenuData> = {
         name: 'Johnnie Walker Black',
         price: 4800,
         description: 'Whisky escocés 12 años, servido solo o con hielo',
-        category: 'Whiskies & Destilados',
+        category: 'Spirits',
         isRecommended: false,
         isVegan: true,
       },
@@ -104,7 +114,7 @@ export const menus: Record<string, MenuData> = {
         name: 'Malbec Reserva',
         price: 3200,
         description: 'Copa de Malbec mendocino, cuerpo medio, taninos suaves',
-        category: 'Vinos & Espumantes',
+        category: 'Wine',
         isRecommended: true,
         isVegan: true,
       },
@@ -142,7 +152,7 @@ export const menus: Record<string, MenuData> = {
         name: 'Stella Artois',
         price: 2200,
         description: 'Cerveza belga premium, botella 330ml',
-        category: 'Cervezas',
+        category: 'Beer',
         isRecommended: false,
         isVegan: true,
       },
@@ -180,7 +190,7 @@ export const menus: Record<string, MenuData> = {
         name: 'Agua San Pellegrino',
         price: 1500,
         description: 'Agua mineral italiana con gas, botella 500ml',
-        category: 'Sin Alcohol',
+        category: 'Non-Alcoholic',
         isRecommended: false,
         isVegan: true,
       },
@@ -218,7 +228,7 @@ export const menus: Record<string, MenuData> = {
         name: 'Tabla de Fiambres Premium',
         price: 6500,
         description: 'Jamón crudo, salame, quesos importados, aceitunas, nueces y pan artesanal',
-        category: 'Picadas & Tapas',
+        category: 'Appetizers',
         isRecommended: true,
         isVegan: false,
       },
@@ -265,7 +275,7 @@ export const menus: Record<string, MenuData> = {
         name: 'Hamburguesa Xs Reset',
         price: 5800,
         description: 'Carne premium 200g, queso cheddar, bacon, cebolla caramelizada, papas rústicas',
-        category: 'Platos Principales',
+        category: 'Main Course',
         isRecommended: true,
         isVegan: false,
       },
@@ -303,7 +313,7 @@ export const menus: Record<string, MenuData> = {
         name: 'Brownie Premium',
         price: 3500,
         description: 'Brownie de chocolate belga tibio con helado de vainilla y salsa de chocolate',
-        category: 'Postres',
+        category: 'Desserts',
         isRecommended: true,
         isVegan: false,
       },
@@ -341,7 +351,7 @@ export const menus: Record<string, MenuData> = {
         name: 'Espresso Italiano',
         price: 1200,
         description: 'Café espresso de granos selectos, tostado artesanal',
-        category: 'Cafetería',
+        category: 'Coffee',
         isRecommended: false,
         isVegan: true,
       },

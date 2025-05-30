@@ -6,9 +6,9 @@ import { motion } from 'framer-motion';
 import { 
   Star, 
   FiberNew, 
-  Eco
+  LocalFlorist
 } from '@mui/icons-material';
-import { Product } from '../types';
+import { Product } from '../../data/menu';
 
 interface ProductCardProps {
   product: Product;
@@ -161,7 +161,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                   borderRadius: 0,
                 }}
               >
-                <Eco sx={{ fontSize: 12, color: '#22C55E' }} />
+                <LocalFlorist sx={{ fontSize: 12, color: '#22C55E' }} />
                 <Typography
                   sx={{
                     color: '#22C55E',
@@ -247,6 +247,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                 </Typography>
               </Box>
             </Box>
+
         {/* Línea separadora elegante */}
         <Box
           sx={{
