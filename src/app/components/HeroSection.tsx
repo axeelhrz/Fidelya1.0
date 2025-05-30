@@ -16,10 +16,6 @@ export default function HeroSection() {
     router.push('/menu');
   };
 
-  const handlePanelAdmin = () => {
-    router.push('/admin');
-  };
-
   return (
     <MotionBox
       initial={{ opacity: 0 }}
@@ -124,7 +120,7 @@ export default function HeroSection() {
           Navegación sin límites, sabores sin fronteras.
         </MotionTypography>
 
-        {/* Action buttons */}
+        {/* Action button */}
         <MotionBox
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -135,9 +131,6 @@ export default function HeroSection() {
           }}
           sx={{ 
             display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: { xs: 3, sm: 4 },
-            alignItems: 'center',
             justifyContent: 'center',
             width: '100%'
           }}
@@ -169,34 +162,6 @@ export default function HeroSection() {
             }}
           >
             Explorar Menú
-          </MotionButton>
-
-          <MotionButton
-            variant="outlined"
-            size="large"
-            onClick={handlePanelAdmin}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            sx={{
-              px: { xs: 4, sm: 6 },
-              py: { xs: 1.5, sm: 2 },
-              fontSize: { xs: '1rem', sm: '1.125rem' },
-              fontWeight: 600,
-              borderRadius: 2,
-              color: '#3B82F6',
-              borderColor: '#3B82F6',
-              borderWidth: '1px',
-              background: 'transparent',
-              minWidth: { xs: 200, sm: 180 },
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                borderColor: '#2563eb',
-                background: 'rgba(59, 130, 246, 0.04)',
-                transform: 'translateY(-1px)'
-              }
-            }}
-          >
-            Panel Admin
           </MotionButton>
         </MotionBox>
       </Stack>

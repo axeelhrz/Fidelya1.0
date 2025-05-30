@@ -36,20 +36,8 @@ const MenuPageContent: React.FC = () => {
         if (staticMenu) {
           setMenuData(staticMenu);
         } else {
-          // Intentar cargar desde API como fallback
-          try {
-          const response = await fetch(`/api/menus/${menuId}`);
-          if (response.ok) {
-            const apiMenu = await response.json();
-            setMenuData(apiMenu);
-          } else {
             setError('Menú no encontrado');
           }
-          } catch (apiError) {
-            console.error('Error cargando desde API:', apiError);
-        setError('Error al cargar el menú');
-      }
-        }
       } catch (err) {
         console.error('Error cargando menú:', err);
         setError('Error al cargar el menú');

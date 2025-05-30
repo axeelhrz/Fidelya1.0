@@ -6,9 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "setup-firebase": "node scripts/setup-firebase.js",
-    "generate-menu-data": "node scripts/generate-menu-data.js"
+    "lint": "next lint"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -16,7 +14,6 @@
     "@fontsource/plus-jakarta-sans": "^5.2.5",
     "@mui/icons-material": "^5.14.19",
     "@mui/material": "^5.14.20",
-    "firebase": "^10.7.1",
     "framer-motion": "^10.16.16",
     "next": "15.3.2",
     "qrcode.react": "^4.2.0",
