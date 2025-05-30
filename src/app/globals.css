@@ -3,18 +3,15 @@
   --background-start-rgb: 28, 28, 30;
   --background-end-rgb: 44, 44, 46;
   
-  /* Colores del tema */
-  --primary-color: #3B82F6;
-  --secondary-color: #F59E0B;
-  --success-color: #10B981;
-  --error-color: #EF4444;
-  --background-primary: #1C1C1E;
-  --background-secondary: #2C2C2E;
-  --background-tertiary: #3A3A3C;
-  --text-primary: #F5F5F7;
-  --text-secondary: #A1A1AA;
-  --text-muted: #71717A;
-  --border-color: #3A3A3C;
+  /* Paleta de colores para bar nocturno */
+  --background: #1C1C1E; /* fondo principal (casi negro, sin fatiga visual) */
+  --surface: #2C2C2E; /* tarjetas y secciones */
+  --primary: #3B82F6; /* botones y detalles activos */
+  --accent: #F59E0B; /* precios o promociones */
+  --text-primary: #F5F5F7; /* texto principal */
+  --text-secondary: #A1A1AA; /* descripciones */
+  --divider: #3A3A3C; /* separadores sutiles */
+  --hover: rgba(255,255,255,0.04); /* efecto hover suave */
 }
 /* Reset y configuración base */
 * {
@@ -27,46 +24,27 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
-  background-color: #1C1C1E;
-  color: #F5F5F7;
+  font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+  background-color: var(--background);
+  color: var(--text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Variables CSS personalizadas */
-:root {
-  --foreground-rgb: 245, 245, 247;
-  --background-start-rgb: 28, 28, 30;
-  --background-end-rgb: 44, 44, 46;
-  
-  /* Colores del tema */
-  --primary-color: #3B82F6;
-  --secondary-color: #F59E0B;
-  --success-color: #10B981;
-  --error-color: #EF4444;
-  --background-primary: #1C1C1E;
-  --background-secondary: #2C2C2E;
-  --background-tertiary: #3A3A3C;
-  --text-primary: #F5F5F7;
-  --text-secondary: #A1A1AA;
-  --text-muted: #71717A;
-  --border-color: #3A3A3C;
-}
-/* Scrollbar personalizado */
+/* Scrollbar personalizado para tema oscuro */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background-secondary);
+  background: var(--surface);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--background-tertiary);
+  background: var(--divider);
   border-radius: 4px;
   transition: background 0.15s ease;
 }
@@ -78,7 +56,7 @@ body {
 /* Scrollbar para Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--background-tertiary) var(--background-secondary);
+  scrollbar-color: var(--divider) var(--surface);
 }
 
 /* Enlaces */
@@ -89,10 +67,10 @@ a {
 }
 
 a:hover {
-  color: var(--primary-color);
+  color: var(--primary);
 }
 
-/* Selección de texto */
+/* Selección de texto optimizada para bar nocturno */
 ::selection {
   background-color: rgba(59, 130, 246, 0.3);
   color: var(--text-primary);
@@ -105,9 +83,9 @@ a:hover {
 
 /* Focus visible para accesibilidad */
 *:focus-visible {
-  outline: 2px solid var(--primary-color);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 /* Botones base */
@@ -122,34 +100,34 @@ button:disabled {
   opacity: 0.6;
 }
 
-/* Inputs base */
+/* Inputs base optimizados para tema oscuro */
 input, textarea, select {
   font-family: inherit;
-  background-color: var(--background-secondary);
-  border: 1px solid var(--border-color);
+  background-color: var(--surface);
+  border: 1px solid var(--divider);
   color: var(--text-primary);
-  border-radius: 12px;
+  border-radius: 16px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   padding: 1rem;
 }
 
 input:focus, textarea:focus, select:focus {
-  border-color: var(--primary-color);
+  border-color: var(--primary);
   outline: none;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 input::placeholder, textarea::placeholder {
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
-/* Utilidades básicas */
-.container {
+/* Utilidades básicas para layout sin Grid */
+  .container {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem;
-}
+  padding: 0 1.5rem;
+  }
 
 .text-center {
   text-align: center;
@@ -179,12 +157,116 @@ input::placeholder, textarea::placeholder {
   justify-content: space-between;
 }
 
-/* Responsive */
+/* Espaciado optimizado para mobile-first */
+.spacing-sm {
+  gap: 0.5rem;
+}
+
+.spacing-md {
+  gap: 1rem;
+}
+
+.spacing-lg {
+  gap: 1.5rem;
+}
+
+.spacing-xl {
+  gap: 2.5rem;
+}
+
+/* Padding consistente p: 3 */
+.padding-3 {
+  padding: 1.5rem;
+}
+
+/* Bordes suaves sin bordes duros */
+.rounded-soft {
+  border-radius: 16px;
+}
+
+.rounded-medium {
+  border-radius: 12px;
+}
+
+.rounded-small {
+  border-radius: 8px;
+}
+
+/* Sombras suaves para elementos */
+.shadow-soft {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.shadow-medium {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+/* Efectos hover suaves */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+}
+
+/* Responsive optimizado para mobile-first */
 @media (max-width: 640px) {
   .container {
-    padding: 0 0.5rem;
+    padding: 0 1rem;
+  }
+  
+  /* Ajustes para pantallas pequeñas */
+  .mobile-padding {
+    padding: 1rem;
+  }
+  
+  .mobile-spacing {
+    gap: 1rem;
   }
 }
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 0.75rem;
+  }
+  
+  /* Optimización para pantallas muy pequeñas */
+  .mobile-sm-padding {
+    padding: 0.75rem;
+  }
+}
+
+/* Animaciones suaves para elementos interactivos */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
 /* Reducir movimiento para usuarios que lo prefieren */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -195,4 +277,49 @@ input::placeholder, textarea::placeholder {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  
+  .hover-lift:hover {
+    transform: none;
+}
+}
+
+/* Optimización para pantallas de alta densidad */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Ajustes para pantallas retina */
+  .shadow-soft {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+}
+
+/* Estilos específicos para el ambiente nocturno */
+.night-mode {
+  background: linear-gradient(135deg, var(--background) 0%, rgba(44, 44, 46, 0.8) 100%);
+}
+
+.glass-effect {
+  background: rgba(44, 44, 46, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Efectos de iluminación sutil para elementos destacados */
+.glow-primary {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+.glow-accent {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+}
+
+/* Tipografía optimizada para legibilidad nocturna */
+.text-premium {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+}
+
+.text-elegant {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
 }

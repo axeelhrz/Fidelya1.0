@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Outfit } from "next/font/google";
 import ThemeRegistry from './components/ThemeRegistry';
 import "./globals.css";
 
-const plusJakartaSans = Plus_Jakarta_Sans({ 
+const outfit = Outfit({ 
   subsets: ["latin"],
   weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-plus-jakarta-sans',
+  variable: '--font-outfit',
 });
 
 export const metadata: Metadata = {
-  title: "MenuQR - Experiencia Gastronómica Digital",
-  description: "Menú digital de alta gama para una experiencia gastronómica excepcional",
+  title: "XSreset - Experiencia Nocturna Premium",
+  description: "Menú digital de alta gama para una experiencia nocturna excepcional en XSreset",
 };
 
 export default function RootLayout({
@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={plusJakartaSans.className}>
+      <body className={outfit.className}>
         <ThemeRegistry>
           {children}
         </ThemeRegistry>

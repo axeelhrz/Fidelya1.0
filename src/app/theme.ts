@@ -26,32 +26,32 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#3B82F6', // Botones e íconos destacados
+      main: '#3B82F6', // Botones y detalles activos
       light: '#60a5fa',
       dark: '#2563eb',
     },
     secondary: {
-      main: '#F59E0B', // Color para precios y atención
+      main: '#F59E0B', // Precios y promociones (mostaza suave)
       light: '#fbbf24',
       dark: '#d97706',
     },
     success: {
-      main: '#10B981', // Para "Recomendado" y vegano
+      main: '#10B981', // Para "Recomendado"
       light: '#34d399',
       dark: '#059669',
     },
     background: {
-      default: '#1C1C1E', // Fondo principal oscuro
-      paper: '#2C2C2E',   // Tarjetas y elementos flotantes
+      default: '#1C1C1E', // Fondo principal (casi negro, sin fatiga visual)
+      paper: '#2C2C2E',   // Tarjetas y secciones
     },
     text: {
-      primary: '#F5F5F7',   // Texto principal (blanco cálido)
-      secondary: '#A1A1AA', // Texto sutil o descripciones
+      primary: '#F5F5F7',   // Texto principal
+      secondary: '#A1A1AA', // Descripciones
     },
-    divider: '#3A3A3C', // Separadores
+    divider: '#3A3A3C', // Separadores sutiles
   },
   typography: {
-    fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif",
+    fontFamily: "'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif",
     h1: {
       fontWeight: 700,
       fontSize: '3rem',
@@ -141,7 +141,7 @@ const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 16,
   },
   shadows: [
     'none',
@@ -190,7 +190,7 @@ const theme = createTheme({
           textTransform: 'none',
           minHeight: 48,
           '&:hover': {
-            transform: 'translateY(-2px)',
+            transform: 'scale(1.05)',
           },
         },
         contained: {
@@ -208,7 +208,7 @@ const theme = createTheme({
           color: '#3B82F6',
           '&:hover': {
             borderWidth: '1.5px',
-            backgroundColor: 'rgba(59, 130, 246, 0.08)',
+            backgroundColor: 'rgba(255,255,255,0.04)',
             borderColor: '#2563eb',
         },
       },
@@ -218,7 +218,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: '#2C2C2E',
-          borderRadius: 12,
+          borderRadius: 16,
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         },
       },
@@ -255,7 +255,8 @@ const theme = createTheme({
           minHeight: 48,
           minWidth: 48,
           '&:hover': {
-            transform: 'translateY(-2px)',
+            transform: 'scale(1.05)',
+            backgroundColor: 'rgba(255,255,255,0.04)',
           },
         },
       },
@@ -264,7 +265,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderColor: '#3A3A3C',
-          margin: '16px 0',
+          margin: '24px 0',
         },
       },
     },

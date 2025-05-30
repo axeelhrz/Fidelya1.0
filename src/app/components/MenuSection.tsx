@@ -11,7 +11,6 @@ interface MenuSectionProps {
   index: number;
 }
 
-
 const MotionBox = motion(Box);
 const MotionTypography = motion(Typography);
 const MotionDivider = motion(Divider);
@@ -19,25 +18,28 @@ const MotionDivider = motion(Divider);
 export default function MenuSection({ title, products, index }: MenuSectionProps) {
   if (products.length === 0) return null;
 
-  // Variantes de animación
+  // Variantes de animación fadeIn + slideUp
   const containerVariants = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
+      y: 0,
+      transition: { 
+        duration: 0.6,
+        ease: [0.04, 0.62, 0.23, 0.98],
+        staggerChildren: 0.1,
         delayChildren: index * 0.2,
-      }
+      } 
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
       y: 0,
       transition: { 
-        duration: 0.8, 
+        duration: 0.5, 
         ease: [0.04, 0.62, 0.23, 0.98] 
       } 
     }
@@ -51,48 +53,38 @@ export default function MenuSection({ title, products, index }: MenuSectionProps
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      sx={{ mb: 10 }}
+      sx={{ mb: 6 }}
     >
+      {/* Título de categoría con Typography h5 */}
       <MotionBox
         variants={itemVariants}
-        sx={{ mb: 6 }}
+        sx={{ mb: 3 }}
       >
-        <MotionTypography
-          variant="h4"
+        <Typography
+          variant="h5"
           sx={{
-            fontWeight: 700,
-            fontSize: { xs: '1.75rem', sm: '2rem' },
+            fontWeight: 600,
+            fontSize: '1.25rem',
             color: '#F5F5F7',
-            display: 'inline-block',
-            position: 'relative',
-            mb: 1,
+            letterSpacing: '-0.01em',
+            lineHeight: 1.4,
           }}
         >
           {title}
-          <Box
-            component="span"
-            sx={{
-              position: 'absolute',
-              bottom: -4,
-              left: 0,
-              width: '50%',
-              height: 4,
-              background: 'linear-gradient(90deg, #F59E0B 0%, rgba(245, 158, 11, 0.3) 100%)',
-              borderRadius: 4,
-            }}
-          />
-        </MotionTypography>
+        </Typography>
       </MotionBox>
 
+      {/* Divider personalizado */}
       <MotionDivider 
         variants={itemVariants}
         sx={{ 
-          mb: 6,
           borderColor: '#3A3A3C',
-          opacity: 0.3,
+          my: 3,
+          opacity: 0.6,
         }} 
       />
 
+      {/* Lista de productos usando Stack */}
       <Stack spacing={2.5}>
         {products.map((product, productIndex) => (
           <motion.div
@@ -100,9 +92,7 @@ export default function MenuSection({ title, products, index }: MenuSectionProps
             variants={itemVariants}
             custom={productIndex}
           >
-            <ProductCard
-              product={product}
-            />
+            <ProductCard product={product} />
           </motion.div>
         ))}
       </Stack>
