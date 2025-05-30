@@ -4,6 +4,7 @@ import { Box, Typography, Button, Stack } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { RestaurantMenu, QrCode2 } from '@mui/icons-material';
+
 const MotionBox = motion(Box);
 const MotionTypography = motion(Typography);
 const MotionButton = motion(Button);
@@ -15,24 +16,28 @@ export default function HeroSection() {
     router.push('/menu');
   };
 
+  const handlePanelAdmin = () => {
+    router.push('/admin');
+  };
+
   return (
     <MotionBox
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.8, ease: 'easeOut' }}
+      transition={{ duration: 1.2, ease: 'easeOut' }}
       sx={{
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
-        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 50%, #1C1C1E 100%)',
+        background: '#1C1C1E',
         overflow: 'hidden',
-        px: 3,
+        px: { xs: 3, sm: 4 },
         py: 4
       }}
     >
-      {/* Efecto de fondo sutil */}
+      {/* Subtle background gradient */}
       <Box
         sx={{
           position: 'absolute',
@@ -40,117 +45,160 @@ export default function HeroSection() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 50%)',
+          background: 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 70%)',
           pointerEvents: 'none'
         }}
       />
 
-      {/* Contenido principal */}
+      {/* Main content */}
       <Stack 
-        spacing={4} 
+        spacing={{ xs: 6, sm: 8 }}
         alignItems="center" 
         textAlign="center"
         sx={{ 
-          maxWidth: 600, 
+          maxWidth: 640,
           zIndex: 1,
           position: 'relative'
         }}
       >
-        {/* Icono principal */}
+        {/* Logo/Icon */}
         <MotionBox
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
           transition={{ 
-            duration: 0.6, 
+            duration: 0.8, 
             ease: 'easeOut',
             delay: 0.2
           }}
         >
           <QrCode2 
             sx={{ 
-              fontSize: 80, 
+              fontSize: { xs: 64, sm: 80 },
               color: '#3B82F6',
-              filter: 'drop-shadow(0px 4px 12px rgba(59, 130, 246, 0.3))'
+              filter: 'drop-shadow(0px 0px 20px rgba(59, 130, 246, 0.2))'
             }} 
           />
           </MotionBox>
 
-        {/* Título principal */}
+        {/* Main title */}
         <MotionTypography
-          variant="titleLarge"
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ 
-            duration: 0.6, 
+            duration: 0.8, 
             ease: 'easeOut',
             delay: 0.4
           }}
           sx={{
-            background: 'linear-gradient(135deg, #F5F5F7 0%, #A1A1AA 100%)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            textAlign: 'center',
-            maxWidth: '100%'
+            fontSize: { xs: '3rem', sm: '4rem', md: '4.5rem' },
+            fontWeight: 700,
+            letterSpacing: '-0.04em',
+            lineHeight: 0.9,
+            color: '#F5F5F7',
+            mb: 2
           }}
         >
-          Experiencia Nocturna Premium
+          MenuQR
         </MotionTypography>
 
-        {/* Subtítulo */}
+        {/* Subtitle */}
         <MotionTypography
-          variant="body1"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ 
-            duration: 0.6, 
+            duration: 0.8, 
             ease: 'easeOut',
             delay: 0.6
           }}
           sx={{
+            fontSize: { xs: '1.125rem', sm: '1.25rem' },
+            fontWeight: 400,
             color: '#A1A1AA',
-            fontSize: '1.125rem',
-            lineHeight: 1.6,
+            lineHeight: 1.5,
             maxWidth: 480,
-            textAlign: 'center'
+            mx: 'auto'
           }}
         >
-          Descubre nuestra selección exclusiva de cócteles artesanales y experiencias gastronómicas únicas
+          Escanea, explora y ordena con un simple toque.
+          <br />
+          Navegación sin límites, sabores sin fronteras.
         </MotionTypography>
 
-        {/* Botón principal */}
-        <MotionButton
-          variant="contained"
-          size="large"
-          onClick={handleViewMenu}
-          startIcon={<RestaurantMenu />}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
+        {/* Action buttons */}
+        <MotionBox
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ 
-            duration: 0.5, 
+            duration: 0.8, 
             ease: 'easeOut',
             delay: 0.8
           }}
-          whileHover={{ 
-            scale: 1.05,
-            boxShadow: '0px 12px 32px rgba(59, 130, 246, 0.4)'
-          }}
-          whileTap={{ scale: 0.95 }}
-          sx={{
-            px: 4,
-            py: 1.5,
-            fontSize: '1.1rem',
-            fontWeight: 600,
-            borderRadius: 3,
-            background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
-            boxShadow: '0px 8px 24px rgba(59, 130, 246, 0.3)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-}
+          sx={{ 
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 3, sm: 4 },
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%'
           }}
         >
-          Ver Menú
-        </MotionButton>
+          <MotionButton
+            variant="contained"
+            size="large"
+            onClick={handleViewMenu}
+            startIcon={<RestaurantMenu />}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            sx={{
+              px: { xs: 4, sm: 6 },
+              py: { xs: 1.5, sm: 2 },
+              fontSize: { xs: '1rem', sm: '1.125rem' },
+              fontWeight: 600,
+              borderRadius: 2,
+              background: '#3B82F6',
+              color: '#FFFFFF',
+              border: 'none',
+              boxShadow: 'none',
+              minWidth: { xs: 200, sm: 180 },
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                background: '#2563eb',
+                boxShadow: 'none',
+                transform: 'translateY(-1px)'
+}
+            }}
+          >
+            Explorar Menú
+          </MotionButton>
+
+          <MotionButton
+            variant="outlined"
+            size="large"
+            onClick={handlePanelAdmin}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            sx={{
+              px: { xs: 4, sm: 6 },
+              py: { xs: 1.5, sm: 2 },
+              fontSize: { xs: '1rem', sm: '1.125rem' },
+              fontWeight: 600,
+              borderRadius: 2,
+              color: '#3B82F6',
+              borderColor: '#3B82F6',
+              borderWidth: '1px',
+              background: 'transparent',
+              minWidth: { xs: 200, sm: 180 },
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                borderColor: '#2563eb',
+                background: 'rgba(59, 130, 246, 0.04)',
+                transform: 'translateY(-1px)'
+              }
+            }}
+          >
+            Panel Admin
+          </MotionButton>
+        </MotionBox>
       </Stack>
     </MotionBox>
   );

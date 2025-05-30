@@ -1,6 +1,7 @@
 'use client';
 
-import { Box, Typography, Stack, Divider } from '@mui/material';
+import React from 'react';
+import { Box, Typography, Stack } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Product } from '../types';
 import ProductCard from './ProductCard';
@@ -12,61 +13,75 @@ interface MenuSectionProps {
 }
 
 const MotionBox = motion(Box);
-export default function MenuSection({ title, products, index = 0 }: MenuSectionProps) {
+const MotionTypography = motion(Typography);
+
+const MenuSection: React.FC<MenuSectionProps> = ({ title, products, index = 0 }) => {
+  if (!products || products.length === 0) return null;
+
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.6, 
+        ease: 'easeOut',
+        delay: index * 0.1
+      } 
+    }
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2 + (index * 0.1),
+      },
+    },
+  };
+
   return (
     <MotionBox
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ 
-        duration: 0.5, 
-        ease: 'easeOut',
-        delay: index * 0.1 // Animación escalonada para cada sección
-      }}
-      sx={{ mb: 5 }}
+      variants={sectionVariants}
+      initial="hidden"
+      animate="visible"
+      sx={{ mb: { xs: 6, sm: 8 } }}
     >
-      {/* Título de la sección */}
-      <Box sx={{ mb: 3 }}>
-        <Typography 
-          variant="h5" 
-          sx={{ 
-            fontWeight: 600,
-            color: '#F5F5F7',
-            fontSize: '1.5rem',
-            letterSpacing: '-0.01em',
-            lineHeight: 1.3,
-            mb: 1.5
-          }}
-        >
-          {title}
-        </Typography>
+      {/* Section title */}
+      <MotionTypography
+        variant="h4"
+        sx={{
+          mb: { xs: 4, sm: 5 },
+          fontWeight: 600,
+          fontSize: { xs: '1.5rem', sm: '1.75rem' },
+          color: '#F5F5F7',
+          letterSpacing: '-0.02em',
+          textAlign: 'left'
+        }}
+      >
+        {title}
+      </MotionTypography>
 
-        {/* Divider elegante */}
-        <Divider 
-          sx={{ 
-            borderColor: '#3A3A3C',
-            borderWidth: '1px',
-            background: 'linear-gradient(90deg, #3A3A3C 0%, rgba(58, 58, 60, 0.3) 50%, transparent 100%)'
-          }} 
-        />
-      </Box>
-
-      {/* Lista de productos usando Stack */}
-      <Stack spacing={2.5}>
-        {products.map((product, productIndex) => (
-          <motion.div
-            key={product.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ 
-              duration: 0.4, 
-              ease: 'easeOut',
-              delay: (index * 0.1) + (productIndex * 0.05) // Animación escalonada para productos
-            }}
-          >
-            <ProductCard product={product} />
-          </motion.div>
-        ))}
-      </Stack>
+      {/* Products grid */}
+      <MotionBox
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <Stack spacing={{ xs: 3, sm: 4 }}>
+          {products.map((product, productIndex) => (
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              index={productIndex}
+            />
+          ))}
+        </Stack>
+    </MotionBox>
     </MotionBox>
   );
-}
+};
+
+export default MenuSection;

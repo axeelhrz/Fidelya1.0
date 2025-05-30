@@ -14,7 +14,8 @@ import {
   Fade,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FilterList, Restaurant } from '@mui/icons-material';
+import { FilterList, Restaurant, ArrowBack } from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
 import { Product } from '../types';
 import MenuSection from './MenuSection';
 
@@ -29,24 +30,25 @@ const MotionContainer = motion(Container);
 
 const MenuViewer: React.FC<MenuViewerProps> = ({
   products,
-  menuName = 'XSreset',
-  menuDescription = 'Experiencia nocturna premium'
+  menuName = 'MenuQR',
+  menuDescription = 'Escanea, explora y ordena con un simple toque'
 }) => {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Obtener categorías únicas
+  // Get unique categories
   const categories = useMemo(() => {
     const cats = ['Todas', ...Array.from(new Set(products.map(p => p.category)))];
     return cats;
   }, [products]);
 
-  // Filtrar productos por categoría
+  // Filter products by category
   const filteredProducts = useMemo(() => {
     if (selectedCategory === 'Todas') return products;
     return products.filter(p => p.category === selectedCategory);
   }, [products, selectedCategory]);
-  // Agrupar productos por categoría
+  // Group products by category
   const groupedProducts = useMemo(() => {
     const groups: Record<string, Product[]> = {};
     filteredProducts.forEach(product => {
@@ -77,124 +79,137 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
       transition: { duration: 0.6, ease: 'easeOut' }
     }
   };
+
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#1C1C1E' }}>
-      {/* Header fijo con glassmorphism */}
+      {/* Minimalist fixed header */}
       <AppBar 
         position="fixed" 
         elevation={0}
         sx={{ 
-          backgroundColor: 'rgba(28, 28, 30, 0.95)',
+          backgroundColor: 'rgba(28, 28, 30, 0.98)',
           backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(58, 58, 60, 0.3)',
+          borderBottom: '1px solid rgba(58, 58, 60, 0.2)',
           zIndex: 1100,
         }}
       >
         <Toolbar sx={{ 
           justifyContent: 'space-between',
-          px: { xs: 2, sm: 3 }
+          px: { xs: 2, sm: 3 },
+          minHeight: { xs: 64, sm: 72 }
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Restaurant sx={{ color: '#3B82F6', fontSize: 24 }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <IconButton 
+              onClick={() => router.push('/')}
+              sx={{ 
+                color: '#A1A1AA',
+                p: 1,
+                '&:hover': { 
+                  color: '#F5F5F7',
+                  backgroundColor: 'rgba(255, 255, 255, 0.04)'
+                }
+              }}
+            >
+              <ArrowBack fontSize="small" />
+            </IconButton>
             <Typography 
               variant="h6" 
               sx={{ 
-                fontWeight: 700,
+                fontWeight: 600,
                 color: '#F5F5F7',
-                letterSpacing: '0.02em',
-                fontSize: { xs: '1rem', sm: '1.25rem' }
+                letterSpacing: '-0.01em',
+                fontSize: { xs: '1.125rem', sm: '1.25rem' }
               }}
             >
               {menuName}
           </Typography>
-    </Box>
-          
+          </Box>
+
           <IconButton
             onClick={() => setShowFilters(!showFilters)}
             sx={{ 
-              color: '#3B82F6',
+              color: showFilters ? '#3B82F6' : '#A1A1AA',
+              p: 1,
               '&:hover': {
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                transform: 'scale(1.05)'
-}
+              color: '#3B82F6',
+                backgroundColor: 'rgba(59, 130, 246, 0.04)'
+              }
             }}
           >
-            <FilterList />
+            <FilterList fontSize="small" />
           </IconButton>
         </Toolbar>
       </AppBar>
 
-      {/* Contenido principal */}
+      {/* Main content */}
       <MotionContainer 
-        maxWidth="lg" 
+        maxWidth="md" 
         sx={{ 
           pt: { xs: 10, sm: 12 },
-          pb: 6,
+          pb: 8,
           px: { xs: 2, sm: 3 },
         }}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Header del Menú */}
+        {/* Menu header */}
         <MotionBox
           variants={headerVariants}
-          sx={{ textAlign: 'center', mb: { xs: 4, sm: 6 } }}
+          sx={{ textAlign: 'center', mb: { xs: 6, sm: 8 } }}
         >
           <Typography 
-            variant="h3"
             sx={{ 
-              mb: 2,
+              fontSize: { xs: '2.5rem', sm: '3.5rem' },
               fontWeight: 700,
-              fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
-              background: 'linear-gradient(135deg, #F5F5F7 0%, #A1A1AA 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              letterSpacing: '-0.03em',
+              lineHeight: 0.9,
+              color: '#F5F5F7',
+              mb: 3
             }}
           >
             {menuName}
           </Typography>
           <Typography 
-            variant="subtitle1" 
             sx={{ 
               color: '#A1A1AA',
-              fontSize: { xs: '0.9rem', sm: '1rem' },
-              maxWidth: 600,
+              fontSize: { xs: '1rem', sm: '1.125rem' },
+              fontWeight: 400,
+              maxWidth: 480,
               mx: 'auto',
-              lineHeight: 1.6,
+              lineHeight: 1.5,
             }}
           >
             {menuDescription}
           </Typography>
         </MotionBox>
 
-        {/* Filtros de Categoría */}
+        {/* Category filters */}
         <AnimatePresence>
-          {(showFilters || categories.length <= 6) && (
-            <Fade in={showFilters || categories.length <= 6}>
+          {showFilters && (
+            <Fade in={showFilters}>
               <MotionBox
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.3 }}
-                sx={{ mb: { xs: 4, sm: 6 } }}
+                sx={{ mb: { xs: 6, sm: 8 } }}
               >
                 <Paper sx={{ 
-                  p: { xs: 2, sm: 3 }, 
-                  borderRadius: 4,
-                  backgroundColor: 'rgba(44, 44, 46, 0.8)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  boxShadow: '0px 6px 18px rgba(0,0,0,0.12)',
+                  p: { xs: 3, sm: 4 }, 
+                  borderRadius: 3,
+                  backgroundColor: 'rgba(44, 44, 46, 0.6)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  boxShadow: 'none',
                 }}>
                   <Typography 
-                    variant="h6" 
                     sx={{ 
-                      mb: 2,
+                      mb: 3,
                       fontWeight: 600,
                       color: '#F5F5F7',
-                      fontSize: { xs: '1rem', sm: '1.25rem' }
+                      fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                      letterSpacing: '-0.01em'
                     }}
                   >
                     Categorías
@@ -204,7 +219,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                     spacing={1.5}
                     sx={{ 
                       flexWrap: 'wrap',
-                      gap: { xs: 1, sm: 1.5 },
+                      gap: { xs: 1.5, sm: 2 },
                     }}
                   >
                     {categories.map((category) => (
@@ -213,20 +228,31 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                         label={category}
                         onClick={() => setSelectedCategory(category)}
                         variant={selectedCategory === category ? 'filled' : 'outlined'}
-                        color={selectedCategory === category ? 'primary' : 'default'}
                         sx={{
-                          minHeight: { xs: 40, sm: 48 },
-                          borderRadius: 3,
+                          minHeight: { xs: 40, sm: 44 },
+                          borderRadius: 2,
                           fontWeight: selectedCategory === category ? 600 : 500,
-                          fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                          px: { xs: 1.5, sm: 2 },
-                          transition: 'all 0.3s ease',
+                          fontSize: { xs: '0.875rem', sm: '0.9rem' },
+                          px: { xs: 2, sm: 2.5 },
+                          transition: 'all 0.2s ease',
                           cursor: 'pointer',
+                          backgroundColor: selectedCategory === category 
+                            ? '#3B82F6' 
+                            : 'transparent',
+                          color: selectedCategory === category 
+                            ? '#FFFFFF' 
+                            : '#A1A1AA',
+                          borderColor: selectedCategory === category 
+                            ? '#3B82F6' 
+                            : 'rgba(161, 161, 170, 0.3)',
                           '&:hover': {
-                            transform: 'scale(1.05)',
+                            transform: 'translateY(-1px)',
                             backgroundColor: selectedCategory === category 
-                              ? 'primary.dark' 
-                              : 'rgba(255,255,255,0.08)',
+                              ? '#2563eb' 
+                              : 'rgba(255,255,255,0.04)',
+                            color: selectedCategory === category 
+                              ? '#FFFFFF' 
+                              : '#F5F5F7',
                           },
                         }}
                       />
@@ -238,21 +264,21 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Contador de productos */}
+        {/* Product count */}
         <MotionBox
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
           sx={{ 
-            mb: 4,
+            mb: 6,
             textAlign: 'center'
           }}
         >
           <Typography 
-            variant="body2" 
             sx={{ 
               color: '#A1A1AA',
-              fontSize: '0.875rem'
+              fontSize: '0.9rem',
+              fontWeight: 500
             }}
           >
             {filteredProducts.length} {filteredProducts.length === 1 ? 'producto' : 'productos'}
@@ -260,9 +286,9 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           </Typography>
         </MotionBox>
 
-        {/* Lista de Productos por Categoría */}
+        {/* Product sections */}
         <AnimatePresence mode="wait">
-          <Stack spacing={{ xs: 4, sm: 6 }}>
+          <Stack spacing={{ xs: 6, sm: 8 }}>
             {Object.entries(groupedProducts).map(([category, categoryProducts], index) => (
               <MenuSection
                 key={`${category}-${selectedCategory}`}
@@ -274,37 +300,36 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           </Stack>
         </AnimatePresence>
 
-        {/* Footer del menú */}
+        {/* Footer */}
         <MotionBox
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
           sx={{ 
-            mt: 8,
-            pt: 4,
-            borderTop: '1px solid rgba(58, 58, 60, 0.3)',
+            mt: 12,
+            pt: 6,
+            borderTop: '1px solid rgba(58, 58, 60, 0.2)',
             textAlign: 'center'
           }}
         >
           <Typography 
-            variant="body2" 
             sx={{ 
               color: '#A1A1AA',
               fontSize: '0.875rem',
+              fontWeight: 400,
               mb: 1
             }}
           >
             Precios sujetos a cambios sin previo aviso
           </Typography>
           <Typography 
-            variant="body2" 
             sx={{ 
               color: '#3B82F6',
               fontSize: '0.8rem',
               fontWeight: 500
             }}
           >
-            Menú actualizado • {new Date().toLocaleDateString('es-AR')}
+            Actualizado • {new Date().toLocaleDateString('es-AR')}
           </Typography>
         </MotionBox>
       </MotionContainer>
