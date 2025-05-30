@@ -3,7 +3,7 @@
 import { Box, Paper, Typography, Stack, Chip } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Product } from '../types';
-import { EcoOutlined, Recommend } from '@mui/icons-material';
+import { Recommend } from '@mui/icons-material';
 
 interface ProductCardProps {
   product: Product;
@@ -118,17 +118,13 @@ export default function ProductCard({ product }: ProductCardProps) {
                 )}
                 {product.isVegan && (
                   <Chip 
-                    icon={<EcoOutlined sx={{ fontSize: '16px !important' }} />}
                     label="Vegano" 
                     size="small" 
                     color="primary"
                     sx={{ 
                       fontSize: { xs: '0.7rem', sm: '0.75rem' },
                       fontWeight: 500,
-                      height: { xs: 22, sm: 24 },
-                      '& .MuiChip-icon': {
-                        fontSize: '14px'
-}
+                      height: { xs: 22, sm: 24 }
                     }}
                   />
                 )}
