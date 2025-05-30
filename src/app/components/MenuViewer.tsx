@@ -123,7 +123,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           px: { xs: 2, sm: 3 },
-          minHeight: { xs: 60, sm: 64 }, // Más compacto
+          minHeight: { xs: 60, sm: 64 },
           position: 'relative'
         }}>
           {/* Sección izquierda compacta */}
@@ -321,11 +321,11 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
         />
       </AppBar>
 
-      {/* Contenido principal */}
+      {/* Contenido principal con mejor espaciado */}
       <MotionContainer 
         maxWidth="md" 
         sx={{ 
-          pt: { xs: 8, sm: 9 }, // Reducido para header más compacto
+          pt: { xs: 10, sm: 11 }, // Más espacio desde el header
           pb: 8,
           px: { xs: 2, sm: 3 },
         }}
@@ -333,19 +333,19 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
         initial="hidden"
         animate="visible"
       >
-        {/* Hero section ultra-compacto */}
+        {/* Hero section con espaciado mejorado */}
         <MotionBox
           variants={headerVariants}
-          sx={{ textAlign: 'center', mb: { xs: 4, sm: 5 } }} // Muy reducido
+          sx={{ textAlign: 'center', mb: { xs: 6, sm: 7 } }} // Más espacio antes del contenido
         >
           <Typography 
             sx={{ 
-              fontSize: { xs: '1.75rem', sm: '2.25rem' }, // Más pequeño
+              fontSize: { xs: '1.75rem', sm: '2.25rem' },
               fontWeight: 700,
               letterSpacing: '-0.03em',
               lineHeight: 0.9,
               color: '#F5F5F7',
-              mb: 1.5, // Reducido
+              mb: 1.5,
               background: 'linear-gradient(135deg, #F5F5F7 0%, #A1A1AA 100%)',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
@@ -357,12 +357,12 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
 
           <Typography 
             sx={{ 
-              fontSize: { xs: '0.75rem', sm: '0.8rem' }, // Más pequeño
+              fontSize: { xs: '0.75rem', sm: '0.8rem' },
               fontWeight: 500,
               color: '#A1A1AA',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              mb: 2, // Reducido
+              mb: 2,
               opacity: 0.8
             }}
           >
@@ -372,21 +372,20 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           <Typography 
             sx={{ 
               color: '#A1A1AA',
-              fontSize: { xs: '0.85rem', sm: '0.9rem' }, // Más pequeño
+              fontSize: { xs: '0.85rem', sm: '0.9rem' },
               fontWeight: 400,
-              maxWidth: 350, // Más estrecho
+              maxWidth: 350,
               mx: 'auto',
               lineHeight: 1.5,
-              mb: 3 // Reducido
+              mb: 3
             }}
           >
             {menuDescription}
           </Typography>
 
-          {/* Divisor minimalista */}
           <Box
             sx={{
-              width: 60, // Más pequeño
+              width: 60,
               height: 1,
               background: 'linear-gradient(90deg, transparent 0%, #74ACDF 50%, transparent 100%)',
               mx: 'auto'
@@ -473,7 +472,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                         onClick={() => setSelectedCategory(category.name)}
                         variant={selectedCategory === category.name ? 'filled' : 'outlined'}
                         sx={{
-                          minHeight: 32, // Más compacto
+                          minHeight: 32,
                           borderRadius: 2,
                           fontWeight: selectedCategory === category.name ? 600 : 500,
                           fontSize: { xs: '0.75rem', sm: '0.8rem' },
