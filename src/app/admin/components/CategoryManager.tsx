@@ -20,43 +20,60 @@ import {
   Typography,
   Alert,
   Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
+  FormControlLabel,
+  Switch
 } from '@mui/material';
-import { Edit, Delete, Add } from '@mui/icons-material';
-import { useFirebaseMenu } from '../../../hooks/useFirebaseMenu';
-import { Menu } from '../../types';
-
-interface MenuWithCategories extends Menu {
-  categories: string[];
-}
+import { Edit, Delete, Add, DragIndicator } from '@mui/icons-material';
+import { useFirebaseCategories } from '../../../hooks/useFirebaseCategories';
+import { Category, Menu } from '../../types';
 
 interface CategoryManagerProps {
-  menus: MenuWithCategories[];
+  menus: Menu[];
+  selectedMenuId: string;
+  categories: Category[];
 }
 
-export default function CategoryManager({ menus }: CategoryManagerProps) {
+export default function CategoryManager({ menus, selectedMenuId, categories }: CategoryManagerProps) {
   const [open, setOpen] = useState(false);
-  const [selectedMenuId, setSelectedMenuId] = useState<string>('');
-  const [newCategory, setNewCategory] = useState('');
-  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    menuId: selectedMenuId,
+    order: 0,
+    isActive: true,
+    icon: ''
+  });
 
   const {
-    updateMenu,
+    createCategory,
+    updateCategory,
+    deleteCategory,
     error
-  } = useFirebaseMenu();
+  } = useFirebaseCategories(selectedMenuId);
 
-  const selectedMenu = menus.find(menu => menu.id === selectedMenuId) as MenuWithCategories | undefined;
-
-  const handleOpen = (category?: string) => {
+  const handleOpen = (category?: Category) => {
     if (category) {
       setEditingCategory(category);
-      setNewCategory(category);
+      setFormData({
+        name: category.name,
+        description: category.description || '',
+        menuId: category.menuId,
+        order: category.order,
+        isActive: category.isActive,
+        icon: category.icon || ''
+      });
     } else {
       setEditingCategory(null);
-      setNewCategory('');
+      const nextOrder = categories.length > 0 ? Math.max(...categories.map(c => c.order)) + 1 : 1;
+      setFormData({
+        name: '',
+        description: '',
+        menuId: selectedMenuId,
+        order: nextOrder,
+        isActive: true,
+        icon: ''
+      });
     }
     setOpen(true);
   };
@@ -64,30 +81,24 @@ export default function CategoryManager({ menus }: CategoryManagerProps) {
   const handleClose = () => {
     setOpen(false);
     setEditingCategory(null);
-    setNewCategory('');
   };
 
   const handleSubmit = async () => {
-    if (!selectedMenu || !newCategory.trim()) return;
-
     try {
-      const updatedCategories = [...selectedMenu.categories];
-      if (editingCategory) {
-        // Update existing category
-        const index = updatedCategories.indexOf(editingCategory);
-        if (index !== -1) {
-          updatedCategories[index] = newCategory.trim();
-        }
-      } else {
-        // Add new category
-        if (!updatedCategories.includes(newCategory.trim())) {
-          updatedCategories.push(newCategory.trim());
-        }
-      }
+      const categoryData = {
+        name: formData.name,
+        description: formData.description,
+        menuId: formData.menuId,
+        order: formData.order,
+        isActive: formData.isActive,
+        icon: formData.icon
+      };
 
-      await updateMenu(selectedMenu.id, {
-        categories: updatedCategories
-      });
+      if (editingCategory) {
+        await updateCategory(editingCategory.id, categoryData);
+      } else {
+        await createCategory(categoryData);
+      }
 
       handleClose();
     } catch (error) {
@@ -95,129 +106,152 @@ export default function CategoryManager({ menus }: CategoryManagerProps) {
     }
   };
 
-  const handleDelete = async (category: string) => {
-    if (!selectedMenu) return;
-
-    if (confirm(`¿Estás seguro de que quieres eliminar la categoría "${category}"?`)) {
+  const handleDelete = async (categoryId: string) => {
+    if (confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
       try {
-        const updatedCategories = selectedMenu.categories.filter(cat => cat !== category);
-        await updateMenu(selectedMenu.id, {
-          categories: updatedCategories
-        });
+        await deleteCategory(categoryId);
       } catch (error) {
         console.error('Error deleting category:', error);
       }
     }
   };
 
+  const toggleActive = async (category: Category) => {
+    try {
+      await updateCategory(category.id, { isActive: !category.isActive });
+    } catch (error) {
+      console.error('Error updating category:', error);
+    }
+  };
+
+  const getMenuName = (menuId: string) => {
+    const menu = menus.find(m => m.id === menuId);
+    return menu?.name || 'Menú no encontrado';
+  };
+
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h6">
-              Gestión de Categorías
-            </Typography>
-          </Box>
+          Gestión de Categorías ({categories.length})
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => handleOpen()}
+          disabled={!selectedMenuId}
+        >
+          Agregar Categoría
+        </Button>
+      </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
-            </Alert>
-          )}
-
-      {menus.length === 0 ? (
-        <Alert severity="warning">
-          Necesitas crear al menos un menú antes de gestionar categorías.
         </Alert>
-      ) : (
-        <>
-          <Box mb={3}>
-            <FormControl fullWidth>
-              <InputLabel>Seleccionar Menú</InputLabel>
-              <Select
-                value={selectedMenuId}
-                onChange={(e) => setSelectedMenuId(e.target.value)}
-                label="Seleccionar Menú"
-              >
-                {menus.map((menu) => (
-                  <MenuItem key={menu.id} value={menu.id}>
-                    {menu.name}
-                  </MenuItem>
-            ))}
-              </Select>
-            </FormControl>
-            </Box>
+      )}
 
-          {selectedMenu && (
-            <>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="subtitle1">
-                  Categorías de &quot;{selectedMenu.name}&quot; ({selectedMenu.categories.length})
-                </Typography>
+      {!selectedMenuId ? (
+        <Alert severity="warning">
+          Selecciona un menú para gestionar categorías.
+        </Alert>
+      ) : categories.length === 0 ? (
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No hay categorías en este menú
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={3}>
+            Las categorías ayudan a organizar tus productos
+          </Typography>
           <Button
             variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => handleOpen()}
-                >
-                  Agregar Categoría
+            startIcon={<Add />}
+            onClick={() => handleOpen()}
+          >
+            Agregar Primera Categoría
           </Button>
-              </Box>
-
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Nombre de Categoría</TableCell>
-                      <TableCell>Estado</TableCell>
-                      <TableCell>Acciones</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {selectedMenu.categories.map((category, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <Typography variant="subtitle2">
-                            {category}
+        </Paper>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell width="50">Orden</TableCell>
+                <TableCell>Categoría</TableCell>
+                <TableCell>Menú</TableCell>
+                <TableCell>Estado</TableCell>
+                <TableCell>Acciones</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {categories
+                .sort((a, b) => a.order - b.order)
+                .map((category) => (
+                <TableRow key={category.id}>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <DragIndicator color="disabled" />
+                      <Typography variant="body2">
+                        {category.order}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={2}>
+                      {category.icon && (
+                        <Typography variant="h6">
+                          {category.icon}
+                        </Typography>
+                      )}
+                      <Box>
+                        <Typography variant="subtitle2" gutterBottom>
+                          {category.name}
+                        </Typography>
+                        {category.description && (
+                          <Typography variant="caption" color="text.secondary">
+                            {category.description}
                           </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label="Activa"
-                            color="success"
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <IconButton
-                            onClick={() => handleOpen(category)}
-                            size="small"
-                          >
-                            <Edit />
-                          </IconButton>
-                          <IconButton
-                            onClick={() => handleDelete(category)}
-                            size="small"
-                            color="error"
-                          >
-                            <Delete />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {selectedMenu.categories.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={3} align="center">
-                          <Typography variant="body2" color="text.secondary">
-                            No hay categorías definidas para este menú
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </>
-          )}
-        </>
+                        )}
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {getMenuName(category.menuId)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Chip
+                        label={category.isActive ? 'Activa' : 'Inactiva'}
+                        color={category.isActive ? 'success' : 'default'}
+                        size="small"
+                        onClick={() => toggleActive(category)}
+                        sx={{ cursor: 'pointer' }}
+                      />
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <IconButton
+                      onClick={() => handleOpen(category)}
+                      size="small"
+                      color="primary"
+                    >
+                      <Edit />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleDelete(category.id)}
+                      size="small"
+                      color="error"
+                    >
+                      <Delete />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
 
       {/* Category Form Dialog */}
@@ -226,14 +260,54 @@ export default function CategoryManager({ menus }: CategoryManagerProps) {
           {editingCategory ? 'Editar Categoría' : 'Agregar Categoría'}
         </DialogTitle>
         <DialogContent>
-          <Box pt={1}>
+          <Box display="flex" flexDirection="column" gap={3} pt={1}>
             <TextField
               fullWidth
               label="Nombre de la Categoría"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
-              autoFocus
+              placeholder="Ej: Entradas, Platos Principales, Bebidas"
+            />
+            
+            <TextField
+              fullWidth
+              label="Descripción"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              multiline
+              rows={2}
+              placeholder="Descripción opcional de la categoría"
+            />
+            
+            <Box display="flex" gap={2}>
+              <TextField
+                label="Icono (Emoji)"
+                value={formData.icon}
+                onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                placeholder="🍽️"
+                inputProps={{ maxLength: 2 }}
+                sx={{ width: 120 }}
+              />
+              
+              <TextField
+                label="Orden"
+                type="number"
+                value={formData.order}
+                onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                inputProps={{ min: 0 }}
+                sx={{ flex: 1 }}
+              />
+            </Box>
+            
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                />
+              }
+              label="Categoría activa"
             />
           </Box>
         </DialogContent>
@@ -242,7 +316,7 @@ export default function CategoryManager({ menus }: CategoryManagerProps) {
           <Button 
             onClick={handleSubmit} 
             variant="contained"
-            disabled={!newCategory.trim() || !selectedMenu}
+            disabled={!formData.name.trim()}
           >
             {editingCategory ? 'Actualizar' : 'Crear'}
           </Button>

@@ -1,859 +1,469 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   Container,
   Typography,
-  Stack,
-  IconButton,
+  Tabs,
+  Tab,
   Chip,
+  Alert,
+  CircularProgress,
+  TextField,
+  InputAdornment,
   Fab,
+  Collapse,
+  IconButton
 } from '@mui/material';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { 
-  ArrowBack, 
-  Restaurant,
-  FilterList,
-  Close,
-  AccessTime,
+  Search, 
+  Restaurant, 
+  ExpandMore,
+  ExpandLess,
+  NoMeals
 } from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
-import { Product } from '../types';
-import MenuSection from './MenuSection';
-
-interface MenuViewerProps {
-  products: Product[];
-  menuDescription?: string;
-}
+import { motion, AnimatePresence } from 'framer-motion';
+import { useFirebaseMenuById } from '../../hooks/useFirebaseMenu';
+import { useFirebaseCategories } from '../../hooks/useFirebaseCategories';
+import ProductCard from './ProductCard';
 
 const MotionBox = motion(Box);
-const MotionContainer = motion(Container);
-const MotionFab = motion(Fab);
 
-const MenuViewer: React.FC<MenuViewerProps> = ({
-  products,
-  menuDescription = 'Tragos de autor, picadas y buena onda en el corazón de la ciudad'
-}) => {
-  const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
+interface MenuViewerProps {
+  menuId: string;
+}
+
+export default function MenuViewer({ menuId }: MenuViewerProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [headerVisible, setHeaderVisible] = useState(true);
+  const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
 
-  const { scrollY } = useScroll();
-  const headerY = useTransform(scrollY, [0, 100], [0, -100]);
+  const { menu, products, loading, error, connected } = useFirebaseMenuById(menuId);
+  const { categories } = useFirebaseCategories(menuId, true);
 
-  // Habilitar scroll cuando se monta el componente
-  useEffect(() => {
-    // Restaurar scroll para la página del menú
-    document.body.style.overflow = 'auto';
-    document.body.style.position = 'static';
-    document.body.style.width = 'auto';
-    document.body.style.height = 'auto';
-    
-    // Cleanup: mantener scroll habilitado
-    return () => {
-      // No restaurar el bloqueo de scroll al desmontar
-      // porque queremos mantener el scroll en esta página
-    };
-  }, []);
-
-  // Controlar visibilidad del header
-  useEffect(() => {
-    const unsubscribe = scrollY.onChange((latest) => {
-      setHeaderVisible(latest < 100);
-    });
-    return unsubscribe;
-  }, [scrollY]);
-
-  // Obtener categorías únicas
-  const categories = useMemo(() => {
-    const categoryCount: Record<string, number> = {};
-    products.forEach(p => {
-      categoryCount[p.category] = (categoryCount[p.category] || 0) + 1;
-    });
-    
-    const cats = [
-      { name: 'Todas', count: products.length },
-      ...Array.from(new Set(products.map(p => p.category))).map(cat => ({
-        name: cat,
-        count: categoryCount[cat] || 0
-      }))
-    ];
-    return cats;
-  }, [products]);
-
-  // Filtrar productos por categoría
+  // Filtrar productos
   const filteredProducts = useMemo(() => {
-    if (selectedCategory === 'Todas') return products;
-    return products.filter(p => p.category === selectedCategory);
-  }, [products, selectedCategory]);
+    let filtered = products;
 
-  // Agrupar productos filtrados por categoría
-  const groupedProducts = useMemo(() => {
-    const groups: Record<string, Product[]> = {};
+    // Filtrar por disponibilidad
+    if (showOnlyAvailable) {
+      filtered = filtered.filter(product => product.isAvailable);
+    }
+
+    // Filtrar por categoría
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(product => product.category === selectedCategory);
+    }
+
+    // Filtrar por búsqueda
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(search) ||
+        product.description?.toLowerCase().includes(search) ||
+        product.tags?.some(tag => tag.toLowerCase().includes(search))
+      );
+    }
+
+    return filtered;
+  }, [products, selectedCategory, searchTerm, showOnlyAvailable]);
+
+  // Agrupar productos por categoría
+  const productsByCategory = useMemo(() => {
+    const grouped: { [key: string]: typeof products } = {};
+    
     filteredProducts.forEach(product => {
-      if (!groups[product.category]) {
-        groups[product.category] = [];
+      const category = product.category;
+      if (!grouped[category]) {
+        grouped[category] = [];
       }
-      groups[product.category].push(product);
+      grouped[category].push(product);
     });
-    return groups;
+
+    return grouped;
   }, [filteredProducts]);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.3,
-      },
-    },
+  // Obtener categorías únicas de los productos
+  const availableCategories = useMemo(() => {
+    const categorySet = new Set(products.map(p => p.category));
+    return Array.from(categorySet);
+  }, [products]);
+
+  const getCategoryInfo = (categoryKey: string) => {
+    const category = categories.find(c => c.name === categoryKey);
+    return {
+      name: category?.name || categoryKey,
+      icon: category?.icon || '🍽️',
+      description: category?.description
+    };
   };
 
-  const headerVariants = {
-    hidden: { opacity: 0, y: -20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 1, ease: [0.04, 0.62, 0.23, 0.98] }
+  const ConnectionStatus = () => {
+    if (!connected && !loading) {
+      return (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Sin conexión en tiempo real. Los datos pueden no estar actualizados.
+        </Alert>
+      );
     }
+    return null;
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ 
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
+        gap: 3
+      }}>
+        <CircularProgress size={60} sx={{ color: '#D4AF37' }} />
+        <Typography sx={{ 
+          color: '#B8B8B8', 
+          fontSize: '1.125rem',
+          fontWeight: 500,
+          textAlign: 'center'
+        }}>
+          Cargando menú...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container sx={{ py: 4 }}>
+        <Alert severity="error">
+          <Typography variant="h6" gutterBottom>
+            Error al cargar el menú
+          </Typography>
+          <Typography variant="body2">
+            {error}
+          </Typography>
+        </Alert>
+      </Container>
+    );
+  }
+
+  if (!menu) {
+    return (
+      <Container sx={{ py: 4 }}>
+        <Alert severity="warning">
+          <Typography variant="h6" gutterBottom>
+            Menú no encontrado
+          </Typography>
+          <Typography variant="body2">
+            El menú solicitado no existe o no está disponible.
+          </Typography>
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Box sx={{ 
-      minHeight: '100vh', // Cambio de height fijo a minHeight
-      backgroundColor: '#0A0A0A',
-      position: 'relative',
-      overflow: 'visible' // Permitir overflow
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%)',
+      color: 'white'
     }}>
-      {/* Fondo elegante minimalista */}
-      <Box
-        sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: -1,
-          pointerEvents: 'none',
-          background: `
-            radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.02) 0%, transparent 50%),
-            linear-gradient(180deg, rgba(10, 10, 10, 1) 0%, rgba(16, 16, 16, 1) 100%)
-          `
-        }}
-      />
-
-      {/* Header elegante */}
-      <MotionBox
-        style={{ y: headerY }}
-        sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1000,
-          background: 'linear-gradient(180deg, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.8) 70%, transparent 100%)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(212, 175, 55, 0.1)',
-          pt: 2,
-          pb: 4,
-        }}
-      >
-        <Container maxWidth="lg" sx={{ px: { xs: 3, sm: 4 } }}>
-          <Box sx={{ 
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            py: 3
-          }}>
-            {/* Sección izquierda */}
-            <MotionBox
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98] }}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 3
-              }}
-            >
-              {/* Botón de regreso */}
-              <MotionBox
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <IconButton 
-                  onClick={() => router.push('/')}
-                  sx={{ 
-                    color: '#B8B8B8',
-                    p: 1.5,
-                    borderRadius: 0,
-                    border: '1px solid rgba(212, 175, 55, 0.2)',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': { 
-                      color: '#D4AF37',
-                      borderColor: 'rgba(212, 175, 55, 0.5)',
-                      backgroundColor: 'rgba(212, 175, 55, 0.1)'
-                    }
-                  }}
-                >
-                  <ArrowBack fontSize="small" />
-                </IconButton>
-              </MotionBox>
-
-              {/* Branding elegante */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 0,
-                    border: '2px solid #D4AF37',
-                    background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <Restaurant sx={{ 
-                    color: '#D4AF37', 
-                    fontSize: 20
-                  }} />
-                </Box>
-                
-                <Box>
-                  <Typography 
-                    sx={{ 
-                      fontFamily: "'Inter', sans-serif",
-                      fontWeight: 700,
-                      color: '#F8F8F8',
-                      letterSpacing: '0.02em',
-                      fontSize: { xs: '1.25rem', sm: '1.5rem' },
-                      lineHeight: 1
-                    }}
-                  >
-                    Xs Reset
-                  </Typography>
-                  
-                  <Typography
-                    sx={{
-                      fontFamily: "'Inter', sans-serif",
-                      fontSize: '0.75rem',
-                      fontWeight: 500,
-                      color: '#B8B8B8',
-                      letterSpacing: '0.15em',
-                      textTransform: 'uppercase',
-                      opacity: 0.8,
-                      lineHeight: 1,
-                      mt: 0.5
-                    }}
-                  >
-                    Bar & Resto
-                  </Typography>
-                </Box>
-              </Box>
-            </MotionBox>
-
-            {/* Sección derecha */}
-            <MotionBox
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98], delay: 0.1 }}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2
-              }}
-            >
-              {/* Hora actual */}
-              <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
-                <AccessTime sx={{ fontSize: 16, color: '#B8B8B8' }} />
-                <Typography
-                  sx={{
-                    color: '#B8B8B8',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    fontFamily: "'Inter', sans-serif"
-                  }}
-                >
-                  {new Date().toLocaleTimeString('es-AR', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: false 
-                  })}
-                </Typography>
-              </Box>
-
-              {/* Estado abierto */}
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 2,
-                  py: 1,
-                  borderRadius: 0,
-                  border: '1px solid #D4AF37',
-                  backgroundColor: 'rgba(212, 175, 55, 0.1)'
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    backgroundColor: '#D4AF37',
-                    boxShadow: '0 0 8px rgba(212, 175, 55, 0.6)',
-                    animation: 'pulse 2s infinite'
-                  }}
-                />
-                <Typography
-                  sx={{
-                    color: '#D4AF37',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    fontFamily: "'Inter', sans-serif"
-                  }}
-                >
-                  Abierto
-                </Typography>
-              </Box>
-            </MotionBox>
-          </Box>
-        </Container>
-      </MotionBox>
-
-      {/* Botón flotante de filtros */}
-      <AnimatePresence>
-        {!headerVisible && (
-          <MotionFab
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setShowFilters(!showFilters)}
-            sx={{
-              position: 'fixed',
-              top: 20,
-              right: 20,
-              zIndex: 1100,
-              width: 56,
-              height: 56,
-              background: showFilters 
-                ? 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)'
-                : 'linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(16, 16, 16, 0.9) 100%)',
-              backdropFilter: 'blur(20px)',
-              border: `2px solid ${showFilters ? '#D4AF37' : 'rgba(212, 175, 55, 0.3)'}`,
-              borderRadius: 0,
-              boxShadow: showFilters 
-                ? '0 8px 32px rgba(212, 175, 55, 0.3)' 
-                : '0 8px 32px rgba(0, 0, 0, 0.4)',
-              '&:hover': {
-                background: showFilters 
-                  ? 'linear-gradient(135deg, #F4E4BC 0%, #D4AF37 100%)'
-                  : 'linear-gradient(135deg, rgba(26, 26, 26, 1) 0%, rgba(16, 16, 16, 1) 100%)',
-                boxShadow: showFilters 
-                  ? '0 12px 40px rgba(212, 175, 55, 0.4)' 
-                  : '0 12px 40px rgba(0, 0, 0, 0.5)',
-              }
-            }}
-          >
-            <MotionBox
-              animate={{ rotate: showFilters ? 180 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {showFilters ? (
-                <Close sx={{ color: showFilters ? '#0A0A0A' : '#D4AF37', fontSize: 24 }} />
-              ) : (
-                <FilterList sx={{ color: '#D4AF37', fontSize: 24 }} />
-              )}
-            </MotionBox>
-          </MotionFab>
-        )}
-      </AnimatePresence>
-
-      {/* Panel de filtros */}
-      <AnimatePresence>
-        {showFilters && !headerVisible && (
+      <ConnectionStatus />
+      
+      {/* Header del menú */}
+      <Box sx={{ 
+        background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
+        py: 6,
+        textAlign: 'center'
+      }}>
+        <Container>
           <MotionBox
-            initial={{ opacity: 0, scale: 0, x: 300, y: -50 }}
-            animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-            exit={{ opacity: 0, scale: 0, x: 300, y: -50 }}
-            transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
-            sx={{
-              position: 'fixed',
-              top: 90,
-              right: 20,
-              zIndex: 1050,
-              width: { xs: 'calc(100vw - 40px)', sm: 400 },
-              maxWidth: 400,
-              background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.98) 0%, rgba(16, 16, 16, 0.95) 100%)',
-              backdropFilter: 'blur(32px)',
-              border: '1px solid rgba(212, 175, 55, 0.3)',
-              borderRadius: 0,
-              p: 4,
-              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
-              transformOrigin: 'top right'
-            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            {/* Header del panel */}
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              mb: 4,
-              pb: 2,
-              borderBottom: '1px solid rgba(212, 175, 55, 0.2)'
-            }}>
-              <Typography 
-                sx={{ 
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 600,
-                  color: '#F8F8F8',
-                  fontSize: '1.25rem',
-                  letterSpacing: '0.02em'
-                }}
-              >
-                Filtrar Menú
-              </Typography>
-              
-              <Typography
-                sx={{
-                  color: '#D4AF37',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  px: 2,
-                  py: 0.75,
-                  backgroundColor: 'rgba(212, 175, 55, 0.15)',
-                  border: '1px solid rgba(212, 175, 55, 0.3)',
-                  borderRadius: 0,
-                  fontFamily: "'Inter', sans-serif"
-                }}
-              >
-                {filteredProducts.length} productos
-              </Typography>
-            </Box>
-            
-            {/* Chips de categorías */}
-            <Stack 
-              direction="row" 
-              spacing={1.5}
-              sx={{ 
-                flexWrap: 'wrap',
-                gap: 1.5,
-              }}
-            >
-              {categories.map((category, index) => (
-                <MotionBox
-                  key={category.name}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    delay: index * 0.05, 
-                    duration: 0.3
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Chip
-                    label={`${category.name} (${category.count})`}
-                    onClick={() => setSelectedCategory(category.name)}
-                    variant={selectedCategory === category.name ? 'filled' : 'outlined'}
-                    sx={{
-                      minHeight: 40,
-                      borderRadius: 0,
-                      fontWeight: selectedCategory === category.name ? 600 : 500,
-                      fontSize: '0.875rem',
-                      px: 2,
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      cursor: 'pointer',
-                      fontFamily: "'Inter', sans-serif",
-                      letterSpacing: '0.05em',
-                      textTransform: 'uppercase',
-                      backgroundColor: selectedCategory === category.name 
-                        ? '#D4AF37' 
-                        : 'rgba(255, 255, 255, 0.05)',
-                      color: selectedCategory === category.name 
-                        ? '#0A0A0A' 
-                        : '#B8B8B8',
-                      borderColor: selectedCategory === category.name 
-                        ? '#D4AF37' 
-                        : 'rgba(212, 175, 55, 0.3)',
-                      '&:hover': {
-                        backgroundColor: selectedCategory === category.name 
-                          ? '#F4E4BC' 
-                          : 'rgba(212, 175, 55, 0.1)',
-                        color: selectedCategory === category.name 
-                          ? '#0A0A0A' 
-                          : '#F8F8F8',
-                        borderColor: selectedCategory === category.name 
-                          ? '#F4E4BC' 
-                          : 'rgba(212, 175, 55, 0.5)',
-                      },
-                    }}
-                  />
-                </MotionBox>
-              ))}
-            </Stack>
-          </MotionBox>
-        )}
-      </AnimatePresence>
-
-      {/* Contenido principal con scroll habilitado */}
-      <MotionContainer 
-        maxWidth="lg" 
-        sx={{ 
-          pt: { xs: 20, sm: 24 },
-          pb: 10,
-          px: { xs: 3, sm: 4 },
-          position: 'relative',
-          zIndex: 1
-        }}
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Hero section elegante */}
-        <MotionBox
-          variants={headerVariants}
-          sx={{ textAlign: 'center', mb: { xs: 10, sm: 12 } }}
-        >
-          {/* Ornamento superior */}
-          <Box
-            sx={{
-              width: 80,
-              height: 1,
-              background: 'linear-gradient(90deg, transparent 0%, #D4AF37 50%, transparent 100%)',
-              mx: 'auto',
-              mb: 4
-            }}
-          />
-
-          <Typography 
-            sx={{ 
-              fontFamily: "'Inter', sans-serif",
-              fontSize: { xs: '2.5rem', sm: '3.5rem' },
+            <Typography variant="h2" component="h1" gutterBottom sx={{ 
               fontWeight: 700,
-              letterSpacing: '0.02em',
-              lineHeight: 0.9,
-              color: '#F8F8F8',
-              mb: 2
-            }}
-          >
-            Xs Reset
-          </Typography>
-          
-          <Typography 
-            sx={{ 
-              fontFamily: "'Inter', sans-serif",
-              fontSize: { xs: '0.875rem', sm: '1rem' },
-              fontWeight: 500,
-              color: '#D4AF37',
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-              mb: 4,
-              opacity: 0.9
-            }}
-          >
-            Bar & Resto Experience
-          </Typography>
-          
-          <Typography 
-            sx={{ 
-              fontFamily: "'Inter', sans-serif",
-              color: '#B8B8B8',
-              fontSize: { xs: '1rem', sm: '1.125rem' },
-              fontWeight: 400,
-              maxWidth: 500,
-              mx: 'auto',
-              lineHeight: 1.6,
-              mb: 4,
-              fontStyle: 'italic'
-            }}
-          >
-            {menuDescription}
-          </Typography>
-
-          {/* Ornamento inferior */}
-          <Box
-            sx={{
-              width: 120,
-              height: 1,
-              background: 'linear-gradient(90deg, transparent 0%, #D4AF37 50%, transparent 100%)',
-              mx: 'auto',
-              position: 'relative',
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                top: -2,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: '#D4AF37',
-                boxShadow: '0 0 12px rgba(212, 175, 55, 0.5)'
-              }
-            }}
-          />
-        </MotionBox>
-
-        {/* Sistema de filtros cuando el header está visible */}
-        <AnimatePresence>
-          {showFilters && headerVisible && (
-            <MotionBox
-              initial={{ opacity: 0, height: 0, y: -20 }}
-              animate={{ opacity: 1, height: 'auto', y: 0 }}
-              exit={{ opacity: 0, height: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
-              sx={{ mb: { xs: 6, sm: 8 } }}
-            >
-              <Box
-                sx={{ 
-                  p: { xs: 3, sm: 4 }, 
-                  borderRadius: 0,
-                  backgroundColor: 'rgba(26, 26, 26, 0.6)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(212, 175, 55, 0.2)',
-                }}
-              >
-                <Box sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  mb: 3
-                }}>
-                  <Typography 
-                    sx={{ 
-                      fontFamily: "'Inter', sans-serif",
-                      fontWeight: 600,
-                      color: '#F8F8F8',
-                      fontSize: { xs: '1.125rem', sm: '1.25rem' },
-                      letterSpacing: '0.02em'
-                    }}
-                  >
-                    Filtrar Menú
-                  </Typography>
-                  
-                  <Typography
-                    sx={{
-                      color: '#D4AF37',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      px: 2,
-                      py: 0.75,
-                      backgroundColor: 'rgba(212, 175, 55, 0.15)',
-                      border: '1px solid rgba(212, 175, 55, 0.3)',
-                      borderRadius: 0,
-                      fontFamily: "'Inter', sans-serif"
-                    }}
-                  >
-                    {filteredProducts.length}
-                  </Typography>
-                </Box>
-                
-                <Stack 
-                  direction="row" 
-                  spacing={1.5}
-                  sx={{ 
-                    flexWrap: 'wrap',
-                    gap: 1.5,
-                  }}
-                >
-                  {categories.map((category, index) => (
-                    <MotionBox
-                      key={category.name}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ 
-                        delay: index * 0.03, 
-                        duration: 0.2
-                      }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Chip
-                        label={`${category.name} (${category.count})`}
-                        onClick={() => setSelectedCategory(category.name)}
-                        variant={selectedCategory === category.name ? 'filled' : 'outlined'}
-                        sx={{
-                          minHeight: 36,
-                          borderRadius: 0,
-                          fontWeight: selectedCategory === category.name ? 600 : 500,
-                          fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                          px: 2,
-                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                          cursor: 'pointer',
-                          fontFamily: "'Inter', sans-serif",
-                          letterSpacing: '0.05em',
-                          textTransform: 'uppercase',
-                          backgroundColor: selectedCategory === category.name 
-                            ? '#D4AF37' 
-                            : 'rgba(255, 255, 255, 0.03)',
-                          color: selectedCategory === category.name 
-                            ? '#0A0A0A' 
-                            : '#B8B8B8',
-                          borderColor: selectedCategory === category.name 
-                            ? '#D4AF37' 
-                            : 'rgba(212, 175, 55, 0.3)',
-                          '&:hover': {
-                            backgroundColor: selectedCategory === category.name 
-                              ? '#F4E4BC' 
-                              : 'rgba(212, 175, 55, 0.1)',
-                            color: selectedCategory === category.name 
-                              ? '#0A0A0A' 
-                              : '#F8F8F8',
-                            borderColor: selectedCategory === category.name 
-                              ? '#F4E4BC' 
-                              : 'rgba(212, 175, 55, 0.5)',
-                          },
-                        }}
-                      />
-                    </MotionBox>
-                  ))}
-                </Stack>
-              </Box>
-            </MotionBox>
-          )}
-        </AnimatePresence>
-
-        {/* Indicador de filtro activo */}
-        {selectedCategory !== 'Todas' && (
-          <MotionBox
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            sx={{ 
-              mb: 6,
-              textAlign: 'center'
-            }}
-          >
-            <Box
-              sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 1.5,
-                px: 3,
-                py: 1.5,
-                backgroundColor: 'rgba(212, 175, 55, 0.15)',
-                border: '1px solid rgba(212, 175, 55, 0.3)',
-                borderRadius: 0
-              }}
-            >
-              <Typography 
-                sx={{ 
-                  color: '#D4AF37',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  fontFamily: "'Inter', sans-serif",
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase'
-                }}
-              >
-                {selectedCategory}
-              </Typography>
-              <MotionBox
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <IconButton
-                  size="small"
-                  onClick={() => setSelectedCategory('Todas')}
-                  sx={{
-                    color: '#D4AF37',
-                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
-                    width: 20,
-                    height: 20,
-                    borderRadius: 0,
-                    '&:hover': {
-                      backgroundColor: 'rgba(212, 175, 55, 0.2)'
-                    }
-                  }}
-                >
-                  <Close sx={{ fontSize: 12 }} />
-                </IconButton>
-              </MotionBox>
-            </Box>
-          </MotionBox>
-        )}
-
-        {/* Secciones del menú */}
-        <AnimatePresence mode="wait">
-          <Stack spacing={{ xs: 6, sm: 8 }}>
-            {Object.entries(groupedProducts).map(([category, categoryProducts], index) => (
-              <MenuSection
-                key={`${category}-${selectedCategory}`}
-                title={category}
-                products={categoryProducts}
-                index={index}
-              />
-            ))}
-          </Stack>
-        </AnimatePresence>
-
-        {/* Footer elegante */}
-        <MotionBox
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          sx={{ 
-            mt: 16,
-            pt: 8,
-            textAlign: 'center'
-          }}
-        >
-          <Box
-            sx={{
-              p: { xs: 4, sm: 6 },
-              borderRadius: 0,
-              background: 'rgba(26, 26, 26, 0.4)',
-              backdropFilter: 'blur(24px)',
-              border: '1px solid rgba(212, 175, 55, 0.2)',
-            }}
-          >
-            <Typography 
-              sx={{ 
-                fontFamily: "'Inter', sans-serif",
-                color: '#F8F8F8',
-                fontSize: '1.25rem',
-                fontWeight: 600,
-                mb: 1,
-                letterSpacing: '0.02em'
-              }}
-            >
-              Xs Reset
+              color: '#0A0A0A',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
+            }}>
+              {menu.name}
             </Typography>
-            <Typography 
-              sx={{ 
-                fontFamily: "'Inter', sans-serif",
-                color: '#B8B8B8',
-                fontSize: '0.875rem',
-                fontWeight: 400,
-                mb: 3,
-                lineHeight: 1.6,
-                opacity: 0.8
-              }}
-            >
-              Experiencia Digital Premium • Precios sujetos a cambios sin previo aviso
+            <Typography variant="h6" sx={{ 
+              color: '#2C2C2E',
+              maxWidth: 600,
+              mx: 'auto',
+              fontWeight: 400
+            }}>
+              {menu.description}
             </Typography>
             
-            <Box
-              sx={{
-                width: 60,
-                height: 1,
-                background: 'linear-gradient(90deg, transparent 0%, #D4AF37 50%, transparent 100%)',
-                mx: 'auto'
+            {menu.restaurantInfo && (
+              <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 3, flexWrap: 'wrap' }}>
+                {menu.restaurantInfo.address && (
+                  <Typography variant="body2" sx={{ color: '#2C2C2E' }}>
+                    📍 {menu.restaurantInfo.address}
+                  </Typography>
+                )}
+                {menu.restaurantInfo.phone && (
+                  <Typography variant="body2" sx={{ color: '#2C2C2E' }}>
+                    📞 {menu.restaurantInfo.phone}
+                  </Typography>
+                )}
+                {menu.restaurantInfo.hours && (
+                  <Typography variant="body2" sx={{ color: '#2C2C2E' }}>
+                    🕒 {menu.restaurantInfo.hours}
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </MotionBox>
+        </Container>
+      </Box>
+
+      <Container sx={{ py: 4 }}>
+        {/* Barra de búsqueda y filtros */}
+        <MotionBox
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          sx={{ mb: 4 }}
+        >
+          <Box display="flex" gap={2} mb={2} alignItems="center">
+            <TextField
+              fullWidth
+              placeholder="Buscar productos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search sx={{ color: '#D4AF37' }} />
+                  </InputAdornment>
+                ),
+                sx: {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: 2,
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(212, 175, 55, 0.3)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(212, 175, 55, 0.5)',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#D4AF37',
+                  },
+                  color: 'white'
+                }
               }}
             />
+            <IconButton
+              onClick={() => setShowFilters(!showFilters)}
+              sx={{ 
+                color: '#D4AF37',
+                backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                '&:hover': {
+                  backgroundColor: 'rgba(212, 175, 55, 0.2)',
+                }
+              }}
+            >
+              {showFilters ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
           </Box>
+
+          <Collapse in={showFilters}>
+            <Box sx={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: 2,
+              p: 2,
+              mb: 2
+            }}>
+              <Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
+                <Chip
+                  label="Solo disponibles"
+                  onClick={() => setShowOnlyAvailable(!showOnlyAvailable)}
+                  color={showOnlyAvailable ? 'primary' : 'default'}
+                  variant={showOnlyAvailable ? 'filled' : 'outlined'}
+                  icon={<Restaurant />}
+                />
+              </Box>
+            </Box>
+          </Collapse>
         </MotionBox>
-      </MotionContainer>
+
+        {/* Tabs de categorías */}
+        {availableCategories.length > 1 && (
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            sx={{ mb: 4 }}
+          >
+            <Tabs
+              value={selectedCategory}
+              onChange={(e, newValue) => setSelectedCategory(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                '& .MuiTab-root': {
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontWeight: 500,
+                  '&.Mui-selected': {
+                    color: '#D4AF37',
+                  }
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: '#D4AF37',
+                }
+              }}
+            >
+              <Tab 
+                label="Todos" 
+                value="all" 
+                icon="🍽️"
+                iconPosition="start"
+              />
+              {availableCategories.map((category) => {
+                const categoryInfo = getCategoryInfo(category);
+                const count = products.filter(p => p.category === category && (!showOnlyAvailable || p.isAvailable)).length;
+                return (
+                  <Tab
+                    key={category}
+                    label={`${categoryInfo.name} (${count})`}
+                    value={category}
+                    icon={categoryInfo.icon}
+                    iconPosition="start"
+                  />
+                );
+              })}
+            </Tabs>
+          </MotionBox>
+        )}
+
+        {/* Productos */}
+        {filteredProducts.length === 0 ? (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            sx={{ textAlign: 'center', py: 8 }}
+          >
+            <NoMeals sx={{ fontSize: 64, color: 'rgba(255, 255, 255, 0.3)', mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              No se encontraron productos
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {searchTerm 
+                ? `No hay productos que coincidan con "${searchTerm}"`
+                : 'No hay productos disponibles en esta categoría'
+              }
+            </Typography>
+          </MotionBox>
+        ) : selectedCategory === 'all' ? (
+          // Mostrar por categorías cuando está en "Todos"
+          <Box>
+            {Object.entries(productsByCategory).map(([category, categoryProducts], index) => {
+              const categoryInfo = getCategoryInfo(category);
+              return (
+                <MotionBox
+                  key={category}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  sx={{ mb: 6 }}
+                >
+                  <Box display="flex" alignItems="center" gap={2} mb={3}>
+                    <Typography variant="h4">
+                      {categoryInfo.icon}
+                    </Typography>
+                    <Box>
+                      <Typography variant="h5" sx={{ color: '#D4AF37', fontWeight: 600 }}>
+                        {categoryInfo.name}
+                      </Typography>
+                      {categoryInfo.description && (
+                        <Typography variant="body2" color="text.secondary">
+                          {categoryInfo.description}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                  
+                  <Box display="grid" gridTemplateColumns={{
+                    xs: '1fr',
+                    sm: 'repeat(2, 1fr)',
+                    lg: 'repeat(3, 1fr)'
+                  }} gap={3}>
+                    <AnimatePresence>
+                      {categoryProducts.map((product, productIndex) => (
+                        <motion.div
+                          key={product.id}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          transition={{ duration: 0.3, delay: productIndex * 0.05 }}
+                        >
+                          <ProductCard product={product} />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </Box>
+                </MotionBox>
+              );
+            })}
+          </Box>
+        ) : (
+          // Mostrar solo la categoría seleccionada
+          <Box display="grid" gridTemplateColumns={{
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            lg: 'repeat(3, 1fr)'
+          }} gap={3}>
+            <AnimatePresence>
+              {filteredProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                >
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </Box>
+        )}
+
+        {/* Indicador de tiempo real */}
+        {connected && (
+          <Fab
+            size="small"
+            sx={{
+              position: 'fixed',
+              bottom: 16,
+              right: 16,
+              backgroundColor: 'rgba(76, 175, 80, 0.9)',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(76, 175, 80, 1)',
+              }
+            }}
+          >
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                backgroundColor: 'white',
+                animation: 'pulse 2s infinite'
+              }}
+            />
+          </Fab>
+        )}
+      </Container>
 
       {/* Estilos para animaciones */}
       <style jsx global>{`
@@ -870,6 +480,4 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
       `}</style>
     </Box>
   );
-};
-
-export default MenuViewer;
+}

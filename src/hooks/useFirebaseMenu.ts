@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { FirebaseDatabase } from '../lib/firebase-database';
-import { Menu, Product } from '../app/types';
+import { Menu, Product, ProductFilters, MenuFilters } from '../app/types';
 
 export interface UseFirebaseMenuReturn {
   menus: Menu[];
@@ -17,22 +17,31 @@ export interface UseFirebaseMenuReturn {
   createProduct: (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
   updateProduct: (id: string, productData: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
-  initializeDatabase: (data: { menus: Menu[], products: Product[] }) => Promise<void>;
+  initializeDatabase: (data: { 
+    menus: Omit<Menu, 'id' | 'createdAt' | 'updatedAt'>[], 
+    products: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
+  }) => Promise<void>;
   exportData: () => Promise<{ menus: Menu[], products: Product[] }>;
+  setProductFilters: (filters: ProductFilters) => void;
+  setMenuFilters: (filters: MenuFilters) => void;
 }
 
-export function useFirebaseMenu(menuId?: string, realtime: boolean = true): UseFirebaseMenuReturn {
+export function useFirebaseMenu(
+  initialProductFilters?: ProductFilters, 
+  initialMenuFilters?: MenuFilters,
+  realtime: boolean = true
+): UseFirebaseMenuReturn {
   const [menus, setMenus] = useState<Menu[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
+  const [productFilters, setProductFilters] = useState<ProductFilters>(initialProductFilters || {});
+  const [menuFilters, setMenuFilters] = useState<MenuFilters>(initialMenuFilters || {});
 
-  // Refs to store unsubscribe functions
   const unsubscribeMenus = useRef<(() => void) | null>(null);
   const unsubscribeProducts = useRef<(() => void) | null>(null);
 
-  // Error handler
   const handleError = useCallback((err: unknown) => {
     const errorMessage = err instanceof Error ? err.message : 'An error occurred';
     setError(errorMessage);
@@ -40,9 +49,9 @@ export function useFirebaseMenu(menuId?: string, realtime: boolean = true): UseF
     console.error('Firebase error:', err);
   }, []);
 
-  // Setup realtime listeners
   const setupRealtimeListeners = useCallback(() => {
     if (!realtime) return;
+
     try {
       // Subscribe to menus
       unsubscribeMenus.current = FirebaseDatabase.subscribeToMenus(
@@ -52,6 +61,7 @@ export function useFirebaseMenu(menuId?: string, realtime: boolean = true): UseF
       setError(null);
           if (loading) setLoading(false);
         },
+        menuFilters,
         handleError
       );
 
@@ -63,16 +73,16 @@ export function useFirebaseMenu(menuId?: string, realtime: boolean = true): UseF
       setError(null);
           if (loading) setLoading(false);
         },
-        menuId,
+        productFilters,
         handleError
       );
+
     } catch (err) {
       handleError(err);
       setLoading(false);
     }
-  }, [realtime, menuId, loading, handleError]);
+  }, [realtime, productFilters, menuFilters, loading, handleError]);
 
-  // Cleanup listeners
   const cleanupListeners = useCallback(() => {
     if (unsubscribeMenus.current) {
       unsubscribeMenus.current();
@@ -84,16 +94,15 @@ export function useFirebaseMenu(menuId?: string, realtime: boolean = true): UseF
     }
   }, []);
 
-  // Refresh data manually (for non-realtime mode)
   const refreshData = useCallback(async () => {
-    if (realtime) return; // Don't refresh if using realtime
+    if (realtime) return;
     try {
       setLoading(true);
       setError(null);
       
       const [menusData, productsData] = await Promise.all([
-        FirebaseDatabase.getMenus(),
-        FirebaseDatabase.getProducts(menuId)
+        FirebaseDatabase.getMenus(menuFilters),
+        FirebaseDatabase.getProducts(productFilters)
       ]);
       
       setMenus(menusData);
@@ -104,19 +113,18 @@ export function useFirebaseMenu(menuId?: string, realtime: boolean = true): UseF
     } finally {
       setLoading(false);
     }
-  }, [realtime, menuId, handleError]);
+  }, [realtime, productFilters, menuFilters, handleError]);
 
-  // Setup effect
   useEffect(() => {
+    cleanupListeners();
     if (realtime) {
       setupRealtimeListeners();
     } else {
       refreshData();
     }
 
-    // Cleanup on unmount or dependency change
     return cleanupListeners;
-  }, [realtime, setupRealtimeListeners, refreshData, cleanupListeners]);
+  }, [realtime, productFilters, menuFilters, setupRealtimeListeners, refreshData, cleanupListeners]);
 
   // CRUD operations
   const createMenu = useCallback(async (menuData: Omit<Menu, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -187,7 +195,10 @@ export function useFirebaseMenu(menuId?: string, realtime: boolean = true): UseF
     }
   }, [realtime, refreshData, handleError]);
 
-  const initializeDatabase = useCallback(async (data: { menus: Menu[], products: Product[] }) => {
+  const initializeDatabase = useCallback(async (data: { 
+    menus: Omit<Menu, 'id' | 'createdAt' | 'updatedAt'>[], 
+    products: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
+  }) => {
     try {
       setError(null);
       setLoading(true);
@@ -202,12 +213,14 @@ export function useFirebaseMenu(menuId?: string, realtime: boolean = true): UseF
   const exportData = useCallback(async () => {
     try {
       setError(null);
-      return await FirebaseDatabase.exportData();
+      const data = await FirebaseDatabase.exportData();
+      return { menus: data.menus, products: data.products };
     } catch (err) {
       handleError(err);
       throw err;
     }
   }, [handleError]);
+
   return {
     menus,
     products,
@@ -222,7 +235,9 @@ export function useFirebaseMenu(menuId?: string, realtime: boolean = true): UseF
     updateProduct,
     deleteProduct,
     initializeDatabase,
-    exportData
+    exportData,
+    setProductFilters,
+    setMenuFilters
   };
 }
 
@@ -267,7 +282,7 @@ export function useFirebaseMenuById(menuId: string) {
         setError(null);
         if (loading) setLoading(false);
       },
-      menuId,
+      { menuId },
       handleError
     );
 
