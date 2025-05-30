@@ -4,7 +4,8 @@ import {
   onAuthStateChanged, 
   User,
   createUserWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth } from './firebase';
 
@@ -15,176 +16,93 @@ export interface AuthUser {
   isAdmin: boolean;
 }
 
-class FirebaseAuthService {
-  private currentUser: AuthUser | null = null;
-  private authStateListeners: ((user: AuthUser | null) => void)[] = [];
+export class FirebaseAuth {
+  // Admin email for role checking
+  private static ADMIN_EMAIL = 'admin@menuqr.com';
 
-  constructor() {
-    // Escuchar cambios en el estado de autenticación
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        this.currentUser = {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          isAdmin: this.checkAdminStatus(user)
-        };
-      } else {
-        this.currentUser = null;
+  static async signInWithPassword(email: string, password: string): Promise<AuthUser> {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return this.mapUserToAuthUser(userCredential.user);
+    } catch (error: any) {
+      console.error('Error signing in:', error);
+      throw new Error(this.getAuthErrorMessage(error.code));
+    }
+  }
+      
+  static async createAccount(email: string, password: string, displayName?: string): Promise<AuthUser> {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      if (displayName) {
+        await updateProfile(userCredential.user, { displayName });
       }
       
-      // Notificar a todos los listeners
-      this.authStateListeners.forEach(listener => listener(this.currentUser));
+      return this.mapUserToAuthUser(userCredential.user);
+    } catch (error: any) {
+      console.error('Error creating account:', error);
+      throw new Error(this.getAuthErrorMessage(error.code));
+    }
+  }
+
+  static async signOut(): Promise<void> {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out:', error);
+      throw new Error('Failed to sign out');
+    }
+  }
+
+  static async resetPassword(email: string): Promise<void> {
+        try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      console.error('Error sending password reset:', error);
+      throw new Error(this.getAuthErrorMessage(error.code));
+        }
+      }
+
+  static onAuthStateChange(callback: (user: AuthUser | null) => void): () => void {
+    return onAuthStateChanged(auth, (user) => {
+      if (user) {
+        callback(this.mapUserToAuthUser(user));
+      } else {
+        callback(null);
+    }
     });
   }
 
-  private checkAdminStatus(user: User): boolean {
-    // Por ahora, consideramos admin a cualquier usuario autenticado
-    // En el futuro se puede implementar roles más complejos
-    return true;
+  static getCurrentUser(): AuthUser | null {
+    const user = auth.currentUser;
+    return user ? this.mapUserToAuthUser(user) : null;
   }
 
-  async signInWithPassword(email: string, password: string): Promise<AuthUser> {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      const authUser: AuthUser = {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        isAdmin: this.checkAdminStatus(user)
-      };
-      
-      this.currentUser = authUser;
-      return authUser;
-    } catch (error) {
-      console.error('Error en inicio de sesión:', error);
-      throw new Error('Credenciales incorrectas');
-    }
-  }
-
-  async signInWithAdminPassword(password: string): Promise<AuthUser> {
-    // Para compatibilidad con el sistema actual de contraseña simple
-    if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD || password === 'admin123') {
-      // Crear un usuario temporal para el admin
-      const adminUser: AuthUser = {
-        uid: 'admin-temp',
-        email: 'admin@menuqr.com',
-        displayName: 'Administrador',
-        isAdmin: true
-      };
-      
-      this.currentUser = adminUser;
-      
-      // Simular persistencia en localStorage para compatibilidad
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('menuqr-admin-auth', JSON.stringify(adminUser));
-      }
-      
-      return adminUser;
-    } else {
-      throw new Error('Contraseña de administrador incorrecta');
-    }
-  }
-
-  async createAdminUser(email: string, password: string, displayName: string): Promise<AuthUser> {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      // Actualizar perfil con nombre
-      await updateProfile(user, { displayName });
-      
-      const authUser: AuthUser = {
-        uid: user.uid,
-        email: user.email,
-        displayName: displayName,
-        isAdmin: true
-      };
-      
-      this.currentUser = authUser;
-      return authUser;
-    } catch (error) {
-      console.error('Error creando usuario admin:', error);
-      throw new Error('Error al crear usuario administrador');
-    }
-  }
-
-  async signOut(): Promise<void> {
-    try {
-      await signOut(auth);
-      this.currentUser = null;
-      
-      // Limpiar localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('menuqr-admin-auth');
-      }
-    } catch (error) {
-      console.error('Error cerrando sesión:', error);
-      throw new Error('Error al cerrar sesión');
-    }
-  }
-
-  getCurrentUser(): AuthUser | null {
-    // Verificar localStorage para compatibilidad
-    if (!this.currentUser && typeof window !== 'undefined') {
-      const stored = localStorage.getItem('menuqr-admin-auth');
-      if (stored) {
-        try {
-          this.currentUser = JSON.parse(stored);
-        } catch (error) {
-          console.error('Error parsing stored auth:', error);
-          localStorage.removeItem('menuqr-admin-auth');
-        }
-      }
-    }
-    
-    return this.currentUser;
-  }
-
-  isAuthenticated(): boolean {
-    return this.getCurrentUser() !== null;
-  }
-
-  isAdmin(): boolean {
-    const user = this.getCurrentUser();
-    return user?.isAdmin || false;
-  }
-
-  onAuthStateChange(callback: (user: AuthUser | null) => void): () => void {
-    this.authStateListeners.push(callback);
-    
-    // Llamar inmediatamente con el estado actual
-    callback(this.getCurrentUser());
-    
-    // Retornar función para desuscribirse
-    return () => {
-      const index = this.authStateListeners.indexOf(callback);
-      if (index > -1) {
-        this.authStateListeners.splice(index, 1);
-      }
+  private static mapUserToAuthUser(user: User): AuthUser {
+    return {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      isAdmin: user.email === this.ADMIN_EMAIL
     };
   }
 
-  // Método para verificar si el usuario tiene permisos específicos
-  hasPermission(permission: string): boolean {
-    const user = this.getCurrentUser();
-    if (!user || !user.isAdmin) return false;
-    
-    // Por ahora, todos los admins tienen todos los permisos
-    // En el futuro se puede implementar un sistema más granular
-    return true;
-  }
-
-  // Método para refrescar el token (útil para sesiones largas)
-  async refreshAuth(): Promise<void> {
-    if (auth.currentUser) {
-      await auth.currentUser.getIdToken(true);
+  private static getAuthErrorMessage(errorCode: string): string {
+    switch (errorCode) {
+      case 'auth/user-not-found':
+        return 'No user found with this email address';
+      case 'auth/wrong-password':
+        return 'Incorrect password';
+      case 'auth/email-already-in-use':
+        return 'An account with this email already exists';
+      case 'auth/weak-password':
+        return 'Password should be at least 6 characters';
+      case 'auth/invalid-email':
+        return 'Invalid email address';
+      case 'auth/too-many-requests':
+        return 'Too many failed attempts. Please try again later';
+      default:
+        return 'Authentication failed. Please try again';
     }
   }
 }
-
-// Instancia singleton
-export const firebaseAuth = new FirebaseAuthService();
-export default firebaseAuth;

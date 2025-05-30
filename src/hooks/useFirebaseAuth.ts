@@ -1,17 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { firebaseAuth, AuthUser } from '../lib/firebase-auth';
+import { FirebaseAuth, AuthUser } from '../lib/firebase-auth';
 
-interface UseFirebaseAuthReturn {
+export interface UseFirebaseAuthReturn {
   user: AuthUser | null;
   loading: boolean;
   error: string | null;
-  isAuthenticated: boolean;
-  isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signInWithAdminPassword: (password: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -21,8 +20,7 @@ export function useFirebaseAuth(): UseFirebaseAuthReturn {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Suscribirse a cambios de autenticación
-    const unsubscribe = firebaseAuth.onAuthStateChange((authUser) => {
+    const unsubscribe = FirebaseAuth.onAuthStateChange((authUser) => {
       setUser(authUser);
       setLoading(false);
     });
@@ -31,45 +29,48 @@ export function useFirebaseAuth(): UseFirebaseAuthReturn {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    setLoading(true);
-    setError(null);
-    
     try {
-      await firebaseAuth.signInWithPassword(email, password);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error de autenticación';
-      setError(errorMessage);
+      setLoading(true);
+    setError(null);
+      await FirebaseAuth.signInWithPassword(email, password);
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const signInWithAdminPassword = async (password: string) => {
-    setLoading(true);
-    setError(null);
-    
+  const signUp = async (email: string, password: string, displayName?: string) => {
     try {
-      await firebaseAuth.signInWithAdminPassword(password);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Contraseña incorrecta';
-      setError(errorMessage);
+      setLoading(true);
+    setError(null);
+      await FirebaseAuth.createAccount(email, password, displayName);
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const signOut = async () => {
-    setLoading(true);
-    setError(null);
-    
     try {
-      await firebaseAuth.signOut();
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al cerrar sesión';
-      setError(errorMessage);
+      setLoading(true);
+      setError(null);
+      await FirebaseAuth.signOut();
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      setError(null);
+      await FirebaseAuth.resetPassword(email);
+    } catch (err: any) {
+      setError(err.message);
+}
   };
 
   const clearError = () => {
@@ -80,11 +81,10 @@ export function useFirebaseAuth(): UseFirebaseAuthReturn {
     user,
     loading,
     error,
-    isAuthenticated: firebaseAuth.isAuthenticated(),
-    isAdmin: firebaseAuth.isAdmin(),
     signIn,
-    signInWithAdminPassword,
+    signUp,
     signOut,
+    resetPassword,
     clearError
   };
 }
@@ -108,7 +108,7 @@ export function usePermissions() {
   const { user, isAdmin } = useFirebaseAuth();
 
   const hasPermission = (permission: string): boolean => {
-    return firebaseAuth.hasPermission(permission);
+    return FirebaseAuth.hasPermission(permission);
   };
 
   const canManageProducts = (): boolean => {

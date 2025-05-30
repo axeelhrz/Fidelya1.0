@@ -1,184 +1,155 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { MenuData, Menu, Product } from '../app/types';
-import { firebaseDB } from '../lib/firebase-database';
+import { useState, useEffect } from 'react';
+import { FirebaseDatabase } from '../lib/firebase-database';
+import { Menu, Product } from '../app/types';
 
-interface UseFirebaseMenuReturn {
-  menuData: MenuData | null;
+export interface UseFirebaseMenuReturn {
+  menus: Menu[];
+  products: Product[];
   loading: boolean;
   error: string | null;
-  refreshMenu: () => Promise<void>;
+  refreshData: () => Promise<void>;
+  createMenu: (menuData: Omit<Menu, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
+  updateMenu: (id: string, menuData: Partial<Menu>) => Promise<void>;
+  deleteMenu: (id: string) => Promise<void>;
+  createProduct: (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
+  updateProduct: (id: string, productData: Partial<Product>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  initializeDatabase: (data: { menus: Menu[], products: Product[] }) => Promise<void>;
+  exportData: () => Promise<{ menus: Menu[], products: Product[] }>;
 }
 
-export function useFirebaseMenu(menuId: string): UseFirebaseMenuReturn {
-  const [menuData, setMenuData] = useState<MenuData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchMenu = useCallback(async () => {
-    if (!menuId) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const menu = await firebaseDB.getMenuWithProducts(menuId);
-      setMenuData(menu);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al cargar el menú';
-      setError(errorMessage);
-      console.error('Error fetching menu:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [menuId]);
-
-  const refreshMenu = async () => {
-    await fetchMenu();
-  };
-
-  useEffect(() => {
-    fetchMenu();
-  }, [fetchMenu]);
-
-  return {
-    menuData,
-    loading,
-    error,
-    refreshMenu
-  };
-}
-
-// Hook para menús en tiempo real
-export function useRealtimeMenu(menuId: string) {
-  const [menuData, setMenuData] = useState<MenuData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!menuId) return;
-
-    setLoading(true);
-    
-    const unsubscribe = firebaseDB.realtime.subscribeToMenu(menuId, (menu) => {
-      setMenuData(menu);
-      setLoading(false);
-      setError(null);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [menuId]);
-
-  return { menuData, loading, error };
-}
-
-// Hook para lista de menús
-export function useFirebaseMenus() {
+export function useFirebaseMenu(): UseFirebaseMenuReturn {
   const [menus, setMenus] = useState<Menu[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMenus = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
+  const refreshData = async () => {
     try {
-      const menusData = await firebaseDB.getMenus();
+    setLoading(true);
+      setError(null);
+      const [menusData, productsData] = await Promise.all([
+        FirebaseDatabase.getMenus(),
+        FirebaseDatabase.getProducts()
+      ]);
       setMenus(menusData);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al cargar los menús';
-      setError(errorMessage);
-      console.error('Error fetching menus:', err);
+      setProducts(productsData);
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
+    };
+
+  useEffect(() => {
+    refreshData();
   }, []);
 
-  const createMenu = async (menuData: Omit<Menu, 'id'>) => {
+  const createMenu = async (menuData: Omit<Menu, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const newMenu = await firebaseDB.createMenu(menuData);
-      setMenus(prev => [newMenu, ...prev]);
-      return newMenu;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al crear el menú';
-      setError(errorMessage);
+      setError(null);
+      const id = await FirebaseDatabase.createMenu(menuData);
+      await refreshData();
+      return id;
+    } catch (err: any) {
+      setError(err.message);
       throw err;
-    }
+}
   };
 
   const updateMenu = async (id: string, menuData: Partial<Menu>) => {
     try {
-      const updatedMenu = await firebaseDB.updateMenu(id, menuData);
-      setMenus(prev => prev.map(m => m.id === id ? updatedMenu : m));
-      return updatedMenu;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el menú';
-      setError(errorMessage);
+      setError(null);
+      await FirebaseDatabase.updateMenu(id, menuData);
+      await refreshData();
+    } catch (err: any) {
+      setError(err.message);
       throw err;
     }
   };
 
   const deleteMenu = async (id: string) => {
     try {
-      await firebaseDB.deleteMenu(id);
-      setMenus(prev => prev.filter(m => m.id !== id));
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al eliminar el menú';
-      setError(errorMessage);
+      setError(null);
+      await FirebaseDatabase.deleteMenu(id);
+      await refreshData();
+    } catch (err: any) {
+      setError(err.message);
       throw err;
     }
   };
 
-  const duplicateMenu = async (menuId: string, newName: string) => {
+  const createProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const duplicatedMenu = await firebaseDB.duplicateMenu(menuId, newName);
-      setMenus(prev => [duplicatedMenu, ...prev]);
-      return duplicatedMenu;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al duplicar el menú';
-      setError(errorMessage);
+      setError(null);
+      const id = await FirebaseDatabase.createProduct(productData);
+      await refreshData();
+      return id;
+    } catch (err: any) {
+      setError(err.message);
       throw err;
     }
   };
 
-  useEffect(() => {
-    fetchMenus();
-  }, [fetchMenus]);
+  const updateProduct = async (id: string, productData: Partial<Product>) => {
+    try {
+      setError(null);
+      await FirebaseDatabase.updateProduct(id, productData);
+      await refreshData();
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const deleteProduct = async (id: string) => {
+    try {
+      setError(null);
+      await FirebaseDatabase.deleteProduct(id);
+      await refreshData();
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const initializeDatabase = async (data: { menus: Menu[], products: Product[] }) => {
+    try {
+      setError(null);
+      setLoading(true);
+      await FirebaseDatabase.initializeDatabase(data);
+      await refreshData();
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const exportData = async () => {
+    try {
+      setError(null);
+      return await FirebaseDatabase.exportData();
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
 
   return {
     menus,
+    products,
     loading,
     error,
+    refreshData,
     createMenu,
     updateMenu,
     deleteMenu,
-    duplicateMenu,
-    refreshMenus: fetchMenus
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    initializeDatabase,
+    exportData
   };
-}
-
-// Hook para menús en tiempo real
-export function useRealtimeMenus() {
-  const [menus, setMenus] = useState<Menu[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    
-    const unsubscribe = firebaseDB.realtime.subscribeToMenus((menusData) => {
-      setMenus(menusData);
-      setLoading(false);
-      setError(null);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  return { menus, loading, error };
 }
