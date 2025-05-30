@@ -38,20 +38,13 @@ export const storage = getStorage(app);
 // Variables para controlar la conexión de emuladores
 let emulatorsConnected = false;
 
-// Configurar emuladores en desarrollo
-if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !emulatorsConnected) {
+// Configurar emuladores en desarrollo (DESHABILITADO para producción)
+if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !emulatorsConnected && false) {
   try {
     // Solo conectar emuladores si no están ya conectados
     connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-    
-    if (!((db as unknown as { _delegate: { _databaseId: { projectId: string } } })._delegate._databaseId.projectId.includes('demo-'))) {
       connectFirestoreEmulator(db, 'localhost', 8080);
-    }
-    
-    if (!storage.app.options.storageBucket?.includes('demo-')) {
       connectStorageEmulator(storage, 'localhost', 9199);
-    }
-    
     emulatorsConnected = true;
     console.log('Firebase emulators connected');
   } catch (error) {
