@@ -13,36 +13,18 @@ const MotionButton = motion(Button);
 export default function HomePage() {
   const router = useRouter();
 
-  // Prevenir scroll en móviles
+  // Aplicar clase CSS para bloquear scroll solo en homepage
   useEffect(() => {
-    // Prevenir scroll
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.height = '100%';
-    
-    // Prevenir zoom en iOS
-    const viewport = document.querySelector('meta[name=viewport]');
-    if (viewport) {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-    }
-
+    document.body.className = 'homepage-no-scroll';
     // Cleanup al desmontar
     return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
+      document.body.className = '';
     };
   }, []);
 
   const handleViewMenu = () => {
-    // Restaurar scroll antes de navegar
-    document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.width = '';
-    document.body.style.height = '';
-    
+    // Cambiar a clase que permite scroll antes de navegar
+    document.body.className = 'menu-page-scroll';
     router.push('/menu?id=xs-reset-menu');
   };
 
@@ -52,7 +34,7 @@ export default function HomePage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
       sx={{
-        height: '100dvh', // Dynamic viewport height para móviles
+        height: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
