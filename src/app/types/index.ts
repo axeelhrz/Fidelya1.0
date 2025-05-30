@@ -1,4 +1,3 @@
-import { FieldValue, Timestamp } from 'firebase/firestore';
 
 // Tipos base para Firebase
 export interface BaseFirebaseDocument {

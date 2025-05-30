@@ -1,224 +1,105 @@
 'use client';
 
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Box, CircularProgress, Typography, Container, Alert } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import MenuViewer from '../components/MenuViewer';
-import { getMenuById } from '../../data/menu';
-import { Product } from '../types';
-
-interface MenuData {
-  id: string;
-  name: string;
-  description: string;
-  products: Product[];
-}
-
 const MotionBox = motion(Box);
 
 const MenuPageContent: React.FC = () => {
   const searchParams = useSearchParams();
-  const menuId = searchParams.get('id') || 'xs-reset-menu';
-  const [menuData, setMenuData] = useState<MenuData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Obtener el ID del menú desde los parámetros de la URL
+  const menuId = searchParams.get('id') || searchParams.get('menuId') || 'default-menu';
 
-  useEffect(() => {
-    const loadMenuData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Cargar desde datos estáticos
-        const staticMenu = getMenuById(menuId);
-        
-        if (staticMenu) {
-          // Transform the data to match our local types
-          const transformedMenu: MenuData = {
-            ...staticMenu,
-            products: staticMenu.products.map(product => ({
-              ...product,
-              description: product.description || '',
-              category: product.category as Product['category']
-            }))
-          };
-          setMenuData(transformedMenu);
-        } else {
-            setError('Menú no encontrado');
-          }
-      } catch (err) {
-        console.error('Error cargando menú:', err);
-        setError('Error al cargar el menú');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMenuData();
-  }, [menuId]);
-
-  if (loading) {
-    return (
-      <MotionBox
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-          backgroundColor: '#0A0A0A',
-          px: 3
-        }}
-    >
-        <CircularProgress 
-          size={60} 
-          sx={{ 
-            color: '#D4AF37',
-            mb: 3,
-            '& .MuiCircularProgress-circle': {
-              strokeLinecap: 'round',
-            }
-          }} 
-    />
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            fontFamily: "'Playfair Display', serif",
-            color: '#F8F8F8',
-            textAlign: 'center',
-            fontSize: { xs: '1rem', sm: '1.25rem' },
-            mb: 1
-          }}
-        >
-          Cargando Carta Digital...
-        </Typography>
-        <Typography 
-          variant="body2" 
-          sx={{ 
-            fontFamily: "'Inter', sans-serif",
-            color: '#B8B8B8',
-            textAlign: 'center',
-            opacity: 0.8,
-            fontStyle: 'italic'
-            }}
-          >
-          Preparando la experiencia Xs Reset
-          </Typography>
-      </MotionBox>
-    );
-  }
-
-  if (error || !menuData) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          backgroundColor: '#0A0A0A',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          px: 3
-        }}
-    >
-        <Container maxWidth="sm">
-          <MotionBox
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Alert 
-              severity="error"
-              sx={{ 
-                borderRadius: 0,
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                color: '#F87171',
-                fontFamily: "'Inter', sans-serif",
-                '& .MuiAlert-icon': {
-                  color: '#F87171'
-                }
-              }}
-            >
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 1,
-                  fontFamily: "'Playfair Display', serif",
-                  fontWeight: 600
-                }}
-              >
-                {error || 'Menú no encontrado'}
-              </Typography>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  opacity: 0.8,
-                  fontFamily: "'Inter', sans-serif"
-                }}
-              >
-                Por favor, escanea un código QR válido o verifica el ID del menú.
-              </Typography>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  mt: 2, 
-                  fontFamily: 'monospace',
-                  fontSize: '0.75rem',
-                  opacity: 0.6
-                }}
-              >
-                ID solicitado: {menuId}
-              </Typography>
-            </Alert>
-          </MotionBox>
-        </Container>
-      </Box>
-  );
-  }
-
-  return (
-    <MenuViewer
-      products={menuData.products}
-      menuDescription={menuData.description}
-    />
-  );
+  return <MenuViewer menuId={menuId} />;
 };
-
 const MenuPage: React.FC = () => {
   return (
     <Suspense
       fallback={
-        <Box
+        <MotionBox
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           sx={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             minHeight: '100vh',
-            backgroundColor: '#0A0A0A'
+            background: 'linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%)',
+            px: 3
           }}
         >
           <CircularProgress 
             size={60} 
             sx={{ 
               color: '#D4AF37',
-              mb: 3
+              mb: 3,
+              '& .MuiCircularProgress-circle': {
+                strokeLinecap: 'round',
+              }
             }} 
           />
           <Typography 
             variant="h6" 
             sx={{ 
-              fontFamily: "'Playfair Display', serif",
+              fontFamily: "'Inter', sans-serif",
               color: '#F8F8F8',
-              textAlign: 'center'
+              textAlign: 'center',
+              fontSize: { xs: '1rem', sm: '1.25rem' },
+              mb: 1,
+              fontWeight: 600
             }}
           >
             Cargando Carta Digital...
           </Typography>
-        </Box>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              fontFamily: "'Inter', sans-serif",
+              color: '#B8B8B8',
+              textAlign: 'center',
+              opacity: 0.8,
+              fontStyle: 'italic'
+            }}
+          >
+            Conectando con Firebase
+          </Typography>
+          
+          {/* Indicador de carga animado */}
+          <Box
+            sx={{
+              mt: 4,
+              display: 'flex',
+              gap: 1,
+              alignItems: 'center'
+            }}
+          >
+            {[0, 1, 2].map((index) => (
+              <Box
+                key={index}
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  backgroundColor: '#D4AF37',
+                  animation: `pulse 1.5s infinite ${index * 0.2}s`,
+                  '@keyframes pulse': {
+                    '0%, 100%': {
+                      opacity: 0.3,
+                      transform: 'scale(1)'
+                    },
+                    '50%': {
+                      opacity: 1,
+                      transform: 'scale(1.2)'
+                    }
+                  }
+                }}
+              />
+            ))}
+          </Box>
+        </MotionBox>
       }
     >
       <MenuPageContent />

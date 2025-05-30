@@ -1,274 +1,372 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography } from '@mui/material';
-import { motion } from 'framer-motion';
 import { 
-  Star, 
-  FiberNew, 
-  LocalFlorist
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Chip,
+  IconButton,
+  Collapse
+} from '@mui/material';
+import { 
+  ExpandMore, 
+  AccessTime, 
+  LocalOffer,
+  Eco,
+  Restaurant,
+  Warning
 } from '@mui/icons-material';
-import { Product } from '../../data/menu';
+import { motion } from 'framer-motion';
+import { Product } from '../types';
+
+const MotionCard = motion(Card);
 
 interface ProductCardProps {
   product: Product;
-  index?: number;
 }
 
-const MotionBox = motion(Box);
+export default function ProductCard({ product }: ProductCardProps) {
+  const [expanded, setExpanded] = React.useState(false);
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
-  const cardVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { 
-        duration: 0.4, 
-        ease: [0.04, 0.62, 0.23, 0.98],
-        delay: index * 0.05
-      } 
-    }
+  const handleExpandClick = () => {
+    setExpanded(!expanded);
   };
 
-  const isRecommended = product.isRecommended || false;
-  const isNew = product.isNew || false;
-  const isVegetarian = product.isVegetarian || false;
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 0
+    }).format(price);
+  };
+
+  const getCategoryColor = (category: string) => {
+    const colors: { [key: string]: string } = {
+      'APPETIZER': '#FF6B6B',
+      'MAIN_COURSE': '#4ECDC4',
+      'DESSERT': '#FFE66D',
+      'BEVERAGE': '#A8E6CF',
+      'COCKTAIL': '#FF8B94',
+      'WINE': '#B4A7D6',
+      'BEER': '#FFD93D',
+      'COFFEE': '#8B4513',
+      'NON_ALCOHOLIC': '#87CEEB',
+      'SIDE_DISH': '#DDA0DD',
+      'SNACK': '#F0E68C'
+    };
+    return colors[category] || '#D4AF37';
+  };
+
+  const getCategoryLabel = (category: string) => {
+    const labels: { [key: string]: string } = {
+      'APPETIZER': 'Entrada',
+      'MAIN_COURSE': 'Principal',
+      'DESSERT': 'Postre',
+      'BEVERAGE': 'Bebida',
+      'COCKTAIL': 'Cóctel',
+      'WINE': 'Vino',
+      'BEER': 'Cerveza',
+      'COFFEE': 'Café',
+      'NON_ALCOHOLIC': 'Sin Alcohol',
+      'SIDE_DISH': 'Acompañamiento',
+      'SNACK': 'Snack'
+    };
+    return labels[category] || category;
+  };
 
   return (
-    <MotionBox
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
+    <MotionCard
       whileHover={{ 
-        y: -2,
-        transition: { duration: 0.2, ease: 'easeOut' }
+        scale: 1.02,
+        boxShadow: '0 8px 32px rgba(212, 175, 55, 0.2)'
       }}
+      transition={{ duration: 0.2 }}
       sx={{
-        position: 'relative',
-        background: 'rgba(26, 26, 26, 0.4)',
-        border: isRecommended 
-          ? '1px solid rgba(212, 175, 55, 0.3)' 
-          : '1px solid rgba(255, 255, 255, 0.05)',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        cursor: 'pointer',
+        background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(16, 16, 16, 0.9) 100%)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(212, 175, 55, 0.2)',
+        borderRadius: 2,
         overflow: 'hidden',
-        '&:hover': {
-          background: 'rgba(26, 26, 26, 0.6)',
-          borderColor: isRecommended 
-            ? 'rgba(212, 175, 55, 0.5)' 
-            : 'rgba(255, 255, 255, 0.1)',
-        },
+        position: 'relative',
+        opacity: product.isAvailable ? 1 : 0.6,
+        cursor: 'pointer'
       }}
+      onClick={handleExpandClick}
     >
-      {/* Línea dorada para productos destacados */}
-      {isRecommended && (
+      {/* Imagen del producto */}
+      {product.image && (
         <Box
           sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '1px',
-            background: '#D4AF37',
-            zIndex: 2
+            height: 200,
+            backgroundImage: `url(${product.image})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            position: 'relative'
           }}
-        />
-      )}
-
-      {/* Contenido principal */}
-      <Box sx={{ position: 'relative', zIndex: 1, p: { xs: 2.5, sm: 3 } }}>
-        {/* Etiquetas minimalistas */}
-        {(isRecommended || isNew || isVegetarian) && (
-          <Box sx={{ 
-            display: 'flex', 
-            gap: 1, 
-            mb: 2,
-            flexWrap: 'wrap'
-          }}>
-            {isRecommended && (
-              <Box
+        >
+          {/* Overlay con información rápida */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              display: 'flex',
+              gap: 1
+            }}
+          >
+            {product.nutritionalInfo?.isVegan && (
+              <Chip
+                icon={<Eco />}
+                label="Vegano"
+                size="small"
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  px: 1.5,
-                  py: 0.5,
-                  background: 'rgba(212, 175, 55, 0.1)',
-                  border: '1px solid rgba(212, 175, 55, 0.2)',
+                  backgroundColor: 'rgba(76, 175, 80, 0.9)',
+                  color: 'white',
+                  fontWeight: 600
                 }}
-              >
-                <Star sx={{ fontSize: 10, color: '#D4AF37' }} />
-                <Typography
-                  sx={{
-                    color: '#D4AF37',
-                    fontSize: '0.65rem',
-                    fontWeight: 500,
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase',
-                    fontFamily: "'Inter', sans-serif"
-                  }}
-                >
-                  Recomendado
-                </Typography>
-              </Box>
+              />
             )}
-            
-            {isNew && (
-              <Box
+            {product.tags?.includes('recomendado') && (
+              <Chip
+                icon={<LocalOffer />}
+                label="Recomendado"
+                size="small"
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  px: 1.5,
-                  py: 0.5,
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  backgroundColor: 'rgba(212, 175, 55, 0.9)',
+                  color: '#0A0A0A',
+                  fontWeight: 600
                 }}
-              >
-                <FiberNew sx={{ fontSize: 10, color: '#F8F8F8' }} />
-                <Typography
-                  sx={{
-                    color: '#F8F8F8',
-                    fontSize: '0.65rem',
-                    fontWeight: 500,
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase',
-                    fontFamily: "'Inter', sans-serif"
-                  }}
-                >
-                  Nuevo
-                </Typography>
-      </Box>
-            )}
-            
-            {isVegetarian && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  px: 1.5,
-                  py: 0.5,
-                  background: 'rgba(34, 197, 94, 0.1)',
-                  border: '1px solid rgba(34, 197, 94, 0.2)',
-                }}
-              >
-                <LocalFlorist sx={{ fontSize: 10, color: '#22C55E' }} />
-                <Typography
-                  sx={{
-                    color: '#22C55E',
-                    fontSize: '0.65rem',
-                    fontWeight: 500,
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase',
-                    fontFamily: "'Inter', sans-serif"
-                  }}
-                >
-                  Veggie
-                </Typography>
-              </Box>
+              />
             )}
           </Box>
-        )}
 
-        {/* Layout estilo menú argentino */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'flex-start',
-          mb: 1.5,
-          gap: 2
-        }}>
-          {/* Nombre del producto */}
-          <Box sx={{ flex: 1 }}>
-            <Typography
-              variant="menuItem"
+          {!product.isAvailable && (
+            <Box
               sx={{
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 500,
-                fontSize: { xs: '1rem', sm: '1.1rem' },
+                position: 'absolute',
+                bottom: 8,
+                left: 8,
+                backgroundColor: 'rgba(244, 67, 54, 0.9)',
+                color: 'white',
+                px: 2,
+                py: 0.5,
+                borderRadius: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}
+            >
+              <Warning fontSize="small" />
+              <Typography variant="caption" fontWeight={600}>
+                No disponible
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      )}
+
+      <CardContent sx={{ p: 3 }}>
+        {/* Header del producto */}
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+          <Box flex={1}>
+            <Typography
+              variant="h6"
+              sx={{
                 color: '#F8F8F8',
+                fontWeight: 600,
+                fontSize: '1.125rem',
                 lineHeight: 1.3,
-                textAlign: 'left',
                 mb: 0.5
               }}
             >
               {product.name}
             </Typography>
             
-            {/* Categoría sutil */}
-            <Typography
-              sx={{
-                fontSize: '0.7rem',
-                fontWeight: 400,
-                color: '#B8B8B8',
-                letterSpacing: '0.02em',
-                textTransform: 'uppercase',
-                opacity: 0.7,
-                fontFamily: "'Inter', sans-serif"
-              }}
-            >
-              {product.category}
-            </Typography>
+            <Box display="flex" alignItems="center" gap={1} mb={1}>
+              <Chip
+                label={getCategoryLabel(product.category)}
+                size="small"
+                sx={{
+                  backgroundColor: getCategoryColor(product.category),
+                  color: '#0A0A0A',
+                  fontWeight: 600,
+                  fontSize: '0.75rem'
+                }}
+              />
+              
+              {product.preparationTime && (
+                <Box display="flex" alignItems="center" gap={0.5}>
+                  <AccessTime sx={{ fontSize: 14, color: '#B8B8B8' }} />
+                  <Typography variant="caption" color="#B8B8B8">
+                    {product.preparationTime} min
+                  </Typography>
+                </Box>
+              )}
+            </Box>
           </Box>
-          
-          {/* Precio estilo argentino */}
-          <Box
+
+          <Typography
+            variant="h6"
             sx={{
-              display: 'flex',
-              alignItems: 'center',
-              minWidth: 'fit-content'
+              color: '#D4AF37',
+              fontWeight: 700,
+              fontSize: '1.25rem',
+              ml: 2
             }}
           >
-            <Typography
-              variant="priceDisplay"
-              sx={{
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 600,
-                fontSize: { xs: '1rem', sm: '1.1rem' },
-                color: '#D4AF37',
-                lineHeight: 1,
-                textAlign: 'right'
-                  }}
-                >
-              ${product.price.toLocaleString('es-AR')}
-                </Typography>
-              </Box>
-            </Box>
+            {formatPrice(product.price)}
+          </Typography>
+        </Box>
 
-        {/* Línea separadora minimalista */}
-        <Box
-          sx={{
-            width: '100%',
-            height: '1px',
-            background: isRecommended 
-              ? 'rgba(212, 175, 55, 0.2)'
-              : 'rgba(255, 255, 255, 0.08)',
-            mb: 1.5,
-          }}
-        />
-
-        {/* Descripción compacta */}
+        {/* Descripción */}
         {product.description && (
           <Typography
-            variant="menuDescription"
+            variant="body2"
             sx={{
-              fontFamily: "'Inter', sans-serif",
               color: '#B8B8B8',
-              fontSize: { xs: '0.8rem', sm: '0.85rem' },
-              lineHeight: 1.4,
-              fontWeight: 400,
-              textAlign: 'left',
-              opacity: 0.9
+              lineHeight: 1.5,
+              mb: 2
             }}
           >
             {product.description}
           </Typography>
         )}
-      </Box>
-    </MotionBox>
-  );
-};
 
-export default ProductCard;
+        {/* Tags principales */}
+        {product.tags && product.tags.length > 0 && (
+          <Box display="flex" flexWrap="wrap" gap={0.5} mb={2}>
+            {product.tags.slice(0, 3).map((tag) => (
+              <Chip
+                key={tag}
+                label={tag}
+                size="small"
+                variant="outlined"
+                sx={{
+                  borderColor: 'rgba(212, 175, 55, 0.3)',
+                  color: '#D4AF37',
+                  fontSize: '0.7rem'
+                }}
+              />
+            ))}
+            {product.tags.length > 3 && (
+              <Chip
+                label={`+${product.tags.length - 3}`}
+                size="small"
+                variant="outlined"
+                sx={{
+                  borderColor: 'rgba(212, 175, 55, 0.3)',
+                  color: '#D4AF37',
+                  fontSize: '0.7rem'
+                }}
+              />
+            )}
+          </Box>
+        )}
+
+        {/* Información nutricional rápida */}
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box display="flex" gap={1}>
+            {product.nutritionalInfo?.isVegetarian && !product.nutritionalInfo?.isVegan && (
+              <Chip
+                label="Vegetariano"
+                size="small"
+                sx={{
+                  backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                  color: '#4CAF50',
+                  fontSize: '0.7rem'
+                }}
+              />
+            )}
+            {product.nutritionalInfo?.isGlutenFree && (
+              <Chip
+                label="Sin Gluten"
+                size="small"
+                sx={{
+                  backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                  color: '#FF9800',
+                  fontSize: '0.7rem'
+                }}
+              />
+            )}
+          </Box>
+
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleExpandClick();
+            }}
+            sx={{
+              color: '#D4AF37',
+              transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.3s'
+            }}
+          >
+            <ExpandMore />
+          </IconButton>
+        </Box>
+
+        {/* Información expandida */}
+        <Collapse in={expanded} timeout="auto" unmountOnExit>
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(212, 175, 55, 0.2)' }}>
+            {/* Información nutricional detallada */}
+            {product.nutritionalInfo?.calories && (
+              <Box display="flex" alignItems="center" gap={1} mb={1}>
+                <Restaurant sx={{ fontSize: 16, color: '#B8B8B8' }} />
+                <Typography variant="body2" color="#B8B8B8">
+                  {product.nutritionalInfo.calories} calorías
+                </Typography>
+              </Box>
+            )}
+
+            {/* Alérgenos */}
+            {product.allergens && product.allergens.length > 0 && (
+              <Box mb={2}>
+                <Typography variant="caption" color="#B8B8B8" gutterBottom display="block">
+                  Alérgenos:
+                </Typography>
+                <Box display="flex" flexWrap="wrap" gap={0.5}>
+                  {product.allergens.map((allergen) => (
+                    <Chip
+                      key={allergen}
+                      label={allergen}
+                      size="small"
+                      color="warning"
+                      variant="outlined"
+                      sx={{ fontSize: '0.7rem' }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+
+            {/* Todos los tags */}
+            {product.tags && product.tags.length > 3 && (
+              <Box>
+                <Typography variant="caption" color="#B8B8B8" gutterBottom display="block">
+                  Características:
+                </Typography>
+                <Box display="flex" flexWrap="wrap" gap={0.5}>
+                  {product.tags.map((tag) => (
+                    <Chip
+                      key={tag}
+                      label={tag}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        borderColor: 'rgba(212, 175, 55, 0.3)',
+                        color: '#D4AF37',
+                        fontSize: '0.7rem'
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+          </Box>
+        </Collapse>
+      </CardContent>
+    </MotionCard>
+  );
+}
