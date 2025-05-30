@@ -1,14 +1,12 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, Chip } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import { 
   Star, 
   FiberNew, 
-  Eco,
-  LocalBar,
-  Restaurant
+  Eco
 } from '@mui/icons-material';
 import { Product } from '../types';
 
@@ -21,14 +19,14 @@ const MotionBox = motion(Box);
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
   const cardVariants = {
-    hidden: { opacity: 0, y: 15 },
+    hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
       y: 0,
       transition: { 
-        duration: 0.5, 
+        duration: 0.6, 
         ease: [0.04, 0.62, 0.23, 0.98],
-        delay: index * 0.05
+        delay: index * 0.08
       } 
     }
   };
@@ -43,83 +41,53 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
       initial="hidden"
       animate="visible"
       whileHover={{ 
-        y: -2,
+        y: -3,
         transition: { duration: 0.3, ease: 'easeOut' }
       }}
       sx={{
         position: 'relative',
-        background: 'linear-gradient(135deg, rgba(44, 44, 46, 0.6) 0%, rgba(28, 28, 30, 0.8) 100%)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+        background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(16, 16, 16, 0.98) 100%)',
+        border: isRecommended 
+          ? '1px solid rgba(212, 175, 55, 0.4)' 
+          : '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: 0,
         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: 'pointer',
         overflow: 'hidden',
         '&:hover': {
-          background: 'linear-gradient(135deg, rgba(44, 44, 46, 0.8) 0%, rgba(28, 28, 30, 0.95) 100%)',
-          borderColor: 'rgba(255, 255, 255, 0.15)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
+          background: 'linear-gradient(135deg, rgba(26, 26, 26, 1) 0%, rgba(16, 16, 16, 1) 100%)',
+          borderColor: isRecommended 
+            ? 'rgba(212, 175, 55, 0.6)' 
+            : 'rgba(255, 255, 255, 0.15)',
+          boxShadow: isRecommended 
+            ? '0 8px 32px rgba(212, 175, 55, 0.15)' 
+            : '0 8px 32px rgba(0, 0, 0, 0.4)',
         },
-        // Esquinas cortadas elegantes
-        clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))'
               }}
             >
-      {/* Marco dorado para productos destacados */}
+      {/* Borde dorado sutil para productos destacados */}
       {isRecommended && (
         <Box
           sx={{
             position: 'absolute',
             top: 0,
             left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'linear-gradient(45deg, rgba(116, 172, 223, 0.15), transparent, rgba(116, 172, 223, 0.15))',
-            backgroundSize: '200% 200%',
-            animation: 'shimmer 3s ease-in-out infinite',
-            clipPath: 'inherit',
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              top: '1px',
-              left: '1px',
-              right: '1px',
-              bottom: '1px',
-              background: 'linear-gradient(135deg, rgba(44, 44, 46, 0.6) 0%, rgba(28, 28, 30, 0.8) 100%)',
-              clipPath: 'polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px))'
-            },
-            '@keyframes shimmer': {
-              '0%, 100%': { backgroundPosition: '0% 50%' },
-              '50%': { backgroundPosition: '100% 50%' }
-            }
+            width: '100%',
+            height: '2px',
+            background: 'linear-gradient(90deg, transparent 0%, #D4AF37 50%, transparent 100%)',
+            zIndex: 2
           }}
       />
               )}
 
-      {/* Patrón de fondo elegante */}
-      <Box
-              sx={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '30%',
-          height: '100%',
-          background: `
-            radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
-            linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.01) 100%)
-          `,
-          pointerEvents: 'none',
-          zIndex: 1
-        }}
-      />
-
       {/* Contenido principal */}
-      <Box sx={{ position: 'relative', zIndex: 2, p: { xs: 3.5, sm: 4 } }}>
-        {/* Header con etiquetas elegantes */}
+      <Box sx={{ position: 'relative', zIndex: 1, p: { xs: 4, sm: 5 } }}>
+        {/* Etiquetas elegantes */}
         {(isRecommended || isNew || isVegetarian) && (
           <Box sx={{ 
             display: 'flex', 
-            gap: 1, 
-            mb: 2.5,
+            gap: 1.5, 
+            mb: 3,
             flexWrap: 'wrap'
           }}>
             {isRecommended && (
@@ -128,35 +96,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 0.75,
-                  px: 1.5,
-                  py: 0.5,
-                  background: 'linear-gradient(135deg, rgba(116, 172, 223, 0.2) 0%, rgba(116, 172, 223, 0.1) 100%)',
-                  border: '1px solid rgba(116, 172, 223, 0.3)',
-                  clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
-                  position: 'relative',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%)',
-                    clipPath: 'inherit'
-                  }
+                  px: 2,
+                  py: 0.75,
+                  background: 'rgba(212, 175, 55, 0.15)',
+                  border: '1px solid rgba(212, 175, 55, 0.3)',
+                  borderRadius: 0,
                 }}
               >
-                <Star sx={{ fontSize: 11, color: '#74ACDF' }} />
+                <Star sx={{ fontSize: 12, color: '#D4AF37' }} />
                 <Typography
                   sx={{
-                    color: '#74ACDF',
-                  fontSize: '0.65rem',
+                    color: '#D4AF37',
+                    fontSize: '0.7rem',
                     fontWeight: 600,
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase'
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    fontFamily: "'Inter', sans-serif"
                   }}
                 >
-                  Destacado
+                  Recomendado
                 </Typography>
               </Box>
             )}
@@ -167,21 +125,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 0.75,
-                  px: 1.5,
-                  py: 0.5,
-                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)',
-                  border: '1px solid rgba(59, 130, 246, 0.3)',
-                  clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))'
+                  px: 2,
+                  py: 0.75,
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: 0,
                 }}
               >
-                <FiberNew sx={{ fontSize: 11, color: '#3B82F6' }} />
+                <FiberNew sx={{ fontSize: 12, color: '#F8F8F8' }} />
                 <Typography
                   sx={{
-                    color: '#3B82F6',
-                    fontSize: '0.65rem',
+                    color: '#F8F8F8',
+                    fontSize: '0.7rem',
                     fontWeight: 600,
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase'
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    fontFamily: "'Inter', sans-serif"
                   }}
                 >
                   Nuevo
@@ -195,21 +154,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 0.75,
-                  px: 1.5,
-                  py: 0.5,
-                  background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%)',
+                  px: 2,
+                  py: 0.75,
+                  background: 'rgba(34, 197, 94, 0.15)',
                   border: '1px solid rgba(34, 197, 94, 0.3)',
-                  clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))'
+                  borderRadius: 0,
                 }}
               >
-                <Eco sx={{ fontSize: 11, color: '#22C55E' }} />
+                <Eco sx={{ fontSize: 12, color: '#22C55E' }} />
                 <Typography
                   sx={{
                     color: '#22C55E',
-                    fontSize: '0.65rem',
+                    fontSize: '0.7rem',
                     fontWeight: 600,
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase'
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    fontFamily: "'Inter', sans-serif"
                   }}
                 >
                   Vegano
@@ -219,22 +179,24 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
           </Box>
         )}
 
-        {/* Layout principal estilo carta premium */}
+        {/* Layout estilo menú clásico */}
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'flex-start',
-          mb: 2,
-          gap: 3
+          mb: 2.5,
+          gap: 4
         }}>
-          {/* Nombre del plato */}
+          {/* Nombre del producto */}
           <Box sx={{ flex: 1 }}>
             <Typography
+              variant="menuItem"
               sx={{
+                fontFamily: "'Cormorant Garamond', serif",
                 fontWeight: 600,
-                fontSize: { xs: '1.125rem', sm: '1.25rem' },
-                color: '#F5F5F7',
-                letterSpacing: '-0.02em',
+                fontSize: { xs: '1.25rem', sm: '1.375rem' },
+                color: '#F8F8F8',
+                letterSpacing: '0.01em',
                 lineHeight: 1.3,
                 textAlign: 'left',
                 mb: 0.5
@@ -246,124 +208,72 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
             {/* Categoría sutil */}
             <Typography
               sx={{
-                fontSize: '0.7rem',
+                fontSize: '0.75rem',
                 fontWeight: 500,
-                color: '#A1A1AA',
-                letterSpacing: '0.08em',
+                color: '#B8B8B8',
+                letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                opacity: 0.7
+                opacity: 0.8,
+                fontFamily: "'Inter', sans-serif"
               }}
             >
               {product.category}
             </Typography>
           </Box>
           
-          {/* Precio estilo medallón de bar */}
+          {/* Precio estilo menú clásico */}
           <Box
             sx={{
               position: 'relative',
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
+              alignItems: 'flex-end',
               minWidth: 'fit-content'
             }}
           >
-            {/* Contenedor del precio */}
-            <Box
+            <Typography
+              variant="priceDisplay"
               sx={{
-                position: 'relative',
-                px: 2.5,
-                py: 1.5,
-                background: isRecommended 
-                  ? 'linear-gradient(135deg, rgba(116, 172, 223, 0.2) 0%, rgba(116, 172, 223, 0.1) 100%)'
-                  : 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)',
-                border: `1px solid ${isRecommended ? 'rgba(116, 172, 223, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
-                clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
-                backdropFilter: 'blur(12px)',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%)',
-                  clipPath: 'inherit',
-                  pointerEvents: 'none'
-                }
-              }}
-            >
-              <Box sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-                {/* Icono temático */}
-                <Box sx={{ mb: 0.5 }}>
-                  {product.category.toLowerCase().includes('bebida') || product.category.toLowerCase().includes('cocktail') ? (
-                    <LocalBar sx={{ 
-                      fontSize: 16, 
-                      color: isRecommended ? '#74ACDF' : '#F59E0B',
-                      opacity: 0.8
-                    }} />
-                  ) : (
-                    <Restaurant sx={{ 
-                      fontSize: 16, 
-                      color: isRecommended ? '#74ACDF' : '#F59E0B',
-                      opacity: 0.8
-                    }} />
-                  )}
-                </Box>
-                
-                {/* Precio */}
-                <Typography
-                  sx={{
-                    fontWeight: 800,
-                    fontSize: { xs: '1.125rem', sm: '1.25rem' },
-                    color: isRecommended ? '#74ACDF' : '#F59E0B',
-                    letterSpacing: '-0.02em',
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: 700,
+                fontSize: { xs: '1.25rem', sm: '1.375rem' },
+                color: '#D4AF37',
+                letterSpacing: '-0.01em',
                     lineHeight: 1,
-                    fontFamily: 'monospace'
+                textAlign: 'right'
                   }}
                 >
-                  ${product.price}
+              ${product.price.toLocaleString()}
                 </Typography>
               </Box>
             </Box>
-          </Box>
-        </Box>
-
-        {/* Separador elegante */}
+        {/* Línea separadora elegante */}
         <Box
           sx={{
             width: '100%',
             height: '1px',
-            background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 20%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.1) 80%, transparent 100%)',
-            mb: 2,
+            background: isRecommended 
+              ? 'linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.3) 20%, rgba(212, 175, 55, 0.5) 50%, rgba(212, 175, 55, 0.3) 80%, transparent 100%)'
+              : 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 20%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 80%, transparent 100%)',
+            mb: 2.5,
             position: 'relative',
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              top: -1,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 4,
-              height: 4,
-              borderRadius: '50%',
-              background: isRecommended ? '#74ACDF' : '#F59E0B',
-              opacity: 0.6
-            }
           }}
         />
 
-        {/* Descripción estilo carta francesa */}
+        {/* Descripción estilo menú clásico */}
         {product.description && (
           <Typography
+            variant="menuDescription"
             sx={{
-              color: '#A1A1AA',
-              fontSize: { xs: '0.8rem', sm: '0.85rem' },
+              fontFamily: "'Inter', sans-serif",
+              color: '#B8B8B8',
+              fontSize: { xs: '0.875rem', sm: '0.9rem' },
               lineHeight: 1.6,
               fontWeight: 400,
               textAlign: 'left',
-              opacity: 0.9,
               fontStyle: 'italic',
-              letterSpacing: '0.01em'
+              letterSpacing: '0.01em',
+              opacity: 0.9
             }}
           >
             {product.description}
@@ -371,29 +281,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
         )}
       </Box>
 
-      {/* Esquinas decorativas */}
+      {/* Efecto de brillo sutil en hover */}
       <Box
         sx={{
           position: 'absolute',
           top: 0,
-          left: 0,
-          width: 16,
-          height: 16,
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%)',
-          clipPath: 'polygon(0 0, 100% 0, 0 100%)',
-          zIndex: 3
-        }}
-      />
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 0,
-          right: 0,
-          width: 16,
-          height: 16,
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%)',
-          clipPath: 'polygon(100% 0, 100% 100%, 0 100%)',
-          zIndex: 3
+          left: '-100%',
+          width: '100%',
+          height: '100%',
+          background: 'linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.1) 50%, transparent 100%)',
+          transition: 'left 0.6s ease-in-out',
+          pointerEvents: 'none',
+          zIndex: 0,
+          '.MuiBox-root:hover &': {
+            left: '100%',
+          }
         }}
       />
     </MotionBox>

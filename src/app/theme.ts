@@ -9,12 +9,16 @@ declare module '@mui/material/styles' {
     titleMedium?: React.CSSProperties;
     priceDisplay?: React.CSSProperties;
     categoryTitle?: React.CSSProperties;
+    menuItem?: React.CSSProperties;
+    menuDescription?: React.CSSProperties;
   }
   interface TypographyVariants {
     titleLarge: React.CSSProperties;
     titleMedium: React.CSSProperties;
     priceDisplay: React.CSSProperties;
     categoryTitle: React.CSSProperties;
+    menuItem: React.CSSProperties;
+    menuDescription: React.CSSProperties;
   }
 }
 
@@ -24,6 +28,8 @@ declare module '@mui/material/Typography' {
     titleMedium: true;
     priceDisplay: true;
     categoryTitle: true;
+    menuItem: true;
+    menuDescription: true;
   }
 }
 
@@ -31,261 +37,296 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#3B82F6', // azul profesional moderno
-      light: '#60a5fa',
-      dark: '#2563eb',
+      main: '#D4AF37', // Dorado elegante para elementos premium
+      light: '#F4E4BC',
+      dark: '#B8941F',
     },
     secondary: {
-      main: '#F59E0B', // mostaza/dorado sutil para precios
-      light: '#fbbf24',
-      dark: '#d97706',
+      main: '#2C2C2E', // Gris carbón sofisticado
+      light: '#48484A',
+      dark: '#1C1C1E',
     },
     success: {
-      main: '#10B981', // verde para elementos recomendados
-      light: '#34d399',
-      dark: '#059669',
+      main: '#D4AF37', // Dorado para elementos destacados
+      light: '#F4E4BC',
+      dark: '#B8941F',
     },
     background: {
-      default: '#1C1C1E', // negro texturizado principal
-      paper: '#2C2C2E',   // gris oscuro más claro para tarjetas
+      default: '#0A0A0A', // Negro profundo más elegante
+      paper: '#1A1A1A',   // Gris muy oscuro para tarjetas
     },
     text: {
-      primary: '#F5F5F7',   // blanco cálido
-      secondary: '#A1A1AA', // gris claro para descripciones
+      primary: '#F8F8F8',   // Blanco cálido más suave
+      secondary: '#B8B8B8', // Gris medio para descripciones
     },
-    divider: '#3A3A3C', // separadores apenas perceptibles
+    divider: '#2C2C2E', // Separadores sutiles
   },
   typography: {
-    fontFamily: "'Plus Jakarta Sans', 'Outfit', 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif",
+    fontFamily: "'Playfair Display', 'Cormorant Garamond', 'Times New Roman', serif",
     
-    // Títulos de secciones/categorías - peso medio-alto, tamaño grande, blanco cálido
+    // Títulos principales - elegantes y sofisticados
     h1: {
+      fontFamily: "'Playfair Display', serif",
       fontWeight: 700,
-      fontSize: '2.5rem',
-      letterSpacing: '-0.03em',
+      fontSize: '3rem',
+      letterSpacing: '-0.02em',
       lineHeight: 1.1,
-      color: '#F5F5F7',
+      color: '#F8F8F8',
     },
     h2: {
+      fontFamily: "'Playfair Display', serif",
       fontWeight: 600,
-      fontSize: '2rem',
-      letterSpacing: '-0.02em',
+      fontSize: '2.25rem',
+      letterSpacing: '-0.01em',
       lineHeight: 1.2,
-      color: '#F5F5F7',
+      color: '#F8F8F8',
     },
     h3: {
+      fontFamily: "'Playfair Display', serif",
       fontWeight: 600,
-      fontSize: '1.75rem',
-      letterSpacing: '-0.02em',
+      fontSize: '1.875rem',
+      letterSpacing: '-0.01em',
       lineHeight: 1.2,
-      color: '#F5F5F7',
+      color: '#F8F8F8',
     },
     
-    // Nombres de productos - alineados izquierda, tamaño medio, peso medio, blanco
+    // Nombres de productos - estilo menú clásico
     h4: {
-      fontWeight: 500,
-      fontSize: '1.25rem',
-      letterSpacing: '-0.01em',
+      fontFamily: "'Cormorant Garamond', serif",
+      fontWeight: 600,
+      fontSize: '1.375rem',
+      letterSpacing: '0.01em',
       lineHeight: 1.3,
-      color: '#F5F5F7',
+      color: '#F8F8F8',
       textAlign: 'left',
     },
     h5: {
+      fontFamily: "'Cormorant Garamond', serif",
       fontWeight: 500,
-      fontSize: '1.125rem',
-      letterSpacing: '-0.01em',
+      fontSize: '1.25rem',
+      letterSpacing: '0.01em',
       lineHeight: 1.3,
-      color: '#F5F5F7',
+      color: '#F8F8F8',
       textAlign: 'left',
     },
     h6: {
+      fontFamily: "'Cormorant Garamond', serif",
       fontWeight: 500,
-      fontSize: '1rem',
-      letterSpacing: '-0.01em',
+      fontSize: '1.125rem',
+      letterSpacing: '0.01em',
       lineHeight: 1.4,
-      color: '#F5F5F7',
+      color: '#F8F8F8',
     },
     
-    // Descripciones - fuente pequeña, peso normal, gris claro
+    // Descripciones - fuente sans-serif para legibilidad
     body1: {
+      fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
       fontSize: '0.9rem',
       lineHeight: 1.6,
       letterSpacing: '0.01em',
-      color: '#A1A1AA',
+      color: '#B8B8B8',
       fontWeight: 400,
     },
     body2: {
+      fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
       fontSize: '0.8rem',
       lineHeight: 1.6,
       letterSpacing: '0.01em',
-      color: '#A1A1AA',
+      color: '#B8B8B8',
       fontWeight: 400,
     },
     subtitle1: {
+      fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
       fontSize: '1rem',
       fontWeight: 500,
       letterSpacing: '0.01em',
       lineHeight: 1.5,
-      color: '#F5F5F7',
+      color: '#F8F8F8',
     },
     subtitle2: {
+      fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
       fontSize: '0.875rem',
       fontWeight: 500,
       letterSpacing: '0.01em',
       lineHeight: 1.5,
-      color: '#A1A1AA',
+      color: '#B8B8B8',
     },
     
     button: {
+      fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
       fontWeight: 600,
-      letterSpacing: '0.01em',
+      letterSpacing: '0.02em',
           textTransform: 'none',
           },
     
-    // Variantes personalizadas
+    // Variantes personalizadas para el menú
     categoryTitle: {
-      fontSize: '1.5rem',
-      fontWeight: 600,
-      letterSpacing: '-0.02em',
-      lineHeight: 1.2,
-      color: '#F5F5F7',
-      },
-    
-    // Precios - destacados en mostaza, alineados derecha, peso alto
-    priceDisplay: {
-      fontSize: '1.375rem',
+      fontFamily: "'Playfair Display', serif",
+      fontSize: '1.75rem',
       fontWeight: 700,
       letterSpacing: '-0.01em',
       lineHeight: 1.2,
-            color: '#F59E0B',
-      textAlign: 'right',
+      color: '#D4AF37',
+      textTransform: 'uppercase',
+      },
+    
+    menuItem: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontSize: '1.25rem',
+      fontWeight: 600,
+      letterSpacing: '0.01em',
+      lineHeight: 1.3,
+      color: '#F8F8F8',
           },
     
-    titleLarge: {
-      fontSize: '2.25rem',
-      fontWeight: 700,
-      letterSpacing: '-0.03em',
-      lineHeight: 1.1,
-      color: '#F5F5F7',
+    menuDescription: {
+      fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+      fontSize: '0.875rem',
+      fontWeight: 400,
+      letterSpacing: '0.01em',
+      lineHeight: 1.5,
+      color: '#B8B8B8',
+      fontStyle: 'italic',
           },
-    titleMedium: {
-      fontSize: '1.75rem',
-      fontWeight: 600,
-      letterSpacing: '-0.02em',
+    
+    // Precios - destacados en dorado
+    priceDisplay: {
+      fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+      fontSize: '1.25rem',
+      fontWeight: 700,
+      letterSpacing: '-0.01em',
       lineHeight: 1.2,
-      color: '#F5F5F7',
+      color: '#D4AF37',
+      textAlign: 'right',
+        },
+    
+    titleLarge: {
+      fontFamily: "'Playfair Display', serif",
+      fontSize: '2.75rem',
+      fontWeight: 700,
+      letterSpacing: '-0.02em',
+      lineHeight: 1.1,
+      color: '#F8F8F8',
+      },
+    titleMedium: {
+      fontFamily: "'Playfair Display', serif",
+      fontSize: '2rem',
+          fontWeight: 600,
+      letterSpacing: '-0.01em',
+      lineHeight: 1.2,
+      color: '#F8F8F8',
         },
       },
   shape: {
-    borderRadius: 12, // bordes redondeados suaves
+    borderRadius: 0, // Bordes rectos para un look más clásico y elegante
     },
   shadows: [
     'none',
-    '0px 2px 8px rgba(0,0,0,0.15)',
-    '0px 4px 12px rgba(0,0,0,0.18)',
-    '0px 6px 16px rgba(0,0,0,0.20)',
-    '0px 8px 20px rgba(0,0,0,0.22)',
-    '0px 10px 24px rgba(0,0,0,0.25)',
-    '0px 12px 28px rgba(0,0,0,0.28)',
-    '0px 14px 32px rgba(0,0,0,0.30)',
-    '0px 16px 36px rgba(0,0,0,0.32)',
-    '0px 18px 40px rgba(0,0,0,0.35)',
-    '0px 20px 44px rgba(0,0,0,0.38)',
-    '0px 22px 48px rgba(0,0,0,0.40)',
-    '0px 24px 52px rgba(0,0,0,0.42)',
-    '0px 26px 56px rgba(0,0,0,0.45)',
-    '0px 28px 60px rgba(0,0,0,0.48)',
-    '0px 30px 64px rgba(0,0,0,0.50)',
-    '0px 32px 68px rgba(0,0,0,0.52)',
-    '0px 34px 72px rgba(0,0,0,0.55)',
-    '0px 36px 76px rgba(0,0,0,0.58)',
-    '0px 38px 80px rgba(0,0,0,0.60)',
-    '0px 40px 84px rgba(0,0,0,0.62)',
-    '0px 42px 88px rgba(0,0,0,0.65)',
-    '0px 44px 92px rgba(0,0,0,0.68)',
-    '0px 46px 96px rgba(0,0,0,0.70)',
-    '0px 48px 100px rgba(0,0,0,0.72)',
+    '0px 1px 3px rgba(0,0,0,0.3)',
+    '0px 2px 6px rgba(0,0,0,0.35)',
+    '0px 3px 9px rgba(0,0,0,0.4)',
+    '0px 4px 12px rgba(0,0,0,0.45)',
+    '0px 5px 15px rgba(0,0,0,0.5)',
+    '0px 6px 18px rgba(0,0,0,0.55)',
+    '0px 7px 21px rgba(0,0,0,0.6)',
+    '0px 8px 24px rgba(0,0,0,0.65)',
+    '0px 9px 27px rgba(0,0,0,0.7)',
+    '0px 10px 30px rgba(0,0,0,0.75)',
+    '0px 11px 33px rgba(0,0,0,0.8)',
+    '0px 12px 36px rgba(0,0,0,0.85)',
+    '0px 13px 39px rgba(0,0,0,0.9)',
+    '0px 14px 42px rgba(0,0,0,0.95)',
+    '0px 15px 45px rgba(0,0,0,1)',
+    '0px 16px 48px rgba(0,0,0,1)',
+    '0px 17px 51px rgba(0,0,0,1)',
+    '0px 18px 54px rgba(0,0,0,1)',
+    '0px 19px 57px rgba(0,0,0,1)',
+    '0px 20px 60px rgba(0,0,0,1)',
+    '0px 21px 63px rgba(0,0,0,1)',
+    '0px 22px 66px rgba(0,0,0,1)',
+    '0px 23px 69px rgba(0,0,0,1)',
+    '0px 24px 72px rgba(0,0,0,1)',
   ],
   components: {
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#1C1C1E',
-          color: '#F5F5F7',
-          fontFamily: "'Plus Jakarta Sans', 'Outfit', 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif",
-          backgroundImage: `
-            radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0)
-          `,
-          backgroundSize: '20px 20px',
-          },
+          backgroundColor: '#0A0A0A',
+          color: '#F8F8F8',
+          fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+          backgroundImage: 'none', // Sin texturas para un look más limpio
         },
       },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          padding: '14px 28px',
+          borderRadius: 0,
+          padding: '12px 24px',
           fontWeight: 600,
           boxShadow: 'none',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          textTransform: 'none',
-          minHeight: 48,
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+          minHeight: 44,
           '&:hover': {
-            transform: 'translateY(-2px)',
+            transform: 'translateY(-1px)',
+          },
         },
-      },
         contained: {
-          backgroundColor: '#3B82F6',
-          color: '#FFFFFF',
-          boxShadow: '0px 4px 12px rgba(59, 130, 246, 0.25)',
+          backgroundColor: '#D4AF37',
+          color: '#0A0A0A',
+          border: '1px solid #D4AF37',
           '&:hover': {
-            backgroundColor: '#2563eb',
-            boxShadow: '0px 8px 24px rgba(59, 130, 246, 0.35)',
+            backgroundColor: '#F4E4BC',
+            boxShadow: '0px 4px 12px rgba(212, 175, 55, 0.3)',
+      },
     },
-        },
         outlined: {
           borderWidth: '1px',
-          borderColor: 'rgba(255, 255, 255, 0.12)',
-          color: '#F5F5F7',
+          borderColor: '#D4AF37',
+          color: '#D4AF37',
           '&:hover': {
             borderWidth: '1px',
-            backgroundColor: 'rgba(255,255,255,0.04)',
-            borderColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: 'rgba(212, 175, 55, 0.1)',
+            borderColor: '#F4E4BC',
+        },
       },
     },
-  },
-    },
+        },
     MuiPaper: {
       styleOverrides: {
         root: {
-          backgroundColor: '#2C2C2E',
-          borderRadius: 12,
-          border: '1px solid rgba(255, 255, 255, 0.06)',
-          boxShadow: '0px 4px 12px rgba(0,0,0,0.15)',
-        },
+          backgroundColor: '#1A1A1A',
+          borderRadius: 0,
+          border: '1px solid rgba(212, 175, 55, 0.2)',
+          boxShadow: '0px 2px 8px rgba(0,0,0,0.4)',
       },
     },
+  },
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 0,
           fontWeight: 600,
           fontSize: '0.75rem',
           height: 28,
           border: 'none',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
         },
         filled: {
           '&.MuiChip-colorPrimary': {
-            backgroundColor: 'rgba(59, 130, 246, 0.15)',
-            color: '#3B82F6',
+            backgroundColor: 'rgba(212, 175, 55, 0.2)',
+            color: '#D4AF37',
           },
           '&.MuiChip-colorSecondary': {
-            backgroundColor: 'rgba(245, 158, 11, 0.15)',
-            color: '#F59E0B',
+            backgroundColor: 'rgba(44, 44, 46, 0.8)',
+            color: '#F8F8F8',
           },
           '&.MuiChip-colorSuccess': {
-            backgroundColor: 'rgba(16, 185, 129, 0.15)',
-            color: '#10B981',
+            backgroundColor: 'rgba(212, 175, 55, 0.2)',
+            color: '#D4AF37',
           },
         },
       },
@@ -293,11 +334,10 @@ const theme = createTheme({
     MuiIconButton: {
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: 0,
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
-            transform: 'scale(1.05)',
-            backgroundColor: 'rgba(255,255,255,0.06)',
+            backgroundColor: 'rgba(212, 175, 55, 0.1)',
           },
         },
       },
@@ -305,8 +345,8 @@ const theme = createTheme({
     MuiDivider: {
       styleOverrides: {
         root: {
-          borderColor: '#3A3A3C',
-          margin: '20px 0',
+          borderColor: 'rgba(212, 175, 55, 0.3)',
+          margin: '24px 0',
         },
       },
     },
@@ -316,6 +356,8 @@ const theme = createTheme({
           titleLarge: 'h1',
           titleMedium: 'h2',
           categoryTitle: 'h3',
+          menuItem: 'h4',
+          menuDescription: 'p',
           priceDisplay: 'span',
         },
       },
