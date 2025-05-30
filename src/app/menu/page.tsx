@@ -5,15 +5,23 @@ import { useSearchParams } from 'next/navigation';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import MenuViewer from '../components/MenuViewer';
+import MenuSelector from '../components/MenuSelector';
+
 const MotionBox = motion(Box);
 
 const MenuPageContent: React.FC = () => {
   const searchParams = useSearchParams();
   // Obtener el ID del menú desde los parámetros de la URL
-  const menuId = searchParams.get('id') || searchParams.get('menuId') || 'default-menu';
+  const menuId = searchParams.get('id') || searchParams.get('menuId');
+
+  // Si no hay ID de menú, mostrar selector de menús
+  if (!menuId) {
+    return <MenuSelector />;
+  }
 
   return <MenuViewer menuId={menuId} />;
 };
+
 const MenuPage: React.FC = () => {
   return (
     <Suspense

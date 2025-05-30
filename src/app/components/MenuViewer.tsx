@@ -14,16 +14,20 @@ import {
   InputAdornment,
   Fab,
   Collapse,
-  IconButton
+  IconButton,
+  Button
 } from '@mui/material';
 import { 
   Search, 
   Restaurant, 
   ExpandMore,
   ExpandLess,
-  NoMeals
+  NoMeals,
+  ArrowBack,
+  Refresh
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { useFirebaseMenuById } from '../../hooks/useFirebaseMenu';
 import { useFirebaseCategories } from '../../hooks/useFirebaseCategories';
 import ProductCard from './ProductCard';
@@ -35,6 +39,7 @@ interface MenuViewerProps {
 }
 
 export default function MenuViewer({ menuId }: MenuViewerProps) {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -100,68 +105,189 @@ export default function MenuViewer({ menuId }: MenuViewerProps) {
     };
   };
 
+  const handleInitializeDatabase = async () => {
+    try {
+      const response = await fetch('/api/database/initialize', {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        // Recargar la página después de inicializar
+        window.location.reload();
+      } else {
+        console.error('Error al inicializar la base de datos');
+      }
+    } catch (error) {
+      console.error('Error al inicializar la base de datos:', error);
+    }
+  };
+
   const ConnectionStatus = () => {
     if (!connected && !loading) {
-      return (
+    return (
         <Alert severity="warning" sx={{ mb: 2 }}>
           Sin conexión en tiempo real. Los datos pueden no estar actualizados.
         </Alert>
-      );
-    }
+    );
+  }
     return null;
   };
 
   if (loading) {
-    return (
+  return (
       <Box sx={{ 
-        minHeight: '100vh',
+      minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
         gap: 3
-      }}>
+    }}>
         <CircularProgress size={60} sx={{ color: '#D4AF37' }} />
         <Typography sx={{ 
           color: '#B8B8B8', 
           fontSize: '1.125rem',
-          fontWeight: 500,
+                  fontWeight: 500,
           textAlign: 'center'
         }}>
           Cargando menú...
-        </Typography>
-      </Box>
-    );
+            </Typography>
+                    </Box>
+              );
   }
 
   if (error) {
     return (
-      <Container sx={{ py: 4 }}>
-        <Alert severity="error">
-          <Typography variant="h6" gutterBottom>
-            Error al cargar el menú
-          </Typography>
-          <Typography variant="body2">
-            {error}
-          </Typography>
-        </Alert>
-      </Container>
-    );
-  }
+      <Box sx={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%)',
+        display: 'flex',
+        alignItems: 'center'
+      }}>
+        <Container sx={{ py: 4 }}>
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Alert severity="error" sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Error al cargar el menú
+              </Typography>
+              <Typography variant="body2">
+                {error}
+              </Typography>
+            </Alert>
+            
+            <Box display="flex" gap={2} flexWrap="wrap">
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBack />}
+                onClick={() => router.push('/menu')}
+                sx={{ 
+                  borderColor: '#D4AF37',
+                  color: '#D4AF37',
+              '&:hover': {
+                    borderColor: '#B8941F',
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)'
+              }
+            }}
+          >
+                Volver a menús
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<Refresh />}
+                onClick={() => window.location.reload()}
+                sx={{
+                  background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
+                  color: '#0A0A0A',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #B8941F 0%, #D4AF37 100%)',
+                  }
+              }}
+              >
+                Reintentar
+              </Button>
+    </Box>
+          </MotionBox>
+        </Container>
+      </Box>
+  );
+}
 
   if (!menu) {
     return (
-      <Container sx={{ py: 4 }}>
-        <Alert severity="warning">
-          <Typography variant="h6" gutterBottom>
-            Menú no encontrado
-          </Typography>
-          <Typography variant="body2">
-            El menú solicitado no existe o no está disponible.
-          </Typography>
-        </Alert>
-      </Container>
+      <Box sx={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%)',
+        display: 'flex',
+        alignItems: 'center'
+      }}>
+        <Container sx={{ py: 4 }}>
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            sx={{ textAlign: 'center' }}
+          >
+            <Restaurant sx={{ fontSize: 80, color: '#D4AF37', mb: 3 }} />
+            
+            <Typography variant="h4" gutterBottom sx={{ color: '#F8F8F8', fontWeight: 700 }}>
+              Menú no encontrado
+            </Typography>
+            
+            <Typography variant="h6" sx={{ color: '#B8B8B8', mb: 4 }}>
+              {`El menú con ID "${menuId}" no existe o no está disponible.`}
+            </Typography>
+
+            <Alert severity="info" sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}>
+              <Typography variant="body2" gutterBottom>
+                Esto puede suceder si:
+              </Typography>
+              <Typography variant="body2" component="ul" sx={{ textAlign: 'left', pl: 2 }}>
+                <li>El enlace QR es incorrecto</li>
+                <li>El menú fue eliminado</li>
+                <li>La base de datos no está inicializada</li>
+              </Typography>
+            </Alert>
+
+            <Box display="flex" gap={2} justifyContent="center" flexWrap="wrap">
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBack />}
+                onClick={() => router.push('/menu')}
+                sx={{ 
+                  borderColor: '#D4AF37',
+                  color: '#D4AF37',
+                  '&:hover': {
+                    borderColor: '#B8941F',
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)'
+                  }
+                }}
+              >
+                Ver menús disponibles
+              </Button>
+              
+              <Button
+                variant="contained"
+                startIcon={<Restaurant />}
+                onClick={handleInitializeDatabase}
+                sx={{
+                  background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
+                  color: '#0A0A0A',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #B8941F 0%, #D4AF37 100%)',
+                  }
+                }}
+              >
+                Inicializar base de datos
+              </Button>
+            </Box>
+          </MotionBox>
+        </Container>
+      </Box>
     );
   }
 
