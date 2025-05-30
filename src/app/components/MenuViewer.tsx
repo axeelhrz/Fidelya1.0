@@ -665,11 +665,11 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Contenido principal */}
+      {/* Contenido principal con espaciado corregido */}
       <MotionContainer 
         maxWidth="md" 
         sx={{ 
-          pt: { xs: 12, sm: 14 },
+          pt: { xs: 16, sm: 18 }, // Aumentado significativamente para móviles
           pb: 8,
           px: { xs: 2, sm: 3 },
           position: 'relative',
@@ -679,7 +679,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
         initial="hidden"
         animate="visible"
       >
-        {/* Hero section */}
+        {/* Hero section con espaciado mejorado */}
         <MotionBox
           variants={headerVariants}
           sx={{ textAlign: 'center', mb: { xs: 6, sm: 7 } }}
@@ -805,6 +805,10 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ 
+
+
+
+
                         delay: index * 0.03, 
                         duration: 0.2
                       }}
