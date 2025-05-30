@@ -9,12 +9,14 @@ import {
   AppBar,
   Toolbar,
   IconButton,
+  Chip,
   Fade,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowBack, 
-  Restaurant
+  Restaurant,
+  FilterList
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { Product } from '../types';
@@ -35,18 +37,43 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
   menuDescription = 'Experiencia gastronómica premium'
 }) => {
   const router = useRouter();
+  const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Agrupar productos por categoría
+  // Obtener categorías únicas
+  const categories = useMemo(() => {
+    const categoryCount: Record<string, number> = {};
+    products.forEach(p => {
+      categoryCount[p.category] = (categoryCount[p.category] || 0) + 1;
+    });
+    
+    const cats = [
+      { name: 'Todas', count: products.length },
+      ...Array.from(new Set(products.map(p => p.category))).map(cat => ({
+        name: cat,
+        count: categoryCount[cat] || 0
+      }))
+    ];
+    return cats;
+  }, [products]);
+
+  // Filtrar productos por categoría
+  const filteredProducts = useMemo(() => {
+    if (selectedCategory === 'Todas') return products;
+    return products.filter(p => p.category === selectedCategory);
+  }, [products, selectedCategory]);
+
+  // Agrupar productos filtrados por categoría
   const groupedProducts = useMemo(() => {
     const groups: Record<string, Product[]> = {};
-    products.forEach(product => {
+    filteredProducts.forEach(product => {
       if (!groups[product.category]) {
         groups[product.category] = [];
       }
       groups[product.category].push(product);
     });
     return groups;
-  }, [products]);
+  }, [filteredProducts]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -79,7 +106,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
       backgroundSize: '20px 20px, 40px 40px',
       backgroundPosition: '0 0, 10px 10px'
     }}>
-      {/* Header Premium Ultra-Elegante */}
+      {/* Header Premium */}
       <AppBar 
         position="fixed" 
                 elevation={0}
@@ -118,7 +145,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               gap: 3
             }}
             >
-            {/* Botón de regreso elegante */}
             <MotionBox
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -145,9 +171,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               </IconButton>
           </MotionBox>
 
-            {/* Branding del Bar - Xs Reset */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
-              {/* Logo Premium */}
         <Box
           sx={{
                   p: 1.5,
@@ -178,7 +202,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                 }} />
               </Box>
               
-              {/* Información del Bar */}
               <Box>
                 <Typography 
                   sx={{ 
@@ -197,7 +220,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                   Xs Reset
               </Typography>
               
-                {/* Subtítulo elegante */}
                 <Typography
                 sx={{
                     fontSize: '0.7rem',
@@ -216,38 +238,45 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
             </Box>
           </MotionBox>
 
-          {/* Sección derecha: Estado y hora */}
+          {/* Sección derecha: Filtros y estado */}
           <MotionBox
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98], delay: 0.2 }}
             sx={{
               display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-end',
-              gap: 0.5
+              alignItems: 'center',
+              gap: 2
             }}
           >
-            {/* Hora actual */}
-            <Typography
-              sx={{
-                color: '#F5F5F7',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                letterSpacing: '-0.01em',
-                fontFamily: 'monospace'
+            {/* Botón de filtros */}
+            <MotionBox
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <IconButton
+                onClick={() => setShowFilters(!showFilters)}
+                sx={{ 
+                  color: showFilters ? '#3B82F6' : '#A1A1AA',
+                  p: 1.5,
+                  borderRadius: 2,
+                  backgroundColor: showFilters ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.04)',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    color: '#3B82F6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: 'rgba(59, 130, 246, 0.2)'
+                  }
               }}
             >
-              {new Date().toLocaleTimeString('es-AR', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: false 
-              })}
-            </Typography>
-            
-            {/* Estado premium */}
-            <Box
-              sx={{
+                <FilterList fontSize="small" />
+              </IconButton>
+          </MotionBox>
+
+            {/* Estado */}
+        <Box
+          sx={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
@@ -256,20 +285,20 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                 borderRadius: 1.5,
                 backgroundColor: 'rgba(16, 185, 129, 0.06)',
                 border: '1px solid rgba(16, 185, 129, 0.12)'
-              }}
+          }}
             >
-              <Box
-                sx={{
+        <Box
+          sx={{
                   width: 5,
                   height: 5,
                   borderRadius: '50%',
                   backgroundColor: '#10B981',
                   boxShadow: '0 0 8px rgba(16, 185, 129, 0.6)',
                   animation: 'pulse 2s infinite'
-                }}
-              />
-              <Typography
-                sx={{
+          }}
+        />
+          <Typography 
+            sx={{ 
                   color: '#10B981',
                   fontSize: '0.7rem',
                   fontWeight: 600,
@@ -278,12 +307,12 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                 }}
               >
                 Abierto
-              </Typography>
-    </Box>
+          </Typography>
+            </Box>
           </MotionBox>
         </Toolbar>
 
-        {/* Línea decorativa inferior con gradiente elegante */}
+        {/* Línea decorativa inferior */}
         <Box
           sx={{
             position: 'absolute',
@@ -293,21 +322,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
             height: '1px',
             background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.2) 20%, rgba(245, 158, 11, 0.3) 50%, rgba(59, 130, 246, 0.2) 80%, transparent 100%)',
             opacity: 0.7
-          }}
-        />
-
-        {/* Efecto de brillo sutil */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '25%',
-            transform: 'translate(-50%, -50%)',
-            width: '300px',
-            height: '60px',
-            background: 'radial-gradient(ellipse, rgba(59, 130, 246, 0.02) 0%, transparent 70%)',
-            pointerEvents: 'none',
-            borderRadius: '50%'
           }}
         />
       </AppBar>
@@ -324,18 +338,17 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
         initial="hidden"
         animate="visible"
       >
-        {/* Hero section con branding del bar */}
+        {/* Hero section minimalista */}
         <MotionBox
           variants={headerVariants}
-          sx={{ textAlign: 'center', mb: { xs: 12, sm: 16 } }}
+          sx={{ textAlign: 'center', mb: { xs: 8, sm: 10 } }}
         >
-          {/* Título principal con el nombre del bar */}
           <Typography 
             sx={{ 
-              fontSize: { xs: '2.75rem', sm: '3.75rem', md: '4.25rem' },
+              fontSize: { xs: '2.5rem', sm: '3.25rem', md: '3.75rem' },
               fontWeight: 700,
               letterSpacing: '-0.04em',
-              lineHeight: 0.85,
+              lineHeight: 0.9,
               color: '#F5F5F7',
               mb: 2,
               background: 'linear-gradient(135deg, #F5F5F7 0%, #A1A1AA 100%)',
@@ -347,7 +360,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
             Xs Reset
           </Typography>
 
-          {/* Subtítulo elegante */}
           <Typography 
             sx={{ 
               fontSize: { xs: '0.9rem', sm: '1rem' },
@@ -367,7 +379,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               color: '#A1A1AA',
               fontSize: { xs: '1rem', sm: '1.125rem' },
               fontWeight: 400,
-              maxWidth: 520,
+              maxWidth: 480,
               mx: 'auto',
               lineHeight: 1.6,
               mb: 6
@@ -376,10 +388,9 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
             {menuDescription}
           </Typography>
 
-          {/* Divisor elegante con gradiente */}
           <Box
             sx={{
-              width: 140,
+              width: 120,
               height: 1,
               background: 'linear-gradient(90deg, transparent 0%, #3B82F6 30%, #F59E0B 70%, transparent 100%)',
               mx: 'auto'
@@ -387,12 +398,129 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           />
         </MotionBox>
 
-        {/* Secciones del menú */}
+        {/* Sistema de filtros */}
         <AnimatePresence>
-          <Stack spacing={{ xs: 12, sm: 16 }}>
+          {showFilters && (
+            <Fade in={showFilters}>
+              <MotionBox
+                initial={{ opacity: 0, height: 0, y: -20 }}
+                animate={{ opacity: 1, height: 'auto', y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                sx={{ mb: { xs: 8, sm: 10 } }}
+              >
+                <Box
+                  sx={{ 
+                    p: { xs: 3, sm: 4 }, 
+                    borderRadius: 3,
+                    backgroundColor: 'rgba(44, 44, 46, 0.3)',
+                    backdropFilter: 'blur(24px)',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                  }}
+                >
+                  <Typography 
+                    sx={{ 
+                      mb: 3,
+                      fontWeight: 600,
+                      color: '#F5F5F7',
+                      fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                      letterSpacing: '-0.02em'
+                    }}
+                  >
+                    Filtrar por categoría
+                  </Typography>
+                  
+                  <Stack 
+                    direction="row" 
+                    spacing={1.5}
+                    sx={{ 
+                      flexWrap: 'wrap',
+                      gap: 1.5,
+                    }}
+                  >
+                    {categories.map((category) => (
+                      <MotionBox
+                        key={category.name}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Chip
+                          label={`${category.name} (${category.count})`}
+                          onClick={() => setSelectedCategory(category.name)}
+                          variant={selectedCategory === category.name ? 'filled' : 'outlined'}
+                          sx={{
+                            minHeight: 40,
+                            borderRadius: 2.5,
+                            fontWeight: selectedCategory === category.name ? 600 : 500,
+                            fontSize: '0.875rem',
+                            px: 2,
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            cursor: 'pointer',
+                            backgroundColor: selectedCategory === category.name 
+                              ? '#3B82F6' 
+                              : 'rgba(255, 255, 255, 0.02)',
+                            color: selectedCategory === category.name 
+                              ? '#FFFFFF' 
+                              : '#A1A1AA',
+                            borderColor: selectedCategory === category.name 
+                              ? '#3B82F6' 
+                              : 'rgba(161, 161, 170, 0.2)',
+                            '&:hover': {
+                              backgroundColor: selectedCategory === category.name 
+                                ? '#2563eb' 
+                                : 'rgba(255,255,255,0.06)',
+                              color: selectedCategory === category.name 
+                                ? '#FFFFFF' 
+                                : '#F5F5F7',
+                              borderColor: selectedCategory === category.name 
+                                ? '#2563eb' 
+                                : 'rgba(161, 161, 170, 0.3)',
+                            },
+                          }}
+                        />
+                      </MotionBox>
+                    ))}
+                  </Stack>
+    </Box>
+              </MotionBox>
+            </Fade>
+          )}
+        </AnimatePresence>
+
+        {/* Contador de productos */}
+        <MotionBox
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          sx={{ 
+            mb: 6,
+            textAlign: 'center'
+          }}
+        >
+          <Typography 
+            sx={{ 
+              color: '#A1A1AA',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              px: 3,
+              py: 1,
+              backgroundColor: 'rgba(44, 44, 46, 0.4)',
+              borderRadius: 2,
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              display: 'inline-block'
+            }}
+          >
+            {filteredProducts.length} {filteredProducts.length === 1 ? 'producto' : 'productos'}
+            {selectedCategory !== 'Todas' && ` en ${selectedCategory}`}
+          </Typography>
+        </MotionBox>
+
+        {/* Secciones del menú */}
+        <AnimatePresence mode="wait">
+          <Stack spacing={{ xs: 6, sm: 8 }}>
             {Object.entries(groupedProducts).map(([category, categoryProducts], index) => (
               <MenuSection
-                key={category}
+                key={`${category}-${selectedCategory}`}
                 title={category}
                 products={categoryProducts}
                 index={index}
@@ -401,21 +529,21 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           </Stack>
         </AnimatePresence>
 
-        {/* Footer premium con branding */}
+        {/* Footer premium */}
         <MotionBox
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
           sx={{ 
-            mt: 20,
-            pt: 12,
+            mt: 16,
+            pt: 8,
             textAlign: 'center'
           }}
         >
           <Box
             sx={{
-              p: 8,
-              borderRadius: 4,
+              p: 6,
+              borderRadius: 3,
               background: 'rgba(44, 44, 46, 0.3)',
               backdropFilter: 'blur(32px)',
               border: '1px solid rgba(255, 255, 255, 0.06)',
@@ -423,7 +551,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               overflow: 'hidden'
             }}
           >
-            {/* Efecto de iluminación sutil */}
             <Box
               sx={{
                 position: 'absolute',
@@ -453,7 +580,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                   color: '#A1A1AA',
                   fontSize: '0.875rem',
                   fontWeight: 400,
-                  mb: 4,
+                  mb: 3,
                   lineHeight: 1.6,
                   opacity: 0.8
                 }}
@@ -461,10 +588,9 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                 Experiencia Digital Premium • Precios sujetos a cambios
               </Typography>
               
-              {/* Línea decorativa final */}
               <Box
                 sx={{
-                  width: 80,
+                  width: 60,
                   height: 1,
                   background: 'linear-gradient(90deg, transparent 0%, #F59E0B 50%, transparent 100%)',
                   mx: 'auto'

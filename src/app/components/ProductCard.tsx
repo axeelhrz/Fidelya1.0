@@ -41,13 +41,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
       initial="hidden"
       animate="visible"
       whileHover={{ 
-        y: -3,
+        y: -2,
         transition: { duration: 0.3, ease: 'easeOut' }
       }}
       sx={{
         position: 'relative',
         borderRadius: 2,
-        overflow: 'hidden',
         background: 'rgba(44, 44, 46, 0.3)',
         backdropFilter: 'blur(20px)',
         border: '1px solid rgba(255, 255, 255, 0.06)',
@@ -56,7 +55,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
         '&:hover': {
           backgroundColor: 'rgba(44, 44, 46, 0.5)',
           borderColor: 'rgba(255, 255, 255, 0.12)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+          boxShadow: '0 6px 24px rgba(0, 0, 0, 0.15)',
         }
       }}
     >
@@ -74,173 +73,131 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
         />
       )}
 
-      {/* Contenido principal */}
-      <Box sx={{ p: { xs: 5, sm: 6 } }}>
-        {/* Chips minimalistas */}
-        {(isRecommended || isNew || isVegetarian) && (
-          <Box sx={{ mb: 3, display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+      {/* Contenido principal compacto */}
+      <Box sx={{ p: { xs: 3, sm: 4 } }}>
+        {/* Header con chips y precio */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'flex-start',
+          mb: 2,
+          gap: 2
+        }}>
+          {/* Chips minimalistas */}
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             {isRecommended && (
               <Chip
-                icon={<Star sx={{ fontSize: '12px !important' }} />}
-                  label="Recomendado"
-                  size="small"
-                  sx={{
+                icon={<Star sx={{ fontSize: '10px !important' }} />}
+                label="★"
+                size="small"
+                sx={{
                   backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                    color: '#10B981',
+                  color: '#10B981',
                   fontWeight: 600,
-                    fontSize: '0.7rem',
-                  height: 24,
-                  borderRadius: 1.5,
+                  fontSize: '0.65rem',
+                  height: 20,
+                  minWidth: 20,
+                  borderRadius: 1,
                   border: 'none',
-                    '& .MuiChip-icon': {
-                    color: '#10B981'
-                    }
-                  }}
-                />
+                  '& .MuiChip-label': {
+                    px: 0.5
+                  }
+                }}
+              />
             )}
             
             {isNew && (
               <Chip
-                icon={<FiberNew sx={{ fontSize: '12px !important' }} />}
-                  label="Nuevo"
-                  size="small"
-                  sx={{
+                label="N"
+                size="small"
+                sx={{
                   backgroundColor: 'rgba(59, 130, 246, 0.12)',
-                    color: '#3B82F6',
+                  color: '#3B82F6',
                   fontWeight: 600,
-                    fontSize: '0.7rem',
-                  height: 24,
-                  borderRadius: 1.5,
+                  fontSize: '0.65rem',
+                  height: 20,
+                  minWidth: 20,
+                  borderRadius: 1,
                   border: 'none',
-                    '& .MuiChip-icon': {
-                    color: '#3B82F6'
-                    }
-                  }}
-                />
+                  '& .MuiChip-label': {
+                    px: 0.5
+                  }
+                }}
+              />
             )}
             
             {isVegetarian && (
               <Chip
-                icon={<Eco sx={{ fontSize: '12px !important' }} />}
-                  label="Vegano"
-                  size="small"
-                  sx={{
+                label="V"
+                size="small"
+                sx={{
                   backgroundColor: 'rgba(245, 158, 11, 0.12)',
-                    color: '#F59E0B',
+                  color: '#F59E0B',
                   fontWeight: 600,
-                    fontSize: '0.7rem',
-                  height: 24,
-                  borderRadius: 1.5,
+                  fontSize: '0.65rem',
+                  height: 20,
+                  minWidth: 20,
+                  borderRadius: 1,
                   border: 'none',
-                    '& .MuiChip-icon': {
-                    color: '#F59E0B'
-                    }
-                  }}
-                />
+                  '& .MuiChip-label': {
+                    px: 0.5
+                  }
+                }}
+              />
             )}
           </Box>
-        )}
-
-        {/* Layout principal: nombre y precio en línea */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'baseline',
-          mb: 2.5,
-          gap: 3
-        }}>
-          {/* Nombre del producto */}
-          <Typography
-              variant="h5"
-              sx={{
-              fontWeight: 500,
-              fontSize: { xs: '1.125rem', sm: '1.25rem' },
-                color: '#F5F5F7',
-              letterSpacing: '-0.01em',
-              lineHeight: 1.3,
-                textAlign: 'left',
-              flex: 1
-              }}
-            >
-              {product.name}
-            </Typography>
-          {/* Precio elegante */}
+          
+          {/* Precio compacto */}
           <Typography
             sx={{
               fontWeight: 700,
-              fontSize: { xs: '1.25rem', sm: '1.375rem' },
+              fontSize: { xs: '1.125rem', sm: '1.25rem' },
               color: '#F59E0B',
-                letterSpacing: '-0.02em',
+              letterSpacing: '-0.02em',
               textAlign: 'right',
-              minWidth: 'fit-content',
-                position: 'relative',
-              '&::before': {
-                content: '"$"',
-                fontSize: '0.9em',
-                opacity: 0.8,
-                marginRight: '2px'
-              }
-              }}
-            >
-            {product.price}
-            </Typography>
+              minWidth: 'fit-content'
+            }}
+          >
+            ${product.price}
+          </Typography>
         </Box>
 
-        {/* Descripción elegante */}
-        {product.description && (
-          <Typography
-              variant="body1"
-              sx={{
-                color: '#A1A1AA',
-              fontSize: { xs: '0.875rem', sm: '0.9rem' },
-              lineHeight: 1.6,
-                fontWeight: 400,
-                textAlign: 'left',
-              mb: 3,
-              opacity: 0.9
-              }}
-            >
-              {product.description}
-            </Typography>
-        )}
-
-        {/* Footer minimalista */}
-        <Box
+        {/* Nombre del producto */}
+        <Typography
+          variant="h6"
           sx={{
-            pt: 3,
-            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            fontWeight: 500,
+            fontSize: { xs: '1rem', sm: '1.125rem' },
+            color: '#F5F5F7',
+            letterSpacing: '-0.01em',
+            lineHeight: 1.3,
+            textAlign: 'left',
+            mb: 1.5
           }}
         >
-            <Typography
-              variant="caption"
-              sx={{
-                color: '#A1A1AA',
-                fontSize: '0.75rem',
-              fontWeight: 500,
-                textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              opacity: 0.7
-              }}
-            >
-              {product.category}
-            </Typography>
-            
-          {/* Indicador visual sutil */}
-            {isRecommended && (
-            <Box
-              sx={{
-                width: 6,
-                height: 6,
-                  borderRadius: '50%',
-                backgroundColor: '#10B981',
-                opacity: 0.8
-              }}
-            />
-          )}
-        </Box>
+          {product.name}
+        </Typography>
+
+        {/* Descripción compacta */}
+        {product.description && (
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#A1A1AA',
+              fontSize: { xs: '0.8rem', sm: '0.85rem' },
+              lineHeight: 1.5,
+              fontWeight: 400,
+              textAlign: 'left',
+              opacity: 0.9,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}
+          >
+            {product.description}
+          </Typography>
+        )}
       </Box>
     </MotionBox>
   );
