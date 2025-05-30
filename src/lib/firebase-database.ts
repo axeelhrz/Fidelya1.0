@@ -15,6 +15,9 @@ import {
 import { db } from './firebase';
 import { Menu, Product, Category } from '../app/types';
 
+// Export db for use in other modules
+export { db };
+
 export class FirebaseDatabase {
   // Collections
   private static MENUS_COLLECTION = 'menus';
@@ -27,6 +30,7 @@ export class FirebaseDatabase {
       const menusRef = collection(db, this.MENUS_COLLECTION);
       const q = query(menusRef, orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
+      
       return snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -47,6 +51,7 @@ export class FirebaseDatabase {
       if (!snapshot.exists()) {
         return null;
       }
+
       return {
         id: snapshot.id,
         ...snapshot.data(),
@@ -107,6 +112,7 @@ export class FirebaseDatabase {
       if (menuId) {
         q = query(productsRef, where('menuId', '==', menuId), orderBy('createdAt', 'desc'));
       }
+      
       const snapshot = await getDocs(q);
       
       return snapshot.docs.map(doc => ({
