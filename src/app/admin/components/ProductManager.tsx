@@ -58,7 +58,7 @@ const COMMON_TAGS = [
   'artesanal', 'importado', 'nacional', 'temporada', 'compartir'
 ];
 
-export default function ProductManager({ products, menus, selectedMenuId }: ProductManagerProps) {
+export default function ProductManager({ products, selectedMenuId }: ProductManagerProps) {
   const [open, setOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
@@ -182,10 +182,7 @@ export default function ProductManager({ products, menus, selectedMenuId }: Prod
     }
   };
 
-  const getMenuName = (menuId: string) => {
-    const menu = menus.find(m => m.id === menuId);
-    return menu?.name || 'Menú no encontrado';
-  };
+
 
   const getCategoryLabel = (category: string) => {
     const cat = PRODUCT_CATEGORIES.find(c => c.value === category);
@@ -312,7 +309,7 @@ export default function ProductManager({ products, menus, selectedMenuId }: Prod
                         <Chip label="Vegetariano" size="small" color="info" variant="outlined" />
                       )}
                       {product.tags?.slice(0, 2).map((tag, index) => (
-                        <Chip key={`tag-${index}`} label={tag} size="small" variant="outlined" />
+                        <Chip key={`product-${product.id}-tag-${index}`} label={tag} size="small" variant="outlined" />
                       ))}
                       {product.tags && product.tags.length > 2 && (
                         <Chip label={`+${product.tags.length - 2}`} size="small" variant="outlined" />
@@ -443,20 +440,24 @@ export default function ProductManager({ products, menus, selectedMenuId }: Prod
                     setFormData({ ...formData, tags: newValue });
                   }}
                   renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                      <Chip 
-                        variant="outlined" 
-                        label={option} 
-                        {...getTagProps({ index })} 
-                      />
-                    ))
+                    value.map((option, index) => {
+                      const { key, ...tagProps } = getTagProps({ index });
+                      return (
+                        <Chip 
+                          key={key}
+                          variant="outlined" 
+                          label={option} 
+                          {...tagProps}
+                        />
+                      );
+                    })
                   }
                   renderInput={(params) => (
                     <TextField
                       {...params}
                       label="Tags"
                       placeholder="Agregar tags..."
-                />
+                    />
                   )}
                 />
                 
@@ -469,15 +470,19 @@ export default function ProductManager({ products, menus, selectedMenuId }: Prod
                     setFormData({ ...formData, allergens: newValue });
                   }}
                   renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                      <Chip 
-                        variant="outlined" 
-                        label={option} 
-                        color="warning" 
-                        {...getTagProps({ index })} 
-                      />
-                    ))
-                  }
+                    value.map((option, index) => {
+                      const { key, ...tagProps } = getTagProps({ index });
+                      return (
+                        <Chip 
+                          key={key}
+                          variant="outlined" 
+                          label={option} 
+                          color="warning" 
+                          {...tagProps}
+              />
+  );
+                    })
+}
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -486,7 +491,7 @@ export default function ProductManager({ products, menus, selectedMenuId }: Prod
                     />
                   )}
                 />
-            </Box>
+              </Box>
             </Box>
 
             {/* Información nutricional */}
@@ -495,14 +500,14 @@ export default function ProductManager({ products, menus, selectedMenuId }: Prod
                 Información Nutricional
               </Typography>
               <Box display="flex" flexDirection="column" gap={2}>
-              <TextField
+                <TextField
                   label="Calorías"
                   type="number"
                   value={formData.calories}
                   onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
                   inputProps={{ min: 0 }}
                   fullWidth
-              />
+                />
                 
                 <Box display="flex" gap={2}>
                   <FormControlLabel
@@ -534,7 +539,7 @@ export default function ProductManager({ products, menus, selectedMenuId }: Prod
                     }
                     label="Sin Gluten"
                   />
-    </Box>
+                </Box>
               </Box>
             </Box>
 
