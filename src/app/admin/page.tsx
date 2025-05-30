@@ -20,15 +20,17 @@ import {
   VisibilityOff,
   Lock as LockIcon,
   AdminPanelSettings as AdminIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
+const MotionBox = motion(Box);
 const MotionPaper = motion(Paper);
-const MotionContainer = motion(Container);
+const MotionTypography = motion(Typography);
+const MotionButton = motion(Button);
 
-// Contraseña de administrador (en producción debería estar en variables de entorno)
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123';
-
+// Contraseña de administrador estándar
+const ADMIN_PASSWORD = 'admin123';
 const AdminLogin: React.FC = () => {
   const router = useRouter();
   const [password, setPassword] = useState('');
@@ -67,91 +69,155 @@ const AdminLogin: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
+  const handleBackToHome = () => {
+    router.push('/');
+};
+
   return (
-    <Box
+    <MotionBox
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1.2, ease: 'easeOut' }}
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 50%, #1C1C1E 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        px: 2,
+        position: 'relative',
+        background: '#1C1C1E',
+        overflow: 'hidden',
+        px: { xs: 3, sm: 4 },
+        py: 4
       }}
     >
-      <MotionContainer
-        maxWidth="sm"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+      {/* Subtle background gradient - igual que HeroSection */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 70%)',
+          pointerEvents: 'none'
+        }}
+      />
+
+      {/* Botón de regreso */}
+      <MotionButton
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+        onClick={handleBackToHome}
+        startIcon={<ArrowBackIcon />}
+        sx={{
+          position: 'absolute',
+          top: { xs: 20, sm: 32 },
+          left: { xs: 20, sm: 32 },
+          color: '#A1A1AA',
+          '&:hover': {
+            color: '#F5F5F7',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          },
+          zIndex: 2,
+        }}
       >
-        <MotionPaper
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          sx={{
-            p: { xs: 3, sm: 5 },
-            borderRadius: 4,
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
-            position: 'relative',
-            overflow: 'hidden',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '4px',
-              background: 'linear-gradient(90deg, #3B82F6 0%, #10B981 100%)',
-            },
-          }}
+        Volver al inicio
+      </MotionButton>
+
+      <Container 
+        maxWidth="sm"
+        sx={{ 
+          zIndex: 1,
+          position: 'relative'
+        }}
+      >
+        <Stack 
+          spacing={{ xs: 6, sm: 8 }}
+          alignItems="center" 
+          textAlign="center"
         >
-          <Stack spacing={4} alignItems="center">
-            {/* Logo/Icono */}
-            <motion.div
-              initial={{ rotate: -180, scale: 0 }}
-              animate={{ rotate: 0, scale: 1 }}
-              transition={{ duration: 0.8, type: "spring", stiffness: 200 }}
-            >
-              <Box
-                sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #3B82F6 0%, #10B981 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)',
-                }}
-              >
-                <AdminIcon sx={{ fontSize: 40, color: 'white' }} />
-              </Box>
-            </motion.div>
+          {/* Logo/Icono - similar al HeroSection */}
+          <MotionBox
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ 
+              duration: 0.8, 
+              ease: 'easeOut',
+              delay: 0.4
+            }}
+          >
+            <AdminIcon 
+              sx={{ 
+                fontSize: { xs: 64, sm: 80 },
+                color: '#3B82F6',
+                filter: 'drop-shadow(0px 0px 20px rgba(59, 130, 246, 0.2))'
+              }} 
+            />
+          </MotionBox>
 
-            {/* Título */}
-            <Box textAlign="center">
-              <Typography 
-                variant="h4" 
-                fontWeight={700}
-                sx={{
-                  background: 'linear-gradient(135deg, #F5F5F7 0%, #A1A1AA 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  mb: 1,
-                }}
-              >
-                Panel de Administración
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Ingresa la contraseña para acceder al editor de menú
-              </Typography>
-            </Box>
+          {/* Título principal - estilo similar al HeroSection */}
+          <MotionTypography
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              duration: 0.8, 
+              ease: 'easeOut',
+              delay: 0.6
+            }}
+            sx={{
+              fontSize: { xs: '2.5rem', sm: '3rem', md: '3.5rem' },
+              fontWeight: 700,
+              letterSpacing: '-0.04em',
+              lineHeight: 0.9,
+              color: '#F5F5F7',
+              mb: 2
+            }}
+          >
+            Panel Admin
+          </MotionTypography>
 
-            {/* Formulario */}
-            <Box component="form" onSubmit={handleLogin} sx={{ width: '100%' }}>
+          {/* Subtítulo */}
+          <MotionTypography
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              duration: 0.8, 
+              ease: 'easeOut',
+              delay: 0.8
+            }}
+            sx={{
+              fontSize: { xs: '1.125rem', sm: '1.25rem' },
+              fontWeight: 400,
+              color: '#A1A1AA',
+              lineHeight: 1.5,
+              maxWidth: 480,
+              mx: 'auto'
+            }}
+          >
+            Ingresa la contraseña para acceder al editor de menú
+          </MotionTypography>
+
+          {/* Formulario */}
+          <MotionPaper
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              duration: 0.8, 
+              ease: 'easeOut',
+              delay: 1.0
+            }}
+            sx={{
+              p: { xs: 4, sm: 5 },
+              borderRadius: 3,
+              background: 'rgba(44, 44, 46, 0.8)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(20px)',
+              width: '100%',
+              maxWidth: 400,
+            }}
+          >
+            <Box component="form" onSubmit={handleLogin}>
               <Stack spacing={3}>
                 <TextField
                   fullWidth
@@ -163,7 +229,7 @@ const AdminLogin: React.FC = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <LockIcon sx={{ color: 'text.secondary' }} />
+                        <LockIcon sx={{ color: '#A1A1AA' }} />
                       </InputAdornment>
                     ),
                     endAdornment: (
@@ -172,6 +238,7 @@ const AdminLogin: React.FC = () => {
                           onClick={togglePasswordVisibility}
                           edge="end"
                           disabled={loading}
+                          sx={{ color: '#A1A1AA' }}
                         >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
@@ -181,37 +248,54 @@ const AdminLogin: React.FC = () => {
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
                       '&:hover': {
                         backgroundColor: 'rgba(255, 255, 255, 0.04)',
                       },
                       '&.Mui-focused': {
                         backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                        borderColor: '#3B82F6',
                       },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: '#A1A1AA',
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      color: '#F5F5F7',
                     },
                   }}
                 />
 
-                <Button
+                <MotionButton
                   type="submit"
                   variant="contained"
                   size="large"
                   disabled={loading || !password.trim()}
+                  whileHover={{ scale: loading ? 1 : 1.02 }}
+                  whileTap={{ scale: loading ? 1 : 0.98 }}
                   sx={{
                     py: 1.5,
-                    borderRadius: 3,
-                    background: 'linear-gradient(135deg, #3B82F6 0%, #10B981 100%)',
-                    fontWeight: 600,
                     fontSize: '1.1rem',
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    background: '#3B82F6',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    boxShadow: 'none',
+                    transition: 'all 0.2s ease',
                     '&:hover': {
-                      background: 'linear-gradient(135deg, #2563eb 0%, #059669 100%)',
+                      background: '#2563eb',
+                      boxShadow: 'none',
+                      transform: 'translateY(-1px)'
                     },
                     '&:disabled': {
-                      background: 'rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(59, 130, 246, 0.3)',
+                      color: 'rgba(255, 255, 255, 0.5)',
                     },
                   }}
                 >
                   {loading ? 'Verificando...' : 'Acceder al Panel'}
-                </Button>
+                </MotionButton>
               </Stack>
             </Box>
 
@@ -221,10 +305,11 @@ const AdminLogin: React.FC = () => {
                 <Alert 
                   severity="error" 
                   sx={{ 
-                    width: '100%',
+                    mt: 3,
                     borderRadius: 2,
                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
                     border: '1px solid rgba(239, 68, 68, 0.2)',
+                    color: '#F87171',
                   }}
                 >
                   {error}
@@ -233,15 +318,26 @@ const AdminLogin: React.FC = () => {
             )}
 
             {/* Información adicional */}
-            <Box textAlign="center" sx={{ mt: 2 }}>
-              <Typography variant="caption" color="text.secondary">
-                💡 Contraseña por defecto: <code>admin123</code>
+            <Box textAlign="center" sx={{ mt: 3 }}>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: '#71717A',
+                  fontSize: '0.875rem'
+                }}
+              >
+                💡 Contraseña estándar: <code style={{ 
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)', 
+                  padding: '2px 6px', 
+                  borderRadius: '4px',
+                  color: '#3B82F6'
+                }}>admin123</code>
               </Typography>
             </Box>
-          </Stack>
-        </MotionPaper>
-      </MotionContainer>
-    </Box>
+          </MotionPaper>
+        </Stack>
+      </Container>
+    </MotionBox>
   );
 };
 

@@ -30,8 +30,10 @@ import {
 import { motion } from 'framer-motion';
 import { useAdminDashboard } from '../../../hooks/useAdminDashboard';
 import SimpleMenuEditor from '../../components/SimpleMenuEditor';
+
 const MotionContainer = motion(Container);
 const MotionPaper = motion(Paper);
+
 const AdminDashboard: React.FC = () => {
   const router = useRouter();
   const { 
@@ -45,12 +47,19 @@ const AdminDashboard: React.FC = () => {
 
   const [selectedMenuId, setSelectedMenuId] = useState<string>('');
   const [initLoading, setInitLoading] = useState(false);
-  // Verificar autenticación
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Verificar autenticación al cargar
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('admin-authenticated');
-    if (isAuthenticated !== 'true') {
+    const checkAuth = () => {
+      const authStatus = localStorage.getItem('admin-authenticated');
+      if (authStatus === 'true') {
+        setIsAuthenticated(true);
+      } else {
       router.push('/admin');
     }
+  };
+
+    checkAuth();
   }, [router]);
 
   // Seleccionar primer menú automáticamente
@@ -59,9 +68,9 @@ const AdminDashboard: React.FC = () => {
       setSelectedMenuId(menus[0].id);
     }
   }, [menus, selectedMenuId]);
-
   const handleLogout = () => {
     localStorage.removeItem('admin-authenticated');
+    setIsAuthenticated(false);
     router.push('/admin');
   };
 
@@ -93,7 +102,24 @@ const AdminDashboard: React.FC = () => {
     } catch (error) {
       console.error('Error exportando datos:', error);
     }
-  };
+};
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (!isAuthenticated) {
+    return (
+      <Box 
+        sx={{ 
+          minHeight: '100vh', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          backgroundColor: '#1C1C1E'
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: '#3B82F6' }} />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
@@ -167,37 +193,37 @@ const AdminDashboard: React.FC = () => {
           </Box>
         </MotionPaper>
 
-                {/* Selector de menú */}
+        {/* Selector de menú */}
         {menus.length > 0 && (
           <MotionPaper
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             sx={{ p: 3, mb: 4 }}
-                    >
+          >
             <FormControl sx={{ minWidth: 300 }}>
               <InputLabel>Seleccionar Menú</InputLabel>
               <Select
                 value={selectedMenuId}
                 onChange={(e) => setSelectedMenuId(e.target.value)}
                 label="Seleccionar Menú"
-                >
+              >
                 {menus.map((menu) => (
                   <MenuItem key={menu.id} value={menu.id}>
                     <Box display="flex" alignItems="center" gap={2}>
                       <Typography>{menu.name}</Typography>
                       <Chip 
-                            label={menu.isActive ? 'Activo' : 'Inactivo'}
-                            size="small"
-                            color={menu.isActive ? 'success' : 'default'}
-                          />
-                        </Box>
+                        label={menu.isActive ? 'Activo' : 'Inactivo'}
+                        size="small"
+                        color={menu.isActive ? 'success' : 'default'}
+                      />
+                    </Box>
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
-        </MotionPaper>
-            )}
+          </MotionPaper>
+        )}
 
         {/* Contenido principal */}
         {loading ? (
@@ -215,7 +241,7 @@ const AdminDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             sx={{ p: 6, textAlign: 'center' }}
-        >
+          >
             <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
               {menus.length === 0 ? 'No hay menús disponibles' : 'Selecciona un menú para editar'}
             </Typography>
@@ -223,15 +249,15 @@ const AdminDashboard: React.FC = () => {
               <>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                   Inicializa la base de datos para comenzar
-            </Typography>
-            <Button
-              variant="contained"
+                </Typography>
+                <Button
+                  variant="contained"
                   startIcon={<UploadIcon />}
                   onClick={handleInitializeDatabase}
-              disabled={initLoading}
-            >
+                  disabled={initLoading}
+                >
                   {initLoading ? 'Inicializando...' : 'Inicializar Base de Datos'}
-            </Button>
+                </Button>
               </>
             )}
           </MotionPaper>

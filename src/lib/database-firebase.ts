@@ -13,8 +13,6 @@ import {
   orderBy,
   serverTimestamp,
   writeBatch,
-  DocumentSnapshot,
-  QuerySnapshot,
   Unsubscribe,
   Firestore
 } from 'firebase/firestore';
@@ -45,16 +43,19 @@ class FirebaseDatabaseAPI {
   }
 
   // Manejar errores de Firebase
-  private handleError(error: any, operation: string) {
+  private handleError(error: unknown, operation: string) {
     console.error(`Error en ${operation}:`, error);
-    throw new Error(`Error en ${operation}: ${error.message}`);
+    const message = error instanceof Error ? error.message : 'Error desconocido';
+    throw new Error(`Error en ${operation}: ${message}`);
   }
 
   // Convertir timestamp de Firebase a string
-  private convertTimestamp(timestamp: any): string {
+  private convertTimestamp(timestamp: { toDate(): Date } | Date | string | number | null | undefined): string {
     if (!timestamp) return new Date().toISOString();
-    if (timestamp.toDate) return timestamp.toDate().toISOString();
+    if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp) return timestamp.toDate().toISOString();
     if (timestamp instanceof Date) return timestamp.toISOString();
+    if (typeof timestamp === 'string') return new Date(timestamp).toISOString();
+    if (typeof timestamp === 'number') return new Date(timestamp).toISOString();
     return new Date().toISOString();
   }
 
@@ -784,7 +785,15 @@ class FirebaseDatabaseAPI {
     }
   }
 
-  getSchemaInfo(): any {
+  getSchemaInfo(): {
+    collections: Array<{
+      name: string;
+      fields: string[];
+    }>;
+    provider: string;
+    status: string;
+    realtime: boolean;
+  } {
     return {
       collections: [
         {

@@ -1,264 +1,207 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Product, MenuData } from '../app/types';
+import { Menu, Product, MenuData } from '../app/types';
+import { getDatabaseAPI } from '../lib/database';
 
-interface DatabaseHook {
-  // Estados
-  loading: boolean;
-  error: string | null;
-  
-  // Operaciones de menús
-  menus: MenuData[];
-  getMenu: (id: string) => Promise<MenuData | null>;
-  getAllMenus: () => Promise<MenuData[]>;
-  createMenu: (menu: MenuData) => Promise<boolean>;
-  updateMenu: (menu: MenuData) => Promise<boolean>;
-  deleteMenu: (id: string) => Promise<boolean>;
-  
-  // Operaciones de productos
-  createProduct: (product: Product, menuId: string) => Promise<boolean>;
-  updateProduct: (product: Product, menuId: string) => Promise<boolean>;
-  deleteProduct: (id: string, menuId?: string) => Promise<boolean>;
-  
-  // Utilidades
-  initializeDatabase: (force?: boolean) => Promise<boolean>;
-  refreshMenus: () => Promise<void>;
-  getDatabaseInfo: () => Promise<object | null>;
-  
-  // Funciones en tiempo real específicas de Firebase
-  subscribeToMenus: (callback: (menus: MenuData[]) => void) => (() => void) | null;
+interface DatabaseInfo {
+  menusCount: number;
+  productsCount: number;
+  dbType: string;
+  status: string;
+  realtime?: boolean;
 }
 
-export const useDatabase = (): DatabaseHook => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface UseDatabaseReturn {
+  menus: MenuData[];
+  loading: boolean;
+  error: string | null;
+  initializeDatabase: (force?: boolean) => Promise<void>;
+  getDatabaseInfo: () => Promise<DatabaseInfo>;
+  refreshMenus: () => Promise<void>;
+  createMenu: (menu: Omit<Menu, 'id'>) => Promise<Menu | null>;
+  updateMenu: (id: string, updates: Partial<Menu>) => Promise<void>;
+  deleteMenu: (id: string) => Promise<void>;
+  exportData: () => Promise<{ menus: Menu[], products: Product[] } | null>;
+}
+
+export const useDatabase = (): UseDatabaseReturn => {
   const [menus, setMenus] = useState<MenuData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Función para manejar errores
-  const handleError = useCallback((error: any) => {
-    console.error('Database error:', error);
-    setError(error.message || 'Error desconocido');
-    setLoading(false);
+  const handleError = useCallback((error: Error | unknown, operation: string) => {
+    console.error(`Error en ${operation}:`, error);
+    setError(`Error en ${operation}: ${error instanceof Error ? error.message : 'Error desconocido'}`);
   }, []);
 
-  // Función para hacer peticiones a la API
-  const apiRequest = useCallback(async (url: string, options: RequestInit = {}) => {
+  // Cargar menús con productos
+  const loadMenusWithProducts = useCallback(async () => {
     try {
+      setLoading(true);
       setError(null);
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        ...options,
-      });
+
+      const DatabaseAPI = await getDatabaseAPI();
       
-      const data = await response.json();
-      console.log(`API ${options.method || 'GET'} ${url}:`, data);
+      // Obtener todos los menús
+      const menusData = await DatabaseAPI.menus.getAll();
+      
+      // Para cada menú, obtener sus productos
+      const menusWithProducts = await Promise.all(
+        menusData.map(async (menu) => {
+          const products = await DatabaseAPI.products.getByMenu(menu.id);
+          return {
+            ...menu,
+            products: products
+          } as MenuData;
+        })
+      );
 
-      if (!data.success) {
-        throw new Error(data.error || 'Error en la petición');
-      }
-
-      return data.data;
+      setMenus(menusWithProducts);
     } catch (error) {
-      handleError(error);
-      throw error;
+      handleError(error, 'cargar menús');
+    } finally {
+      setLoading(false);
     }
   }, [handleError]);
 
-  // Operaciones de menús
-  const getAllMenus = useCallback(async (): Promise<MenuData[]> => {
-    console.log('Obteniendo todos los menús...');
-      setLoading(true);
-    try {
-      const data = await apiRequest('/api/menus');
-      setMenus(data || []);
-      setLoading(false);
-      return data || [];
-    } catch (error) {
-      setLoading(false);
-      return [];
-    }
-  }, [apiRequest]);
+  // Cargar datos iniciales
+  useEffect(() => {
+    loadMenusWithProducts();
+  }, [loadMenusWithProducts]);
 
-  const getMenu = useCallback(async (id: string): Promise<MenuData | null> => {
-    console.log('Obteniendo menú:', id);
-      setLoading(true);
+  // Inicializar base de datos
+  const initializeDatabase = useCallback(async (force: boolean = false) => {
     try {
-      const data = await apiRequest(`/api/menus/${id}`);
-      setLoading(false);
-      return data;
+      setError(null);
+      const DatabaseAPI = await getDatabaseAPI();
+      
+      console.log('🔄 Inicializando base de datos...');
+      await DatabaseAPI.initializeDatabase();
+      
+      console.log('✅ Base de datos inicializada exitosamente');
+      await loadMenusWithProducts();
     } catch (error) {
-      setLoading(false);
-      return null;
+      handleError(error, 'inicializar base de datos');
     }
-  }, [apiRequest]);
+  }, [handleError, loadMenusWithProducts]);
 
-  const createMenu = useCallback(async (menu: MenuData): Promise<boolean> => {
-    console.log('Creando menú:', menu);
-    setLoading(true);
+  // Obtener información de la base de datos
+  const getDatabaseInfo = useCallback(async (): Promise<DatabaseInfo> => {
     try {
-      await apiRequest('/api/menus', {
-        method: 'POST',
-        body: JSON.stringify(menu),
-      });
-      setLoading(false);
-      await refreshMenus();
-      return true;
-    } catch (error) {
-      setLoading(false);
-      return false;
-    }
-  }, [apiRequest]);
+      const DatabaseAPI = await getDatabaseAPI();
+      
+      const [menusData, products] = await Promise.all([
+        DatabaseAPI.menus.getAll(),
+        DatabaseAPI.products.getAll()
+      ]);
 
-  const updateMenu = useCallback(async (menu: MenuData): Promise<boolean> => {
-    console.log('Actualizando menú:', menu);
-    setLoading(true);
-    try {
-      await apiRequest(`/api/menus/${menu.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(menu),
-      });
-      setLoading(false);
-      await refreshMenus();
-      return true;
-    } catch (error) {
-      setLoading(false);
-      return false;
-    }
-  }, [apiRequest]);
+      const schemaInfo = DatabaseAPI.getSchemaInfo();
 
-  const deleteMenu = useCallback(async (id: string): Promise<boolean> => {
-    console.log('Eliminando menú:', id);
-    setLoading(true);
-    try {
-      await apiRequest(`/api/menus/${id}`, {
-        method: 'DELETE',
-      });
-      setLoading(false);
-      await refreshMenus();
-      return true;
+      return {
+        menusCount: menusData.length,
+        productsCount: products.length,
+        dbType: schemaInfo.provider || 'Unknown',
+        status: schemaInfo.status || 'Unknown',
+        realtime: schemaInfo.realtime || false
+      };
     } catch (error) {
-      setLoading(false);
-      return false;
+      console.error('Error obteniendo información de la base de datos:', error);
+      return {
+        menusCount: 0,
+        productsCount: 0,
+        dbType: 'Error',
+        status: 'Desconectado',
+        realtime: false
+      };
     }
-  }, [apiRequest]);
-
-  // Operaciones de productos
-  const createProduct = useCallback(async (product: Product, menuId: string): Promise<boolean> => {
-    console.log('Creando producto:', product, 'en menú:', menuId);
-    setLoading(true);
-    try {
-      await apiRequest('/api/products', {
-        method: 'POST',
-        body: JSON.stringify({ product, menuId }),
-      });
-      setLoading(false);
-      await refreshMenus();
-      return true;
-    } catch (error) {
-      setLoading(false);
-      return false;
-    }
-  }, [apiRequest]);
-
-  const updateProduct = useCallback(async (product: Product, menuId: string): Promise<boolean> => {
-    console.log('Actualizando producto:', product);
-    setLoading(true);
-    try {
-      await apiRequest(`/api/products/${product.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ product, menuId }),
-      });
-      setLoading(false);
-      await refreshMenus();
-      return true;
-    } catch (error) {
-      setLoading(false);
-      return false;
-    }
-  }, [apiRequest]);
-
-  const deleteProduct = useCallback(async (id: string, menuId?: string): Promise<boolean> => {
-    console.log('Eliminando producto:', id);
-    setLoading(true);
-    try {
-      const url = menuId ? `/api/products/${id}?menuId=${menuId}` : `/api/products/${id}`;
-      await apiRequest(url, {
-        method: 'DELETE',
-      });
-      setLoading(false);
-      await refreshMenus();
-      return true;
-    } catch (error) {
-      setLoading(false);
-      return false;
-    }
-  }, [apiRequest]);
-
-  // Utilidades
-  const initializeDatabase = useCallback(async (force: boolean = false): Promise<boolean> => {
-    console.log('Inicializando base de datos...');
-    setLoading(true);
-    try {
-      await apiRequest('/api/database/seed', {
-        method: 'POST',
-        body: JSON.stringify({ force }),
-      });
-      setLoading(false);
-      await refreshMenus();
-      return true;
-    } catch (error) {
-      setLoading(false);
-      return false;
-    }
-  }, [apiRequest]);
-  const refreshMenus = useCallback(async (): Promise<void> => {
-    await getAllMenus();
-  }, [getAllMenus]);
-
-  const getDatabaseInfo = useCallback(async (): Promise<object | null> => {
-    console.log('Obteniendo información de la base de datos...');
-    try {
-      const data = await apiRequest('/api/database/seed');
-      return data;
-    } catch (error) {
-      return null;
-    }
-  }, [apiRequest]);
-
-  // Función para suscribirse a cambios en tiempo real (específica de Firebase)
-  const subscribeToMenus = useCallback((callback: (menus: MenuData[]) => void): (() => void) | null => {
-    // Esta función se implementará directamente en los componentes que usen Firebase
-    // usando el hook useFirebaseMenu para tiempo real
-    console.log('subscribeToMenus: usar useFirebaseMenu para tiempo real');
-    return null;
   }, []);
 
-  // Cargar menús al montar el componente
-  useEffect(() => {
-    console.log('useDatabase montado, cargando menús...');
-    getAllMenus();
-  }, [getAllMenus]);
+  // Refrescar menús
+  const refreshMenus = useCallback(async () => {
+    await loadMenusWithProducts();
+  }, [loadMenusWithProducts]);
+
+  // Crear menú
+  const createMenu = useCallback(async (menu: Omit<Menu, 'id'>): Promise<Menu | null> => {
+    try {
+      setError(null);
+      const DatabaseAPI = await getDatabaseAPI();
+      
+      console.log('➕ Creando nuevo menú:', menu.name);
+      const newMenu = await DatabaseAPI.menus.create(menu);
+      
+      console.log('✅ Menú creado exitosamente:', newMenu.id);
+      await loadMenusWithProducts();
+      
+      return newMenu;
+    } catch (error) {
+      handleError(error, 'crear menú');
+      return null;
+    }
+  }, [handleError, loadMenusWithProducts]);
+
+  // Actualizar menú
+  const updateMenu = useCallback(async (id: string, updates: Partial<Menu>) => {
+    try {
+      setError(null);
+      const DatabaseAPI = await getDatabaseAPI();
+      
+      console.log('📝 Actualizando menú:', id, updates);
+      await DatabaseAPI.menus.update(id, updates);
+      
+      console.log('✅ Menú actualizado exitosamente');
+      await loadMenusWithProducts();
+    } catch (error) {
+      handleError(error, 'actualizar menú');
+    }
+  }, [handleError, loadMenusWithProducts]);
+
+  // Eliminar menú
+  const deleteMenu = useCallback(async (id: string) => {
+    try {
+      setError(null);
+      const DatabaseAPI = await getDatabaseAPI();
+      
+      console.log('🗑️ Eliminando menú:', id);
+      await DatabaseAPI.menus.delete(id);
+      
+      console.log('✅ Menú eliminado exitosamente');
+      await loadMenusWithProducts();
+    } catch (error) {
+      handleError(error, 'eliminar menú');
+    }
+  }, [handleError, loadMenusWithProducts]);
+
+  // Exportar datos
+  const exportData = useCallback(async (): Promise<{ menus: Menu[], products: Product[] } | null> => {
+    try {
+      setError(null);
+      const DatabaseAPI = await getDatabaseAPI();
+      
+      console.log('📤 Exportando datos...');
+      const data = await DatabaseAPI.exportData();
+      
+      console.log('✅ Datos exportados exitosamente');
+      return data;
+    } catch (error) {
+      handleError(error, 'exportar datos');
+      return null;
+    }
+  }, [handleError]);
 
   return {
+    menus,
     loading,
     error,
-    menus,
-    getMenu,
-    getAllMenus,
+    initializeDatabase,
+    getDatabaseInfo,
+    refreshMenus,
     createMenu,
     updateMenu,
     deleteMenu,
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    initializeDatabase,
-    refreshMenus,
-    getDatabaseInfo,
-    subscribeToMenus,
+    exportData
   };
 };
 
