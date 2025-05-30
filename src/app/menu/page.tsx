@@ -1,114 +1,61 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Box, CircularProgress, Container, Alert, Button, Stack } from '@mui/material';
-import { motion } from 'framer-motion';
-import { MenuData } from '../types';
-import MenuContent from './MenuContent';
+import React, { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import MenuViewer from '../components/MenuViewer';
 
-const MotionContainer = motion(Container);
-export default function MenuPage() {
-  const [menus, setMenus] = useState<MenuData[]>([]);
-  const [selectedMenu, setSelectedMenu] = useState<MenuData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const MenuPageContent: React.FC = () => {
+  const searchParams = useSearchParams();
+  const menuId = searchParams.get('id');
 
-  useEffect(() => {
-    const fetchMenus = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await fetch('/api/menus');
-        const data = await response.json();
-        
-        if (data.success && data.data.length > 0) {
-          setMenus(data.data);
-          // Seleccionar el primer menú por defecto
-          setSelectedMenu(data.data[0]);
-        } else {
-          setError('No se encontraron menús disponibles');
-        }
-      } catch (err) {
-        console.error('Error fetching menus:', err);
-        setError('Error de conexión');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMenus();
-  }, []);
-
-  if (loading) {
+  if (!menuId) {
     return (
-      <Box sx={{ 
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
-      }}>
-        <CircularProgress size={60} />
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        minHeight="100vh"
+        sx={{ px: 2 }}
+      >
+        <Typography variant="h5" color="error" gutterBottom>
+          ID de menú no proporcionado
+        </Typography>
+        <Typography variant="body1" color="text.secondary" textAlign="center">
+          Por favor, escanea un código QR válido o proporciona un ID de menú en la URL.
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          Ejemplo: /menu?id=menu-principal
+        </Typography>
       </Box>
     );
   }
 
-  if (error) {
-    return (
-      <MotionContainer
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        sx={{ py: 4 }}
-      >
-        <Alert severity="error" sx={{ borderRadius: 2 }}>
-          {error}
-        </Alert>
-      </MotionContainer>
-    );
-  }
+  return <MenuViewer menuId={menuId} />;
+};
 
-  if (!selectedMenu) {
-    return (
-      <MotionContainer
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        sx={{ py: 4 }}
-      >
-        <Alert severity="warning" sx={{ borderRadius: 2 }}>
-          No hay menús disponibles
-        </Alert>
-      </MotionContainer>
-    );
-  }
-
-  // Si hay múltiples menús, mostrar selector
-  if (menus.length > 1) {
-    return (
-      <Box sx={{ 
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
-      }}>
-        {/* Selector de menús */}
-        <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-          <Stack direction="row" spacing={2} sx={{ justifyContent: 'center', flexWrap: 'wrap' }}>
-            {menus.map((menu) => (
-              <Button
-                key={menu.id}
-                variant={selectedMenu.id === menu.id ? 'contained' : 'outlined'}
-                onClick={() => setSelectedMenu(menu)}
-                size="small"
-              >
-                {menu.name}
-              </Button>
-            ))}
-          </Stack>
+const MenuPage: React.FC = () => {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          minHeight="100vh"
+        >
+          <CircularProgress size={60} />
+          <Typography variant="h6" sx={{ mt: 2, color: 'text.secondary' }}>
+            Cargando menú...
+          </Typography>
         </Box>
-        
-        <MenuContent menu={selectedMenu} />
-      </Box>
-    );
-  }
+      }
+    >
+      <MenuPageContent />
+    </Suspense>
+  );
+};
 
-  return <MenuContent menu={selectedMenu} />;
-}
+export default MenuPage;

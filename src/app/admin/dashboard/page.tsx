@@ -1,812 +1,480 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { 
-  Box, 
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Box,
   Container,
   Typography,
   Button,
-  Paper,
   Stack,
-  Chip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
   Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress,
+  Paper,
+  Divider,
+  IconButton,
+  Tooltip,
+  Chip,
   Card,
   CardContent,
-  CardActions,
-  Fab,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  CircularProgress,
 } from '@mui/material';
+import {
+  Logout as LogoutIcon,
+  QrCode as QrCodeIcon,
+  Refresh as RefreshIcon,
+  Storage as StorageIcon,
+  Download as DownloadIcon,
+  Upload as UploadIcon,
+  Dashboard as DashboardIcon,
+  Restaurant as RestaurantIcon,
+  Analytics as AnalyticsIcon,
+} from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import QrCodeIcon from '@mui/icons-material/QrCode';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import CodeIcon from '@mui/icons-material/Code';
-import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import DatabaseIcon from '@mui/icons-material/Storage';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { useRouter } from 'next/navigation';
-import { Product, ProductCategory, MenuData } from '../../types';
+import { MenuData } from '../../types';
 import { useDatabase } from '../../../hooks/useDatabase';
-import ProductForm from '../../components/ProductForm';
+import MenuEditor from '../../components/MenuEditor';
 import QRGenerator from '../../components/QRGenerator';
 
+const MotionContainer = motion(Container);
 const MotionPaper = motion(Paper);
 const MotionCard = motion(Card);
-const MotionContainer = motion(Container);
 
-export default function AdminDashboard() {
+const AdminDashboard: React.FC = () => {
   const router = useRouter();
-  const {
-    loading,
-    error,
-    menus,
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    initializeDatabase,
-    refreshMenus,
+  const { 
+    menus, 
+    loading, 
+    error, 
+    initializeDatabase, 
+    getDatabaseInfo,
+    refreshMenus 
   } = useDatabase();
 
-  const [selectedMenuId, setSelectedMenuId] = useState('');
-  const [currentMenu, setCurrentMenu] = useState<MenuData | null>(null);
-  const [showProductForm, setShowProductForm] = useState(false);
-  const [showQRGenerator, setShowQRGenerator] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<Product | null>(null);
-  const [saveMessage, setSaveMessage] = useState('');
+  const [selectedMenuId, setSelectedMenuId] = useState<string>('');
+  const [selectedMenu, setSelectedMenu] = useState<MenuData | null>(null);
   const [showInitDialog, setShowInitDialog] = useState(false);
   const [initLoading, setInitLoading] = useState(false);
-
-  useEffect(() => {
+  const [dbInfo, setDbInfo] = useState<any>(null);
+  const [showQRGenerator, setShowQRGenerator] = useState(false);
     // Verificar autenticación
+  useEffect(() => {
     const isAuthenticated = localStorage.getItem('admin-authenticated');
-    if (!isAuthenticated) {
-      router.push('/admin');
-      return;
+    if (isAuthenticated !== 'true') {
+    router.push('/admin');
     }
   }, [router]);
 
+  // Cargar información de la base de datos
   useEffect(() => {
-    // Seleccionar el primer menú disponible
+    const loadDbInfo = async () => {
+      const info = await getDatabaseInfo();
+      setDbInfo(info);
+  };
+    loadDbInfo();
+  }, [getDatabaseInfo]);
+
+  // Seleccionar primer menú automáticamente
+  useEffect(() => {
     if (menus.length > 0 && !selectedMenuId) {
-      console.log('Setting first menu as selected:', menus[0].id);
       setSelectedMenuId(menus[0].id);
     }
   }, [menus, selectedMenuId]);
 
+  // Actualizar menú seleccionado
   useEffect(() => {
-    // Cargar el menú seleccionado
-    if (selectedMenuId) {
-      const menu = menus.find(m => m.id === selectedMenuId);
-      console.log('Current menu updated:', menu);
-      setCurrentMenu(menu || null);
-    }
-  }, [selectedMenuId, menus]);
+    const menu = menus.find(m => m.id === selectedMenuId);
+    setSelectedMenu(menu || null);
+  }, [menus, selectedMenuId]);
 
-  const handleAddProduct = async (product: Product) => {
-    if (!selectedMenuId) return;
-    
-    const success = await createProduct(product, selectedMenuId);
-    if (success) {
-      setSaveMessage('Producto agregado correctamente');
-      setTimeout(() => setSaveMessage(''), 3000);
-    }
-  };
-
-  const handleEditProduct = async (product: Product) => {
-    if (!selectedMenuId) return;
-    
-    const success = await updateProduct(product, selectedMenuId);
-    if (success) {
-      setSaveMessage('Producto actualizado correctamente');
-    setTimeout(() => setSaveMessage(''), 3000);
-          setEditingProduct(null);
-    }
-  };
-
-  const handleDeleteProduct = async (productId: string) => {
-    const success = await deleteProduct(productId);
-    if (success) {
-      setSaveMessage('Producto eliminado correctamente');
-      setTimeout(() => setSaveMessage(''), 3000);
-      setDeleteConfirm(null);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('admin-authenticated');
+    router.push('/admin');
   };
 
   const handleInitializeDatabase = async () => {
-    console.log('Initialize database button clicked');
     setInitLoading(true);
-    
     try {
-    const success = await initializeDatabase(true); // Forzar la inicialización
-      console.log('Initialize result:', success);
-      
-    if (success) {
-        setSaveMessage('Base de datos inicializada correctamente');
-      setTimeout(() => setSaveMessage(''), 3000);
+      await initializeDatabase(true);
+      await refreshMenus();
+      const info = await getDatabaseInfo();
+      setDbInfo(info);
       setShowInitDialog(false);
-        
-        // Refrescar los datos después de la inicialización
-    await refreshMenus();
-      } else {
-        setSaveMessage('Error al inicializar la base de datos');
-        setTimeout(() => setSaveMessage(''), 3000);
-      }
     } catch (error) {
-      console.error('Error in handleInitializeDatabase:', error);
-      setSaveMessage('Error al inicializar la base de datos');
-      setTimeout(() => setSaveMessage(''), 3000);
+      console.error('Error inicializando base de datos:', error);
     } finally {
       setInitLoading(false);
     }
   };
 
-  const handleRefresh = async () => {
-    await refreshMenus();
-    setSaveMessage('Datos actualizados');
-    setTimeout(() => setSaveMessage(''), 2000);
+  const handleExportData = async () => {
+    try {
+      const dataStr = JSON.stringify(menus, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `menu-data-${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exportando datos:', error);
+    }
   };
-
-  const exportMenuCode = () => {
-    if (!currentMenu) return;
-
-    const codeString = `'${selectedMenuId}': ${JSON.stringify(currentMenu, null, 2)},`;
-    
-    navigator.clipboard.writeText(codeString).then(() => {
-      setSaveMessage('Código del menú copiado al portapapeles');
-      setTimeout(() => setSaveMessage(''), 3000);
-    });
-  };
-
-  const logout = () => {
-    localStorage.removeItem('admin-authenticated');
-    router.push('/admin');
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const products = currentMenu?.products || [];
-  const productsByCategory = ['Entrada', 'Principal', 'Bebida', 'Postre'].map(category => ({
-    category: category as ProductCategory,
-    products: products.filter(p => p.category === category)
-  }));
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
+        duration: 0.6,
         staggerChildren: 0.1,
-        delayChildren: 0.2,
-      }
-    }
+      },
+    },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { duration: 0.5 } 
-    }
+      transition: {
+        duration: 0.5,
+      },
+    },
   };
-  // Mostrar pantalla de carga inicial
-  if (loading && menus.length === 0) {
     return (
-      <Box sx={{ 
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <Stack alignItems="center" spacing={2}>
-          <CircularProgress size={60} />
-          <Typography variant="h6" color="text.secondary">
-            Cargando panel de administración...
-          </Typography>
-            </Stack>
-          </Box>
-                      );
-  }
-
-  // Mostrar opción de inicializar si no hay menús
-  if (menus.length === 0 && !loading) {
-    return (
-      <Box sx={{ 
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        p: 4 
-              }}>
-        <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, maxWidth: 500 }}>
-          <DatabaseIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
-          <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
-            {process.env.VERCEL === '1' ? 'Configuración Requerida' : 'Base de Datos Vacía'}
-                </Typography>
-          
-          {process.env.VERCEL === '1' ? (
-            <>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                Para usar el panel de administración en producción, necesitas configurar la variable de entorno MENU_DATA en Vercel.
-                </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                En desarrollo local, puedes inicializar la base de datos con los datos por defecto.
-          </Typography>
-            </>
-          ) : (
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              No se encontraron menús en la base de datos. ¿Deseas inicializar con los datos por defecto?
-            </Typography>
-          )}
-          {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
-              {error}
-              </Alert>
-          )}
-          
-          <Stack direction="row" spacing={2} justifyContent="center">
-            <Button 
-              variant="outlined" 
-              onClick={() => router.push('/admin')}
-            disabled={initLoading}
-          >
-              Volver al Login
-          </Button>
-            {process.env.VERCEL !== '1' && (
-              <Button 
-                variant="contained" 
-                startIcon={initLoading ? <CircularProgress size={20} /> : <DatabaseIcon />}
-                onClick={handleInitializeDatabase}
-                disabled={initLoading}
-                sx={{
-                  background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
-                }}
-              >
-                {initLoading ? 'Inicializando...' : 'Inicializar Base de Datos'}
-              </Button>
-            )}
-          </Stack>
-        </Paper>
-      </Box>
-  );
-}
-
-  if (!currentMenu) {
-    return (
-      <Box sx={{ 
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        p: 4 
-      }}>
-        <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
-          <Typography variant="h6" color="error" sx={{ mb: 2 }}>
-            Menú no encontrado
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            El menú seleccionado no existe o no se pudo cargar.
-          </Typography>
-          <Stack direction="row" spacing={2} justifyContent="center">
-            <Button 
-              variant="outlined" 
-              onClick={() => router.push('/admin')}
-            >
-              Volver al Login
-            </Button>
-            <Button 
-              variant="contained" 
-              onClick={handleRefresh}
-              startIcon={<RefreshIcon />}
-            >
-              Actualizar
-            </Button>
-          </Stack>
-        </Paper>
-      </Box>
-    );
-  }
-
-  return (
-    <Box sx={{ 
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
-      pb: 10,
-    }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
       <MotionContainer 
-        maxWidth="lg" 
-        sx={{ pt: 4 }}
+        maxWidth="xl"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
+        sx={{ py: 4 }}
       >
         {/* Header */}
         <MotionPaper
           variants={itemVariants}
-          elevation={3}
           sx={{
-            p: 4,
+            p: 3,
             mb: 4,
+            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: 3,
-            background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
-            color: '#FFFFFF',
           }}
         >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+            <Box display="flex" alignItems="center" gap={2}>
+              <DashboardIcon sx={{ color: 'primary.main', fontSize: 32 }} />
             <Box>
-              <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
+                <Typography variant="h4" fontWeight={700}>
                 Panel de Administración
               </Typography>
-              <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
-                Gestiona el menú: {currentMenu.name}
+                <Typography variant="body2" color="text.secondary">
+                  Gestiona tu menú en tiempo real con Firebase
               </Typography>
-              <Chip 
-                label="Base de Datos JSON Activa" 
-                size="small" 
-                sx={{ 
-                  mt: 1,
-                  backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                  color: '#10B981',
-                  border: '1px solid rgba(16, 185, 129, 0.3)'
-                }} 
-              />
+              </Box>
             </Box>
+
             <Stack direction="row" spacing={2}>
-              <Button
-                variant="outlined"
-                startIcon={<QrCodeIcon />}
-                onClick={() => setShowQRGenerator(true)}
+              <Tooltip title="Actualizar datos">
+                <IconButton
+                  onClick={refreshMenus}
+                  disabled={loading}
                 sx={{
-                  borderColor: 'rgba(255,255,255,0.3)',
-                  color: '#FFFFFF',
-                  '&:hover': {
-                    borderColor: 'rgba(255,255,255,0.5)',
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                  }
-                }}
-              >
-                Generar QR
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<ExitToAppIcon />}
-                onClick={logout}
-                sx={{
-                  borderColor: 'rgba(255,255,255,0.3)',
-                  color: '#FFFFFF',
-                  '&:hover': {
-                    borderColor: 'rgba(255,255,255,0.5)',
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                  }
-                }}
-              >
-                Salir
-              </Button>
-            </Stack>
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.2)' },
+                  }}
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title="Exportar datos">
+                <IconButton
+                  onClick={handleExportData}
+                  disabled={menus.length === 0}
+                  sx={{
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    '&:hover': { backgroundColor: 'rgba(16, 185, 129, 0.2)' },
+                  }}
+                >
+                  <DownloadIcon />
+                </IconButton>
+              </Tooltip>
+                <Button
+                  variant="outlined"
+                startIcon={<LogoutIcon />}
+                onClick={handleLogout}
+                sx={{ borderRadius: 2 }}
+                >
+                Cerrar Sesión
+                </Button>
+              </Stack>
+            </Box>
+        </MotionPaper>
+
+        {/* Estadísticas */}
+        <MotionPaper variants={itemVariants} sx={{ p: 3, mb: 4 }}>
+          <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
+            Estadísticas de la Base de Datos
+          </Typography>
+          
+          <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }} gap={3}>
+                  <MotionCard
+              whileHover={{ scale: 1.02 }}
+              sx={{ 
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%)',
+                border: '1px solid rgba(59, 130, 246, 0.2)',
+                    }}
+                  >
+              <CardContent>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <RestaurantIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+                  <Box>
+                    <Typography variant="h4" fontWeight={700} color="primary.main">
+                      {dbInfo?.menusCount || 0}
+                        </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Menús
+                    </Typography>
+    </Box>
+                </Box>
+              </CardContent>
+            </MotionCard>
+
+            <MotionCard
+              whileHover={{ scale: 1.02 }}
+              sx={{ 
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+              }}
+            >
+              <CardContent>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <AnalyticsIcon sx={{ color: 'success.main', fontSize: 28 }} />
+                  <Box>
+                    <Typography variant="h4" fontWeight={700} color="success.main">
+                      {dbInfo?.productsCount || 0}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Productos
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </MotionCard>
+
+            <MotionCard
+              whileHover={{ scale: 1.02 }}
+              sx={{ 
+                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)',
+                border: '1px solid rgba(245, 158, 11, 0.2)',
+              }}
+            >
+              <CardContent>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <StorageIcon sx={{ color: 'secondary.main', fontSize: 28 }} />
+                  <Box>
+                    <Typography variant="body1" fontWeight={600} color="secondary.main">
+                      {dbInfo?.dbType || 'N/A'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Base de Datos
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </MotionCard>
+
+            <MotionCard
+              whileHover={{ scale: 1.02 }}
+              sx={{ 
+                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)',
+                border: '1px solid rgba(139, 92, 246, 0.2)',
+              }}
+            >
+              <CardContent>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <QrCodeIcon sx={{ color: '#8B5CF6', fontSize: 28 }} />
+                  <Box>
+                    <Typography variant="body1" fontWeight={600} sx={{ color: '#8B5CF6' }}>
+                      Tiempo Real
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Firebase
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </MotionCard>
           </Box>
         </MotionPaper>
 
-        {/* Selector de Menú y Controles */}
-        <MotionPaper
-          variants={itemVariants}
-          elevation={2}
-          sx={{ p: 3, mb: 4, borderRadius: 3 }}
-        >
-          <Stack spacing={3}>
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, alignItems: { md: 'center' } }}>
-              <Box sx={{ minWidth: 250 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Seleccionar Menú</InputLabel>
-                  <Select
-                    value={selectedMenuId}
-                    onChange={(e) => setSelectedMenuId(e.target.value)}
-                    label="Seleccionar Menú"
-                  >
-                    {menus.map((menu) => (
-                      <MenuItem key={menu.id} value={menu.id}>
-                        {menu.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-              
-              <Stack direction="row" spacing={2} sx={{ flex: 1, justifyContent: { md: 'flex-end' } }} flexWrap="wrap">
-                <Button
-                  variant="outlined"
-                  startIcon={<RefreshIcon />}
-                  onClick={handleRefresh}
-                  disabled={loading}
-                >
-                  {loading ? 'Actualizando...' : 'Actualizar'}
-                </Button>
-                
-                <Button
-                  variant="outlined"
-                  startIcon={<CodeIcon />}
-                  onClick={exportMenuCode}
-                >
-                  Exportar Código
-                </Button>
-
-                <Button
-                  variant="outlined"
-                  startIcon={<DatabaseIcon />}
-                  onClick={() => setShowInitDialog(true)}
-                  color="warning"
-                >
-                  Reinicializar DB
-                </Button>
-              </Stack>
-            </Box>
-          </Stack>
-        </MotionPaper>
-
-        {/* Mensaje de estado */}
-        <AnimatePresence>
-          {saveMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Alert 
-                severity={saveMessage.includes('Error') ? 'error' : 'success'}
-                sx={{ mb: 3, borderRadius: 2 }}
-                onClose={() => setSaveMessage('')}
+        {/* Selector de menú y acciones */}
+        <MotionPaper variants={itemVariants} sx={{ p: 3, mb: 4 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems={{ sm: 'center' }}>
+            <FormControl sx={{ minWidth: 300 }}>
+              <InputLabel>Seleccionar Menú</InputLabel>
+              <Select
+                value={selectedMenuId}
+                onChange={(e) => setSelectedMenuId(e.target.value)}
+                label="Seleccionar Menú"
               >
-                {saveMessage}
-              </Alert>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Error de la base de datos */}
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Alert 
-                severity="error" 
-                sx={{ mb: 3, borderRadius: 2 }}
-                action={
-                  <Button color="inherit" size="small" onClick={handleRefresh}>
-                    Reintentar
-                  </Button>
-                }
-              >
-                {error}
-              </Alert>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Estadísticas */}
-        <MotionPaper
-          variants={itemVariants}
-          elevation={2}
-          sx={{ p: 3, mb: 4, borderRadius: 3 }}
-        >
-          <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
-            Estadísticas del Menú
-          </Typography>
-          <Stack direction="row" spacing={4} sx={{ flexWrap: 'wrap', gap: 2 }}>
-            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
-              <Typography variant="h4" color="primary" fontWeight="bold">
-                {products.length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Productos
-              </Typography>
-            </Box>
-            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
-              <Typography variant="h4" color="secondary" fontWeight="bold">
-                {products.filter(p => p.isRecommended).length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Recomendados
-              </Typography>
-            </Box>
-            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
-              <Typography variant="h4" color="success.main" fontWeight="bold">
-                {products.filter(p => p.isVegan).length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Veganos
-              </Typography>
-            </Box>
-            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
-              <Typography variant="h4" color="info.main" fontWeight="bold">
-                {products.length > 0 ? formatPrice(Math.round(products.reduce((sum, p) => sum + p.price, 0) / products.length)) : '$0'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Precio Promedio
-              </Typography>
-            </Box>
-          </Stack>
-        </MotionPaper>
-
-        {/* Productos por Categoría */}
-        {productsByCategory.map((group) => (
-          <MotionPaper
-            key={group.category}
-            variants={itemVariants}
-            elevation={2}
-            sx={{ p: 3, mb: 4, borderRadius: 3 }}
-          >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h6" fontWeight={600}>
-                {group.category} ({group.products.length})
-              </Typography>
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={() => setShowProductForm(true)}
-                size="small"
-              >
-                Agregar
-              </Button>
-            </Box>
-
-            {group.products.length === 0 ? (
-              <Box sx={{ 
-                textAlign: 'center', 
-                py: 4, 
-                color: 'text.secondary',
-                border: '2px dashed',
-                borderColor: 'divider',
-                borderRadius: 2,
-              }}>
-                <RestaurantMenuIcon sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
-                <Typography variant="body1">
-                  No hay productos en esta categoría
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  Haz clic en &quot;Agregar&quot; para crear el primer producto
-                </Typography>
-              </Box>
-            ) : (
-              <Stack spacing={2}>
-                {group.products.map((product, index) => (
-                  <MotionCard
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    elevation={1}
-                    sx={{
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      '&:hover': {
-                        borderColor: 'primary.main',
-                        transform: 'translateY(-2px)',
-                        transition: 'all 0.3s ease',
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ pb: 1 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1, gap: 2 }}>
-                        <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
-                          {product.name}
-                        </Typography>
-                        <Typography variant="h6" color="secondary.main" fontWeight="bold">
-                          {formatPrice(product.price)}
-                        </Typography>
-                      </Box>
-                      
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.4 }}>
-                        {product.description}
-                      </Typography>
-                      
-                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                        {product.isRecommended && (
-                          <Chip 
-                            label="Recomendado" 
-                            size="small" 
-                            color="secondary"
-                            sx={{ fontSize: '0.7rem' }}
-                          />
-                        )}
-                        {product.isVegan && (
-                          <Chip 
-                            label="Vegano" 
-                            size="small" 
-                            color="success"
-                            sx={{ fontSize: '0.7rem' }}
-                          />
-                        )}
-                      </Stack>
-                    </CardContent>
-                    
-                    <CardActions sx={{ pt: 0, px: 2, pb: 2 }}>
-                      <Button
+                {menus.map((menu) => (
+                  <MenuItem key={menu.id} value={menu.id}>
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Typography>{menu.name}</Typography>
+                      <Chip 
+                        label={`${menu.products.length} productos`}
                         size="small"
-                        startIcon={<EditIcon />}
-                        onClick={() => {
-                          setEditingProduct(product);
-                          setShowProductForm(true);
-                        }}
-                        disabled={loading}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        size="small"
-                        color="error"
-                        startIcon={<DeleteIcon />}
-                        onClick={() => setDeleteConfirm(product)}
-                        disabled={loading}
-                      >
-                        Eliminar
-                      </Button>
-                    </CardActions>
-                  </MotionCard>
+                        color="primary"
+                      />
+                    </Box>
+                  </MenuItem>
                 ))}
-              </Stack>
+              </Select>
+            </FormControl>
+
+            <Stack direction="row" spacing={2}>
+              <Button
+                variant="contained"
+                startIcon={<QrCodeIcon />}
+                onClick={() => setShowQRGenerator(true)}
+                disabled={!selectedMenu}
+                sx={{ borderRadius: 2 }}
+              >
+                Generar QR
+              </Button>
+
+              {process.env.VERCEL !== '1' && (
+                <Button
+                  variant="outlined"
+                  startIcon={<UploadIcon />}
+                  onClick={() => setShowInitDialog(true)}
+                  sx={{ borderRadius: 2 }}
+                >
+                  Inicializar DB
+                </Button>
+              )}
+            </Stack>
+          </Stack>
+        </MotionPaper>
+
+        {/* Error */}
+        {error && (
+          <MotionPaper variants={itemVariants} sx={{ mb: 4 }}>
+            <Alert severity="error" sx={{ borderRadius: 2 }}>
+              {error}
+            </Alert>
+          </MotionPaper>
+        )}
+
+        {/* Editor de menú */}
+        {selectedMenu ? (
+          <MotionPaper variants={itemVariants} sx={{ p: 3 }}>
+            <MenuEditor 
+              menuId={selectedMenu.id}
+              onMenuUpdate={(menu) => setSelectedMenu(menu)}
+            />
+          </MotionPaper>
+        ) : (
+          <MotionPaper variants={itemVariants} sx={{ p: 6, textAlign: 'center' }}>
+            <Typography variant="h6" color="text.secondary">
+              {menus.length === 0 ? 'No hay menús disponibles' : 'Selecciona un menú para editar'}
+            </Typography>
+            {menus.length === 0 && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Inicializa la base de datos para comenzar
+              </Typography>
             )}
           </MotionPaper>
-        ))}
+        )}
 
-        {/* FAB para agregar producto */}
-        <Fab
-          color="primary"
-          sx={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            background: 'linear-gradient(135deg, #3B82F6 0%, #2563eb 100%)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-            }
+        {/* Dialog para generar QR */}
+        <Dialog
+          open={showQRGenerator}
+          onClose={() => setShowQRGenerator(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              backgroundColor: '#2C2C2E',
+            },
           }}
-          onClick={() => setShowProductForm(true)}
-          disabled={loading}
         >
-          <AddIcon />
-        </Fab>
+          <DialogTitle>
+            <Typography variant="h6" fontWeight={600}>
+              Generador de Código QR
+            </Typography>
+          </DialogTitle>
+          <DialogContent>
+            {selectedMenu && (
+              <QRGenerator
+                menuId={selectedMenu.id}
+                menuName={selectedMenu.name}
+              />
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowQRGenerator(false)}>
+              Cerrar
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Dialog para inicializar base de datos */}
+        <Dialog
+          open={showInitDialog}
+          onClose={() => !initLoading && setShowInitDialog(false)}
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              backgroundColor: '#2C2C2E',
+            },
+          }}
+        >
+          <DialogTitle>
+            <Typography variant="h6" fontWeight={600}>
+              Inicializar Base de Datos
+            </Typography>
+          </DialogTitle>
+          <DialogContent>
+            <Typography>
+              ¿Estás seguro de que quieres inicializar la base de datos con datos de ejemplo?
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Esto sobrescribirá todos los datos existentes.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setShowInitDialog(false)}
+              disabled={initLoading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleInitializeDatabase}
+              variant="contained"
+              disabled={initLoading}
+              startIcon={initLoading ? <CircularProgress size={16} /> : <UploadIcon />}
+            >
+              Inicializar
+            </Button>
+          </DialogActions>
+        </Dialog>
       </MotionContainer>
-
-      {/* Formulario de Producto */}
-      <ProductForm
-        open={showProductForm}
-        onClose={() => {
-          setShowProductForm(false);
-          setEditingProduct(null);
-        }}
-        onSave={editingProduct ? handleEditProduct : handleAddProduct}
-        product={editingProduct}
-        menuId={selectedMenuId}
-      />
-
-      {/* Generador de QR */}
-      <Dialog
-        open={showQRGenerator}
-        onClose={() => setShowQRGenerator(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: { borderRadius: 3 }
-        }}
-      >
-        <DialogTitle>
-          <Typography variant="h6" fontWeight={600}>
-            Código QR del Menú
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
-          <QRGenerator 
-            menuId={selectedMenuId} 
-            menuName={currentMenu.name}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowQRGenerator(false)}>
-            Cerrar
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Confirmación de eliminación */}
-      <Dialog
-        open={!!deleteConfirm}
-        onClose={() => setDeleteConfirm(null)}
-        PaperProps={{
-          sx: { borderRadius: 3 }
-        }}
-      >
-        <DialogTitle>
-          <Typography variant="h6" fontWeight={600}>
-            Confirmar Eliminación
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Typography>
-            ¿Estás seguro de que quieres eliminar &quot;{deleteConfirm?.name}&quot;?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Esta acción no se puede deshacer y se eliminará permanentemente de la base de datos.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteConfirm(null)} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button
-            color="error"
-            variant="contained"
-            onClick={() => deleteConfirm && handleDeleteProduct(deleteConfirm.id)}
-            disabled={loading}
-          >
-            {loading ? 'Eliminando...' : 'Eliminar'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Diálogo de inicialización de base de datos */}
-      <Dialog
-        open={showInitDialog}
-        onClose={() => !initLoading && setShowInitDialog(false)}
-        PaperProps={{
-          sx: { borderRadius: 3 }
-        }}
-      >
-        <DialogTitle>
-          <Typography variant="h6" fontWeight={600}>
-            Reinicializar Base de Datos
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Typography sx={{ mb: 2 }}>
-            Esta acción reinicializará la base de datos con los datos por defecto del archivo menu.ts.
-          </Typography>
-          <Typography variant="body2" color="warning.main" sx={{ mb: 2 }}>
-            ⚠️ Advertencia: Esto sobrescribirá todos los datos existentes.
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            ¿Estás seguro de que quieres continuar?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowInitDialog(false)} disabled={initLoading}>
-            Cancelar
-          </Button>
-          <Button
-            color="warning"
-            variant="contained"
-            onClick={handleInitializeDatabase}
-            disabled={initLoading}
-            startIcon={initLoading ? <CircularProgress size={20} /> : <DatabaseIcon />}
-          >
-            {initLoading ? 'Inicializando...' : 'Reinicializar'}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
-}
+};
+
+export default AdminDashboard;
