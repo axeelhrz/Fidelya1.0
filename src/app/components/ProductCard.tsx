@@ -9,7 +9,7 @@ import {
   Eco,
   LocalBar,
   Restaurant,
-  AutoAwesome
+  Whatshot
 } from '@mui/icons-material';
 import { Product } from '../types';
 
@@ -62,7 +62,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
         background: 'linear-gradient(145deg, rgba(44, 44, 46, 0.8) 0%, rgba(28, 28, 30, 0.95) 100%)',
         backdropFilter: 'blur(32px)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: 0, // Sin bordes redondeados para look premium
+                  borderRadius: 0,
         transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: 'pointer',
         overflow: 'hidden',
@@ -70,27 +70,27 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
           background: 'linear-gradient(145deg, rgba(44, 44, 46, 0.95) 0%, rgba(28, 28, 30, 1) 100%)',
           borderColor: 'rgba(255, 255, 255, 0.15)',
           boxShadow: '0 12px 40px rgba(0, 0, 0, 0.3)',
-        },
+                },
         // Esquinas cortadas estilo premium
         clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))'
-      }}
-    >
-      {/* Marco dorado para productos recomendados */}
-            {isRecommended && (
-            <Box
-              sx={{
+              }}
+            >
+      {/* Marco celeste y blanco para productos recomendados */}
+      {isRecommended && (
+        <Box
+          sx={{
             position: 'absolute',
             top: 0,
             left: 0,
-                  right: 0,
-                  bottom: 0,
-            background: 'linear-gradient(45deg, #D4AF37, #FFD700, #D4AF37)',
+          right: 0,
+            bottom: 0,
+            background: 'linear-gradient(45deg, #74ACDF, #FFFFFF, #74ACDF)',
             backgroundSize: '200% 200%',
-            animation: 'goldShimmer 4s ease-in-out infinite',
+            animation: 'argentineShimmer 4s ease-in-out infinite',
             clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
-                '&::after': {
+            '&::after': {
               content: '""',
-                  position: 'absolute',
+              position: 'absolute',
               top: '2px',
               left: '2px',
               right: '2px',
@@ -98,20 +98,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
               background: 'linear-gradient(145deg, rgba(44, 44, 46, 0.8) 0%, rgba(28, 28, 30, 0.95) 100%)',
               clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))'
             },
-            '@keyframes goldShimmer': {
+            '@keyframes argentineShimmer': {
               '0%, 100%': { backgroundPosition: '0% 50%' },
               '50%': { backgroundPosition: '100% 50%' }
             }
-              }}
-        />
-        )}
+          }}
+      />
+      )}
 
-      {/* Patrón de fondo tipo papel de lujo */}
+      {/* Patrón de fondo tipo cuero premium */}
       <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
           right: 0,
           bottom: 0,
           backgroundImage: `
@@ -121,12 +121,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
           `,
           pointerEvents: 'none',
           zIndex: 1
-          }}
-        />
+        }}
+      />
 
       {/* Contenido principal */}
       <Box sx={{ position: 'relative', zIndex: 2, p: { xs: 4, sm: 5 } }}>
-        {/* Header estilo Michelin */}
+        {/* Header estilo parrilla premium */}
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -134,12 +134,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
           mb: 3,
           gap: 3
         }}>
-          {/* Sección izquierda: Etiquetas premium */}
+          {/* Sección izquierda: Etiquetas argentinas */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flex: 1 }}>
             {/* Categoría principal */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <Box
-        sx={{
+              <Box
+                sx={{
                   p: 0.75,
                   borderRadius: 0,
                   background: 'linear-gradient(135deg, rgba(161, 161, 170, 0.15) 0%, rgba(161, 161, 170, 0.08) 100%)',
@@ -155,15 +155,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                   fontSize: '0.75rem',
                   fontWeight: 500,
                   letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  fontFamily: 'serif'
-        }}
+                  textTransform: 'uppercase'
+                }}
               >
                 {product.category}
               </Typography>
             </Box>
 
-            {/* Etiquetas especiales */}
+            {/* Etiquetas especiales argentinas */}
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {isRecommended && (
                 <MotionBox
@@ -178,8 +177,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                       gap: 0.75,
                       px: 1.5,
                       py: 0.5,
-                      background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(255, 215, 0, 0.1) 100%)',
-                      border: '1px solid rgba(212, 175, 55, 0.3)',
+                      background: 'linear-gradient(135deg, rgba(116, 172, 223, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%)',
+                      border: '1px solid rgba(116, 172, 223, 0.3)',
                       clipPath: 'polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 3px 100%, 0 calc(100% - 3px))',
                       position: 'relative',
                       '&::before': {
@@ -194,18 +193,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                       }
                     }}
                   >
-                    <AutoAwesome sx={{ fontSize: 12, color: '#D4AF37' }} />
+                    <Whatshot sx={{ fontSize: 12, color: '#74ACDF' }} />
                     <Typography
                       sx={{
-                        color: '#D4AF37',
+                        color: '#74ACDF',
                         fontSize: '0.65rem',
                         fontWeight: 600,
                         letterSpacing: '0.05em',
-                        textTransform: 'uppercase',
-                        fontFamily: 'serif'
+                        textTransform: 'uppercase'
                       }}
                     >
-                      Signature
+                      Destacado
                     </Typography>
                   </Box>
     </MotionBox>
@@ -236,11 +234,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                         fontSize: '0.65rem',
                         fontWeight: 600,
                         letterSpacing: '0.05em',
-                        textTransform: 'uppercase',
-                        fontFamily: 'serif'
+                        textTransform: 'uppercase'
                       }}
                     >
-                      Nouveau
+                      Nuevo
                     </Typography>
                   </Box>
                 </MotionBox>
@@ -271,11 +268,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                         fontSize: '0.65rem',
                         fontWeight: 600,
                         letterSpacing: '0.05em',
-                        textTransform: 'uppercase',
-                        fontFamily: 'serif'
+                        textTransform: 'uppercase'
                       }}
                     >
-                      Végétal
+                      Vegano
                     </Typography>
                   </Box>
                 </MotionBox>
@@ -283,7 +279,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
             </Box>
           </Box>
 
-          {/* Precio estilo medallón Michelin */}
+          {/* Precio estilo medallón argentino */}
           <MotionBox
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
@@ -301,15 +297,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                 height: 80,
                 borderRadius: '50%',
                 background: isRecommended 
-                  ? 'radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, rgba(255, 215, 0, 0.1) 70%, transparent 100%)'
+                  ? 'radial-gradient(circle, rgba(116, 172, 223, 0.2) 0%, rgba(255, 255, 255, 0.1) 70%, transparent 100%)'
                   : 'radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 70%, transparent 100%)',
-                border: `2px solid ${isRecommended ? '#D4AF37' : '#F59E0B'}`,
+                border: `2px solid ${isRecommended ? '#74ACDF' : '#F59E0B'}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 backdropFilter: 'blur(16px)',
                 boxShadow: isRecommended 
-                  ? '0 8px 32px rgba(212, 175, 55, 0.2)' 
+                  ? '0 8px 32px rgba(116, 172, 223, 0.2)' 
                   : '0 8px 32px rgba(245, 158, 11, 0.2)',
                 '&::before': {
                   content: '""',
@@ -319,7 +315,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                   right: -1,
                   bottom: -1,
                   borderRadius: '50%',
-                  background: `conic-gradient(from 0deg, ${isRecommended ? '#D4AF37' : '#F59E0B'}, transparent, ${isRecommended ? '#D4AF37' : '#F59E0B'})`,
+                  background: `conic-gradient(from 0deg, ${isRecommended ? '#74ACDF' : '#F59E0B'}, transparent, ${isRecommended ? '#74ACDF' : '#F59E0B'})`,
                   zIndex: -1,
                   animation: 'rotate 4s linear infinite'
                 },
@@ -345,23 +341,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                   sx={{
                     fontSize: '0.6rem',
                     fontWeight: 500,
-                    color: isRecommended ? '#D4AF37' : '#F59E0B',
+                    color: isRecommended ? '#74ACDF' : '#F59E0B',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
-                    fontFamily: 'serif',
                     mb: 0.25
                   }}
                 >
-                  Prix
+                  Precio
                 </Typography>
                 <Typography
                   sx={{
                     fontWeight: 800,
                     fontSize: '1.1rem',
-                    color: isRecommended ? '#D4AF37' : '#F59E0B',
+                    color: isRecommended ? '#74ACDF' : '#F59E0B',
                     letterSpacing: '-0.02em',
-                    lineHeight: 1,
-                    fontFamily: 'serif'
+                    lineHeight: 1
                   }}
                 >
                   ${product.price}
@@ -388,41 +382,37 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
               width: 6,
               height: 6,
               borderRadius: '50%',
-              background: isRecommended ? '#D4AF37' : '#F59E0B',
+              background: isRecommended ? '#74ACDF' : '#F59E0B',
               opacity: 0.6
             }
           }}
         />
 
-        {/* Nombre del plato estilo Michelin */}
+        {/* Nombre del plato estilo argentino */}
         <Typography
           sx={{
-            fontWeight: 400,
+            fontWeight: 500,
             fontSize: { xs: '1.125rem', sm: '1.25rem' },
             color: '#F5F5F7',
-            letterSpacing: '0.02em',
+            letterSpacing: '-0.01em',
             lineHeight: 1.4,
             textAlign: 'center',
-            mb: 2,
-            fontFamily: 'serif',
-            fontStyle: 'italic'
+            mb: 2
           }}
         >
           {product.name}
         </Typography>
 
-        {/* Descripción estilo carta francesa */}
+        {/* Descripción estilo carta argentina */}
         {product.description && (
           <Typography
             sx={{
               color: '#A1A1AA',
               fontSize: { xs: '0.8rem', sm: '0.85rem' },
               lineHeight: 1.6,
-              fontWeight: 300,
+              fontWeight: 400,
               textAlign: 'center',
               opacity: 0.9,
-              fontFamily: 'serif',
-              fontStyle: 'normal',
               letterSpacing: '0.01em'
             }}
           >
