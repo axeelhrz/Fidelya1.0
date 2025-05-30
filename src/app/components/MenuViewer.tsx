@@ -1,210 +1,177 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Chip,
-  Stack,
-  Paper,
-  AppBar,
-  Toolbar,
-} from '@mui/material';
-import { motion } from 'framer-motion';
-import { Product } from '../types';
+import { useState, useEffect } from 'react';
+import { Box, Typography, Stack, CircularProgress, Alert, Container } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, Product } from '../types';
 import MenuSection from './MenuSection';
 
-interface MenuViewerProps {
-  products: Product[];
-  menuName?: string;
-  menuDescription?: string;
-}
-
 const MotionBox = motion(Box);
-const MotionContainer = motion(Container);
 
-const MenuViewer: React.FC<MenuViewerProps> = ({
-  products,
-  menuName = 'XSreset',
-  menuDescription = 'Experiencia nocturna premium'
-}) => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
-  // Obtener categorías únicas
-  const categories = useMemo(() => {
-    const cats = ['Todas', ...Array.from(new Set(products.map(p => p.category)))];
-    return cats;
-  }, [products]);
+export default function MenuViewer() {
+  const [menu, setMenu] = useState<Menu | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Filtrar productos por categoría
-  const filteredProducts = useMemo(() => {
-    if (selectedCategory === 'Todas') return products;
-    return products.filter(p => p.category === selectedCategory);
-  }, [products, selectedCategory]);
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        const response = await fetch('/api/menus');
+        if (!response.ok) {
+          throw new Error('Error al cargar el menú');
+        }
+        const menus = await response.json();
+        if (menus.length > 0) {
+          setMenu(menus[0]);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Error desconocido');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenu();
+  }, []);
+
+  if (loading) {
+    return (
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh',
+          backgroundColor: '#1C1C1E'
+        }}
+      >
+        <Stack spacing={3} alignItems="center">
+          <CircularProgress 
+            size={48} 
+            sx={{ 
+              color: '#3B82F6',
+              '& .MuiCircularProgress-circle': {
+                strokeLinecap: 'round',
+              }
+            }} 
+          />
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              color: '#A1A1AA',
+              fontSize: '1rem'
+            }}
+          >
+            Cargando menú...
+          </Typography>
+        </Stack>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="sm" sx={{ py: 8 }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            borderRadius: 3,
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            color: '#F87171'
+          }}
+        >
+          {error}
+        </Alert>
+      </Container>
+    );
+  }
+
+  if (!menu) {
+    return (
+      <Container maxWidth="sm" sx={{ py: 8 }}>
+        <Alert 
+          severity="info"
+          sx={{ 
+            borderRadius: 3,
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            border: '1px solid rgba(59, 130, 246, 0.2)',
+            color: '#60A5FA'
+          }}
+        >
+          No hay menú disponible
+        </Alert>
+      </Container>
+    );
+  }
 
   // Agrupar productos por categoría
-  const groupedProducts = useMemo(() => {
-    const groups: Record<string, Product[]> = {};
-    filteredProducts.forEach(product => {
-      if (!groups[product.category]) {
-        groups[product.category] = [];
-      }
-      groups[product.category].push(product);
-    });
-    return groups;
-  }, [filteredProducts]);
+  const groupedProducts = menu.products.reduce((acc, product) => {
+    if (!acc[product.category]) {
+      acc[product.category] = [];
+    }
+    acc[product.category].push(product);
+    return acc;
+  }, {} as Record<string, Product[]>);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-        staggerChildren: 0.1,
-    },
-  },
-};
-
-    return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#1C1C1E' }}>
-      {/* Encabezado fijo con nombre del bar */}
-      <AppBar 
-        position="fixed" 
-        elevation={0}
-        sx={{ 
-          backgroundColor: 'rgba(28, 28, 30, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid #3A3A3C',
-                            }}
-                          >
-        <Toolbar sx={{ justifyContent: 'center' }}>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              fontWeight: 700,
-              color: '#F5F5F7',
-              letterSpacing: '0.05em',
-            }}
-                                >
-            {menuName}
-                                </Typography>
-        </Toolbar>
-      </AppBar>
-
-      {/* Contenido principal con padding p: 3 */}
-      <MotionContainer 
-        maxWidth="md" 
-        sx={{ 
-          pt: 12, // Espacio para AppBar fijo
-          pb: 4,
-          px: 3, // Padding p: 3
-        }}
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-                                >
-        {/* Header del Menú */}
+  return (
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        backgroundColor: '#1C1C1E',
+        py: 4
+      }}
+    >
+      <Container maxWidth="md">
+        {/* Header del menú */}
         <MotionBox
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          sx={{ textAlign: 'center', mb: 6 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          sx={{ mb: 6, textAlign: 'center' }}
         >
           <Typography 
-            variant="h3"
-            fontWeight={700}
+            variant="titleMedium" 
             sx={{ 
               mb: 2,
-              background: 'linear-gradient(135deg, #3B82F6 0%, #F59E0B 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              background: 'linear-gradient(135deg, #F5F5F7 0%, #A1A1AA 100%)',
               backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
             }}
           >
-            {menuName}
-                                </Typography>
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              color: '#A1A1AA',
-              fontSize: '1rem',
-            }}
-          >
-            {menuDescription}
+            {menu.name}
           </Typography>
-          </MotionBox>
-
-        {/* Filtros de Categoría optimizados para mobile */}
-        <MotionBox
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          sx={{ mb: 6 }}
-        >
-          <Paper sx={{ 
-            p: 3, 
-            borderRadius: 4,
-            backgroundColor: '#2C2C2E',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          }}>
+          
+          {menu.description && (
             <Typography 
-              variant="h6" 
+              variant="body1" 
               sx={{ 
-                mb: 3,
-                fontWeight: 600,
-                color: '#F5F5F7',
+                color: '#A1A1AA',
+                maxWidth: 600,
+                mx: 'auto',
+                lineHeight: 1.6
               }}
             >
-              Categorías
+              {menu.description}
             </Typography>
-            <Stack 
-              direction="row" 
-              spacing={1} 
-              sx={{ 
-                gap: 2.5, // gap: 2.5
-                flexWrap: 'wrap',
-              }}
-            >
-              {categories.map((category) => (
-                <Chip
-                  key={category}
-                  label={category}
-                  onClick={() => setSelectedCategory(category)}
-                  variant={selectedCategory === category ? 'filled' : 'outlined'}
-                  color={selectedCategory === category ? 'primary' : 'default'}
-                  sx={{
-                    minHeight: 48, // Botones táctiles grandes
-                    borderRadius: 3, // borderRadius: 12px
-                    fontWeight: selectedCategory === category ? 600 : 500,
-                    fontSize: '0.9rem',
-                    px: 2,
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      transform: 'scale(1.05)',
-                      backgroundColor: selectedCategory === category 
-                        ? 'primary.dark' 
-                        : 'rgba(255,255,255,0.04)',
-                    },
-                  }}
-                />
-              ))}
-            </Stack>
-          </Paper>
+          )}
         </MotionBox>
 
-        {/* Lista de Productos por Categoría usando Stack */}
-        <Stack spacing={6}>
-          {Object.entries(groupedProducts).map(([category, categoryProducts], index) => (
-            <MenuSection
-              key={category}
-              title={category}
-              products={categoryProducts}
-              index={index}
-            />
-          ))}
-        </Stack>
-      </MotionContainer>
+        {/* Secciones del menú */}
+        <AnimatePresence>
+          <Stack spacing={5}>
+            {Object.entries(groupedProducts).map(([category, products], index) => (
+              <MenuSection
+                key={category}
+                title={category}
+                products={products}
+                index={index}
+              />
+            ))}
+          </Stack>
+        </AnimatePresence>
+      </Container>
     </Box>
   );
-};
-
-export default MenuViewer;
+}
