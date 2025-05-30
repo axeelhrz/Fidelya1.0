@@ -17,7 +17,7 @@ import {
   Alert,
   Chip,
 } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { 
   ArrowBack,
   Add,
@@ -26,7 +26,10 @@ import {
   Category,
   Save,
   Close,
-  DragIndicator
+  DragIndicator,
+  SwapVert,
+  KeyboardArrowUp,
+  KeyboardArrowDown
 } from '@mui/icons-material';
 import { ProductCategory } from '../../types';
 
@@ -37,25 +40,36 @@ interface CategoryManagerProps {
   onBack: () => void;
 }
 
+interface CategoryItem {
+  id: string;
+  name: ProductCategory;
+  productCount: number;
+  order: number;
+}
+
 // Datos de ejemplo con conteo de productos
-const mockCategories = [
-  { name: 'Bebidas' as ProductCategory, productCount: 8, order: 1 },
-  { name: 'Sin Alcohol' as ProductCategory, productCount: 4, order: 2 },
-  { name: 'Tapas' as ProductCategory, productCount: 12, order: 3 },
-  { name: 'Principales' as ProductCategory, productCount: 6, order: 4 },
-  { name: 'Postres' as ProductCategory, productCount: 5, order: 5 },
-  { name: 'Café' as ProductCategory, productCount: 3, order: 6 },
+const mockCategories: CategoryItem[] = [
+  { id: '1', name: 'Bebidas' as ProductCategory, productCount: 8, order: 1 },
+  { id: '2', name: 'Sin Alcohol' as ProductCategory, productCount: 4, order: 2 },
+  { id: '3', name: 'Tapas' as ProductCategory, productCount: 12, order: 3 },
+  { id: '4', name: 'Principales' as ProductCategory, productCount: 6, order: 4 },
+  { id: '5', name: 'Postres' as ProductCategory, productCount: 5, order: 5 },
+  { id: '6', name: 'Café' as ProductCategory, productCount: 3, order: 6 },
 ];
 
 export default function CategoryManager({ onBack }: CategoryManagerProps) {
-  const [categories, setCategories] = useState(mockCategories);
+  const [categories, setCategories] = useState<CategoryItem[]>(mockCategories);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<{ name: ProductCategory; productCount: number; order: number } | null>(null);
+  const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [dragMode, setDragMode] = useState(false);
 
-  const handleOpenDialog = (category?: { name: ProductCategory; productCount: number; order: number }) => {
+  // Ordenar categorías por orden
+  const sortedCategories = [...categories].sort((a, b) => a.order - b.order);
+
+  const handleOpenDialog = (category?: CategoryItem) => {
     if (category) {
       setEditingCategory(category);
       setNewCategoryName(category.name);
@@ -83,17 +97,18 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
       if (editingCategory) {
         // Editar categoría existente
         setCategories(prev => prev.map(cat => 
-          cat.name === editingCategory.name 
+          cat.id === editingCategory.id 
             ? { ...cat, name: newCategoryName as ProductCategory }
             : cat
         ));
         setAlert({ type: 'success', message: 'Categoría actualizada correctamente' });
       } else {
         // Crear nueva categoría
-        const newCategory = {
+        const newCategory: CategoryItem = {
+          id: Date.now().toString(),
           name: newCategoryName as ProductCategory,
           productCount: 0,
-          order: categories.length + 1
+          order: Math.max(...categories.map(c => c.order), 0) + 1
         };
         setCategories(prev => [...prev, newCategory]);
         setAlert({ type: 'success', message: 'Categoría creada correctamente' });
@@ -107,8 +122,8 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
     }
   };
 
-  const handleDeleteCategory = async (categoryName: ProductCategory) => {
-    const category = categories.find(cat => cat.name === categoryName);
+  const handleDeleteCategory = async (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId);
     
     if (category && category.productCount > 0) {
       setAlert({ 
@@ -123,13 +138,60 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
     setLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
-      setCategories(prev => prev.filter(cat => cat.name !== categoryName));
+      setCategories(prev => prev.filter(cat => cat.id !== categoryId));
       setAlert({ type: 'success', message: 'Categoría eliminada correctamente' });
     } catch {
       setAlert({ type: 'error', message: 'Error al eliminar la categoría' });
     } finally {
       setLoading(false);
     }
+  };
+
+  // Mover categoría hacia arriba
+  const moveUp = (categoryId: string) => {
+    const categoryIndex = sortedCategories.findIndex(cat => cat.id === categoryId);
+    if (categoryIndex <= 0) return;
+
+    const newCategories = [...categories];
+    const currentCategory = newCategories.find(cat => cat.id === categoryId);
+    const previousCategory = newCategories.find(cat => cat.order === sortedCategories[categoryIndex - 1].order);
+
+    if (currentCategory && previousCategory) {
+      const tempOrder = currentCategory.order;
+      currentCategory.order = previousCategory.order;
+      previousCategory.order = tempOrder;
+      
+      setCategories(newCategories);
+      setAlert({ type: 'success', message: 'Orden actualizado correctamente' });
+    }
+  };
+
+  // Mover categoría hacia abajo
+  const moveDown = (categoryId: string) => {
+    const categoryIndex = sortedCategories.findIndex(cat => cat.id === categoryId);
+    if (categoryIndex >= sortedCategories.length - 1) return;
+
+    const newCategories = [...categories];
+    const currentCategory = newCategories.find(cat => cat.id === categoryId);
+    const nextCategory = newCategories.find(cat => cat.order === sortedCategories[categoryIndex + 1].order);
+
+    if (currentCategory && nextCategory) {
+      const tempOrder = currentCategory.order;
+      currentCategory.order = nextCategory.order;
+      nextCategory.order = tempOrder;
+      
+      setCategories(newCategories);
+      setAlert({ type: 'success', message: 'Orden actualizado correctamente' });
+    }
+  };
+
+  // Manejar reordenamiento con drag and drop
+  const handleReorder = (newOrder: CategoryItem[]) => {
+    const updatedCategories = newOrder.map((category, index) => ({
+      ...category,
+      order: index + 1
+    }));
+    setCategories(updatedCategories);
   };
 
   // Auto-hide alert
@@ -178,7 +240,7 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
             <ArrowBack />
           </IconButton>
 
-          <Box>
+          <Box sx={{ flex: 1 }}>
             <Typography 
               sx={{ 
                 fontFamily: "'Inter', sans-serif",
@@ -200,28 +262,72 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
               Organiza las categorías de tu menú
             </Typography>
           </Box>
+
+          {/* Toggle para modo drag */}
+          <Button
+            variant={dragMode ? "contained" : "outlined"}
+            startIcon={<SwapVert />}
+            onClick={() => setDragMode(!dragMode)}
+            sx={{
+              borderColor: '#D4AF37',
+              color: dragMode ? '#0A0A0A' : '#D4AF37',
+              background: dragMode ? 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)' : 'transparent',
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: 600,
+              borderRadius: 0,
+              px: 2,
+              py: 1,
+              '&:hover': {
+                borderColor: '#D4AF37',
+                backgroundColor: dragMode ? 'linear-gradient(135deg, #E8C547 0%, #D4AF37 100%)' : 'rgba(212, 175, 55, 0.1)',
+              }
+            }}
+          >
+            {dragMode ? 'Finalizar' : 'Reordenar'}
+          </Button>
         </Stack>
 
-        {/* Botón para agregar categoría */}
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => handleOpenDialog()}
-          sx={{
-            background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
-            color: '#0A0A0A',
-            fontFamily: "'Inter', sans-serif",
-            fontWeight: 600,
-            borderRadius: 0,
-            px: 3,
-            py: 1.5,
-            '&:hover': {
-              background: 'linear-gradient(135deg, #E8C547 0%, #D4AF37 100%)',
-            }
-          }}
-        >
-          Nueva Categoría
-        </Button>
+        {/* Botones de acción */}
+        <Stack direction="row" spacing={2}>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => handleOpenDialog()}
+            sx={{
+              background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
+              color: '#0A0A0A',
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: 600,
+              borderRadius: 0,
+              px: 3,
+              py: 1.5,
+              '&:hover': {
+                background: 'linear-gradient(135deg, #E8C547 0%, #D4AF37 100%)',
+              }
+            }}
+          >
+            Nueva Categoría
+          </Button>
+
+          {dragMode && (
+            <Alert 
+              severity="info"
+              sx={{
+                borderRadius: 0,
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                color: '#3B82F6',
+                fontFamily: "'Inter', sans-serif",
+                py: 0,
+                '& .MuiAlert-message': {
+                  py: 1
+                }
+              }}
+            >
+              Arrastra las categorías para cambiar su orden
+            </Alert>
+          )}
+        </Stack>
       </Box>
 
       {/* Alert */}
@@ -255,155 +361,320 @@ export default function CategoryManager({ onBack }: CategoryManagerProps) {
       </AnimatePresence>
 
       {/* Lista de categorías */}
-      <Stack spacing={2}>
-        <AnimatePresence>
-          {categories.map((category, index) => (
-            <MotionCard
-              key={category.name}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              sx={{
-                background: 'rgba(26, 26, 26, 0.6)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(212, 175, 55, 0.2)',
-                borderRadius: 0,
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Stack direction="row" spacing={3} alignItems="center">
-                  {/* Icono de arrastrar */}
-                  <DragIndicator sx={{ color: '#B8B8B8', cursor: 'grab' }} />
-
-                  {/* Icono de categoría */}
-                  <Box
-                    sx={{
-                      width: 60,
-                      height: 60,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '2rem',
-                      background: 'rgba(212, 175, 55, 0.1)',
-                      border: '1px solid rgba(212, 175, 55, 0.3)',
-                    }}
-                  >
-                    {getCategoryIcon(category.name)}
-                  </Box>
-
-                  {/* Información de la categoría */}
-                  <Box sx={{ flex: 1 }}>
-                    <Typography 
-                      sx={{ 
-                        fontFamily: "'Inter', sans-serif",
-                        fontSize: '1.25rem',
-                        fontWeight: 600,
-                        color: '#F8F8F8',
-                        mb: 0.5
-                      }}
-                    >
-                      {category.name}
-                    </Typography>
-                    
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <Chip
-                        label={`${category.productCount} productos`}
-                        size="small"
+      {dragMode ? (
+        // Modo drag and drop
+        <Reorder.Group 
+          axis="y" 
+          values={sortedCategories} 
+          onReorder={handleReorder}
+          style={{ listStyle: 'none', padding: 0, margin: 0 }}
+        >
+          <Stack spacing={2}>
+            {sortedCategories.map((category) => (
+              <Reorder.Item 
+                key={category.id} 
+                value={category}
+                style={{ listStyle: 'none' }}
+                whileDrag={{ 
+                  scale: 1.02,
+                  boxShadow: '0 8px 32px rgba(212, 175, 55, 0.3)',
+                  zIndex: 1000
+                }}
+              >
+                <Card
+                  sx={{
+                    background: 'rgba(26, 26, 26, 0.8)',
+                    backdropFilter: 'blur(20px)',
+                    border: '2px solid rgba(212, 175, 55, 0.4)',
+                    borderRadius: 0,
+                    cursor: 'grab',
+                    '&:active': {
+                      cursor: 'grabbing'
+                    }
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Stack direction="row" spacing={3} alignItems="center">
+                      {/* Icono de arrastrar más prominente */}
+                      <Box
                         sx={{
-                          backgroundColor: category.productCount > 0 
-                            ? 'rgba(34, 197, 94, 0.15)' 
-                            : 'rgba(156, 163, 175, 0.15)',
-                          color: category.productCount > 0 ? '#22C55E' : '#9CA3AF',
-                          fontSize: '0.75rem',
-                          fontFamily: "'Inter', sans-serif",
-                          borderRadius: 0
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          p: 1,
+                          backgroundColor: 'rgba(212, 175, 55, 0.2)',
+                          border: '1px solid rgba(212, 175, 55, 0.4)'
                         }}
-                      />
-                      
-                      <Chip
-                        label={`Orden: ${category.order}`}
-                        size="small"
+                      >
+                        <DragIndicator sx={{ color: '#D4AF37', fontSize: 24 }} />
+                      </Box>
+
+                      {/* Icono de categoría */}
+                      <Box
                         sx={{
-                          backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                          color: '#3B82F6',
-                          fontSize: '0.75rem',
-                          fontFamily: "'Inter', sans-serif",
-                          borderRadius: 0
+                          width: 60,
+                          height: 60,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '2rem',
+                          background: 'rgba(212, 175, 55, 0.1)',
+                          border: '1px solid rgba(212, 175, 55, 0.3)',
                         }}
-                      />
+                      >
+                        {getCategoryIcon(category.name)}
+                      </Box>
+
+                      {/* Información de la categoría */}
+                      <Box sx={{ flex: 1 }}>
+                        <Typography 
+                          sx={{ 
+                            fontFamily: "'Inter', sans-serif",
+                            fontSize: '1.25rem',
+                            fontWeight: 600,
+                            color: '#F8F8F8',
+                            mb: 0.5
+                          }}
+                        >
+                          {category.name}
+                        </Typography>
+                        
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Chip
+                            label={`${category.productCount} productos`}
+                            size="small"
+                            sx={{
+                              backgroundColor: category.productCount > 0 
+                                ? 'rgba(34, 197, 94, 0.15)' 
+                                : 'rgba(156, 163, 175, 0.15)',
+                              color: category.productCount > 0 ? '#22C55E' : '#9CA3AF',
+                              fontSize: '0.75rem',
+                              fontFamily: "'Inter', sans-serif",
+                              borderRadius: 0
+                            }}
+                          />
+                          
+                          <Chip
+                            label={`Orden: ${category.order}`}
+                            size="small"
+                            sx={{
+                              backgroundColor: 'rgba(212, 175, 55, 0.15)',
+                              color: '#D4AF37',
+                              fontSize: '0.75rem',
+                              fontFamily: "'Inter', sans-serif",
+                              borderRadius: 0,
+                              fontWeight: 600
+                            }}
+                          />
+                        </Stack>
+                      </Box>
                     </Stack>
-                  </Box>
+                  </CardContent>
+                </Card>
+              </Reorder.Item>
+            ))}
+          </Stack>
+        </Reorder.Group>
+      ) : (
+        // Modo normal con botones de orden
+        <Stack spacing={2}>
+          <AnimatePresence>
+            {sortedCategories.map((category, index) => (
+              <MotionCard
+                key={category.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                sx={{
+                  background: 'rgba(26, 26, 26, 0.6)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(212, 175, 55, 0.2)',
+                  borderRadius: 0,
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Stack direction="row" spacing={3} alignItems="center">
+                    {/* Controles de orden */}
+                    <Stack spacing={0.5}>
+                      <IconButton
+                        onClick={() => moveUp(category.id)}
+                        disabled={index === 0}
+                        size="small"
+                        sx={{
+                          color: index === 0 ? '#6B7280' : '#D4AF37',
+                          border: `1px solid ${index === 0 ? 'rgba(107, 114, 128, 0.3)' : 'rgba(212, 175, 55, 0.3)'}`,
+                          borderRadius: 0,
+                          width: 28,
+                          height: 28,
+                          '&:hover': {
+                            backgroundColor: index === 0 
+                              ? 'rgba(107, 114, 128, 0.1)' 
+                              : 'rgba(212, 175, 55, 0.1)',
+                          },
+                          '&:disabled': {
+                            color: '#6B7280',
+                            borderColor: 'rgba(107, 114, 128, 0.3)',
+                          }
+                        }}
+                      >
+                        <KeyboardArrowUp sx={{ fontSize: 16 }} />
+                      </IconButton>
+                      
+                      <IconButton
+                        onClick={() => moveDown(category.id)}
+                        disabled={index === sortedCategories.length - 1}
+                        size="small"
+                        sx={{
+                          color: index === sortedCategories.length - 1 ? '#6B7280' : '#D4AF37',
+                          border: `1px solid ${index === sortedCategories.length - 1 ? 'rgba(107, 114, 128, 0.3)' : 'rgba(212, 175, 55, 0.3)'}`,
+                          borderRadius: 0,
+                          width: 28,
+                          height: 28,
+                          '&:hover': {
+                            backgroundColor: index === sortedCategories.length - 1 
+                              ? 'rgba(107, 114, 128, 0.1)' 
+                              : 'rgba(212, 175, 55, 0.1)',
+                          },
+                          '&:disabled': {
+                            color: '#6B7280',
+                            borderColor: 'rgba(107, 114, 128, 0.3)',
+                          }
+                        }}
+                      >
+                        <KeyboardArrowDown sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Stack>
 
-                  {/* Acciones */}
-                  <Stack direction="row" spacing={1}>
-                    <IconButton
-                      onClick={() => handleOpenDialog(category)}
+                    {/* Icono de categoría */}
+                    <Box
                       sx={{
-                        color: '#3B82F6',
-                        border: '1px solid rgba(59, 130, 246, 0.3)',
-                        borderRadius: 0,
-                        '&:hover': {
-                          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        }
+                        width: 60,
+                        height: 60,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '2rem',
+                        background: 'rgba(212, 175, 55, 0.1)',
+                        border: '1px solid rgba(212, 175, 55, 0.3)',
                       }}
                     >
-                      <Edit />
-                    </IconButton>
+                      {getCategoryIcon(category.name)}
+                    </Box>
 
-                    <IconButton
-                      onClick={() => handleDeleteCategory(category.name)}
-                      disabled={category.productCount > 0}
-                      sx={{
-                        color: category.productCount > 0 ? '#6B7280' : '#F87171',
-                        border: `1px solid ${category.productCount > 0 ? 'rgba(107, 114, 128, 0.3)' : 'rgba(248, 113, 113, 0.3)'}`,
-                        borderRadius: 0,
-                        '&:hover': {
-                          backgroundColor: category.productCount > 0 
-                            ? 'rgba(107, 114, 128, 0.1)' 
-                            : 'rgba(248, 113, 113, 0.1)',
-                        },
-                        '&:disabled': {
-                          color: '#6B7280',
-                          borderColor: 'rgba(107, 114, 128, 0.3)',
-                        }
-                      }}
-                    >
-                      <Delete />
-                    </IconButton>
+                    {/* Información de la categoría */}
+                    <Box sx={{ flex: 1 }}>
+                      <Typography 
+                        sx={{ 
+                          fontFamily: "'Inter', sans-serif",
+                          fontSize: '1.25rem',
+                          fontWeight: 600,
+                          color: '#F8F8F8',
+                          mb: 0.5
+                        }}
+                      >
+                        {category.name}
+                      </Typography>
+                      
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Chip
+                          label={`${category.productCount} productos`}
+                          size="small"
+                          sx={{
+                            backgroundColor: category.productCount > 0 
+                              ? 'rgba(34, 197, 94, 0.15)' 
+                              : 'rgba(156, 163, 175, 0.15)',
+                            color: category.productCount > 0 ? '#22C55E' : '#9CA3AF',
+                            fontSize: '0.75rem',
+                            fontFamily: "'Inter', sans-serif",
+                            borderRadius: 0
+                          }}
+                        />
+                        
+                        <Chip
+                          label={`Orden: ${category.order}`}
+                          size="small"
+                          sx={{
+                            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                            color: '#3B82F6',
+                            fontSize: '0.75rem',
+                            fontFamily: "'Inter', sans-serif",
+                            borderRadius: 0
+                          }}
+                        />
+                      </Stack>
+                    </Box>
+
+                    {/* Acciones */}
+                    <Stack direction="row" spacing={1}>
+                      <IconButton
+                        onClick={() => handleOpenDialog(category)}
+                        sx={{
+                          color: '#3B82F6',
+                          border: '1px solid rgba(59, 130, 246, 0.3)',
+                          borderRadius: 0,
+                          '&:hover': {
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                          }
+                        }}
+                      >
+                        <Edit />
+                      </IconButton>
+
+                      <IconButton
+                        onClick={() => handleDeleteCategory(category.id)}
+                        disabled={category.productCount > 0}
+                        sx={{
+                          color: category.productCount > 0 ? '#6B7280' : '#F87171',
+                          border: `1px solid ${category.productCount > 0 ? 'rgba(107, 114, 128, 0.3)' : 'rgba(248, 113, 113, 0.3)'}`,
+                          borderRadius: 0,
+                          '&:hover': {
+                            backgroundColor: category.productCount > 0 
+                              ? 'rgba(107, 114, 128, 0.1)' 
+                              : 'rgba(248, 113, 113, 0.1)',
+                          },
+                          '&:disabled': {
+                            color: '#6B7280',
+                            borderColor: 'rgba(107, 114, 128, 0.3)',
+                          }
+                        }}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Stack>
                   </Stack>
-                </Stack>
-              </CardContent>
-            </MotionCard>
-          ))}
-        </AnimatePresence>
+                </CardContent>
+              </MotionCard>
+            ))}
+          </AnimatePresence>
 
-        {categories.length === 0 && (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Category sx={{ fontSize: 64, color: '#B8B8B8', mb: 2 }} />
-            <Typography 
-              sx={{ 
-                fontFamily: "'Inter', sans-serif",
-                fontSize: '1.125rem',
-                color: '#B8B8B8',
-                mb: 1
-              }}
-            >
-              No hay categorías creadas
-            </Typography>
-            <Typography 
-              sx={{ 
-                fontFamily: "'Inter', sans-serif",
-                fontSize: '0.875rem',
-                color: '#B8B8B8',
-                opacity: 0.7
-              }}
-            >
-              Crea tu primera categoría para organizar el menú
-            </Typography>
-          </Box>
-        )}
-      </Stack>
+          {categories.length === 0 && (
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <Category sx={{ fontSize: 64, color: '#B8B8B8', mb: 2 }} />
+              <Typography 
+                sx={{ 
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: '1.125rem',
+                  color: '#B8B8B8',
+                  mb: 1
+                }}
+              >
+                No hay categorías creadas
+              </Typography>
+              <Typography 
+                sx={{ 
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: '0.875rem',
+                  color: '#B8B8B8',
+                  opacity: 0.7
+                }}
+              >
+                Crea tu primera categoría para organizar el menú
+              </Typography>
+            </Box>
+          )}
+        </Stack>
+      )}
 
       {/* Dialog para crear/editar categoría */}
       <Dialog
