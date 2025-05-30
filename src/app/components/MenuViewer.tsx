@@ -107,63 +107,49 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           minHeight: { xs: 68, sm: 76 },
           position: 'relative'
         }}>
-          {/* Botón de regreso minimalista */}
+          {/* Sección izquierda: Botón de regreso + Branding */}
           <MotionBox
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease: [0.04, 0.62, 0.23, 0.98] }}
-              >
-            <IconButton 
-              onClick={() => router.push('/')}
-              sx={{ 
-                color: '#A1A1AA',
-                p: 1.5,
-                borderRadius: 2,
-                backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.04)',
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': { 
-                  color: '#F5F5F7',
-                  backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                  borderColor: 'rgba(255, 255, 255, 0.08)',
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)'
-                }
-                }}
-            >
-              <ArrowBack fontSize="small" />
-            </IconButton>
-        </MotionBox>
-          
-          {/* Branding Central Premium - Xs Reset */}
-          <MotionBox
-            initial={{ opacity: 0, y: -15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98], delay: 0.2 }}
-            sx={{ 
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
+            transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98] }}
+            sx={{
               display: 'flex', 
-              flexDirection: 'column',
-                alignItems: 'center',
-              gap: 0.5
+              alignItems: 'center',
+              gap: 3
             }}
             >
-            {/* Logo Premium */}
-            <Box
-            sx={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2
+            {/* Botón de regreso elegante */}
+            <MotionBox
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <IconButton 
+                onClick={() => router.push('/')}
+                sx={{ 
+                    color: '#A1A1AA',
+                  p: 1.5,
+                  borderRadius: 2,
+                  backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.04)',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': { 
+                color: '#F5F5F7',
+                    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                    borderColor: 'rgba(255, 255, 255, 0.08)',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)'
+                  }
               }}
             >
-              {/* Icono con efecto de lujo */}
-            <Box
-              sx={{
+                <ArrowBack fontSize="small" />
+              </IconButton>
+          </MotionBox>
+
+            {/* Branding del Bar - Xs Reset */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+              {/* Logo Premium */}
+        <Box
+          sx={{
                   p: 1.5,
                   borderRadius: 2.5,
                   background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.06) 100%)',
@@ -187,27 +173,27 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               >
                 <Restaurant sx={{ 
                   color: '#3B82F6', 
-                  fontSize: 22,
+                  fontSize: 20,
                   filter: 'drop-shadow(0 2px 6px rgba(59, 130, 246, 0.4))'
                 }} />
               </Box>
               
-              {/* Nombre del Bar - Xs Reset */}
-              <Box sx={{ textAlign: 'center' }}>
+              {/* Información del Bar */}
+              <Box>
                 <Typography 
                   sx={{ 
                     fontWeight: 700,
                     color: '#F5F5F7',
                     letterSpacing: '-0.03em',
-                    fontSize: { xs: '1.375rem', sm: '1.5rem' },
+                    fontSize: { xs: '1.25rem', sm: '1.375rem' },
                     lineHeight: 1,
                     textShadow: '0 2px 12px rgba(0, 0, 0, 0.4)',
                     background: 'linear-gradient(135deg, #F5F5F7 0%, #E5E5E7 100%)',
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                }}
-              >
+                  }}
+                >
                   Xs Reset
               </Typography>
               
@@ -217,9 +203,10 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                     fontSize: '0.7rem',
                     fontWeight: 500,
                     color: '#A1A1AA',
-                    letterSpacing: '0.15em',
+                    letterSpacing: '0.12em',
                     textTransform: 'uppercase',
                     opacity: 0.8,
+                    lineHeight: 1,
                     mt: 0.25
                   }}
                 >
@@ -229,11 +216,11 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
             </Box>
           </MotionBox>
 
-          {/* Indicador de tiempo/estado elegante */}
+          {/* Sección derecha: Estado y hora */}
           <MotionBox
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease: [0.04, 0.62, 0.23, 0.98], delay: 0.4 }}
+            transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98], delay: 0.2 }}
             sx={{
               display: 'flex',
               flexDirection: 'column',
@@ -309,16 +296,16 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           }}
         />
 
-        {/* Efecto de brillo sutil en el centro */}
+        {/* Efecto de brillo sutil */}
         <Box
           sx={{
             position: 'absolute',
             top: '50%',
-            left: '50%',
+            left: '25%',
             transform: 'translate(-50%, -50%)',
-            width: '200px',
+            width: '300px',
             height: '60px',
-            background: 'radial-gradient(ellipse, rgba(59, 130, 246, 0.03) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse, rgba(59, 130, 246, 0.02) 0%, transparent 70%)',
             pointerEvents: 'none',
             borderRadius: '50%'
           }}
