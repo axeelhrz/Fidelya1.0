@@ -3,10 +3,11 @@ import { FirebaseDatabase } from '../../../../lib/firebase-database';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const menu = await FirebaseDatabase.getMenu(params.id);
+    const { id } = await params;
+    const menu = await FirebaseDatabase.getMenu(id);
     
     if (!menu) {
       return NextResponse.json(
@@ -27,13 +28,14 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const menuData = await request.json();
     
     // Check if menu exists
-    const existingMenu = await FirebaseDatabase.getMenu(params.id);
+    const existingMenu = await FirebaseDatabase.getMenu(id);
     if (!existingMenu) {
       return NextResponse.json(
         { error: 'Menu not found' },
@@ -41,8 +43,8 @@ export async function PUT(
       );
     }
 
-    await FirebaseDatabase.updateMenu(params.id, menuData);
-    const updatedMenu = await FirebaseDatabase.getMenu(params.id);
+    await FirebaseDatabase.updateMenu(id, menuData);
+    const updatedMenu = await FirebaseDatabase.getMenu(id);
     
     return NextResponse.json(updatedMenu);
   } catch (error: unknown) {
@@ -55,12 +57,14 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     // Check if menu exists
-    const existingMenu = await FirebaseDatabase.getMenu(params.id);
+    const existingMenu = await FirebaseDatabase.getMenu(id);
     if (!existingMenu) {
       return NextResponse.json(
         { error: 'Menu not found' },
@@ -68,7 +72,7 @@ export async function DELETE(
       );
     }
 
-    await FirebaseDatabase.deleteMenu(params.id);
+    await FirebaseDatabase.deleteMenu(id);
     
     return NextResponse.json(
       { message: 'Menu deleted successfully' },
