@@ -1,18 +1,16 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Container,
   Typography,
   Stack,
-  AppBar,
-  Toolbar,
   IconButton,
   Chip,
-  Fade,
+  Fab,
 } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { 
   ArrowBack, 
   Restaurant,
@@ -32,6 +30,7 @@ interface MenuViewerProps {
 
 const MotionBox = motion(Box);
 const MotionContainer = motion(Container);
+const MotionFab = motion(Fab);
 
 const MenuViewer: React.FC<MenuViewerProps> = ({
   products,
@@ -41,6 +40,19 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
   const [showFilters, setShowFilters] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(true);
+
+  const { scrollY } = useScroll();
+  const headerOpacity = useTransform(scrollY, [0, 100], [1, 0]);
+  const headerY = useTransform(scrollY, [0, 100], [0, -100]);
+
+  // Controlar visibilidad del header
+  useEffect(() => {
+    const unsubscribe = scrollY.onChange((latest) => {
+      setHeaderVisible(latest < 100);
+    });
+    return unsubscribe;
+  }, [scrollY]);
 
   // Obtener categorías únicas
   const categories = useMemo(() => {
@@ -111,7 +123,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: -10, // Muy atrás
+          zIndex: -10,
           pointerEvents: 'none'
         }}
       >
@@ -163,7 +175,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           }}
         />
 
-        {/* Orbes flotantes grandes */}
+        {/* Orbes flotantes */}
         <Box
           sx={{
             position: 'absolute',
@@ -300,254 +312,364 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
             }
           }}
         />
-
-        {/* Partículas flotantes pequeñas */}
-        {[...Array(6)].map((_, i) => (
-          <Box
-            key={i}
-            sx={{
-              position: 'absolute',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: '3px',
-              height: '3px',
-              borderRadius: '50%',
-              backgroundColor: i % 3 === 0 ? '#74ACDF' : i % 3 === 1 ? '#F59E0B' : '#10B981',
-              opacity: 0.3,
-              animation: `particle${i} ${15 + i * 2}s ease-in-out infinite`,
-              [`@keyframes particle${i}`]: {
-                '0%, 100%': { 
-                  transform: 'translate(0, 0)',
-                  opacity: 0.1
-                },
-                '50%': { 
-                  transform: `translate(${(i % 2 === 0 ? 1 : -1) * 50}px, ${(i % 2 === 0 ? -1 : 1) * 30}px)`,
-                  opacity: 0.4
-                }
-              }
-            }}
-          />
-        ))}
       </Box>
 
-      {/* Header Premium Compacto */}
-      <AppBar 
-        position="fixed" 
-        elevation={0}
-        sx={{ 
-          backgroundColor: 'rgba(28, 28, 30, 0.92)',
-          backdropFilter: 'blur(32px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-          zIndex: 1100,
+      {/* Header integrado con fondo - Sin barra inferior */}
+      <MotionBox
+        style={{
+          opacity: headerOpacity,
+          y: headerY,
+        }}
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          background: 'linear-gradient(180deg, rgba(28, 28, 30, 0.8) 0%, rgba(28, 28, 30, 0.4) 70%, transparent 100%)',
+          backdropFilter: 'blur(20px)',
+          pt: 2,
+          pb: 4,
         }}
       >
-        <Toolbar sx={{ 
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          px: { xs: 2, sm: 3 },
-          minHeight: { xs: 60, sm: 64 },
-          position: 'relative'
-        }}>
-          {/* Sección izquierda compacta */}
-          <MotionBox
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease: [0.04, 0.62, 0.23, 0.98] }}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2
-            }}
-          >
-            {/* Botón de regreso minimalista */}
+        <Container maxWidth="md" sx={{ px: { xs: 2, sm: 3 } }}>
+          <Box sx={{ 
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            py: 2
+          }}>
+            {/* Sección izquierda */}
             <MotionBox
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <IconButton 
-                onClick={() => router.push('/')}
-                sx={{ 
-                  color: '#A1A1AA',
-                  p: 1,
-                  borderRadius: 1.5,
-                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': { 
-                    color: '#F5F5F7',
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                    borderColor: 'rgba(255, 255, 255, 0.12)'
-                  }
-                }}
-              >
-                <ArrowBack fontSize="small" />
-              </IconButton>
-            </MotionBox>
-
-            {/* Branding compacto */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              {/* Logo minimalista */}
-              <Box
-                sx={{
-                  p: 1,
-                  borderRadius: 1.5,
-                  background: 'linear-gradient(135deg, rgba(116, 172, 223, 0.15) 0%, rgba(116, 172, 223, 0.08) 100%)',
-                  border: '1px solid rgba(116, 172, 223, 0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <Restaurant sx={{ 
-                  color: '#74ACDF', 
-                  fontSize: 18
-                }} />
-              </Box>
-              
-              {/* Información del bar */}
-              <Box>
-                <Typography 
-                  sx={{ 
-                    fontWeight: 700,
-                    color: '#F5F5F7',
-                    letterSpacing: '-0.02em',
-                    fontSize: { xs: '1rem', sm: '1.125rem' },
-                    lineHeight: 1
-                  }}
-                >
-                  Xs Reset
-                </Typography>
-                
-                <Typography
-                  sx={{
-                    fontSize: '0.65rem',
-                    fontWeight: 500,
-                    color: '#A1A1AA',
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    opacity: 0.8,
-                    lineHeight: 1,
-                    mt: 0.25
-                  }}
-                >
-                  Bar & Lounge
-                </Typography>
-              </Box>
-            </Box>
-          </MotionBox>
-
-          {/* Sección derecha compacta */}
-          <MotionBox
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease: [0.04, 0.62, 0.23, 0.98], delay: 0.1 }}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.5
-            }}
-          >
-            {/* Hora actual compacta */}
-            <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
-              <AccessTime sx={{ fontSize: 14, color: '#A1A1AA' }} />
-              <Typography
-                sx={{
-                  color: '#A1A1AA',
-                  fontSize: '0.8rem',
-                  fontWeight: 500,
-                  fontFamily: 'monospace'
-                }}
-              >
-                {new Date().toLocaleTimeString('es-AR', { 
-                  hour: '2-digit', 
-                  minute: '2-digit',
-                  hour12: false 
-                })}
-              </Typography>
-            </Box>
-
-            {/* Botón de filtros compacto */}
-            <MotionBox
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <IconButton
-                onClick={() => setShowFilters(!showFilters)}
-                sx={{ 
-                  color: showFilters ? '#74ACDF' : '#A1A1AA',
-                  p: 1,
-                  borderRadius: 1.5,
-                  backgroundColor: showFilters ? 'rgba(116, 172, 223, 0.12)' : 'rgba(255, 255, 255, 0.03)',
-                  border: `1px solid ${showFilters ? 'rgba(116, 172, 223, 0.2)' : 'rgba(255, 255, 255, 0.06)'}`,
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': {
-                    color: '#74ACDF',
-                    backgroundColor: 'rgba(116, 172, 223, 0.12)',
-                    borderColor: 'rgba(116, 172, 223, 0.2)'
-                  }
-                }}
-              >
-                {showFilters ? <Close fontSize="small" /> : <FilterList fontSize="small" />}
-              </IconButton>
-            </MotionBox>
-
-            {/* Estado abierto compacto */}
-            <Box
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: [0.04, 0.62, 0.23, 0.98] }}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 0.75,
-                px: 1.5,
-                py: 0.5,
-                borderRadius: 1.5,
-                backgroundColor: 'rgba(16, 185, 129, 0.08)',
-                border: '1px solid rgba(16, 185, 129, 0.15)'
+                gap: 2
               }}
             >
+              {/* Botón de regreso */}
+              <MotionBox
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <IconButton 
+                  onClick={() => router.push('/')}
+                  sx={{ 
+                    color: '#A1A1AA',
+                    p: 1,
+                    borderRadius: 1.5,
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': { 
+                      color: '#F5F5F7',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderColor: 'rgba(255, 255, 255, 0.2)'
+                    }
+                  }}
+                >
+                  <ArrowBack fontSize="small" />
+                </IconButton>
+              </MotionBox>
+
+              {/* Branding */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box
+                  sx={{
+                    p: 1,
+                    borderRadius: 1.5,
+                    background: 'linear-gradient(135deg, rgba(116, 172, 223, 0.2) 0%, rgba(116, 172, 223, 0.1) 100%)',
+                    border: '1px solid rgba(116, 172, 223, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Restaurant sx={{ 
+                    color: '#74ACDF', 
+                    fontSize: 18
+                  }} />
+                </Box>
+                
+                <Box>
+                  <Typography 
+                    sx={{ 
+                      fontWeight: 700,
+                      color: '#F5F5F7',
+                      letterSpacing: '-0.02em',
+                      fontSize: { xs: '1rem', sm: '1.125rem' },
+                      lineHeight: 1
+                    }}
+                  >
+                    Xs Reset
+                  </Typography>
+                  
+                  <Typography
+                    sx={{
+                      fontSize: '0.65rem',
+                      fontWeight: 500,
+                      color: '#A1A1AA',
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      opacity: 0.8,
+                      lineHeight: 1,
+                      mt: 0.25
+                    }}
+                  >
+                    Bar & Lounge
+                  </Typography>
+                </Box>
+              </Box>
+            </MotionBox>
+
+            {/* Sección derecha */}
+            <MotionBox
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: [0.04, 0.62, 0.23, 0.98], delay: 0.1 }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5
+              }}
+            >
+              {/* Hora actual */}
+              <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
+                <AccessTime sx={{ fontSize: 14, color: '#A1A1AA' }} />
+                <Typography
+                  sx={{
+                    color: '#A1A1AA',
+                    fontSize: '0.8rem',
+                    fontWeight: 500,
+                    fontFamily: 'monospace'
+                  }}
+                >
+                  {new Date().toLocaleTimeString('es-AR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: false 
+                  })}
+                </Typography>
+              </Box>
+
+              {/* Estado abierto */}
               <Box
                 sx={{
-                  width: 4,
-                  height: 4,
-                  borderRadius: '50%',
-                  backgroundColor: '#10B981',
-                  boxShadow: '0 0 6px rgba(16, 185, 129, 0.6)',
-                  animation: 'pulse 2s infinite'
-                }}
-              />
-              <Typography
-                sx={{
-                  color: '#10B981',
-                  fontSize: '0.65rem',
-                  fontWeight: 600,
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase'
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 1.5,
+                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
                 }}
               >
-                Abierto
+                <Box
+                  sx={{
+                    width: 4,
+                    height: 4,
+                    borderRadius: '50%',
+                    backgroundColor: '#10B981',
+                    boxShadow: '0 0 6px rgba(16, 185, 129, 0.6)',
+                    animation: 'pulse 2s infinite'
+                  }}
+                />
+                <Typography
+                  sx={{
+                    color: '#10B981',
+                    fontSize: '0.65rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.02em',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  Abierto
+                </Typography>
+              </Box>
+            </MotionBox>
+          </Box>
+        </Container>
+      </MotionBox>
+
+      {/* Botón flotante de filtros */}
+      <AnimatePresence>
+        {!headerVisible && (
+          <MotionFab
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowFilters(!showFilters)}
+            sx={{
+              position: 'fixed',
+              top: 20,
+              right: 20,
+              zIndex: 1100,
+              width: 56,
+              height: 56,
+              background: showFilters 
+                ? 'linear-gradient(135deg, rgba(116, 172, 223, 0.9) 0%, rgba(116, 172, 223, 0.7) 100%)'
+                : 'linear-gradient(135deg, rgba(44, 44, 46, 0.9) 0%, rgba(28, 28, 30, 0.8) 100%)',
+              backdropFilter: 'blur(20px)',
+              border: `2px solid ${showFilters ? 'rgba(116, 172, 223, 0.5)' : 'rgba(255, 255, 255, 0.1)'}`,
+              boxShadow: showFilters 
+                ? '0 8px 32px rgba(116, 172, 223, 0.3)' 
+                : '0 8px 32px rgba(0, 0, 0, 0.3)',
+              '&:hover': {
+                background: showFilters 
+                  ? 'linear-gradient(135deg, rgba(116, 172, 223, 1) 0%, rgba(116, 172, 223, 0.8) 100%)'
+                  : 'linear-gradient(135deg, rgba(44, 44, 46, 1) 0%, rgba(28, 28, 30, 0.9) 100%)',
+                boxShadow: showFilters 
+                  ? '0 12px 40px rgba(116, 172, 223, 0.4)' 
+                  : '0 12px 40px rgba(0, 0, 0, 0.4)',
+              }
+            }}
+          >
+            <MotionBox
+              animate={{ rotate: showFilters ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {showFilters ? (
+                <Close sx={{ color: '#FFFFFF', fontSize: 24 }} />
+              ) : (
+                <FilterList sx={{ color: '#74ACDF', fontSize: 24 }} />
+              )}
+            </MotionBox>
+          </MotionFab>
+        )}
+      </AnimatePresence>
+
+      {/* Panel de filtros desplegable desde la burbuja */}
+      <AnimatePresence>
+        {showFilters && !headerVisible && (
+          <MotionBox
+            initial={{ opacity: 0, scale: 0, x: 300, y: -50 }}
+            animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, scale: 0, x: 300, y: -50 }}
+            transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+            sx={{
+              position: 'fixed',
+              top: 90,
+              right: 20,
+              zIndex: 1050,
+              width: { xs: 'calc(100vw - 40px)', sm: 400 },
+              maxWidth: 400,
+              background: 'linear-gradient(135deg, rgba(44, 44, 46, 0.95) 0%, rgba(28, 28, 30, 0.9) 100%)',
+              backdropFilter: 'blur(32px)',
+              border: '1px solid rgba(116, 172, 223, 0.2)',
+              borderRadius: 3,
+              p: 3,
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
+              transformOrigin: 'top right'
+            }}
+          >
+            {/* Header del panel */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              mb: 3
+            }}>
+              <Typography 
+                sx={{ 
+                  fontWeight: 600,
+                  color: '#F5F5F7',
+                  fontSize: '1rem',
+                  letterSpacing: '-0.01em'
+                }}
+              >
+                Filtrar Menú
+              </Typography>
+              
+              <Typography
+                sx={{
+                  color: '#74ACDF',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  px: 2,
+                  py: 0.5,
+                  backgroundColor: 'rgba(116, 172, 223, 0.15)',
+                  borderRadius: 2,
+                  border: '1px solid rgba(116, 172, 223, 0.3)'
+                }}
+              >
+                {filteredProducts.length} productos
               </Typography>
             </Box>
+            
+            {/* Chips de categorías */}
+            <Stack 
+              direction="row" 
+              spacing={1}
+              sx={{ 
+                flexWrap: 'wrap',
+                gap: 1,
+              }}
+            >
+              {categories.map((category, index) => (
+                <MotionBox
+                  key={category.name}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ 
+                    delay: index * 0.05, 
+                    duration: 0.3
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Chip
+                    label={`${category.name} (${category.count})`}
+                    onClick={() => setSelectedCategory(category.name)}
+                    variant={selectedCategory === category.name ? 'filled' : 'outlined'}
+                    sx={{
+                      minHeight: 36,
+                      borderRadius: 2.5,
+                      fontWeight: selectedCategory === category.name ? 600 : 500,
+                      fontSize: '0.8rem',
+                      px: 2,
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      cursor: 'pointer',
+                      backgroundColor: selectedCategory === category.name 
+                        ? '#74ACDF' 
+                        : 'rgba(255, 255, 255, 0.03)',
+                      color: selectedCategory === category.name 
+                        ? '#FFFFFF' 
+                        : '#A1A1AA',
+                      borderColor: selectedCategory === category.name 
+                        ? '#74ACDF' 
+                        : 'rgba(161, 161, 170, 0.2)',
+                      '&:hover': {
+                        backgroundColor: selectedCategory === category.name 
+                          ? '#5a9bd4' 
+                          : 'rgba(255,255,255,0.08)',
+                        color: selectedCategory === category.name 
+                          ? '#FFFFFF' 
+                          : '#F5F5F7',
+                        borderColor: selectedCategory === category.name 
+                          ? '#5a9bd4' 
+                          : 'rgba(161, 161, 170, 0.4)',
+                      },
+                    }}
+                  />
+                </MotionBox>
+              ))}
+            </Stack>
           </MotionBox>
-        </Toolbar>
-
-        {/* Línea decorativa minimalista */}
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: '1px',
-            background: 'linear-gradient(90deg, transparent 0%, rgba(116, 172, 223, 0.2) 50%, transparent 100%)',
-            opacity: 0.6
-          }}
-        />
-      </AppBar>
+        )}
+      </AnimatePresence>
 
       {/* Contenido principal */}
       <MotionContainer 
         maxWidth="md" 
         sx={{ 
-          pt: { xs: 10, sm: 11 },
+          pt: { xs: 12, sm: 14 },
           pb: 8,
           px: { xs: 2, sm: 3 },
           position: 'relative',
@@ -557,7 +679,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
         initial="hidden"
         animate="visible"
       >
-        {/* Hero section con espaciado mejorado */}
+        {/* Hero section */}
         <MotionBox
           variants={headerVariants}
           sx={{ textAlign: 'center', mb: { xs: 6, sm: 7 } }}
@@ -617,9 +739,9 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           />
         </MotionBox>
 
-        {/* Sistema de filtros compacto */}
+        {/* Sistema de filtros cuando el header está visible */}
         <AnimatePresence>
-          {showFilters && (
+          {showFilters && headerVisible && (
             <MotionBox
               initial={{ opacity: 0, height: 0, y: -15 }}
               animate={{ opacity: 1, height: 'auto', y: 0 }}
@@ -636,7 +758,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                 }}
               >
-                {/* Header ultra-compacto */}
                 <Box sx={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -670,7 +791,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                   </Typography>
                 </Box>
                 
-                {/* Chips horizontales compactos */}
                 <Stack 
                   direction="row" 
                   spacing={1}
@@ -733,7 +853,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Indicador de filtro activo ultra-compacto */}
+        {/* Indicador de filtro activo */}
         {selectedCategory !== 'Todas' && (
           <MotionBox
             initial={{ opacity: 0, scale: 0.9 }}
@@ -840,43 +960,40 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                 fontSize: '0.75rem',
                 fontWeight: 400,
                 mb: 2,
+                lineHeight: 1.5,
+                opacity: 0.8
+              }}
+            >
+              Experiencia Digital Premium • Precios sujetos a cambios
+            </Typography>
+            
+            <Box
+              sx={{
+                width: 40,
+                height: 1,
+                background: 'linear-gradient(90deg, transparent 0%, #74ACDF 50%, transparent 100%)',
+                mx: 'auto'
+              }}
+            />
+          </Box>
+        </MotionBox>
+      </MotionContainer>
 
-
-
-              lineHeight: 1.5,
-              opacity: 0.8
-            }}
-          >
-            Experiencia Digital Premium • Precios sujetos a cambios
-          </Typography>
-          
-          <Box
-            sx={{
-              width: 40,
-              height: 1,
-              background: 'linear-gradient(90deg, transparent 0%, #74ACDF 50%, transparent 100%)',
-              mx: 'auto'
-            }}
-          />
-        </Box>
-      </MotionBox>
-    </MotionContainer>
-
-    {/* Estilos para animaciones */}
-    <style jsx global>{`
-      @keyframes pulse {
-        0%, 100% {
-          opacity: 1;
-          transform: scale(1);
+      {/* Estilos para animaciones */}
+      <style jsx global>{`
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.7;
+            transform: scale(1.1);
+          }
         }
-        50% {
-          opacity: 0.7;
-          transform: scale(1.1);
-        }
-      }
-    `}</style>
-  </Box>
-);
+      `}</style>
+    </Box>
+  );
 };
 
 export default MenuViewer;
