@@ -27,8 +27,7 @@ const MotionBox = motion(Box);
 const MotionPaper = motion(Paper);
 const MotionButton = motion(Button);
 
-const ADMIN_PASSWORD = 'xs-reset-admin-2024'; // En producción esto debería estar en variables de entorno
-
+const ADMIN_PASSWORD = 'admin123'; // Contraseña simple para acceso admin
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -38,7 +37,7 @@ export default function AdminPage() {
 
   // Verificar si ya está autenticado al cargar
   useEffect(() => {
-    const authStatus = localStorage.getItem('xs-reset-admin-auth');
+    const authStatus = localStorage.getItem('menuqr-admin-auth');
     if (authStatus === 'true') {
       setIsAuthenticated(true);
     }
@@ -53,16 +52,16 @@ export default function AdminPage() {
 
     if (password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
-      localStorage.setItem('xs-reset-admin-auth', 'true');
+      localStorage.setItem('menuqr-admin-auth', 'true');
     } else {
-      setError('Contraseña incorrecta. Intenta nuevamente.');
+      setError('Contraseña incorrecta. La contraseña es: admin123');
     }
     setLoading(false);
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem('xs-reset-admin-auth');
+    localStorage.removeItem('menuqr-admin-auth');
     setPassword('');
     setError('');
   };
@@ -168,7 +167,7 @@ export default function AdminPage() {
                 fontWeight: 400
               }}
             >
-              Xs Reset - Gestión del Menú
+              MenuQR - Gestión del Menú Digital
             </Typography>
 
             {/* Línea decorativa */}
@@ -192,6 +191,7 @@ export default function AdminPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyPress={handleKeyPress}
                 disabled={loading}
+                placeholder="Ingresa: admin123"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -235,10 +235,13 @@ export default function AdminPage() {
                     color: '#F8F8F8',
                     fontFamily: "'Inter', sans-serif",
                     fontSize: '1rem',
+                    '&::placeholder': {
+                      color: '#888',
+                      opacity: 1,
+                    },
                   },
                 }}
               />
-
               {/* Mensaje de error */}
               <AnimatePresence>
                 {error && (
@@ -255,12 +258,12 @@ export default function AdminPage() {
                         backgroundColor: 'rgba(239, 68, 68, 0.1)',
                         border: '1px solid rgba(239, 68, 68, 0.3)',
                         color: '#F87171',
-                        fontFamily: "'Inter', sans-serif",
+                    fontFamily: "'Inter', sans-serif",
                         '& .MuiAlert-icon': {
                           color: '#F87171'
                         }
-                      }}
-                    >
+                  }}
+                >
                       {error}
                     </Alert>
                   </motion.div>
@@ -303,7 +306,7 @@ export default function AdminPage() {
                   '&:disabled': {
                     background: 'rgba(212, 175, 55, 0.3)',
                     color: '#B8B8B8'
-                  }
+}
                 }}
               >
                 {loading ? 'Verificando...' : 'Acceder al Panel'}
@@ -325,6 +328,19 @@ export default function AdminPage() {
                   Gestión segura del menú digital
                 </Typography>
               </Stack>
+              
+              {/* Hint para la contraseña */}
+              <Typography
+                sx={{
+                  color: '#888',
+                  fontSize: '0.75rem',
+                  fontFamily: "'Inter', sans-serif",
+                  mt: 2,
+                  opacity: 0.7
+                }}
+              >
+                💡 Contraseña: admin123
+              </Typography>
             </Box>
           </MotionPaper>
         </MotionBox>
