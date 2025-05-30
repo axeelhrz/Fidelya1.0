@@ -1,468 +1,1040 @@
 'use client';
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Container,
   Typography,
+  Stack,
+  IconButton,
   Chip,
+  Fab,
   Alert,
   CircularProgress,
-  TextField,
-  InputAdornment,
-  Button,
-  Divider
 } from '@mui/material';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { 
-  Search, 
-  Restaurant, 
-  ArrowBack,
+  ArrowBack, 
+  Restaurant,
+  FilterList,
+  Close,
+  AccessTime,
   Refresh,
-  LocationOn,
-  Phone,
-  Schedule
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useFirebaseMenuById } from '../../hooks/useFirebaseMenu';
 import { useFirebaseCategories } from '../../hooks/useFirebaseCategories';
-import ProductCard from './ProductCard';
-
-const MotionBox = motion(Box);
+import { Product, Category } from '../types';
+import MenuSection from './MenuSection';
 
 interface MenuViewerProps {
   menuId: string;
 }
 
-export default function MenuViewer({ menuId }: MenuViewerProps) {
+const MotionBox = motion(Box);
+const MotionContainer = motion(Container);
+const MotionFab = motion(Fab);
+
+const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const { menu, products, loading, error, connected } = useFirebaseMenuById(menuId);
-  const { categories } = useFirebaseCategories(menuId, true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
+  const [showFilters, setShowFilters] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const { scrollY } = useScroll();
+  const headerY = useTransform(scrollY, [0, 100], [0, -100]);
 
-  // Filtrar productos
-  const filteredProducts = useMemo(() => {
-    let filtered = products.filter(product => product.isAvailable);
-    // Filtrar por categoría
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => product.category === selectedCategory);
-    }
+  // Firebase hooks
+  const { 
+    menu, 
+    products, 
+    loading: menuLoading, 
+    error: menuError, 
+    connected: menuConnected 
+  } = useFirebaseMenuById(menuId);
 
-    // Filtrar por búsqueda
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(search) ||
-        product.description?.toLowerCase().includes(search)
-      );
-    }
+  const { 
+    categories: firebaseCategories, 
+    loading: categoriesLoading, 
+    error: categoriesError,
+    connected: categoriesConnected
+  } = useFirebaseCategories(menuId);
 
-    return filtered;
-  }, [products, selectedCategory, searchTerm]);
+  const loading = menuLoading || categoriesLoading;
+  const error = menuError || categoriesError;
+  const connected = menuConnected && categoriesConnected;
 
-  // Agrupar productos por categoría
-  const productsByCategory = useMemo(() => {
-    const grouped: { [key: string]: typeof products } = {};
-    
-    filteredProducts.forEach(product => {
-      const category = product.category;
-      if (!grouped[category]) {
-        grouped[category] = [];
+  // Habilitar scroll cuando se monta el componente
+  useEffect(() => {
+    document.body.style.overflow = 'auto';
+    document.body.style.position = 'static';
+    document.body.style.width = 'auto';
+    document.body.style.height = 'auto';
+
+    return () => {
+      // Mantener scroll habilitado al desmontar
+    };
+  }, []);
+
+  // Controlar visibilidad del header
+  useEffect(() => {
+    const unsubscribe = scrollY.onChange((latest) => {
+      setHeaderVisible(latest < 100);
+    });
+    return unsubscribe;
+  }, [scrollY]);
+
+  // Obtener categorías únicas de productos y Firebase
+  const categories = useMemo(() => {
+    if (!products || products.length === 0) return [{ name: 'Todas', count: 0 }];
+
+    // Contar productos por categoría
+    const categoryCount: Record<string, number> = {};
+    products.forEach(p => {
+      if (p.isAvailable) { // Solo contar productos disponibles
+        categoryCount[p.category] = (categoryCount[p.category] || 0) + 1;
       }
-      grouped[category].push(product);
     });
 
-    return grouped;
-  }, [filteredProducts]);
+    // Crear lista de categorías con conteos
+    const availableCategories = Object.keys(categoryCount).filter(cat => categoryCount[cat] > 0);
+    
+    const cats = [
+      { name: 'Todas', count: products.filter(p => p.isAvailable).length },
+      ...availableCategories.map(cat => ({
+        name: cat,
+        count: categoryCount[cat] || 0
+      }))
+    ];
 
-  // Obtener categorías únicas de los productos
-  const availableCategories = useMemo(() => {
-    const categorySet = new Set(products.map(p => p.category));
-    return Array.from(categorySet);
+    return cats;
   }, [products]);
 
+  // Filtrar productos por categoría y disponibilidad
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    
+    let filtered = products.filter(p => p.isAvailable); // Solo productos disponibles
+    
+    if (selectedCategory !== 'Todas') {
+      filtered = filtered.filter(p => p.category === selectedCategory);
+    }
+    
+    return filtered;
+  }, [products, selectedCategory]);
+
+  // Agrupar productos filtrados por categoría
+  const groupedProducts = useMemo(() => {
+    const groups: Record<string, Product[]> = {};
+    filteredProducts.forEach(product => {
+      if (!groups[product.category]) {
+        groups[product.category] = [];
+      }
+      groups[product.category].push(product);
+    });
+    return groups;
+  }, [filteredProducts]);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.3,
+      },
+    },
+  };
+
+  const headerVariants = {
+    hidden: { opacity: 0, y: -20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 1, ease: [0.04, 0.62, 0.23, 0.98] }
+    }
+  };
+
+  // Loading state
   if (loading) {
-  return (
+    return (
       <Box sx={{ 
-      minHeight: '100vh',
+        minHeight: '100vh',
+        backgroundColor: '#0A0A0A',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0A0A0A',
-        gap: 3
-    }}>
-        <CircularProgress size={40} sx={{ color: '#D4AF37' }} />
-        <Typography sx={{ 
-          color: '#B8B8B8', 
-          fontSize: '0.9rem',
-          fontWeight: 400,
-          textAlign: 'center'
-        }}>
-          Cargando menú...
-            </Typography>
-                    </Box>
-              );
+        px: 3
+      }}>
+        <CircularProgress 
+          size={60} 
+          sx={{ 
+            color: '#D4AF37',
+            mb: 3,
+            '& .MuiCircularProgress-circle': {
+              strokeLinecap: 'round',
+            }
+          }} 
+        />
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontFamily: "'Inter', sans-serif",
+            color: '#F8F8F8',
+            textAlign: 'center',
+            fontSize: { xs: '1rem', sm: '1.25rem' },
+            mb: 1,
+            fontWeight: 600
+          }}
+        >
+          Cargando Carta Digital...
+        </Typography>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontFamily: "'Inter', sans-serif",
+            color: '#B8B8B8',
+            textAlign: 'center',
+            opacity: 0.8,
+            fontStyle: 'italic'
+          }}
+        >
+          {connected ? 'Conectado a Firebase' : 'Conectando con Firebase...'}
+        </Typography>
+      </Box>
+    );
   }
 
+  // Error state
   if (error || !menu) {
     return (
       <Box sx={{ 
         minHeight: '100vh',
-        background: '#0A0A0A',
+        backgroundColor: '#0A0A0A',
         display: 'flex',
-        alignItems: 'center'
+        alignItems: 'center',
+        justifyContent: 'center',
+        px: 3
       }}>
-        <Container sx={{ py: 4 }}>
+        <Container maxWidth="sm">
           <MotionBox
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
           >
-            <Alert severity="error" sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Error al cargar el menú
-              </Typography>
-              <Typography variant="body2">
+            <Alert 
+              severity="error"
+              sx={{ 
+                borderRadius: 0,
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#F87171',
+                fontFamily: "'Inter', sans-serif",
+                '& .MuiAlert-icon': {
+                  color: '#F87171'
+                },
+                mb: 3
+              }}
+            >
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  mb: 1,
+                  fontFamily: "'Inter', sans-serif",
+                  fontWeight: 600
+                }}
+              >
                 {error || 'Menú no encontrado'}
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  opacity: 0.8,
+                  fontFamily: "'Inter', sans-serif"
+                }}
+              >
+                Por favor, verifica el ID del menú o intenta nuevamente.
               </Typography>
             </Alert>
             
-            <Box display="flex" gap={2} flexWrap="wrap">
-              <Button
-                variant="outlined"
-                startIcon={<ArrowBack />}
-                onClick={() => router.push('/menu')}
-                sx={{ 
-                  borderColor: '#D4AF37',
-                  color: '#D4AF37'
+            <Stack direction="row" spacing={2} justifyContent="center">
+              <IconButton
+                onClick={() => router.push('/')}
+                sx={{
+                  color: '#B8B8B8',
+                  border: '1px solid rgba(212, 175, 55, 0.2)',
+                  borderRadius: 0,
+                  '&:hover': {
+                    color: '#D4AF37',
+                    borderColor: 'rgba(212, 175, 55, 0.5)',
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)'
+                  }
                 }}
               >
-                Volver a menús
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<Refresh />}
+                <ArrowBack />
+              </IconButton>
+              
+              <IconButton
                 onClick={() => window.location.reload()}
                 sx={{
-                  background: '#D4AF37',
-                  color: '#0A0A0A'
+                  color: '#B8B8B8',
+                  border: '1px solid rgba(212, 175, 55, 0.2)',
+                  borderRadius: 0,
+                  '&:hover': {
+                    color: '#D4AF37',
+                    borderColor: 'rgba(212, 175, 55, 0.5)',
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)'
+                  }
                 }}
               >
-                Reintentar
-              </Button>
-    </Box>
+                <Refresh />
+              </IconButton>
+            </Stack>
           </MotionBox>
         </Container>
       </Box>
-  );
-}
+    );
+  }
 
-    return (
+  return (
     <Box sx={{ 
-        minHeight: '100vh',
-      background: '#0A0A0A',
-      color: '#F8F8F8'
-      }}>
-      {/* Header elegante estilo Xs Reset */}
-      <Box sx={{ 
-        borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
-        py: { xs: 4, md: 6 }
+      minHeight: '100vh',
+      backgroundColor: '#0A0A0A',
+      position: 'relative',
+      overflow: 'visible'
     }}>
-        <Container maxWidth="lg">
-          <MotionBox
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            sx={{ textAlign: 'center' }}
-          >
-            {/* Logo/Nombre del restaurante */}
-            <Typography 
-              variant="h1" 
-              sx={{ 
-                fontFamily: "'Playfair Display', serif",
-                fontWeight: 700,
-                fontSize: { xs: '2.5rem', md: '3.5rem' },
-                color: '#F8F8F8',
-                letterSpacing: '0.05em',
-                mb: 2
-              }}
-            >
-              {menu.name}
-            </Typography>
-            
-            {/* Tagline elegante */}
-            <Typography 
-              sx={{ 
-                fontFamily: "'Inter', sans-serif",
-                fontSize: { xs: '0.9rem', md: '1rem' },
-                color: '#B8B8B8',
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                fontWeight: 400,
-                mb: 4
-              }}
-            >
-              {menu.description || 'Carta Digital Premium'}
-            </Typography>
+      {/* Fondo elegante minimalista */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: -1,
+          pointerEvents: 'none',
+          background: `
+            radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.02) 0%, transparent 50%),
+            linear-gradient(180deg, rgba(10, 10, 10, 1) 0%, rgba(16, 16, 16, 1) 100%)
+          `
+        }}
+      />
 
-            {/* Información del restaurante */}
-            {menu.restaurantInfo && (
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                gap: { xs: 2, md: 4 }, 
-                flexWrap: 'wrap',
-                opacity: 0.8
-              }}>
-                {menu.restaurantInfo.address && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LocationOn sx={{ fontSize: 16, color: '#D4AF37' }} />
-                    <Typography variant="body2" sx={{ color: '#B8B8B8', fontSize: '0.8rem' }}>
-                      {menu.restaurantInfo.address}
-            </Typography>
-                    </Box>
-                )}
-                {menu.restaurantInfo.phone && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Phone sx={{ fontSize: 16, color: '#D4AF37' }} />
-                    <Typography variant="body2" sx={{ color: '#B8B8B8', fontSize: '0.8rem' }}>
-                      {menu.restaurantInfo.phone}
-                    </Typography>
-                  </Box>
-                )}
-                {menu.restaurantInfo.hours && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Schedule sx={{ fontSize: 16, color: '#D4AF37' }} />
-                    <Typography variant="body2" sx={{ color: '#B8B8B8', fontSize: '0.8rem' }}>
-                      {menu.restaurantInfo.hours}
-                    </Typography>
-                  </Box>
-                )}
+      {/* Header elegante */}
+      <MotionBox
+        style={{ y: headerY }}
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          background: 'linear-gradient(180deg, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.8) 70%, transparent 100%)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(212, 175, 55, 0.1)',
+          pt: 2,
+          pb: 4,
+        }}
+      >
+        <Container maxWidth="lg" sx={{ px: { xs: 3, sm: 4 } }}>
+          <Box sx={{ 
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            py: 3
+          }}>
+            {/* Sección izquierda */}
+            <MotionBox
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98] }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 3
+              }}
+            >
+              {/* Botón de regreso */}
+              <MotionBox
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <IconButton 
+                  onClick={() => router.push('/')}
+                  sx={{ 
+                    color: '#B8B8B8',
+                    p: 1.5,
+                    borderRadius: 0,
+                    border: '1px solid rgba(212, 175, 55, 0.2)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': { 
+                      color: '#D4AF37',
+                      borderColor: 'rgba(212, 175, 55, 0.5)',
+                      backgroundColor: 'rgba(212, 175, 55, 0.1)'
+                    }
+                  }}
+                >
+                  <ArrowBack fontSize="small" />
+                </IconButton>
+              </MotionBox>
+
+              {/* Branding elegante */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 0,
+                    border: '2px solid #D4AF37',
+                    background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Restaurant sx={{ 
+                    color: '#D4AF37', 
+                    fontSize: 20
+                  }} />
+                </Box>
+                <Box>
+                  <Typography 
+                    sx={{ 
+                      fontFamily: "'Inter', sans-serif",
+                      fontWeight: 700,
+                      color: '#F8F8F8',
+                      letterSpacing: '0.02em',
+                      fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                      lineHeight: 1
+                    }}
+                  >
+                    {menu.restaurantInfo?.name || menu.name}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: '0.75rem',
+                      fontWeight: 500,
+                      color: '#B8B8B8',
+                      letterSpacing: '0.15em',
+                      textTransform: 'uppercase',
+                      opacity: 0.8,
+                      lineHeight: 1,
+                      mt: 0.5
+                    }}
+                  >
+                    Carta Digital
+                  </Typography>
+                </Box>
+              </Box>
+            </MotionBox>
+
+            {/* Sección derecha */}
+            <MotionBox
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98], delay: 0.1 }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2
+              }}
+            >
+              {/* Hora actual */}
+              <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
+                <AccessTime sx={{ fontSize: 16, color: '#B8B8B8' }} />
+                <Typography
+                  sx={{
+                    color: '#B8B8B8',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    fontFamily: "'Inter', sans-serif"
+                  }}
+                >
+                  {new Date().toLocaleTimeString('es-AR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: false 
+                  })}
+                </Typography>
+              </Box>
+
+              {/* Estado de conexión */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 2,
+                  py: 1,
+                  borderRadius: 0,
+                  border: `1px solid ${connected ? '#D4AF37' : '#F87171'}`,
+                  backgroundColor: `rgba(${connected ? '212, 175, 55' : '248, 113, 113'}, 0.1)`
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    backgroundColor: connected ? '#D4AF37' : '#F87171',
+                    boxShadow: `0 0 8px rgba(${connected ? '212, 175, 55' : '248, 113, 113'}, 0.6)`,
+                    animation: connected ? 'pulse 2s infinite' : 'none'
+                  }}
+                />
+                <Typography
+                  sx={{
+                    color: connected ? '#D4AF37' : '#F87171',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    fontFamily: "'Inter', sans-serif"
+                  }}
+                >
+                  {connected ? 'Conectado' : 'Desconectado'}
+                </Typography>
+              </Box>
+            </MotionBox>
           </Box>
-            )}
-          </MotionBox>
-      </Container>
-    </Box>
+        </Container>
+      </MotionBox>
 
-      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
-        {/* Barra de búsqueda minimalista */}
-        <MotionBox
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          sx={{ mb: 4 }}
-        >
-          <TextField
-            fullWidth
-            placeholder="Buscar en la carta..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search sx={{ color: '#D4AF37', fontSize: 20 }} />
-                </InputAdornment>
-              ),
-              sx: {
-                backgroundColor: 'rgba(26, 26, 26, 0.6)',
-                border: '1px solid rgba(212, 175, 55, 0.2)',
-                borderRadius: 0,
-                '& .MuiOutlinedInput-notchedOutline': {
-                  border: 'none'
-                },
-                '&:hover': {
-                  backgroundColor: 'rgba(26, 26, 26, 0.8)',
-                  borderColor: 'rgba(212, 175, 55, 0.3)'
-                },
-                '&.Mui-focused': {
-                  backgroundColor: 'rgba(26, 26, 26, 0.9)',
-                  borderColor: '#D4AF37'
-                },
-                color: '#F8F8F8',
-                fontSize: '0.9rem'
-}
+      {/* Botón flotante de filtros */}
+      <AnimatePresence>
+        {!headerVisible && (
+          <MotionFab
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowFilters(!showFilters)}
+            sx={{
+              position: 'fixed',
+              top: 20,
+              right: 20,
+              zIndex: 1100,
+              width: 56,
+              height: 56,
+              background: showFilters 
+                ? 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)'
+                : 'linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(16, 16, 16, 0.9) 100%)',
+              backdropFilter: 'blur(20px)',
+              border: `2px solid ${showFilters ? '#D4AF37' : 'rgba(212, 175, 55, 0.3)'}`,
+              borderRadius: 0,
+              boxShadow: showFilters 
+                ? '0 8px 32px rgba(212, 175, 55, 0.3)' 
+                : '0 8px 32px rgba(0, 0, 0, 0.4)',
+              '&:hover': {
+                background: showFilters 
+                  ? 'linear-gradient(135deg, #F4E4BC 0%, #D4AF37 100%)'
+                  : 'linear-gradient(135deg, rgba(26, 26, 26, 1) 0%, rgba(16, 16, 16, 1) 100%)',
+                boxShadow: showFilters 
+                  ? '0 12px 40px rgba(212, 175, 55, 0.4)' 
+                  : '0 12px 40px rgba(0, 0, 0, 0.5)',
+              }
             }}
-            sx={{ maxWidth: 600, mx: 'auto', display: 'block' }}
+          >
+            <MotionBox
+              animate={{ rotate: showFilters ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {showFilters ? (
+                <Close sx={{ color: showFilters ? '#0A0A0A' : '#D4AF37', fontSize: 24 }} />
+              ) : (
+                <FilterList sx={{ color: '#D4AF37', fontSize: 24 }} />
+              )}
+            </MotionBox>
+          </MotionFab>
+        )}
+      </AnimatePresence>
+
+      {/* Panel de filtros */}
+      <AnimatePresence>
+        {showFilters && !headerVisible && (
+          <MotionBox
+            initial={{ opacity: 0, scale: 0, x: 300, y: -50 }}
+            animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, scale: 0, x: 300, y: -50 }}
+            transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+            sx={{
+              position: 'fixed',
+              top: 90,
+              right: 20,
+              zIndex: 1050,
+              width: { xs: 'calc(100vw - 40px)', sm: 400 },
+              maxWidth: 400,
+              background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.98) 0%, rgba(16, 16, 16, 0.95) 100%)',
+              backdropFilter: 'blur(32px)',
+              border: '1px solid rgba(212, 175, 55, 0.3)',
+              borderRadius: 0,
+              p: 4,
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
+              transformOrigin: 'top right'
+            }}
+          >
+            {/* Header del panel */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              mb: 4,
+              pb: 2,
+              borderBottom: '1px solid rgba(212, 175, 55, 0.2)'
+            }}>
+              <Typography 
+                sx={{ 
+                  fontFamily: "'Inter', sans-serif",
+                  fontWeight: 600,
+                  color: '#F8F8F8',
+                  fontSize: '1.25rem',
+                  letterSpacing: '0.02em'
+                }}
+              >
+                Filtrar Menú
+              </Typography>
+              <Typography
+                sx={{
+                  color: '#D4AF37',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  px: 2,
+                  py: 0.75,
+                  backgroundColor: 'rgba(212, 175, 55, 0.15)',
+                  border: '1px solid rgba(212, 175, 55, 0.3)',
+                  borderRadius: 0,
+                  fontFamily: "'Inter', sans-serif"
+                }}
+              >
+                {filteredProducts.length} productos
+              </Typography>
+            </Box>
+
+            {/* Chips de categorías */}
+            <Stack 
+              direction="row" 
+              spacing={1.5}
+              sx={{ 
+                flexWrap: 'wrap',
+                gap: 1.5,
+              }}
+            >
+              {categories.map((category, index) => (
+                <MotionBox
+                  key={category.name}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ 
+                    delay: index * 0.05, 
+                    duration: 0.3
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Chip
+                    label={`${category.name} (${category.count})`}
+                    onClick={() => setSelectedCategory(category.name)}
+                    variant={selectedCategory === category.name ? 'filled' : 'outlined'}
+                    sx={{
+                      minHeight: 40,
+                      borderRadius: 0,
+                      fontWeight: selectedCategory === category.name ? 600 : 500,
+                      fontSize: '0.875rem',
+                      px: 2,
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      cursor: 'pointer',
+                      fontFamily: "'Inter', sans-serif",
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      backgroundColor: selectedCategory === category.name 
+                        ? '#D4AF37' 
+                        : 'rgba(255, 255, 255, 0.05)',
+                      color: selectedCategory === category.name 
+                        ? '#0A0A0A' 
+                        : '#B8B8B8',
+                      borderColor: selectedCategory === category.name 
+                        ? '#D4AF37' 
+                        : 'rgba(212, 175, 55, 0.3)',
+                      '&:hover': {
+                        backgroundColor: selectedCategory === category.name 
+                          ? '#F4E4BC' 
+                          : 'rgba(212, 175, 55, 0.1)',
+                        color: selectedCategory === category.name 
+                          ? '#0A0A0A' 
+                          : '#F8F8F8',
+                        borderColor: selectedCategory === category.name 
+                          ? '#F4E4BC' 
+                          : 'rgba(212, 175, 55, 0.5)',
+                      },
+                    }}
+                  />
+                </MotionBox>
+              ))}
+            </Stack>
+          </MotionBox>
+        )}
+      </AnimatePresence>
+
+      {/* Contenido principal con scroll habilitado */}
+      <MotionContainer 
+        maxWidth="lg" 
+        sx={{ 
+          pt: { xs: 20, sm: 24 },
+          pb: 10,
+          px: { xs: 3, sm: 4 },
+          position: 'relative',
+          zIndex: 1
+        }}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Hero section elegante */}
+        <MotionBox
+          variants={headerVariants}
+          sx={{ textAlign: 'center', mb: { xs: 10, sm: 12 } }}
+        >
+          {/* Ornamento superior */}
+          <Box
+            sx={{
+              width: 80,
+              height: 1,
+              background: 'linear-gradient(90deg, transparent 0%, #D4AF37 50%, transparent 100%)',
+              mx: 'auto',
+              mb: 4
+            }}
+          />
+          <Typography 
+            sx={{ 
+              fontFamily: "'Inter', sans-serif",
+              fontSize: { xs: '2.5rem', sm: '3.5rem' },
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+              lineHeight: 0.9,
+              color: '#F8F8F8',
+              mb: 2
+            }}
+          >
+            {menu.restaurantInfo?.name || menu.name}
+          </Typography>
+          <Typography 
+            sx={{ 
+              fontFamily: "'Inter', sans-serif",
+              fontSize: { xs: '0.875rem', sm: '1rem' },
+              fontWeight: 500,
+              color: '#D4AF37',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              mb: 4,
+              opacity: 0.9
+            }}
+          >
+            Carta Digital
+          </Typography>
+          <Typography 
+            sx={{ 
+              fontFamily: "'Inter', sans-serif",
+              color: '#B8B8B8',
+              fontSize: { xs: '1rem', sm: '1.125rem' },
+              fontWeight: 400,
+              maxWidth: 500,
+              mx: 'auto',
+              lineHeight: 1.6,
+              mb: 4,
+              fontStyle: 'italic'
+            }}
+          >
+            {menu.description}
+          </Typography>
+          {/* Ornamento inferior */}
+          <Box
+            sx={{
+              width: 120,
+              height: 1,
+              background: 'linear-gradient(90deg, transparent 0%, #D4AF37 50%, transparent 100%)',
+              mx: 'auto',
+              position: 'relative',
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                top: -2,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: '#D4AF37',
+                boxShadow: '0 0 12px rgba(212, 175, 55, 0.5)'
+              }
+            }}
           />
         </MotionBox>
 
-        {/* Navegación de categorías elegante */}
-        {availableCategories.length > 1 && (
-          <MotionBox
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            sx={{ mb: 6 }}
-          >
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'center',
-              gap: { xs: 1, md: 2 },
-              flexWrap: 'wrap'
-            }}>
-              <Chip
-                label="Todos"
-                onClick={() => setSelectedCategory('all')}
-                sx={{
-                  backgroundColor: selectedCategory === 'all' ? '#D4AF37' : 'transparent',
-                  color: selectedCategory === 'all' ? '#0A0A0A' : '#B8B8B8',
-                  border: '1px solid rgba(212, 175, 55, 0.3)',
+        {/* Sistema de filtros cuando el header está visible */}
+        <AnimatePresence>
+          {showFilters && headerVisible && (
+            <MotionBox
+              initial={{ opacity: 0, height: 0, y: -20 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -20 }}
+              transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+              sx={{ mb: { xs: 6, sm: 8 } }}
+            >
+              <Box
+                sx={{ 
+                  p: { xs: 3, sm: 4 }, 
                   borderRadius: 0,
-                  fontWeight: 500,
-                  fontSize: '0.8rem',
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    backgroundColor: selectedCategory === 'all' ? '#D4AF37' : 'rgba(212, 175, 55, 0.1)',
-                    color: selectedCategory === 'all' ? '#0A0A0A' : '#D4AF37'
-                  }
+                  backgroundColor: 'rgba(26, 26, 26, 0.6)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(212, 175, 55, 0.2)',
                 }}
-              />
-              {availableCategories.map((category) => {
-                const count = products.filter(p => p.category === category && p.isAvailable).length;
-                return (
-                  <Chip
-                    key={category}
-                    label={`${category} (${count})`}
-                    onClick={() => setSelectedCategory(category)}
-                    sx={{
-                      backgroundColor: selectedCategory === category ? '#D4AF37' : 'transparent',
-                      color: selectedCategory === category ? '#0A0A0A' : '#B8B8B8',
-                      border: '1px solid rgba(212, 175, 55, 0.3)',
-                      borderRadius: 0,
-                      fontWeight: 500,
-                      fontSize: '0.8rem',
-                      letterSpacing: '0.05em',
-                      textTransform: 'uppercase',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        backgroundColor: selectedCategory === category ? '#D4AF37' : 'rgba(212, 175, 55, 0.1)',
-                        color: selectedCategory === category ? '#0A0A0A' : '#D4AF37'
-                      }
-                    }}
-                  />
-                );
-              })}
-            </Box>
-          </MotionBox>
-        )}
-
-        {/* Lista de productos */}
-        {filteredProducts.length === 0 ? (
-          <MotionBox
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            sx={{ textAlign: 'center', py: 8 }}
-          >
-            <Restaurant sx={{ fontSize: 48, color: 'rgba(212, 175, 55, 0.3)', mb: 2 }} />
-            <Typography variant="h6" sx={{ color: '#B8B8B8', mb: 1 }}>
-              No se encontraron productos
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#B8B8B8', opacity: 0.7 }}>
-              {searchTerm 
-                ? `No hay productos que coincidan con "${searchTerm}"`
-                : 'No hay productos disponibles en esta categoría'
-              }
-            </Typography>
-          </MotionBox>
-        ) : selectedCategory === 'all' ? (
-          // Mostrar por categorías cuando está en "Todos"
-          <Box>
-            {Object.entries(productsByCategory).map(([category, categoryProducts], index) => (
-              <MotionBox
-                key={category}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                sx={{ mb: 6 }}
               >
-                {/* Título de categoría elegante */}
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  mb: 3
+                }}>
                   <Typography 
-                    variant="h3" 
                     sx={{ 
-                      fontFamily: "'Playfair Display', serif",
+                      fontFamily: "'Inter', sans-serif",
                       fontWeight: 600,
-                      fontSize: { xs: '1.5rem', md: '2rem' },
-                      color: '#D4AF37',
-                      letterSpacing: '0.02em',
-                      mb: 1
+                      color: '#F8F8F8',
+                      fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                      letterSpacing: '0.02em'
                     }}
                   >
-                    {category}
+                    Filtrar Menú
                   </Typography>
-                  <Divider sx={{ 
-                    borderColor: 'rgba(212, 175, 55, 0.2)',
-                    width: '60px'
-                  }} />
+                  <Typography
+
+                    sx={{
+                      color: '#D4AF37',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      px: 2,
+                      py: 0.75,
+                      backgroundColor: 'rgba(212, 175, 55, 0.15)',
+                      border: '1px solid rgba(212, 175, 55, 0.3)',
+                      borderRadius: 0,
+                      fontFamily: "'Inter', sans-serif"
+                    }}
+                  >
+                    {filteredProducts.length}
+                  </Typography>
                 </Box>
-                
-                {/* Lista de productos */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                  <AnimatePresence>
-                    {categoryProducts.map((product, productIndex) => (
-                      <motion.div
-                        key={product.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.4, delay: productIndex * 0.05 }}
-                      >
-                        <ProductCard product={product} />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </Box>
-              </MotionBox>
-            ))}
-          </Box>
-        ) : (
-          // Mostrar solo la categoría seleccionada
-          <Box>
-            <Box sx={{ mb: 4 }}>
+                <Stack 
+                  direction="row" 
+                  spacing={1.5}
+                  sx={{ 
+                    flexWrap: 'wrap',
+                    gap: 1.5,
+                  }}
+                >
+                  {categories.map((category, index) => (
+                    <MotionBox
+                      key={category.name}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ 
+                        delay: index * 0.03, 
+                        duration: 0.2
+                      }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Chip
+                        label={`${category.name} (${category.count})`}
+                        onClick={() => setSelectedCategory(category.name)}
+                        variant={selectedCategory === category.name ? 'filled' : 'outlined'}
+                        sx={{
+                          minHeight: 36,
+                          borderRadius: 0,
+                          fontWeight: selectedCategory === category.name ? 600 : 500,
+                          fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                          px: 2,
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                          cursor: 'pointer',
+                          fontFamily: "'Inter', sans-serif",
+                          letterSpacing: '0.05em',
+                          textTransform: 'uppercase',
+                          backgroundColor: selectedCategory === category.name 
+                            ? '#D4AF37' 
+                            : 'rgba(255, 255, 255, 0.03)',
+                          color: selectedCategory === category.name 
+                            ? '#0A0A0A' 
+                            : '#B8B8B8',
+                          borderColor: selectedCategory === category.name 
+                            ? '#D4AF37' 
+                            : 'rgba(212, 175, 55, 0.3)',
+                          '&:hover': {
+                            backgroundColor: selectedCategory === category.name 
+                              ? '#F4E4BC' 
+                              : 'rgba(212, 175, 55, 0.1)',
+                            color: selectedCategory === category.name 
+                              ? '#0A0A0A' 
+                              : '#F8F8F8',
+                            borderColor: selectedCategory === category.name 
+                              ? '#F4E4BC' 
+                              : 'rgba(212, 175, 55, 0.5)',
+                          },
+                        }}
+                      />
+                    </MotionBox>
+                  ))}
+                </Stack>
+              </Box>
+            </MotionBox>
+          )}
+        </AnimatePresence>
+
+        {/* Indicador de filtro activo */}
+        {selectedCategory !== 'Todas' && (
+          <MotionBox
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            sx={{ 
+              mb: 6,
+              textAlign: 'center'
+            }}
+          >
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1.5,
+                px: 3,
+                py: 1.5,
+                backgroundColor: 'rgba(212, 175, 55, 0.15)',
+                border: '1px solid rgba(212, 175, 55, 0.3)',
+                borderRadius: 0
+              }}
+            >
               <Typography 
-                variant="h3" 
                 sx={{ 
-                  fontFamily: "'Playfair Display', serif",
-                  fontWeight: 600,
-                  fontSize: { xs: '1.5rem', md: '2rem' },
                   color: '#D4AF37',
-                  letterSpacing: '0.02em',
-                  mb: 1
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  fontFamily: "'Inter', sans-serif",
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase'
                 }}
               >
                 {selectedCategory}
               </Typography>
-              <Divider sx={{ 
-                borderColor: 'rgba(212, 175, 55, 0.2)',
-                width: '60px'
-              }} />
+              <MotionBox
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <IconButton
+                  size="small"
+                  onClick={() => setSelectedCategory('Todas')}
+                  sx={{
+                    color: '#D4AF37',
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                    width: 20,
+                    height: 20,
+                    borderRadius: 0,
+                    '&:hover': {
+                      backgroundColor: 'rgba(212, 175, 55, 0.2)'
+                    }
+                  }}
+                >
+                  <Close sx={{ fontSize: 12 }} />
+                </IconButton>
+              </MotionBox>
             </Box>
-            
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              <AnimatePresence>
-                {filteredProducts.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.4, delay: index * 0.05 }}
-                  >
-                    <ProductCard product={product} />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </Box>
-          </Box>
+          </MotionBox>
         )}
-      </Container>
+
+        {/* Secciones del menú */}
+        <AnimatePresence mode="wait">
+          <Stack spacing={{ xs: 6, sm: 8 }}>
+            {Object.entries(groupedProducts).map(([category, categoryProducts], index) => (
+              <MenuSection
+                key={`${category}-${selectedCategory}`}
+                title={category}
+                products={categoryProducts}
+                index={index}
+              />
+            ))}
+          </Stack>
+        </AnimatePresence>
+
+        {/* Footer elegante */}
+        <MotionBox
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          sx={{ 
+            mt: 16,
+            pt: 8,
+            textAlign: 'center'
+          }}
+        >
+          <Box
+            sx={{
+              p: { xs: 4, sm: 6 },
+              borderRadius: 0,
+              background: 'rgba(26, 26, 26, 0.4)',
+              backdropFilter: 'blur(24px)',
+              border: '1px solid rgba(212, 175, 55, 0.2)',
+            }}
+          >
+            <Typography 
+              sx={{ 
+                fontFamily: "'Inter', sans-serif",
+                color: '#F8F8F8',
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                mb: 1,
+                letterSpacing: '0.02em'
+              }}
+            >
+              {menu.restaurantInfo?.name || menu.name}
+            </Typography>
+            <Typography 
+              sx={{ 
+                fontFamily: "'Inter', sans-serif",
+                color: '#B8B8B8',
+                fontSize: '0.875rem',
+                fontWeight: 400,
+                mb: 3,
+                lineHeight: 1.6,
+                opacity: 0.8
+              }}
+            >
+              Carta Digital • Precios sujetos a cambios sin previo aviso
+            </Typography>
+            <Box
+              sx={{
+                width: 60,
+                height: 1,
+                background: 'linear-gradient(90deg, transparent 0%, #D4AF37 50%, transparent 100%)',
+                mx: 'auto'
+              }}
+            />
+          </Box>
+        </MotionBox>
+      </MotionContainer>
+
+      {/* Estilos para animaciones */}
+      <style jsx global>{`
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.7;
+            transform: scale(1.05);
+          }
+        }
+      `}</style>
     </Box>
   );
-}
+};
+
+export default MenuViewer;

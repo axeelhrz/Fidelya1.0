@@ -8,7 +8,11 @@ import {
   Restaurant,
   Coffee,
   Cake,
-  Star
+  Star,
+  Fastfood,
+  LocalPizza,
+  Icecream,
+  EmojiFoodBeverage
 } from '@mui/icons-material';
 import { Product } from '../types';
 import ProductCard from './ProductCard';
@@ -49,21 +53,60 @@ const MenuSection: React.FC<MenuSectionProps> = ({ title, products, index = 0 })
     },
   };
 
-  const recommendedCount = products.filter(p => p.isRecommended).length;
+  // Contar productos recomendados (usando tags o nutritionalInfo)
+  const recommendedCount = products.filter(p => 
+    p.tags?.includes('recomendado') || 
+    p.tags?.includes('destacado') ||
+    p.tags?.includes('especial')
+  ).length;
 
   // Determinar el icono según la categoría
   const getCategoryIcon = () => {
     const category = title.toLowerCase();
-    if (category.includes('trago') || category.includes('whisky') || category.includes('vino')) {
+    
+    // Mapeo de categorías Firebase a iconos
+    if (category.includes('cocktail') || category.includes('beverage') || category.includes('wine') || category.includes('beer')) {
       return <LocalBar sx={{ fontSize: 18, color: '#D4AF37' }} />;
     }
-    if (category.includes('café') || category.includes('cafetería')) {
+    if (category.includes('coffee') || category.includes('café')) {
       return <Coffee sx={{ fontSize: 18, color: '#D4AF37' }} />;
     }
-    if (category.includes('postre')) {
+    if (category.includes('dessert') || category.includes('postre')) {
       return <Cake sx={{ fontSize: 18, color: '#D4AF37' }} />;
     }
+    if (category.includes('appetizer') || category.includes('entrada')) {
+      return <Fastfood sx={{ fontSize: 18, color: '#D4AF37' }} />;
+    }
+    if (category.includes('main_course') || category.includes('principal')) {
+      return <LocalPizza sx={{ fontSize: 18, color: '#D4AF37' }} />;
+    }
+    if (category.includes('snack') || category.includes('side_dish')) {
+      return <Icecream sx={{ fontSize: 18, color: '#D4AF37' }} />;
+    }
+    if (category.includes('non_alcoholic')) {
+      return <EmojiFoodBeverage sx={{ fontSize: 18, color: '#D4AF37' }} />;
+    }
+    
     return <Restaurant sx={{ fontSize: 18, color: '#D4AF37' }} />;
+  };
+
+  // Función para formatear el nombre de la categoría
+  const formatCategoryName = (category: string) => {
+    const categoryMap: Record<string, string> = {
+      'APPETIZER': 'Entradas',
+      'MAIN_COURSE': 'Platos Principales',
+      'DESSERT': 'Postres',
+      'BEVERAGE': 'Bebidas',
+      'SIDE_DISH': 'Acompañamientos',
+      'COCKTAIL': 'Cócteles',
+      'WINE': 'Vinos',
+      'BEER': 'Cervezas',
+      'COFFEE': 'Cafetería',
+      'NON_ALCOHOLIC': 'Sin Alcohol',
+      'SNACK': 'Snacks'
+    };
+
+    return categoryMap[category.toUpperCase()] || category;
   };
 
   return (
@@ -100,42 +143,40 @@ const MenuSection: React.FC<MenuSectionProps> = ({ title, products, index = 0 })
                 justifyContent: 'center'
               }}
             >
-            {getCategoryIcon()}
-          </Box>
-
+              {getCategoryIcon()}
+            </Box>
             {/* Título y contador */}
             <Box>
-          <MotionTypography
+              <MotionTypography
                 initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-            variant="categoryTitle"
-            sx={{
+                variant="categoryTitle"
+                sx={{
                   fontFamily: "'Inter', sans-serif",
                   fontWeight: 600,
                   fontSize: { xs: '1.1rem', sm: '1.25rem' },
-              color: '#D4AF37',
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
+                  color: '#D4AF37',
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
                   lineHeight: 1.2,
                   mb: 0.25
-            }}
-          >
-            {title}
-          </MotionTypography>
-
-          <Typography
-            sx={{
+                }}
+              >
+                {formatCategoryName(title)}
+              </MotionTypography>
+              <Typography
+                sx={{
                   fontSize: '0.7rem',
                   fontWeight: 400,
-              color: '#B8B8B8',
+                  color: '#B8B8B8',
                   letterSpacing: '0.02em',
-              opacity: 0.8,
+                  opacity: 0.8,
                   fontFamily: "'Inter', sans-serif"
                 }}
               >
                 {products.length} {products.length === 1 ? 'opción' : 'opciones'}
-          </Typography>
+              </Typography>
             </Box>
           </Box>
 
@@ -166,7 +207,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({ title, products, index = 0 })
                   {recommendedCount}
                 </Typography>
               </Box>
-      </MotionBox>
+            </MotionBox>
           )}
         </MotionBox>
       </Box>
