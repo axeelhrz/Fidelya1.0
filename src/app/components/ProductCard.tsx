@@ -8,7 +8,8 @@ import {
   FiberNew, 
   Eco,
   LocalBar,
-  Restaurant
+  Restaurant,
+  AutoAwesome
 } from '@mui/icons-material';
 import { Product } from '../types';
 
@@ -21,14 +22,15 @@ const MotionBox = motion(Box);
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
   const cardVariants = {
-    hidden: { opacity: 0, y: 15 },
+    hidden: { opacity: 0, y: 20, scale: 0.95 },
     visible: { 
       opacity: 1, 
       y: 0,
+      scale: 1,
       transition: { 
-        duration: 0.5, 
+        duration: 0.6, 
         ease: [0.04, 0.62, 0.23, 0.98],
-        delay: index * 0.06
+        delay: index * 0.08
       } 
     }
   };
@@ -41,9 +43,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
   const getCategoryIcon = () => {
     const category = product.category.toLowerCase();
     if (category.includes('bebida') || category.includes('cocktail') || category.includes('drink')) {
-      return <LocalBar sx={{ fontSize: 12, color: 'inherit' }} />;
+      return <LocalBar sx={{ fontSize: 14, color: 'inherit' }} />;
     }
-    return <Restaurant sx={{ fontSize: 12, color: 'inherit' }} />;
+    return <Restaurant sx={{ fontSize: 14, color: 'inherit' }} />;
   };
 
   return (
@@ -52,286 +54,376 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
       initial="hidden"
       animate="visible"
       whileHover={{ 
-        y: -3,
-        transition: { duration: 0.3, ease: 'easeOut' }
+        y: -4,
+        transition: { duration: 0.4, ease: 'easeOut' }
       }}
       sx={{
         position: 'relative',
-        borderRadius: 3,
-        background: 'linear-gradient(135deg, rgba(44, 44, 46, 0.4) 0%, rgba(28, 28, 30, 0.6) 100%)',
-        backdropFilter: 'blur(24px)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
-        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        background: 'linear-gradient(145deg, rgba(44, 44, 46, 0.8) 0%, rgba(28, 28, 30, 0.95) 100%)',
+        backdropFilter: 'blur(32px)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: 0, // Sin bordes redondeados para look premium
+        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: 'pointer',
         overflow: 'hidden',
         '&:hover': {
-          background: 'linear-gradient(135deg, rgba(44, 44, 46, 0.6) 0%, rgba(28, 28, 30, 0.8) 100%)',
-          borderColor: 'rgba(255, 255, 255, 0.12)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-          transform: 'translateY(-3px)'
-        }
+          background: 'linear-gradient(145deg, rgba(44, 44, 46, 0.95) 0%, rgba(28, 28, 30, 1) 100%)',
+          borderColor: 'rgba(255, 255, 255, 0.15)',
+          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.3)',
+        },
+        // Esquinas cortadas estilo premium
+        clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))'
       }}
     >
-      {/* Patrón de fondo sutil */}
+      {/* Marco dorado para productos recomendados */}
+            {isRecommended && (
+            <Box
+              sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+                  right: 0,
+                  bottom: 0,
+            background: 'linear-gradient(45deg, #D4AF37, #FFD700, #D4AF37)',
+            backgroundSize: '200% 200%',
+            animation: 'goldShimmer 4s ease-in-out infinite',
+            clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
+                '&::after': {
+              content: '""',
+                  position: 'absolute',
+              top: '2px',
+              left: '2px',
+              right: '2px',
+              bottom: '2px',
+              background: 'linear-gradient(145deg, rgba(44, 44, 46, 0.8) 0%, rgba(28, 28, 30, 0.95) 100%)',
+              clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))'
+            },
+            '@keyframes goldShimmer': {
+              '0%, 100%': { backgroundPosition: '0% 50%' },
+              '50%': { backgroundPosition: '100% 50%' }
+            }
+              }}
+        />
+        )}
+
+      {/* Patrón de fondo tipo papel de lujo */}
       <Box
-        sx={{
-          position: 'absolute',
-          top: 0,
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
           right: 0,
-          width: '40%',
-          height: '100%',
-          background: `
-            radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
-            linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.01) 100%)
+          bottom: 0,
+          backgroundImage: `
+            radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+            radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.01) 0%, transparent 50%),
+            linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.005) 50%, transparent 100%)
           `,
           pointerEvents: 'none',
-          zIndex: 0
-        }}
-      />
+          zIndex: 1
+          }}
+        />
 
       {/* Contenido principal */}
-      <Box sx={{ position: 'relative', zIndex: 1, p: { xs: 3.5, sm: 4 } }}>
-        {/* Header con etiquetas modernas */}
+      <Box sx={{ position: 'relative', zIndex: 2, p: { xs: 4, sm: 5 } }}>
+        {/* Header estilo Michelin */}
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'flex-start',
-          mb: 2.5,
-          gap: 2
+          mb: 3,
+          gap: 3
         }}>
-          {/* Etiquetas modernas con iconos */}
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-            {/* Etiqueta de categoría siempre visible */}
-            <Chip
-              icon={getCategoryIcon()}
-              label={product.category}
-              size="small"
-              sx={{
-                backgroundColor: 'rgba(161, 161, 170, 0.12)',
-                color: '#A1A1AA',
-                fontWeight: 500,
-                fontSize: '0.7rem',
-                height: 22,
-                borderRadius: 1.5,
-                border: 'none',
-                '& .MuiChip-label': {
-                  px: 1
-                },
-                '& .MuiChip-icon': {
-                  color: '#A1A1AA'
-                }
-              }}
-            />
+          {/* Sección izquierda: Etiquetas premium */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flex: 1 }}>
+            {/* Categoría principal */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box
+        sx={{
+                  p: 0.75,
+                  borderRadius: 0,
+                  background: 'linear-gradient(135deg, rgba(161, 161, 170, 0.15) 0%, rgba(161, 161, 170, 0.08) 100%)',
+                  border: '1px solid rgba(161, 161, 170, 0.2)',
+                  clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))'
+                }}
+              >
+                {getCategoryIcon()}
+              </Box>
+              <Typography
+                sx={{
+                  color: '#A1A1AA',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  fontFamily: 'serif'
+        }}
+              >
+                {product.category}
+              </Typography>
+            </Box>
 
-            {isRecommended && (
-              <MotionBox
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.3 + (index * 0.05), type: 'spring', stiffness: 200 }}
-              >
-                <Chip
-                  icon={<Star sx={{ fontSize: '11px !important' }} />}
-                  label="Chef's Choice"
-                  size="small"
-                  sx={{
-                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%)',
-                    color: '#10B981',
-                    fontWeight: 600,
-                    fontSize: '0.65rem',
-                    height: 22,
-                    borderRadius: 1.5,
-                    border: '1px solid rgba(16, 185, 129, 0.2)',
-                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)',
-                    '& .MuiChip-label': {
-                      px: 1
-                    },
-                    '& .MuiChip-icon': {
-                      color: '#10B981'
-                    }
-                  }}
-                />
-              </MotionBox>
-            )}
-            
-            {isNew && (
-              <MotionBox
-                initial={{ scale: 0, x: -20 }}
-                animate={{ scale: 1, x: 0 }}
-                transition={{ delay: 0.4 + (index * 0.05), type: 'spring', stiffness: 200 }}
-              >
-                <Chip
-                  icon={<FiberNew sx={{ fontSize: '11px !important' }} />}
-                  label="Nuevo"
-                  size="small"
-                  sx={{
-                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)',
-                    color: '#3B82F6',
-                    fontWeight: 600,
-                    fontSize: '0.65rem',
-                    height: 22,
-                    borderRadius: 1.5,
-                    border: '1px solid rgba(59, 130, 246, 0.2)',
-                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)',
-                    '& .MuiChip-label': {
-                      px: 1
-                    },
-                    '& .MuiChip-icon': {
-                      color: '#3B82F6'
-                    }
-                  }}
-                />
-              </MotionBox>
-            )}
-            
-            {isVegetarian && (
-              <MotionBox
-                initial={{ scale: 0, y: -20 }}
-                animate={{ scale: 1, y: 0 }}
-                transition={{ delay: 0.5 + (index * 0.05), type: 'spring', stiffness: 200 }}
-              >
-                <Chip
-                  icon={<Eco sx={{ fontSize: '11px !important' }} />}
-                  label="Plant-Based"
-                  size="small"
-                  sx={{
-                    background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)',
-                    color: '#F59E0B',
-                    fontWeight: 600,
-                    fontSize: '0.65rem',
-                    height: 22,
-                    borderRadius: 1.5,
-                    border: '1px solid rgba(245, 158, 11, 0.2)',
-                    boxShadow: '0 2px 8px rgba(245, 158, 11, 0.15)',
-                    '& .MuiChip-label': {
-                      px: 1
-                    },
-                    '& .MuiChip-icon': {
-                      color: '#F59E0B'
-                    }
-                  }}
-                />
-              </MotionBox>
-            )}
+            {/* Etiquetas especiales */}
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              {isRecommended && (
+                <MotionBox
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + (index * 0.05), duration: 0.5 }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      px: 1.5,
+                      py: 0.5,
+                      background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(255, 215, 0, 0.1) 100%)',
+                      border: '1px solid rgba(212, 175, 55, 0.3)',
+                      clipPath: 'polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 3px 100%, 0 calc(100% - 3px))',
+                      position: 'relative',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%)',
+                        clipPath: 'inherit'
+                      }
+                    }}
+                  >
+                    <AutoAwesome sx={{ fontSize: 12, color: '#D4AF37' }} />
+                    <Typography
+                      sx={{
+                        color: '#D4AF37',
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                        fontFamily: 'serif'
+                      }}
+                    >
+                      Signature
+                    </Typography>
+                  </Box>
+    </MotionBox>
+              )}
+              
+              {isNew && (
+                <MotionBox
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4 + (index * 0.05), duration: 0.5 }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      px: 1.5,
+                      py: 0.5,
+                      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)',
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      clipPath: 'polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 3px 100%, 0 calc(100% - 3px))'
+                    }}
+                  >
+                    <FiberNew sx={{ fontSize: 12, color: '#3B82F6' }} />
+                    <Typography
+                      sx={{
+                        color: '#3B82F6',
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                        fontFamily: 'serif'
+                      }}
+                    >
+                      Nouveau
+                    </Typography>
+                  </Box>
+                </MotionBox>
+              )}
+              
+              {isVegetarian && (
+                <MotionBox
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + (index * 0.05), duration: 0.5 }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      px: 1.5,
+                      py: 0.5,
+                      background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%)',
+                      border: '1px solid rgba(34, 197, 94, 0.3)',
+                      clipPath: 'polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 3px 100%, 0 calc(100% - 3px))'
+                    }}
+                  >
+                    <Eco sx={{ fontSize: 12, color: '#22C55E' }} />
+                    <Typography
+                      sx={{
+                        color: '#22C55E',
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                        fontFamily: 'serif'
+                      }}
+                    >
+                      Végétal
+                    </Typography>
+                  </Box>
+                </MotionBox>
+              )}
+            </Box>
           </Box>
-          
-          {/* Precio como nube/burbuja de bar */}
+
+          {/* Precio estilo medallón Michelin */}
           <MotionBox
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2 + (index * 0.05), duration: 0.5 }}
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ delay: 0.2 + (index * 0.05), duration: 0.7, type: 'spring', stiffness: 200 }}
             whileHover={{ 
-              scale: 1.05,
-              rotate: [0, -1, 1, 0],
-              transition: { duration: 0.3 }
-            }}
-            sx={{
-              position: 'relative',
-              minWidth: 'fit-content'
+              scale: 1.1,
+              rotate: [0, -2, 2, 0],
+              transition: { duration: 0.4 }
             }}
           >
             <Box
               sx={{
                 position: 'relative',
-                px: 2.5,
-                py: 1.5,
-                borderRadius: '20px 20px 20px 4px', // Forma de burbuja de diálogo
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
                 background: isRecommended 
-                  ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%)'
-                  : 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)',
-                border: `1.5px solid ${isRecommended ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                  ? 'radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, rgba(255, 215, 0, 0.1) 70%, transparent 100%)'
+                  : 'radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 70%, transparent 100%)',
+                border: `2px solid ${isRecommended ? '#D4AF37' : '#F59E0B'}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 backdropFilter: 'blur(16px)',
                 boxShadow: isRecommended 
-                  ? '0 4px 16px rgba(16, 185, 129, 0.15)' 
-                  : '0 4px 16px rgba(245, 158, 11, 0.15)',
+                  ? '0 8px 32px rgba(212, 175, 55, 0.2)' 
+                  : '0 8px 32px rgba(245, 158, 11, 0.2)',
                 '&::before': {
                   content: '""',
                   position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  borderRadius: 'inherit',
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%)',
-                  pointerEvents: 'none'
+                  top: -1,
+                  left: -1,
+                  right: -1,
+                  bottom: -1,
+                  borderRadius: '50%',
+                  background: `conic-gradient(from 0deg, ${isRecommended ? '#D4AF37' : '#F59E0B'}, transparent, ${isRecommended ? '#D4AF37' : '#F59E0B'})`,
+                  zIndex: -1,
+                  animation: 'rotate 4s linear infinite'
                 },
                 '&::after': {
-                  content: '"$"',
+                  content: '""',
                   position: 'absolute',
-                  top: -8,
-                  left: 8,
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                  color: isRecommended ? '#10B981' : '#F59E0B',
-                  opacity: 0.7
+                  top: 6,
+                  left: 6,
+                  right: 6,
+                  bottom: 6,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(145deg, rgba(44, 44, 46, 0.9) 0%, rgba(28, 28, 30, 0.95) 100%)',
+                  zIndex: 0
+                },
+                '@keyframes rotate': {
+                  '0%': { transform: 'rotate(0deg)' },
+                  '100%': { transform: 'rotate(360deg)' }
                 }
               }}
             >
-              <Typography
-                sx={{
-                  fontWeight: 800,
-                  fontSize: { xs: '1.125rem', sm: '1.25rem' },
-                  color: isRecommended ? '#10B981' : '#F59E0B',
-                  letterSpacing: '-0.02em',
-                  textAlign: 'center',
-                  lineHeight: 1,
-                  textShadow: `0 2px 8px ${isRecommended ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
-                  position: 'relative',
-                  zIndex: 1
-                }}
-              >
-                {product.price}
-              </Typography>
+              <Box sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+                <Typography
+                  sx={{
+                    fontSize: '0.6rem',
+                    fontWeight: 500,
+                    color: isRecommended ? '#D4AF37' : '#F59E0B',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    fontFamily: 'serif',
+                    mb: 0.25
+                  }}
+                >
+                  Prix
+                </Typography>
+                <Typography
+                  sx={{
+                    fontWeight: 800,
+                    fontSize: '1.1rem',
+                    color: isRecommended ? '#D4AF37' : '#F59E0B',
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1,
+                    fontFamily: 'serif'
+                  }}
+                >
+                  ${product.price}
+                </Typography>
+              </Box>
             </Box>
           </MotionBox>
         </Box>
 
-        {/* Nombre del producto */}
-        <Typography
-          variant="h6"
+        {/* Separador elegante */}
+        <Box
           sx={{
-            fontWeight: 600,
-            fontSize: { xs: '1rem', sm: '1.125rem' },
+            width: '100%',
+            height: '1px',
+            background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 20%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 80%, transparent 100%)',
+            mb: 3,
+            position: 'relative',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              top: -2,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: isRecommended ? '#D4AF37' : '#F59E0B',
+              opacity: 0.6
+            }
+          }}
+        />
+
+        {/* Nombre del plato estilo Michelin */}
+        <Typography
+          sx={{
+            fontWeight: 400,
+            fontSize: { xs: '1.125rem', sm: '1.25rem' },
             color: '#F5F5F7',
-            letterSpacing: '-0.02em',
-            lineHeight: 1.3,
-            textAlign: 'left',
-            mb: 1.5,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden'
+            letterSpacing: '0.02em',
+            lineHeight: 1.4,
+            textAlign: 'center',
+            mb: 2,
+            fontFamily: 'serif',
+            fontStyle: 'italic'
           }}
         >
           {product.name}
         </Typography>
 
-        {/* Descripción elegante */}
+        {/* Descripción estilo carta francesa */}
         {product.description && (
           <Typography
-            variant="body2"
             sx={{
               color: '#A1A1AA',
               fontSize: { xs: '0.8rem', sm: '0.85rem' },
-              lineHeight: 1.5,
-              fontWeight: 400,
-              textAlign: 'left',
+              lineHeight: 1.6,
+              fontWeight: 300,
+              textAlign: 'center',
               opacity: 0.9,
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              position: 'relative',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                left: -12,
-                top: 6,
-                width: 2,
-                height: 2,
-                borderRadius: '50%',
-                backgroundColor: isRecommended ? '#10B981' : '#3B82F6',
-                opacity: 0.6
-              }
+              fontFamily: 'serif',
+              fontStyle: 'normal',
+              letterSpacing: '0.01em'
             }}
           >
             {product.description}
@@ -339,40 +431,29 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
         )}
       </Box>
 
-      {/* Indicador de borde para productos especiales */}
-      {isRecommended && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '2px',
-            background: 'linear-gradient(90deg, #10B981 0%, rgba(16, 185, 129, 0.5) 50%, #10B981 100%)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 3s ease-in-out infinite',
-            '@keyframes shimmer': {
-              '0%': { backgroundPosition: '-200% 0' },
-              '100%': { backgroundPosition: '200% 0' }
-            }
-          }}
-        />
-      )}
-
-      {/* Efecto de brillo en hover */}
+      {/* Esquinas decorativas */}
       <Box
         sx={{
           position: 'absolute',
           top: 0,
-          left: '-100%',
-          width: '100%',
-          height: '100%',
-          background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent)',
-          transition: 'left 0.6s ease',
-          pointerEvents: 'none',
-          '.MuiBox-root:hover &': {
-            left: '100%'
-          }
+          left: 0,
+          width: 20,
+          height: 20,
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%)',
+          clipPath: 'polygon(0 0, 100% 0, 0 100%)',
+          zIndex: 3
+        }}
+      />
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 0,
+          right: 0,
+          width: 20,
+          height: 20,
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%)',
+          clipPath: 'polygon(100% 0, 100% 100%, 0 100%)',
+          zIndex: 3
         }}
       />
     </MotionBox>
