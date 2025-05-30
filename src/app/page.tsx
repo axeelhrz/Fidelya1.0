@@ -22,15 +22,14 @@ export default function HomePage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
       sx={{
-        minHeight: '100vh',
+        height: '100vh', // Cambio de minHeight a height fijo
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
         background: '#0A0A0A',
-        overflow: 'hidden',
-        px: { xs: 2, sm: 3 },
-        py: 3
+        overflow: 'hidden', // Evita cualquier scroll
+        px: { xs: 2, sm: 3 }
       }}
     >
       {/* Fondo minimalista */}
@@ -50,11 +49,11 @@ export default function HomePage() {
 
       {/* Contenido principal compacto */}
       <Stack 
-        spacing={{ xs: 3, sm: 4 }}
+        spacing={{ xs: 2.5, sm: 3 }} // Reducido el spacing
         alignItems="center" 
         textAlign="center"
         sx={{ 
-          maxWidth: 480,
+          maxWidth: 420, // Reducido el ancho máximo
           zIndex: 1,
           position: 'relative'
         }}
@@ -69,7 +68,7 @@ export default function HomePage() {
             delay: 0.1
           }}
           sx={{
-            p: 2,
+            p: 1.5, // Reducido el padding
             border: '1px solid rgba(212, 175, 55, 0.3)',
             background: 'rgba(212, 175, 55, 0.05)',
             display: 'flex',
@@ -79,7 +78,7 @@ export default function HomePage() {
         >
           <LocalBar 
             sx={{ 
-              fontSize: { xs: 28, sm: 32 },
+              fontSize: { xs: 24, sm: 28 }, // Reducido el tamaño del icono
               color: '#D4AF37'
             }} 
           />
@@ -96,12 +95,12 @@ export default function HomePage() {
           }}
           sx={{
             fontFamily: "'Inter', sans-serif",
-            fontSize: { xs: '2rem', sm: '2.5rem' },
+            fontSize: { xs: '1.75rem', sm: '2rem' }, // Reducido el tamaño
             fontWeight: 700,
             letterSpacing: '0.02em',
             lineHeight: 1,
             color: '#F8F8F8',
-            mb: 1
+            mb: 0.5 // Reducido el margen
           }}
         >
           Xs Reset
@@ -118,12 +117,12 @@ export default function HomePage() {
           }}
           sx={{
             fontFamily: "'Inter', sans-serif",
-            fontSize: { xs: '0.8rem', sm: '0.85rem' },
+            fontSize: { xs: '0.75rem', sm: '0.8rem' }, // Reducido el tamaño
             fontWeight: 500,
             color: '#D4AF37',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            mb: 2
+            mb: 1.5 // Reducido el margen
           }}
         >
           Bar & Resto
@@ -140,11 +139,11 @@ export default function HomePage() {
           }}
           sx={{
             fontFamily: "'Inter', sans-serif",
-            fontSize: { xs: '0.9rem', sm: '1rem' },
+            fontSize: { xs: '0.85rem', sm: '0.9rem' }, // Reducido el tamaño
             fontWeight: 400,
             color: '#B8B8B8',
-            lineHeight: 1.5,
-            maxWidth: 360,
+            lineHeight: 1.4, // Reducido el line-height
+            maxWidth: 320, // Reducido el ancho máximo
             mx: 'auto'
           }}
         >
@@ -161,7 +160,7 @@ export default function HomePage() {
             delay: 0.5
           }}
           sx={{
-            width: 60,
+            width: 50, // Reducido el ancho
             height: '1px',
               background: '#D4AF37',
             mx: 'auto'
@@ -186,14 +185,14 @@ export default function HomePage() {
             whileTap={{ scale: 0.98 }}
             sx={{
               fontFamily: "'Inter', sans-serif",
-              px: { xs: 3, sm: 4 },
-              py: { xs: 1, sm: 1.25 },
-              fontSize: { xs: '0.85rem', sm: '0.9rem' },
+              px: { xs: 2.5, sm: 3.5 }, // Reducido el padding
+              py: { xs: 0.75, sm: 1 }, // Reducido el padding
+              fontSize: { xs: '0.8rem', sm: '0.85rem' }, // Reducido el tamaño
               fontWeight: 500,
               background: 'transparent',
               color: '#D4AF37',
               border: '1px solid #D4AF37',
-              minWidth: { xs: 140, sm: 160 },
+              minWidth: { xs: 120, sm: 140 }, // Reducido el ancho mínimo
               letterSpacing: '0.05em',
               transition: 'all 0.3s ease',
               '&:hover': {
@@ -220,7 +219,7 @@ export default function HomePage() {
           <Typography
             sx={{
               fontFamily: "'Inter', sans-serif",
-              fontSize: '0.7rem',
+              fontSize: '0.65rem', // Reducido el tamaño
               fontWeight: 400,
               color: '#B8B8B8',
               opacity: 0.6,

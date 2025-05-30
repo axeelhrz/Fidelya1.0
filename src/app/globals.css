@@ -41,6 +41,12 @@ body {
   background-image: none;
 }
 
+/* Evitar scroll en la página principal */
+body:has([data-page="home"]) {
+  height: 100vh;
+  overflow: hidden;
+}
+
 /* Scrollbar premium personalizado */
 ::-webkit-scrollbar {
   width: 6px;
@@ -101,8 +107,8 @@ button {
   font-family: inherit;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
+  }
+  
 button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
@@ -131,12 +137,12 @@ input::placeholder, textarea::placeholder {
 }
 
 /* Layout utilities premium */
-  .container {
+.container {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
-  }
+}
 
 .stack {
   display: flex;
@@ -192,6 +198,7 @@ input::placeholder, textarea::placeholder {
 
 /* Bordes premium rectos */
 .rounded-none { border-radius: 0; }
+
 /* Sombras premium */
 .shadow-soft {
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
@@ -208,9 +215,9 @@ input::placeholder, textarea::placeholder {
 /* Efectos hover premium */
 .hover-lift {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .hover-lift:hover {
+}
+
+.hover-lift:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
@@ -240,7 +247,7 @@ input::placeholder, textarea::placeholder {
 @media (max-width: 640px) {
   .container {
     padding: 0 16px;
-}
+  }
 
   .mobile-stack {
     flex-direction: column;
@@ -305,11 +312,11 @@ input::placeholder, textarea::placeholder {
   0%, 100% {
     opacity: 1;
     transform: scale(1);
-}
+  }
   50% {
     opacity: 0.7;
     transform: scale(1.05);
-}
+  }
 }
 
 .animate-fade-in-up {
@@ -427,4 +434,18 @@ input::placeholder, textarea::placeholder {
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--primary);
+}
+
+/* Estilos específicos para evitar scroll en homepage */
+.homepage-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Mejoras para mobile */
+@media (max-width: 768px) {
+  .homepage-container {
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height para móviles */
+  }
 }
