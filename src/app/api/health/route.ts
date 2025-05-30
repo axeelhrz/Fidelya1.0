@@ -8,7 +8,7 @@ export async function GET() {
     
     const health = {
       status: info.dbExists ? 'healthy' : 'unhealthy',
-      database: info.dbType,
+      database: 'dbType' in info ? info.dbType : 'unknown',
       timestamp: new Date().toISOString(),
       details: info
     };
@@ -19,7 +19,7 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json({
       status: 'error',
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
     }, { status: 500 });
   }
