@@ -15,10 +15,10 @@ export async function GET(
     }
 
     return NextResponse.json(product);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching product:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch product', details: error.message },
+      { error: 'Failed to fetch product', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -55,10 +55,10 @@ export async function PUT(
     const updatedProduct = await FirebaseDatabase.getProduct(params.id);
 
     return NextResponse.json(updatedProduct);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating product:', error);
     return NextResponse.json(
-      { error: 'Failed to update product', details: error.message },
+      { error: 'Failed to update product', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -84,10 +84,10 @@ export async function DELETE(
       { message: 'Product deleted successfully' },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting product:', error);
     return NextResponse.json(
-      { error: 'Failed to delete product', details: error.message },
+      { error: 'Failed to delete product', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

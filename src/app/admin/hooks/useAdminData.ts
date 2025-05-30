@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useFirebaseMenu } from '../../../hooks/useFirebaseMenu';
 import { Menu, Product } from '../../types';
 export interface UseAdminDataReturn {

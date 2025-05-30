@@ -92,7 +92,7 @@ export default function AdminDashboard() {
       setEmail('');
       setPassword('');
       setDisplayName('');
-    } catch (error) {
+    } catch {
       // Error is handled by the hook
     }
   };
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
   const handleLogout = async () => {
     try {
       await signOut();
-    } catch (error) {
+    } catch {
       // Error is handled by the hook
     }
   };
@@ -115,21 +115,21 @@ export default function AdminDashboard() {
             description: 'Nuestro delicioso menú con los mejores platos',
             isActive: true,
             categories: ['Entradas', 'Platos Principales', 'Postres', 'Bebidas'],
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           }
         ],
         products: initialProducts.map(product => ({
           ...product,
           menuId: 'menu-1',
-          createdAt: new Date(),
-          updatedAt: new Date()
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         }))
       };
 
       await initializeDatabase(initialData);
       alert('Base de datos inicializada correctamente');
-    } catch (error) {
+    } catch {
       alert('Error al inicializar la base de datos');
     }
   };
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch {
       alert('Error al exportar datos');
     }
   };

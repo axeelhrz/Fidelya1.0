@@ -36,8 +36,8 @@ export function useFirebaseMenu(): UseFirebaseMenuReturn {
       ]);
       setMenus(menusData);
       setProducts(productsData);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -53,8 +53,8 @@ export function useFirebaseMenu(): UseFirebaseMenuReturn {
       const id = await FirebaseDatabase.createMenu(menuData);
       await refreshData();
       return id;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
 }
   };
@@ -64,8 +64,8 @@ export function useFirebaseMenu(): UseFirebaseMenuReturn {
       setError(null);
       await FirebaseDatabase.updateMenu(id, menuData);
       await refreshData();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
     }
   };
@@ -75,8 +75,8 @@ export function useFirebaseMenu(): UseFirebaseMenuReturn {
       setError(null);
       await FirebaseDatabase.deleteMenu(id);
       await refreshData();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
     }
   };
@@ -87,8 +87,8 @@ export function useFirebaseMenu(): UseFirebaseMenuReturn {
       const id = await FirebaseDatabase.createProduct(productData);
       await refreshData();
       return id;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
     }
   };
@@ -98,8 +98,8 @@ export function useFirebaseMenu(): UseFirebaseMenuReturn {
       setError(null);
       await FirebaseDatabase.updateProduct(id, productData);
       await refreshData();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
     }
   };
@@ -109,8 +109,8 @@ export function useFirebaseMenu(): UseFirebaseMenuReturn {
       setError(null);
       await FirebaseDatabase.deleteProduct(id);
       await refreshData();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
     }
   };
@@ -121,8 +121,8 @@ export function useFirebaseMenu(): UseFirebaseMenuReturn {
       setLoading(true);
       await FirebaseDatabase.initializeDatabase(data);
       await refreshData();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
     }
   };
@@ -131,8 +131,8 @@ export function useFirebaseMenu(): UseFirebaseMenuReturn {
     try {
       setError(null);
       return await FirebaseDatabase.exportData();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
     }
   };

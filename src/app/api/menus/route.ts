@@ -5,10 +5,10 @@ export async function GET() {
   try {
     const menus = await FirebaseDatabase.getMenus();
     return NextResponse.json(menus);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching menus:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch menus', details: error.message },
+      { error: 'Failed to fetch menus', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -30,10 +30,10 @@ export async function POST(request: NextRequest) {
     const createdMenu = await FirebaseDatabase.getMenu(menuId);
     
     return NextResponse.json(createdMenu, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating menu:', error);
     return NextResponse.json(
-      { error: 'Failed to create menu', details: error.message },
+      { error: 'Failed to create menu', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

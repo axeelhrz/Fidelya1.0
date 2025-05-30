@@ -16,10 +16,10 @@ export async function GET(
     }
 
     return NextResponse.json(menu);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching menu:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch menu', details: error.message },
+      { error: 'Failed to fetch menu', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -45,10 +45,10 @@ export async function PUT(
     const updatedMenu = await FirebaseDatabase.getMenu(params.id);
     
     return NextResponse.json(updatedMenu);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating menu:', error);
     return NextResponse.json(
-      { error: 'Failed to update menu', details: error.message },
+      { error: 'Failed to update menu', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -74,10 +74,10 @@ export async function DELETE(
       { message: 'Menu deleted successfully' },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting menu:', error);
     return NextResponse.json(
-      { error: 'Failed to delete menu', details: error.message },
+      { error: 'Failed to delete menu', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

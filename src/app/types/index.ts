@@ -49,6 +49,8 @@ export interface Menu {
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  categories: string[];
+  // Add other existing properties
 }
 
 export interface AdminFormData {

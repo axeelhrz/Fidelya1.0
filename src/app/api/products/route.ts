@@ -8,10 +8,10 @@ export async function GET(request: NextRequest) {
 
     const products = await FirebaseDatabase.getProducts(menuId || undefined);
     return NextResponse.json(products);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching products:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch products', details: error.message },
+      { error: 'Failed to fetch products', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -42,10 +42,10 @@ export async function POST(request: NextRequest) {
     const createdProduct = await FirebaseDatabase.getProduct(productId);
     
     return NextResponse.json(createdProduct, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating product:', error);
     return NextResponse.json(
-      { error: 'Failed to create product', details: error.message },
+      { error: 'Failed to create product', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

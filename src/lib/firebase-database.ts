@@ -13,7 +13,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Menu, Product, Category } from '../app/types';
+import { Menu, Product } from '../app/types';
 
 // Export db for use in other modules
 export { db };

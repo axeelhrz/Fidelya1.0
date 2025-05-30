@@ -24,9 +24,9 @@ export class FirebaseAuth {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       return this.mapUserToAuthUser(userCredential.user);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error signing in:', error);
-      throw new Error(this.getAuthErrorMessage(error.code));
+      throw new Error(this.getAuthErrorMessage((error as { code?: string })?.code || 'unknown'));
     }
   }
       
@@ -39,9 +39,10 @@ export class FirebaseAuth {
       }
       
       return this.mapUserToAuthUser(userCredential.user);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating account:', error);
-      throw new Error(this.getAuthErrorMessage(error.code));
+      const errorCode = (error as { code?: string })?.code || 'unknown';
+      throw new Error(this.getAuthErrorMessage(errorCode));
     }
   }
 
@@ -57,9 +58,9 @@ export class FirebaseAuth {
   static async resetPassword(email: string): Promise<void> {
         try {
       await sendPasswordResetEmail(auth, email);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending password reset:', error);
-      throw new Error(this.getAuthErrorMessage(error.code));
+      throw new Error(this.getAuthErrorMessage((error as { code?: string })?.code || 'unknown'));
         }
       }
 
