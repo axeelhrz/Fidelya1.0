@@ -18,6 +18,14 @@ export default function MenuPageContent() {
   const { menu, products, loading, error, connected } = useFirebaseMenuById(menuId);
   const [menuData, setMenuData] = useState<MenuData | null>(null);
 
+  // Helper function para convertir fechas de manera segura
+  const convertToISOString = (date: Date | string | undefined): string => {
+    if (!date) return new Date().toISOString();
+    if (date instanceof Date) return date.toISOString();
+    if (typeof date === 'string') return date;
+    return new Date().toISOString();
+    };
+
   // Convertir datos de Firebase al formato esperado por MenuContent
   useEffect(() => {
     if (menu && products) {
@@ -25,7 +33,6 @@ export default function MenuPageContent() {
         id: menu.id,
         name: menu.name,
         description: menu.description,
-        categories: menu.categories || [],
         isActive: menu.isActive,
         products: products.map(product => ({
           id: product.id,
@@ -33,13 +40,13 @@ export default function MenuPageContent() {
           description: product.description || '',
           price: product.price,
           category: product.category,
-          image: (product as any).image || '',
+          image: (product as { image?: string }).image || '',
           isAvailable: product.isAvailable ?? true,
           menuId: product.menuId || menu.id
         })),
-        createdAt: menu.createdAt instanceof Date ? menu.createdAt.toISOString() : menu.createdAt,
-        updatedAt: menu.updatedAt instanceof Date ? menu.updatedAt.toISOString() : menu.updatedAt
-    };
+        createdAt: convertToISOString(menu.createdAt),
+        updatedAt: convertToISOString(menu.updatedAt)
+      };
       setMenuData(convertedMenuData);
     }
   }, [menu, products]);
@@ -187,7 +194,7 @@ export default function MenuPageContent() {
               Menú no encontrado
             </Typography>
             <Typography variant="body2">
-              El menú con ID "{menuId}" no existe o no está disponible.
+              El menú con ID &quot;{menuId}&quot; no existe o no está disponible.
             </Typography>
           </Alert>
         </MotionContainer>

@@ -42,11 +42,9 @@ let emulatorsConnected = false;
 if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !emulatorsConnected) {
   try {
     // Solo conectar emuladores si no están ya conectados
-    if (!auth.config.emulator) {
-      connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-    }
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
     
-    if (!(db as any)._delegate._databaseId.projectId.includes('demo-')) {
+    if (!((db as unknown as { _delegate: { _databaseId: { projectId: string } } })._delegate._databaseId.projectId.includes('demo-'))) {
       connectFirestoreEmulator(db, 'localhost', 8080);
     }
     
