@@ -19,7 +19,7 @@ const MotionBox = motion(Box);
 
 const MenuPageContent: React.FC = () => {
   const searchParams = useSearchParams();
-  const menuId = searchParams.get('id') || 'menu-bar';
+  const menuId = searchParams.get('id') || 'xs-reset-menu';
   const [menuData, setMenuData] = useState<MenuData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,14 +60,14 @@ const MenuPageContent: React.FC = () => {
           alignItems: 'center',
           justifyContent: 'center',
           minHeight: '100vh',
-          backgroundColor: '#1C1C1E',
+          backgroundColor: '#0A0A0A',
           px: 3
         }}
     >
         <CircularProgress 
           size={60} 
           sx={{ 
-            color: '#3B82F6',
+            color: '#D4AF37',
             mb: 3,
             '& .MuiCircularProgress-circle': {
               strokeLinecap: 'round',
@@ -77,24 +77,27 @@ const MenuPageContent: React.FC = () => {
         <Typography 
           variant="h6" 
           sx={{ 
-            color: '#A1A1AA',
+            fontFamily: "'Playfair Display', serif",
+            color: '#F8F8F8',
             textAlign: 'center',
-            fontSize: { xs: '1rem', sm: '1.25rem' }
+            fontSize: { xs: '1rem', sm: '1.25rem' },
+            mb: 1
           }}
         >
-            Cargando menú...
-          </Typography>
+          Cargando Carta Digital...
+        </Typography>
         <Typography 
           variant="body2" 
           sx={{ 
-            color: '#A1A1AA',
+            fontFamily: "'Inter', sans-serif",
+            color: '#B8B8B8',
             textAlign: 'center',
-            mt: 1,
-            opacity: 0.7
-          }}
-        >
-          Preparando la experiencia perfecta
-        </Typography>
+            opacity: 0.8,
+            fontStyle: 'italic'
+            }}
+          >
+          Preparando la experiencia Xs Reset
+          </Typography>
       </MotionBox>
     );
   }
@@ -104,13 +107,13 @@ const MenuPageContent: React.FC = () => {
       <Box
         sx={{
           minHeight: '100vh',
-          backgroundColor: '#1C1C1E',
+          backgroundColor: '#0A0A0A',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           px: 3
         }}
-      >
+    >
         <Container maxWidth="sm">
           <MotionBox
             initial={{ opacity: 0, y: 20 }}
@@ -120,22 +123,44 @@ const MenuPageContent: React.FC = () => {
             <Alert 
               severity="error"
               sx={{ 
-                borderRadius: 4,
+                borderRadius: 0,
                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
                 color: '#F87171',
+                fontFamily: "'Inter', sans-serif",
                 '& .MuiAlert-icon': {
                   color: '#F87171'
                 }
               }}
             >
-              <Typography variant="h6" sx={{ mb: 1 }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  mb: 1,
+                  fontFamily: "'Playfair Display', serif",
+                  fontWeight: 600
+                }}
+              >
                 {error || 'Menú no encontrado'}
               </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.8 }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  opacity: 0.8,
+                  fontFamily: "'Inter', sans-serif"
+                }}
+              >
                 Por favor, escanea un código QR válido o verifica el ID del menú.
               </Typography>
-              <Typography variant="body2" sx={{ mt: 2, fontFamily: 'monospace' }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  mt: 2, 
+                  fontFamily: 'monospace',
+                  fontSize: '0.75rem',
+                  opacity: 0.6
+                }}
+              >
                 ID solicitado: {menuId}
               </Typography>
             </Alert>
@@ -148,7 +173,6 @@ const MenuPageContent: React.FC = () => {
   return (
     <MenuViewer
       products={menuData.products}
-      menuName={menuData.name}
       menuDescription={menuData.description}
     />
   );
@@ -165,24 +189,25 @@ const MenuPage: React.FC = () => {
             alignItems: 'center',
             justifyContent: 'center',
             minHeight: '100vh',
-            backgroundColor: '#1C1C1E'
+            backgroundColor: '#0A0A0A'
           }}
         >
           <CircularProgress 
             size={60} 
             sx={{ 
-              color: '#3B82F6',
+              color: '#D4AF37',
               mb: 3
             }} 
           />
           <Typography 
             variant="h6" 
             sx={{ 
-              color: '#A1A1AA',
+              fontFamily: "'Playfair Display', serif",
+              color: '#F8F8F8',
               textAlign: 'center'
             }}
           >
-            Cargando menú...
+            Cargando Carta Digital...
           </Typography>
         </Box>
       }
