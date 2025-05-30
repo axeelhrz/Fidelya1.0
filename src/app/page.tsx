@@ -3,11 +3,12 @@
 import { Box, Typography, Button, Stack } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Restaurant, LocalBar } from '@mui/icons-material';
+import { LocalBar } from '@mui/icons-material';
 
 const MotionBox = motion(Box);
 const MotionTypography = motion(Typography);
 const MotionButton = motion(Button);
+
 export default function HomePage() {
   const router = useRouter();
 
@@ -19,7 +20,7 @@ export default function HomePage() {
     <MotionBox
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 1.2, ease: 'easeOut' }}
+      transition={{ duration: 0.8, ease: 'easeOut' }}
       sx={{
         minHeight: '100vh',
         display: 'flex',
@@ -28,11 +29,11 @@ export default function HomePage() {
         position: 'relative',
         background: '#0A0A0A',
         overflow: 'hidden',
-        px: { xs: 3, sm: 4 },
-        py: 4
+        px: { xs: 2, sm: 3 },
+        py: 3
       }}
     >
-      {/* Fondo elegante */}
+      {/* Fondo minimalista */}
       <Box
         sx={{
           position: 'absolute',
@@ -41,39 +42,36 @@ export default function HomePage() {
           right: 0,
           bottom: 0,
           background: `
-            radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.04) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
-            linear-gradient(180deg, rgba(10, 10, 10, 1) 0%, rgba(16, 16, 16, 1) 100%)
+            radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.02) 0%, transparent 60%)
           `,
           pointerEvents: 'none'
         }}
       />
 
-      {/* Contenido principal */}
+      {/* Contenido principal compacto */}
       <Stack 
-        spacing={{ xs: 6, sm: 8 }}
+        spacing={{ xs: 3, sm: 4 }}
         alignItems="center" 
         textAlign="center"
         sx={{ 
-          maxWidth: 640,
+          maxWidth: 480,
           zIndex: 1,
           position: 'relative'
         }}
       >
-        {/* Logo/Icono */}
+        {/* Logo minimalista */}
         <MotionBox
-          initial={{ scale: 0.8, opacity: 0 }}
+          initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ 
-            duration: 0.8, 
+            duration: 0.6, 
             ease: 'easeOut',
-            delay: 0.2
+            delay: 0.1
           }}
           sx={{
-            p: 3,
-            borderRadius: 0,
-            border: '2px solid #D4AF37',
-            background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%)',
+            p: 2,
+            border: '1px solid rgba(212, 175, 55, 0.3)',
+            background: 'rgba(212, 175, 55, 0.05)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -81,186 +79,155 @@ export default function HomePage() {
         >
           <LocalBar 
             sx={{ 
-              fontSize: { xs: 48, sm: 64 },
-              color: '#D4AF37',
-              filter: 'drop-shadow(0px 0px 20px rgba(212, 175, 55, 0.3))'
+              fontSize: { xs: 28, sm: 32 },
+              color: '#D4AF37'
             }} 
           />
         </MotionBox>
 
-        {/* Título principal */}
+        {/* Título compacto */}
         <MotionTypography
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ 
-            duration: 0.8, 
+            duration: 0.6, 
             ease: 'easeOut',
-            delay: 0.4
+            delay: 0.2
           }}
           sx={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: { xs: '3rem', sm: '4rem', md: '4.5rem' },
+            fontFamily: "'Inter', sans-serif",
+            fontSize: { xs: '2rem', sm: '2.5rem' },
             fontWeight: 700,
-            letterSpacing: '0.05em',
-            lineHeight: 0.9,
+            letterSpacing: '0.02em',
+            lineHeight: 1,
             color: '#F8F8F8',
-            mb: 2,
-            textTransform: 'uppercase'
+            mb: 1
           }}
         >
           Xs Reset
         </MotionTypography>
 
-        {/* Subtítulo */}
+        {/* Subtítulo argentino */}
         <MotionTypography
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ 
-            duration: 0.8, 
+            duration: 0.6, 
             ease: 'easeOut',
-            delay: 0.6
+            delay: 0.3
           }}
           sx={{
             fontFamily: "'Inter', sans-serif",
-            fontSize: { xs: '0.875rem', sm: '1rem' },
+            fontSize: { xs: '0.8rem', sm: '0.85rem' },
             fontWeight: 500,
             color: '#D4AF37',
-            letterSpacing: '0.15em',
+            letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            mb: 3,
-            opacity: 0.9
+            mb: 2
           }}
         >
-          Bar & Lounge Experience
+          Bar & Resto
         </MotionTypography>
 
-        {/* Descripción */}
+        {/* Descripción argentina minimalista */}
         <MotionTypography
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ 
-            duration: 0.8, 
+            duration: 0.6, 
             ease: 'easeOut',
-            delay: 0.7
+            delay: 0.4
           }}
           sx={{
             fontFamily: "'Inter', sans-serif",
-            fontSize: { xs: '1rem', sm: '1.125rem' },
+            fontSize: { xs: '0.9rem', sm: '1rem' },
             fontWeight: 400,
             color: '#B8B8B8',
-            lineHeight: 1.6,
-            maxWidth: 480,
-            mx: 'auto',
-            fontStyle: 'italic'
+            lineHeight: 1.5,
+            maxWidth: 360,
+            mx: 'auto'
           }}
         >
-          Descubre nuestra carta digital premium.
-          <br />
-          Cocktails exclusivos, gastronomía de autor y ambiente único.
+          Carta digital. Tragos de autor, picadas y buena onda.
         </MotionTypography>
 
-        {/* Ornamento */}
+        {/* Línea decorativa minimalista */}
         <MotionBox
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, scaleX: 0 }}
+          animate={{ opacity: 1, scaleX: 1 }}
           transition={{ 
-            duration: 0.8, 
+            duration: 0.6, 
             ease: 'easeOut',
-            delay: 0.8
+            delay: 0.5
           }}
           sx={{
-            width: 120,
-            height: 1,
-            background: 'linear-gradient(90deg, transparent 0%, #D4AF37 50%, transparent 100%)',
-            mx: 'auto',
-            position: 'relative',
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              top: -2,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
+            width: 60,
+            height: '1px',
               background: '#D4AF37',
-              boxShadow: '0 0 12px rgba(212, 175, 55, 0.5)'
-            }
+            mx: 'auto'
           }}
         />
 
-        {/* Botón de acción */}
+        {/* Botón compacto argentino */}
         <MotionBox
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ 
-            duration: 0.8, 
+            duration: 0.6, 
             ease: 'easeOut',
-            delay: 1
-          }}
-          sx={{ 
-            display: 'flex',
-            justifyContent: 'center',
-            width: '100%'
+            delay: 0.6
           }}
         >
           <MotionButton
-            variant="contained"
-            size="large"
+            variant="outlined"
+            size="medium"
             onClick={handleViewMenu}
-            startIcon={<Restaurant />}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             sx={{
               fontFamily: "'Inter', sans-serif",
-              px: { xs: 4, sm: 6 },
-              py: { xs: 1.5, sm: 2 },
-              fontSize: { xs: '1rem', sm: '1.125rem' },
-              fontWeight: 600,
-              borderRadius: 0,
-              background: '#D4AF37',
-              color: '#0A0A0A',
+              px: { xs: 3, sm: 4 },
+              py: { xs: 1, sm: 1.25 },
+              fontSize: { xs: '0.85rem', sm: '0.9rem' },
+              fontWeight: 500,
+              background: 'transparent',
+              color: '#D4AF37',
               border: '1px solid #D4AF37',
-              boxShadow: 'none',
-              minWidth: { xs: 200, sm: 220 },
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
+              minWidth: { xs: 140, sm: 160 },
+              letterSpacing: '0.05em',
               transition: 'all 0.3s ease',
               '&:hover': {
-                background: '#F4E4BC',
-                borderColor: '#F4E4BC',
-                boxShadow: '0px 4px 12px rgba(212, 175, 55, 0.3)',
+                background: 'rgba(212, 175, 55, 0.1)',
+                borderColor: '#D4AF37',
                 transform: 'translateY(-1px)'
               }
             }}
           >
-            Ver Carta Digital
+            Ver Carta
           </MotionButton>
         </MotionBox>
 
-        {/* Información adicional */}
+        {/* Info minimalista */}
         <MotionBox
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ 
-            duration: 0.8, 
+            duration: 0.6, 
             ease: 'easeOut',
-            delay: 1.2
+            delay: 0.8
           }}
-          sx={{ textAlign: 'center' }}
         >
           <Typography
             sx={{
               fontFamily: "'Inter', sans-serif",
-              fontSize: '0.75rem',
+              fontSize: '0.7rem',
               fontWeight: 400,
               color: '#B8B8B8',
-              opacity: 0.7,
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase'
+              opacity: 0.6,
+              letterSpacing: '0.05em'
             }}
           >
-            Experiencia Digital Premium
+            Menú Digital
           </Typography>
         </MotionBox>
       </Stack>
