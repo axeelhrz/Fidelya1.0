@@ -4,6 +4,7 @@ import { Box, Typography, Button, Stack } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { LocalBar } from '@mui/icons-material';
+import { useEffect } from 'react';
 
 const MotionBox = motion(Box);
 const MotionTypography = motion(Typography);
@@ -12,7 +13,36 @@ const MotionButton = motion(Button);
 export default function HomePage() {
   const router = useRouter();
 
+  // Prevenir scroll en móviles
+  useEffect(() => {
+    // Prevenir scroll
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    
+    // Prevenir zoom en iOS
+    const viewport = document.querySelector('meta[name=viewport]');
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    }
+
+    // Cleanup al desmontar
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+    };
+  }, []);
+
   const handleViewMenu = () => {
+    // Restaurar scroll antes de navegar
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.height = '';
+    
     router.push('/menu?id=xs-reset-menu');
   };
 
@@ -22,19 +52,24 @@ export default function HomePage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
       sx={{
-        height: '100vh', // Cambio de minHeight a height fijo
+        height: '100dvh', // Dynamic viewport height para móviles
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'relative',
+        position: 'fixed', // Fijo para evitar scroll
+        top: 0,
+        left: 0,
+          right: 0,
+          bottom: 0,
         background: '#0A0A0A',
-        overflow: 'hidden', // Evita cualquier scroll
-        px: { xs: 2, sm: 3 }
-      }}
+        overflow: 'hidden',
+        px: { xs: 2, sm: 3 },
+        zIndex: 1000
+        }}
     >
       {/* Fondo minimalista */}
       <Box
-        sx={{
+        sx={{ 
           position: 'absolute',
           top: 0,
           left: 0,
@@ -45,19 +80,20 @@ export default function HomePage() {
           `,
           pointerEvents: 'none'
         }}
-      />
+          />
 
       {/* Contenido principal compacto */}
       <Stack 
-        spacing={{ xs: 2.5, sm: 3 }} // Reducido el spacing
+        spacing={{ xs: 2, sm: 2.5 }} // Más compacto en móviles
         alignItems="center" 
         textAlign="center"
         sx={{ 
-          maxWidth: 420, // Reducido el ancho máximo
+          maxWidth: { xs: 280, sm: 420 }, // Más estrecho en móviles
           zIndex: 1,
-          position: 'relative'
-        }}
-      >
+          position: 'relative',
+          width: '100%'
+          }}
+        >
         {/* Logo minimalista */}
         <MotionBox
           initial={{ scale: 0.9, opacity: 0 }}
@@ -68,7 +104,7 @@ export default function HomePage() {
             delay: 0.1
           }}
           sx={{
-            p: 1.5, // Reducido el padding
+            p: { xs: 1.2, sm: 1.5 }, // Más pequeño en móviles
             border: '1px solid rgba(212, 175, 55, 0.3)',
             background: 'rgba(212, 175, 55, 0.05)',
             display: 'flex',
@@ -78,7 +114,7 @@ export default function HomePage() {
         >
           <LocalBar 
             sx={{ 
-              fontSize: { xs: 24, sm: 28 }, // Reducido el tamaño del icono
+              fontSize: { xs: 20, sm: 28 }, // Más pequeño en móviles
               color: '#D4AF37'
             }} 
           />
@@ -94,15 +130,15 @@ export default function HomePage() {
             delay: 0.2
           }}
           sx={{
-            fontFamily: "'Inter', sans-serif",
-            fontSize: { xs: '1.75rem', sm: '2rem' }, // Reducido el tamaño
+              fontFamily: "'Inter', sans-serif",
+            fontSize: { xs: '1.5rem', sm: '2rem' }, // Más pequeño en móviles
             fontWeight: 700,
             letterSpacing: '0.02em',
             lineHeight: 1,
             color: '#F8F8F8',
-            mb: 0.5 // Reducido el margen
-          }}
-        >
+            mb: { xs: 0.25, sm: 0.5 } // Menos margen en móviles
+            }}
+          >
           Xs Reset
         </MotionTypography>
 
@@ -117,12 +153,12 @@ export default function HomePage() {
           }}
           sx={{
             fontFamily: "'Inter', sans-serif",
-            fontSize: { xs: '0.75rem', sm: '0.8rem' }, // Reducido el tamaño
+            fontSize: { xs: '0.7rem', sm: '0.8rem' }, // Más pequeño en móviles
             fontWeight: 500,
             color: '#D4AF37',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            mb: 1.5 // Reducido el margen
+            mb: { xs: 1, sm: 1.5 } // Menos margen en móviles
           }}
         >
           Bar & Resto
@@ -139,11 +175,11 @@ export default function HomePage() {
           }}
           sx={{
             fontFamily: "'Inter', sans-serif",
-            fontSize: { xs: '0.85rem', sm: '0.9rem' }, // Reducido el tamaño
+            fontSize: { xs: '0.8rem', sm: '0.9rem' }, // Más pequeño en móviles
             fontWeight: 400,
             color: '#B8B8B8',
-            lineHeight: 1.4, // Reducido el line-height
-            maxWidth: 320, // Reducido el ancho máximo
+            lineHeight: 1.3, // Más compacto
+            maxWidth: { xs: 260, sm: 320 }, // Más estrecho en móviles
             mx: 'auto'
           }}
         >
@@ -160,9 +196,9 @@ export default function HomePage() {
             delay: 0.5
           }}
           sx={{
-            width: 50, // Reducido el ancho
+            width: { xs: 40, sm: 50 }, // Más pequeño en móviles
             height: '1px',
-              background: '#D4AF37',
+            background: '#D4AF37',
             mx: 'auto'
           }}
         />
@@ -185,21 +221,21 @@ export default function HomePage() {
             whileTap={{ scale: 0.98 }}
             sx={{
               fontFamily: "'Inter', sans-serif",
-              px: { xs: 2.5, sm: 3.5 }, // Reducido el padding
-              py: { xs: 0.75, sm: 1 }, // Reducido el padding
-              fontSize: { xs: '0.8rem', sm: '0.85rem' }, // Reducido el tamaño
+              px: { xs: 2, sm: 3.5 }, // Más compacto en móviles
+              py: { xs: 0.6, sm: 1 }, // Más compacto en móviles
+              fontSize: { xs: '0.75rem', sm: '0.85rem' }, // Más pequeño en móviles
               fontWeight: 500,
               background: 'transparent',
               color: '#D4AF37',
               border: '1px solid #D4AF37',
-              minWidth: { xs: 120, sm: 140 }, // Reducido el ancho mínimo
+              minWidth: { xs: 100, sm: 140 }, // Más pequeño en móviles
               letterSpacing: '0.05em',
               transition: 'all 0.3s ease',
               '&:hover': {
                 background: 'rgba(212, 175, 55, 0.1)',
                 borderColor: '#D4AF37',
                 transform: 'translateY(-1px)'
-              }
+}
             }}
           >
             Ver Carta
@@ -219,7 +255,7 @@ export default function HomePage() {
           <Typography
             sx={{
               fontFamily: "'Inter', sans-serif",
-              fontSize: '0.65rem', // Reducido el tamaño
+              fontSize: { xs: '0.6rem', sm: '0.65rem' }, // Más pequeño en móviles
               fontWeight: 400,
               color: '#B8B8B8',
               opacity: 0.6,

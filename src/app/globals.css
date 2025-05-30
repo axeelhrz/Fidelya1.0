@@ -26,10 +26,20 @@
   margin: 0;
 }
 
-html,
+html {
+  height: 100%;
+  height: 100dvh; /* Dynamic viewport height */
+  overflow: hidden; /* Prevenir scroll en la raíz */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  touch-action: manipulation; /* Prevenir zoom en móviles */
+}
+
 body {
+  height: 100%;
+  height: 100dvh; /* Dynamic viewport height */
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow: hidden; /* Prevenir scroll */
   font-family: 'Inter', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
   background-color: var(--background);
   color: var(--text-primary);
@@ -37,14 +47,34 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   
+  /* Prevenir comportamientos móviles no deseados */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  
   /* Fondo limpio sin texturas para un look más elegante */
   background-image: none;
+  
+  /* Prevenir bounce en iOS */
+  position: fixed;
+  width: 100%;
 }
 
-/* Evitar scroll en la página principal */
-body:has([data-page="home"]) {
-  height: 100vh;
-  overflow: hidden;
+/* Permitir selección de texto solo donde sea necesario */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Prevenir zoom en inputs en iOS */
+input, select, textarea {
+  font-size: 16px !important;
 }
 
 /* Scrollbar premium personalizado */
@@ -72,7 +102,6 @@ body:has([data-page="home"]) {
   scrollbar-width: thin;
   scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
 }
-
 /* Enlaces premium */
 a {
   color: inherit;
@@ -107,8 +136,9 @@ button {
   font-family: inherit;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
+  -webkit-tap-highlight-color: transparent; /* Quitar highlight en móviles */
+}
+
 button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
@@ -437,15 +467,23 @@ input::placeholder, textarea::placeholder {
 }
 
 /* Estilos específicos para evitar scroll en homepage */
-.homepage-container {
-  height: 100vh;
+  .homepage-container {
+    height: 100vh;
   overflow: hidden;
-}
+  }
 
 /* Mejoras para mobile */
 @media (max-width: 768px) {
   .homepage-container {
     height: 100vh;
     height: 100dvh; /* Dynamic viewport height para móviles */
+}
+}
+
+/* Soporte para notch en iPhone X+ */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
   }
 }
