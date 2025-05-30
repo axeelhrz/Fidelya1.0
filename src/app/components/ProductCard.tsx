@@ -19,14 +19,14 @@ const MotionBox = motion(Box);
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
   const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 15 },
     visible: { 
       opacity: 1, 
       y: 0,
       transition: { 
-        duration: 0.6, 
+        duration: 0.5, 
         ease: [0.04, 0.62, 0.23, 0.98],
-        delay: index * 0.08
+        delay: index * 0.06
       } 
     }
   };
@@ -42,20 +42,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
       animate="visible"
       whileHover={{ 
         y: -2,
-        transition: { duration: 0.3, ease: 'easeOut' }
+        transition: { duration: 0.2, ease: 'easeOut' }
       }}
       sx={{
         position: 'relative',
-        borderRadius: 2,
-        background: 'rgba(44, 44, 46, 0.3)',
+        borderRadius: 2.5,
+        background: 'rgba(44, 44, 46, 0.25)',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
+        border: '1px solid rgba(255, 255, 255, 0.05)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: 'pointer',
+        overflow: 'hidden',
         '&:hover': {
-          backgroundColor: 'rgba(44, 44, 46, 0.5)',
-          borderColor: 'rgba(255, 255, 255, 0.12)',
-          boxShadow: '0 6px 24px rgba(0, 0, 0, 0.15)',
+          backgroundColor: 'rgba(44, 44, 46, 0.4)',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
         }
       }}
     >
@@ -67,15 +68,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
             top: 0,
             left: 0,
             width: '100%',
-            height: '2px',
-            background: 'linear-gradient(90deg, #10B981 0%, rgba(16, 185, 129, 0.3) 100%)',
+            height: '1.5px',
+            background: 'linear-gradient(90deg, #10B981 0%, rgba(16, 185, 129, 0.4) 100%)',
           }}
         />
       )}
 
-      {/* Contenido principal compacto */}
-      <Box sx={{ p: { xs: 3, sm: 4 } }}>
-        {/* Header con chips y precio */}
+      {/* Contenido principal ultra-compacto */}
+      <Box sx={{ p: { xs: 3, sm: 3.5 } }}>
+        {/* Header: chips y precio en línea */}
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -83,24 +84,29 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
           mb: 2,
           gap: 2
         }}>
-          {/* Chips minimalistas */}
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          {/* Chips ultra-minimalistas */}
+          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
             {isRecommended && (
               <Chip
                 icon={<Star sx={{ fontSize: '10px !important' }} />}
-                label="★"
+                label=""
                 size="small"
                 sx={{
-                  backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
                   color: '#10B981',
                   fontWeight: 600,
                   fontSize: '0.65rem',
-                  height: 20,
-                  minWidth: 20,
+                  height: 18,
+                  minWidth: 18,
                   borderRadius: 1,
                   border: 'none',
                   '& .MuiChip-label': {
-                    px: 0.5
+                    px: 0,
+                    display: 'none'
+                  },
+                  '& .MuiChip-icon': {
+                    margin: 0,
+                    color: '#10B981'
                   }
                 }}
               />
@@ -111,12 +117,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                 label="N"
                 size="small"
                 sx={{
-                  backgroundColor: 'rgba(59, 130, 246, 0.12)',
+                  backgroundColor: 'rgba(59, 130, 246, 0.15)',
                   color: '#3B82F6',
-                  fontWeight: 600,
-                  fontSize: '0.65rem',
-                  height: 20,
-                  minWidth: 20,
+                  fontWeight: 700,
+                  fontSize: '0.6rem',
+                  height: 18,
+                  minWidth: 18,
                   borderRadius: 1,
                   border: 'none',
                   '& .MuiChip-label': {
@@ -130,32 +136,33 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
               <Chip
                 label="V"
                 size="small"
-                sx={{
-                  backgroundColor: 'rgba(245, 158, 11, 0.12)',
-                  color: '#F59E0B',
-                  fontWeight: 600,
-                  fontSize: '0.65rem',
-                  height: 20,
-                  minWidth: 20,
+            sx={{
+                  backgroundColor: 'rgba(245, 158, 11, 0.15)',
+              color: '#F59E0B',
+                  fontWeight: 700,
+                  fontSize: '0.6rem',
+                  height: 18,
+                  minWidth: 18,
                   borderRadius: 1,
                   border: 'none',
                   '& .MuiChip-label': {
                     px: 0.5
                   }
-                }}
+            }}
               />
-            )}
-          </Box>
+        )}
+      </Box>
           
-          {/* Precio compacto */}
+          {/* Precio ultra-compacto */}
           <Typography
             sx={{
               fontWeight: 700,
-              fontSize: { xs: '1.125rem', sm: '1.25rem' },
+              fontSize: { xs: '1rem', sm: '1.125rem' },
               color: '#F59E0B',
-              letterSpacing: '-0.02em',
+              letterSpacing: '-0.01em',
               textAlign: 'right',
-              minWidth: 'fit-content'
+              minWidth: 'fit-content',
+              lineHeight: 1
             }}
           >
             ${product.price}
@@ -167,28 +174,32 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
           variant="h6"
           sx={{
             fontWeight: 500,
-            fontSize: { xs: '1rem', sm: '1.125rem' },
+            fontSize: { xs: '0.95rem', sm: '1.05rem' },
             color: '#F5F5F7',
             letterSpacing: '-0.01em',
-            lineHeight: 1.3,
+            lineHeight: 1.25,
             textAlign: 'left',
-            mb: 1.5
+            mb: 1.25,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
           }}
         >
           {product.name}
         </Typography>
 
-        {/* Descripción compacta */}
+        {/* Descripción ultra-compacta */}
         {product.description && (
           <Typography
             variant="body2"
             sx={{
               color: '#A1A1AA',
-              fontSize: { xs: '0.8rem', sm: '0.85rem' },
-              lineHeight: 1.5,
+              fontSize: { xs: '0.75rem', sm: '0.8rem' },
+              lineHeight: 1.4,
               fontWeight: 400,
               textAlign: 'left',
-              opacity: 0.9,
+              opacity: 0.85,
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
@@ -199,6 +210,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
           </Typography>
         )}
       </Box>
+
+      {/* Efecto de brillo sutil en hover */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: '-100%',
+          width: '100%',
+          height: '100%',
+          background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent)',
+          transition: 'left 0.6s ease',
+          pointerEvents: 'none',
+          '.MuiBox-root:hover &': {
+            left: '100%'
+          }
+        }}
+      />
     </MotionBox>
   );
 };
