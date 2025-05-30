@@ -306,16 +306,16 @@ export default function ProductManager({ products, menus, selectedMenuId }: Prod
                   <TableCell>
                     <Box display="flex" flexWrap="wrap" gap={0.5}>
                       {product.nutritionalInfo?.isVegan && (
-                        <Chip key="vegan" label="Vegano" size="small" color="success" variant="outlined" />
+                        <Chip label="Vegano" size="small" color="success" variant="outlined" />
                       )}
                       {product.nutritionalInfo?.isVegetarian && (
-                        <Chip key="vegetarian" label="Vegetariano" size="small" color="info" variant="outlined" />
+                        <Chip label="Vegetariano" size="small" color="info" variant="outlined" />
                       )}
                       {product.tags?.slice(0, 2).map((tag, index) => (
                         <Chip key={`tag-${index}`} label={tag} size="small" variant="outlined" />
                       ))}
                       {product.tags && product.tags.length > 2 && (
-                        <Chip key="more-tags" label={`+${product.tags.length - 2}`} size="small" variant="outlined" />
+                        <Chip label={`+${product.tags.length - 2}`} size="small" variant="outlined" />
                       )}
                     </Box>
                   </TableCell>
@@ -445,7 +445,6 @@ export default function ProductManager({ products, menus, selectedMenuId }: Prod
                   renderTags={(value, getTagProps) =>
                     value.map((option, index) => (
                       <Chip 
-                        key={`tag-${index}`}
                         variant="outlined" 
                         label={option} 
                         {...getTagProps({ index })} 
@@ -472,7 +471,6 @@ export default function ProductManager({ products, menus, selectedMenuId }: Prod
                   renderTags={(value, getTagProps) =>
                     value.map((option, index) => (
                       <Chip 
-                        key={`allergen-${index}`}
                         variant="outlined" 
                         label={option} 
                         color="warning" 
@@ -490,6 +488,7 @@ export default function ProductManager({ products, menus, selectedMenuId }: Prod
                 />
             </Box>
             </Box>
+
             {/* Información nutricional */}
             <Box>
               <Typography variant="subtitle1" gutterBottom>
