@@ -12,6 +12,7 @@ export type ProductCategory =
   | 'Principal' 
   | 'Bebida' 
   | 'Postre';
+
 export interface Product {
   id: string;
   name: string;
@@ -22,6 +23,8 @@ export interface Product {
   isVegan?: boolean;
   isAvailable?: boolean;
   menuId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProductCardProps {
@@ -82,7 +85,7 @@ export interface FirebaseMenu {
   updatedAt: FieldValue | Timestamp | Date | null;
 }
 
-// Tipos para el hook de Firebase
+// Tipos para el hook de Firebase mejorado
 export interface UseFirebaseMenuReturn {
   menuData: MenuData | null;
   loading: boolean;
@@ -91,10 +94,22 @@ export interface UseFirebaseMenuReturn {
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   updateProduct: (productId: string, product: Partial<Product>) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
+  updateProductsAvailability?: (productIds: string[], isAvailable: boolean) => Promise<void>;
 }
 
-// Tipos para la API de base de datos
+// Tipos para estadísticas del dashboard
+export interface AdminStatistics {
+  totalMenus: number;
+  totalProducts: number;
+  productsByCategory: Record<string, number>;
+  availableProducts: number;
+  recommendedProducts: number;
+  veganProducts: number;
+}
+
+// Tipos para la API de base de datos mejorada
 export interface DatabaseAPI {
+  // Métodos básicos
   getMenus(): Promise<Menu[]>;
   getMenu(id: string): Promise<Menu | null>;
   createMenu(menu: Omit<Menu, 'id'>): Promise<Menu>;
@@ -111,4 +126,124 @@ export interface DatabaseAPI {
   initializeDatabase(): Promise<void>;
   exportData(): Promise<{ menus: Menu[], products: Product[] }>;
   getSchemaInfo(): Record<string, unknown>;
+
+  // Métodos avanzados opcionales
+  getMenuWithProducts?(id: string): Promise<MenuData | null>;
+  getStatistics?(): Promise<AdminStatistics>;
+  updateProductsAvailability?(productIds: string[], isAvailable: boolean): Promise<void>;
+  duplicateMenu?(menuId: string, newName: string): Promise<Menu>;
+  getCategories?(): Promise<ProductCategory[]>;
+  createCategory?(name: ProductCategory): Promise<void>;
+
+  // Funcionalidad en tiempo real opcional
+  realtime?: {
+    subscribeToMenu(menuId: string, callback: (menu: MenuData | null) => void): () => void;
+    subscribeToMenus(callback: (menus: Menu[]) => void): () => void;
+    subscribeToProducts(menuId: string, callback: (products: Product[]) => void): () => void;
+  };
+
+  // Métodos organizados por entidad
+  menus?: {
+    get(id: string): Promise<Menu | null>;
+    getAll(): Promise<Menu[]>;
+    getWithProducts(id: string): Promise<MenuData | null>;
+    create(menu: Omit<Menu, 'id'>): Promise<Menu>;
+    update(id: string, menu: Partial<Menu>): Promise<Menu>;
+    delete(id: string): Promise<void>;
+    duplicate?(menuId: string, newName: string): Promise<Menu>;
+  };
+
+  products?: {
+    get(id: string): Promise<Product | null>;
+    getAll(): Promise<Product[]>;
+    getByMenu(menuId: string): Promise<Product[]>;
+    create(product: Omit<Product, 'id'>): Promise<Product>;
+    update(id: string, product: Partial<Product>): Promise<Product>;
+    delete(id: string): Promise<void>;
+    updateAvailability?(productIds: string[], isAvailable: boolean): Promise<void>;
+  };
+
+  categories?: {
+    getAll(): Promise<ProductCategory[]>;
+    create(name: ProductCategory): Promise<void>;
+  };
+}
+
+// Tipos para componentes del panel admin
+export interface MenuEditorProps {
+  menuId: string;
+  onMenuUpdate?: (menu: MenuData) => void;
+}
+
+export interface QRGeneratorProps {
+  menuId: string;
+  menuName: string;
+  onUrlChange?: (url: string) => void;
+}
+
+export interface CategoryManagerProps {
+  categories: ProductCategory[];
+  onCategoryAdd: (category: ProductCategory) => void;
+  onCategoryDelete?: (category: ProductCategory) => void;
+}
+
+// Tipos para filtros y búsqueda
+export interface ProductFilters {
+  category?: ProductCategory;
+  isAvailable?: boolean;
+  isRecommended?: boolean;
+  isVegan?: boolean;
+  searchTerm?: string;
+  priceRange?: {
+    min: number;
+    max: number;
+  };
+}
+
+export interface MenuFilters {
+  isActive?: boolean;
+  searchTerm?: string;
+  sortBy?: 'name' | 'createdAt' | 'updatedAt';
+  sortOrder?: 'asc' | 'desc';
+}
+
+// Tipos para notificaciones y estados
+export interface NotificationState {
+  type: 'success' | 'error' | 'warning' | 'info';
+  message: string;
+  duration?: number;
+  id?: string;
+}
+
+export interface LoadingState {
+  isLoading: boolean;
+  operation?: string;
+  progress?: number;
+}
+
+// Tipos para configuración del QR
+export interface QRConfig {
+  size: number;
+  level: 'L' | 'M' | 'Q' | 'H';
+  fgColor: string;
+  bgColor: string;
+  includeMargin: boolean;
+  logoUrl?: string;
+  logoSize?: number;
+}
+
+// Tipos para backup y sincronización
+export interface BackupData {
+  menus: Menu[];
+  products: Product[];
+  categories: ProductCategory[];
+  timestamp: string;
+  version: string;
+}
+
+export interface SyncStatus {
+  isOnline: boolean;
+  lastSync?: string;
+  pendingChanges: number;
+  syncInProgress: boolean;
 }

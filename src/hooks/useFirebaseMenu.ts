@@ -33,24 +33,31 @@ export const useFirebaseMenu = (menuId: string): UseFirebaseMenuReturn => {
         
         // Verificar si el adaptador tiene funcionalidad en tiempo real
         if ('realtime' in DatabaseAPI && DatabaseAPI.realtime?.subscribeToMenu) {
-          console.log('Configurando listener en tiempo real para menú:', menuId);
+          console.log('🔄 Configurando listener en tiempo real para menú:', menuId);
           
           unsubscribe = DatabaseAPI.realtime.subscribeToMenu(menuId, (menu) => {
+            console.log('📡 Datos del menú actualizados en tiempo real:', menu?.name);
             setMenuData(menu);
             setLoading(false);
             if (!menu) {
               setError('Menú no encontrado');
+            } else {
+              setError(null);
             }
           });
         } else {
           // Fallback para adaptadores sin tiempo real
-          console.log('Cargando menú sin tiempo real:', menuId);
+          console.log('📄 Cargando menú sin tiempo real:', menuId);
           const menu = await DatabaseAPI.menus.get(menuId);
-          setMenuData(menu);
-          setLoading(false);
-          if (!menu) {
+          if (menu) {
+            // If menu exists, load products separately
+            const products = await DatabaseAPI.products.getByMenu(menuId);
+            setMenuData({ ...menu, products });
+          } else {
+            setMenuData(null);
             setError('Menú no encontrado');
           }
+          setLoading(false);
         }
       } catch (error) {
         handleError(error, 'cargar menú');
@@ -63,7 +70,7 @@ export const useFirebaseMenu = (menuId: string): UseFirebaseMenuReturn => {
     // Cleanup
     return () => {
       if (unsubscribe) {
-        console.log('Cancelando suscripción al menú:', menuId);
+        console.log('🔌 Cancelando suscripción al menú:', menuId);
         unsubscribe();
       }
     };
@@ -77,14 +84,10 @@ export const useFirebaseMenu = (menuId: string): UseFirebaseMenuReturn => {
       setError(null);
       const DatabaseAPI = await getDatabaseAPI();
       
-      const updatedMenu = { ...menuData, ...updates };
-      const success = await DatabaseAPI.menus.update(updatedMenu);
+      console.log('📝 Actualizando menú:', menuData.id, updates);
+      await DatabaseAPI.menus.update(menuData.id, updates);
       
-      if (!success) {
-        throw new Error('No se pudo actualizar el menú');
-      }
-
-      console.log('Menú actualizado exitosamente');
+      console.log('✅ Menú actualizado exitosamente');
     } catch (error) {
       handleError(error, 'actualizar menú');
     }
@@ -97,19 +100,17 @@ export const useFirebaseMenu = (menuId: string): UseFirebaseMenuReturn => {
     try {
       setError(null);
       const DatabaseAPI = await getDatabaseAPI();
-      
-      const newProduct: Product = {
+
+      const newProduct: Omit<Product, 'id'> = {
         ...product,
-        id: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        menuId: menuData.id,
+        isAvailable: product.isAvailable ?? true
       };
 
-      const success = await DatabaseAPI.products.create(newProduct, menuData.id);
+      console.log('➕ Agregando producto:', newProduct.name);
+      await DatabaseAPI.products.create(newProduct);
       
-      if (!success) {
-        throw new Error('No se pudo crear el producto');
-      }
-
-      console.log('Producto agregado exitosamente:', newProduct.id);
+      console.log('✅ Producto agregado exitosamente');
     } catch (error) {
       handleError(error, 'agregar producto');
     }
@@ -128,14 +129,10 @@ export const useFirebaseMenu = (menuId: string): UseFirebaseMenuReturn => {
         throw new Error('Producto no encontrado');
       }
 
-      const updatedProduct = { ...existingProduct, ...updates };
-      const success = await DatabaseAPI.products.update(updatedProduct, menuData.id);
+      console.log('📝 Actualizando producto:', productId, updates);
+      await DatabaseAPI.products.update(productId, updates);
       
-      if (!success) {
-        throw new Error('No se pudo actualizar el producto');
-      }
-
-      console.log('Producto actualizado exitosamente:', productId);
+      console.log('✅ Producto actualizado exitosamente');
     } catch (error) {
       handleError(error, 'actualizar producto');
     }
@@ -149,15 +146,37 @@ export const useFirebaseMenu = (menuId: string): UseFirebaseMenuReturn => {
       setError(null);
       const DatabaseAPI = await getDatabaseAPI();
       
-      const success = await DatabaseAPI.products.delete(productId, menuData.id);
+      console.log('🗑️ Eliminando producto:', productId);
+      await DatabaseAPI.products.delete(productId);
       
-      if (!success) {
-        throw new Error('No se pudo eliminar el producto');
-      }
-
-      console.log('Producto eliminado exitosamente:', productId);
+      console.log('✅ Producto eliminado exitosamente');
     } catch (error) {
       handleError(error, 'eliminar producto');
+    }
+  }, [menuData, handleError]);
+
+  // Actualizar disponibilidad de múltiples productos
+  const updateProductsAvailability = useCallback(async (productIds: string[], isAvailable: boolean) => {
+    if (!menuData) return;
+
+    try {
+      setError(null);
+      const DatabaseAPI = await getDatabaseAPI();
+      
+      console.log(`🔄 Actualizando disponibilidad de ${productIds.length} productos:`, isAvailable);
+      
+      if ('updateAvailability' in DatabaseAPI.products) {
+        await DatabaseAPI.products.updateAvailability(productIds, isAvailable);
+      } else {
+        // Fallback para actualizaciones individuales
+        await Promise.all(
+          productIds.map(id => DatabaseAPI.products.update(id, { isAvailable }))
+        );
+      }
+      
+      console.log('✅ Disponibilidad actualizada exitosamente');
+    } catch (error) {
+      handleError(error, 'actualizar disponibilidad');
     }
   }, [menuData, handleError]);
 
@@ -169,6 +188,7 @@ export const useFirebaseMenu = (menuId: string): UseFirebaseMenuReturn => {
     addProduct,
     updateProduct,
     deleteProduct,
+    updateProductsAvailability
   };
 };
 

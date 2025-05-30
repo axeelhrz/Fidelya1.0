@@ -40,7 +40,7 @@ try {
     try {
     connectFirestoreEmulator(db, 'localhost', 8080);
       console.log('🔧 Conectado al emulador de Firestore');
-    } catch (error) {
+    } catch {
       console.log('ℹ️  Emulador ya conectado o no disponible');
   }
 }

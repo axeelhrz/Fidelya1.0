@@ -24,17 +24,14 @@ import MenuSection from './MenuSection';
 
 interface MenuViewerProps {
   products: Product[];
-  menuName?: string;
   menuDescription?: string;
 }
 
 const MotionBox = motion(Box);
 const MotionContainer = motion(Container);
 const MotionFab = motion(Fab);
-
 const MenuViewer: React.FC<MenuViewerProps> = ({
   products,
-  menuName = 'MenuQR',
   menuDescription = 'Experiencia gastronómica premium'
 }) => {
   const router = useRouter();
@@ -43,7 +40,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
   const [headerVisible, setHeaderVisible] = useState(true);
 
   const { scrollY } = useScroll();
-  const headerOpacity = useTransform(scrollY, [0, 100], [1, 0]);
   const headerY = useTransform(scrollY, [0, 100], [0, -100]);
 
   // Controlar visibilidad del header
@@ -313,11 +309,9 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           }}
         />
       </Box>
-
       {/* Header integrado con fondo - Sin barra inferior */}
       <MotionBox
         style={{
-          opacity: headerOpacity,
           y: headerY,
         }}
         sx={{
