@@ -5,26 +5,22 @@ import {
   Box,
   Container,
   Typography,
-  Tabs,
-  Tab,
   Chip,
   Alert,
   CircularProgress,
   TextField,
   InputAdornment,
-  Fab,
-  Collapse,
-  IconButton,
-  Button
+  Button,
+  Divider
 } from '@mui/material';
 import { 
   Search, 
   Restaurant, 
-  ExpandMore,
-  ExpandLess,
-  NoMeals,
   ArrowBack,
-  Refresh
+  Refresh,
+  LocationOn,
+  Phone,
+  Schedule
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -42,21 +38,12 @@ export default function MenuViewer({ menuId }: MenuViewerProps) {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
-
   const { menu, products, loading, error, connected } = useFirebaseMenuById(menuId);
   const { categories } = useFirebaseCategories(menuId, true);
 
   // Filtrar productos
   const filteredProducts = useMemo(() => {
-    let filtered = products;
-
-    // Filtrar por disponibilidad
-    if (showOnlyAvailable) {
-      filtered = filtered.filter(product => product.isAvailable);
-    }
-
+    let filtered = products.filter(product => product.isAvailable);
     // Filtrar por categoría
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(product => product.category === selectedCategory);
@@ -67,13 +54,12 @@ export default function MenuViewer({ menuId }: MenuViewerProps) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(product =>
         product.name.toLowerCase().includes(search) ||
-        product.description?.toLowerCase().includes(search) ||
-        product.tags?.some(tag => tag.toLowerCase().includes(search))
+        product.description?.toLowerCase().includes(search)
       );
     }
 
     return filtered;
-  }, [products, selectedCategory, searchTerm, showOnlyAvailable]);
+  }, [products, selectedCategory, searchTerm]);
 
   // Agrupar productos por categoría
   const productsByCategory = useMemo(() => {
@@ -96,43 +82,6 @@ export default function MenuViewer({ menuId }: MenuViewerProps) {
     return Array.from(categorySet);
   }, [products]);
 
-  const getCategoryInfo = (categoryKey: string) => {
-    const category = categories.find(c => c.name === categoryKey);
-    return {
-      name: category?.name || categoryKey,
-      icon: category?.icon || '🍽️',
-      description: category?.description
-    };
-  };
-
-  const handleInitializeDatabase = async () => {
-    try {
-      const response = await fetch('/api/database/initialize', {
-        method: 'POST',
-      });
-      
-      if (response.ok) {
-        // Recargar la página después de inicializar
-        window.location.reload();
-      } else {
-        console.error('Error al inicializar la base de datos');
-      }
-    } catch (error) {
-      console.error('Error al inicializar la base de datos:', error);
-    }
-  };
-
-  const ConnectionStatus = () => {
-    if (!connected && !loading) {
-    return (
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Sin conexión en tiempo real. Los datos pueden no estar actualizados.
-        </Alert>
-    );
-  }
-    return null;
-  };
-
   if (loading) {
   return (
       <Box sx={{ 
@@ -141,14 +90,14 @@ export default function MenuViewer({ menuId }: MenuViewerProps) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)',
+        background: '#0A0A0A',
         gap: 3
     }}>
-        <CircularProgress size={60} sx={{ color: '#D4AF37' }} />
+        <CircularProgress size={40} sx={{ color: '#D4AF37' }} />
         <Typography sx={{ 
           color: '#B8B8B8', 
-          fontSize: '1.125rem',
-                  fontWeight: 500,
+          fontSize: '0.9rem',
+          fontWeight: 400,
           textAlign: 'center'
         }}>
           Cargando menú...
@@ -157,11 +106,11 @@ export default function MenuViewer({ menuId }: MenuViewerProps) {
               );
   }
 
-  if (error) {
+  if (error || !menu) {
     return (
       <Box sx={{ 
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%)',
+        background: '#0A0A0A',
         display: 'flex',
         alignItems: 'center'
       }}>
@@ -176,7 +125,7 @@ export default function MenuViewer({ menuId }: MenuViewerProps) {
                 Error al cargar el menú
               </Typography>
               <Typography variant="body2">
-                {error}
+                {error || 'Menú no encontrado'}
               </Typography>
             </Alert>
             
@@ -187,13 +136,9 @@ export default function MenuViewer({ menuId }: MenuViewerProps) {
                 onClick={() => router.push('/menu')}
                 sx={{ 
                   borderColor: '#D4AF37',
-                  color: '#D4AF37',
-              '&:hover': {
-                    borderColor: '#B8941F',
-                    backgroundColor: 'rgba(212, 175, 55, 0.1)'
-              }
-            }}
-          >
+                  color: '#D4AF37'
+                }}
+              >
                 Volver a menús
               </Button>
               <Button
@@ -201,12 +146,9 @@ export default function MenuViewer({ menuId }: MenuViewerProps) {
                 startIcon={<Refresh />}
                 onClick={() => window.location.reload()}
                 sx={{
-                  background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
-                  color: '#0A0A0A',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #B8941F 0%, #D4AF37 100%)',
-                  }
-              }}
+                  background: '#D4AF37',
+                  color: '#0A0A0A'
+                }}
               >
                 Reintentar
               </Button>
@@ -217,259 +159,200 @@ export default function MenuViewer({ menuId }: MenuViewerProps) {
   );
 }
 
-  if (!menu) {
     return (
-      <Box sx={{ 
+    <Box sx={{ 
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%)',
-        display: 'flex',
-        alignItems: 'center'
+      background: '#0A0A0A',
+      color: '#F8F8F8'
       }}>
-        <Container sx={{ py: 4 }}>
+      {/* Header elegante estilo Xs Reset */}
+      <Box sx={{ 
+        borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
+        py: { xs: 4, md: 6 }
+    }}>
+        <Container maxWidth="lg">
           <MotionBox
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
             sx={{ textAlign: 'center' }}
           >
-            <Restaurant sx={{ fontSize: 80, color: '#D4AF37', mb: 3 }} />
-            
-            <Typography variant="h4" gutterBottom sx={{ color: '#F8F8F8', fontWeight: 700 }}>
-              Menú no encontrado
-            </Typography>
-            
-            <Typography variant="h6" sx={{ color: '#B8B8B8', mb: 4 }}>
-              {`El menú con ID "${menuId}" no existe o no está disponible.`}
-            </Typography>
-
-            <Alert severity="info" sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}>
-              <Typography variant="body2" gutterBottom>
-                Esto puede suceder si:
-              </Typography>
-              <Typography variant="body2" component="ul" sx={{ textAlign: 'left', pl: 2 }}>
-                <li>El enlace QR es incorrecto</li>
-                <li>El menú fue eliminado</li>
-                <li>La base de datos no está inicializada</li>
-              </Typography>
-            </Alert>
-
-            <Box display="flex" gap={2} justifyContent="center" flexWrap="wrap">
-              <Button
-                variant="outlined"
-                startIcon={<ArrowBack />}
-                onClick={() => router.push('/menu')}
-                sx={{ 
-                  borderColor: '#D4AF37',
-                  color: '#D4AF37',
-                  '&:hover': {
-                    borderColor: '#B8941F',
-                    backgroundColor: 'rgba(212, 175, 55, 0.1)'
-                  }
-                }}
-              >
-                Ver menús disponibles
-              </Button>
-              
-              <Button
-                variant="contained"
-                startIcon={<Restaurant />}
-                onClick={handleInitializeDatabase}
-                sx={{
-                  background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
-                  color: '#0A0A0A',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #B8941F 0%, #D4AF37 100%)',
-                  }
-                }}
-              >
-                Inicializar base de datos
-              </Button>
-            </Box>
-          </MotionBox>
-        </Container>
-      </Box>
-    );
-  }
-
-  return (
-    <Box sx={{ 
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%)',
-      color: 'white'
-    }}>
-      <ConnectionStatus />
-      
-      {/* Header del menú */}
-      <Box sx={{ 
-        background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
-        py: 6,
-        textAlign: 'center'
-      }}>
-        <Container>
-          <MotionBox
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Typography variant="h2" component="h1" gutterBottom sx={{ 
-              fontWeight: 700,
-              color: '#0A0A0A',
-              textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
-            }}>
+            {/* Logo/Nombre del restaurante */}
+            <Typography 
+              variant="h1" 
+              sx={{ 
+                fontFamily: "'Playfair Display', serif",
+                fontWeight: 700,
+                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                color: '#F8F8F8',
+                letterSpacing: '0.05em',
+                mb: 2
+              }}
+            >
               {menu.name}
             </Typography>
-            <Typography variant="h6" sx={{ 
-              color: '#2C2C2E',
-              maxWidth: 600,
-              mx: 'auto',
-              fontWeight: 400
-            }}>
-              {menu.description}
-            </Typography>
             
+            {/* Tagline elegante */}
+            <Typography 
+              sx={{ 
+                fontFamily: "'Inter', sans-serif",
+                fontSize: { xs: '0.9rem', md: '1rem' },
+                color: '#B8B8B8',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                fontWeight: 400,
+                mb: 4
+              }}
+            >
+              {menu.description || 'Carta Digital Premium'}
+            </Typography>
+
+            {/* Información del restaurante */}
             {menu.restaurantInfo && (
-              <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 3, flexWrap: 'wrap' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                gap: { xs: 2, md: 4 }, 
+                flexWrap: 'wrap',
+                opacity: 0.8
+              }}>
                 {menu.restaurantInfo.address && (
-                  <Typography variant="body2" sx={{ color: '#2C2C2E' }}>
-                    📍 {menu.restaurantInfo.address}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <LocationOn sx={{ fontSize: 16, color: '#D4AF37' }} />
+                    <Typography variant="body2" sx={{ color: '#B8B8B8', fontSize: '0.8rem' }}>
+                      {menu.restaurantInfo.address}
+            </Typography>
+                    </Box>
                 )}
                 {menu.restaurantInfo.phone && (
-                  <Typography variant="body2" sx={{ color: '#2C2C2E' }}>
-                    📞 {menu.restaurantInfo.phone}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Phone sx={{ fontSize: 16, color: '#D4AF37' }} />
+                    <Typography variant="body2" sx={{ color: '#B8B8B8', fontSize: '0.8rem' }}>
+                      {menu.restaurantInfo.phone}
+                    </Typography>
+                  </Box>
                 )}
                 {menu.restaurantInfo.hours && (
-                  <Typography variant="body2" sx={{ color: '#2C2C2E' }}>
-                    🕒 {menu.restaurantInfo.hours}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Schedule sx={{ fontSize: 16, color: '#D4AF37' }} />
+                    <Typography variant="body2" sx={{ color: '#B8B8B8', fontSize: '0.8rem' }}>
+                      {menu.restaurantInfo.hours}
+                    </Typography>
+                  </Box>
                 )}
-              </Box>
+          </Box>
             )}
           </MotionBox>
-        </Container>
-      </Box>
+      </Container>
+    </Box>
 
-      <Container sx={{ py: 4 }}>
-        {/* Barra de búsqueda y filtros */}
+      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
+        {/* Barra de búsqueda minimalista */}
         <MotionBox
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           sx={{ mb: 4 }}
         >
-          <Box display="flex" gap={2} mb={2} alignItems="center">
-            <TextField
-              fullWidth
-              placeholder="Buscar productos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search sx={{ color: '#D4AF37' }} />
-                  </InputAdornment>
-                ),
-                sx: {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: 2,
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(212, 175, 55, 0.3)',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(212, 175, 55, 0.5)',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#D4AF37',
-                  },
-                  color: 'white'
-                }
-              }}
-            />
-            <IconButton
-              onClick={() => setShowFilters(!showFilters)}
-              sx={{ 
-                color: '#D4AF37',
-                backgroundColor: 'rgba(212, 175, 55, 0.1)',
+          <TextField
+            fullWidth
+            placeholder="Buscar en la carta..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search sx={{ color: '#D4AF37', fontSize: 20 }} />
+                </InputAdornment>
+              ),
+              sx: {
+                backgroundColor: 'rgba(26, 26, 26, 0.6)',
+                border: '1px solid rgba(212, 175, 55, 0.2)',
+                borderRadius: 0,
+                '& .MuiOutlinedInput-notchedOutline': {
+                  border: 'none'
+                },
                 '&:hover': {
-                  backgroundColor: 'rgba(212, 175, 55, 0.2)',
-                }
-              }}
-            >
-              {showFilters ? <ExpandLess /> : <ExpandMore />}
-            </IconButton>
-          </Box>
-
-          <Collapse in={showFilters}>
-            <Box sx={{ 
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: 2,
-              p: 2,
-              mb: 2
-            }}>
-              <Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
-                <Chip
-                  label="Solo disponibles"
-                  onClick={() => setShowOnlyAvailable(!showOnlyAvailable)}
-                  color={showOnlyAvailable ? 'primary' : 'default'}
-                  variant={showOnlyAvailable ? 'filled' : 'outlined'}
-                  icon={<Restaurant />}
-                />
-              </Box>
-            </Box>
-          </Collapse>
+                  backgroundColor: 'rgba(26, 26, 26, 0.8)',
+                  borderColor: 'rgba(212, 175, 55, 0.3)'
+                },
+                '&.Mui-focused': {
+                  backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                  borderColor: '#D4AF37'
+                },
+                color: '#F8F8F8',
+                fontSize: '0.9rem'
+}
+            }}
+            sx={{ maxWidth: 600, mx: 'auto', display: 'block' }}
+          />
         </MotionBox>
 
-        {/* Tabs de categorías */}
+        {/* Navegación de categorías elegante */}
         {availableCategories.length > 1 && (
           <MotionBox
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            sx={{ mb: 4 }}
+            sx={{ mb: 6 }}
           >
-            <Tabs
-              value={selectedCategory}
-              onChange={(e, newValue) => setSelectedCategory(newValue)}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{
-                '& .MuiTab-root': {
-                  color: 'rgba(255, 255, 255, 0.7)',
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center',
+              gap: { xs: 1, md: 2 },
+              flexWrap: 'wrap'
+            }}>
+              <Chip
+                label="Todos"
+                onClick={() => setSelectedCategory('all')}
+                sx={{
+                  backgroundColor: selectedCategory === 'all' ? '#D4AF37' : 'transparent',
+                  color: selectedCategory === 'all' ? '#0A0A0A' : '#B8B8B8',
+                  border: '1px solid rgba(212, 175, 55, 0.3)',
+                  borderRadius: 0,
                   fontWeight: 500,
-                  '&.Mui-selected': {
-                    color: '#D4AF37',
+                  fontSize: '0.8rem',
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: selectedCategory === 'all' ? '#D4AF37' : 'rgba(212, 175, 55, 0.1)',
+                    color: selectedCategory === 'all' ? '#0A0A0A' : '#D4AF37'
                   }
-                },
-                '& .MuiTabs-indicator': {
-                  backgroundColor: '#D4AF37',
-                }
-              }}
-            >
-              <Tab 
-                label="Todos" 
-                value="all" 
-                icon="🍽️"
-                iconPosition="start"
+                }}
               />
               {availableCategories.map((category) => {
-                const categoryInfo = getCategoryInfo(category);
-                const count = products.filter(p => p.category === category && (!showOnlyAvailable || p.isAvailable)).length;
+                const count = products.filter(p => p.category === category && p.isAvailable).length;
                 return (
-                  <Tab
+                  <Chip
                     key={category}
-                    label={`${categoryInfo.name} (${count})`}
-                    value={category}
-                    icon={categoryInfo.icon}
-                    iconPosition="start"
+                    label={`${category} (${count})`}
+                    onClick={() => setSelectedCategory(category)}
+                    sx={{
+                      backgroundColor: selectedCategory === category ? '#D4AF37' : 'transparent',
+                      color: selectedCategory === category ? '#0A0A0A' : '#B8B8B8',
+                      border: '1px solid rgba(212, 175, 55, 0.3)',
+                      borderRadius: 0,
+                      fontWeight: 500,
+                      fontSize: '0.8rem',
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        backgroundColor: selectedCategory === category ? '#D4AF37' : 'rgba(212, 175, 55, 0.1)',
+                        color: selectedCategory === category ? '#0A0A0A' : '#D4AF37'
+                      }
+                    }}
                   />
                 );
               })}
-            </Tabs>
+            </Box>
           </MotionBox>
         )}
 
-        {/* Productos */}
+        {/* Lista de productos */}
         {filteredProducts.length === 0 ? (
           <MotionBox
             initial={{ opacity: 0 }}
@@ -477,11 +360,11 @@ export default function MenuViewer({ menuId }: MenuViewerProps) {
             transition={{ duration: 0.6 }}
             sx={{ textAlign: 'center', py: 8 }}
           >
-            <NoMeals sx={{ fontSize: 64, color: 'rgba(255, 255, 255, 0.3)', mb: 2 }} />
-            <Typography variant="h6" color="text.secondary" gutterBottom>
+            <Restaurant sx={{ fontSize: 48, color: 'rgba(212, 175, 55, 0.3)', mb: 2 }} />
+            <Typography variant="h6" sx={{ color: '#B8B8B8', mb: 1 }}>
               No se encontraron productos
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: '#B8B8B8', opacity: 0.7 }}>
               {searchTerm 
                 ? `No hay productos que coincidan con "${searchTerm}"`
                 : 'No hay productos disponibles en esta categoría'
@@ -491,119 +374,95 @@ export default function MenuViewer({ menuId }: MenuViewerProps) {
         ) : selectedCategory === 'all' ? (
           // Mostrar por categorías cuando está en "Todos"
           <Box>
-            {Object.entries(productsByCategory).map(([category, categoryProducts], index) => {
-              const categoryInfo = getCategoryInfo(category);
-              return (
-                <MotionBox
-                  key={category}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  sx={{ mb: 6 }}
-                >
-                  <Box display="flex" alignItems="center" gap={2} mb={3}>
-                    <Typography variant="h4">
-                      {categoryInfo.icon}
-                    </Typography>
-                    <Box>
-                      <Typography variant="h5" sx={{ color: '#D4AF37', fontWeight: 600 }}>
-                        {categoryInfo.name}
-                      </Typography>
-                      {categoryInfo.description && (
-                        <Typography variant="body2" color="text.secondary">
-                          {categoryInfo.description}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                  
-                  <Box display="grid" gridTemplateColumns={{
-                    xs: '1fr',
-                    sm: 'repeat(2, 1fr)',
-                    lg: 'repeat(3, 1fr)'
-                  }} gap={3}>
-                    <AnimatePresence>
-                      {categoryProducts.map((product, productIndex) => (
-                        <motion.div
-                          key={product.id}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          transition={{ duration: 0.3, delay: productIndex * 0.05 }}
-                        >
-                          <ProductCard product={product} />
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  </Box>
-                </MotionBox>
-              );
-            })}
+            {Object.entries(productsByCategory).map(([category, categoryProducts], index) => (
+              <MotionBox
+                key={category}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                sx={{ mb: 6 }}
+              >
+                {/* Título de categoría elegante */}
+                <Box sx={{ mb: 4 }}>
+                  <Typography 
+                    variant="h3" 
+                    sx={{ 
+                      fontFamily: "'Playfair Display', serif",
+                      fontWeight: 600,
+                      fontSize: { xs: '1.5rem', md: '2rem' },
+                      color: '#D4AF37',
+                      letterSpacing: '0.02em',
+                      mb: 1
+                    }}
+                  >
+                    {category}
+                  </Typography>
+                  <Divider sx={{ 
+                    borderColor: 'rgba(212, 175, 55, 0.2)',
+                    width: '60px'
+                  }} />
+                </Box>
+                
+                {/* Lista de productos */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  <AnimatePresence>
+                    {categoryProducts.map((product, productIndex) => (
+                      <motion.div
+                        key={product.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.4, delay: productIndex * 0.05 }}
+                      >
+                        <ProductCard product={product} />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </Box>
+              </MotionBox>
+            ))}
           </Box>
         ) : (
           // Mostrar solo la categoría seleccionada
-          <Box display="grid" gridTemplateColumns={{
-            xs: '1fr',
-            sm: 'repeat(2, 1fr)',
-            lg: 'repeat(3, 1fr)'
-          }} gap={3}>
-            <AnimatePresence>
-              {filteredProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                >
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
+          <Box>
+            <Box sx={{ mb: 4 }}>
+              <Typography 
+                variant="h3" 
+                sx={{ 
+                  fontFamily: "'Playfair Display', serif",
+                  fontWeight: 600,
+                  fontSize: { xs: '1.5rem', md: '2rem' },
+                  color: '#D4AF37',
+                  letterSpacing: '0.02em',
+                  mb: 1
+                }}
+              >
+                {selectedCategory}
+              </Typography>
+              <Divider sx={{ 
+                borderColor: 'rgba(212, 175, 55, 0.2)',
+                width: '60px'
+              }} />
+            </Box>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              <AnimatePresence>
+                {filteredProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.4, delay: index * 0.05 }}
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </Box>
           </Box>
         )}
-
-        {/* Indicador de tiempo real */}
-        {connected && (
-          <Fab
-            size="small"
-            sx={{
-              position: 'fixed',
-              bottom: 16,
-              right: 16,
-              backgroundColor: 'rgba(76, 175, 80, 0.9)',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(76, 175, 80, 1)',
-              }
-            }}
-          >
-            <Box
-              sx={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                backgroundColor: 'white',
-                animation: 'pulse 2s infinite'
-              }}
-            />
-          </Fab>
-        )}
       </Container>
-
-      {/* Estilos para animaciones */}
-      <style jsx global>{`
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.7;
-            transform: scale(1.05);
-          }
-        }
-      `}</style>
     </Box>
   );
 }
