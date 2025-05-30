@@ -1,21 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { firebaseDB } from '../../../lib/firebase-database';
+import { FirebaseDatabase } from '../../../lib/firebase-database';
 
 export async function GET() {
   try {
-    const menus = await firebaseDB.getMenus();
-    
-    return NextResponse.json({
-      success: true,
-      data: menus
-    });
-  } catch (error) {
-    console.error('Error en GET /api/menus:', error);
+    const menus = await FirebaseDatabase.getMenus();
+    return NextResponse.json(menus);
+  } catch (error: any) {
+    console.error('Error fetching menus:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Error interno del servidor' 
-      },
+      { error: 'Failed to fetch menus', details: error.message },
       { status: 500 }
     );
   }
@@ -23,102 +16,24 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { name, description, isActive = true } = body;
-
-    if (!name || !description) {
+    const menuData = await request.json();
+    
+    // Validate required fields
+    if (!menuData.name || !menuData.description) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Nombre y descripción son requeridos' 
-        },
+        { error: 'Name and description are required' },
         { status: 400 }
       );
     }
 
-    const newMenu = await firebaseDB.createMenu({
-      name,
-      description,
-      isActive
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: newMenu
-    }, { status: 201 });
-  } catch (error) {
-    console.error('Error en POST /api/menus:', error);
+    const menuId = await FirebaseDatabase.createMenu(menuData);
+    const createdMenu = await FirebaseDatabase.getMenu(menuId);
+    
+    return NextResponse.json(createdMenu, { status: 201 });
+  } catch (error: any) {
+    console.error('Error creating menu:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Error interno del servidor' 
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { id, ...updateData } = body;
-
-    if (!id) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'ID del menú es requerido' 
-        },
-        { status: 400 }
-      );
-    }
-
-    const updatedMenu = await firebaseDB.updateMenu(id, updateData);
-
-    return NextResponse.json({
-      success: true,
-      data: updatedMenu
-    });
-  } catch (error) {
-    console.error('Error en PUT /api/menus:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Error interno del servidor' 
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'ID del menú es requerido' 
-        },
-        { status: 400 }
-      );
-    }
-
-    await firebaseDB.deleteMenu(id);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Menú eliminado correctamente'
-    });
-  } catch (error) {
-    console.error('Error en DELETE /api/menus:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Error interno del servidor' 
-      },
+      { error: 'Failed to create menu', details: error.message },
       { status: 500 }
     );
   }

@@ -25,16 +25,20 @@ export const storage = getStorage(app);
 if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
   try {
     // Solo conectar emuladores si no están ya conectados
-    if (!auth.config.emulator) {
+    try {
       connectAuthEmulator(auth, 'http://localhost:9099');
+    } catch {
+      // Auth emulator already connected
     }
-    if (!(db as any)._delegate._databaseId.projectId.includes('demo-')) {
+    try {
       connectFirestoreEmulator(db, 'localhost', 8080);
+    } catch {
+      // Firestore emulator already connected
     }
     if (!storage.app.options.storageBucket?.includes('demo-')) {
       connectStorageEmulator(storage, 'localhost', 9199);
     }
-  } catch (error) {
+  } catch {
     console.log('Emuladores ya conectados o no disponibles');
   }
 }

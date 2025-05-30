@@ -1,101 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { firebaseDB } from '../../../../lib/firebase-database';
+import { FirebaseDatabase } from '../../../../lib/firebase-database';
+import { initialProducts } from '../../../data/initialProducts';
 
 export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const password = searchParams.get('password');
-
-    // Verificar contraseña de administrador
+    // Get admin password from request
+    const { password } = await request.json();
+    
+    // Verify admin password
     if (password !== process.env.ADMIN_PASSWORD) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Contraseña de administrador incorrecta' 
-        },
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    await firebaseDB.initializeDatabase();
+    // Prepare initial data
+    const initialData = {
+      menus: [
+        {
+          id: 'menu-1',
+          name: 'Menú Principal',
+          description: 'Nuestro delicioso menú con los mejores platos',
+          isActive: true,
+          categories: ['Entradas', 'Platos Principales', 'Postres', 'Bebidas']
+        }
+      ],
+      products: initialProducts.map(product => ({
+        ...product,
+        menuId: 'menu-1'
+      }))
+    };
 
-    return NextResponse.json({
-      success: true,
-      message: 'Base de datos inicializada correctamente con datos de ejemplo'
-    });
-  } catch (error) {
-    console.error('Error inicializando base de datos:', error);
+    await FirebaseDatabase.initializeDatabase(initialData);
+      return NextResponse.json(
+      { message: 'Database initialized successfully' },
+      { status: 200 }
+      );
+  } catch (error: unknown) {
+    console.error('Error initializing database:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Error interno del servidor' 
-      },
+      { error: 'Failed to initialize database', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action');
-    const password = searchParams.get('password');
-
-    // Verificar contraseña de administrador
-    if (password !== process.env.ADMIN_PASSWORD) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Contraseña de administrador incorrecta' 
-        },
-        { status: 401 }
-      );
-    }
-
-    if (action === 'export') {
-      const data = await firebaseDB.exportData();
-      
-      return NextResponse.json({
-        success: true,
-        data,
-        message: 'Datos exportados correctamente'
-      });
-    }
-
-    if (action === 'schema') {
-      const schema = firebaseDB.getSchemaInfo();
-      
-      return NextResponse.json({
-        success: true,
-        data: schema,
-        message: 'Información del esquema obtenida'
-      });
-    }
-
-    if (action === 'statistics') {
-      const statistics = await firebaseDB.getStatistics();
-      
-      return NextResponse.json({
-        success: true,
-        data: statistics,
-        message: 'Estadísticas obtenidas correctamente'
-      });
-    }
-
+    const data = await FirebaseDatabase.exportData();
+    return NextResponse.json(data);
+  } catch (error: unknown) {
+    console.error('Error exporting data:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Acción no válida. Usa: export, schema, o statistics' 
-      },
-      { status: 400 }
-    );
-  } catch (error) {
-    console.error('Error en operación de base de datos:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Error interno del servidor' 
-      },
+      { error: 'Failed to export data', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

@@ -1,46 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { firebaseDB } from '../../../../lib/firebase-database';
+import { FirebaseDatabase } from '../../../../lib/firebase-database';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
-
-    if (!id) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'ID del producto es requerido' 
-        },
-        { status: 400 }
-      );
-    }
-
-    const product = await firebaseDB.getProduct(id);
-
+    const product = await FirebaseDatabase.getProduct(params.id);
     if (!product) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Producto no encontrado' 
-        },
+        { error: 'Product not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      data: product
-    });
-  } catch (error) {
-    console.error('Error en GET /api/products/[id]:', error);
+    return NextResponse.json(product);
+  } catch (error: any) {
+    console.error('Error fetching product:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Error interno del servidor' 
-      },
+      { error: 'Failed to fetch product', details: error.message },
       { status: 500 }
     );
   }
@@ -51,45 +29,36 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
-    const body = await request.json();
+    const productData = await request.json();
 
-    if (!id) {
+    // Check if product exists
+    const existingProduct = await FirebaseDatabase.getProduct(params.id);
+    if (!existingProduct) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'ID del producto es requerido' 
-        },
-        { status: 400 }
+        { error: 'Product not found' },
+        { status: 404 }
       );
     }
 
-    // Validar precio si se está actualizando
-    if (body.price !== undefined) {
-      if (typeof body.price !== 'number' || body.price <= 0) {
+    // If menuId is being updated, validate that the new menu exists
+    if (productData.menuId && productData.menuId !== existingProduct.menuId) {
+      const menu = await FirebaseDatabase.getMenu(productData.menuId);
+      if (!menu) {
         return NextResponse.json(
-          { 
-            success: false, 
-            error: 'El precio debe ser un número mayor a 0' 
-          },
-          { status: 400 }
+          { error: 'Menu not found' },
+          { status: 404 }
         );
       }
     }
 
-    const updatedProduct = await firebaseDB.updateProduct(id, body);
+    await FirebaseDatabase.updateProduct(params.id, productData);
+    const updatedProduct = await FirebaseDatabase.getProduct(params.id);
 
-    return NextResponse.json({
-      success: true,
-      data: updatedProduct
-    });
-  } catch (error) {
-    console.error('Error en PUT /api/products/[id]:', error);
+    return NextResponse.json(updatedProduct);
+  } catch (error: any) {
+    console.error('Error updating product:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Error interno del servidor' 
-      },
+      { error: 'Failed to update product', details: error.message },
       { status: 500 }
     );
   }
@@ -100,31 +69,25 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
-
-    if (!id) {
+    // Check if product exists
+    const existingProduct = await FirebaseDatabase.getProduct(params.id);
+    if (!existingProduct) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'ID del producto es requerido' 
-        },
-        { status: 400 }
+        { error: 'Product not found' },
+        { status: 404 }
       );
     }
 
-    await firebaseDB.deleteProduct(id);
+    await FirebaseDatabase.deleteProduct(params.id);
 
-    return NextResponse.json({
-      success: true,
-      message: 'Producto eliminado correctamente'
-    });
-  } catch (error) {
-    console.error('Error en DELETE /api/products/[id]:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Error interno del servidor' 
-      },
+      { message: 'Product deleted successfully' },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error('Error deleting product:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete product', details: error.message },
       { status: 500 }
     );
   }
