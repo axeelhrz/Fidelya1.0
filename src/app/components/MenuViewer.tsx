@@ -271,19 +271,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                     borderColor: 'rgba(59, 130, 246, 0.2)',
                     transform: 'translateY(-1px)',
                     boxShadow: '0 6px 20px rgba(59, 130, 246, 0.15)'
-                            },
-                  '&::before': showFilters ? {
-                    content: '""',
-                position: 'absolute',
-                    top: -2,
-                    left: -2,
-                    right: -2,
-                    bottom: -2,
-                    borderRadius: 'inherit',
-                    background: 'linear-gradient(45deg, rgba(59, 130, 246, 0.2), transparent, rgba(59, 130, 246, 0.2))',
-                    zIndex: -1,
-                    filter: 'blur(4px)'
-                  } : {}
+                  }
                 }}
               >
                 {showFilters ? <Close fontSize="small" /> : <FilterList fontSize="small" />}
@@ -357,11 +345,11 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
         {/* Hero section minimalista */}
         <MotionBox
           variants={headerVariants}
-          sx={{ textAlign: 'center', mb: { xs: 8, sm: 10 } }}
+          sx={{ textAlign: 'center', mb: { xs: 6, sm: 8 } }}
         >
           <Typography 
             sx={{ 
-              fontSize: { xs: '2.5rem', sm: '3.25rem', md: '3.75rem' },
+              fontSize: { xs: '2.25rem', sm: '2.75rem', md: '3.25rem' },
               fontWeight: 700,
               letterSpacing: '-0.04em',
               lineHeight: 0.9,
@@ -378,12 +366,12 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
 
           <Typography 
             sx={{ 
-              fontSize: { xs: '0.9rem', sm: '1rem' },
+              fontSize: { xs: '0.8rem', sm: '0.9rem' },
               fontWeight: 500,
               color: '#A1A1AA',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              mb: 4,
+              mb: 3,
               opacity: 0.8
             }}
           >
@@ -393,12 +381,12 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           <Typography 
             sx={{ 
               color: '#A1A1AA',
-              fontSize: { xs: '1rem', sm: '1.125rem' },
+              fontSize: { xs: '0.9rem', sm: '1rem' },
               fontWeight: 400,
-              maxWidth: 480,
+              maxWidth: 400,
               mx: 'auto',
               lineHeight: 1.6,
-              mb: 6
+              mb: 4
             }}
           >
             {menuDescription}
@@ -406,7 +394,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
 
           <Box
             sx={{
-              width: 120,
+              width: 80,
               height: 1,
               background: 'linear-gradient(90deg, transparent 0%, #3B82F6 30%, #F59E0B 70%, transparent 100%)',
               mx: 'auto'
@@ -414,217 +402,129 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           />
         </MotionBox>
 
-        {/* Sistema de filtros premium */}
+        {/* Sistema de filtros compacto para móvil */}
         <AnimatePresence>
           {showFilters && (
             <MotionBox
-              initial={{ opacity: 0, height: 0, y: -30 }}
+              initial={{ opacity: 0, height: 0, y: -20 }}
               animate={{ opacity: 1, height: 'auto', y: 0 }}
-              exit={{ opacity: 0, height: 0, y: -30 }}
-              transition={{ duration: 0.5, ease: [0.04, 0.62, 0.23, 0.98] }}
-              sx={{ mb: { xs: 8, sm: 10 } }}
+              exit={{ opacity: 0, height: 0, y: -20 }}
+              transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+              sx={{ mb: { xs: 6, sm: 8 } }}
             >
               <Box
                 sx={{ 
-                  position: 'relative',
-                  borderRadius: 4,
-                  background: 'linear-gradient(135deg, rgba(44, 44, 46, 0.6) 0%, rgba(28, 28, 30, 0.8) 100%)',
-                  backdropFilter: 'blur(32px)',
+                  p: { xs: 3, sm: 4 }, 
+                  borderRadius: 3,
+                  backgroundColor: 'rgba(44, 44, 46, 0.4)',
+                  backdropFilter: 'blur(24px)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                  overflow: 'hidden',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, transparent 50%, rgba(245, 158, 11, 0.02) 100%)',
-                    pointerEvents: 'none'
-                  }
                 }}
               >
-                <Box sx={{ position: 'relative', zIndex: 1, p: { xs: 4, sm: 5 } }}>
-                  {/* Header del panel de filtros */}
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                {/* Header compacto */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
                     justifyContent: 'space-between',
-                    mb: 4
+                  mb: 3
                   }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Box
-                        sx={{
-                          p: 1,
-                          borderRadius: 2,
-                          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.08) 100%)',
-                          border: '1px solid rgba(59, 130, 246, 0.2)'
-                        }}
-                      >
-                        <FilterList sx={{ color: '#3B82F6', fontSize: 18 }} />
-    </Box>
-                      <Typography 
-                        sx={{ 
-                          fontWeight: 600,
-                          color: '#F5F5F7',
-                          fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                  <Typography 
+                    sx={{ 
+                      fontWeight: 600,
+                      color: '#F5F5F7',
+                      fontSize: { xs: '1rem', sm: '1.125rem' },
                           letterSpacing: '-0.02em'
                         }}
                       >
-                        Filtrar Menú
+                    Categorías
                       </Typography>
-                    </Box>
-                    
-                    {/* Contador activo */}
-                    <Box
-                      sx={{
-                        px: 2,
-                        py: 0.5,
-                        borderRadius: 2,
-                        backgroundColor: 'rgba(245, 158, 11, 0.12)',
-                        border: '1px solid rgba(245, 158, 11, 0.2)'
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          color: '#F59E0B',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          letterSpacing: '0.02em'
-                        }}
-                      >
-                        {filteredProducts.length} productos
-                      </Typography>
-                    </Box>
-                  </Box>
-                  
-                  {/* Grid de categorías premium */}
-                  <Box
+                  <Typography
                     sx={{
-                      display: 'grid',
-                      gridTemplateColumns: { 
-                        xs: 'repeat(2, 1fr)', 
-                        sm: 'repeat(3, 1fr)', 
-                        md: 'repeat(4, 1fr)' 
-                      },
-                      gap: 2
+                      color: '#F59E0B',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      px: 2,
+                      py: 0.5,
+                      backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                      borderRadius: 1.5,
+                      border: '1px solid rgba(245, 158, 11, 0.2)'
                     }}
                   >
+                    {filteredProducts.length}
+                  </Typography>
+                    </Box>
+                
+                {/* Chips horizontales para móvil */}
+                <Stack 
+                  direction="row" 
+                  spacing={1.5}
+                  sx={{ 
+                    flexWrap: 'wrap',
+                    gap: 1.5,
+                  }}
+                >
                     {categories.map((category, index) => (
                       <MotionBox
                         key={category.name}
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        transition={{ 
-                          delay: index * 0.1, 
-                          duration: 0.4,
-                          ease: [0.04, 0.62, 0.23, 0.98]
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ 
+                        delay: index * 0.05, 
+                        duration: 0.3
                         }}
-                        whileHover={{ scale: 1.02, y: -2 }}
+                      whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <Box
+                      <Chip
+                        label={`${category.name} (${category.count})`}
                           onClick={() => setSelectedCategory(category.name)}
+                        variant={selectedCategory === category.name ? 'filled' : 'outlined'}
                           sx={{
-                            p: 3,
-                            borderRadius: 3,
-                            cursor: 'pointer',
-                            position: 'relative',
-                            background: selectedCategory === category.name 
-                              ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)'
-                              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                            border: selectedCategory === category.name 
-                              ? '1px solid rgba(59, 130, 246, 0.3)' 
-                              : '1px solid rgba(255, 255, 255, 0.08)',
+                          minHeight: { xs: 36, sm: 40 },
+                          borderRadius: 2,
+                          fontWeight: selectedCategory === category.name ? 600 : 500,
+                          fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                          px: { xs: 1.5, sm: 2 },
                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            '&:hover': {
-                              backgroundColor: selectedCategory === category.name 
-                                ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(59, 130, 246, 0.15) 100%)'
-                                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
-                              borderColor: selectedCategory === category.name 
-                                ? 'rgba(59, 130, 246, 0.4)' 
-                                : 'rgba(255, 255, 255, 0.15)',
-                              boxShadow: selectedCategory === category.name 
-                                ? '0 8px 32px rgba(59, 130, 246, 0.15)' 
-                                : '0 4px 16px rgba(0, 0, 0, 0.1)'
-                            },
-                            '&::before': selectedCategory === category.name ? {
-                              content: '""',
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              height: '2px',
-                              background: 'linear-gradient(90deg, #3B82F6 0%, rgba(59, 130, 246, 0.5) 100%)',
-                              borderRadius: '3px 3px 0 0'
-                            } : {}
-                          }}
-                        >
-                          <Typography
-                            sx={{
-                              fontWeight: selectedCategory === category.name ? 600 : 500,
-                              fontSize: { xs: '0.875rem', sm: '0.9rem' },
-                              color: selectedCategory === category.name ? '#3B82F6' : '#F5F5F7',
-                              letterSpacing: '-0.01em',
-                              mb: 1,
-                              textAlign: 'center'
-                            }}
-                          >
-                            {category.name}
-                          </Typography>
-                          
-                          <Typography
-                            sx={{
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              color: selectedCategory === category.name ? '#3B82F6' : '#A1A1AA',
-                              textAlign: 'center',
-                              opacity: 0.8
-                            }}
-                          >
-                            {category.count} {category.count === 1 ? 'item' : 'items'}
-                          </Typography>
-                        </Box>
+                          cursor: 'pointer',
+                          backgroundColor: selectedCategory === category.name 
+                            ? '#3B82F6' 
+                            : 'rgba(255, 255, 255, 0.02)',
+                          color: selectedCategory === category.name 
+                            ? '#FFFFFF' 
+                            : '#A1A1AA',
+                          borderColor: selectedCategory === category.name 
+                            ? '#3B82F6' 
+                            : 'rgba(161, 161, 170, 0.2)',
+                          '&:hover': {
+                            backgroundColor: selectedCategory === category.name 
+                              ? '#2563eb' 
+                              : 'rgba(255,255,255,0.06)',
+                            color: selectedCategory === category.name 
+                              ? '#FFFFFF' 
+                              : '#F5F5F7',
+                            borderColor: selectedCategory === category.name 
+                              ? '#2563eb' 
+                              : 'rgba(161, 161, 170, 0.3)',
+                          },
+                        }}
+                      />
                       </MotionBox>
                     ))}
-                  </Box>
-
-                  {/* Footer del panel */}
-                  <Box
-                    sx={{
-                      mt: 4,
-                      pt: 3,
-                      borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-                      display: 'flex',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        color: '#A1A1AA',
-                        fontSize: '0.8rem',
-                        fontWeight: 500,
-                        opacity: 0.7,
-                        textAlign: 'center'
-                      }}
-                    >
-                      Selecciona una categoría para filtrar el menú
-                    </Typography>
-                  </Box>
-                </Box>
+                </Stack>
               </Box>
             </MotionBox>
           )}
         </AnimatePresence>
 
-        {/* Indicador de filtro activo */}
+        {/* Indicador de filtro activo compacto */}
         {selectedCategory !== 'Todas' && (
           <MotionBox
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             sx={{ 
-              mb: 6,
+              mb: 4,
               textAlign: 'center'
             }}
           >
@@ -632,22 +532,22 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               sx={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 2,
-                px: 3,
-                py: 1.5,
+                gap: 1.5,
+                px: 2.5,
+                py: 1,
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                borderRadius: 3,
+                borderRadius: 2.5,
                 border: '1px solid rgba(59, 130, 246, 0.2)'
               }}
             >
               <Typography 
                 sx={{ 
                   color: '#3B82F6',
-                  fontSize: '0.875rem',
+                  fontSize: '0.8rem',
                   fontWeight: 600
                 }}
               >
-                Mostrando: {selectedCategory}
+                {selectedCategory}
               </Typography>
               <MotionBox
                 whileHover={{ scale: 1.1 }}
@@ -659,14 +559,14 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                   sx={{
                     color: '#3B82F6',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    width: 24,
-                    height: 24,
+                    width: 20,
+                    height: 20,
                     '&:hover': {
                       backgroundColor: 'rgba(59, 130, 246, 0.2)'
                     }
                   }}
                 >
-                  <Close sx={{ fontSize: 14 }} />
+                  <Close sx={{ fontSize: 12 }} />
                 </IconButton>
               </MotionBox>
             </Box>
@@ -675,7 +575,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
 
         {/* Secciones del menú */}
         <AnimatePresence mode="wait">
-          <Stack spacing={{ xs: 6, sm: 8 }}>
+          <Stack spacing={{ xs: 5, sm: 6 }}>
             {Object.entries(groupedProducts).map(([category, categoryProducts], index) => (
               <MenuSection
                 key={`${category}-${selectedCategory}`}
@@ -687,20 +587,20 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           </Stack>
         </AnimatePresence>
 
-        {/* Footer premium */}
+        {/* Footer premium compacto */}
         <MotionBox
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
           sx={{ 
-            mt: 16,
-            pt: 8,
+            mt: 12,
+            pt: 6,
             textAlign: 'center'
           }}
         >
           <Box
             sx={{
-              p: 6,
+              p: { xs: 4, sm: 5 },
               borderRadius: 3,
               background: 'rgba(44, 44, 46, 0.3)',
               backdropFilter: 'blur(32px)',
@@ -725,7 +625,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               <Typography 
                 sx={{ 
                   color: '#F5F5F7',
-                  fontSize: '1rem',
+                  fontSize: '0.9rem',
                   fontWeight: 600,
                   mb: 1,
                   letterSpacing: '-0.01em'
@@ -736,7 +636,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               <Typography 
                 sx={{ 
                   color: '#A1A1AA',
-                  fontSize: '0.875rem',
+                  fontSize: '0.8rem',
                   fontWeight: 400,
                   mb: 3,
                   lineHeight: 1.6,
@@ -748,7 +648,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               
               <Box
                 sx={{
-                  width: 60,
+                  width: 50,
                   height: 1,
                   background: 'linear-gradient(90deg, transparent 0%, #F59E0B 50%, transparent 100%)',
                   mx: 'auto'
