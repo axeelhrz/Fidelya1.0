@@ -1,70 +1,68 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Product, ProductCategory } from '../../types';
+import { useState, useEffect, useCallback } from 'react';
+import { Product, ProductCategory, AdminStatistics } from '../../types';
+import { firebaseDB } from '../../../lib/firebase-database';
 
 interface UseAdminDataReturn {
   products: Product[];
   categories: ProductCategory[];
   loading: boolean;
   error: string | null;
+  statistics: AdminStatistics | null;
   createProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
+  updateProductsAvailability: (productIds: string[], isAvailable: boolean) => Promise<void>;
   refreshProducts: () => Promise<void>;
+  refreshStatistics: () => Promise<void>;
 }
 
 export function useAdminData(): UseAdminDataReturn {
   const [products, setProducts] = useState<Product[]>([]);
+  const [statistics, setStatistics] = useState<AdminStatistics | null>(null);
   const [categories] = useState<ProductCategory[]>([
     'Bebidas', 'Sin Alcohol', 'Tapas', 'Principales', 'Postres', 'Café', 'Promociones'
   ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await fetch('/api/admin/products');
-      const data = await response.json();
-      
-      if (data.success) {
-        setProducts(data.data);
-      } else {
-        setError(data.error || 'Error al cargar productos');
-      }
-    } catch {
-      setError('Error de conexión');
+      const productsData = await firebaseDB.getProducts();
+      setProducts(productsData);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar productos';
+      setError(errorMessage);
+      console.error('Error fetching products:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const fetchStatistics = useCallback(async () => {
+    try {
+      const stats = await firebaseDB.getStatistics();
+      setStatistics(stats);
+    } catch (err) {
+      console.error('Error fetching statistics:', err);
+    }
+  }, []);
 
   const createProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await fetch('/api/admin/products', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productData),
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setProducts(prev => [...prev, data.data]);
-      } else {
-        setError(data.error || 'Error al crear producto');
-        throw new Error(data.error);
-      }
+      const newProduct = await firebaseDB.createProduct(productData);
+      setProducts(prev => [newProduct, ...prev]);
+      await fetchStatistics(); // Actualizar estadísticas
     } catch (err) {
-      setError('Error al crear producto');
+      const errorMessage = err instanceof Error ? err.message : 'Error al crear producto';
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);
@@ -76,28 +74,16 @@ export function useAdminData(): UseAdminDataReturn {
     setError(null);
     
     try {
-      const response = await fetch('/api/admin/products', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id, ...productData }),
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setProducts(prev => prev.map(p => p.id === id ? data.data : p));
-      } else {
-        setError(data.error || 'Error al actualizar producto');
-        throw new Error(data.error);
-      }
+      const updatedProduct = await firebaseDB.updateProduct(id, productData);
+      setProducts(prev => prev.map(p => p.id === id ? updatedProduct : p));
+      await fetchStatistics(); // Actualizar estadísticas
     } catch (err) {
-      setError('Error al actualizar producto');
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar producto';
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);
-    }
+}
   };
 
   const deleteProduct = async (id: string) => {
@@ -105,20 +91,35 @@ export function useAdminData(): UseAdminDataReturn {
     setError(null);
     
     try {
-      const response = await fetch(`/api/admin/products?id=${id}`, {
-        method: 'DELETE',
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setProducts(prev => prev.filter(p => p.id !== id));
-      } else {
-        setError(data.error || 'Error al eliminar producto');
-        throw new Error(data.error);
-      }
+      await firebaseDB.deleteProduct(id);
+      setProducts(prev => prev.filter(p => p.id !== id));
+      await fetchStatistics(); // Actualizar estadísticas
     } catch (err) {
-      setError('Error al eliminar producto');
+      const errorMessage = err instanceof Error ? err.message : 'Error al eliminar producto';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProductsAvailability = async (productIds: string[], isAvailable: boolean) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await firebaseDB.updateProductsAvailability(productIds, isAvailable);
+      
+      // Actualizar estado local
+      setProducts(prev => prev.map(product => 
+        productIds.includes(product.id) 
+          ? { ...product, isAvailable }
+          : product
+      ));
+      
+      await fetchStatistics(); // Actualizar estadísticas
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar disponibilidad';
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);
@@ -129,21 +130,81 @@ export function useAdminData(): UseAdminDataReturn {
     await fetchProducts();
   };
 
-  // Cargar productos al montar el componente
+  const refreshStatistics = async () => {
+    await fetchStatistics();
+  };
+
+  // Cargar datos iniciales
   useEffect(() => {
     fetchProducts();
-  }, []);
+    fetchStatistics();
+  }, [fetchProducts, fetchStatistics]);
 
   return {
     products,
     categories,
     loading,
     error,
+    statistics,
     createProduct,
     updateProduct,
     deleteProduct,
+    updateProductsAvailability,
     refreshProducts,
+    refreshStatistics,
   };
+}
+
+// Hook para datos en tiempo real
+export function useRealtimeAdminData() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    
+    // Suscribirse a todos los productos (sin filtro de menú específico)
+    const unsubscribe = firebaseDB.realtime.subscribeToProducts('', (productsData) => {
+      setProducts(productsData);
+      setLoading(false);
+      setError(null);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  return { products, loading, error };
+}
+
+// Hook para estadísticas en tiempo real
+export function useRealtimeStatistics() {
+  const [statistics, setStatistics] = useState<AdminStatistics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const stats = await firebaseDB.getStatistics();
+        setStatistics(stats);
+      } catch (err) {
+        console.error('Error fetching real-time statistics:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+    
+    // Actualizar estadísticas cada 30 segundos
+    const interval = setInterval(fetchStats, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  return { statistics, loading };
 }
 
 // Hook adicional para estadísticas del admin
