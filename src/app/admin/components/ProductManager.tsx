@@ -23,27 +23,59 @@ import {
   IconButton,
   Typography,
   Alert,
-  Chip
+  Chip,
+  FormControlLabel,
+  Switch,
+  Autocomplete
 } from '@mui/material';
-import { Edit, Delete, Add } from '@mui/icons-material';
+import { Edit, Delete, Add, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useFirebaseMenu } from '../../../hooks/useFirebaseMenu';
 import { Product, Menu, ProductCategory } from '../../types';
+
 interface ProductManagerProps {
   products: Product[];
   menus: Menu[];
+  selectedMenuId: string;
 }
 
-export default function ProductManager({ products, menus }: ProductManagerProps) {
+const PRODUCT_CATEGORIES: { value: ProductCategory; label: string }[] = [
+  { value: 'APPETIZER', label: 'Entrada' },
+  { value: 'MAIN_COURSE', label: 'Plato Principal' },
+  { value: 'DESSERT', label: 'Postre' },
+  { value: 'BEVERAGE', label: 'Bebida' },
+  { value: 'COCKTAIL', label: 'Cóctel' },
+  { value: 'WINE', label: 'Vino' },
+  { value: 'BEER', label: 'Cerveza' },
+  { value: 'COFFEE', label: 'Café' },
+  { value: 'NON_ALCOHOLIC', label: 'Sin Alcohol' },
+  { value: 'SIDE_DISH', label: 'Acompañamiento' },
+  { value: 'SNACK', label: 'Snack' }
+];
+
+const COMMON_TAGS = [
+  'recomendado', 'nuevo', 'popular', 'especial', 'premium', 'clásico',
+  'picante', 'dulce', 'refrescante', 'caliente', 'frío', 'casero',
+  'artesanal', 'importado', 'nacional', 'temporada', 'compartir'
+];
+
+export default function ProductManager({ products, menus, selectedMenuId }: ProductManagerProps) {
   const [open, setOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
-    category: '',
-    menuId: '',
+    category: '' as ProductCategory,
+    menuId: selectedMenuId,
     image: '',
-    isAvailable: true
+    isAvailable: true,
+    allergens: [] as string[],
+    tags: [] as string[],
+    preparationTime: '',
+    calories: '',
+    isVegan: false,
+    isVegetarian: false,
+    isGlutenFree: false
   });
 
   const {
@@ -60,10 +92,17 @@ export default function ProductManager({ products, menus }: ProductManagerProps)
         name: product.name,
         description: product.description || '',
         price: product.price.toString(),
-        category: product.category,
-        menuId: product.menuId || '',
-        image: (product as Product & { image?: string }).image || '',
-        isAvailable: product.isAvailable ?? true
+        category: product.category as ProductCategory,
+        menuId: product.menuId || selectedMenuId,
+        image: product.image || '',
+        isAvailable: product.isAvailable ?? true,
+        allergens: product.allergens || [],
+        tags: product.tags || [],
+        preparationTime: product.preparationTime?.toString() || '',
+        calories: product.nutritionalInfo?.calories?.toString() || '',
+        isVegan: product.nutritionalInfo?.isVegan || false,
+        isVegetarian: product.nutritionalInfo?.isVegetarian || false,
+        isGlutenFree: product.nutritionalInfo?.isGlutenFree || false
       });
     } else {
       setEditingProduct(null);
@@ -71,10 +110,17 @@ export default function ProductManager({ products, menus }: ProductManagerProps)
         name: '',
         description: '',
         price: '',
-        category: '',
-        menuId: menus[0]?.id || '',
+        category: '' as ProductCategory,
+        menuId: selectedMenuId,
         image: '',
-        isAvailable: true
+        isAvailable: true,
+        allergens: [],
+        tags: [],
+        preparationTime: '',
+        calories: '',
+        isVegan: false,
+        isVegetarian: false,
+        isGlutenFree: false
       });
     }
     setOpen(true);
@@ -91,10 +137,19 @@ export default function ProductManager({ products, menus }: ProductManagerProps)
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
-        category: formData.category as ProductCategory,
+        category: formData.category,
         menuId: formData.menuId,
         image: formData.image,
-        isAvailable: formData.isAvailable
+        isAvailable: formData.isAvailable,
+        allergens: formData.allergens,
+        tags: formData.tags,
+        preparationTime: formData.preparationTime ? parseInt(formData.preparationTime) : undefined,
+        nutritionalInfo: {
+          calories: formData.calories ? parseInt(formData.calories) : undefined,
+          isVegan: formData.isVegan,
+          isVegetarian: formData.isVegetarian,
+          isGlutenFree: formData.isGlutenFree
+        }
       };
 
       if (editingProduct) {
@@ -119,14 +174,24 @@ export default function ProductManager({ products, menus }: ProductManagerProps)
     }
   };
 
+  const toggleAvailability = async (product: Product) => {
+    try {
+      await updateProduct(product.id, { isAvailable: !product.isAvailable });
+    } catch (error) {
+      console.error('Error updating product availability:', error);
+    }
+  };
+
   const getMenuName = (menuId: string) => {
     const menu = menus.find(m => m.id === menuId);
     return menu?.name || 'Menú no encontrado';
   };
 
-  const getAvailableCategories = () => {
-    return ['APPETIZER', 'MAIN_COURSE', 'DESSERT', 'BEVERAGE', 'SIDE_DISH'];
+  const getCategoryLabel = (category: string) => {
+    const cat = PRODUCT_CATEGORIES.find(c => c.value === category);
+    return cat?.label || category;
   };
+
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -134,13 +199,13 @@ export default function ProductManager({ products, menus }: ProductManagerProps)
           Gestión de Productos ({products.length})
         </Typography>
         <Button
-            variant="contained"
+          variant="contained"
           startIcon={<Add />}
           onClick={() => handleOpen()}
-          disabled={menus.length === 0}
-          >
+          disabled={!selectedMenuId}
+        >
           Agregar Producto
-          </Button>
+        </Button>
       </Box>
 
       {error && (
@@ -149,20 +214,36 @@ export default function ProductManager({ products, menus }: ProductManagerProps)
         </Alert>
       )}
 
-      {menus.length === 0 ? (
+      {!selectedMenuId ? (
         <Alert severity="warning">
-          Necesitas crear al menos un menú antes de agregar productos.
+          Selecciona un menú para gestionar productos.
         </Alert>
+      ) : products.length === 0 ? (
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No hay productos en este menú
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={3}>
+            Agrega tu primer producto para comenzar
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => handleOpen()}
+          >
+            Agregar Primer Producto
+          </Button>
+        </Paper>
       ) : (
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Nombre</TableCell>
+                <TableCell>Producto</TableCell>
                 <TableCell>Categoría</TableCell>
                 <TableCell>Precio</TableCell>
-                <TableCell>Menú</TableCell>
                 <TableCell>Estado</TableCell>
+                <TableCell>Tags</TableCell>
                 <TableCell>Acciones</TableCell>
               </TableRow>
             </TableHead>
@@ -171,30 +252,78 @@ export default function ProductManager({ products, menus }: ProductManagerProps)
                 <TableRow key={product.id}>
                   <TableCell>
                     <Box>
-                      <Typography variant="subtitle2">
+                      <Typography variant="subtitle2" gutterBottom>
                         {product.name}
                       </Typography>
                       {product.description && (
                         <Typography variant="caption" color="text.secondary">
-                          {product.description.substring(0, 50)}...
+                          {product.description.length > 60 
+                            ? `${product.description.substring(0, 60)}...`
+                            : product.description
+                          }
+                        </Typography>
+                      )}
+                      {product.preparationTime && (
+                        <Typography variant="caption" display="block" color="text.secondary">
+                          ⏱️ {product.preparationTime} min
                         </Typography>
                       )}
                     </Box>
                   </TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
-                  <TableCell>{getMenuName(product.menuId || '')}</TableCell>
                   <TableCell>
                     <Chip
-                      label={product.isAvailable ? 'Disponible' : 'No disponible'}
-                      color={product.isAvailable ? 'success' : 'error'}
+                      label={getCategoryLabel(product.category)}
                       size="small"
+                      variant="outlined"
                     />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle2">
+                      ${product.price.toLocaleString()}
+                    </Typography>
+                    {product.nutritionalInfo?.calories && (
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        {product.nutritionalInfo.calories} cal
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Chip
+                        label={product.isAvailable ? 'Disponible' : 'No disponible'}
+                        color={product.isAvailable ? 'success' : 'error'}
+                        size="small"
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => toggleAvailability(product)}
+                        color={product.isAvailable ? 'success' : 'error'}
+                      >
+                        {product.isAvailable ? <Visibility /> : <VisibilityOff />}
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" flexWrap="wrap" gap={0.5}>
+                      {product.nutritionalInfo?.isVegan && (
+                        <Chip key="vegan" label="Vegano" size="small" color="success" variant="outlined" />
+                      )}
+                      {product.nutritionalInfo?.isVegetarian && (
+                        <Chip key="vegetarian" label="Vegetariano" size="small" color="info" variant="outlined" />
+                      )}
+                      {product.tags?.slice(0, 2).map((tag, index) => (
+                        <Chip key={`tag-${index}`} label={tag} size="small" variant="outlined" />
+                      ))}
+                      {product.tags && product.tags.length > 2 && (
+                        <Chip key="more-tags" label={`+${product.tags.length - 2}`} size="small" variant="outlined" />
+                      )}
+                    </Box>
                   </TableCell>
                   <TableCell>
                     <IconButton
                       onClick={() => handleOpen(product)}
                       size="small"
+                      color="primary"
                     >
                       <Edit />
                     </IconButton>
@@ -219,82 +348,210 @@ export default function ProductManager({ products, menus }: ProductManagerProps)
           {editingProduct ? 'Editar Producto' : 'Agregar Producto'}
         </DialogTitle>
         <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2} pt={1}>
-            <TextField
-              fullWidth
-              label="Nombre del Producto"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
-            
-            <TextField
-              fullWidth
-              label="Descripción"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              multiline
-              rows={3}
-            />
-            
-            <TextField
-              fullWidth
-              label="Precio"
-              type="number"
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              required
-              inputProps={{ step: 0.01, min: 0 }}
-            />
-            
-            <FormControl fullWidth required>
-              <InputLabel>Menú</InputLabel>
-              <Select
-                value={formData.menuId}
-                onChange={(e) => setFormData({ ...formData, menuId: e.target.value, category: '' })}
-                label="Menú"
-              >
-                {menus.map((menu) => (
-                  <MenuItem key={menu.id} value={menu.id}>
-                    {menu.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            
-            <FormControl fullWidth required disabled={!formData.menuId}>
-              <InputLabel>Categoría</InputLabel>
-              <Select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                label="Categoría"
-              >
-                {getAvailableCategories().map((category) => (
-                  <MenuItem key={category} value={category}>
-                    {category}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            
-            <TextField
-              fullWidth
-              label="URL de Imagen"
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            />
-            
-            <FormControl fullWidth>
-              <InputLabel>Estado</InputLabel>
-              <Select
-                value={formData.isAvailable ? 'true' : 'false'}
-                onChange={(e) => setFormData({ ...formData, isAvailable: e.target.value === 'true' })}
-                label="Estado"
-              >
-                <MenuItem value="true">Disponible</MenuItem>
-                <MenuItem value="false">No disponible</MenuItem>
-              </Select>
-            </FormControl>
+          <Box display="flex" flexDirection="column" gap={3} pt={1}>
+            {/* Información básica */}
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>
+                Información Básica
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={2}>
+                <TextField
+                  fullWidth
+                  label="Nombre del Producto"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+                
+                <TextField
+                  fullWidth
+                  label="Descripción"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  multiline
+                  rows={3}
+                />
+                
+                <Box display="flex" gap={2}>
+                  <TextField
+                    label="Precio"
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    required
+                    inputProps={{ step: 0.01, min: 0 }}
+                    sx={{ flex: 1 }}
+                  />
+                  
+                  <TextField
+                    label="Tiempo de Preparación (min)"
+                    type="number"
+                    value={formData.preparationTime}
+                    onChange={(e) => setFormData({ ...formData, preparationTime: e.target.value })}
+                    inputProps={{ min: 0 }}
+                    sx={{ flex: 1 }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Categoría y disponibilidad */}
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>
+                Categoría y Disponibilidad
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={2}>
+                <FormControl fullWidth required>
+                  <InputLabel>Categoría</InputLabel>
+                  <Select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as ProductCategory })}
+                    label="Categoría"
+                  >
+                    {PRODUCT_CATEGORIES.map((category) => (
+                      <MenuItem key={category.value} value={category.value}>
+                        {category.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.isAvailable}
+                      onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })}
+                    />
+                  }
+                  label="Producto disponible"
+                />
+              </Box>
+            </Box>
+
+            {/* Tags y alérgenos */}
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>
+                Tags y Alérgenos
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={2}>
+                <Autocomplete
+                  multiple
+                  options={COMMON_TAGS}
+                  freeSolo
+                  value={formData.tags}
+                  onChange={(event, newValue) => {
+                    setFormData({ ...formData, tags: newValue });
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip 
+                        key={`tag-${index}`}
+                        variant="outlined" 
+                        label={option} 
+                        {...getTagProps({ index })} 
+                      />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Tags"
+                      placeholder="Agregar tags..."
+                />
+                  )}
+                />
+                
+                <Autocomplete
+                  multiple
+                  options={['Gluten', 'Lácteos', 'Frutos secos', 'Huevos', 'Soja', 'Mariscos', 'Pescado']}
+                  freeSolo
+                  value={formData.allergens}
+                  onChange={(event, newValue) => {
+                    setFormData({ ...formData, allergens: newValue });
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip 
+                        key={`allergen-${index}`}
+                        variant="outlined" 
+                        label={option} 
+                        color="warning" 
+                        {...getTagProps({ index })} 
+                      />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Alérgenos"
+                      placeholder="Agregar alérgenos..."
+                    />
+                  )}
+                />
+            </Box>
+            </Box>
+            {/* Información nutricional */}
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>
+                Información Nutricional
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={2}>
+              <TextField
+                  label="Calorías"
+                  type="number"
+                  value={formData.calories}
+                  onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
+                  inputProps={{ min: 0 }}
+                  fullWidth
+              />
+                
+                <Box display="flex" gap={2}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.isVegan}
+                        onChange={(e) => setFormData({ ...formData, isVegan: e.target.checked })}
+                      />
+                    }
+                    label="Vegano"
+                  />
+                  
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.isVegetarian}
+                        onChange={(e) => setFormData({ ...formData, isVegetarian: e.target.checked })}
+                      />
+                    }
+                    label="Vegetariano"
+                  />
+                  
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.isGlutenFree}
+                        onChange={(e) => setFormData({ ...formData, isGlutenFree: e.target.checked })}
+                      />
+                    }
+                    label="Sin Gluten"
+                  />
+    </Box>
+              </Box>
+            </Box>
+
+            {/* Imagen */}
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>
+                Imagen
+              </Typography>
+              <TextField
+                fullWidth
+                label="URL de Imagen"
+                value={formData.image}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                placeholder="https://ejemplo.com/imagen.jpg"
+              />
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -302,7 +559,7 @@ export default function ProductManager({ products, menus }: ProductManagerProps)
           <Button 
             onClick={handleSubmit} 
             variant="contained"
-            disabled={!formData.name || !formData.price || !formData.menuId || !formData.category}
+            disabled={!formData.name || !formData.price || !formData.category}
           >
             {editingProduct ? 'Actualizar' : 'Crear'}
           </Button>
