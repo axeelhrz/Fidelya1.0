@@ -14,7 +14,6 @@ import {
   ExpandMore, 
   AccessTime, 
   LocalOffer,
-  Eco,
   Restaurant,
   Warning
 } from '@mui/icons-material';
@@ -118,8 +117,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           >
             {product.nutritionalInfo?.isVegan && (
               <Chip
-                icon={<Eco />}
-                label="Vegano"
+                label="🌱 Vegano"
                 size="small"
                 sx={{
                   backgroundColor: 'rgba(76, 175, 80, 0.9)',
@@ -237,9 +235,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Tags principales */}
         {product.tags && product.tags.length > 0 && (
           <Box display="flex" flexWrap="wrap" gap={0.5} mb={2}>
-            {product.tags.slice(0, 3).map((tag) => (
+            {product.tags.slice(0, 3).map((tag, index) => (
               <Chip
-                key={tag}
+                key={`tag-${index}`}
                 label={tag}
                 size="small"
                 variant="outlined"
@@ -270,7 +268,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Box display="flex" gap={1}>
             {product.nutritionalInfo?.isVegetarian && !product.nutritionalInfo?.isVegan && (
               <Chip
-                label="Vegetariano"
+                label="🥬 Vegetariano"
                 size="small"
                 sx={{
                   backgroundColor: 'rgba(76, 175, 80, 0.2)',
@@ -281,7 +279,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             )}
             {product.nutritionalInfo?.isGlutenFree && (
               <Chip
-                label="Sin Gluten"
+                label="🌾 Sin Gluten"
                 size="small"
                 sx={{
                   backgroundColor: 'rgba(255, 152, 0, 0.2)',
@@ -324,12 +322,12 @@ export default function ProductCard({ product }: ProductCardProps) {
             {product.allergens && product.allergens.length > 0 && (
               <Box mb={2}>
                 <Typography variant="caption" color="#B8B8B8" gutterBottom display="block">
-                  Alérgenos:
+                  ⚠️ Alérgenos:
                 </Typography>
                 <Box display="flex" flexWrap="wrap" gap={0.5}>
-                  {product.allergens.map((allergen) => (
+                  {product.allergens.map((allergen, index) => (
                     <Chip
-                      key={allergen}
+                      key={`allergen-${index}`}
                       label={allergen}
                       size="small"
                       color="warning"
@@ -345,12 +343,12 @@ export default function ProductCard({ product }: ProductCardProps) {
             {product.tags && product.tags.length > 3 && (
               <Box>
                 <Typography variant="caption" color="#B8B8B8" gutterBottom display="block">
-                  Características:
+                  ✨ Características:
                 </Typography>
                 <Box display="flex" flexWrap="wrap" gap={0.5}>
-                  {product.tags.map((tag) => (
+                  {product.tags.map((tag, index) => (
                     <Chip
-                      key={tag}
+                      key={`expanded-tag-${index}`}
                       label={tag}
                       size="small"
                       variant="outlined"
