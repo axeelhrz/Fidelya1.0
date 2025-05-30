@@ -48,33 +48,86 @@ const AdminDashboard: React.FC = () => {
   const [selectedMenuId, setSelectedMenuId] = useState<string>('');
   const [initLoading, setInitLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // Verificar autenticación al cargar
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  // Verificar autenticación de forma más robusta
   useEffect(() => {
-    const checkAuth = () => {
-      const authStatus = localStorage.getItem('admin-authenticated');
-      if (authStatus === 'true') {
-        setIsAuthenticated(true);
-      } else {
-      router.push('/admin');
+    const checkAuthentication = () => {
+      try {
+        const authStatus = localStorage.getItem('admin-authenticated');
+        
+        if (authStatus === 'true') {
+          setIsAuthenticated(true);
+        } else {
+          // Si no está autenticado, redirigir inmediatamente
+          setIsAuthenticated(false);
+          router.replace('/admin');
+          return;
+        }
+    } catch (error) {
+        // Si hay error accediendo al localStorage, redirigir
+        console.error('Error checking authentication:', error);
+        setIsAuthenticated(false);
+        router.replace('/admin');
+        return;
+      } finally {
+        setIsCheckingAuth(false);
     }
   };
 
-    checkAuth();
+    // Verificar inmediatamente al montar el componente
+    checkAuthentication();
+
+    // También verificar cuando la ventana recupera el foco
+    const handleFocus = () => {
+      checkAuthentication();
+};
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+};
+  }, [router]);
+
+  // Verificar autenticación periódicamente
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const authStatus = localStorage.getItem('admin-authenticated');
+      if (authStatus !== 'true') {
+        setIsAuthenticated(false);
+        router.replace('/admin');
+      }
+    }, 5000); // Verificar cada 5 segundos
+
+    return () => clearInterval(interval);
   }, [router]);
 
   // Seleccionar primer menú automáticamente
   useEffect(() => {
-    if (menus.length > 0 && !selectedMenuId) {
+    if (isAuthenticated && menus.length > 0 && !selectedMenuId) {
       setSelectedMenuId(menus[0].id);
     }
-  }, [menus, selectedMenuId]);
+  }, [menus, selectedMenuId, isAuthenticated]);
+
   const handleLogout = () => {
-    localStorage.removeItem('admin-authenticated');
-    setIsAuthenticated(false);
-    router.push('/admin');
+    try {
+      localStorage.removeItem('admin-authenticated');
+      setIsAuthenticated(false);
+      router.replace('/admin');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Forzar redirección incluso si hay error
+      router.replace('/admin');
+    }
   };
 
   const handleInitializeDatabase = async () => {
+    // Verificar autenticación antes de ejecutar acciones sensibles
+    const authStatus = localStorage.getItem('admin-authenticated');
+    if (authStatus !== 'true') {
+      router.replace('/admin');
+      return;
+    }
+
     setInitLoading(true);
     try {
       await initializeDatabase(true);
@@ -87,6 +140,13 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleExportData = async () => {
+    // Verificar autenticación antes de exportar
+    const authStatus = localStorage.getItem('admin-authenticated');
+    if (authStatus !== 'true') {
+      router.replace('/admin');
+      return;
+    }
+
     try {
       const data = await exportData();
       if (data) {
@@ -102,10 +162,10 @@ const AdminDashboard: React.FC = () => {
     } catch (error) {
       console.error('Error exportando datos:', error);
     }
-};
+  };
 
   // Mostrar loading mientras se verifica la autenticación
-  if (!isAuthenticated) {
+  if (isCheckingAuth || !isAuthenticated) {
     return (
       <Box 
         sx={{ 
@@ -116,7 +176,12 @@ const AdminDashboard: React.FC = () => {
           backgroundColor: '#1C1C1E'
         }}
       >
-        <CircularProgress size={60} sx={{ color: '#3B82F6' }} />
+        <Stack spacing={2} alignItems="center">
+          <CircularProgress size={60} sx={{ color: '#3B82F6' }} />
+          <Typography variant="body2" color="#A1A1AA">
+            {isCheckingAuth ? 'Verificando autenticación...' : 'Redirigiendo...'}
+          </Typography>
+        </Stack>
       </Box>
     );
   }
