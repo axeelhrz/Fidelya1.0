@@ -19,7 +19,6 @@ import {
   DialogActions,
   CircularProgress,
   Paper,
-  Divider,
   IconButton,
   Tooltip,
   Chip,
@@ -37,11 +36,17 @@ import {
   Restaurant as RestaurantIcon,
   Analytics as AnalyticsIcon,
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { MenuData } from '../../types';
 import { useDatabase } from '../../../hooks/useDatabase';
 import MenuEditor from '../../components/MenuEditor';
 import QRGenerator from '../../components/QRGenerator';
+
+interface DatabaseInfo {
+  menusCount: number;
+  productsCount: number;
+  dbType: string;
+}
 
 const MotionContainer = motion(Container);
 const MotionPaper = motion(Paper);
@@ -55,15 +60,14 @@ const AdminDashboard: React.FC = () => {
     error, 
     initializeDatabase, 
     getDatabaseInfo,
-    refreshMenus 
+    refreshMenus,
   } = useDatabase();
-
+  const [initLoading, setInitLoading] = useState(false);
+  const [dbInfo, setDbInfo] = useState<DatabaseInfo | null>(null);
+  const [showQRGenerator, setShowQRGenerator] = useState(false);
   const [selectedMenuId, setSelectedMenuId] = useState<string>('');
   const [selectedMenu, setSelectedMenu] = useState<MenuData | null>(null);
   const [showInitDialog, setShowInitDialog] = useState(false);
-  const [initLoading, setInitLoading] = useState(false);
-  const [dbInfo, setDbInfo] = useState<any>(null);
-  const [showQRGenerator, setShowQRGenerator] = useState(false);
     // Verificar autenticación
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('admin-authenticated');
@@ -76,7 +80,7 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const loadDbInfo = async () => {
       const info = await getDatabaseInfo();
-      setDbInfo(info);
+      setDbInfo(info as DatabaseInfo | null);
   };
     loadDbInfo();
   }, [getDatabaseInfo]);
@@ -105,7 +109,7 @@ const AdminDashboard: React.FC = () => {
       await initializeDatabase(true);
       await refreshMenus();
       const info = await getDatabaseInfo();
-      setDbInfo(info);
+      setDbInfo(info as DatabaseInfo | null);
       setShowInitDialog(false);
     } catch (error) {
       console.error('Error inicializando base de datos:', error);
