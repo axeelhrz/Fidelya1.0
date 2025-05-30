@@ -16,6 +16,7 @@ import {
 } from '@mui/icons-material';
 import { Product } from '../types';
 import ProductCard from './ProductCard';
+import { translateCategory } from '../../lib/categoryTranslations';
 
 interface MenuSectionProps {
   title: string;
@@ -60,6 +61,9 @@ const MenuSection: React.FC<MenuSectionProps> = ({ title, products, index = 0 })
     p.tags?.includes('especial')
   ).length;
 
+  // Traducir el título de la categoría
+  const translatedTitle = translateCategory(title);
+
   // Determinar el icono según la categoría
   const getCategoryIcon = () => {
     const category = title.toLowerCase();
@@ -88,25 +92,6 @@ const MenuSection: React.FC<MenuSectionProps> = ({ title, products, index = 0 })
     }
     
     return <Restaurant sx={{ fontSize: 18, color: '#D4AF37' }} />;
-  };
-
-  // Función para formatear el nombre de la categoría
-  const formatCategoryName = (category: string) => {
-    const categoryMap: Record<string, string> = {
-      'APPETIZER': 'Entradas',
-      'MAIN_COURSE': 'Platos Principales',
-      'DESSERT': 'Postres',
-      'BEVERAGE': 'Bebidas',
-      'SIDE_DISH': 'Acompañamientos',
-      'COCKTAIL': 'Cócteles',
-      'WINE': 'Vinos',
-      'BEER': 'Cervezas',
-      'COFFEE': 'Cafetería',
-      'NON_ALCOHOLIC': 'Sin Alcohol',
-      'SNACK': 'Snacks'
-    };
-
-    return categoryMap[category.toUpperCase()] || category;
   };
 
   return (
@@ -163,7 +148,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({ title, products, index = 0 })
                   mb: 0.25
                 }}
               >
-                {formatCategoryName(title)}
+                {translatedTitle}
               </MotionTypography>
               <Typography
                 sx={{

@@ -221,7 +221,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
             fontWeight: 600
           }}
         >
-          Cargando Carta Digital...
+          Cargando Bar y Resto...
         </Typography>
         <Typography 
           variant="body2" 
@@ -233,7 +233,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
             fontStyle: 'italic'
           }}
         >
-          {connected ? 'Conectado a Firebase' : 'Conectando con Firebase...'}
+          {connected ? 'Abierto' : 'Conectando...'}
         </Typography>
       </Box>
     );
@@ -385,7 +385,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
             <Box sx={{ mt: 4, p: 2, backgroundColor: 'rgba(26, 26, 26, 0.5)', borderRadius: 0 }}>
               <Typography variant="caption" sx={{ color: '#B8B8B8', fontFamily: "'Inter', sans-serif" }}>
                 ID del menú: {menuId}<br/>
-                Estado de conexión: {connected ? 'Conectado' : 'Desconectado'}<br/>
+                Estado de conexión: {connected ? 'Abierto' : 'Cerrado'}<br/>
                 Error: {error || 'Ninguno'}<br/>
                 Reintentos: {retryCount}/3
               </Typography>
@@ -396,7 +396,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
     );
   }
 
-  // ... resto del componente permanece igual
+  // ... resto del componente permanece igual hasta el header
   return (
     <Box sx={{ 
       minHeight: '100vh',
@@ -524,7 +524,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
                       mt: 0.5
                     }}
                   >
-                    Carta Digital
+                    Bar y Resto
                   </Typography>
                 </Box>
               </Box>
@@ -593,7 +593,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
                     fontFamily: "'Inter', sans-serif"
                   }}
                 >
-                  {connected ? 'Conectado' : 'Desconectado'}
+                  {connected ? 'Abierto' : 'Cerrado'}
                 </Typography>
               </Box>
             </MotionBox>
@@ -788,9 +788,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
           position: 'relative',
           zIndex: 1
         }}
-
-
-
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -810,6 +807,8 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
               mb: 4
             }}
           />
+
+
           <Typography 
             sx={{ 
               fontFamily: "'Inter', sans-serif",
@@ -835,7 +834,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
               opacity: 0.9
             }}
           >
-            Carta Digital
+            Bar y Resto
           </Typography>
           <Typography 
             sx={{ 
@@ -1110,7 +1109,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
                 opacity: 0.8
               }}
             >
-              Carta Digital • Precios sujetos a cambios sin previo aviso
+              Bar y Resto • Precios sujetos a cambios sin previo aviso
             </Typography>
             <Box
               sx={{

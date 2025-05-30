@@ -15,6 +15,7 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { Product } from '../types';
+import { translateCategory } from '../../lib/categoryTranslations';
 
 const MotionBox = motion(Box);
 
@@ -50,6 +51,9 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const isVegetarian = product.nutritionalInfo?.isVegetarian || false;
   const isVegan = product.nutritionalInfo?.isVegan || false;
   const isGlutenFree = product.nutritionalInfo?.isGlutenFree || false;
+
+  // Traducir la categoría al español
+  const translatedCategory = translateCategory(product.category);
 
   return (
     <MotionBox
@@ -268,7 +272,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             >
               {product.name}
             </Typography>
-            {/* Categoría sutil */}
+            {/* Categoría traducida al español */}
             <Typography
               sx={{
                 fontSize: '0.7rem',
@@ -280,7 +284,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                 fontFamily: "'Inter', sans-serif"
               }}
             >
-              {product.category}
+              {translatedCategory}
             </Typography>
           </Box>
 
