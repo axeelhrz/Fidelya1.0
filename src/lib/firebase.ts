@@ -21,7 +21,7 @@ export const db = getFirestore(app);
 if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
   try {
     connectFirestoreEmulator(db, 'localhost', 8080);
-  } catch (error) {
+  } catch {
     console.log('Emulador ya conectado o no disponible');
   }
 }

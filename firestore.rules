@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Permitir lectura pública de menús (para el QR público)
+    match /menus/{menuId} {
+      allow read: if true;
+      allow write: if false; // Solo a través de la API
+      
+      // Permitir lectura pública de productos
+      match /items/{itemId} {
+        allow read: if true;
+        allow write: if false; // Solo a través de la API
+      }
+    }
+    
+    // Denegar todo lo demás por defecto
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
