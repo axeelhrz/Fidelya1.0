@@ -26,32 +26,32 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#3B82F6', // Botones y detalles activos
+      main: '#3B82F6', // azul eléctrico para botones y acentos principales
       light: '#60a5fa',
       dark: '#2563eb',
     },
     secondary: {
-      main: '#F59E0B', // Precios y promociones (mostaza suave)
+      main: '#F59E0B', // color mostaza para precios y promociones
       light: '#fbbf24',
       dark: '#d97706',
     },
     success: {
-      main: '#10B981', // Para "Recomendado"
+      main: '#10B981', // verde para "Recomendado"
       light: '#34d399',
       dark: '#059669',
     },
     background: {
-      default: '#1C1C1E', // Fondo principal (casi negro, sin fatiga visual)
-      paper: '#2C2C2E',   // Tarjetas y secciones
+      default: '#1C1C1E', // fondo general oscuro (negro elegante)
+      paper: '#2C2C2E',   // tarjetas y contenedores
     },
     text: {
-      primary: '#F5F5F7',   // Texto principal
-      secondary: '#A1A1AA', // Descripciones
+      primary: '#F5F5F7',   // texto claro
+      secondary: '#A1A1AA', // descripciones
     },
-    divider: '#3A3A3C', // Separadores sutiles
+    divider: '#3A3A3C', // separadores suaves
   },
   typography: {
-    fontFamily: "'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif",
+    fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif",
     h1: {
       fontWeight: 700,
       fontSize: '3rem',
@@ -145,30 +145,30 @@ const theme = createTheme({
   },
   shadows: [
     'none',
-    '0 4px 12px rgba(0,0,0,0.15)',
-    '0 6px 16px rgba(0,0,0,0.20)',
-    '0 8px 24px rgba(0,0,0,0.25)',
-    '0 12px 32px rgba(0,0,0,0.30)',
-    '0 16px 40px rgba(0,0,0,0.35)',
-    '0 20px 48px rgba(0,0,0,0.40)',
-    '0 24px 56px rgba(0,0,0,0.45)',
-    '0 28px 64px rgba(0,0,0,0.50)',
-    '0 32px 72px rgba(0,0,0,0.55)',
-    '0 36px 80px rgba(0,0,0,0.60)',
-    '0 40px 88px rgba(0,0,0,0.65)',
-    '0 44px 96px rgba(0,0,0,0.70)',
-    '0 48px 104px rgba(0,0,0,0.75)',
-    '0 52px 112px rgba(0,0,0,0.80)',
-    '0 56px 120px rgba(0,0,0,0.85)',
-    '0 60px 128px rgba(0,0,0,0.90)',
-    '0 64px 136px rgba(0,0,0,0.95)',
-    '0 68px 144px rgba(0,0,0,1.00)',
-    '0 72px 152px rgba(0,0,0,1.00)',
-    '0 76px 160px rgba(0,0,0,1.00)',
-    '0 80px 168px rgba(0,0,0,1.00)',
-    '0 84px 176px rgba(0,0,0,1.00)',
-    '0 88px 184px rgba(0,0,0,1.00)',
-    '0 92px 192px rgba(0,0,0,1.00)',
+    '0px 6px 18px rgba(0,0,0,0.12)',
+    '0px 8px 24px rgba(0,0,0,0.15)',
+    '0px 12px 32px rgba(0,0,0,0.18)',
+    '0px 16px 40px rgba(0,0,0,0.20)',
+    '0px 20px 48px rgba(0,0,0,0.22)',
+    '0px 24px 56px rgba(0,0,0,0.25)',
+    '0px 28px 64px rgba(0,0,0,0.28)',
+    '0px 32px 72px rgba(0,0,0,0.30)',
+    '0px 36px 80px rgba(0,0,0,0.32)',
+    '0px 40px 88px rgba(0,0,0,0.35)',
+    '0px 44px 96px rgba(0,0,0,0.38)',
+    '0px 48px 104px rgba(0,0,0,0.40)',
+    '0px 52px 112px rgba(0,0,0,0.42)',
+    '0px 56px 120px rgba(0,0,0,0.45)',
+    '0px 60px 128px rgba(0,0,0,0.48)',
+    '0px 64px 136px rgba(0,0,0,0.50)',
+    '0px 68px 144px rgba(0,0,0,0.52)',
+    '0px 72px 152px rgba(0,0,0,0.55)',
+    '0px 76px 160px rgba(0,0,0,0.58)',
+    '0px 80px 168px rgba(0,0,0,0.60)',
+    '0px 84px 176px rgba(0,0,0,0.62)',
+    '0px 88px 184px rgba(0,0,0,0.65)',
+    '0px 92px 192px rgba(0,0,0,0.68)',
+    '0px 96px 200px rgba(0,0,0,0.70)',
   ],
   components: {
     MuiCssBaseline: {
@@ -176,6 +176,7 @@ const theme = createTheme({
         body: {
           backgroundColor: '#1C1C1E',
           color: '#F5F5F7',
+          fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif",
         },
       },
     },
@@ -196,10 +197,10 @@ const theme = createTheme({
         contained: {
           backgroundColor: '#3B82F6',
           color: '#FFFFFF',
-          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)',
+          boxShadow: '0px 6px 18px rgba(59, 130, 246, 0.25)',
           '&:hover': {
             backgroundColor: '#2563eb',
-            boxShadow: '0 8px 24px rgba(59, 130, 246, 0.35)',
+            boxShadow: '0px 8px 24px rgba(59, 130, 246, 0.35)',
       },
     },
         outlined: {
@@ -219,7 +220,7 @@ const theme = createTheme({
         root: {
           backgroundColor: '#2C2C2E',
           borderRadius: 16,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          boxShadow: '0px 6px 18px rgba(0,0,0,0.12)',
         },
       },
     },

@@ -15,7 +15,6 @@ import {
   Switch,
   FormControlLabel,
   IconButton,
-  Divider,
   Chip,
   Alert,
   Dialog,
@@ -33,7 +32,7 @@ import {
   Cancel as CancelIcon,
   Restaurant as RestaurantIcon,
   LocalOffer as LocalOfferIcon,
-  Eco as EcoIcon,
+  Eco,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product, ProductCategory, MenuData } from '../types';
@@ -66,7 +65,7 @@ const categoryColors = {
 };
 
 export const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, onMenuUpdate }) => {
-  const { menuData, loading, error, addProduct, updateProduct, deleteProduct, updateMenu } = useFirebaseMenu(menuId);
+  const { menuData, loading, error, addProduct, updateProduct, deleteProduct } = useFirebaseMenu(menuId);
   
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -181,24 +180,13 @@ export const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, onMenuUpdate }) 
     }
   };
 
-  const handleUpdateMenuInfo = async (updates: Partial<MenuData>) => {
-    if (!menuData) return;
-    
-    try {
-      await updateMenu(updates);
-      setSaveMessage('Información del menú actualizada');
-    } catch (error) {
-      console.error('Error actualizando menú:', error);
-    }
-  };
-
-  const groupedProducts = menuData?.products.reduce((acc, product) => {
+  const groupedProducts: Record<ProductCategory, Product[]> = menuData?.products.reduce((acc, product) => {
     if (!acc[product.category]) {
       acc[product.category] = [];
     }
     acc[product.category].push(product);
     return acc;
-  }, {} as Record<ProductCategory, Product[]>) || {};
+  }, {} as Record<ProductCategory, Product[]>) || {} as Record<ProductCategory, Product[]>;
 
   if (loading) {
     return (
@@ -372,7 +360,7 @@ export const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, onMenuUpdate }) 
                             )}
                             {product.isVegan && (
                               <Chip
-                                icon={<EcoIcon />}
+                                icon={<Eco />}
                                 label="Vegano"
                                 size="small"
                                 color="success"
@@ -557,7 +545,7 @@ export const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, onMenuUpdate }) 
         
         <DialogContent>
           <Typography>
-            ¿Estás seguro de que quieres eliminar "{productToDelete?.name}"?
+            ¿Estás seguro de que quieres eliminar &quot;{productToDelete?.name}&quot;?
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             Esta acción no se puede deshacer.

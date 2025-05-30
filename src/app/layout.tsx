@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
+import '@fontsource/plus-jakarta-sans/800.css';
 import ThemeRegistry from './components/ThemeRegistry';
 import "./globals.css";
-
-const outfit = Outfit({ 
-  subsets: ["latin"],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-outfit',
-});
 
 export const metadata: Metadata = {
   title: "XSreset - Experiencia Nocturna Premium",
@@ -21,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={outfit.className}>
+      <body>
         <ThemeRegistry>
           {children}
         </ThemeRegistry>
