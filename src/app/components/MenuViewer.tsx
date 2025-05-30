@@ -101,24 +101,246 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
     <Box sx={{ 
       minHeight: '100vh', 
       backgroundColor: '#1C1C1E',
-      backgroundImage: `
-        radial-gradient(circle at 1px 1px, rgba(255,255,255,0.015) 1px, transparent 0),
-        radial-gradient(circle at 2px 2px, rgba(255,255,255,0.008) 1px, transparent 0)
-      `,
-      backgroundSize: '20px 20px, 40px 40px',
-      backgroundPosition: '0 0, 10px 10px'
+      position: 'relative'
     }}>
+      {/* Capa de efectos de fondo - Completamente detrás */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: -10, // Muy atrás
+          pointerEvents: 'none'
+        }}
+      >
+        {/* Gradiente base con textura */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: `
+              radial-gradient(circle at 20% 80%, rgba(116, 172, 223, 0.04) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.03) 0%, transparent 50%),
+              radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.02) 0%, transparent 50%)
+            `
+          }}
+        />
+
+        {/* Patrón de puntos animado */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: `
+              radial-gradient(circle at 1px 1px, rgba(255,255,255,0.015) 1px, transparent 0),
+              radial-gradient(circle at 2px 2px, rgba(255,255,255,0.008) 1px, transparent 0)
+            `,
+            backgroundSize: '80px 80px, 160px 160px',
+            backgroundPosition: '0 0, 40px 40px',
+            animation: 'float 25s ease-in-out infinite',
+            '@keyframes float': {
+              '0%, 100%': { 
+                transform: 'translate(0, 0)',
+                opacity: 0.3
+              },
+              '33%': { 
+                transform: 'translate(15px, -10px)',
+                opacity: 0.5
+              },
+              '66%': { 
+                transform: 'translate(-8px, 8px)',
+                opacity: 0.4
+              }
+            }
+          }}
+        />
+
+        {/* Orbes flotantes grandes */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '5%',
+            left: '5%',
+            width: '400px',
+            height: '400px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(116, 172, 223, 0.06) 0%, transparent 70%)',
+            filter: 'blur(60px)',
+            animation: 'orbit1 30s linear infinite',
+            '@keyframes orbit1': {
+              '0%': { 
+                transform: 'translate(0, 0) scale(1)',
+                opacity: 0.3
+              },
+              '25%': { 
+                transform: 'translate(100px, -50px) scale(1.2)',
+                opacity: 0.5
+              },
+              '50%': { 
+                transform: 'translate(50px, 80px) scale(0.8)',
+                opacity: 0.4
+              },
+              '75%': { 
+                transform: 'translate(-60px, 20px) scale(1.1)',
+                opacity: 0.6
+              },
+              '100%': { 
+                transform: 'translate(0, 0) scale(1)',
+                opacity: 0.3
+              }
+            }
+          }}
+        />
+
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            right: '10%',
+            width: '300px',
+            height: '300px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(245, 158, 11, 0.05) 0%, transparent 70%)',
+            filter: 'blur(50px)',
+            animation: 'orbit2 35s linear infinite reverse',
+            '@keyframes orbit2': {
+              '0%': { 
+                transform: 'translate(0, 0) scale(1)',
+                opacity: 0.25
+              },
+              '33%': { 
+                transform: 'translate(-80px, 40px) scale(1.3)',
+                opacity: 0.4
+              },
+              '66%': { 
+                transform: 'translate(60px, -50px) scale(0.7)',
+                opacity: 0.3
+              },
+              '100%': { 
+                transform: 'translate(0, 0) scale(1)',
+                opacity: 0.25
+              }
+            }
+          }}
+        />
+
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: '15%',
+            left: '15%',
+            width: '250px',
+            height: '250px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.04) 0%, transparent 70%)',
+            filter: 'blur(40px)',
+            animation: 'orbit3 40s ease-in-out infinite',
+            '@keyframes orbit3': {
+              '0%, 100%': { 
+                transform: 'translate(0, 0) scale(1)',
+                opacity: 0.2
+              },
+              '50%': { 
+                transform: 'translate(120px, -80px) scale(1.4)',
+                opacity: 0.4
+              }
+            }
+          }}
+        />
+
+        {/* Líneas geométricas sutiles */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '25%',
+            left: '0%',
+            width: '100%',
+            height: '1px',
+            background: 'linear-gradient(90deg, transparent 0%, rgba(116, 172, 223, 0.08) 50%, transparent 100%)',
+            animation: 'slide 20s ease-in-out infinite',
+            '@keyframes slide': {
+              '0%, 100%': { 
+                transform: 'translateX(-100%)',
+                opacity: 0
+              },
+              '50%': { 
+                transform: 'translateX(0%)',
+                opacity: 1
+              }
+            }
+          }}
+        />
+
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '75%',
+            right: '0%',
+            width: '100%',
+            height: '1px',
+            background: 'linear-gradient(90deg, transparent 0%, rgba(245, 158, 11, 0.06) 50%, transparent 100%)',
+            animation: 'slide2 25s ease-in-out infinite reverse',
+            '@keyframes slide2': {
+              '0%, 100%': { 
+                transform: 'translateX(100%)',
+                opacity: 0
+              },
+              '50%': { 
+                transform: 'translateX(0%)',
+                opacity: 1
+              }
+            }
+          }}
+        />
+
+        {/* Partículas flotantes pequeñas */}
+        {[...Array(6)].map((_, i) => (
+          <Box
+            key={i}
+            sx={{
+              position: 'absolute',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              width: '3px',
+              height: '3px',
+              borderRadius: '50%',
+              backgroundColor: i % 3 === 0 ? '#74ACDF' : i % 3 === 1 ? '#F59E0B' : '#10B981',
+              opacity: 0.3,
+              animation: `particle${i} ${15 + i * 2}s ease-in-out infinite`,
+              [`@keyframes particle${i}`]: {
+                '0%, 100%': { 
+                  transform: 'translate(0, 0)',
+                  opacity: 0.1
+                },
+                '50%': { 
+                  transform: `translate(${(i % 2 === 0 ? 1 : -1) * 50}px, ${(i % 2 === 0 ? -1 : 1) * 30}px)`,
+                  opacity: 0.4
+                }
+              }
+            }}
+          />
+        ))}
+      </Box>
+
       {/* Header Premium Compacto */}
       <AppBar 
         position="fixed" 
-                elevation={0}
+        elevation={0}
         sx={{ 
           backgroundColor: 'rgba(28, 28, 30, 0.92)',
           backdropFilter: 'blur(32px)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
           zIndex: 1100,
-              }}
-              >
+        }}
+      >
         <Toolbar sx={{ 
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -132,11 +354,11 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: [0.04, 0.62, 0.23, 0.98] }}
             sx={{
-              display: 'flex', 
+              display: 'flex',
               alignItems: 'center',
               gap: 2
             }}
-            >
+          >
             {/* Botón de regreso minimalista */}
             <MotionBox
               whileHover={{ scale: 1.05 }}
@@ -145,28 +367,28 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               <IconButton 
                 onClick={() => router.push('/')}
                 sx={{ 
-                    color: '#A1A1AA',
+                  color: '#A1A1AA',
                   p: 1,
                   borderRadius: 1.5,
                   backgroundColor: 'rgba(255, 255, 255, 0.03)',
                   border: '1px solid rgba(255, 255, 255, 0.06)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   '&:hover': { 
-                color: '#F5F5F7',
+                    color: '#F5F5F7',
                     backgroundColor: 'rgba(255, 255, 255, 0.08)',
                     borderColor: 'rgba(255, 255, 255, 0.12)'
                   }
-              }}
-            >
+                }}
+              >
                 <ArrowBack fontSize="small" />
               </IconButton>
-          </MotionBox>
+            </MotionBox>
 
             {/* Branding compacto */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               {/* Logo minimalista */}
-        <Box
-          sx={{
+              <Box
+                sx={{
                   p: 1,
                   borderRadius: 1.5,
                   background: 'linear-gradient(135deg, rgba(116, 172, 223, 0.15) 0%, rgba(116, 172, 223, 0.08) 100%)',
@@ -174,7 +396,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
-              }}
+                }}
               >
                 <Restaurant sx={{ 
                   color: '#74ACDF', 
@@ -194,10 +416,10 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                   }}
                 >
                   Xs Reset
-              </Typography>
-              
+                </Typography>
+                
                 <Typography
-                sx={{
+                  sx={{
                     fontSize: '0.65rem',
                     fontWeight: 500,
                     color: '#A1A1AA',
@@ -210,7 +432,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                 >
                   Bar & Lounge
                 </Typography>
-          </Box>
+              </Box>
             </Box>
           </MotionBox>
 
@@ -229,7 +451,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
             <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
               <AccessTime sx={{ fontSize: 14, color: '#A1A1AA' }} />
               <Typography
-                sx={{ 
+                sx={{
                   color: '#A1A1AA',
                   fontSize: '0.8rem',
                   fontWeight: 500,
@@ -257,13 +479,13 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                   borderRadius: 1.5,
                   backgroundColor: showFilters ? 'rgba(116, 172, 223, 0.12)' : 'rgba(255, 255, 255, 0.03)',
                   border: `1px solid ${showFilters ? 'rgba(116, 172, 223, 0.2)' : 'rgba(255, 255, 255, 0.06)'}`,
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          '&:hover': {
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
                     color: '#74ACDF',
                     backgroundColor: 'rgba(116, 172, 223, 0.12)',
                     borderColor: 'rgba(116, 172, 223, 0.2)'
                   }
-                        }}
+                }}
               >
                 {showFilters ? <Close fontSize="small" /> : <FilterList fontSize="small" />}
               </IconButton>
@@ -271,7 +493,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
 
             {/* Estado abierto compacto */}
             <Box
-            sx={{ 
+              sx={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 0.75,
@@ -283,7 +505,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               }}
             >
               <Box
-                sx={{ 
+                sx={{
                   width: 4,
                   height: 4,
                   borderRadius: '50%',
@@ -304,7 +526,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                 Abierto
               </Typography>
             </Box>
-        </MotionBox>
+          </MotionBox>
         </Toolbar>
 
         {/* Línea decorativa minimalista */}
@@ -321,13 +543,15 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
         />
       </AppBar>
 
-      {/* Contenido principal con mejor espaciado */}
+      {/* Contenido principal */}
       <MotionContainer 
         maxWidth="md" 
         sx={{ 
-          pt: { xs: 10, sm: 11 }, // Más espacio desde el header
+          pt: { xs: 10, sm: 11 },
           pb: 8,
           px: { xs: 2, sm: 3 },
+          position: 'relative',
+          zIndex: 1
         }}
         variants={containerVariants}
         initial="hidden"
@@ -336,7 +560,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
         {/* Hero section con espaciado mejorado */}
         <MotionBox
           variants={headerVariants}
-          sx={{ textAlign: 'center', mb: { xs: 6, sm: 7 } }} // Más espacio antes del contenido
+          sx={{ textAlign: 'center', mb: { xs: 6, sm: 7 } }}
         >
           <Typography 
             sx={{ 
@@ -354,7 +578,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           >
             Xs Reset
           </Typography>
-
+          
           <Typography 
             sx={{ 
               fontSize: { xs: '0.75rem', sm: '0.8rem' },
@@ -444,7 +668,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                   >
                     {filteredProducts.length}
                   </Typography>
-    </Box>
+                </Box>
                 
                 {/* Chips horizontales compactos */}
                 <Stack 
@@ -616,40 +840,43 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                 fontSize: '0.75rem',
                 fontWeight: 400,
                 mb: 2,
-                lineHeight: 1.5,
-                opacity: 0.8
-              }}
-            >
-              Experiencia Digital Premium • Precios sujetos a cambios
-            </Typography>
-            
-            <Box
-              sx={{
-                width: 40,
-                height: 1,
-                background: 'linear-gradient(90deg, transparent 0%, #74ACDF 50%, transparent 100%)',
-                mx: 'auto'
-              }}
-            />
-          </Box>
-        </MotionBox>
-      </MotionContainer>
 
-      {/* Estilos para animación pulse */}
-      <style jsx global>{`
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.7;
-            transform: scale(1.1);
-          }
+
+
+              lineHeight: 1.5,
+              opacity: 0.8
+            }}
+          >
+            Experiencia Digital Premium • Precios sujetos a cambios
+          </Typography>
+          
+          <Box
+            sx={{
+              width: 40,
+              height: 1,
+              background: 'linear-gradient(90deg, transparent 0%, #74ACDF 50%, transparent 100%)',
+              mx: 'auto'
+            }}
+          />
+        </Box>
+      </MotionBox>
+    </MotionContainer>
+
+    {/* Estilos para animaciones */}
+    <style jsx global>{`
+      @keyframes pulse {
+        0%, 100% {
+          opacity: 1;
+          transform: scale(1);
         }
-      `}</style>
-    </Box>
-  );
+        50% {
+          opacity: 0.7;
+          transform: scale(1.1);
+        }
+      }
+    `}</style>
+  </Box>
+);
 };
 
 export default MenuViewer;
