@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const available = searchParams.get('available');
 
-    let products = await FirebaseDatabase.getProducts(menuId || undefined);
+    let products = await FirebaseDatabase.getProducts(menuId ? { menuId } : undefined);
     
     // Apply additional filters
     if (category) {

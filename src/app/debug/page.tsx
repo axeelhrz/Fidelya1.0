@@ -5,8 +5,28 @@ import { Box, Typography, Button, Paper, Alert, CircularProgress } from '@mui/ma
 import { useFirebaseMenu } from '../../hooks/useFirebaseMenu';
 import { prepareInitialData } from '../../lib/firebaseInitialData';
 
+interface DebugInfo {
+  menusCount?: number;
+  productsCount?: number;
+  connected?: boolean;
+  error?: string | null;
+  menus?: Array<{ id: string; name: string }>;
+  firstProducts?: Array<{ id: string; name: string; menuId: string }>;
+}
+
+interface DebugMenu {
+  id: string;
+  name: string;
+}
+
+interface DebugProduct {
+  id: string;
+  name: string;
+  menuId: string;
+}
+
 export default function DebugPage() {
-  const [debugInfo, setDebugInfo] = useState<any>({});
+  const [debugInfo, setDebugInfo] = useState<DebugInfo>({});
   const [loading, setLoading] = useState(true);
   
   const { 
@@ -134,7 +154,7 @@ export default function DebugPage() {
 
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
-          Datos Actuales
+          Datos
         </Typography>
         <Typography>Menús: {debugInfo.menusCount}</Typography>
         <Typography>Productos: {debugInfo.productsCount}</Typography>
@@ -142,7 +162,7 @@ export default function DebugPage() {
         {debugInfo.menus && debugInfo.menus.length > 0 && (
           <Box sx={{ mt: 2 }}>
             <Typography variant="subtitle1">Menús encontrados:</Typography>
-            {debugInfo.menus.map((menu: any) => (
+            {debugInfo.menus.map((menu: DebugMenu) => (
               <Typography key={menu.id} variant="body2">
                 - {menu.name} (ID: {menu.id})
               </Typography>
@@ -153,7 +173,7 @@ export default function DebugPage() {
         {debugInfo.firstProducts && debugInfo.firstProducts.length > 0 && (
           <Box sx={{ mt: 2 }}>
             <Typography variant="subtitle1">Primeros productos:</Typography>
-            {debugInfo.firstProducts.map((product: any) => (
+            {debugInfo.firstProducts.map((product: DebugProduct) => (
               <Typography key={product.id} variant="body2">
                 - {product.name} (MenuID: {product.menuId})
               </Typography>

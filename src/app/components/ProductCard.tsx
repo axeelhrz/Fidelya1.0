@@ -9,8 +9,7 @@ import {
   Star, 
   FiberNew, 
   LocalFlorist,
-  GlutenFree,
-  Eco
+  NoFood,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { Product } from '../types';
@@ -173,7 +172,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                   border: '1px solid rgba(34, 197, 94, 0.2)',
                 }}
               >
-                <Eco sx={{ fontSize: 10, color: '#22C55E' }} />
+                <NoFood sx={{ fontSize: 10, color: '#22C55E' }} />
                 <Typography
                   sx={{
                     color: '#22C55E',
@@ -229,7 +228,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                   border: '1px solid rgba(168, 85, 247, 0.2)',
                 }}
               >
-                <GlutenFree sx={{ fontSize: 10, color: '#A855F7' }} />
+                <NoFood sx={{ fontSize: 10, color: '#A855F7' }} />
                 <Typography
                   sx={{
                     color: '#A855F7',
