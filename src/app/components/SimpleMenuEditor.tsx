@@ -24,7 +24,7 @@ import {
   Card,
   CardContent,
   Grid,
-  Divider,
+  Tooltip,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -34,10 +34,12 @@ import {
   Cancel as CancelIcon,
   Check as CheckIcon,
   Close as CloseIcon,
+  Lock as LockIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product, ProductCategory, MenuData } from '../types';
 import { useFirebaseMenu } from '../../hooks/useFirebaseMenu';
+import { useAuthActions } from '../../hooks/useAuthActions';
 
 interface SimpleMenuEditorProps {
   menuId: string;
@@ -65,6 +67,7 @@ const categoryColors = {
 
 export const SimpleMenuEditor: React.FC<SimpleMenuEditorProps> = ({ menuId }) => {
   const { menuData, loading, error, addProduct, updateProduct, deleteProduct } = useFirebaseMenu(menuId);
+  const { withAuth, isAuthenticated, logout } = useAuthActions();
   
   const [editingProduct, setEditingProduct] = useState<EditingProduct | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -97,7 +100,8 @@ export const SimpleMenuEditor: React.FC<SimpleMenuEditorProps> = ({ menuId }) =>
     return acc;
   }, {} as Record<ProductCategory, Product[]>) || {};
 
-  const handleEditProduct = (product: Product) => {
+  // Funciones protegidas con autenticación
+  const handleEditProduct = withAuth((product: Product) => {
     setEditingProduct({
       id: product.id,
       name: product.name,
@@ -105,9 +109,8 @@ export const SimpleMenuEditor: React.FC<SimpleMenuEditorProps> = ({ menuId }) =>
       description: product.description,
       category: product.category,
     });
-  };
-
-  const handleSaveEdit = async () => {
+  });
+  const handleSaveEdit = withAuth(async () => {
     if (!editingProduct) return;
 
     setFormLoading(true);
@@ -126,18 +129,13 @@ export const SimpleMenuEditor: React.FC<SimpleMenuEditorProps> = ({ menuId }) =>
     } finally {
       setFormLoading(false);
     }
-  };
+  });
 
-  const handleCancelEdit = () => {
-    setEditingProduct(null);
-  };
-
-  const handleDeleteProduct = (product: Product) => {
+  const handleDeleteProduct = withAuth((product: Product) => {
     setProductToDelete(product);
     setDeleteConfirmOpen(true);
-  };
-
-  const confirmDelete = async () => {
+  });
+  const confirmDelete = withAuth(async () => {
     if (!productToDelete) return;
 
     setFormLoading(true);
@@ -152,9 +150,8 @@ export const SimpleMenuEditor: React.FC<SimpleMenuEditorProps> = ({ menuId }) =>
     } finally {
       setFormLoading(false);
     }
-  };
-
-  const handleAddProduct = async () => {
+  });
+  const handleAddProduct = withAuth(async () => {
     if (!newProduct.name.trim() || newProduct.price <= 0) {
       setSaveMessage('Por favor completa todos los campos requeridos');
       return;
@@ -185,6 +182,14 @@ export const SimpleMenuEditor: React.FC<SimpleMenuEditorProps> = ({ menuId }) =>
     } finally {
       setFormLoading(false);
     }
+  });
+
+  const handleShowAddForm = withAuth(() => {
+    setShowAddForm(true);
+  });
+
+  const handleCancelEdit = () => {
+    setEditingProduct(null);
   };
 
   if (loading) {
@@ -241,10 +246,11 @@ export const SimpleMenuEditor: React.FC<SimpleMenuEditorProps> = ({ menuId }) =>
           {menuData.description}
         </Typography>
         
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => setShowAddForm(true)}
+            onClick={handleShowAddForm}
           size="large"
           sx={{
             borderRadius: 3,
@@ -255,6 +261,45 @@ export const SimpleMenuEditor: React.FC<SimpleMenuEditorProps> = ({ menuId }) =>
         >
           Agregar Producto
         </Button>
+
+          {isAuthenticated && (
+            <Tooltip title="Cerrar sesión">
+          <Button
+                variant="outlined"
+                startIcon={<LockIcon />}
+                onClick={logout}
+                size="large"
+                sx={{
+            borderRadius: 3,
+                  px: 3,
+                  py: 1.5,
+                  borderColor: 'rgba(161, 161, 170, 0.3)',
+                  color: '#A1A1AA',
+                  '&:hover': {
+                    borderColor: '#74ACDF',
+                    color: '#74ACDF',
+                  }
+                }}
+              >
+                Logout
+          </Button>
+            </Tooltip>
+          )}
+    </Box>
+
+        {isAuthenticated && (
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              display: 'block',
+              mt: 2,
+              color: '#22C55E',
+              fontWeight: 500
+            }}
+          >
+            ✓ Sesión de administrador activa
+          </Typography>
+        )}
       </MotionPaper>
 
       {/* Productos por categoría */}
@@ -405,29 +450,33 @@ export const SimpleMenuEditor: React.FC<SimpleMenuEditorProps> = ({ menuId }) =>
                               </Typography>
                               
                               <Box display="flex" gap={1}>
-                                <IconButton
-                                  onClick={() => handleEditProduct(product)}
-                                  size="small"
-                                  sx={{
-                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                    color: 'primary.main',
-                                    '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.2)' },
-                                  }}
-                                >
-                                  <EditIcon fontSize="small" />
-                                </IconButton>
+                                <Tooltip title="Editar producto (requiere autenticación)">
+                                  <IconButton
+                                    onClick={() => handleEditProduct(product)}
+                                    size="small"
+                                    sx={{
+                                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                      color: 'primary.main',
+                                      '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.2)' },
+                                    }}
+                                  >
+                                    <EditIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
                                 
-                                <IconButton
-                                  onClick={() => handleDeleteProduct(product)}
-                                  size="small"
-                                  sx={{
-                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                    color: '#ef4444',
-                                    '&:hover': { backgroundColor: 'rgba(239, 68, 68, 0.2)' },
-                                  }}
-                                >
-                                  <DeleteIcon fontSize="small" />
-                                </IconButton>
+                                <Tooltip title="Eliminar producto (requiere autenticación)">
+                                  <IconButton
+                                    onClick={() => handleDeleteProduct(product)}
+                                    size="small"
+                                    sx={{
+                                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                      color: '#ef4444',
+                                      '&:hover': { backgroundColor: 'rgba(239, 68, 68, 0.2)' },
+                                    }}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
                               </Box>
                             </Box>
                             
@@ -446,7 +495,7 @@ export const SimpleMenuEditor: React.FC<SimpleMenuEditorProps> = ({ menuId }) =>
                 ))}
               </Grid>
             </MotionPaper>
-          );
+  );
         })}
       </Stack>
 

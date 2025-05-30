@@ -38,11 +38,13 @@ import {
   Star,
   Visibility,
   VisibilityOff,
+  Lock as LockIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { Product, ProductCategory } from '../../types';
 import { useAdminDashboard } from '../../../hooks/useAdminDashboard';
+import { useAuthActions } from '../../../hooks/useAuthActions';
 
 const MotionBox = motion(Box);
 const MotionContainer = motion(Container);
@@ -50,9 +52,8 @@ const MotionFab = motion(Fab);
 
 const AdminDashboard: React.FC = () => {
   const router = useRouter();
-  const { 
-    menus, 
-  } = useAdminDashboard();
+  const { menus } = useAdminDashboard();
+  const { withAuth, isAuthenticated, logout } = useAuthActions();
 
   // Estados del dashboard
   const [selectedMenuId, setSelectedMenuId] = useState<string>('');
@@ -119,13 +120,6 @@ const AdminDashboard: React.FC = () => {
     },
   ]);
 
-  // Cargar datos del menú seleccionado
-  // Cargar datos del menú seleccionado
-  useEffect(() => {
-    if (selectedMenuId && menus.length > 0) {
-      // Menu data is available but not stored in state since it's not being used
-    }
-  }, [selectedMenuId, menus, products]);
   // Seleccionar primer menú automáticamente
   useEffect(() => {
     if (menus.length > 0 && !selectedMenuId) {
@@ -133,16 +127,12 @@ const AdminDashboard: React.FC = () => {
     }
   }, [menus, selectedMenuId]);
 
-  // Funciones de manejo
+  // Funciones de manejo protegidas con autenticación
   const handleBack = () => {
     router.push('/');
   };
 
-  const handleLogout = () => {
-    router.push('/admin');
-  };
-
-  const handleAddProduct = () => {
+  const handleAddProduct = withAuth(() => {
     setEditingProduct(null);
     setProductForm({
       name: '',
@@ -154,9 +144,9 @@ const AdminDashboard: React.FC = () => {
       isAvailable: true,
     });
     setShowProductDialog(true);
-  };
+  });
 
-  const handleEditProduct = (product: Product) => {
+  const handleEditProduct = withAuth((product: Product) => {
     setEditingProduct(product);
     setProductForm({
       name: product.name,
@@ -168,9 +158,9 @@ const AdminDashboard: React.FC = () => {
       isAvailable: product.isAvailable !== false,
     });
     setShowProductDialog(true);
-  };
+  });
 
-  const handleSaveProduct = async () => {
+  const handleSaveProduct = withAuth(async () => {
     if (editingProduct) {
       // Editar producto existente
       setProducts(prev => prev.map(p => 
@@ -187,19 +177,19 @@ const AdminDashboard: React.FC = () => {
       setProducts(prev => [...prev, newProduct]);
     }
     setShowProductDialog(false);
-  };
+  });
 
-  const handleDeleteProduct = async (productId: string) => {
+  const handleDeleteProduct = withAuth(async (productId: string) => {
     setProducts(prev => prev.filter(p => p.id !== productId));
-  };
+  });
 
-  const handleToggleAvailability = (productId: string) => {
+  const handleToggleAvailability = withAuth((productId: string) => {
     setProducts(prev => prev.map(p => 
       p.id === productId 
         ? { ...p, isAvailable: !p.isAvailable }
         : p
     ));
-  };
+  });
 
   const generateQRUrl = () => {
     const baseUrl = window.location.origin;
@@ -397,23 +387,58 @@ const AdminDashboard: React.FC = () => {
                 </IconButton>
               </Tooltip>
 
-              <Button
-                variant="outlined"
-                onClick={handleLogout}
-                sx={{ 
-                  borderRadius: 2,
-                  color: '#A1A1AA',
-                  borderColor: 'rgba(161, 161, 170, 0.3)',
-                  '&:hover': {
-                    borderColor: '#74ACDF',
-                    color: '#74ACDF',
-                  }
-                }}
-              >
-                Salir
-              </Button>
+              {isAuthenticated ? (
+                <Button
+                  variant="outlined"
+                  startIcon={<LockIcon />}
+                  onClick={logout}
+                  sx={{ 
+                    borderRadius: 2,
+                    color: '#22C55E',
+                    borderColor: 'rgba(34, 197, 94, 0.3)',
+                    '&:hover': {
+                      borderColor: '#22C55E',
+                      backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    }
+                  }}
+                >
+                  Logout
+                </Button>
+              ) : (
+                <Button
+                  variant="outlined"
+                  onClick={() => router.push('/admin')}
+                  sx={{ 
+                    borderRadius: 2,
+                    color: '#A1A1AA',
+                    borderColor: 'rgba(161, 161, 170, 0.3)',
+                    '&:hover': {
+                      borderColor: '#74ACDF',
+                      color: '#74ACDF',
+                    }
+                  }}
+                >
+                  Login
+                </Button>
+              )}
             </Box>
           </Box>
+
+          {/* Indicador de estado de autenticación */}
+          {isAuthenticated && (
+            <Box sx={{ textAlign: 'center', mt: 1 }}>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: '#22C55E',
+                  fontWeight: 500,
+                  fontSize: '0.75rem'
+                }}
+              >
+                ✓ Sesión de administrador activa
+              </Typography>
+            </Box>
+          )}
         </Container>
       </Box>
 
@@ -672,7 +697,6 @@ const AdminDashboard: React.FC = () => {
                               )}
                               {product.isVegan && (
                                 <Chip
-                                  
                                   label="Vegano"
                                   size="small"
                                   sx={{
@@ -700,7 +724,7 @@ const AdminDashboard: React.FC = () => {
                                   {product.isAvailable ? <Visibility fontSize="small" /> : <VisibilityOff fontSize="small" />}
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title="Editar">
+                              <Tooltip title="Editar (requiere autenticación)">
                                 <IconButton
                                   size="small"
                                   onClick={() => handleEditProduct(product)}
@@ -713,7 +737,7 @@ const AdminDashboard: React.FC = () => {
                                   <EditIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title="Eliminar">
+                              <Tooltip title="Eliminar (requiere autenticación)">
                                 <IconButton
                                   size="small"
                                   onClick={() => handleDeleteProduct(product.id)}
@@ -755,6 +779,7 @@ const AdminDashboard: React.FC = () => {
                                 }}
                               >
                                 {product.category}
+                
                               </Typography>
                               <Typography
                                 sx={{
@@ -772,7 +797,7 @@ const AdminDashboard: React.FC = () => {
                             <Box
                               sx={{
                                 px: 2.5,
-                                                                py: 1.5,
+                                py: 1.5,
                                 background: product.isRecommended 
                                   ? 'linear-gradient(135deg, rgba(116, 172, 223, 0.2) 0%, rgba(116, 172, 223, 0.1) 100%)'
                                   : 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)',

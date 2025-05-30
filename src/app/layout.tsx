@@ -1,27 +1,28 @@
-import type { Metadata } from "next";
-import '@fontsource/plus-jakarta-sans/400.css';
-import '@fontsource/plus-jakarta-sans/500.css';
-import '@fontsource/plus-jakarta-sans/600.css';
-import '@fontsource/plus-jakarta-sans/700.css';
-import '@fontsource/plus-jakarta-sans/800.css';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
 import ThemeRegistry from './components/ThemeRegistry';
-import "./globals.css";
+import { AuthProvider } from '../contexts/AuthContext';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "XSreset - Experiencia Nocturna Premium",
-  description: "Menú digital de alta gama para una experiencia nocturna excepcional en XSreset",
+  title: 'MenuQR - Menú Digital',
+  description: 'Sistema de menú digital con código QR',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="es">
-      <body>
+      <body className={inter.className}>
         <ThemeRegistry>
+          <AuthProvider>
           {children}
+          </AuthProvider>
         </ThemeRegistry>
       </body>
     </html>
