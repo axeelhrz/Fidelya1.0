@@ -133,24 +133,40 @@ export default function ProductManager({ products, selectedMenuId }: ProductMana
 
   const handleSubmit = async () => {
     try {
+      // Build nutritionalInfo object, filtering out undefined values
+      const nutritionalInfo: any = {
+        isVegan: formData.isVegan,
+        isVegetarian: formData.isVegetarian,
+        isGlutenFree: formData.isGlutenFree
+      };
+
+      // Only add calories if it has a value
+      if (formData.calories && formData.calories.trim() !== '') {
+        nutritionalInfo.calories = parseInt(formData.calories);
+      }
+
       const productData = {
         name: formData.name,
-        description: formData.description,
+        description: formData.description || undefined,
         price: parseFloat(formData.price),
         category: formData.category,
         menuId: formData.menuId,
-        image: formData.image,
+        image: formData.image || undefined,
         isAvailable: formData.isAvailable,
-        allergens: formData.allergens,
-        tags: formData.tags,
-        preparationTime: formData.preparationTime ? parseInt(formData.preparationTime) : undefined,
-        nutritionalInfo: {
-          calories: formData.calories ? parseInt(formData.calories) : undefined,
-          isVegan: formData.isVegan,
-          isVegetarian: formData.isVegetarian,
-          isGlutenFree: formData.isGlutenFree
-        }
+        allergens: formData.allergens.length > 0 ? formData.allergens : undefined,
+        tags: formData.tags.length > 0 ? formData.tags : undefined,
+        preparationTime: formData.preparationTime && formData.preparationTime.trim() !== '' 
+          ? parseInt(formData.preparationTime) 
+          : undefined,
+        nutritionalInfo
       };
+
+      // Remove undefined values from the main object
+      Object.keys(productData).forEach(key => {
+        if (productData[key as keyof typeof productData] === undefined) {
+          delete productData[key as keyof typeof productData];
+        }
+      });
 
       if (editingProduct) {
         await updateProduct(editingProduct.id, productData);
@@ -181,8 +197,6 @@ export default function ProductManager({ products, selectedMenuId }: ProductMana
       console.error('Error updating product availability:', error);
     }
   };
-
-
 
   const getCategoryLabel = (category: string) => {
     const cat = PRODUCT_CATEGORIES.find(c => c.value === category);

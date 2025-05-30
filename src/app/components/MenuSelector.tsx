@@ -25,9 +25,11 @@ const MotionCard = motion(Card);
 
 const MenuSelector: React.FC = () => {
   const router = useRouter();
-  const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
   const [checkingMenus, setCheckingMenus] = useState(true);
-  const [menuCheckResult, setMenuCheckResult] = useState<any>(null);
+  const [menuCheckResult, setMenuCheckResult] = useState<{
+    data?: { hasMenus: boolean };
+    success?: boolean;
+  } | null>(null);
 
   const { 
     menus, 
@@ -57,10 +59,8 @@ const MenuSelector: React.FC = () => {
   }, [connected, loading]);
 
   const handleMenuSelect = (menuId: string) => {
-    setSelectedMenu(menuId);
     router.push(`/menu?id=${menuId}`);
   };
-
   const handleCreateSampleMenu = async () => {
     try {
       setCheckingMenus(true);
