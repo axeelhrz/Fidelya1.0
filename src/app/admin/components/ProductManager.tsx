@@ -134,7 +134,12 @@ export default function ProductManager({ products, selectedMenuId }: ProductMana
   const handleSubmit = async () => {
     try {
       // Build nutritionalInfo object, filtering out undefined values
-      const nutritionalInfo: any = {
+      const nutritionalInfo: {
+        isVegan: boolean;
+        isVegetarian: boolean;
+        isGlutenFree: boolean;
+        calories?: number;
+      } = {
         isVegan: formData.isVegan,
         isVegetarian: formData.isVegetarian,
         isGlutenFree: formData.isGlutenFree

@@ -21,12 +21,11 @@ import {
   AccessTime,
   Refresh,
   Home,
-  Warning,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useFirebaseMenuById } from '../../hooks/useFirebaseMenu';
 import { useFirebaseCategories } from '../../hooks/useFirebaseCategories';
-import { Product, Category } from '../types';
+import { Product } from '../types';
 import MenuSection from './MenuSection';
 
 interface MenuViewerProps {
@@ -56,7 +55,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
   } = useFirebaseMenuById(menuId);
 
   const { 
-    categories: firebaseCategories, 
     loading: categoriesLoading, 
     error: categoriesError,
     connected: categoriesConnected

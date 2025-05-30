@@ -72,7 +72,6 @@ type DashboardView = 'main' | 'products' | 'categories' | 'stats' | 'qr';
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   
   const [currentView, setCurrentView] = useState<DashboardView>('main');
   const [showCreateMenu, setShowCreateMenu] = useState(false);
@@ -483,7 +482,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     fontWeight: 600, 
                 textAlign: 'center', 
                     width: '100%',
-                    mb: 1
+                    mb: 1,
+                    display: 'block'
                   }}
                 >
                   Productos
