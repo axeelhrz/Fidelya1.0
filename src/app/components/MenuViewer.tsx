@@ -10,6 +10,7 @@ import {
   Fab,
   Alert,
   CircularProgress,
+  Button,
 } from '@mui/material';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { 
@@ -19,6 +20,8 @@ import {
   Close,
   AccessTime,
   Refresh,
+  Home,
+  Warning,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useFirebaseMenuById } from '../../hooks/useFirebaseMenu';
@@ -39,6 +42,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
   const [showFilters, setShowFilters] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
   const { scrollY } = useScroll();
   const headerY = useTransform(scrollY, [0, 100], [0, -100]);
 
@@ -81,6 +85,17 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
     });
     return unsubscribe;
   }, [scrollY]);
+
+  // Auto-retry logic
+  useEffect(() => {
+    if (error && retryCount < 3) {
+      const timer = setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+        window.location.reload();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, retryCount]);
 
   // Obtener categorías únicas de productos y Firebase
   const categories = useMemo(() => {
@@ -153,6 +168,26 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
     }
   };
 
+  // Función para inicializar datos de ejemplo
+  const initializeSampleData = async () => {
+    try {
+      const response = await fetch('/api/database/initialize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        console.error('Error initializing data');
+      }
+    } catch (error) {
+      console.error('Error initializing data:', error);
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -204,8 +239,11 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
     );
   }
 
-  // Error state
+  // Error state mejorado
   if (error || !menu) {
+    const isMenuNotFound = !menu && !loading;
+    const isConnectionError = error && !connected;
+    
     return (
       <Box sx={{ 
         minHeight: '100vh',
@@ -222,15 +260,19 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
             transition={{ duration: 0.5 }}
           >
             <Alert 
-              severity="error"
+              severity={isConnectionError ? "warning" : "error"}
               sx={{ 
                 borderRadius: 0,
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                color: '#F87171',
+                backgroundColor: isConnectionError 
+                  ? 'rgba(255, 152, 0, 0.1)' 
+                  : 'rgba(239, 68, 68, 0.1)',
+                border: isConnectionError 
+                  ? '1px solid rgba(255, 152, 0, 0.3)' 
+                  : '1px solid rgba(239, 68, 68, 0.3)',
+                color: isConnectionError ? '#FFB74D' : '#F87171',
                 fontFamily: "'Inter', sans-serif",
                 '& .MuiAlert-icon': {
-                  color: '#F87171'
+                  color: isConnectionError ? '#FFB74D' : '#F87171'
                 },
                 mb: 3
               }}
@@ -243,25 +285,51 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
                   fontWeight: 600
                 }}
               >
-                {error || 'Menú no encontrado'}
+                {isConnectionError 
+                  ? 'Problema de Conexión' 
+                  : isMenuNotFound 
+                    ? 'Menú no encontrado'
+                    : 'Error al cargar el menú'
+                }
               </Typography>
               <Typography 
                 variant="body2" 
                 sx={{ 
                   opacity: 0.8,
-                  fontFamily: "'Inter', sans-serif"
+                  fontFamily: "'Inter', sans-serif",
+                  mb: 2
                 }}
               >
-                Por favor, verifica el ID del menú o intenta nuevamente.
+                {isConnectionError 
+                  ? 'No se puede conectar con la base de datos. Verificando conexión...'
+                  : isMenuNotFound 
+                    ? `No se encontró un menú con el ID: ${menuId}`
+                    : 'Ocurrió un error al cargar la información del menú.'
+                }
               </Typography>
+              
+              {retryCount > 0 && retryCount < 3 && (
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    opacity: 0.6,
+                    fontFamily: "'Inter', sans-serif",
+                    fontStyle: 'italic'
+                  }}
+                >
+                  Reintentando automáticamente... ({retryCount}/3)
+                </Typography>
+              )}
             </Alert>
             
-            <Stack direction="row" spacing={2} justifyContent="center">
-              <IconButton
+            <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap">
+              <Button
+                variant="outlined"
+                startIcon={<Home />}
                 onClick={() => router.push('/')}
                 sx={{
                   color: '#B8B8B8',
-                  border: '1px solid rgba(212, 175, 55, 0.2)',
+                  borderColor: 'rgba(212, 175, 55, 0.3)',
                   borderRadius: 0,
                   '&:hover': {
                     color: '#D4AF37',
@@ -270,14 +338,19 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
                   }
                 }}
               >
-                <ArrowBack />
-              </IconButton>
+                Ir al Inicio
+              </Button>
               
-              <IconButton
-                onClick={() => window.location.reload()}
+              <Button
+                variant="outlined"
+                startIcon={<Refresh />}
+                onClick={() => {
+                  setRetryCount(0);
+                  window.location.reload();
+                }}
                 sx={{
                   color: '#B8B8B8',
-                  border: '1px solid rgba(212, 175, 55, 0.2)',
+                  borderColor: 'rgba(212, 175, 55, 0.3)',
                   borderRadius: 0,
                   '&:hover': {
                     color: '#D4AF37',
@@ -286,15 +359,44 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
                   }
                 }}
               >
-                <Refresh />
-              </IconButton>
+                Reintentar
+              </Button>
+
+              {isMenuNotFound && (
+                <Button
+                  variant="contained"
+                  startIcon={<Restaurant />}
+                  onClick={initializeSampleData}
+                  sx={{
+                    backgroundColor: '#D4AF37',
+                    color: '#0A0A0A',
+                    borderRadius: 0,
+                    '&:hover': {
+                      backgroundColor: '#F4E4BC'
+                    }
+                  }}
+                >
+                  Crear Menú de Ejemplo
+                </Button>
+              )}
             </Stack>
+
+            {/* Información adicional para debugging */}
+            <Box sx={{ mt: 4, p: 2, backgroundColor: 'rgba(26, 26, 26, 0.5)', borderRadius: 0 }}>
+              <Typography variant="caption" sx={{ color: '#B8B8B8', fontFamily: "'Inter', sans-serif" }}>
+                ID del menú: {menuId}<br/>
+                Estado de conexión: {connected ? 'Conectado' : 'Desconectado'}<br/>
+                Error: {error || 'Ninguno'}<br/>
+                Reintentos: {retryCount}/3
+              </Typography>
+            </Box>
           </MotionBox>
         </Container>
       </Box>
     );
   }
 
+  // ... resto del componente permanece igual
   return (
     <Box sx={{ 
       minHeight: '100vh',
@@ -686,6 +788,9 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
           position: 'relative',
           zIndex: 1
         }}
+
+
+
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -808,7 +913,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ menuId }) => {
                     Filtrar Menú
                   </Typography>
                   <Typography
-
                     sx={{
                       color: '#D4AF37',
                       fontSize: '0.8rem',
