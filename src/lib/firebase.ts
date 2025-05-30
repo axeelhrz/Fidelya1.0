@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { initializeApp, FirebaseApp } from 'firebase/app';
+import { getFirestore, connectFirestoreEmulator, Firestore } from 'firebase/firestore';
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -29,8 +29,8 @@ if (missingEnvVars.length > 0) {
 }
 
 // Inicializar Firebase
-let app;
-let db;
+let app: FirebaseApp | null = null;
+let db: Firestore | null = null;
 try {
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
@@ -49,7 +49,10 @@ try {
 } catch (error) {
   console.error('❌ Error al inicializar Firebase:', error);
   console.warn('🔄 Usando datos estáticos como fallback');
+  app = null;
+  db = null;
 }
 
+// Exportar con tipos explícitos
 export { db };
 export default app;
