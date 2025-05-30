@@ -16,7 +16,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowBack, 
   Restaurant,
-  FilterList
+  FilterList,
+  Close
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { Product } from '../types';
@@ -249,7 +250,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
               gap: 2
             }}
           >
-            {/* Botón de filtros */}
+            {/* Botón de filtros premium */}
             <MotionBox
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -260,23 +261,38 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                   color: showFilters ? '#3B82F6' : '#A1A1AA',
                   p: 1.5,
                   borderRadius: 2,
-                  backgroundColor: showFilters ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid rgba(255, 255, 255, 0.04)',
+                  backgroundColor: showFilters ? 'rgba(59, 130, 246, 0.12)' : 'rgba(255, 255, 255, 0.02)',
+                  border: `1px solid ${showFilters ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.04)'}`,
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': {
+                  position: 'relative',
+                            '&:hover': {
                     color: '#3B82F6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderColor: 'rgba(59, 130, 246, 0.2)'
-                  }
-              }}
-            >
-                <FilterList fontSize="small" />
+                    backgroundColor: 'rgba(59, 130, 246, 0.12)',
+                    borderColor: 'rgba(59, 130, 246, 0.2)',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 6px 20px rgba(59, 130, 246, 0.15)'
+                            },
+                  '&::before': showFilters ? {
+                    content: '""',
+                position: 'absolute',
+                    top: -2,
+                    left: -2,
+                    right: -2,
+                    bottom: -2,
+                    borderRadius: 'inherit',
+                    background: 'linear-gradient(45deg, rgba(59, 130, 246, 0.2), transparent, rgba(59, 130, 246, 0.2))',
+                    zIndex: -1,
+                    filter: 'blur(4px)'
+                  } : {}
+                }}
+              >
+                {showFilters ? <Close fontSize="small" /> : <FilterList fontSize="small" />}
               </IconButton>
-          </MotionBox>
+            </MotionBox>
 
             {/* Estado */}
-        <Box
-          sx={{
+            <Box
+                sx={{ 
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
@@ -285,20 +301,20 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                 borderRadius: 1.5,
                 backgroundColor: 'rgba(16, 185, 129, 0.06)',
                 border: '1px solid rgba(16, 185, 129, 0.12)'
-          }}
-            >
-        <Box
-          sx={{
+                }}
+              >
+              <Box
+                sx={{
                   width: 5,
                   height: 5,
                   borderRadius: '50%',
                   backgroundColor: '#10B981',
                   boxShadow: '0 0 8px rgba(16, 185, 129, 0.6)',
                   animation: 'pulse 2s infinite'
-          }}
-        />
-          <Typography 
-            sx={{ 
+                }}
+              />
+              <Typography
+                sx={{
                   color: '#10B981',
                   fontSize: '0.7rem',
                   fontWeight: 600,
@@ -307,7 +323,7 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
                 }}
               >
                 Abierto
-          </Typography>
+              </Typography>
             </Box>
           </MotionBox>
         </Toolbar>
@@ -398,122 +414,264 @@ const MenuViewer: React.FC<MenuViewerProps> = ({
           />
         </MotionBox>
 
-        {/* Sistema de filtros */}
+        {/* Sistema de filtros premium */}
         <AnimatePresence>
           {showFilters && (
-            <Fade in={showFilters}>
-              <MotionBox
-                initial={{ opacity: 0, height: 0, y: -20 }}
-                animate={{ opacity: 1, height: 'auto', y: 0 }}
-                exit={{ opacity: 0, height: 0, y: -20 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-                sx={{ mb: { xs: 8, sm: 10 } }}
+            <MotionBox
+              initial={{ opacity: 0, height: 0, y: -30 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -30 }}
+              transition={{ duration: 0.5, ease: [0.04, 0.62, 0.23, 0.98] }}
+              sx={{ mb: { xs: 8, sm: 10 } }}
+            >
+              <Box
+                sx={{ 
+                  position: 'relative',
+                  borderRadius: 4,
+                  background: 'linear-gradient(135deg, rgba(44, 44, 46, 0.6) 0%, rgba(28, 28, 30, 0.8) 100%)',
+                  backdropFilter: 'blur(32px)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  overflow: 'hidden',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, transparent 50%, rgba(245, 158, 11, 0.02) 100%)',
+                    pointerEvents: 'none'
+                  }
+                }}
               >
-                <Box
-                  sx={{ 
-                    p: { xs: 3, sm: 4 }, 
-                    borderRadius: 3,
-                    backgroundColor: 'rgba(44, 44, 46, 0.3)',
-                    backdropFilter: 'blur(24px)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
-                  }}
-                >
-                  <Typography 
-                    sx={{ 
-                      mb: 3,
-                      fontWeight: 600,
-                      color: '#F5F5F7',
-                      fontSize: { xs: '1.125rem', sm: '1.25rem' },
-                      letterSpacing: '-0.02em'
-                    }}
-                  >
-                    Filtrar por categoría
-                  </Typography>
+                <Box sx={{ position: 'relative', zIndex: 1, p: { xs: 4, sm: 5 } }}>
+                  {/* Header del panel de filtros */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    mb: 4
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box
+                        sx={{
+                          p: 1,
+                          borderRadius: 2,
+                          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.08) 100%)',
+                          border: '1px solid rgba(59, 130, 246, 0.2)'
+                        }}
+                      >
+                        <FilterList sx={{ color: '#3B82F6', fontSize: 18 }} />
+    </Box>
+                      <Typography 
+                        sx={{ 
+                          fontWeight: 600,
+                          color: '#F5F5F7',
+                          fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                          letterSpacing: '-0.02em'
+                        }}
+                      >
+                        Filtrar Menú
+                      </Typography>
+                    </Box>
+                    
+                    {/* Contador activo */}
+                    <Box
+                      sx={{
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: 2,
+                        backgroundColor: 'rgba(245, 158, 11, 0.12)',
+                        border: '1px solid rgba(245, 158, 11, 0.2)'
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          color: '#F59E0B',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          letterSpacing: '0.02em'
+                        }}
+                      >
+                        {filteredProducts.length} productos
+                      </Typography>
+                    </Box>
+                  </Box>
                   
-                  <Stack 
-                    direction="row" 
-                    spacing={1.5}
-                    sx={{ 
-                      flexWrap: 'wrap',
-                      gap: 1.5,
+                  {/* Grid de categorías premium */}
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { 
+                        xs: 'repeat(2, 1fr)', 
+                        sm: 'repeat(3, 1fr)', 
+                        md: 'repeat(4, 1fr)' 
+                      },
+                      gap: 2
                     }}
                   >
-                    {categories.map((category) => (
+                    {categories.map((category, index) => (
                       <MotionBox
                         key={category.name}
-                        whileHover={{ scale: 1.02 }}
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        transition={{ 
+                          delay: index * 0.1, 
+                          duration: 0.4,
+                          ease: [0.04, 0.62, 0.23, 0.98]
+                        }}
+                        whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <Chip
-                          label={`${category.name} (${category.count})`}
+                        <Box
                           onClick={() => setSelectedCategory(category.name)}
-                          variant={selectedCategory === category.name ? 'filled' : 'outlined'}
                           sx={{
-                            minHeight: 40,
-                            borderRadius: 2.5,
-                            fontWeight: selectedCategory === category.name ? 600 : 500,
-                            fontSize: '0.875rem',
-                            px: 2,
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            p: 3,
+                            borderRadius: 3,
                             cursor: 'pointer',
-                            backgroundColor: selectedCategory === category.name 
-                              ? '#3B82F6' 
-                              : 'rgba(255, 255, 255, 0.02)',
-                            color: selectedCategory === category.name 
-                              ? '#FFFFFF' 
-                              : '#A1A1AA',
-                            borderColor: selectedCategory === category.name 
-                              ? '#3B82F6' 
-                              : 'rgba(161, 161, 170, 0.2)',
+                            position: 'relative',
+                            background: selectedCategory === category.name 
+                              ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)'
+                              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                            border: selectedCategory === category.name 
+                              ? '1px solid rgba(59, 130, 246, 0.3)' 
+                              : '1px solid rgba(255, 255, 255, 0.08)',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                             '&:hover': {
                               backgroundColor: selectedCategory === category.name 
-                                ? '#2563eb' 
-                                : 'rgba(255,255,255,0.06)',
-                              color: selectedCategory === category.name 
-                                ? '#FFFFFF' 
-                                : '#F5F5F7',
+                                ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(59, 130, 246, 0.15) 100%)'
+                                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
                               borderColor: selectedCategory === category.name 
-                                ? '#2563eb' 
-                                : 'rgba(161, 161, 170, 0.3)',
+                                ? 'rgba(59, 130, 246, 0.4)' 
+                                : 'rgba(255, 255, 255, 0.15)',
+                              boxShadow: selectedCategory === category.name 
+                                ? '0 8px 32px rgba(59, 130, 246, 0.15)' 
+                                : '0 4px 16px rgba(0, 0, 0, 0.1)'
                             },
+                            '&::before': selectedCategory === category.name ? {
+                              content: '""',
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              height: '2px',
+                              background: 'linear-gradient(90deg, #3B82F6 0%, rgba(59, 130, 246, 0.5) 100%)',
+                              borderRadius: '3px 3px 0 0'
+                            } : {}
                           }}
-                        />
+                        >
+                          <Typography
+                            sx={{
+                              fontWeight: selectedCategory === category.name ? 600 : 500,
+                              fontSize: { xs: '0.875rem', sm: '0.9rem' },
+                              color: selectedCategory === category.name ? '#3B82F6' : '#F5F5F7',
+                              letterSpacing: '-0.01em',
+                              mb: 1,
+                              textAlign: 'center'
+                            }}
+                          >
+                            {category.name}
+                          </Typography>
+                          
+                          <Typography
+                            sx={{
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              color: selectedCategory === category.name ? '#3B82F6' : '#A1A1AA',
+                              textAlign: 'center',
+                              opacity: 0.8
+                            }}
+                          >
+                            {category.count} {category.count === 1 ? 'item' : 'items'}
+                          </Typography>
+                        </Box>
                       </MotionBox>
                     ))}
-                  </Stack>
-    </Box>
-              </MotionBox>
-            </Fade>
+                  </Box>
+
+                  {/* Footer del panel */}
+                  <Box
+                    sx={{
+                      mt: 4,
+                      pt: 3,
+                      borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                      display: 'flex',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: '#A1A1AA',
+                        fontSize: '0.8rem',
+                        fontWeight: 500,
+                        opacity: 0.7,
+                        textAlign: 'center'
+                      }}
+                    >
+                      Selecciona una categoría para filtrar el menú
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </MotionBox>
           )}
         </AnimatePresence>
 
-        {/* Contador de productos */}
-        <MotionBox
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          sx={{ 
-            mb: 6,
-            textAlign: 'center'
-          }}
-        >
-          <Typography 
+        {/* Indicador de filtro activo */}
+        {selectedCategory !== 'Todas' && (
+          <MotionBox
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
             sx={{ 
-              color: '#A1A1AA',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              px: 3,
-              py: 1,
-              backgroundColor: 'rgba(44, 44, 46, 0.4)',
-              borderRadius: 2,
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              display: 'inline-block'
+              mb: 6,
+              textAlign: 'center'
             }}
           >
-            {filteredProducts.length} {filteredProducts.length === 1 ? 'producto' : 'productos'}
-            {selectedCategory !== 'Todas' && ` en ${selectedCategory}`}
-          </Typography>
-        </MotionBox>
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 2,
+                px: 3,
+                py: 1.5,
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderRadius: 3,
+                border: '1px solid rgba(59, 130, 246, 0.2)'
+              }}
+            >
+              <Typography 
+                sx={{ 
+                  color: '#3B82F6',
+                  fontSize: '0.875rem',
+                  fontWeight: 600
+                }}
+              >
+                Mostrando: {selectedCategory}
+              </Typography>
+              <MotionBox
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <IconButton
+                  size="small"
+                  onClick={() => setSelectedCategory('Todas')}
+                  sx={{
+                    color: '#3B82F6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    width: 24,
+                    height: 24,
+                    '&:hover': {
+                      backgroundColor: 'rgba(59, 130, 246, 0.2)'
+                    }
+                  }}
+                >
+                  <Close sx={{ fontSize: 14 }} />
+                </IconButton>
+              </MotionBox>
+            </Box>
+          </MotionBox>
+        )}
 
         {/* Secciones del menú */}
         <AnimatePresence mode="wait">
