@@ -36,7 +36,6 @@ const MenuSelector: React.FC = () => {
     loading, 
     error, 
     connected,
-    initializeDatabase 
   } = useFirebaseMenu(undefined, { isActive: true }, true);
 
   // Verificar si existen menús al cargar

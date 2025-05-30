@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -51,28 +51,170 @@ import {
   Menu as MenuIcon,
   Close as CloseIcon,
   Dashboard as DashboardIcon,
+  Login as LoginIcon,
 } from '@mui/icons-material';
 import { useFirebaseMenu } from '../../hooks/useFirebaseMenu';
 import { useFirebaseCategories } from '../../hooks/useFirebaseCategories';
 import ProductManager from './components/ProductManager';
 import CategoryManager from './components/CategoryManager';
-import QRMenuGenerator from '../components/QRGenerator';
+import QRMenuGenerator from './components/QRMenuGenerator';
 import { prepareInitialData } from '../../lib/firebaseInitialData';
 
 const MotionCard = motion(Card);
 const MotionBox = motion(Box);
 const MotionPaper = motion(Paper);
 
-interface AdminDashboardProps {
-  onLogout: () => void;
-}
-
 type DashboardView = 'main' | 'products' | 'categories' | 'stats' | 'qr';
 
-export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
+// Simple login component
+const LoginForm = ({ onLogin, loading, error }: { 
+  onLogin: (password: string) => void; 
+  loading: boolean; 
+  error: string | null; 
+}) => {
+  const [password, setPassword] = useState('');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onLogin(password);
+  };
+
+  return (
+    <Box sx={{ 
+      minHeight: '100vh',
+      backgroundColor: '#0A0A0A',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative'
+    }}>
+      {/* Fondo elegante */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+            radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.02) 0%, transparent 50%),
+            linear-gradient(180deg, rgba(10, 10, 10, 1) 0%, rgba(16, 16, 16, 1) 100%)
+          `,
+          pointerEvents: 'none'
+        }}
+      />
+
+      <Container maxWidth="sm" sx={{ position: 'relative' }}>
+        <MotionPaper
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          sx={{
+            p: { xs: 3, md: 4 },
+            background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(26, 26, 26, 0.8) 100%)',
+            border: '1px solid rgba(212, 175, 55, 0.2)',
+            textAlign: 'center'
+          }}
+        >
+          <Box
+            sx={{ 
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              p: 2,
+              mb: 3,
+              border: '2px solid #D4AF37',
+              background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%)',
+            }}
+          >
+            <AdminPanelSettings sx={{ color: '#D4AF37', fontSize: 40 }} />
+          </Box>
+          
+          <Typography 
+            variant={isMobile ? "h5" : "h4"}
+            sx={{ 
+              fontWeight: 700,
+              color: '#F8F8F8',
+              mb: 1,
+              letterSpacing: '0.02em'
+            }}
+          >
+            Panel de Administración
+          </Typography>
+          
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              color: '#B8B8B8',
+              mb: 4
+            }}
+          >
+            Ingresa la contraseña para acceder
+          </Typography>
+
+          <form onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              type="password"
+              label="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              sx={{
+                mb: 3,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 0,
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                },
+              }}
+            />
+
+            {error && (
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 0 }}>
+                {error}
+              </Alert>
+            )}
+
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              size="large"
+              disabled={loading || !password.trim()}
+              startIcon={loading ? <CircularProgress size={20} /> : <LoginIcon />}
+              sx={{
+                py: 1.5,
+                borderRadius: 0,
+                background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #E8C547 0%, #D4AF37 100%)',
+                },
+              }}
+            >
+              {loading ? 'Verificando...' : 'Acceder'}
+            </Button>
+          </form>
+        </MotionPaper>
+      </Container>
+    </Box>
+  );
+};
+
+// Main page component - this is what Next.js expects
+export default function AdminPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  
+  // Dashboard state
   const [currentView, setCurrentView] = useState<DashboardView>('main');
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [newMenuName, setNewMenuName] = useState('');
@@ -80,6 +222,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [selectedMenuId, setSelectedMenuId] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
+  // Check if already authenticated on mount
+  useEffect(() => {
+    const isAuth = localStorage.getItem('admin_authenticated') === 'true';
+    setIsAuthenticated(isAuth);
+  }, []);
+
   const { 
     menus,
     products,
@@ -90,12 +238,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     initializeDatabase,
     exportData,
     refreshData
-  } = useFirebaseMenu(undefined, undefined, true);
+  } = useFirebaseMenu(undefined, undefined, isAuthenticated);
 
   const {
     categories,
     loading: categoriesLoading
-  } = useFirebaseCategories(selectedMenuId, true);
+  } = useFirebaseCategories(selectedMenuId, isAuthenticated);
 
   // Seleccionar el primer menú disponible automáticamente
   React.useEffect(() => {
@@ -104,6 +252,33 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   }, [menus, selectedMenuId]);
 
+  const handleLogin = async (password: string) => {
+    setAuthLoading(true);
+    setAuthError(null);
+    
+    // Simple password check - in production, use proper authentication
+    if (password === 'admin123') {
+      setIsAuthenticated(true);
+      localStorage.setItem('admin_authenticated', 'true');
+    } else {
+      setAuthError('Contraseña incorrecta');
+    }
+    
+    setAuthLoading(false);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('admin_authenticated');
+    setCurrentView('main');
+  };
+
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return <LoginForm onLogin={handleLogin} loading={authLoading} error={authError} />;
+  }
+
+  // ... rest of existing code remains the same
   const handleCreateMenu = async () => {
     if (!newMenuName.trim() || !newMenuDescription.trim()) return;
 
@@ -271,7 +446,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           fullWidth
           variant="outlined"
           startIcon={<ExitToApp />}
-          onClick={onLogout}
+          onClick={handleLogout}
           sx={{
             borderRadius: 0,
             borderColor: 'rgba(212, 175, 55, 0.3)',
@@ -908,7 +1083,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <ConnectionStatus />
               <Tooltip title="Cerrar Sesión">
                 <IconButton
-                  onClick={onLogout}
+                  onClick={handleLogout}
                   sx={{ 
                     color: '#F8F8F8',
                     '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
@@ -1041,8 +1216,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               transition={{ duration: 0.4 }}
             >
               <QRMenuGenerator 
-                menuId={selectedMenuId}
-                menuName={currentMenu?.name || 'Menú'}
+                menus={menus}
+                onBack={() => setCurrentView('main')}
               />
             </MotionBox>
           )}

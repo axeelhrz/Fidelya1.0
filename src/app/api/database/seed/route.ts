@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDatabase } from '../../../../lib/firebase-database';
-import { initialProducts } from '../../../data/initialProducts';
+import { initialProducts } from '@/data/initialProducts';
 
 export async function POST(request: NextRequest) {
   try {
