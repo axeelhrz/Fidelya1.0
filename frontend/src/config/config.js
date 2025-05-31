@@ -1,7 +1,7 @@
 // Configuración de la aplicación
 const config = {
-  // URL base de la API
-  API_BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  // URL base de la API - ACTUALIZADA AL NUEVO PUERTO
+  API_BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:5001/api',
   
   // Configuración JWT
   JWT_STORAGE_KEY: 'token',

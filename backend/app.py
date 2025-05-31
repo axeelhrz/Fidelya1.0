@@ -363,22 +363,29 @@ def internal_error(error):
 
 if __name__ == '__main__':
     print("🚀 Iniciando Frutería Nina Backend...")
-    print("📊 Inicializando base de datos...")
-    
+    print("=" * 50)
     if init_database():
-        print("✅ Base de datos inicializada correctamente")
-        print("🌐 Iniciando servidor Flask...")
-        print("📍 Servidor disponible en: http://localhost:5000")
-        print("🔗 Endpoints disponibles:")
+        print("=" * 50)
+        print("✅ ¡Sistema listo!")
+        print("🌐 Servidor Flask iniciado en: http://localhost:5001")  # Cambio de puerto
+        print("🎯 Frontend esperado en: http://localhost:3000")
+        print("📋 Endpoints disponibles:")
         print("   - POST /api/register")
         print("   - POST /api/login") 
         print("   - GET /api/verify-token")
-        print("   - GET /api/verify-token")
         print("   - GET /api/dashboard")
-        print("🎯 Frontend esperado en: http://localhost:3000")
-        app.run(debug=True, port=5000, host='0.0.0.0')
+        print("   - GET /api/health")
+        print("=" * 50)
+        app.run(debug=True, port=5001, host='0.0.0.0')  # Cambio de puerto a 5001
     else:
-        print("💡 Pasos para solucionar:")
-        print("   1. Verifica que MySQL esté corriendo")
-        print("   2. Actualiza la contraseña en DB_CONFIG")
-        print("   3. Verifica que el usuario 'root' tenga permisos")
+        print("=" * 50)
+        print("❌ Error inicializando base de datos")
+        print("💡 Ejecuta estos comandos en MySQL:")
+        print("   mysql -u root -p")
+        print("   DROP USER IF EXISTS 'fruteria_user'@'localhost';")
+        print("   CREATE USER 'fruteria_user'@'localhost' IDENTIFIED BY 'fruteria_password_123';")
+        print("   GRANT ALL PRIVILEGES ON fruteria_nina.* TO 'fruteria_user'@'localhost';")
+        print("   GRANT CREATE ON *.* TO 'fruteria_user'@'localhost';")
+        print("   FLUSH PRIVILEGES;")
+        print("   EXIT;")
+        print("=" * 50)

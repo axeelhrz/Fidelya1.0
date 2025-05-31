@@ -1,8 +1,8 @@
 import axios from 'axios';
 import config from '../config/config';
 
-// URL base del backend Flask
-const API_URL = config.API_BASE_URL || 'http://localhost:5000/api';
+// URL base del backend Flask - ACTUALIZADA AL NUEVO PUERTO
+const API_URL = config.API_BASE_URL || 'http://localhost:5001/api';
 
 // Configurar instancia de axios con configuraciones base
 const api = axios.create({
@@ -36,9 +36,8 @@ api.interceptors.response.use(
     // Manejar errores de CORS específicamente
     if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
       console.error('Error de CORS o conexión:', error);
-      // No redirigir automáticamente en errores de red
       return Promise.reject({
-        message: 'Error de conexión. Verifica que el servidor esté funcionando.',
+        message: 'Error de conexión. Verifica que el servidor esté funcionando en puerto 5001.',
         type: 'NETWORK_ERROR'
       });
     }
@@ -47,7 +46,6 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('rememberUser');
-      // Solo redirigir si no estamos ya en login
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
@@ -66,6 +64,7 @@ api.interceptors.response.use(
 export const login = async (correo, contraseña) => {
   try {
     console.log('Intentando login con:', { correo, url: `${API_URL}/login` });
+    
     const response = await axios.post(`${API_URL}/login`, {
   correo: correo.trim().toLowerCase(),
   contraseña,
@@ -78,17 +77,16 @@ export const login = async (correo, contraseña) => {
     
     console.log('Respuesta de login:', response.data);
     
-    // Validar que la respuesta tenga la estructura esperada
     if (!response.data.token || !response.data.user) {
       throw new Error('Respuesta del servidor inválida');
   }
+    
     return response.data;
   } catch (error) {
     console.error('Error en login:', error);
     
-    // Manejar diferentes tipos de errores
     if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-      throw { message: 'Error de conexión. Verifica que el servidor esté funcionando.' };
+      throw { message: 'Error de conexión. Verifica que el servidor esté funcionando en puerto 5001.' };
   }
     
     throw error.response?.data || { message: 'Error de conexión con el servidor' };
@@ -122,9 +120,8 @@ export const register = async (nombre, correo, contraseña) => {
   } catch (error) {
     console.error('Error en registro:', error);
     
-    // Manejar diferentes tipos de errores
     if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-      throw { message: 'Error de conexión. Verifica que el servidor esté funcionando.' };
+      throw { message: 'Error de conexión. Verifica que el servidor esté funcionando en puerto 5001.' };
     }
     
     throw error.response?.data || { message: 'Error de conexión con el servidor' };
