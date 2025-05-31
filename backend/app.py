@@ -18,7 +18,7 @@ app.config['JWT_EXPIRATION_DELTA'] = timedelta(hours=24)
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': '',  # Cambia por tu contraseña de MySQL
+    'password': 'Missifu2565711-9',  # Cambia por tu contraseña de MySQL
     'database': 'fruteria_nina'
 }
 

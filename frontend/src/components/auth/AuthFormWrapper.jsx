@@ -35,7 +35,8 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #f5f5f5 0%, #e8f5e8 100%)',
+        // Gradiente específico del diseño
+        background: 'linear-gradient(135deg, #c1fba4 0%, #ffe5b4 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -51,9 +52,10 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
         <Paper
           elevation={4}
           sx={{
-            borderRadius: 4,
+            borderRadius: '18px', // Especificado en el diseño
             overflow: 'hidden',
             minHeight: isMobile ? 'auto' : '600px',
+            boxShadow: 'rgba(0,0,0,0.1) 0px 4px 20px', // Especificado en el diseño
           }}
         >
           <Grid container sx={{ minHeight: isMobile ? 'auto' : '600px' }}>
@@ -104,17 +106,29 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
                     
                     {/* Contenido principal */}
                     <Box sx={{ textAlign: 'center', zIndex: 1 }}>
-                      <Typography variant="h3" sx={{ mb: 2, fontWeight: 600 }}>
-                        🍎 Frutería Nina
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.5, duration: 0.5, type: "spring" }}
+                      >
+                        <Typography variant="h3" sx={{ mb: 2, fontWeight: 600 }}>
+                          🍎 Frutería Nina
                       </Typography>
-                      <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-                        Sistema de Gestión Contable
-                      </Typography>
-                      <Typography variant="body1" sx={{ opacity: 0.8, maxWidth: 300 }}>
-                        Gestiona tu negocio de manera eficiente con nuestro sistema 
-                        diseñado especialmente para fruterías
-                      </Typography>
-                    </Box>
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.7, duration: 0.5 }}
+                      >
+                        <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
+                      Sistema de Gestión Contable
+                    </Typography>
+                        <Typography variant="body1" sx={{ opacity: 0.8, maxWidth: 300 }}>
+                          Gestiona tu negocio de manera eficiente con nuestro sistema 
+                          diseñado especialmente para fruterías
+                        </Typography>
+      </motion.div>
+    </Box>
                   </Box>
                 </motion.div>
               </Grid>
@@ -129,6 +143,7 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
                   flexDirection: 'column',
                   justifyContent: 'center',
                   padding: { xs: 3, sm: 4, md: 6 },
+                  backgroundColor: '#ffffff',
                 }}
               >
                 {/* Header móvil */}
@@ -145,7 +160,7 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
 
                 {/* Título del formulario */}
                 <Box sx={{ mb: 4 }}>
-                  <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
+                  <Typography variant="h4" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
                     {title}
                   </Typography>
                   {subtitle && (
