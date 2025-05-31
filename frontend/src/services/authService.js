@@ -1,16 +1,19 @@
 import axios from 'axios';
+import config from '../config/config';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+// URL base del backend Flask
+const API_URL = config.API_BASE_URL || 'http://localhost:5000/api';
 
-// Configurar axios con interceptores
+// Configurar instancia de axios con configuraciones base
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
+  timeout: config.REQUEST_TIMEOUT || 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor para agregar token a las peticiones
+// Interceptor para agregar token automáticamente a las peticiones
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -20,61 +23,186 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('Error en interceptor de request:', error);
     return Promise.reject(error);
   }
 );
 
-// Interceptor para manejar respuestas
+// Interceptor para manejar respuestas y errores globalmente
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Manejar token expirado o inválido
     if (error.response?.status === 401) {
-      // Token inválido o expirado
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      localStorage.removeItem('rememberUser');
+      // Solo redirigir si no estamos ya en login
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
+    
+    // Manejar errores de red
+    if (!error.response) {
+      console.error('Error de red:', error.message);
+    }
+    
     return Promise.reject(error);
   }
 );
 
-export const authService = {
-  // Iniciar sesión
-  login: async (credentials) => {
-    try {
-      const response = await api.post('/login', credentials);
+/**
+ * Inicia sesión de usuario
+ * @param {string} correo - Correo electrónico
+ * @param {string} contraseña - Contraseña sin hashear
+ * @returns {object} - { token, user: { id, nombre, correo, rol }, message }
+ */
+export const login = async (correo, contraseña) => {
+  try {
+const response = await api.post('/login', {
+  correo: correo.trim().toLowerCase(),
+  contraseña,
+});
+    
+    // Validar que la respuesta tenga la estructura esperada
+    if (!response.data.token || !response.data.user) {
+      throw new Error('Respuesta del servidor inválida');
+    }
       return response.data;
     } catch (error) {
-      throw error;
+    console.error('Error en login:', error);
+    throw error.response?.data || { message: 'Error de conexión con el servidor' };
     }
-  },
+};
 
-  // Registrar usuario
-  register: async (userData) => {
-    try {
-      const response = await api.post('/register', userData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Verificar token
-  verifyToken: async () => {
-    try {
-      const response = await api.get('/verify-token');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Obtener datos del dashboard (ejemplo de ruta protegida)
-  getDashboard: async () => {
-    try {
-      const response = await api.get('/dashboard');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+/**
+ * Registra un nuevo usuario
+ * @param {string} nombre - Nombre del usuario
+ * @param {string} correo - Email del usuario
+ * @param {string} contraseña - Contraseña sin hashear
+ * @returns {object} - { message, success: true }
+ */
+export const register = async (nombre, correo, contraseña) => {
+  try {
+const response = await api.post('/register', {
+      nombre: nombre.trim(),
+      correo: correo.trim().toLowerCase(),
+      contraseña,
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error en registro:', error);
+    throw error.response?.data || { message: 'Error de conexión con el servidor' };
   }
 };
+
+/**
+ * Verifica si un token JWT es válido
+ * @param {string} token - JWT del usuario (opcional, usa el del localStorage si no se proporciona)
+ * @returns {object} - { valid: true/false, user: { id, nombre, correo, rol } }
+ */
+export const verifyToken = async (token = null) => {
+  try {
+    const authToken = token || localStorage.getItem('token');
+    
+    if (!authToken) {
+      return { valid: false };
+    }
+    
+    const response = await axios.get(`${API_URL}/verify-token`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error verificando token:', error);
+    return { valid: false };
+  }
+};
+
+/**
+ * Cierra sesión del usuario
+ * @returns {boolean} - true si se cerró sesión correctamente
+ */
+export const logout = () => {
+  try {
+    localStorage.removeItem('token');
+    localStorage.removeItem('rememberUser');
+    return true;
+  } catch (error) {
+    console.error('Error cerrando sesión:', error);
+    return false;
+  }
+};
+
+/**
+ * Obtiene el token del localStorage
+ * @returns {string|null} - Token JWT o null si no existe
+ */
+export const getToken = () => {
+  try {
+    return localStorage.getItem('token');
+  } catch (error) {
+    console.error('Error obteniendo token:', error);
+    return null;
+  }
+};
+
+/**
+ * Guarda el token en localStorage
+ * @param {string} token - Token JWT a guardar
+ * @returns {boolean} - true si se guardó correctamente
+ */
+export const setToken = (token) => {
+  try {
+    if (token) {
+      localStorage.setItem('token', token);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error guardando token:', error);
+    return false;
+  }
+};
+
+/**
+ * Verifica si el usuario está autenticado
+ * @returns {boolean} - true si hay un token válido
+ */
+export const isAuthenticated = () => {
+  const token = getToken();
+  return !!token;
+};
+
+/**
+ * Obtener datos del dashboard (ejemplo de ruta protegida)
+ * @returns {object} - Datos del dashboard
+ */
+export const getDashboard = async () => {
+  try {
+    const response = await api.get('/dashboard');
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo dashboard:', error);
+    throw error.response?.data || { message: 'Error obteniendo datos del dashboard' };
+  }
+};
+
+// Objeto principal del servicio de autenticación
+export const authService = {
+  login,
+  register,
+  verifyToken,
+  logout,
+  getToken,
+  setToken,
+  isAuthenticated,
+  getDashboard,
+};
+
+// Exportación por defecto
+export default authService;

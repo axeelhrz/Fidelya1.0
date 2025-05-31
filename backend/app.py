@@ -8,7 +8,7 @@ import os
 from functools import wraps
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
 
 # Configuración
 app.config['SECRET_KEY'] = 'tu_clave_secreta_muy_segura_para_jwt'

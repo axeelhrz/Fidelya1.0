@@ -24,29 +24,43 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = authService.getToken();
+      
       if (token) {
-        // Verificar si el token no ha expirado
-        const decodedToken = jwtDecode(token);
-        const currentTime = Date.now() / 1000;
-        
-        if (decodedToken.exp > currentTime) {
-          // Token válido, verificar con el servidor
-          const response = await authService.verifyToken();
-          if (response.valid) {
-            setUser(response.user);
-            setIsAuthenticated(true);
+        // Verificar si el token no ha expirado localmente
+        try {
+          const decodedToken = jwtDecode(token);
+          const currentTime = Date.now() / 1000;
+          
+          if (decodedToken.exp > currentTime) {
+            // Token válido localmente, verificar con el servidor
+            const response = await authService.verifyToken(token);
+      
+            if (response.valid && response.user) {
+      setUser(response.user);
+      setIsAuthenticated(true);
+            } else {
+              // Token inválido en el servidor
+              await logout();
+            }
           } else {
-            logout();
+            // Token expirado localmente
+            console.log('Token expirado localmente');
+            await logout();
           }
-        } else {
-          // Token expirado
-          logout();
-        }
+        } catch (decodeError) {
+          // Error decodificando token
+          console.error('Error decodificando token:', decodeError);
+          await logout();
+    }
+      } else {
+        // No hay token
+    setIsAuthenticated(false);
+        setUser(null);
       }
     } catch (error) {
       console.error('Error verificando autenticación:', error);
-      logout();
+      await logout();
     } finally {
       setLoading(false);
     }
@@ -54,40 +68,105 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await authService.login(credentials);
+      setLoading(true);
       
-      // Guardar token y datos del usuario
-      localStorage.setItem('token', response.token);
-      setUser(response.user);
-      setIsAuthenticated(true);
+      // Validar credenciales
+      if (!credentials.correo || !credentials.contraseña) {
+        return { 
+          success: false, 
+          message: 'Correo y contraseña son requeridos' 
+  };
+      }
+
+      const response = await authService.login(credentials.correo, credentials.contraseña);
       
-      return { success: true, user: response.user };
+      if (response.token && response.user) {
+        // Guardar token
+        const tokenSaved = authService.setToken(response.token);
+        
+        if (tokenSaved) {
+          setUser(response.user);
+          setIsAuthenticated(true);
+          
+          return { 
+            success: true, 
+            user: response.user,
+            message: response.message || 'Inicio de sesión exitoso'
+};
+        } else {
+          return { 
+            success: false, 
+            message: 'Error guardando sesión' 
+          };
+        }
+      } else {
+        return { 
+          success: false, 
+          message: 'Respuesta del servidor inválida' 
+        };
+      }
     } catch (error) {
       console.error('Error en login:', error);
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Error al iniciar sesión' 
+        message: error.message || 'Error al iniciar sesión' 
       };
+    } finally {
+      setLoading(false);
     }
   };
 
   const register = async (userData) => {
     try {
-      const response = await authService.register(userData);
-      return { success: true, message: response.message };
+      setLoading(true);
+      
+      // Validar datos
+      if (!userData.nombre || !userData.correo || !userData.contraseña) {
+        return { 
+          success: false, 
+          message: 'Todos los campos son requeridos' 
+        };
+      }
+
+      const response = await authService.register(
+        userData.nombre, 
+        userData.correo, 
+        userData.contraseña
+      );
+      
+      return { 
+        success: true, 
+        message: response.message || 'Usuario registrado exitosamente' 
+      };
     } catch (error) {
       console.error('Error en registro:', error);
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Error al registrar usuario' 
+        message: error.message || 'Error al registrar usuario' 
       };
+    } finally {
+      setLoading(false);
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    setIsAuthenticated(false);
+  const logout = async () => {
+    try {
+      // Limpiar estado local
+      setUser(null);
+      setIsAuthenticated(false);
+      
+      // Limpiar localStorage
+      authService.logout();
+      
+      return true;
+    } catch (error) {
+      console.error('Error en logout:', error);
+      return false;
+    }
+  };
+
+  const refreshAuth = async () => {
+    await checkAuthStatus();
   };
 
   const value = {
@@ -97,7 +176,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    checkAuthStatus
+    checkAuthStatus,
+    refreshAuth
   };
 
   return (

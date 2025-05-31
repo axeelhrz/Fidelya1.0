@@ -49,19 +49,32 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm({
     resolver: yupResolver(schema),
   });
+
+  // Cargar email recordado al montar el componente
+  React.useEffect(() => {
+    const rememberedEmail = localStorage.getItem('rememberUser');
+    if (rememberedEmail) {
+      setRememberMe(true);
+      setValue('correo', rememberedEmail);
+    }
+  }, [setValue]);
 
   const onSubmit = async (data) => {
     setLoading(true);
     setError('');
 
     try {
-      const result = await login(data);
+      const result = await login({
+        correo: data.correo,
+        contraseña: data.contraseña
+      });
       
       if (result.success) {
-        // Guardar preferencia de "recordarme"
+        // Manejar "recordarme"
         if (rememberMe) {
           localStorage.setItem('rememberUser', data.correo);
         } else {
@@ -75,24 +88,15 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
         
         reset();
       } else {
-        setError(result.message);
+        setError(result.message || 'Error al iniciar sesión');
       }
     } catch (err) {
+      console.error('Error inesperado en login:', err);
       setError('Error inesperado. Intenta nuevamente.');
     } finally {
       setLoading(false);
     }
   };
-
-  // Cargar email recordado al montar el componente
-  React.useEffect(() => {
-    const rememberedEmail = localStorage.getItem('rememberUser');
-    if (rememberedEmail) {
-      setRememberMe(true);
-      // Establecer el valor en el formulario
-      reset({ correo: rememberedEmail });
-    }
-  }, [reset]);
 
   const formVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -109,7 +113,7 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
-  };
+};
 
   return (
     <motion.div
@@ -193,7 +197,6 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
               color="primary"
               sx={{ textDecoration: 'none' }}
               onClick={() => {
-                // Aquí podrías implementar la funcionalidad de "olvidé mi contraseña"
                 alert('Funcionalidad de recuperación de contraseña próximamente');
               }}
             >
