@@ -73,21 +73,21 @@ def init_database():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
         
-        # Crear tabla productos actualizada para inventario
+        # Crear tabla productos según especificaciones del prompt
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS productos (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 nombre VARCHAR(100) NOT NULL,
-                categoria ENUM('fruta', 'verdura', 'otro') NOT NULL,
+                categoria ENUM('frutas', 'verduras', 'otros') NOT NULL,
+                unidad ENUM('kg', 'unidad', 'caja') DEFAULT 'unidad',
+                stock_actual INT DEFAULT 0,
+                stock_minimo INT DEFAULT 0,
+                precio_unitario DECIMAL(10,2) NOT NULL,
                 proveedor VARCHAR(100),
-                unidad VARCHAR(20) DEFAULT 'kg',
-                precio_compra DECIMAL(10,2) DEFAULT 0.00,
-                precio_venta DECIMAL(10,2) DEFAULT 0.00,
-                stock INT DEFAULT 0,
-                stock_minimo INT DEFAULT 5,
-                activo BOOLEAN DEFAULT TRUE,
                 creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                actualizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                INDEX idx_categoria (categoria),
+                INDEX idx_stock_bajo (stock_actual, stock_minimo),
+                INDEX idx_nombre (nombre)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
         
@@ -101,8 +101,10 @@ def init_database():
                 motivo VARCHAR(255),
                 usuario_id INT,
                 fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (producto_id) REFERENCES productos(id),
-                FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+                FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+                INDEX idx_producto_fecha (producto_id, fecha),
+                INDEX idx_tipo (tipo)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
         
@@ -113,7 +115,8 @@ def init_database():
                 total DECIMAL(10,2) NOT NULL,
                 fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 usuario_id INT,
-                FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+                INDEX idx_fecha (fecha)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
         
@@ -122,7 +125,9 @@ def init_database():
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 proveedor VARCHAR(100) NOT NULL,
                 total DECIMAL(10,2) NOT NULL,
-                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_fecha (fecha),
+                INDEX idx_proveedor (proveedor)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
         
@@ -131,7 +136,9 @@ def init_database():
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 tipo ENUM('venta', 'compra', 'ajuste') NOT NULL,
                 detalle TEXT NOT NULL,
-                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_fecha (fecha),
+                INDEX idx_tipo (tipo)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
         
@@ -139,21 +146,27 @@ def init_database():
         cursor.execute("SELECT COUNT(*) FROM productos")
         if cursor.fetchone()[0] == 0:
             productos_ejemplo = [
-                ('Banana', 'fruta', 'Frutas del Sur', 'kg', 1.50, 2.50, 15, 5),
-                ('Manzana Roja', 'fruta', 'Frutas del Sur', 'kg', 2.00, 3.00, 3, 5),
-                ('Naranja', 'fruta', 'Frutas del Sur', 'kg', 1.80, 2.80, 20, 5),
-                ('Lechuga', 'verdura', 'Verduras Uruguay', 'unidad', 0.80, 1.50, 8, 3),
-                ('Tomate', 'verdura', 'Verduras Uruguay', 'kg', 2.50, 4.00, 12, 5),
-                ('Cebolla', 'verdura', 'Verduras Uruguay', 'kg', 0.70, 1.20, 25, 10),
-                ('Bolsas Plásticas', 'otro', 'Distribuidora Central', 'paquete', 0.30, 0.50, 100, 20),
-                ('Pera', 'fruta', 'Frutas del Sur', 'kg', 2.20, 3.50, 2, 5),
-                ('Zanahoria', 'verdura', 'Verduras Uruguay', 'kg', 1.00, 1.80, 18, 8),
-                ('Limón', 'fruta', 'Frutas del Sur', 'kg', 1.20, 2.00, 30, 10)
+                ('Banana', 'frutas', 'kg', 15, 5, 2.50, 'Frutas del Sur'),
+                ('Manzana Roja', 'frutas', 'kg', 3, 5, 3.00, 'Frutas del Sur'),
+                ('Naranja', 'frutas', 'kg', 20, 5, 2.80, 'Frutas del Sur'),
+                ('Lechuga', 'verduras', 'unidad', 8, 3, 1.50, 'Verduras Uruguay'),
+                ('Tomate', 'verduras', 'kg', 12, 5, 4.00, 'Verduras Uruguay'),
+                ('Cebolla', 'verduras', 'kg', 25, 10, 1.20, 'Verduras Uruguay'),
+                ('Bolsas Plásticas', 'otros', 'caja', 100, 20, 0.50, 'Distribuidora Central'),
+                ('Pera', 'frutas', 'kg', 2, 5, 3.50, 'Frutas del Sur'),
+                ('Zanahoria', 'verduras', 'kg', 18, 8, 1.80, 'Verduras Uruguay'),
+                ('Limón', 'frutas', 'kg', 30, 10, 2.00, 'Frutas del Sur'),
+                ('Apio', 'verduras', 'unidad', 1, 3, 1.00, 'Verduras Uruguay'),
+                ('Uva', 'frutas', 'kg', 5, 3, 4.50, 'Frutas del Sur'),
+                ('Papa', 'verduras', 'kg', 50, 15, 0.80, 'Verduras Uruguay'),
+                ('Mandarina', 'frutas', 'kg', 8, 5, 2.20, 'Frutas del Sur'),
+                ('Etiquetas', 'otros', 'caja', 200, 50, 0.30, 'Distribuidora Central')
             ]
             cursor.executemany(
-                "INSERT INTO productos (nombre, categoria, proveedor, unidad, precio_compra, precio_venta, stock, stock_minimo) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO productos (nombre, categoria, unidad, stock_actual, stock_minimo, precio_unitario, proveedor) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                 productos_ejemplo
             )
+            print("Productos de ejemplo insertados")
         
         # Insertar ventas de ejemplo
         cursor.execute("SELECT COUNT(*) FROM ventas")
@@ -163,12 +176,18 @@ def init_database():
                 (890.00, '2024-01-15 14:20:00', 1),
                 (2100.75, '2024-01-14 16:45:00', 1),
                 (1580.25, '2024-01-14 11:15:00', 1),
-                (950.00, '2024-01-13 09:30:00', 1)
+                (950.00, '2024-01-13 09:30:00', 1),
+                (1750.00, '2024-01-13 15:20:00', 1),
+                (680.50, '2024-01-12 11:45:00', 1),
+                (2200.75, '2024-01-12 16:30:00', 1),
+                (1320.00, '2024-01-11 10:15:00', 1),
+                (1890.25, '2024-01-11 14:50:00', 1)
             ]
             cursor.executemany(
                 "INSERT INTO ventas (total, fecha, usuario_id) VALUES (%s, %s, %s)",
                 ventas_ejemplo
             )
+            print("Ventas de ejemplo insertadas")
         
         # Insertar compras de ejemplo
         cursor.execute("SELECT COUNT(*) FROM compras")
@@ -176,12 +195,15 @@ def init_database():
             compras_ejemplo = [
                 ('Frutas del Sur', 4500.00, '2024-01-15 08:00:00'),
                 ('Verduras Uruguay', 2900.00, '2024-01-14 07:30:00'),
-                ('Distribuidora Central', 3200.00, '2024-01-13 09:00:00')
+                ('Distribuidora Central', 3200.00, '2024-01-13 09:00:00'),
+                ('Frutas del Sur', 3800.00, '2024-01-12 08:15:00'),
+                ('Verduras Uruguay', 2100.00, '2024-01-11 07:45:00')
             ]
             cursor.executemany(
                 "INSERT INTO compras (proveedor, total, fecha) VALUES (%s, %s, %s)",
                 compras_ejemplo
             )
+            print("Compras de ejemplo insertadas")
         
         # Insertar movimientos de ejemplo
         cursor.execute("SELECT COUNT(*) FROM movimientos")
@@ -191,12 +213,16 @@ def init_database():
                 ('compra', 'Compra por $2500', '2024-01-15 10:12:00'),
                 ('venta', 'Venta por $950', '2024-01-15 09:45:00'),
                 ('ajuste', 'Ajuste de inventario', '2024-01-14 18:00:00'),
-                ('venta', 'Venta por $1200', '2024-01-14 14:20:00')
+                ('venta', 'Venta por $1200', '2024-01-14 14:20:00'),
+                ('compra', 'Compra por $3200', '2024-01-14 08:30:00'),
+                ('venta', 'Venta por $2100', '2024-01-13 16:45:00'),
+                ('venta', 'Venta por $890', '2024-01-13 11:20:00')
             ]
             cursor.executemany(
                 "INSERT INTO movimientos (tipo, detalle, fecha) VALUES (%s, %s, %s)",
                 movimientos_ejemplo
             )
+            print("Movimientos de ejemplo insertados")
         
         connection.commit()
         print("Tablas creadas y datos de ejemplo insertados exitosamente")
@@ -456,15 +482,17 @@ def obtener_productos(current_user_id):
         categoria = request.args.get('categoria')
         busqueda = request.args.get('busqueda')
         stock_bajo = request.args.get('stock_bajo') == 'true'
+        precio_min = request.args.get('precio_min')
+        precio_max = request.args.get('precio_max')
         orden = request.args.get('orden', 'nombre')
         direccion = request.args.get('direccion', 'asc')
         
         # Construir consulta base
         query = """
-            SELECT id, nombre, categoria, proveedor, unidad, precio_compra, 
-                   precio_venta, stock, stock_minimo, activo, creado, actualizado
+            SELECT id, nombre, categoria, proveedor, unidad, precio_unitario, 
+                   stock_actual, stock_minimo, creado
             FROM productos 
-            WHERE activo = TRUE
+            WHERE 1=1
         """
         params = []
         
@@ -479,15 +507,32 @@ def obtener_productos(current_user_id):
             params.extend([busqueda_param, busqueda_param])
             
         if stock_bajo:
-            query += " AND stock <= stock_minimo"
+            query += " AND stock_actual <= stock_minimo"
+            
+        if precio_min:
+            try:
+                query += " AND precio_unitario >= %s"
+                params.append(float(precio_min))
+            except ValueError:
+                pass
+            
+        if precio_max:
+            try:
+                query += " AND precio_unitario <= %s"
+                params.append(float(precio_max))
+            except ValueError:
+                pass
         
         # Aplicar ordenamiento
-        orden_valido = ['nombre', 'categoria', 'stock', 'precio_venta', 'actualizado']
+        orden_valido = ['nombre', 'categoria', 'stock_actual', 'precio_unitario', 'creado']
         if orden in orden_valido:
             direccion_sql = 'ASC' if direccion.lower() == 'asc' else 'DESC'
             query += f" ORDER BY {orden} {direccion_sql}"
         else:
             query += " ORDER BY nombre ASC"
+        
+        print(f"Ejecutando consulta: {query}")
+        print(f"Parámetros: {params}")
         
         cursor.execute(query, params)
         productos = []
@@ -497,18 +542,16 @@ def obtener_productos(current_user_id):
                 'id': row[0],
                 'nombre': row[1],
                 'categoria': row[2],
-                'proveedor': row[3],
+                'proveedor': row[3] or '',
                 'unidad': row[4],
-                'precio_compra': float(row[5]) if row[5] else 0.0,
-                'precio_venta': float(row[6]) if row[6] else 0.0,
-                'stock': row[7],
-                'stock_minimo': row[8],
-                'activo': row[9],
-                'creado': row[10].isoformat() if row[10] else None,
-                'actualizado': row[11].isoformat() if row[11] else None,
-                'stock_bajo': row[7] <= row[8]
+                'precio_unitario': float(row[5]) if row[5] else 0.0,
+                'stock_actual': row[6],
+                'stock_minimo': row[7],
+                'creado': row[8].isoformat() if row[8] else None,
+                'stock_bajo': row[6] <= row[7]
             })
         
+        print(f"Productos encontrados: {len(productos)}")
         response = jsonify(productos)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
@@ -536,10 +579,10 @@ def obtener_producto(current_user_id, producto_id):
             
         cursor = connection.cursor()
         cursor.execute("""
-            SELECT id, nombre, categoria, proveedor, unidad, precio_compra, 
-                   precio_venta, stock, stock_minimo, activo, creado, actualizado
+            SELECT id, nombre, categoria, proveedor, unidad, precio_unitario, 
+                   stock_actual, stock_minimo, creado
             FROM productos 
-            WHERE id = %s AND activo = TRUE
+            WHERE id = %s
         """, (producto_id,))
         
         row = cursor.fetchone()
@@ -550,18 +593,16 @@ def obtener_producto(current_user_id, producto_id):
             'id': row[0],
             'nombre': row[1],
             'categoria': row[2],
-            'proveedor': row[3],
+            'proveedor': row[3] or '',
             'unidad': row[4],
-            'precio_compra': float(row[5]) if row[5] else 0.0,
-            'precio_venta': float(row[6]) if row[6] else 0.0,
-            'stock': row[7],
-            'stock_minimo': row[8],
-            'activo': row[9],
-            'creado': row[10].isoformat() if row[10] else None,
-            'actualizado': row[11].isoformat() if row[11] else None,
-            'stock_bajo': row[7] <= row[8]
+            'precio_unitario': float(row[5]) if row[5] else 0.0,
+            'stock_actual': row[6],
+            'stock_minimo': row[7],
+            'creado': row[8].isoformat() if row[8] else None,
+            'stock_bajo': row[6] <= row[7]
         }
         
+        print(f"Producto obtenido: {producto['nombre']}")
         response = jsonify(producto)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
@@ -588,15 +629,41 @@ def crear_producto(current_user_id):
         if not data:
             return jsonify({'message': 'No se recibieron datos'}), 400
         
+        print(f"Datos recibidos para crear producto: {data}")
+        
         # Validar campos requeridos
-        campos_requeridos = ['nombre', 'categoria']
-        if not all(campo in data for campo in campos_requeridos):
-            return jsonify({'message': 'Faltan campos requeridos: nombre, categoria'}), 400
+        if not data.get('nombre') or len(data['nombre'].strip()) < 2:
+            return jsonify({'message': 'El nombre es requerido y debe tener al menos 2 caracteres'}), 400
+            
+        if not data.get('categoria'):
+            return jsonify({'message': 'La categoría es requerida'}), 400
+            
+        try:
+            precio = float(data.get('precio_unitario', 0))
+            if precio <= 0:
+                return jsonify({'message': 'El precio debe ser mayor a 0'}), 400
+        except (ValueError, TypeError):
+            return jsonify({'message': 'El precio debe ser un número válido'}), 400
         
         # Validar categoría
-        categorias_validas = ['fruta', 'verdura', 'otro']
+        categorias_validas = ['frutas', 'verduras', 'otros']
         if data['categoria'] not in categorias_validas:
-            return jsonify({'message': 'Categoría inválida'}), 400
+            return jsonify({'message': 'Categoría inválida. Debe ser: frutas, verduras o otros'}), 400
+            
+        # Validar unidad
+        unidades_validas = ['kg', 'unidad', 'caja']
+        unidad = data.get('unidad', 'unidad')
+        if unidad not in unidades_validas:
+            return jsonify({'message': 'Unidad inválida. Debe ser: kg, unidad o caja'}), 400
+        
+        # Validar stock
+        try:
+            stock_actual = int(data.get('stock_actual', 0))
+            stock_minimo = int(data.get('stock_minimo', 0))
+            if stock_actual < 0 or stock_minimo < 0:
+                return jsonify({'message': 'El stock no puede ser negativo'}), 400
+        except (ValueError, TypeError):
+            return jsonify({'message': 'El stock debe ser un número entero válido'}), 400
         
         connection = get_db_connection()
         if not connection:
@@ -605,38 +672,40 @@ def crear_producto(current_user_id):
         cursor = connection.cursor()
         
         # Verificar si el producto ya existe
-        cursor.execute("SELECT id FROM productos WHERE nombre = %s AND activo = TRUE", (data['nombre'],))
+        cursor.execute("SELECT id FROM productos WHERE nombre = %s", (data['nombre'].strip(),))
         if cursor.fetchone():
             return jsonify({'message': 'Ya existe un producto con ese nombre'}), 409
         
         # Insertar producto
         cursor.execute("""
-            INSERT INTO productos (nombre, categoria, proveedor, unidad, precio_compra, 
-                                 precio_venta, stock, stock_minimo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO productos (nombre, categoria, proveedor, unidad, precio_unitario, 
+                                 stock_actual, stock_minimo)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (
-            data['nombre'],
+            data['nombre'].strip(),
             data['categoria'],
-            data.get('proveedor', ''),
-            data.get('unidad', 'kg'),
-            data.get('precio_compra', 0.0),
-            data.get('precio_venta', 0.0),
-            data.get('stock', 0),
-            data.get('stock_minimo', 5)
+            data.get('proveedor', '').strip(),
+            unidad,
+            precio,
+            stock_actual,
+            stock_minimo
         ))
         
         producto_id = cursor.lastrowid
         connection.commit()
         
-        # Registrar movimiento si hay stock inicial
-        if data.get('stock', 0) > 0:
+        # Registrar movimiento de stock inicial si hay stock
+        if stock_actual > 0:
             cursor.execute("""
                 INSERT INTO movimientos_stock (producto_id, tipo, cantidad, motivo, usuario_id)
                 VALUES (%s, 'ingreso', %s, 'Stock inicial', %s)
-            """, (producto_id, data.get('stock', 0), current_user_id))
+            """, (producto_id, stock_actual, current_user_id))
             connection.commit()
         
-        print(f"Producto creado exitosamente: {data['nombre']}")
+
+
+
+        print(f"Producto creado exitosamente: {data['nombre']} (ID: {producto_id})")
         response = jsonify({
             'message': 'Producto creado exitosamente',
             'id': producto_id
@@ -644,6 +713,9 @@ def crear_producto(current_user_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 201
 
+    except ValueError as e:
+        print(f"Error de validación: {e}")
+        return jsonify({'message': 'Datos numéricos inválidos'}), 400
     except Exception as e:
         print(f"Error creando producto: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
@@ -666,6 +738,8 @@ def actualizar_producto(current_user_id, producto_id):
         if not data:
             return jsonify({'message': 'No se recibieron datos'}), 400
         
+        print(f"Actualizando producto {producto_id} con datos: {data}")
+        
         connection = get_db_connection()
         if not connection:
             return jsonify({'message': 'Error de conexión a la base de datos'}), 500
@@ -673,13 +747,48 @@ def actualizar_producto(current_user_id, producto_id):
         cursor = connection.cursor()
         
         # Verificar que el producto existe
-        cursor.execute("SELECT id FROM productos WHERE id = %s AND activo = TRUE", (producto_id,))
-        if not cursor.fetchone():
+        cursor.execute("SELECT id, nombre FROM productos WHERE id = %s", (producto_id,))
+        producto_existente = cursor.fetchone()
+        if not producto_existente:
             return jsonify({'message': 'Producto no encontrado'}), 404
+        
+        # Validaciones
+        if 'nombre' in data and (not data['nombre'] or len(data['nombre'].strip()) < 2):
+            return jsonify({'message': 'El nombre debe tener al menos 2 caracteres'}), 400
+            
+        if 'precio_unitario' in data:
+            try:
+                precio = float(data['precio_unitario'])
+                if precio <= 0:
+                    return jsonify({'message': 'El precio debe ser mayor a 0'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'message': 'El precio debe ser un número válido'}), 400
+            
+        if 'categoria' in data and data['categoria'] not in ['frutas', 'verduras', 'otros']:
+            return jsonify({'message': 'Categoría inválida'}), 400
+            
+        if 'unidad' in data and data['unidad'] not in ['kg', 'unidad', 'caja']:
+            return jsonify({'message': 'Unidad inválida'}), 400
+            
+        if 'stock_actual' in data:
+            try:
+                stock = int(data['stock_actual'])
+                if stock < 0:
+                    return jsonify({'message': 'El stock no puede ser negativo'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'message': 'El stock debe ser un número entero válido'}), 400
+                
+        if 'stock_minimo' in data:
+            try:
+                stock_min = int(data['stock_minimo'])
+                if stock_min < 0:
+                    return jsonify({'message': 'El stock mínimo no puede ser negativo'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'message': 'El stock mínimo debe ser un número entero válido'}), 400
         
         # Construir consulta de actualización dinámicamente
         campos_actualizables = ['nombre', 'categoria', 'proveedor', 'unidad', 
-                              'precio_compra', 'precio_venta', 'stock_minimo']
+                              'precio_unitario', 'stock_actual', 'stock_minimo']
         
         campos_update = []
         valores = []
@@ -687,24 +796,30 @@ def actualizar_producto(current_user_id, producto_id):
         for campo in campos_actualizables:
             if campo in data:
                 campos_update.append(f"{campo} = %s")
-                valores.append(data[campo])
+                if campo in ['precio_unitario']:
+                    valores.append(float(data[campo]))
+                elif campo in ['stock_actual', 'stock_minimo']:
+                    valores.append(int(data[campo]))
+                else:
+                    valores.append(data[campo].strip() if isinstance(data[campo], str) else data[campo])
         
         if not campos_update:
             return jsonify({'message': 'No hay campos para actualizar'}), 400
         
-        # Agregar timestamp de actualización
-        campos_update.append("actualizado = CURRENT_TIMESTAMP")
         valores.append(producto_id)
         
         query = f"UPDATE productos SET {', '.join(campos_update)} WHERE id = %s"
         cursor.execute(query, valores)
         connection.commit()
         
-        print(f"Producto {producto_id} actualizado exitosamente")
+        print(f"Producto {producto_id} ({producto_existente[1]}) actualizado exitosamente")
         response = jsonify({'message': 'Producto actualizado exitosamente'})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
+    except ValueError as e:
+        print(f"Error de validación: {e}")
+        return jsonify({'message': 'Datos numéricos inválidos'}), 400
     except Exception as e:
         print(f"Error actualizando producto: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
@@ -717,7 +832,7 @@ def actualizar_producto(current_user_id, producto_id):
 @app.route('/api/inventario/<int:producto_id>', methods=['DELETE'])
 @jwt_required
 def eliminar_producto(current_user_id, producto_id):
-    """Elimina un producto (soft delete)"""
+    """Elimina un producto"""
     connection = None
     cursor = None
     
@@ -729,21 +844,153 @@ def eliminar_producto(current_user_id, producto_id):
         cursor = connection.cursor()
         
         # Verificar que el producto existe
-        cursor.execute("SELECT id FROM productos WHERE id = %s AND activo = TRUE", (producto_id,))
-        if not cursor.fetchone():
+        cursor.execute("SELECT nombre FROM productos WHERE id = %s", (producto_id,))
+        producto = cursor.fetchone()
+        if not producto:
             return jsonify({'message': 'Producto no encontrado'}), 404
         
-        # Soft delete - marcar como inactivo
-        cursor.execute("UPDATE productos SET activo = FALSE WHERE id = %s", (producto_id,))
+        # Eliminar movimientos de stock relacionados primero
+        cursor.execute("DELETE FROM movimientos_stock WHERE producto_id = %s", (producto_id,))
+        
+        # Eliminar producto
+        cursor.execute("DELETE FROM productos WHERE id = %s", (producto_id,))
         connection.commit()
         
-        print(f"Producto {producto_id} eliminado exitosamente")
+        print(f"Producto {producto_id} ({producto[0]}) eliminado exitosamente")
         response = jsonify({'message': 'Producto eliminado exitosamente'})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
     except Exception as e:
         print(f"Error eliminando producto: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/inventario/stock-bajo', methods=['GET'])
+@jwt_required
+def obtener_productos_stock_bajo(current_user_id):
+    """Obtiene productos con stock bajo"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        cursor.execute("""
+            SELECT id, nombre, categoria, proveedor, unidad, precio_unitario, 
+                   stock_actual, stock_minimo, creado
+            FROM productos 
+            WHERE stock_actual <= stock_minimo
+            ORDER BY stock_actual ASC
+        """)
+        
+        productos = []
+        for row in cursor.fetchall():
+            productos.append({
+                'id': row[0],
+                'nombre': row[1],
+                'categoria': row[2],
+                'proveedor': row[3] or '',
+                'unidad': row[4],
+                'precio_unitario': float(row[5]) if row[5] else 0.0,
+                'stock_actual': row[6],
+                'stock_minimo': row[7],
+                'creado': row[8].isoformat() if row[8] else None,
+                'stock_bajo': True
+            })
+        
+        print(f"Productos con stock bajo encontrados: {len(productos)}")
+        response = jsonify(productos)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        print(f"Error obteniendo productos con stock bajo: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/inventario/stats', methods=['GET'])
+@jwt_required
+def obtener_estadisticas_inventario(current_user_id):
+    """Obtiene estadísticas del inventario"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Total de productos
+        cursor.execute("SELECT COUNT(*) FROM productos")
+        total_productos = cursor.fetchone()[0]
+        
+        # Productos con stock bajo
+        cursor.execute("SELECT COUNT(*) FROM productos WHERE stock_actual <= stock_minimo")
+        productos_stock_bajo = cursor.fetchone()[0]
+        
+        # Valor total del inventario
+        cursor.execute("SELECT SUM(stock_actual * precio_unitario) FROM productos")
+        valor_inventario = cursor.fetchone()[0] or 0.0
+        
+        # Stock total disponible
+        cursor.execute("SELECT SUM(stock_actual) FROM productos")
+        stock_total = cursor.fetchone()[0] or 0
+        
+        # Productos por categoría
+        cursor.execute("""
+            SELECT categoria, COUNT(*) 
+            FROM productos 
+            GROUP BY categoria
+        """)
+        productos_por_categoria = {}
+        for row in cursor.fetchall():
+            productos_por_categoria[row[0]] = row[1]
+        
+        # Categorías principales (con más productos)
+        categorias_principales = sorted(productos_por_categoria.items(), key=lambda x: x[1], reverse=True)
+        
+        # Productos sin movimiento (últimos 30 días)
+        cursor.execute("""
+            SELECT COUNT(DISTINCT p.id)
+            FROM productos p
+            LEFT JOIN movimientos_stock ms ON p.id = ms.producto_id 
+                AND ms.fecha >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            WHERE ms.id IS NULL
+        """)
+        productos_sin_movimiento = cursor.fetchone()[0] or 0
+        
+        estadisticas = {
+            'total_productos': total_productos,
+            'productos_stock_bajo': productos_stock_bajo,
+            'valor_inventario': float(valor_inventario),
+            'stock_total': stock_total,
+            'productos_por_categoria': productos_por_categoria,
+            'categorias_principales': categorias_principales[:3] if categorias_principales else [],
+            'productos_sin_movimiento': productos_sin_movimiento
+        }
+        
+        print(f"Estadísticas calculadas: {estadisticas}")
+        response = jsonify(estadisticas)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        print(f"Error obteniendo estadísticas: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
@@ -764,6 +1011,8 @@ def ajustar_stock(current_user_id, producto_id):
         if not data:
             return jsonify({'message': 'No se recibieron datos'}), 400
         
+        print(f"Ajustando stock del producto {producto_id}: {data}")
+        
         # Validar campos requeridos
         if not all(campo in data for campo in ['tipo', 'cantidad']):
             return jsonify({'message': 'Faltan campos requeridos: tipo, cantidad'}), 400
@@ -778,7 +1027,7 @@ def ajustar_stock(current_user_id, producto_id):
             cantidad = int(data['cantidad'])
             if cantidad <= 0:
                 return jsonify({'message': 'La cantidad debe ser mayor a 0'}), 400
-        except ValueError:
+        except (ValueError, TypeError):
             return jsonify({'message': 'Cantidad inválida'}), 400
         
         connection = get_db_connection()
@@ -788,25 +1037,26 @@ def ajustar_stock(current_user_id, producto_id):
         cursor = connection.cursor()
         
         # Obtener stock actual
-        cursor.execute("SELECT stock FROM productos WHERE id = %s AND activo = TRUE", (producto_id,))
+        cursor.execute("SELECT stock_actual, nombre FROM productos WHERE id = %s", (producto_id,))
         resultado = cursor.fetchone()
         if not resultado:
             return jsonify({'message': 'Producto no encontrado'}), 404
         
         stock_actual = resultado[0]
+        nombre_producto = resultado[1]
         
         # Calcular nuevo stock
         if data['tipo'] == 'ingreso':
             nuevo_stock = stock_actual + cantidad
         elif data['tipo'] == 'egreso':
             if stock_actual < cantidad:
-                return jsonify({'message': 'Stock insuficiente'}), 400
+                return jsonify({'message': f'Stock insuficiente. Stock actual: {stock_actual}'}), 400
             nuevo_stock = stock_actual - cantidad
         else:  # ajuste
             nuevo_stock = cantidad
         
         # Actualizar stock
-        cursor.execute("UPDATE productos SET stock = %s WHERE id = %s", (nuevo_stock, producto_id))
+        cursor.execute("UPDATE productos SET stock_actual = %s WHERE id = %s", (nuevo_stock, producto_id))
         
         # Registrar movimiento
         cursor.execute("""
@@ -816,7 +1066,7 @@ def ajustar_stock(current_user_id, producto_id):
         
         connection.commit()
         
-        print(f"Stock ajustado para producto {producto_id}: {stock_actual} -> {nuevo_stock}")
+        print(f"Stock ajustado para producto {producto_id} ({nombre_producto}): {stock_actual} -> {nuevo_stock}")
         response = jsonify({
             'message': 'Stock ajustado exitosamente',
             'stock_anterior': stock_actual,
@@ -827,74 +1077,6 @@ def ajustar_stock(current_user_id, producto_id):
 
     except Exception as e:
         print(f"Error ajustando stock: {e}")
-        return jsonify({'message': 'Error interno del servidor'}), 500
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
-
-@app.route('/api/inventario/estadisticas', methods=['GET'])
-@jwt_required
-def obtener_estadisticas_inventario(current_user_id):
-    """Obtiene estadísticas del inventario"""
-    connection = None
-    cursor = None
-    
-    try:
-        connection = get_db_connection()
-        if not connection:
-            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
-            
-        cursor = connection.cursor()
-        
-        # Total de productos
-        cursor.execute("SELECT COUNT(*) FROM productos WHERE activo = TRUE")
-        total_productos = cursor.fetchone()[0]
-        
-        # Productos con stock bajo
-        cursor.execute("SELECT COUNT(*) FROM productos WHERE activo = TRUE AND stock <= stock_minimo")
-        productos_stock_bajo = cursor.fetchone()[0]
-        
-        # Valor total del inventario
-        cursor.execute("SELECT SUM(stock * precio_venta) FROM productos WHERE activo = TRUE")
-        valor_inventario = cursor.fetchone()[0] or 0.0
-        
-        # Productos por categoría
-        cursor.execute("""
-            SELECT categoria, COUNT(*) 
-            FROM productos 
-            WHERE activo = TRUE 
-            GROUP BY categoria
-        """)
-        productos_por_categoria = {}
-        for row in cursor.fetchall():
-            productos_por_categoria[row[0]] = row[1]
-        
-        # Productos sin movimiento (últimos 30 días)
-        cursor.execute("""
-            SELECT COUNT(DISTINCT p.id)
-            FROM productos p
-            LEFT JOIN movimientos_stock ms ON p.id = ms.producto_id 
-                AND ms.fecha >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-            WHERE p.activo = TRUE AND ms.id IS NULL
-        """)
-        productos_sin_movimiento = cursor.fetchone()[0]
-        
-        estadisticas = {
-            'total_productos': total_productos,
-            'productos_stock_bajo': productos_stock_bajo,
-            'valor_inventario': float(valor_inventario),
-            'productos_por_categoria': productos_por_categoria,
-            'productos_sin_movimiento': productos_sin_movimiento
-        }
-        
-        response = jsonify(estadisticas)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-        
-    except Exception as e:
-        print(f"Error obteniendo estadísticas: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
@@ -917,7 +1099,7 @@ def obtener_movimientos_producto(current_user_id, producto_id):
         cursor = connection.cursor()
         
         # Verificar que el producto existe
-        cursor.execute("SELECT nombre FROM productos WHERE id = %s AND activo = TRUE", (producto_id,))
+        cursor.execute("SELECT nombre FROM productos WHERE id = %s", (producto_id,))
         producto = cursor.fetchone()
         if not producto:
             return jsonify({'message': 'Producto no encontrado'}), 404
@@ -942,6 +1124,7 @@ def obtener_movimientos_producto(current_user_id, producto_id):
                 'usuario': row[4] or 'Sistema'
             })
         
+        print(f"Movimientos obtenidos para producto {producto_id}: {len(movimientos)}")
         response = jsonify({
             'producto': producto[0],
             'movimientos': movimientos
@@ -958,57 +1141,104 @@ def obtener_movimientos_producto(current_user_id, producto_id):
         if connection and connection.is_connected():
             connection.close()
 
-# ==================== ENDPOINTS DE DASHBOARD (EXISTENTES) ====================
+# ==================== ENDPOINTS DE DASHBOARD ====================
 
 @app.route('/api/dashboard/resumen', methods=['GET'])
 @jwt_required
 def dashboard_resumen(current_user_id):
-    """Obtiene resumen general del dashboard"""
+    """Obtiene resumen general del dashboard - VERSION MEJORADA"""
     connection = None
     cursor = None
     
     try:
+        print(f"🔍 Obteniendo resumen del dashboard para usuario {current_user_id}")
+        
         connection = get_db_connection()
         if not connection:
+            print("❌ Error: No se pudo conectar a la base de datos")
             return jsonify({'message': 'Error de conexión a la base de datos'}), 500
             
         cursor = connection.cursor()
         
-        # Total de productos
-        cursor.execute("SELECT COUNT(*) FROM productos WHERE activo = TRUE")
-        total_productos = cursor.fetchone()[0]
+        # Inicializar valores por defecto
+        total_productos = 0
+        ventas_del_dia = 0.0
+        cantidad_ventas = 0
+        productos_stock_bajo = 0
         
-        # Ventas del día
-        cursor.execute("""
-            SELECT COALESCE(SUM(total), 0), COUNT(*) 
-            FROM ventas 
-            WHERE DATE(fecha) = CURDATE()
-        """)
-        ventas_hoy = cursor.fetchone()
-        ventas_del_dia = float(ventas_hoy[0]) if ventas_hoy[0] else 0.0
-        cantidad_ventas = ventas_hoy[1] if ventas_hoy[1] else 0
+        try:
+            # Total de productos
+            print("📊 Consultando total de productos...")
+            cursor.execute("SELECT COUNT(*) FROM productos")
+            result = cursor.fetchone()
+            total_productos = result[0] if result else 0
+            print(f"✅ Total productos: {total_productos}")
+        except Exception as e:
+            print(f"⚠️ Error consultando productos: {e}")
         
-        response = jsonify({
+        try:
+            # Ventas del día (usar fecha actual)
+            print("💰 Consultando ventas del día...")
+            cursor.execute("""
+                SELECT COALESCE(SUM(total), 0), COUNT(*) 
+                FROM ventas 
+                WHERE DATE(fecha) = CURDATE()
+            """)
+            ventas_hoy = cursor.fetchone()
+            if ventas_hoy:
+                ventas_del_dia = float(ventas_hoy[0]) if ventas_hoy[0] else 0.0
+                cantidad_ventas = ventas_hoy[1] if ventas_hoy[1] else 0
+            print(f"✅ Ventas del día: ${ventas_del_dia}, Cantidad: {cantidad_ventas}")
+        except Exception as e:
+            print(f"⚠️ Error consultando ventas: {e}")
+        
+        try:
+            # Productos con stock bajo
+            print("⚠️ Consultando productos con stock bajo...")
+            cursor.execute("SELECT COUNT(*) FROM productos WHERE stock_actual <= stock_minimo")
+            result = cursor.fetchone()
+            productos_stock_bajo = result[0] if result else 0
+            print(f"✅ Productos stock bajo: {productos_stock_bajo}")
+        except Exception as e:
+            print(f"⚠️ Error consultando stock bajo: {e}")
+        
+        # Preparar respuesta
+        resumen = {
             'totalProductos': total_productos,
             'ventasDelDia': ventas_del_dia,
-            'cantidadVentas': cantidad_ventas
-        })
+            'cantidadVentas': cantidad_ventas,
+            'productosStockBajo': productos_stock_bajo
+        }
+        
+        print(f"✅ Resumen calculado exitosamente: {resumen}")
+        
+        response = jsonify(resumen)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
         
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos en dashboard resumen: {db_err}")
+        return jsonify({
+            'message': 'Error de base de datos',
+            'error': str(db_err)
+        }), 500
     except Exception as e:
-        print(f"Error en dashboard resumen: {e}")
-        return jsonify({'message': 'Error interno del servidor'}), 500
+        print(f"❌ Error general en dashboard resumen: {e}")
+        return jsonify({
+            'message': 'Error interno del servidor',
+            'error': str(e)
+        }), 500
     finally:
         if cursor:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+            print("🔌 Conexión a base de datos cerrada")
 
 @app.route('/api/dashboard/stock-bajo', methods=['GET'])
 @jwt_required
 def dashboard_stock_bajo(current_user_id):
-    """Obtiene productos con stock bajo"""
+    """Obtiene productos con stock bajo para el dashboard"""
     connection = None
     cursor = None
     
@@ -1020,10 +1250,11 @@ def dashboard_stock_bajo(current_user_id):
         cursor = connection.cursor()
         
         cursor.execute("""
-            SELECT nombre, stock, stock_minimo 
+            SELECT nombre, stock_actual, stock_minimo, unidad
             FROM productos 
-            WHERE activo = TRUE AND stock <= stock_minimo
-            ORDER BY stock ASC
+            WHERE stock_actual <= stock_minimo
+            ORDER BY stock_actual ASC
+            LIMIT 10
         """)
         
         productos_bajo_stock = []
@@ -1031,7 +1262,8 @@ def dashboard_stock_bajo(current_user_id):
             productos_bajo_stock.append({
                 'nombre': row[0],
                 'stock': row[1],
-                'stockMinimo': row[2]
+                'stockMinimo': row[2],
+                'unidad': row[3]
             })
         
         response = jsonify(productos_bajo_stock)
@@ -1065,7 +1297,7 @@ def dashboard_compras_recientes(current_user_id):
             SELECT proveedor, DATE_FORMAT(fecha, '%Y-%m-%d'), total 
             FROM compras 
             ORDER BY fecha DESC 
-            LIMIT 3
+            LIMIT 5
         """)
         
         compras_recientes = []
@@ -1105,6 +1337,7 @@ def dashboard_ventas_mensuales(current_user_id):
         
         cursor.execute("""
             SELECT 
+                MONTH(fecha) as mes_num,
                 MONTHNAME(fecha) as mes,
                 COALESCE(SUM(total), 0) as total
             FROM ventas 
@@ -1117,18 +1350,21 @@ def dashboard_ventas_mensuales(current_user_id):
         meses_con_datos = {}
         
         for row in cursor.fetchall():
-            mes_nombre = row[0]
-            total = float(row[1])
+            mes_nombre = row[1]
+            total = float(row[2])
             meses_con_datos[mes_nombre] = total
         
         # Asegurar que todos los meses estén representados
-        meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+        meses = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December']
         
-        for mes in meses:
+        meses_es = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+        
+        for i, mes_en in enumerate(meses):
             ventas_mensuales.append({
-                'mes': mes,
-                'total': meses_con_datos.get(mes, 0)
+                'mes': meses_es[i],
+                'total': meses_con_datos.get(mes_en, 0)
             })
         
         response = jsonify(ventas_mensuales)
@@ -1161,11 +1397,10 @@ def dashboard_stock_distribucion(current_user_id):
         cursor.execute("""
             SELECT categoria, COUNT(*) 
             FROM productos 
-            WHERE activo = TRUE
             GROUP BY categoria
         """)
         
-        distribucion = {'fruta': 0, 'verdura': 0, 'otro': 0}
+        distribucion = {'frutas': 0, 'verduras': 0, 'otros': 0}
         
         for row in cursor.fetchall():
             categoria = row[0]
@@ -1203,7 +1438,7 @@ def dashboard_ultimos_movimientos(current_user_id):
             SELECT tipo, detalle, DATE_FORMAT(fecha, '%Y-%m-%d %H:%i') 
             FROM movimientos 
             ORDER BY fecha DESC 
-            LIMIT 5
+            LIMIT 10
         """)
         
         movimientos = []
@@ -1243,6 +1478,8 @@ def dashboard(current_user_id):
         print(f"Error en dashboard: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
 
+# ==================== ENDPOINTS GENERALES ====================
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Endpoint para verificar que el servidor está funcionando"""
@@ -1250,68 +1487,178 @@ def health_check():
     try:
         connection = get_db_connection()
         if connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            cursor.close()
             connection.close()
         else:
             db_status = "ERROR"
-    except:
+    except Exception as e:
+        print(f"Error en health check: {e}")
         db_status = "ERROR"
     
     response = jsonify({
         'status': 'OK',
         'database': db_status,
         'message': 'Servidor Flask funcionando correctamente',
-        'timestamp': datetime.utcnow().isoformat()
+        'timestamp': datetime.utcnow().isoformat(),
+        'version': '1.0.0'
     })
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 200
 
+@app.route('/', methods=['GET'])
+def root():
+    """Endpoint raíz"""
+    response = jsonify({
+        'message': 'API Frutería Nina',
+        'version': '1.0.0',
+        'status': 'running',
+        'endpoints': {
+            'auth': ['/api/register', '/api/login', '/api/verify-token'],
+            'inventory': ['/api/inventario', '/api/inventario/stats', '/api/inventario/stock-bajo'],
+            'dashboard': ['/api/dashboard', '/api/dashboard/resumen', '/api/dashboard/stock-bajo'],
+            'health': '/api/health'
+        }
+    })
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    return response, 200
+
+# ==================== MANEJO DE ERRORES ====================
+
 @app.errorhandler(404)
 def not_found(error):
-    response = jsonify({'message': 'Endpoint no encontrado'})
+    response = jsonify({
+        'message': 'Endpoint no encontrado',
+        'error': 'Not Found',
+        'status_code': 404
+    })
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 404
 
 @app.errorhandler(500)
 def internal_error(error):
-    response = jsonify({'message': 'Error interno del servidor'})
+    response = jsonify({
+        'message': 'Error interno del servidor',
+        'error': 'Internal Server Error',
+        'status_code': 500
+    })
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 500
 
+@app.errorhandler(400)
+def bad_request(error):
+    response = jsonify({
+        'message': 'Solicitud incorrecta',
+        'error': 'Bad Request',
+        'status_code': 400
+    })
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    return response, 400
+
+@app.errorhandler(401)
+def unauthorized(error):
+    response = jsonify({
+        'message': 'No autorizado',
+        'error': 'Unauthorized',
+        'status_code': 401
+    })
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    return response, 401
+
+@app.errorhandler(403)
+def forbidden(error):
+    response = jsonify({
+        'message': 'Acceso prohibido',
+        'error': 'Forbidden',
+        'status_code': 403
+    })
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    return response, 403
+
+@app.errorhandler(409)
+def conflict(error):
+    response = jsonify({
+        'message': 'Conflicto en la solicitud',
+        'error': 'Conflict',
+        'status_code': 409
+    })
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    return response, 409
+
+# ==================== FUNCIÓN PRINCIPAL ====================
+
 if __name__ == '__main__':
     print("🚀 Iniciando Frutería Nina Backend...")
-    print("=" * 50)
+    print("=" * 60)
+    
     if init_database():
-        print("=" * 50)
+        print("=" * 60)
         print("✅ ¡Sistema listo!")
         print("🌐 Servidor Flask iniciado en: http://localhost:5001")
         print("🎯 Frontend esperado en: http://localhost:3000")
-        print("📋 Endpoints disponibles:")
-        print("   - POST /api/register")
-        print("   - POST /api/login") 
-        print("   - GET /api/verify-token")
-        print("   - GET /api/dashboard")
-        print("   - GET /api/dashboard/resumen")
-        print("   - GET /api/dashboard/stock-bajo")
-        print("   - GET /api/dashboard/compras-recientes")
-        print("   - GET /api/dashboard/ventas-mensuales")
-        print("   - GET /api/dashboard/stock-distribucion")
-        print("   - GET /api/dashboard/ultimos-movimientos")
-        print("   - GET /api/health")
+        print("📋 Endpoints de Autenticación:")
+        print("   - POST /api/register          - Registro de usuarios")
+        print("   - POST /api/login             - Inicio de sesión")
+        print("   - GET  /api/verify-token      - Verificar token JWT")
+        print("")
         print("📦 Endpoints de Inventario:")
-        print("   - GET /api/inventario")
-        print("   - GET /api/inventario/<id>")
-        print("   - POST /api/inventario")
-        print("   - PUT /api/inventario/<id>")
-        print("   - DELETE /api/inventario/<id>")
-        print("   - POST /api/inventario/<id>/stock")
-        print("   - GET /api/inventario/estadisticas")
-        print("   - GET /api/inventario/<id>/movimientos")
-        print("=" * 50)
-        app.run(debug=True, port=5001, host='0.0.0.0')
+        print("   - GET    /api/inventario                    - Listar productos")
+        print("   - GET    /api/inventario/<id>               - Obtener producto")
+        print("   - POST   /api/inventario                    - Crear producto")
+        print("   - PUT    /api/inventario/<id>               - Actualizar producto")
+        print("   - DELETE /api/inventario/<id>               - Eliminar producto")
+        print("   - GET    /api/inventario/stock-bajo         - Productos con stock bajo")
+        print("   - GET    /api/inventario/stats              - Estadísticas de inventario")
+        print("   - POST   /api/inventario/<id>/stock         - Ajustar stock")
+        print("   - GET    /api/inventario/<id>/movimientos   - Historial de movimientos")
+        print("")
+        print("📊 Endpoints de Dashboard:")
+        print("   - GET /api/dashboard                    - Dashboard principal")
+        print("   - GET /api/dashboard/resumen            - Resumen general")
+        print("   - GET /api/dashboard/stock-bajo         - Productos con stock bajo")
+        print("   - GET /api/dashboard/compras-recientes  - Últimas compras")
+        print("   - GET /api/dashboard/ventas-mensuales   - Ventas por mes")
+        print("   - GET /api/dashboard/stock-distribucion - Distribución por categoría")
+        print("   - GET /api/dashboard/ultimos-movimientos - Últimos movimientos")
+        print("")
+        print("🔧 Endpoints Generales:")
+        print("   - GET /api/health                       - Estado del servidor")
+        print("   - GET /                                 - Información de la API")
+        print("")
+        print("🗄️  Base de datos configurada:")
+        print("   - Host: localhost")
+        print("   - Usuario: fruteria_user")
+        print("   - Base de datos: fruteria_nina")
+        print("   - Tablas: usuarios, productos, movimientos_stock, ventas, compras, movimientos")
+        print("")
+        print("🔐 Autenticación:")
+        print("   - JWT con expiración de 24 horas")
+        print("   - Contraseñas hasheadas con bcrypt")
+        print("   - CORS configurado para localhost:3000")
+        print("")
+        print("📝 Datos de ejemplo incluidos:")
+        print("   - 15 productos de ejemplo (frutas, verduras, otros)")
+        print("   - Ventas y compras de ejemplo")
+        print("   - Movimientos de stock de ejemplo")
+        print("=" * 60)
+        print("🎉 ¡Servidor listo para recibir peticiones!")
+        print("💡 Presiona Ctrl+C para detener el servidor")
+        print("=" * 60)
+        
+        # Iniciar el servidor Flask
+        app.run(
+            debug=True, 
+            port=5001, 
+            host='0.0.0.0',
+            threaded=True
+        )
     else:
-        print("=" * 50)
+        print("=" * 60)
         print("❌ Error inicializando base de datos")
-        print("💡 Ejecuta estos comandos en MySQL:")
+        print("")
+        print("💡 Para solucionar este problema, ejecuta estos comandos en MySQL:")
         print("   mysql -u root -p")
         print("   DROP USER IF EXISTS 'fruteria_user'@'localhost';")
         print("   CREATE USER 'fruteria_user'@'localhost' IDENTIFIED BY 'fruteria_password_123';")
@@ -1319,4 +1666,10 @@ if __name__ == '__main__':
         print("   GRANT CREATE ON *.* TO 'fruteria_user'@'localhost';")
         print("   FLUSH PRIVILEGES;")
         print("   EXIT;")
-        print("=" * 50)
+        print("")
+        print("🔧 Alternativamente, puedes:")
+        print("   1. Verificar que MySQL esté ejecutándose")
+        print("   2. Cambiar las credenciales en DB_CONFIG si es necesario")
+        print("   3. Asegurarte de que el usuario tenga permisos suficientes")
+        print("=" * 60)
+        print("❌ El servidor no pudo iniciarse")
