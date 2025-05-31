@@ -46,7 +46,7 @@ const MotionPaper = motion(Paper);
 const MotionBox = motion(Box);
 
 const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
-  const [baseUrl, setBaseUrl] = useState('https://menuqr-bar.vercel.app');
+  const [baseUrl, setBaseUrl] = useState('http://localhost:3000');
   const [copied, setCopied] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [qrSize, setQrSize] = useState(256);
@@ -59,56 +59,13 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
   
   const menuUrl = `${baseUrl}/menu?id=${menuId}`;
 
-  // Función para convertir SVG a PNG y descargar
+  // Función simplificada para generar QR como canvas y descargar
   const downloadQR = useCallback(async () => {
     setIsGenerating(true);
     try {
-      // Crear un SVG temporal con alta resolución
-      const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      const size = 512; // Alta resolución para descarga
-      
-      svgElement.setAttribute('width', size.toString());
-      svgElement.setAttribute('height', size.toString());
-      svgElement.setAttribute('viewBox', `0 0 ${size} ${size}`);
-      
-      // Crear el QR usando qrcode.react internamente
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      document.body.appendChild(tempDiv);
-      
-      // Renderizar QR temporalmente
-      const { createRoot } = await import('react-dom/client');
-      const root = createRoot(tempDiv);
-      
-      await new Promise<void>((resolve) => {
-        root.render(
-          <QRCodeSVG
-            value={menuUrl}
-            size={size}
-            level={qrLevel}
-            fgColor={qrColor}
-            bgColor={qrBgColor}
-            includeMargin={includeMargin}
-          />
-        );
-        
-        setTimeout(() => {
-          const svgInDiv = tempDiv.querySelector('svg');
-          if (svgInDiv) {
-            // Copiar el contenido del SVG generado
-            svgElement.innerHTML = svgInDiv.innerHTML;
-            svgElement.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-          }
-          resolve();
-        }, 100);
-      });
-      
-      // Limpiar el elemento temporal
-      document.body.removeChild(tempDiv);
-      
-      // Convertir SVG a PNG
+      // Crear un canvas directamente
       const canvas = document.createElement('canvas');
+      const size = 512; // Alta resolución
       canvas.width = size;
       canvas.height = size;
       const ctx = canvas.getContext('2d');
@@ -116,52 +73,48 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
       if (!ctx) {
         throw new Error('No se pudo crear el contexto del canvas');
       }
+
+      // Usar la librería QRCode directamente para generar en canvas
+      const QRCode = await import('qrcode');
       
-      // Crear imagen desde SVG
-      const svgData = new XMLSerializer().serializeToString(svgElement);
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      const svgUrl = URL.createObjectURL(svgBlob);
-      
-      const img = new window.Image();
-      img.onload = () => {
-        // Dibujar fondo
-        ctx.fillStyle = qrBgColor;
-        ctx.fillRect(0, 0, size, size);
-        
-        // Dibujar QR
-        ctx.drawImage(img, 0, 0, size, size);
-        
-        // Crear enlace de descarga
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            
-            // Nombre de archivo único y descriptivo
-            const sanitizedMenuName = menuName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-            const timestamp = Date.now();
-            link.download = `qr-${menuId}-${sanitizedMenuName}-${timestamp}.png`;
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Limpiar URLs
-            URL.revokeObjectURL(url);
-            URL.revokeObjectURL(svgUrl);
-            
-            console.log(`✅ QR descargado exitosamente: ${link.download}`);
-          }
-        }, 'image/png', 1.0);
+      // Configurar opciones
+      const options = {
+        errorCorrectionLevel: qrLevel,
+        type: 'image/png' as const,
+        quality: 1.0,
+        margin: includeMargin ? 4 : 1,
+        color: {
+          dark: qrColor,
+          light: qrBgColor,
+        },
+        width: size,
       };
+
+      // Generar QR directamente en canvas
+      await QRCode.toCanvas(canvas, menuUrl, options);
       
-      img.onerror = () => {
-        URL.revokeObjectURL(svgUrl);
-        throw new Error('Error al cargar la imagen SVG');
-      };
-      
-      img.src = svgUrl;
+      // Crear enlace de descarga
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          
+          // Nombre de archivo único
+          const sanitizedMenuName = menuName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+          const timestamp = Date.now();
+          link.download = `qr-${menuId}-${sanitizedMenuName}-${timestamp}.png`;
+          
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // Limpiar URL
+          URL.revokeObjectURL(url);
+          
+          console.log(`✅ QR descargado exitosamente: ${link.download}`);
+        }
+      }, 'image/png', 1.0);
       
     } catch (error) {
       console.error('❌ Error al descargar QR:', error);
@@ -185,258 +138,205 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
     try {
       setIsGenerating(true);
       
-      // Crear SVG para impresión
-      const printSize = 400;
-      const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svgElement.setAttribute('width', printSize.toString());
-      svgElement.setAttribute('height', printSize.toString());
-      svgElement.setAttribute('viewBox', `0 0 ${printSize} ${printSize}`);
+      // Generar QR para impresión usando la librería QRCode
+      const QRCode = await import('qrcode');
       
-      // Crear QR temporal para impresión
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      document.body.appendChild(tempDiv);
-      
-      const { createRoot } = await import('react-dom/client');
-      const root = createRoot(tempDiv);
-      
-      await new Promise<void>((resolve) => {
-        root.render(
-          <QRCodeSVG
-            value={menuUrl}
-            size={printSize}
-            level="H" // Máxima corrección para impresión
-            fgColor={qrColor}
-            bgColor={qrBgColor}
-            includeMargin={true}
-          />
-        );
-        
-        setTimeout(() => {
-          const svgInDiv = tempDiv.querySelector('svg');
-          if (svgInDiv) {
-            svgElement.innerHTML = svgInDiv.innerHTML;
-            svgElement.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-          }
-          resolve();
-        }, 100);
-      });
-      
-      document.body.removeChild(tempDiv);
-      
-      // Convertir a data URL para impresión
-      const svgData = new XMLSerializer().serializeToString(svgElement);
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      const svgUrl = URL.createObjectURL(svgBlob);
-      
-      const canvas = document.createElement('canvas');
-      canvas.width = printSize;
-      canvas.height = printSize;
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) {
-        throw new Error('No se pudo crear el contexto del canvas');
-      }
-      
-      const img = new window.Image();
-      img.onload = () => {
-        ctx.fillStyle = qrBgColor;
-        ctx.fillRect(0, 0, printSize, printSize);
-        ctx.drawImage(img, 0, 0, printSize, printSize);
-        
-        const printImageData = canvas.toDataURL('image/png', 1.0);
-        URL.revokeObjectURL(svgUrl);
-        
-        // Abrir ventana de impresión
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-          throw new Error('No se pudo abrir ventana de impresión');
-        }
+      const options = {
+        errorCorrectionLevel: 'H' as const, // Máxima corrección para impresión
+        type: 'image/png' as const,
+        quality: 1.0,
+        margin: 4,
+        color: {
+          dark: qrColor,
+          light: qrBgColor,
+        },
+        width: 400,
+      };
 
-        const htmlContent = `
-          <!DOCTYPE html>
-          <html lang="es">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Código QR - ${menuName}</title>
-              <style>
-                * {
-                  margin: 0;
-                  padding: 0;
-                  box-sizing: border-box;
-                }
-                
-                body {
-                  font-family: Arial, sans-serif;
-                  text-align: center;
-                  padding: 20px;
-                  background: white;
-                  color: black;
-                  line-height: 1.6;
+      // Generar QR como data URL
+      const qrDataURL = await QRCode.toDataURL(menuUrl, options);
+      
+      // Abrir ventana de impresión
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        throw new Error('No se pudo abrir ventana de impresión');
+      }
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="es">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Código QR - ${menuName}</title>
+            <style>
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+              
+              body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                padding: 20px;
+                background: white;
+                color: black;
+                line-height: 1.6;
+              }
+              
+              .container {
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+              }
+              
+              .header {
+                margin-bottom: 30px;
+              }
+              
+              .header h1 {
+                color: #333;
+                margin-bottom: 10px;
+                font-size: 32px;
+                font-weight: bold;
+              }
+              
+              .header h2 {
+                color: #666;
+                font-weight: normal;
+                font-size: 24px;
+              }
+              
+              .qr-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 40px;
+                border: 4px solid #000;
+                border-radius: 20px;
+                margin: 40px auto;
+                background: white;
+                max-width: 500px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+              }
+              
+              .qr-container img {
+                display: block;
+                width: 400px !important;
+                height: 400px !important;
+                max-width: 100%;
+                image-rendering: pixelated;
+                image-rendering: -moz-crisp-edges;
+                image-rendering: crisp-edges;
+              }
+              
+              .instructions {
+                font-size: 24px;
+                font-weight: bold;
+                color: #333;
+                margin: 40px 0;
+                padding: 20px;
+                background: #f8f9fa;
+                border-radius: 15px;
+                border: 3px solid #e9ecef;
+              }
+              
+              .info {
+                margin: 30px 0;
+                font-size: 18px;
+              }
+              
+              .url {
+                font-family: 'Courier New', monospace;
+                background: #f5f5f5;
+                padding: 20px;
+                border-radius: 10px;
+                word-break: break-all;
+                margin: 20px 0;
+                border: 2px solid #ddd;
+                font-size: 16px;
+                font-weight: bold;
+              }
+              
+              .date {
+                font-weight: bold;
+                color: #555;
+                font-size: 16px;
+              }
+              
+              @media print {
+                body { 
+                  margin: 0; 
+                  padding: 10px;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                  color-adjust: exact !important;
                 }
                 
                 .container {
-                  max-width: 600px;
-                  margin: 0 auto;
-                  padding: 20px;
+                  max-width: none;
+                  padding: 10px;
                 }
                 
-                .header {
-                  margin-bottom: 30px;
-                }
-                
-                .header h1 {
-                  color: #333;
-                  margin-bottom: 10px;
-                  font-size: 32px;
-                  font-weight: bold;
-                }
-                
-                .header h2 {
-                  color: #666;
-                  font-weight: normal;
-                  font-size: 24px;
-                }
-                
-                .qr-container {
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                  padding: 40px;
-                  border: 4px solid #000;
-                  border-radius: 20px;
-                  margin: 40px auto;
-                  background: white;
-                  max-width: 500px;
-                  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                .qr-container { 
+                  box-shadow: none;
+                  page-break-inside: avoid;
+                  background: white !important;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
                 }
                 
                 .qr-container img {
-                  display: block;
-                  width: 400px !important;
-                  height: 400px !important;
-                  max-width: 100%;
-                  image-rendering: pixelated;
-                  image-rendering: -moz-crisp-edges;
-                  image-rendering: crisp-edges;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
                 }
                 
-                .instructions {
-                  font-size: 24px;
-                  font-weight: bold;
-                  color: #333;
-                  margin: 40px 0;
-                  padding: 20px;
-                  background: #f8f9fa;
-                  border-radius: 15px;
-                  border: 3px solid #e9ecef;
+                @page {
+                  margin: 1cm;
+                  size: A4 portrait;
                 }
-                
-                .info {
-                  margin: 30px 0;
-                  font-size: 18px;
-                }
-                
-                .url {
-                  font-family: 'Courier New', monospace;
-                  background: #f5f5f5;
-                  padding: 20px;
-                  border-radius: 10px;
-                  word-break: break-all;
-                  margin: 20px 0;
-                  border: 2px solid #ddd;
-                  font-size: 16px;
-                  font-weight: bold;
-                }
-                
-                .date {
-                  font-weight: bold;
-                  color: #555;
-                  font-size: 16px;
-                }
-                
-                @media print {
-                  body { 
-                    margin: 0; 
-                    padding: 10px;
-                    -webkit-print-color-adjust: exact !important;
-                    print-color-adjust: exact !important;
-                    color-adjust: exact !important;
-                  }
-                  
-                  .container {
-                    max-width: none;
-                    padding: 10px;
-                  }
-                  
-                  .qr-container { 
-                    box-shadow: none;
-                    page-break-inside: avoid;
-                    background: white !important;
-                    -webkit-print-color-adjust: exact !important;
-                    print-color-adjust: exact !important;
-                  }
-                  
-                  .qr-container img {
-                    -webkit-print-color-adjust: exact !important;
-                    print-color-adjust: exact !important;
-                  }
-                  
-                  @page {
-                    margin: 1cm;
-                    size: A4 portrait;
-                  }
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="header">
-                  <h1>${menuName}</h1>
-                  <h2>Menú Digital</h2>
-                </div>
-                
-                <div class="qr-container">
-                  <img src="${printImageData}" alt="Código QR para ${menuName}" />
-                </div>
-                
-                <div class="instructions">
-                  📱 Escanea el código QR con la cámara de tu teléfono para acceder al menú digital
-                </div>
-                
-                <div class="info">
-                  <div class="url">${menuUrl}</div>
-                  <p class="date">Generado el: ${new Date().toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}</p>
-                </div>
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>${menuName}</h1>
+                <h2>Menú Digital</h2>
               </div>
-            </body>
-          </html>
-        `;
-        
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-        
-        printWindow.addEventListener('load', () => {
-          setTimeout(() => {
-            printWindow.print();
-          }, 1000);
-        });
-      };
+              
+              <div class="qr-container">
+                <img src="${qrDataURL}" alt="Código QR para ${menuName}" />
+              </div>
+              
+              <div class="instructions">
+                📱 Escanea el código QR con la cámara de tu teléfono para acceder al menú digital
+              </div>
+              
+              <div class="info">
+                <div class="url">${menuUrl}</div>
+                <p class="date">Generado el: ${new Date().toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
       
-      img.onerror = () => {
-        URL.revokeObjectURL(svgUrl);
-        throw new Error('Error al cargar imagen para impresión');
-      };
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
       
-      img.src = svgUrl;
+      printWindow.addEventListener('load', () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 1000);
+      });
       
     } catch (error) {
       console.error('Error en printQR:', error);
@@ -828,8 +728,6 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
                   value={qrColor}
                   onChange={(e) => setQrColor(e.target.value)}
                   fullWidth
-  
-
                   size="small"
                   sx={{
                     '& input': {
