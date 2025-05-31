@@ -6,15 +6,12 @@ import {
   Alert,
   Snackbar,
   CircularProgress,
-  Stack,
-  Fade,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Inventory2 as InventoryIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
 import inventoryService from '../../services/inventoryService';
 import InventoryTable from '../../components/inventory/InventoryTable';
 import InventoryFormDialog from '../../components/inventory/InventoryFormDialog';
@@ -24,7 +21,6 @@ import InventoryStats from '../../components/inventory/InventoryStats';
 import LowStockAlertCard from '../../components/inventory/LowStockAlertCard';
 
 const InventoryPage = () => {
-  const { user } = useAuth();
   const [productos, setProductos] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);
   const [loading, setLoading] = useState(true);
