@@ -8,7 +8,14 @@ import os
 from functools import wraps
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
+
+# Configuración CORS más específica y segura
+CORS(app, 
+     origins=['http://localhost:3000', 'http://127.0.0.1:3000'],  # Orígenes permitidos
+     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],        # Métodos permitidos
+     allow_headers=['Content-Type', 'Authorization'],             # Headers permitidos
+     supports_credentials=True                                    # Permitir cookies/credenciales
+)
 
 # Configuración
 app.config['SECRET_KEY'] = 'tu_clave_secreta_muy_segura_para_jwt'
@@ -18,7 +25,7 @@ app.config['JWT_EXPIRATION_DELTA'] = timedelta(hours=24)
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'Missifu2565711-9',  # Cambia por tu contraseña de MySQL
+    'password': '',  # Cambia por tu contraseña de MySQL
     'database': 'fruteria_nina'
 }
 
@@ -54,7 +61,7 @@ def init_database():
                 contraseña VARCHAR(255) NOT NULL,
                 rol ENUM('admin', 'operador') DEFAULT 'operador',
                 creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+        )
         """)
         
         connection.commit()
@@ -73,25 +80,44 @@ def jwt_required(f):
     def decorated(*args, **kwargs):
         token = request.headers.get('Authorization')
         
-        if not token:
-            return jsonify({'message': 'Token requerido'}), 401
-            
-        try:
-            if token.startswith('Bearer '):
-                token = token[7:]
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            current_user_id = data['user_id']
-        except jwt.ExpiredSignatureError:
-            return jsonify({'message': 'Token expirado'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'message': 'Token inválido'}), 401
+    if not token:
+        return jsonify({'message': 'Token requerido'}), 401
+    
+    try:
+        if token.startswith('Bearer '):
+            token = token[7:]
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        current_user_id = data['user_id']
+    except jwt.ExpiredSignatureError:
+        return jsonify({'message': 'Token expirado'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'message': 'Token inválido'}), 401
             
         return f(current_user_id, *args, **kwargs)
     return decorated
 
-@app.route('/api/register', methods=['POST'])
+# Manejar preflight requests de CORS
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = jsonify()
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        response.headers.add('Access-Control-Allow-Credentials', "true")
+        return response
+
+@app.route('/api/register', methods=['POST', 'OPTIONS'])
 def register():
     """Endpoint para registro de usuarios"""
+    if request.method == 'OPTIONS':
+        # Manejar preflight request
+        response = jsonify()
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "POST,OPTIONS")
+        return response
+        
     try:
         data = request.get_json()
         
@@ -132,11 +158,12 @@ def register():
         )
         connection.commit()
         
-        return jsonify({
+        response = jsonify({
             'message': 'Usuario registrado exitosamente',
             'success': True
-        }), 201
-        
+        })
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 201
     except Exception as e:
         print(f"Error en registro: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
@@ -145,9 +172,17 @@ def register():
             cursor.close()
             connection.close()
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/api/login', methods=['POST', 'OPTIONS'])
 def login():
     """Endpoint para inicio de sesión"""
+    if request.method == 'OPTIONS':
+        # Manejar preflight request
+        response = jsonify()
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "POST,OPTIONS")
+        return response
+        
     try:
         data = request.get_json()
         
@@ -180,7 +215,7 @@ def login():
         }
         token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
         
-        return jsonify({
+        response = jsonify({
             'token': token,
             'user': {
                 'id': user[0],
@@ -189,7 +224,9 @@ def login():
                 'rol': user[3]
             },
             'message': 'Inicio de sesión exitoso'
-        }), 200
+        })
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
         
     except Exception as e:
         print(f"Error en login: {e}")
@@ -199,10 +236,20 @@ def login():
             cursor.close()
             connection.close()
 
-@app.route('/api/verify-token', methods=['GET'])
-@jwt_required
-def verify_token(current_user_id):
+@app.route('/api/verify-token', methods=['GET', 'OPTIONS'])
+def jwt_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+
     """Verifica si el token es válido"""
+    if request.method == 'OPTIONS':
+        response = jsonify()
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,OPTIONS")
+        return response
+        
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
@@ -213,7 +260,7 @@ def verify_token(current_user_id):
         user = cursor.fetchone()
         
         if user:
-            return jsonify({
+            response = jsonify({
                 'valid': True,
                 'user': {
                     'id': user[0],
@@ -221,7 +268,9 @@ def verify_token(current_user_id):
                     'correo': user[2],
                     'rol': user[3]
                 }
-            }), 200
+            })
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
         else:
             return jsonify({'valid': False}), 401
             
@@ -233,15 +282,23 @@ def verify_token(current_user_id):
             cursor.close()
             connection.close()
 
-@app.route('/api/dashboard', methods=['GET'])
+@app.route('/api/dashboard', methods=['GET', 'OPTIONS'])
 @jwt_required
 def dashboard(current_user_id):
     """Ruta protegida de ejemplo"""
-    return jsonify({
+    if request.method == 'OPTIONS':
+        response = jsonify()
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,OPTIONS")
+        return response
+        
+    response = jsonify({
         'message': f'Bienvenido al dashboard, usuario {current_user_id}',
         'data': 'Datos del dashboard aquí'
-    }), 200
-
+    })
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    return response, 200
 if __name__ == '__main__':
     init_database()
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, host='0.0.0.0')

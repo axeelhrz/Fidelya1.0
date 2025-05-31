@@ -7,10 +7,11 @@ const API_URL = config.API_BASE_URL || 'http://localhost:5000/api';
 // Configurar instancia de axios con configuraciones base
 const api = axios.create({
   baseURL: API_URL,
-  timeout: config.REQUEST_TIMEOUT || 10000,
+  timeout: config.REQUEST_TIMEOUT || 15000,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: false,
 });
 
 // Interceptor para agregar token automáticamente a las peticiones
@@ -32,6 +33,16 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Manejar errores de CORS específicamente
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      console.error('Error de CORS o conexión:', error);
+      // No redirigir automáticamente en errores de red
+      return Promise.reject({
+        message: 'Error de conexión. Verifica que el servidor esté funcionando.',
+        type: 'NETWORK_ERROR'
+      });
+    }
+    
     // Manejar token expirado o inválido
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
@@ -40,11 +51,6 @@ api.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
-    }
-    
-    // Manejar errores de red
-    if (!error.response) {
-      console.error('Error de red:', error.message);
     }
     
     return Promise.reject(error);
@@ -59,20 +65,34 @@ api.interceptors.response.use(
  */
 export const login = async (correo, contraseña) => {
   try {
-const response = await api.post('/login', {
+    console.log('Intentando login con:', { correo, url: `${API_URL}/login` });
+    const response = await axios.post(`${API_URL}/login`, {
   correo: correo.trim().toLowerCase(),
   contraseña,
-});
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      timeout: 15000,
+    });
+    
+    console.log('Respuesta de login:', response.data);
     
     // Validar que la respuesta tenga la estructura esperada
     if (!response.data.token || !response.data.user) {
       throw new Error('Respuesta del servidor inválida');
-    }
-      return response.data;
-    } catch (error) {
+  }
+    return response.data;
+  } catch (error) {
     console.error('Error en login:', error);
+    
+    // Manejar diferentes tipos de errores
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      throw { message: 'Error de conexión. Verifica que el servidor esté funcionando.' };
+  }
+    
     throw error.response?.data || { message: 'Error de conexión con el servidor' };
-    }
+  }
 };
 
 /**
@@ -84,15 +104,29 @@ const response = await api.post('/login', {
  */
 export const register = async (nombre, correo, contraseña) => {
   try {
-const response = await api.post('/register', {
+    console.log('Intentando registro con:', { nombre, correo, url: `${API_URL}/register` });
+    
+    const response = await axios.post(`${API_URL}/register`, {
       nombre: nombre.trim(),
       correo: correo.trim().toLowerCase(),
       contraseña,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      timeout: 15000,
     });
     
+    console.log('Respuesta de registro:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error en registro:', error);
+    
+    // Manejar diferentes tipos de errores
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      throw { message: 'Error de conexión. Verifica que el servidor esté funcionando.' };
+    }
+    
     throw error.response?.data || { message: 'Error de conexión con el servidor' };
   }
 };
@@ -113,7 +147,9 @@ export const verifyToken = async (token = null) => {
     const response = await axios.get(`${API_URL}/verify-token`, {
       headers: {
         Authorization: `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
       },
+      timeout: 15000,
     });
     
     return response.data;
