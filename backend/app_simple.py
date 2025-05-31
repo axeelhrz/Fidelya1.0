@@ -108,9 +108,19 @@ def init_simple_database():
         """)
         print("👤 Tabla usuarios creada")
         
-        # CORREGIR: Eliminar tabla productos existente si tiene estructura incorrecta
-        cursor.execute("DROP TABLE IF EXISTS productos")
-        print("🗑️ Tabla productos anterior eliminada")
+        # CORREGIR: Eliminar tablas en el orden correcto (primero las dependientes)
+        try:
+            cursor.execute("DROP TABLE IF EXISTS movimientos_stock")
+            print("🗑️ Tabla movimientos_stock eliminada")
+        except Exception as e:
+            print(f"⚠️ No se pudo eliminar movimientos_stock: {e}")
+        
+        try:
+            cursor.execute("DROP TABLE IF EXISTS productos")
+            print("🗑️ Tabla productos eliminada")
+        except Exception as e:
+            print(f"⚠️ No se pudo eliminar productos: {e}")
+            
         # Crear tabla productos con la estructura correcta
         cursor.execute("""
             CREATE TABLE productos (
@@ -143,7 +153,6 @@ def init_simple_database():
             productos_ejemplo
         )
         print("🌱 Productos de ejemplo insertados")
-        
         connection.commit()
         print("✅ Base de datos inicializada correctamente")
         return True
@@ -158,7 +167,6 @@ def init_simple_database():
             connection.close()
 
 def jwt_required(f):
-    """Decorador para rutas que requieren autenticación"""
     @wraps(f)
     def decorated(*args, **kwargs):
         if request.method == "OPTIONS":
@@ -173,7 +181,7 @@ def jwt_required(f):
         
         if not auth_header:
             return jsonify({'message': 'Token requerido'}), 401
-
+            
         try:
             if auth_header.startswith('Bearer '):
                 token = auth_header[7:]
@@ -189,6 +197,7 @@ def jwt_required(f):
             return jsonify({'message': 'Token inválido'}), 401
         except Exception as e:
             print(f"Error en jwt_required: {e}")
+            return jsonify({'message': 'Error procesando token'}), 401
             return jsonify({'message': 'Error procesando token'}), 401
             
         return f(current_user_id, *args, **kwargs)
@@ -350,6 +359,7 @@ def verify_token(current_user_id):
             return response, 200
         else:
             return jsonify({'valid': False, 'message': 'Usuario no encontrado'}), 401
+            
     except Exception as e:
         print(f"❌ Error verificando token: {e}")
         return jsonify({'valid': False, 'message': 'Error interno'}), 500
@@ -572,12 +582,16 @@ def test_db():
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
     except Exception as e:
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+    except Exception as e:
         response = jsonify({'status': 'ERROR', 'message': f'Error: {str(e)}'})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 500
 
 if __name__ == '__main__':
     print("🚀 Iniciando Frutería Nina Backend (Versión Simple)...")
+    print("=" * 60)
     print("=" * 60)
     
     if init_simple_database():
