@@ -61,196 +61,242 @@ api.interceptors.response.use(
 );
 
 /**
- * Registra un nuevo usuario
- * @param {object} userData - Datos del usuario (nombre, correo, contraseña)
- * @returns {object} - Respuesta del servidor
- */
-export const register = async (userData) => {
-  try {
-    console.log('📝 Registrando usuario:', userData.correo);
-    const response = await api.post('/register', userData);
-    console.log('✅ Usuario registrado exitosamente');
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error en registro:', error);
-    throw error.response?.data || { message: 'Error en el registro' };
-  }
-};
-
-/**
  * Inicia sesión de usuario
- * @param {object} credentials - Credenciales (correo, contraseña)
- * @returns {object} - Datos del usuario y token
+ * @param {string} correo - Correo electrónico
+ * @param {string} contraseña - Contraseña sin hashear
+ * @returns {object} - { token, user: { id, nombre, correo, rol }, message }
  */
-export const login = async (credentials) => {
+export const login = async (correo, contraseña) => {
   try {
-    console.log('🔐 Iniciando sesión para:', credentials.correo);
-    const response = await api.post('/login', credentials);
+    console.log('🔐 Intentando login...');
+    const response = await api.post('/login', {
+      correo: correo.trim().toLowerCase(),
+      contraseña,
+    });
+    console.log('✅ Respuesta de login:', response.data);
     
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      console.log('✅ Token guardado exitosamente');
-    }
+    if (!response.data.token || !response.data.user) {
+      throw new Error('Respuesta del servidor inválida');
+  }
     
-    console.log('✅ Login exitoso');
     return response.data;
   } catch (error) {
     console.error('❌ Error en login:', error);
-    throw error.response?.data || { message: 'Error en el inicio de sesión' };
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      throw { message: 'Error de conexión. Verifica que el servidor esté funcionando en puerto 5001.' };
+    }
+    throw error.response?.data || { message: 'Error de conexión con el servidor' };
   }
 };
 
 /**
- * Verifica si el token actual es válido
- * @returns {object} - Datos del usuario si el token es válido
+ * Registra un nuevo usuario
+ * @param {string} nombre - Nombre del usuario
+ * @param {string} correo - Email del usuario
+ * @param {string} contraseña - Contraseña sin hashear
+ * @returns {object} - { message, success: true }
  */
-export const verifyToken = async () => {
+export const register = async (nombre, correo, contraseña) => {
   try {
+    console.log('📝 Intentando registro...');
+    const response = await api.post('/register', {
+      nombre: nombre.trim(),
+      correo: correo.trim().toLowerCase(),
+      contraseña,
+    });
+    console.log('✅ Respuesta de registro:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error en registro:', error);
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      throw { message: 'Error de conexión. Verifica que el servidor esté funcionando en puerto 5001.' };
+    }
+    throw error.response?.data || { message: 'Error de conexión con el servidor' };
+  }
+};
+
+/**
+ * Verifica si un token JWT es válido
+ * @param {string} token - JWT del usuario (opcional, usa el del localStorage si no se proporciona)
+ * @returns {object} - { valid: true/false, user: { id, nombre, correo, rol } }
+ */
+export const verifyToken = async (token = null) => {
+  try {
+    const authToken = token || localStorage.getItem('token');
+    if (!authToken) {
+      return { valid: false };
+    }
+    
     console.log('🔍 Verificando token...');
     const response = await api.get('/verify-token');
-    console.log('✅ Token válido');
     return response.data;
   } catch (error) {
     console.error('❌ Error verificando token:', error);
-    localStorage.removeItem('token');
-    throw error.response?.data || { message: 'Token inválido' };
+    return { valid: false };
   }
 };
 
 /**
- * Cierra la sesión del usuario
+ * Cierra sesión del usuario
+ * @returns {boolean} - true si se cerró sesión correctamente
  */
 export const logout = () => {
-  console.log('👋 Cerrando sesión...');
-  localStorage.removeItem('token');
-  localStorage.removeItem('rememberUser');
-  console.log('✅ Sesión cerrada');
+  try {
+    localStorage.removeItem('token');
+    localStorage.removeItem('rememberUser');
+    return true;
+  } catch (error) {
+    console.error('Error cerrando sesión:', error);
+    return false;
+  }
 };
 
 /**
- * Obtiene el token almacenado
+ * Obtiene el token del localStorage
  * @returns {string|null} - Token JWT o null si no existe
  */
 export const getToken = () => {
-  return localStorage.getItem('token');
+  try {
+    return localStorage.getItem('token');
+  } catch (error) {
+    console.error('Error obteniendo token:', error);
+    return null;
+  }
+};
+
+/**
+ * Guarda el token en localStorage
+ * @param {string} token - Token JWT a guardar
+ * @returns {boolean} - true si se guardó correctamente
+ */
+export const setToken = (token) => {
+  try {
+    if (token) {
+      localStorage.setItem('token', token);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error guardando token:', error);
+    return false;
+  }
 };
 
 /**
  * Verifica si el usuario está autenticado
- * @returns {boolean} - True si hay token, false si no
+ * @returns {boolean} - true si hay un token válido
  */
 export const isAuthenticated = () => {
-  return !!getToken();
+  const token = getToken();
+  return !!token;
 };
 
-// ==================== ENDPOINTS DE DASHBOARD ====================
-
 /**
- * Obtiene el resumen general del dashboard
- * @returns {object} - Datos del resumen
+ * Obtener datos del dashboard (ejemplo de ruta protegida)
+ * @returns {object} - Datos del dashboard
  */
-export const getResumen = async () => {
+export const getDashboard = async () => {
   try {
-    console.log('📊 Obteniendo resumen del dashboard...');
-    const response = await api.get('/dashboard/resumen');
-    console.log('✅ Resumen obtenido exitosamente');
+    const response = await api.get('/dashboard');
     return response.data;
   } catch (error) {
-    console.error('❌ Error obteniendo resumen del dashboard:', error);
-    throw error.response?.data || { message: 'Error obteniendo resumen' };
+    console.error('Error obteniendo dashboard:', error);
+    throw error.response?.data || { message: 'Error obteniendo datos del dashboard' };
+  }
+};
+
+// MÉTODOS PARA EL DASHBOARD
+
+/**
+ * Obtiene resumen general del dashboard
+ */
+export const getDashboardResumen = async () => {
+  try {
+    const response = await api.get('/dashboard/resumen');
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo resumen del dashboard:', error);
+    throw error.response?.data || { message: 'Error obteniendo resumen del dashboard' };
   }
 };
 
 /**
  * Obtiene productos con stock bajo
- * @returns {array} - Lista de productos con stock bajo
  */
 export const getStockBajo = async () => {
   try {
-    console.log('⚠️ Obteniendo productos con stock bajo...');
     const response = await api.get('/dashboard/stock-bajo');
-    console.log('✅ Stock bajo obtenido exitosamente:', response.data.length, 'productos');
     return response.data;
   } catch (error) {
-    console.error('❌ Error obteniendo stock bajo:', error);
+    console.error('Error obteniendo stock bajo:', error);
     // Retornar array vacío en caso de error para evitar crashes
     return [];
   }
 };
 
 /**
- * Obtiene las compras recientes
- * @returns {array} - Lista de compras recientes
+ * Obtiene compras recientes
  */
 export const getComprasRecientes = async () => {
   try {
-    console.log('🛒 Obteniendo compras recientes...');
     const response = await api.get('/dashboard/compras-recientes');
-    console.log('✅ Compras recientes obtenidas exitosamente');
     return response.data;
   } catch (error) {
-    console.error('❌ Error obteniendo compras recientes:', error);
+    console.error('Error obteniendo compras recientes:', error);
     return [];
   }
 };
 
 /**
- * Obtiene las ventas mensuales
- * @returns {array} - Datos de ventas por mes
+ * Obtiene ventas mensuales
  */
 export const getVentasMensuales = async () => {
   try {
-    console.log('📈 Obteniendo ventas mensuales...');
     const response = await api.get('/dashboard/ventas-mensuales');
-    console.log('✅ Ventas mensuales obtenidas exitosamente');
     return response.data;
   } catch (error) {
-    console.error('❌ Error obteniendo ventas mensuales:', error);
+    console.error('Error obteniendo ventas mensuales:', error);
     return [];
   }
 };
 
 /**
- * Obtiene la distribución de stock por categoría
- * @returns {object} - Distribución por categorías
+ * Obtiene distribución de stock
  */
 export const getStockDistribucion = async () => {
   try {
-    console.log('📊 Obteniendo distribución de stock...');
     const response = await api.get('/dashboard/stock-distribucion');
-    console.log('✅ Distribución de stock obtenida exitosamente');
     return response.data;
   } catch (error) {
-    console.error('❌ Error obteniendo distribución de stock:', error);
+    console.error('Error obteniendo distribución de stock:', error);
     return { frutas: 0, verduras: 0, otros: 0 };
   }
 };
 
 /**
- * Obtiene los últimos movimientos
- * @returns {array} - Lista de movimientos recientes
+ * Obtiene últimos movimientos
  */
 export const getUltimosMovimientos = async () => {
   try {
-    console.log('📋 Obteniendo últimos movimientos...');
     const response = await api.get('/dashboard/ultimos-movimientos');
-    console.log('✅ Últimos movimientos obtenidos exitosamente');
     return response.data;
   } catch (error) {
-    console.error('❌ Error obteniendo últimos movimientos:', error);
+    console.error('Error obteniendo últimos movimientos:', error);
     return [];
   }
 };
 
 // Objeto principal del servicio de autenticación
 export const authService = {
-  register,
   login,
-  logout,
+  register,
   verifyToken,
+  logout,
   getToken,
+  setToken,
   isAuthenticated,
-  getResumen,
+  getDashboard,
+  getDashboardResumen,
   getStockBajo,
   getComprasRecientes,
   getVentasMensuales,
