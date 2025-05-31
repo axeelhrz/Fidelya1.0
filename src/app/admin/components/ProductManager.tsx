@@ -163,7 +163,9 @@ export default function ProductManager({ products, selectedMenuId }: ProductMana
         preparationTime: formData.preparationTime && formData.preparationTime.trim() !== '' 
           ? parseInt(formData.preparationTime) 
           : undefined,
-        nutritionalInfo
+        nutritionalInfo,
+        isRecommended: false,
+        isVegan: formData.isVegan
       };
 
       // Remove undefined values from the main object

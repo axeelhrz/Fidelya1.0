@@ -5,6 +5,7 @@ import { Product } from '../../../types';
 const products: Product[] = [
   {
     id: '1',
+    menuId: 'menu1',
     name: 'Fernet con Cola',
     price: 2500,
     description: 'Fernet Branca con Coca Cola, hielo y limón',
@@ -17,6 +18,7 @@ const products: Product[] = [
   },
   {
     id: '2',
+    menuId: 'menu1',
     name: 'Empanadas de Carne',
     price: 1800,
     description: 'Empanadas caseras de carne cortada a cuchillo',
@@ -60,6 +62,7 @@ export async function POST(request: NextRequest) {
 
     const newProduct: Product = {
       id: Date.now().toString(),
+      menuId: body.menuId || 'menu1',
       name: body.name,
       price: Number(body.price),
       description: body.description || '',

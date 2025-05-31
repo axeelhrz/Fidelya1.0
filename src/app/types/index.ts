@@ -49,6 +49,11 @@ export interface Product extends BaseFirebaseDocument {
   isAvailable: boolean;
   image?: string;
   allergens?: string[];
+    id: string;
+  isRecommended: boolean;
+  isVegan: boolean;
+  createdAt: string;
+  updatedAt: string;
   nutritionalInfo?: {
     calories?: number;
   isVegan?: boolean;

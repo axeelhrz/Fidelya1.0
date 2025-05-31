@@ -9,6 +9,8 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
     category: 'APPETIZER',
     menuId: '', // Se asignará dinámicamente
     isAvailable: true,
+    isRecommended: true,
+    isVegan: false,
     tags: ['recomendado', 'para compartir'],
     preparationTime: 10,
     nutritionalInfo: {
@@ -25,8 +27,8 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
     category: 'APPETIZER',
     menuId: '',
     isAvailable: true,
-    tags: ['tradicional'],
-    preparationTime: 15,
+    isRecommended: false,
+    isVegan: false,
     nutritionalInfo: {
       calories: 280,
       isVegetarian: false,
@@ -41,6 +43,8 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
     category: 'APPETIZER',
     menuId: '',
     isAvailable: true,
+    isRecommended: false,
+    isVegan: false,
     tags: ['vegetariano'],
     preparationTime: 8,
     nutritionalInfo: {
@@ -50,8 +54,6 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
       isGlutenFree: true
     }
   },
-
-  // PLATOS PRINCIPALES
   {
     name: 'Bife de Chorizo',
     description: 'Corte premium de 400g a la parrilla, acompañado con papas rústicas y ensalada mixta.',
@@ -59,8 +61,8 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
     category: 'MAIN_COURSE',
     menuId: '',
     isAvailable: true,
-    tags: ['recomendado', 'parrilla'],
-    preparationTime: 25,
+    isRecommended: false,
+    isVegan: false,
     nutritionalInfo: {
       calories: 650,
       isVegetarian: false,
@@ -70,13 +72,15 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
   },
   {
     name: 'Milanesa Napolitana',
-    description: 'Milanesa de ternera con jamón, queso y salsa de tomate. Con papas fritas caseras.',
+    description: 'Milanesa de ternera con jamón, queso y salsa de tomate. Acompañada con papas fritas.',
     price: 4200,
     category: 'MAIN_COURSE',
     menuId: '',
     isAvailable: true,
-    tags: ['clásico'],
-    preparationTime: 20,
+    isRecommended: false,
+    isVegan: false,
+    tags: ['popular'],
+    preparationTime: 15,
     nutritionalInfo: {
       calories: 580,
       isVegetarian: false,
@@ -91,6 +95,8 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
     category: 'MAIN_COURSE',
     menuId: '',
     isAvailable: true,
+    isRecommended: false,
+    isVegan: false,
     tags: ['casero'],
     preparationTime: 18,
     nutritionalInfo: {
@@ -101,30 +107,14 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
     }
   },
   {
-    name: 'Hamburguesa de la Casa',
-    description: 'Medallón de carne 200g, queso cheddar, lechuga, tomate, cebolla caramelizada y papas.',
-    price: 3200,
+    name: 'Ensalada Caesar',
+    description: 'Lechuga romana, crutones, queso parmesano y aderezo caesar casero.',
+    price: 2800,
     category: 'MAIN_COURSE',
     menuId: '',
     isAvailable: true,
-    tags: ['popular'],
-    preparationTime: 15,
-    nutritionalInfo: {
-      calories: 680,
-      isVegetarian: false,
-      isVegan: false,
-      isGlutenFree: false
-    }
-  },
-
-  // POSTRES
-  {
-    name: 'Flan Casero',
-    description: 'Flan tradicional con dulce de leche y crema chantilly. Receta de la abuela.',
-    price: 1800,
-    category: 'DESSERT',
-    menuId: '',
-    isAvailable: true,
+    isRecommended: false,
+    isVegan: false,
     tags: ['casero', 'tradicional'],
     preparationTime: 5,
     nutritionalInfo: {
@@ -135,14 +125,16 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
     }
   },
   {
-    name: 'Tiramisu',
-    description: 'Postre italiano con café, mascarpone, cacao y un toque de amaretto.',
-    price: 2200,
-    category: 'DESSERT',
+    name: 'Risotto de Hongos',
+    description: 'Arroz arborio con hongos de estación, queso parmesano y vino blanco.',
+    price: 4200,
+    category: 'MAIN_COURSE',
     menuId: '',
     isAvailable: true,
+    isRecommended: false,
+    isVegan: false,
     tags: ['especial'],
-    preparationTime: 5,
+    preparationTime: 25,
     nutritionalInfo: {
       calories: 350,
       isVegetarian: true,
@@ -151,12 +143,32 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
     }
   },
   {
-    name: 'Brownie con Helado',
-    description: 'Brownie tibio de chocolate con helado de vainilla y salsa de chocolate caliente.',
-    price: 2000,
+    name: 'Flan Casero',
+    description: 'Flan tradicional con dulce de leche y crema chantilly.',
+    price: 1800,
     category: 'DESSERT',
     menuId: '',
     isAvailable: true,
+    isRecommended: false,
+    isVegan: false,
+    tags: ['dulce'],
+    preparationTime: 5,
+    nutritionalInfo: {
+      calories: 280,
+      isVegetarian: true,
+      isVegan: false,
+      isGlutenFree: true
+    }
+  },
+  {
+    name: 'Tiramisú',
+    description: 'Postre italiano tradicional con café, mascarpone y cacao en polvo.',
+    price: 2200,
+    category: 'DESSERT',
+    menuId: '',
+    isAvailable: true,
+    isRecommended: false,
+    isVegan: false,
     tags: ['chocolate'],
     preparationTime: 8,
     nutritionalInfo: {
@@ -166,31 +178,33 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
       isGlutenFree: false
     }
   },
-
-  // BEBIDAS
   {
     name: 'Cerveza Artesanal IPA',
-    description: 'Cerveza artesanal estilo IPA, lupulada y refrescante. 500ml.',
-    price: 1500,
-    category: 'BEER',
+    description: 'Cerveza artesanal IPA de producción local, con notas cítricas y amargor balanceado.',
+    price: 1200,
+    category: 'ALCOHOLIC',
     menuId: '',
     isAvailable: true,
+    isRecommended: false,
+    isVegan: true,
     tags: ['artesanal'],
     preparationTime: 2,
     nutritionalInfo: {
-      calories: 180,
+      calories: 125,
       isVegetarian: true,
       isVegan: true,
-      isGlutenFree: false
+      isGlutenFree: true
     }
   },
   {
     name: 'Vino Malbec',
-    description: 'Vino tinto Malbec de Mendoza, cosecha 2021. Copa o botella.',
-    price: 800,
-    category: 'WINE',
+    description: 'Vino tinto Malbec de Mendoza, con cuerpo y taninos balanceados.',
+    price: 2800,
+    category: 'ALCOHOLIC',
     menuId: '',
     isAvailable: true,
+    isRecommended: false,
+    isVegan: true,
     tags: ['mendoza'],
     preparationTime: 2,
     nutritionalInfo: {
@@ -207,7 +221,9 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
     category: 'NON_ALCOHOLIC',
     menuId: '',
     isAvailable: true,
-    tags: ['natural', 'refrescante'],
+    isRecommended: false,
+    isVegan: true,
+    tags: ['natural'],
     preparationTime: 3,
     nutritionalInfo: {
       calories: 80,
@@ -216,8 +232,24 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
       isGlutenFree: true
     }
   },
-
-  // CÓCTELES
+  {
+    name: 'Jugo Natural',
+    description: 'Jugo natural de frutas de estación, exprimido al momento.',
+    price: 800,
+    category: 'NON_ALCOHOLIC',
+    menuId: '',
+    isAvailable: true,
+    isRecommended: false,
+    isVegan: true,
+    tags: ['natural'],
+    preparationTime: 3,
+    nutritionalInfo: {
+      calories: 60,
+      isVegetarian: true,
+      isVegan: true,
+      isGlutenFree: true
+    }
+  },
   {
     name: 'Negroni',
     description: 'Gin, Campari y vermut rojo. Servido con hielo y cáscara de naranja.',
@@ -225,10 +257,12 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
     category: 'COCKTAIL',
     menuId: '',
     isAvailable: true,
-    tags: ['clásico', 'amargo'],
-    preparationTime: 5,
+    isRecommended: false,
+    isVegan: true,
+    tags: ['clásico'],
+    preparationTime: 3,
     nutritionalInfo: {
-      calories: 190,
+      calories: 160,
       isVegetarian: true,
       isVegan: true,
       isGlutenFree: true
@@ -236,65 +270,53 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
   },
   {
     name: 'Mojito',
-    description: 'Ron blanco, menta fresca, lima, azúcar y soda. Refrescante y aromático.',
+    description: 'Ron blanco, menta fresca, limón y agua con gas.',
     price: 2200,
     category: 'COCKTAIL',
     menuId: '',
     isAvailable: true,
-    tags: ['refrescante', 'menta'],
-    preparationTime: 6,
+    isRecommended: false,
+    isVegan: true,
+    tags: ['refrescante'],
+    preparationTime: 5,
     nutritionalInfo: {
-      calories: 150,
+      calories: 180,
       isVegetarian: true,
       isVegan: true,
       isGlutenFree: true
     }
   },
   {
-    name: 'Old Fashioned',
-    description: 'Whisky bourbon, azúcar, bitter de angostura y cáscara de naranja.',
-    price: 2800,
+    name: 'Pisco Sour',
+    description: 'Cóctel tradicional peruano con pisco, limón, jarabe y clara de huevo.',
+    price: 2400,
     category: 'COCKTAIL',
     menuId: '',
     isAvailable: true,
-    tags: ['whisky', 'clásico'],
-    preparationTime: 4,
-    nutritionalInfo: {
-      calories: 220,
-      isVegetarian: true,
-      isVegan: true,
-      isGlutenFree: true
-    }
-  },
-
-  // CAFETERÍA
-  {
-    name: 'Café Espresso',
-    description: 'Café espresso tradicional, blend de la casa. Intenso y aromático.',
-    price: 600,
-    category: 'COFFEE',
-    menuId: '',
-    isAvailable: true,
+    isRecommended: false,
+    isVegan: false,
     tags: ['tradicional'],
-    preparationTime: 3,
+    preparationTime: 5,
     nutritionalInfo: {
-      calories: 5,
+      calories: 200,
       isVegetarian: true,
-      isVegan: true,
+      isVegan: false,
       isGlutenFree: true
     }
   },
   {
     name: 'Cappuccino',
-    description: 'Espresso con leche vaporizada y espuma cremosa. Con cacao en polvo.',
+    description: 'Café espresso con leche vaporizada y espuma. Servido en taza grande.',
     price: 950,
     category: 'COFFEE',
     menuId: '',
     isAvailable: true,
-    tags: ['cremoso'],
-    preparationTime: 4,
+    isRecommended: false,
+    isVegan: false,
+    tags: ['tradicional'],
+    preparationTime: 5,
     nutritionalInfo: {
-      calories: 120,
+      calories: 200,
       isVegetarian: true,
       isVegan: false,
       isGlutenFree: true
@@ -303,10 +325,12 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
   {
     name: 'Café con Leche',
     description: 'Café con leche tradicional argentino. Servido en taza grande.',
-    price: 800,
+    price: 850,
     category: 'COFFEE',
     menuId: '',
     isAvailable: true,
+    isRecommended: false,
+    isVegan: false,
     tags: ['tradicional', 'argentino'],
     preparationTime: 3,
     nutritionalInfo: {
@@ -316,72 +340,58 @@ export const initialProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] 
       isGlutenFree: true
     }
   },
-
-  // ACOMPAÑAMIENTOS
   {
-    name: 'Papas Fritas',
-    description: 'Papas cortadas en bastón, fritas y condimentadas con sal marina.',
-    price: 1200,
-    category: 'SIDE_DISH',
+    name: 'Té con Leche de Almendras',
+    description: 'Té negro con leche de almendras y un toque de canela.',
+    price: 900,
+    category: 'COFFEE',
     menuId: '',
     isAvailable: true,
-    tags: ['clásico'],
-    preparationTime: 8,
+    isRecommended: false,
+    isVegan: true,
+    tags: ['vegano'],
+    preparationTime: 4,
     nutritionalInfo: {
-      calories: 280,
+      calories: 60,
       isVegetarian: true,
       isVegan: true,
       isGlutenFree: true
     }
-  },
-  {
-    name: 'Ensalada Mixta',
-    description: 'Lechuga, tomate, cebolla, zanahoria y aceitunas con vinagreta de la casa.',
-    price: 1500,
-    category: 'SIDE_DISH',
-    menuId: '',
-    isAvailable: true,
-    tags: ['saludable', 'fresco'],
-    preparationTime: 5,
-    nutritionalInfo: {
-      calories: 120,
-      isVegetarian: true,
-      isVegan: true,
-      isGlutenFree: true
-    }
-  },
-
-  // SNACKS
-  {
-    name: 'Maní Salado',
-    description: 'Maní tostado y salado, ideal para acompañar las bebidas.',
-    price: 800,
-    category: 'SNACK',
-    menuId: '',
-    isAvailable: true,
-    tags: ['aperitivo'],
-    preparationTime: 1,
-    nutritionalInfo: {
-      calories: 180,
-      isVegetarian: true,
-      isVegan: true,
-      isGlutenFree: true
-    }
-  },
-  {
-    name: 'Aceitunas Mixtas',
-    description: 'Selección de aceitunas verdes y negras marinadas con hierbas.',
-    price: 1000,
-    category: 'SNACK',
-    menuId: '',
-    isAvailable: true,
-    tags: ['mediterráneo'],
-    preparationTime: 2,
-    nutritionalInfo: {
-      calories: 150,
-      isVegetarian: true,
-      isVegan: true,
-      isGlutenFree: true
-    }
+},
+{
+  name: 'Papas Fritas',
+  description: 'Papas fritas caseras cortadas a mano, crocantes y doradas.',
+  price: 1500,
+  category: 'SIDE_DISH',
+  menuId: '',
+  isAvailable: true,
+  isRecommended: false,
+  isVegan: true,
+  tags: ['crocante'],
+  preparationTime: 8,
+  nutritionalInfo: {
+    calories: 280,
+    isVegetarian: true,
+    isVegan: true,
+    isGlutenFree: true
   }
+},
+{
+  name: 'Maní Salado',
+  description: 'Maní tostado y salado, ideal para acompañar las bebidas.',
+  price: 800,
+  category: 'SNACK',
+  menuId: '',
+  isAvailable: true,
+  isRecommended: false,
+  isVegan: true,
+  tags: ['aperitivo'],
+  preparationTime: 1,
+  nutritionalInfo: {
+    calories: 180,
+    isVegetarian: true,
+    isVegan: true,
+    isGlutenFree: true
+  }
+}
 ];

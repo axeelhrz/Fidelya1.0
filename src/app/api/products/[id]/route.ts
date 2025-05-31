@@ -3,10 +3,10 @@ import { FirebaseDatabase } from '../../../../lib/firebase-database';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     if (!id) {
       return NextResponse.json(
         { error: 'Product ID is required' },
@@ -42,12 +42,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
-    const productData = await request.json();
-    
+    const { id } = await params;
     if (!id) {
       return NextResponse.json(
         { error: 'Product ID is required' },
@@ -55,7 +53,8 @@ export async function PUT(
       );
     }
 
-    // Verificar que el producto existe
+    const productData = await request.json();
+    // Check if product exists
     const existingProduct = await FirebaseDatabase.getProduct(id);
     if (!existingProduct) {
     return NextResponse.json(
@@ -64,7 +63,7 @@ export async function PUT(
     );
     }
 
-    // Si se está cambiando el menuId, verificar que el nuevo menú existe
+    // If menuId is being changed, verify the new menu exists
     if (productData.menuId && productData.menuId !== existingProduct.menuId) {
       const menu = await FirebaseDatabase.getMenu(productData.menuId);
       if (!menu) {
@@ -96,12 +95,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
-    
+    const { id } = await params;
     if (!id) {
       return NextResponse.json(
         { error: 'Product ID is required' },
@@ -109,7 +107,7 @@ export async function DELETE(
       );
     }
 
-    // Verificar que el producto existe
+    // Check if product exists
     const existingProduct = await FirebaseDatabase.getProduct(id);
     if (!existingProduct) {
       return NextResponse.json(

@@ -39,7 +39,7 @@ export const formatPrice = (price: number): string => {
 
 // Obtener icono de categoría
 export const getCategoryIcon = (category: ProductCategory): string => {
-  const icons: Record<ProductCategory, string> = {
+  const icons: Record<string, string> = {
     'Bebidas': '🍺',
     'Sin Alcohol': '🥤',
     'Tapas': '🍤',
@@ -57,7 +57,7 @@ export const getCategoryIcon = (category: ProductCategory): string => {
 
 // Obtener color de categoría
 export const getCategoryColor = (category: ProductCategory): string => {
-  const colors: Record<ProductCategory, string> = {
+  const colors: Record<string, string> = {
     'Bebidas': '#3B82F6',
     'Sin Alcohol': '#10B981',
     'Tapas': '#F59E0B',
@@ -151,7 +151,7 @@ export const searchProducts = (products: Product[], searchTerm: string): Product
   const term = searchTerm.toLowerCase();
   return products.filter(product => 
     product.name.toLowerCase().includes(term) ||
-    product.description.toLowerCase().includes(term) ||
+    (product.description && product.description.toLowerCase().includes(term)) ||
     product.category.toLowerCase().includes(term)
   );
 };
@@ -160,8 +160,8 @@ export const searchProducts = (products: Product[], searchTerm: string): Product
 export const getProductStats = (products: Product[]) => {
   const total = products.length;
   const available = products.filter(p => p.isAvailable).length;
-  const recommended = products.filter(p => p.isRecommended).length;
-  const vegan = products.filter(p => p.isVegan).length;
+  const recommended = products.filter(p => (p as Product & { isRecommended?: boolean }).isRecommended).length;
+  const vegan = products.filter(p => (p as Product & { isVegan?: boolean }).isVegan).length;
   
   const byCategory = products.reduce((acc, product) => {
     acc[product.category] = (acc[product.category] || 0) + 1;
