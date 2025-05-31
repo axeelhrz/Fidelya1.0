@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -77,11 +77,15 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
-  const [baseUrl, setBaseUrl] = useState('https://menuqr-bar.vercel.app');
+  // Estados básicos
+  const [baseUrl, setBaseUrl] = useState('');
   const [selectedMenuId, setSelectedMenuId] = useState<string>('');
   const [generatedQRs, setGeneratedQRs] = useState<GeneratedQR[]>([]);
   const [showSettings, setShowSettings] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Configuración del QR
   const [currentConfig, setCurrentConfig] = useState<QRConfig>({
     size: 256,
     level: 'M',
@@ -90,6 +94,12 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
     includeMargin: true,
   });
 
+  // Detectar URL automáticamente
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setBaseUrl(window.location.origin);
+    }
+  }, []);
 
   const selectedMenu = menus.find(m => m.id === selectedMenuId);
 
@@ -109,49 +119,104 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
     setGeneratedQRs(prev => [newQR, ...prev]);
   };
 
+  // Función de descarga mejorada (del segundo componente)
   const downloadQR = async (qr: GeneratedQR) => {
+    setIsGenerating(true);
     try {
+      // Buscar el SVG específico de este QR
+      const qrCard = document.querySelector(`[data-qr-id="${qr.id}"]`);
+      const svg = qrCard?.querySelector('svg');
+      
+      if (!svg) {
+        console.error('SVG no encontrado');
+        return;
+      }
+
+      // Crear un canvas temporal para la conversión
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        console.error('No se pudo crear el contexto del canvas');
+        return;
+      }
 
-      // Crear SVG temporal
-      const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svgElement.setAttribute('width', qr.config.size.toString());
-      svgElement.setAttribute('height', qr.config.size.toString());
-      
-      // Simular QR code para descarga
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = `<svg width="${qr.config.size}" height="${qr.config.size}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="${qr.config.bgColor}"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="${qr.config.fgColor}" font-size="12">QR Code</text></svg>`;
-      
-      const svgData = new XMLSerializer().serializeToString(tempDiv.querySelector('svg')!);
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      const svgUrl = URL.createObjectURL(svgBlob);
+      // Configurar el canvas con alta resolución
+      const downloadSize = 512; // Tamaño fijo para descarga de alta calidad
+      canvas.width = downloadSize;
+      canvas.height = downloadSize;
 
+      // Configurar el contexto para renderizado nítido
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = qr.config.bgColor;
+      ctx.fillRect(0, 0, downloadSize, downloadSize);
+
+      // Crear un SVG limpio con las dimensiones correctas
+      const cleanSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="${downloadSize}"
+             height="${downloadSize}"
+             viewBox="0 0 ${downloadSize} ${downloadSize}"
+             style="background-color: ${qr.config.bgColor};">
+          ${svg.innerHTML}
+        </svg>
+      `;
+
+      // Convertir a blob y crear URL
+      const svgBlob = new Blob([cleanSvg], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      // Crear imagen y renderizar en canvas
       const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
       img.onload = () => {
-        canvas.width = qr.config.size;
-        canvas.height = qr.config.size;
-        ctx.fillStyle = qr.config.bgColor;
-        ctx.fillRect(0, 0, qr.config.size, qr.config.size);
-        ctx.drawImage(img, 0, 0, qr.config.size, qr.config.size);
+        try {
+          // Limpiar canvas y dibujar fondo
+          ctx.clearRect(0, 0, downloadSize, downloadSize);
+          ctx.fillStyle = qr.config.bgColor;
+          ctx.fillRect(0, 0, downloadSize, downloadSize);
 
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `qr-${qr.menuName.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.png`;
-            link.click();
-            URL.revokeObjectURL(url);
-          }
-        }, 'image/png');
+          // Dibujar la imagen del QR
+          ctx.drawImage(img, 0, 0, downloadSize, downloadSize);
 
-        URL.revokeObjectURL(svgUrl);
+          // Convertir a PNG y descargar
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const downloadUrl = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = downloadUrl;
+              link.download = `qr-${qr.menuId}-${qr.menuName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.png`;
+
+              // Agregar al DOM temporalmente para hacer click
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+
+              // Limpiar URLs
+              URL.revokeObjectURL(downloadUrl);
+              URL.revokeObjectURL(url);
+              
+              console.log(`✅ QR descargado: ${link.download}`);
+            } else {
+              console.error('Error al crear el blob PNG');
+            }
+          }, 'image/png', 1.0);
+        } catch (error) {
+          console.error('Error al dibujar en canvas:', error);
+          URL.revokeObjectURL(url);
+        }
       };
-      img.src = svgUrl;
+
+      img.onerror = (error) => {
+        console.error('Error al cargar imagen SVG:', error);
+        URL.revokeObjectURL(url);
+      };
+
+      img.src = url;
     } catch (error) {
-      console.error('Error descargando QR:', error);
+      console.error('Error general en downloadQR:', error);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -182,95 +247,208 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
     }
   };
 
+  // Función de impresión mejorada (del segundo componente)
   const printQR = (qr: GeneratedQR) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+    setIsGenerating(true);
+    try {
+      // Buscar el SVG específico de este QR
+      const qrCard = document.querySelector(`[data-qr-id="${qr.id}"]`);
+      const svg = qrCard?.querySelector('svg');
+      
+      if (!svg) {
+        console.error('SVG no encontrado para imprimir');
+        return;
+      }
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Código QR - ${qr.menuName}</title>
-          <style>
-            body {
-              font-family: 'Inter', Arial, sans-serif;
-              text-align: center;
-              padding: 40px 20px;
-              margin: 0;
-              background: white;
-              color: #333;
-            }
-            .header {
-              margin-bottom: 30px;
-            }
-            .qr-container {
-              display: inline-block;
-              padding: 30px;
-              border: 3px solid #D4AF37;
-              border-radius: 10px;
-              margin: 20px 0;
-              background: white;
-              box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            }
-            .info {
-              margin: 20px 0;
-              font-size: 16px;
-              line-height: 1.6;
-            }
-            .url {
-              font-family: monospace;
-              background: #f5f5f5;
-              padding: 10px;
-              border-radius: 5px;
-              word-break: break-all;
-              margin: 10px 0;
-              border: 1px solid #ddd;
-            }
-            .instructions {
-              font-size: 18px;
-              font-weight: bold;
-              color: #D4AF37;
-              margin: 20px 0;
-            }
-            .restaurant-name {
-              color: #D4AF37;
-              font-size: 24px;
-              font-weight: 700;
-              margin-bottom: 10px;
-            }
-            @media print {
-              body { margin: 0; padding: 20px; }
-              .qr-container { box-shadow: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="restaurant-name">${qr.menuName}</div>
-            <h2 style="color: #666; font-weight: normal; margin: 0;">Menú Digital</h2>
-          </div>
-          
-          <div class="qr-container">
-            <div style="width: ${qr.config.size}px; height: ${qr.config.size}px; background: ${qr.config.bgColor}; border: 2px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 14px; color: ${qr.config.fgColor};">
-              [Código QR]
+      // Crear SVG optimizado para impresión
+      const printSize = 400;
+      const printSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="${printSize}"
+             height="${printSize}"
+             viewBox="0 0 ${printSize} ${printSize}"
+             style="background-color: ${qr.config.bgColor};">
+          ${svg.innerHTML}
+        </svg>
+      `;
+
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        console.error('No se pudo abrir ventana de impresión');
+        return;
+      }
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="es">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Código QR - ${qr.menuName}</title>
+            <style>
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+              
+              body {
+                font-family: 'Inter', Arial, sans-serif;
+                text-align: center;
+                padding: 40px 20px;
+                margin: 0;
+                background: white;
+                color: #333;
+              }
+              
+              .header {
+                margin-bottom: 30px;
+              }
+              
+              .restaurant-name {
+                color: #D4AF37;
+                font-size: 32px;
+                font-weight: 700;
+                margin-bottom: 10px;
+              }
+              
+              .subtitle {
+                color: #666;
+                font-size: 24px;
+                font-weight: normal;
+                margin: 0;
+              }
+              
+              .qr-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 40px;
+                border: 4px solid #D4AF37;
+                border-radius: 20px;
+                margin: 40px auto;
+                background: ${qr.config.bgColor};
+                max-width: 500px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+              }
+              
+              .qr-container svg {
+                display: block;
+                width: ${printSize}px !important;
+                height: ${printSize}px !important;
+                background-color: ${qr.config.bgColor} !important;
+              }
+              
+              .instructions {
+                font-size: 24px;
+                font-weight: bold;
+                color: #D4AF37;
+                margin: 40px 0;
+                padding: 20px;
+                background: #f8f9fa;
+                border-radius: 15px;
+                border: 3px solid #e9ecef;
+              }
+              
+              .info {
+                margin: 30px 0;
+                font-size: 18px;
+                line-height: 1.6;
+              }
+              
+              .url {
+                font-family: 'Courier New', monospace;
+                background: #f5f5f5;
+                padding: 20px;
+                border-radius: 10px;
+                word-break: break-all;
+                margin: 20px 0;
+                border: 2px solid #ddd;
+                font-size: 16px;
+                font-weight: bold;
+              }
+              
+              .date {
+                font-weight: bold;
+                color: #555;
+                font-size: 16px;
+              }
+              
+              @media print {
+                body {
+                  margin: 0;
+                  padding: 10px;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                  color-adjust: exact !important;
+                }
+                
+                .qr-container {
+                  box-shadow: none;
+                  page-break-inside: avoid;
+                  background: ${qr.config.bgColor} !important;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                }
+                
+                .qr-container svg {
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                  background-color: ${qr.config.bgColor} !important;
+                }
+                
+                @page {
+                  margin: 1cm;
+                  size: A4 portrait;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="restaurant-name">${qr.menuName}</div>
+                <h2 class="subtitle">Menú Digital</h2>
+              </div>
+              
+              <div class="qr-container">
+                ${printSvg}
+              </div>
+              
+              <div class="instructions">
+                📱 Escanea el código QR con la cámara de tu teléfono para acceder al menú digital
+              </div>
+              
+              <div class="info">
+                <div class="url">${qr.url}</div>
+                <p class="date">Generado el: ${new Date().toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</p>
+                <p><strong>Configuración:</strong> ${qr.config.size}px, Nivel ${qr.config.level}</p>
+              </div>
             </div>
-          </div>
-          
-          <div class="instructions">
-            📱 Escanea el código QR con tu teléfono para ver el menú
-          </div>
-          
-          <div class="info">
-            <div class="url">${qr.url}</div>
-            <p><strong>Fecha de generación:</strong> ${qr.createdAt.toLocaleDateString()}</p>
-            <p><strong>Configuración:</strong> ${qr.config.size}px, Nivel ${qr.config.level}</p>
-          </div>
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.print();
+          </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+
+      // Esperar y luego imprimir
+      printWindow.addEventListener('load', () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 1000);
+      });
+    } catch (error) {
+      console.error('Error en printQR:', error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const presetColors = [
@@ -296,8 +474,16 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
     setGeneratedQRs(prev => prev.filter(qr => qr.id !== qrId));
   };
 
+  if (!baseUrl) {
+    return (
+      <Paper sx={{ p: 4, textAlign: 'center' }}>
+        <Typography>Cargando generador de QR...</Typography>
+      </Paper>
+    );
+  }
+
   return (
-    <Box sx={{ 
+    <Box sx={{
       minHeight: '100vh',
       backgroundColor: '#0A0A0A',
       position: 'relative'
@@ -336,8 +522,8 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
               >
                 <QrCodeIcon sx={{ color: '#D4AF37', fontSize: { xs: 28, md: 32 } }} />
               </motion.div>
-              <Typography 
-                variant={isMobile ? "h5" : "h4"} 
+              <Typography
+                variant={isMobile ? "h5" : "h4"}
                 fontWeight={700}
                 sx={{ color: '#F8F8F8' }}
               >
@@ -347,7 +533,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
             <Button
               variant="outlined"
               onClick={onBack}
-              sx={{ 
+              sx={{
                 borderRadius: 0,
                 minWidth: { xs: 'auto', md: 'auto' },
                 px: { xs: 2, md: 3 }
@@ -356,10 +542,9 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
               {isMobile ? '←' : 'Volver'}
             </Button>
           </Box>
-
-          <Typography 
-            variant="body1" 
-            sx={{ 
+          <Typography
+            variant="body1"
+            sx={{
               color: '#B8B8B8',
               maxWidth: 600,
               lineHeight: 1.6
@@ -398,7 +583,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
                   onChange={(e) => setBaseUrl(e.target.value)}
                   fullWidth
                   variant="outlined"
-                  helperText="Cambia por tu dominio real"
+                  helperText={`Detectado: ${baseUrl}`}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -503,8 +688,8 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
               </Box>
 
               {generatedQRs.length === 0 ? (
-                <Paper sx={{ 
-                  p: { xs: 4, md: 6 }, 
+                <Paper sx={{
+                  p: { xs: 4, md: 6 },
                   textAlign: 'center',
                   background: 'rgba(26, 26, 26, 0.6)',
                   border: '1px solid rgba(212, 175, 55, 0.1)',
@@ -562,6 +747,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
 
                             {/* QR Code Display */}
                             <Box
+                              data-qr-id={qr.id}
                               sx={{
                                 display: 'flex',
                                 justifyContent: 'center',
@@ -582,15 +768,15 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
                             </Box>
 
                             {/* URL */}
-                            <Box sx={{ 
-                              p: 1.5, 
-                              backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                            <Box sx={{
+                              p: 1.5,
+                              backgroundColor: 'rgba(255, 255, 255, 0.05)',
                               borderRadius: 0,
-                              mb: 2 
+                              mb: 2
                             }}>
-                              <Typography 
-                                variant="caption" 
-                                sx={{ 
+                              <Typography
+                                variant="caption"
+                                sx={{
                                   color: '#B8B8B8',
                                   wordBreak: 'break-all',
                                   fontSize: '0.7rem',
@@ -603,19 +789,19 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
 
                             {/* Configuración */}
                             <Stack direction="row" spacing={1} mb={2} flexWrap="wrap" sx={{ gap: 0.5 }}>
-                              <Chip 
-                                label={`${qr.config.size}px`} 
-                                size="small" 
-                                sx={{ 
+                              <Chip
+                                label={`${qr.config.size}px`}
+                                size="small"
+                                sx={{
                                   backgroundColor: 'rgba(212, 175, 55, 0.15)',
                                   color: '#D4AF37',
                                   fontSize: '0.7rem'
                                 }}
                               />
-                              <Chip 
-                                label={`Nivel ${qr.config.level}`} 
-                                size="small" 
-                                sx={{ 
+                              <Chip
+                                label={`Nivel ${qr.config.level}`}
+                                size="small"
+                                sx={{
                                   backgroundColor: 'rgba(59, 130, 246, 0.15)',
                                   color: '#3B82F6',
                                   fontSize: '0.7rem'
@@ -630,20 +816,22 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
                                 <IconButton
                                   size="small"
                                   onClick={() => downloadQR(qr)}
-                                  sx={{ 
+                                  disabled={isGenerating}
+                                  sx={{
                                     color: '#D4AF37',
                                     '&:hover': { backgroundColor: 'rgba(212, 175, 55, 0.1)' }
                                   }}
                                 >
+
                                   <DownloadIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              
+
                               <Tooltip title={copied === qr.id ? "¡Copiado!" : "Copiar URL"}>
                                 <IconButton
                                   size="small"
                                   onClick={() => copyUrl(qr)}
-                                  sx={{ 
+                                  sx={{
                                     color: copied === qr.id ? '#10B981' : '#3B82F6',
                                     '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
                                   }}
@@ -651,12 +839,13 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
                                   <CopyIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              
+
                               <Tooltip title="Imprimir">
                                 <IconButton
                                   size="small"
                                   onClick={() => printQR(qr)}
-                                  sx={{ 
+                                  disabled={isGenerating}
+                                  sx={{
                                     color: '#8B5CF6',
                                     '&:hover': { backgroundColor: 'rgba(139, 92, 246, 0.1)' }
                                   }}
@@ -664,12 +853,12 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
                                   <PrintIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              
+
                               <Tooltip title="Compartir">
                                 <IconButton
                                   size="small"
                                   onClick={() => shareQR(qr)}
-                                  sx={{ 
+                                  sx={{
                                     color: '#10B981',
                                     '&:hover': { backgroundColor: 'rgba(16, 185, 129, 0.1)' }
                                   }}
@@ -704,9 +893,9 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
                 zIndex: 1000,
               }}
             >
-              <Alert 
-                severity="success" 
-                sx={{ 
+              <Alert
+                severity="success"
+                sx={{
                   borderRadius: 0,
                   backgroundColor: 'rgba(16, 185, 129, 0.9)',
                   color: '#FFFFFF',
@@ -749,7 +938,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
             </IconButton>
           </Box>
         </DialogTitle>
-        
+
         <DialogContent>
           <Stack spacing={4} sx={{ mt: 1 }}>
             {/* Tamaño */}
@@ -790,7 +979,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
                 value={currentConfig.level}
                 onChange={(e) => setCurrentConfig(prev => ({ ...prev, level: e.target.value as 'L' | 'M' | 'Q' | 'H' }))}
                 label="Nivel de Corrección de Errores"
-                sx={{ 
+                sx={{
                   borderRadius: 0,
                   '& .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'rgba(212, 175, 55, 0.3)',
@@ -921,10 +1110,10 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
             />
 
             {/* Vista Previa */}
-            <Box sx={{ 
-              textAlign: 'center', 
-              p: 3, 
-              backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+            <Box sx={{
+              textAlign: 'center',
+              p: 3,
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
               borderRadius: 0,
               border: '1px solid rgba(212, 175, 55, 0.2)'
             }}>
@@ -956,7 +1145,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
         <DialogActions sx={{ p: 3 }}>
           <Button
             onClick={resetToDefaults}
-            sx={{ 
+            sx={{
               color: '#B8B8B8',
               borderRadius: 0,
               '&:hover': {
@@ -969,7 +1158,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
           <Button
             onClick={() => setShowSettings(false)}
             variant="contained"
-            sx={{ 
+            sx={{
               borderRadius: 0,
               background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
               '&:hover': {
