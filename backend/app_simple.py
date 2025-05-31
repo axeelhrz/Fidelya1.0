@@ -108,9 +108,12 @@ def init_simple_database():
         """)
         print("👤 Tabla usuarios creada")
         
-        # Crear tabla productos simple
+        # CORREGIR: Eliminar tabla productos existente si tiene estructura incorrecta
+        cursor.execute("DROP TABLE IF EXISTS productos")
+        print("🗑️ Tabla productos anterior eliminada")
+        # Crear tabla productos con la estructura correcta
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS productos (
+            CREATE TABLE productos (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 nombre VARCHAR(100) NOT NULL,
                 categoria ENUM('frutas', 'verduras', 'otros') NOT NULL,
@@ -122,23 +125,24 @@ def init_simple_database():
                 creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
-        print("📦 Tabla productos creada")
+        print("📦 Tabla productos creada con estructura correcta")
         
         # Insertar productos de ejemplo
-        cursor.execute("SELECT COUNT(*) FROM productos")
-        if cursor.fetchone()[0] == 0:
-            productos_ejemplo = [
-                ('Banana', 'frutas', 'kg', 15, 5, 2.50, 'Frutas del Sur'),
-                ('Manzana Roja', 'frutas', 'kg', 3, 5, 3.00, 'Frutas del Sur'),
-                ('Naranja', 'frutas', 'kg', 20, 5, 2.80, 'Frutas del Sur'),
-                ('Lechuga', 'verduras', 'unidad', 8, 3, 1.50, 'Verduras Uruguay'),
-                ('Tomate', 'verduras', 'kg', 12, 5, 4.00, 'Verduras Uruguay'),
-            ]
-            cursor.executemany(
-                "INSERT INTO productos (nombre, categoria, unidad, stock_actual, stock_minimo, precio_unitario, proveedor) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                productos_ejemplo
-            )
-            print("🌱 Productos de ejemplo insertados")
+        productos_ejemplo = [
+            ('Banana', 'frutas', 'kg', 15, 5, 2.50, 'Frutas del Sur'),
+            ('Manzana Roja', 'frutas', 'kg', 3, 5, 3.00, 'Frutas del Sur'),
+            ('Naranja', 'frutas', 'kg', 20, 5, 2.80, 'Frutas del Sur'),
+            ('Lechuga', 'verduras', 'unidad', 8, 3, 1.50, 'Verduras Uruguay'),
+            ('Tomate', 'verduras', 'kg', 12, 5, 4.00, 'Verduras Uruguay'),
+            ('Cebolla', 'verduras', 'kg', 25, 10, 1.20, 'Verduras Uruguay'),
+            ('Pera', 'frutas', 'kg', 2, 5, 3.50, 'Frutas del Sur'),
+            ('Zanahoria', 'verduras', 'kg', 18, 8, 1.80, 'Verduras Uruguay'),
+        ]
+        cursor.executemany(
+            "INSERT INTO productos (nombre, categoria, unidad, stock_actual, stock_minimo, precio_unitario, proveedor) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            productos_ejemplo
+        )
+        print("🌱 Productos de ejemplo insertados")
         
         connection.commit()
         print("✅ Base de datos inicializada correctamente")
