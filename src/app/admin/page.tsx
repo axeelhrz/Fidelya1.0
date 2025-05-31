@@ -51,6 +51,7 @@ import {
   Close as CloseIcon,
   Dashboard as DashboardIcon,
   Login as LoginIcon,
+  Settings,
 } from '@mui/icons-material';
 import { useFirebaseMenu } from '../../hooks/useFirebaseMenu';
 import { useFirebaseCategories } from '../../hooks/useFirebaseCategories';
