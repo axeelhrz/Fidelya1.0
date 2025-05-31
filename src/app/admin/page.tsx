@@ -1216,9 +1216,24 @@ export default function AdminPage() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.4 }}
             >
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
+                <Typography variant={isMobile ? "h5" : "h4"}>
+                  Generador de Códigos QR
+                </Typography>
+                {!isMobile && (
+                  <Button
+                    variant="outlined"
+                    onClick={() => setCurrentView('main')}
+                    startIcon={<Settings />}
+                    sx={{ borderRadius: 0 }}
+                  >
+                    Volver al Panel
+                  </Button>
+                )}
+              </Box>
               <QRMenuGenerator 
-                menus={menus}
-                onBack={() => setCurrentView('main')}
+                menuId={selectedMenuId}
+                menuName={currentMenu?.name || ''}
               />
             </MotionBox>
           )}
