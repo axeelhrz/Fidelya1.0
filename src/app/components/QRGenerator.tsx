@@ -62,78 +62,96 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
     try {
       const svg = qrRef.current?.querySelector('svg');
       if (!svg) {
-        console.error('No se encontró el elemento SVG');
+        console.error('SVG no encontrado');
         return;
       }
 
-      // Obtener las dimensiones del SVG
-      const svgRect = svg.getBoundingClientRect();
-      const svgWidth = svgRect.width || qrSize;
-      const svgHeight = svgRect.height || qrSize;
-      // Crear canvas con el tamaño correcto
+      // Crear un canvas temporal para la conversión
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        console.error('No se pudo obtener el contexto del canvas');
+        console.error('No se pudo crear el contexto del canvas');
         return;
       }
 
-      // Configurar canvas con alta resolución
-      const scale = 3; // Factor de escala para mejor calidad
-      canvas.width = svgWidth * scale;
-      canvas.height = svgHeight * scale;
+      // Configurar el canvas con alta resolución
+      const downloadSize = 512; // Tamaño fijo para descarga de alta calidad
+      canvas.width = downloadSize;
+      canvas.height = downloadSize;
       
-      // Escalar el contexto
-      ctx.scale(scale, scale);
+      // Configurar el contexto para renderizado nítido
       ctx.imageSmoothingEnabled = false;
-
-      // Llenar el fondo
         ctx.fillStyle = qrBgColor;
-      ctx.fillRect(0, 0, svgWidth, svgHeight);
+      ctx.fillRect(0, 0, downloadSize, downloadSize);
 
-      // Convertir SVG a string con namespace correcto
-      const svgString = new XMLSerializer().serializeToString(svg);
-      const svgWithNamespace = svgString.includes('xmlns') 
-        ? svgString 
-        : svgString.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+      // Obtener el SVG como string y limpiarlo
+      const svgData = new XMLSerializer().serializeToString(svg);
+      
+      // Crear un SVG limpio con las dimensiones correctas
+      const cleanSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+             width="${downloadSize}" 
+             height="${downloadSize}" 
+             viewBox="0 0 ${downloadSize} ${downloadSize}"
+             style="background-color: ${qrBgColor};">
+          ${svg.innerHTML}
+        </svg>
+      `;
+      
+      // Convertir a blob y crear URL
+      const svgBlob = new Blob([cleanSvg], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
 
-      // Crear data URL del SVG
-      const svgDataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgWithNamespace)))}`;
-
-      // Crear imagen y dibujar en canvas
+      // Crear imagen y renderizar en canvas
       const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
       img.onload = () => {
       try {
-          ctx.drawImage(img, 0, 0, svgWidth, svgHeight);
+          // Limpiar canvas y dibujar fondo
+          ctx.clearRect(0, 0, downloadSize, downloadSize);
+          ctx.fillStyle = qrBgColor;
+          ctx.fillRect(0, 0, downloadSize, downloadSize);
           
-          // Convertir canvas a blob
+          // Dibujar la imagen del QR
+          ctx.drawImage(img, 0, 0, downloadSize, downloadSize);
+
+          // Convertir a PNG y descargar
           canvas.toBlob((blob) => {
             if (blob) {
-              const url = URL.createObjectURL(blob);
+              const downloadUrl = URL.createObjectURL(blob);
               const link = document.createElement('a');
-              link.href = url;
-              link.download = `qr-menu-${menuName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.png`;
+              link.href = downloadUrl;
+              link.download = `qr-${menuName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.png`;
+              
+              // Agregar al DOM temporalmente para hacer click
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
+              
+              // Limpiar URLs
+              URL.revokeObjectURL(downloadUrl);
               URL.revokeObjectURL(url);
     } else {
-              console.error('Error al crear el blob');
+              console.error('Error al crear el blob PNG');
     }
           }, 'image/png', 1.0);
-        } catch (drawError) {
-          console.error('Error al dibujar en canvas:', drawError);
+          
+        } catch (error) {
+          console.error('Error al dibujar en canvas:', error);
+          URL.revokeObjectURL(url);
         }
   };
 
       img.onerror = (error) => {
-        console.error('Error al cargar la imagen SVG:', error);
+        console.error('Error al cargar imagen SVG:', error);
+        URL.revokeObjectURL(url);
   };
 
-      img.src = svgDataUrl;
+      img.src = url;
 
     } catch (error) {
-      console.error('Error en downloadQR:', error);
+      console.error('Error general en downloadQR:', error);
     }
 };
 
@@ -151,33 +169,25 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
     try {
       const svg = qrRef.current?.querySelector('svg');
       if (!svg) {
-        console.error('No se encontró el elemento SVG para imprimir');
+        console.error('SVG no encontrado para imprimir');
         return;
       }
 
-      // Clonar el SVG y asegurar que tenga los atributos correctos
-      const svgClone = svg.cloneNode(true) as SVGElement;
-      
-      // Asegurar que el SVG tenga namespace y dimensiones correctas
-      svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-      svgClone.setAttribute('width', '300');
-      svgClone.setAttribute('height', '300');
-      svgClone.setAttribute('viewBox', '0 0 300 300');
-      
-      // Asegurar que todos los paths tengan el color correcto
-      const paths = svgClone.querySelectorAll('path, rect');
-      paths.forEach(path => {
-        const fill = path.getAttribute('fill');
-        if (fill && fill !== 'none') {
-          path.setAttribute('fill', qrColor);
-        }
-      });
-
-      const svgString = new XMLSerializer().serializeToString(svgClone);
+      // Crear SVG optimizado para impresión
+      const printSize = 400;
+      const printSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+             width="${printSize}" 
+             height="${printSize}" 
+             viewBox="0 0 ${printSize} ${printSize}"
+             style="background-color: ${qrBgColor};">
+          ${svg.innerHTML}
+        </svg>
+      `;
       
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
-        console.error('No se pudo abrir la ventana de impresión');
+        console.error('No se pudo abrir ventana de impresión');
         return;
       }
 
@@ -236,14 +246,15 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
                 border-radius: 20px;
                 margin: 40px auto;
                 background: ${qrBgColor};
-                max-width: 400px;
+                max-width: 500px;
                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
               }
               
               .qr-container svg {
                 display: block;
-                width: 300px !important;
-                height: 300px !important;
+                width: ${printSize}px !important;
+                height: ${printSize}px !important;
+                background-color: ${qrBgColor} !important;
               }
               
               .instructions {
@@ -305,6 +316,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
                 .qr-container svg {
                   -webkit-print-color-adjust: exact !important;
                   print-color-adjust: exact !important;
+                  background-color: ${qrBgColor} !important;
                 }
                 
                 @page {
@@ -322,7 +334,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
               </div>
               
               <div class="qr-container">
-                ${svgString}
+                ${printSvg}
               </div>
               
               <div class="instructions">
@@ -347,7 +359,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
       printWindow.document.write(htmlContent);
       printWindow.document.close();
       
-      // Esperar a que se cargue y luego imprimir
+      // Esperar y luego imprimir
       printWindow.addEventListener('load', () => {
         setTimeout(() => {
           printWindow.print();
