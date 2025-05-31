@@ -1232,8 +1232,8 @@ export default function AdminPage() {
                 )}
               </Box>
               <QRMenuGenerator 
-                menuId={selectedMenuId}
-                menuName={currentMenu?.name || ''}
+                menus={menus}
+                onBack={() => setCurrentView('main')}
               />
             </MotionBox>
           )}
