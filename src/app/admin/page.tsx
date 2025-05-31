@@ -701,7 +701,7 @@ export default function AdminPage() {
                   <Category sx={{ fontSize: { xs: 28, md: 40 }, color: '#D4AF37' }} />
                 </Box>
                 
-                <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ fontWeight: 600 }}>
+                <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ fontWeight: 600, textAlign: 'center' }}>
                   Categorías
                 </Typography>
                 
@@ -758,7 +758,7 @@ export default function AdminPage() {
                   <QrCode sx={{ fontSize: { xs: 28, md: 40 }, color: '#3B82F6' }} />
                 </Box>
                 
-                <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ fontWeight: 600 }}>
+                <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ fontWeight: 600, textAlign: 'center' }}>
                   Códigos QR
                 </Typography>
                 
@@ -818,7 +818,7 @@ export default function AdminPage() {
                   <Assessment sx={{ fontSize: { xs: 28, md: 40 }, color: '#10B981' }} />
                 </Box>
                 
-                <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ fontWeight: 600 }}>
+                <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ fontWeight: 600, textAlign: 'center' }}>
                   Estadísticas
                 </Typography>
                 
