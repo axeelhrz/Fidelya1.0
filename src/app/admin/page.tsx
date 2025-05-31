@@ -41,7 +41,6 @@ import {
   Inventory2, 
   Category, 
   Assessment, 
-  Settings, 
   ExitToApp, 
   AdminPanelSettings, 
   Restaurant, 
@@ -280,7 +279,6 @@ export default function AdminPage() {
     return <LoginForm onLogin={handleLogin} loading={authLoading} error={authError} />;
   }
 
-  // ... rest of existing code remains the same
   const handleCreateMenu = async () => {
     if (!newMenuName.trim() || !newMenuDescription.trim()) return;
 
@@ -574,7 +572,7 @@ export default function AdminPage() {
               <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ color: '#D4AF37' }}>
                 {currentMenu.name}
               </Typography>
-              <Typography variant="body2" color="text.secondary" mb={3}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 {currentMenu.description}
               </Typography>
               
@@ -645,11 +643,11 @@ export default function AdminPage() {
                   <Inventory2 sx={{ fontSize: { xs: 28, md: 40 }, color: '#D4AF37' }} />
                 </Box>
                 
-                <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ fontWeight: 600 }}>
+                <Typography variant={isMobile ? "h6" : "h5"} gutterBottom sx={{ fontWeight: 600, textAlign: 'center' }}>
                   Productos
                 </Typography>
                 
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.8rem', md: '0.875rem' }, textAlign: 'center' }}>
                   Gestiona los productos de tu menú
                 </Typography>
                 
