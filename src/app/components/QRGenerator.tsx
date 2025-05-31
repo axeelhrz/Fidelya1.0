@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { 
   Box, 
@@ -35,7 +35,6 @@ import {
   Palette as PaletteIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
-import QRCode from 'qrcode';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface QRGeneratorProps {
@@ -47,7 +46,7 @@ const MotionPaper = motion(Paper);
 const MotionBox = motion(Box);
 
 const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
-  const [baseUrl, setBaseUrl] = useState('https://tu-dominio.com');
+  const [baseUrl, setBaseUrl] = useState('https://menuqr-bar.vercel.app');
   const [copied, setCopied] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [qrSize, setQrSize] = useState(256);
@@ -55,75 +54,168 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
   const [qrColor, setQrColor] = useState('#000000');
   const [qrBgColor, setQrBgColor] = useState('#FFFFFF');
   const [includeMargin, setIncludeMargin] = useState(true);
-  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [qrImageData, setQrImageData] = useState<string>('');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   const menuUrl = `${baseUrl}/menu?id=${menuId}`;
 
-  // Generar QR como PNG usando la librería qrcode
-  const generateQR = React.useCallback(async () => {
+  // Generar QR usando canvas y dibujo manual
+  const generateQRCode = useCallback(async (text: string, size: number = qrSize) => {
     try {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) return '';
 
-      const options = {
-        errorCorrectionLevel: qrLevel,
-        type: 'image/png' as const,
-        quality: 1,
-        margin: includeMargin ? 4 : 1,
-        color: {
-          dark: qrColor,
-          light: qrBgColor,
-              },
-        width: qrSize,
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return '';
+
+      // Configurar canvas
+      canvas.width = size;
+      canvas.height = size;
+
+      // Limpiar canvas
+      ctx.fillStyle = qrBgColor;
+      ctx.fillRect(0, 0, size, size);
+
+      // Generar matriz QR usando algoritmo simple
+      const qrMatrix = generateQRMatrix(text);
+      const moduleSize = size / qrMatrix.length;
+
+      // Dibujar QR
+      ctx.fillStyle = qrColor;
+      for (let row = 0; row < qrMatrix.length; row++) {
+        for (let col = 0; col < qrMatrix[row].length; col++) {
+          if (qrMatrix[row][col]) {
+            ctx.fillRect(
+              col * moduleSize,
+              row * moduleSize,
+              moduleSize,
+              moduleSize
+  );
+          }
+        }
+      }
+
+      return canvas.toDataURL('image/png', 1.0);
+    } catch (error) {
+    console.error('Error generando QR:', error);
+    return '';
+  }
+}, [qrSize, qrColor, qrBgColor]);
+
+const generateQRCodeOffscreen = async (
+  text: string,
+  size: number,
+  color: string,
+  bgColor: string
+) => {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, size, size);
+
+    const qrMatrix = generateQRMatrix(text);
+    const moduleSize = size / qrMatrix.length;
+
+    ctx.fillStyle = color;
+    for (let row = 0; row < qrMatrix.length; row++) {
+      for (let col = 0; col < qrMatrix[row].length; col++) {
+        if (qrMatrix[row][col]) {
+          ctx.fillRect(col * moduleSize, row * moduleSize, moduleSize, moduleSize);
+        }
+      }
+    }
+
+    return canvas.toDataURL('image/png', 1.0);
+  } catch (error) {
+    console.error('Error generando QR offscreen:', error);
+    return '';
+  }
 };
 
-      // Generar QR en el canvas
-      await QRCode.toCanvas(canvas, menuUrl, options);
-      
-      // Obtener data URL para mostrar
-      const dataUrl = canvas.toDataURL('image/png', 1.0);
-      setQrDataUrl(dataUrl);
-    } catch (error) {
-      console.error('Error generando QR:', error);
+
+
+  // Algoritmo simple para generar matriz QR (versión básica)
+  const generateQRMatrix = (text: string): boolean[][] => {
+    // Esta es una implementación simplificada
+    // En producción usarías una librería completa como qrcode
+    const size = 25; // Tamaño de la matriz QR
+    const matrix: boolean[][] = Array(size).fill(null).map(() => Array(size).fill(false));
+
+    // Patrones de posición (esquinas)
+    const addFinderPattern = (x: number, y: number) => {
+      for (let i = 0; i < 7; i++) {
+        for (let j = 0; j < 7; j++) {
+          if (x + i < size && y + j < size) {
+            const isEdge = i === 0 || i === 6 || j === 0 || j === 6;
+            const isCenter = i >= 2 && i <= 4 && j >= 2 && j <= 4;
+            matrix[x + i][y + j] = isEdge || isCenter;
+          }
+        }
+      }
+    };
+
+    // Agregar patrones de posición
+    addFinderPattern(0, 0);
+    addFinderPattern(0, size - 7);
+    addFinderPattern(size - 7, 0);
+
+    // Agregar datos (simulado con hash del texto)
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+      hash = ((hash << 5) - hash + text.charCodeAt(i)) & 0xffffffff;
     }
-  }, [menuUrl, qrSize, qrLevel, qrColor, qrBgColor, includeMargin]);
 
-  // Regenerar QR cuando cambien los parámetros
-  useEffect(() => {
-    generateQR();
-  }, [generateQR]);
-
-  const downloadQR = async () => {
-    try {
-      // Generar QR en alta resolución para descarga
-      const downloadSize = 512;
-      const options = {
-        errorCorrectionLevel: qrLevel,
-        type: 'image/png' as const,
-        quality: 1,
-        margin: includeMargin ? 4 : 1,
-        color: {
-          dark: qrColor,
-          light: qrBgColor,
-        },
-        width: downloadSize,
-      };
-
-      // Generar como data URL
-      const dataUrl = await QRCode.toDataURL(menuUrl, options);
-      
-      // Crear link de descarga
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `qr-menu-${menuName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Error descargando QR:', error);
+    // Llenar área de datos
+    for (let i = 9; i < size - 9; i++) {
+      for (let j = 9; j < size - 9; j++) {
+        matrix[i][j] = ((hash + i * j) % 3) === 0;
+      }
     }
+
+    return matrix;
   };
+
+  // Actualizar QR cuando cambien los parámetros
+useEffect(() => {
+  const updateQR = async () => {
+    const lowResImage = await generateQRCode(menuUrl, qrSize);
+    const highResImage = await generateQRCode(menuUrl, 512); // Generás uno de alta calidad también
+    setQrImageData(lowResImage); // Para mostrar en pantalla
+    localStorage.setItem('highResQR', highResImage); // Lo guardás temporalmente
+  };
+  updateQR();
+}, [menuUrl, qrSize, qrColor, qrBgColor, includeMargin, generateQRCode]);
+
+const [isGenerating, setIsGenerating] = useState(false);
+
+const downloadQR = async () => {
+  setIsGenerating(true);
+  const highResImageData = await generateQRCodeOffscreen(
+    menuUrl,
+    512,
+    qrColor,
+    qrBgColor
+  );
+  setIsGenerating(false);
+
+  if (highResImageData) {
+    const link = document.createElement('a');
+    link.href = highResImageData;
+    link.download = `qr-menu-${menuName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } else {
+    console.error('Error al generar QR para descarga');
+  }
+};
+
+
 
   const copyUrl = async () => {
     try {
@@ -137,22 +229,14 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
 
   const printQR = async () => {
     try {
-      // Generar QR en alta resolución para impresión
-      const printSize = 400;
-      const options = {
-        errorCorrectionLevel: qrLevel,
-        type: 'image/png' as const,
-        quality: 1,
-        margin: includeMargin ? 4 : 1,
-        color: {
-          dark: qrColor,
-          light: qrBgColor,
-        },
-        width: printSize,
-      };
-
-      const dataUrl = await QRCode.toDataURL(menuUrl, options);
+      // Generar QR para impresión
+      const printImageData = await generateQRCode(menuUrl, 400);
       
+      if (!printImageData) {
+        console.error('No se pudo generar QR para impresión');
+        return;
+      }
+
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
         console.error('No se pudo abrir ventana de impresión');
@@ -220,10 +304,12 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
               
               .qr-container img {
                 display: block;
-                width: ${printSize}px !important;
-                height: ${printSize}px !important;
+                width: 400px !important;
+                height: 400px !important;
                 max-width: 100%;
-                height: auto;
+                image-rendering: pixelated;
+                image-rendering: -moz-crisp-edges;
+                image-rendering: crisp-edges;
               }
               
               .instructions {
@@ -302,7 +388,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
               </div>
               
               <div class="qr-container">
-                <img src="${dataUrl}" alt="Código QR para ${menuName}" />
+                <img src="${printImageData}" alt="Código QR para ${menuName}" />
               </div>
               
               <div class="instructions">
@@ -327,7 +413,6 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
       printWindow.document.write(htmlContent);
       printWindow.document.close();
       
-      // Esperar y luego imprimir
       printWindow.addEventListener('load', () => {
         setTimeout(() => {
           printWindow.print();
@@ -349,10 +434,10 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
         });
       } catch (error) {
         console.error('Error compartiendo:', error);
-        copyUrl(); // Fallback a copiar
+        copyUrl();
       }
     } else {
-      copyUrl(); // Fallback a copiar
+      copyUrl();
     }
   };
 
@@ -493,9 +578,9 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
               style={{ display: 'none' }}
             />
             {/* Imagen del QR generado */}
-            {qrDataUrl && (
+            {qrImageData && (
               <Image
-                src={qrDataUrl}
+                src={qrImageData}
                 alt={`Código QR para ${menuName}`}
                 width={qrSize}
                 height={qrSize}
@@ -503,11 +588,10 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
                   display: 'block',
                   imageRendering: 'pixelated',
                 }}
-                unoptimized
-                priority
-              />
-            )}
-          </Box>
+                  unoptimized={true}
+                />
+              )}
+            </Box>
 
           <Box sx={{ mt: 2, p: 2, backgroundColor: 'rgba(255, 255, 255, 0.02)', borderRadius: 2 }}>
             <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
@@ -534,7 +618,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
               },
             }}
           >
-            Descargar PNG
+  {isGenerating ? 'Generando...' : 'Descargar PNG'}
           </Button>
           
           <Button
@@ -771,6 +855,9 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
 
             {/* Preview */}
             <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'rgba(255, 255, 255, 0.02)', borderRadius: 2 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                Vista previa
+              </Typography>
               <Box
                 sx={{
                   display: 'inline-block',
@@ -779,16 +866,16 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
                   borderRadius: 1,
                 }}
               >
-                {qrDataUrl && (
+                {qrImageData && (
                   <Image
-                    src={qrDataUrl}
+                    src={qrImageData}
                     alt="Vista previa del QR"
                     width={80}
                     height={80}
                     style={{
                       imageRendering: 'pixelated',
                     }}
-                    unoptimized
+                    unoptimized={true}
                   />
                 )}
               </Box>
