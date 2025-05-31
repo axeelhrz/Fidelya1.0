@@ -1238,60 +1238,98 @@ def dashboard_resumen(current_user_id):
 @app.route('/api/dashboard/stock-bajo', methods=['GET'])
 @jwt_required
 def dashboard_stock_bajo(current_user_id):
-    """Obtiene productos con stock bajo para el dashboard"""
+    """Obtiene productos con stock bajo para el dashboard - VERSION MEJORADA"""
     connection = None
     cursor = None
     
     try:
+        print(f"🔍 Obteniendo productos con stock bajo para usuario {current_user_id}")
+        
         connection = get_db_connection()
         if not connection:
+            print("❌ Error: No se pudo conectar a la base de datos")
             return jsonify({'message': 'Error de conexión a la base de datos'}), 500
             
         cursor = connection.cursor()
         
-        cursor.execute("""
-            SELECT nombre, stock_actual, stock_minimo, unidad
+        print("📊 Ejecutando consulta de productos con stock bajo...")
+        
+        # Consulta mejorada con manejo de errores
+        query = """
+            SELECT nombre, stock_actual, stock_minimo, unidad, categoria
             FROM productos 
             WHERE stock_actual <= stock_minimo
             ORDER BY stock_actual ASC
             LIMIT 10
-        """)
+        """
+        
+        cursor.execute(query)
+        print("✅ Consulta ejecutada exitosamente")
         
         productos_bajo_stock = []
-        for row in cursor.fetchall():
-            productos_bajo_stock.append({
-                'nombre': row[0],
-                'stock': row[1],
-                'stockMinimo': row[2],
-                'unidad': row[3]
-            })
+        rows = cursor.fetchall()
+        print(f"📦 Encontrados {len(rows)} productos con stock bajo")
+        
+        for row in rows:
+            try:
+                producto = {
+                    'nombre': row[0] if row[0] else 'Sin nombre',
+                    'stock': int(row[1]) if row[1] is not None else 0,
+                    'stockMinimo': int(row[2]) if row[2] is not None else 0,
+                    'unidad': row[3] if row[3] else 'unidad',
+                    'categoria': row[4] if row[4] else 'otros'
+                }
+                productos_bajo_stock.append(producto)
+                print(f"✅ Producto procesado: {producto['nombre']} - Stock: {producto['stock']}")
+            except Exception as e:
+                print(f"⚠️ Error procesando producto: {e}")
+                continue
+        
+        print(f"✅ Total productos con stock bajo procesados: {len(productos_bajo_stock)}")
         
         response = jsonify(productos_bajo_stock)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
         
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos en stock bajo: {db_err}")
+        return jsonify({
+            'message': 'Error de base de datos',
+            'error': str(db_err),
+            'productos': []
+        }), 500
     except Exception as e:
-        print(f"Error en dashboard stock bajo: {e}")
-        return jsonify({'message': 'Error interno del servidor'}), 500
+        print(f"❌ Error general en stock bajo: {e}")
+        return jsonify({
+            'message': 'Error interno del servidor',
+            'error': str(e),
+            'productos': []
+        }), 500
     finally:
         if cursor:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+            print("🔌 Conexión a base de datos cerrada")
 
 @app.route('/api/dashboard/compras-recientes', methods=['GET'])
 @jwt_required
 def dashboard_compras_recientes(current_user_id):
-    """Obtiene las últimas compras"""
+    """Obtiene las últimas compras - VERSION MEJORADA"""
     connection = None
     cursor = None
     
     try:
+        print(f"🔍 Obteniendo compras recientes para usuario {current_user_id}")
+        
         connection = get_db_connection()
         if not connection:
+            print("❌ Error: No se pudo conectar a la base de datos")
             return jsonify({'message': 'Error de conexión a la base de datos'}), 500
             
         cursor = connection.cursor()
+        
+        print("📊 Ejecutando consulta de compras recientes...")
         
         cursor.execute("""
             SELECT proveedor, DATE_FORMAT(fecha, '%Y-%m-%d'), total 
@@ -1301,39 +1339,60 @@ def dashboard_compras_recientes(current_user_id):
         """)
         
         compras_recientes = []
-        for row in cursor.fetchall():
-            compras_recientes.append({
-                'proveedor': row[0],
-                'fecha': row[1],
-                'total': float(row[2])
-            })
+        rows = cursor.fetchall()
+        print(f"🛒 Encontradas {len(rows)} compras recientes")
+        
+        for row in rows:
+            try:
+                compra = {
+                    'proveedor': row[0] if row[0] else 'Sin proveedor',
+                    'fecha': row[1] if row[1] else '',
+                    'total': float(row[2]) if row[2] is not None else 0.0
+                }
+                compras_recientes.append(compra)
+                print(f"✅ Compra procesada: {compra['proveedor']} - ${compra['total']}")
+            except Exception as e:
+                print(f"⚠️ Error procesando compra: {e}")
+                continue
+        
+        print(f"✅ Total compras procesadas: {len(compras_recientes)}")
         
         response = jsonify(compras_recientes)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
         
     except Exception as e:
-        print(f"Error en dashboard compras recientes: {e}")
-        return jsonify({'message': 'Error interno del servidor'}), 500
+        print(f"❌ Error en dashboard compras recientes: {e}")
+        return jsonify({
+            'message': 'Error interno del servidor',
+            'error': str(e),
+            'compras': []
+        }), 500
     finally:
         if cursor:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+            print("🔌 Conexión a base de datos cerrada")
 
 @app.route('/api/dashboard/ventas-mensuales', methods=['GET'])
 @jwt_required
 def dashboard_ventas_mensuales(current_user_id):
-    """Obtiene ventas por mes del año actual"""
+    """Obtiene ventas por mes del año actual - VERSION MEJORADA"""
     connection = None
     cursor = None
     
     try:
+        print(f"🔍 Obteniendo ventas mensuales para usuario {current_user_id}")
+        
         connection = get_db_connection()
         if not connection:
+            print("❌ Error: No se pudo conectar a la base de datos")
             return jsonify({'message': 'Error de conexión a la base de datos'}), 500
             
         cursor = connection.cursor()
+        
+        print("📊 Ejecutando consulta de ventas mensuales...")
         
         cursor.execute("""
             SELECT 
@@ -1349,10 +1408,18 @@ def dashboard_ventas_mensuales(current_user_id):
         ventas_mensuales = []
         meses_con_datos = {}
         
-        for row in cursor.fetchall():
-            mes_nombre = row[1]
-            total = float(row[2])
-            meses_con_datos[mes_nombre] = total
+        rows = cursor.fetchall()
+        print(f"📈 Encontrados datos para {len(rows)} meses")
+        
+        for row in rows:
+            try:
+                mes_nombre = row[1] if row[1] else ''
+                total = float(row[2]) if row[2] is not None else 0.0
+                meses_con_datos[mes_nombre] = total
+                print(f"✅ Mes procesado: {mes_nombre} - ${total}")
+            except Exception as e:
+                print(f"⚠️ Error procesando mes: {e}")
+                continue
         
         # Asegurar que todos los meses estén representados
         meses = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -1367,32 +1434,44 @@ def dashboard_ventas_mensuales(current_user_id):
                 'total': meses_con_datos.get(mes_en, 0)
             })
         
+        print(f"✅ Total meses procesados: {len(ventas_mensuales)}")
+        
         response = jsonify(ventas_mensuales)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
-        
+
     except Exception as e:
-        print(f"Error en dashboard ventas mensuales: {e}")
-        return jsonify({'message': 'Error interno del servidor'}), 500
+        print(f"❌ Error en dashboard ventas mensuales: {e}")
+        return jsonify({
+            'message': 'Error interno del servidor',
+            'error': str(e),
+            'ventas': []
+        }), 500
     finally:
         if cursor:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+            print("🔌 Conexión a base de datos cerrada")
 
 @app.route('/api/dashboard/stock-distribucion', methods=['GET'])
 @jwt_required
 def dashboard_stock_distribucion(current_user_id):
-    """Obtiene distribución de stock por categoría"""
+    """Obtiene distribución de stock por categoría - VERSION MEJORADA"""
     connection = None
     cursor = None
     
     try:
+        print(f"🔍 Obteniendo distribución de stock para usuario {current_user_id}")
+        
         connection = get_db_connection()
         if not connection:
+            print("❌ Error: No se pudo conectar a la base de datos")
             return jsonify({'message': 'Error de conexión a la base de datos'}), 500
             
         cursor = connection.cursor()
+        
+        print("📊 Ejecutando consulta de distribución por categoría...")
         
         cursor.execute("""
             SELECT categoria, COUNT(*) 
@@ -1402,37 +1481,58 @@ def dashboard_stock_distribucion(current_user_id):
         
         distribucion = {'frutas': 0, 'verduras': 0, 'otros': 0}
         
-        for row in cursor.fetchall():
-            categoria = row[0]
-            cantidad = row[1]
-            distribucion[categoria] = cantidad
+        rows = cursor.fetchall()
+        print(f"📊 Encontradas {len(rows)} categorías con datos")
+        
+        for row in rows:
+            try:
+                categoria = row[0] if row[0] else 'otros'
+                cantidad = int(row[1]) if row[1] is not None else 0
+                if categoria in distribucion:
+                    distribucion[categoria] = cantidad
+                print(f"✅ Categoría procesada: {categoria} - {cantidad} productos")
+            except Exception as e:
+                print(f"⚠️ Error procesando categoría: {e}")
+                continue
+        
+        print(f"✅ Distribución final: {distribucion}")
         
         response = jsonify(distribucion)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
-        
+
     except Exception as e:
-        print(f"Error en dashboard stock distribución: {e}")
-        return jsonify({'message': 'Error interno del servidor'}), 500
+        print(f"❌ Error en dashboard stock distribución: {e}")
+        return jsonify({
+            'message': 'Error interno del servidor',
+            'error': str(e),
+            'distribucion': {'frutas': 0, 'verduras': 0, 'otros': 0}
+        }), 500
     finally:
         if cursor:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+            print("🔌 Conexión a base de datos cerrada")
 
 @app.route('/api/dashboard/ultimos-movimientos', methods=['GET'])
 @jwt_required
 def dashboard_ultimos_movimientos(current_user_id):
-    """Obtiene los últimos movimientos"""
+    """Obtiene los últimos movimientos - VERSION MEJORADA"""
     connection = None
     cursor = None
     
     try:
+        print(f"🔍 Obteniendo últimos movimientos para usuario {current_user_id}")
+        
         connection = get_db_connection()
         if not connection:
+            print("❌ Error: No se pudo conectar a la base de datos")
             return jsonify({'message': 'Error de conexión a la base de datos'}), 500
             
         cursor = connection.cursor()
+        
+        print("📊 Ejecutando consulta de últimos movimientos...")
         
         cursor.execute("""
             SELECT tipo, detalle, DATE_FORMAT(fecha, '%Y-%m-%d %H:%i') 
@@ -1442,25 +1542,41 @@ def dashboard_ultimos_movimientos(current_user_id):
         """)
         
         movimientos = []
-        for row in cursor.fetchall():
-            movimientos.append({
-                'tipo': row[0],
-                'detalle': row[1],
-                'fecha': row[2]
-            })
+        rows = cursor.fetchall()
+        print(f"📋 Encontrados {len(rows)} movimientos")
+        
+        for row in rows:
+            try:
+                movimiento = {
+                    'tipo': row[0] if row[0] else 'sin_tipo',
+                    'detalle': row[1] if row[1] else 'Sin detalle',
+                    'fecha': row[2] if row[2] else ''
+                }
+                movimientos.append(movimiento)
+                print(f"✅ Movimiento procesado: {movimiento['tipo']} - {movimiento['detalle']}")
+            except Exception as e:
+                print(f"⚠️ Error procesando movimiento: {e}")
+                continue
+        
+        print(f"✅ Total movimientos procesados: {len(movimientos)}")
         
         response = jsonify(movimientos)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
-        
+
     except Exception as e:
-        print(f"Error en dashboard últimos movimientos: {e}")
-        return jsonify({'message': 'Error interno del servidor'}), 500
+        print(f"❌ Error en dashboard últimos movimientos: {e}")
+        return jsonify({
+            'message': 'Error interno del servidor',
+            'error': str(e),
+            'movimientos': []
+        }), 500
     finally:
         if cursor:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+            print("🔌 Conexión a base de datos cerrada")
 
 @app.route('/api/dashboard', methods=['GET'])
 @jwt_required

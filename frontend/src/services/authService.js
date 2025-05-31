@@ -1,9 +1,9 @@
 import axios from 'axios';
+import config from '../config/config';
 
-// URL base del backend Flask - FORZAR PUERTO 5001
-const API_URL = 'http://localhost:5001/api';
-
-console.log('🔗 API_URL configurada:', API_URL); // Para debugging
+// URL base del backend Flask
+const API_URL = config.API_BASE_URL;
+console.log('🔗 API_URL configurada:', API_URL);
 
 // Configurar instancia de axios con configuraciones base
 const api = axios.create({
@@ -61,270 +61,196 @@ api.interceptors.response.use(
 );
 
 /**
- * Inicia sesión de usuario
- * @param {string} correo - Correo electrónico
- * @param {string} contraseña - Contraseña sin hashear
- * @returns {object} - { token, user: { id, nombre, correo, rol }, message }
- */
-export const login = async (correo, contraseña) => {
-  try {
-    const url = `${API_URL}/login`;
-    console.log('🔐 Intentando login en:', url);
-    const response = await axios.post(url, {
-      correo: correo.trim().toLowerCase(),
-      contraseña,
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: 15000,
-    });
-    
-    console.log('✅ Respuesta de login:', response.data);
-    
-    if (!response.data.token || !response.data.user) {
-      throw new Error('Respuesta del servidor inválida');
-  }
-    
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error en login:', error);
-    
-    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-      throw { message: 'Error de conexión. Verifica que el servidor esté funcionando en puerto 5001.' };
-    }
-    
-    throw error.response?.data || { message: 'Error de conexión con el servidor' };
-  }
-};
-
-/**
  * Registra un nuevo usuario
- * @param {string} nombre - Nombre del usuario
- * @param {string} correo - Email del usuario
- * @param {string} contraseña - Contraseña sin hashear
- * @returns {object} - { message, success: true }
+ * @param {object} userData - Datos del usuario (nombre, correo, contraseña)
+ * @returns {object} - Respuesta del servidor
  */
-export const register = async (nombre, correo, contraseña) => {
+export const register = async (userData) => {
   try {
-    const url = `${API_URL}/register`;
-    console.log('📝 Intentando registro en:', url);
-    console.log('📝 Datos:', { nombre, correo });
-    
-    const response = await axios.post(url, {
-      nombre: nombre.trim(),
-      correo: correo.trim().toLowerCase(),
-      contraseña,
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: 15000,
-    });
-    
-    console.log('✅ Respuesta de registro:', response.data);
+    console.log('📝 Registrando usuario:', userData.correo);
+    const response = await api.post('/register', userData);
+    console.log('✅ Usuario registrado exitosamente');
     return response.data;
   } catch (error) {
     console.error('❌ Error en registro:', error);
-    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-      throw { message: 'Error de conexión. Verifica que el servidor esté funcionando en puerto 5001.' };
-    }
-    
-    throw error.response?.data || { message: 'Error de conexión con el servidor' };
+    throw error.response?.data || { message: 'Error en el registro' };
   }
 };
 
 /**
- * Verifica si un token JWT es válido
- * @param {string} token - JWT del usuario (opcional, usa el del localStorage si no se proporciona)
- * @returns {object} - { valid: true/false, user: { id, nombre, correo, rol } }
+ * Inicia sesión de usuario
+ * @param {object} credentials - Credenciales (correo, contraseña)
+ * @returns {object} - Datos del usuario y token
  */
-export const verifyToken = async (token = null) => {
+export const login = async (credentials) => {
   try {
-    const authToken = token || localStorage.getItem('token');
+    console.log('🔐 Iniciando sesión para:', credentials.correo);
+    const response = await api.post('/login', credentials);
     
-    if (!authToken) {
-      return { valid: false };
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      console.log('✅ Token guardado exitosamente');
     }
     
-    const url = `${API_URL}/verify-token`;
-    console.log('🔍 Verificando token en:', url);
-    
-    const response = await axios.get(url, {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-        'Content-Type': 'application/json',
-      },
-      timeout: 15000,
-    });
-    
+    console.log('✅ Login exitoso');
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error en login:', error);
+    throw error.response?.data || { message: 'Error en el inicio de sesión' };
+  }
+};
+
+/**
+ * Verifica si el token actual es válido
+ * @returns {object} - Datos del usuario si el token es válido
+ */
+export const verifyToken = async () => {
+  try {
+    console.log('🔍 Verificando token...');
+    const response = await api.get('/verify-token');
+    console.log('✅ Token válido');
     return response.data;
   } catch (error) {
     console.error('❌ Error verificando token:', error);
-    return { valid: false };
+    localStorage.removeItem('token');
+    throw error.response?.data || { message: 'Token inválido' };
   }
 };
 
 /**
- * Cierra sesión del usuario
- * @returns {boolean} - true si se cerró sesión correctamente
+ * Cierra la sesión del usuario
  */
 export const logout = () => {
-  try {
-    localStorage.removeItem('token');
-    localStorage.removeItem('rememberUser');
-    return true;
-  } catch (error) {
-    console.error('Error cerrando sesión:', error);
-    return false;
-  }
+  console.log('👋 Cerrando sesión...');
+  localStorage.removeItem('token');
+  localStorage.removeItem('rememberUser');
+  console.log('✅ Sesión cerrada');
 };
 
 /**
- * Obtiene el token del localStorage
+ * Obtiene el token almacenado
  * @returns {string|null} - Token JWT o null si no existe
  */
 export const getToken = () => {
-  try {
-    return localStorage.getItem('token');
-  } catch (error) {
-    console.error('Error obteniendo token:', error);
-    return null;
-  }
-};
-
-/**
- * Guarda el token en localStorage
- * @param {string} token - Token JWT a guardar
- * @returns {boolean} - true si se guardó correctamente
- */
-export const setToken = (token) => {
-  try {
-    if (token) {
-      localStorage.setItem('token', token);
-      return true;
-    }
-    return false;
-  } catch (error) {
-    console.error('Error guardando token:', error);
-    return false;
-  }
+  return localStorage.getItem('token');
 };
 
 /**
  * Verifica si el usuario está autenticado
- * @returns {boolean} - true si hay un token válido
+ * @returns {boolean} - True si hay token, false si no
  */
 export const isAuthenticated = () => {
-  const token = getToken();
-  return !!token;
+  return !!getToken();
 };
 
-/**
- * Obtener datos del dashboard (ejemplo de ruta protegida)
- * @returns {object} - Datos del dashboard
- */
-export const getDashboard = async () => {
-  try {
-    const response = await api.get('/dashboard');
-    return response.data;
-  } catch (error) {
-    console.error('Error obteniendo dashboard:', error);
-    throw error.response?.data || { message: 'Error obteniendo datos del dashboard' };
-  }
-};
-
-// NUEVOS MÉTODOS PARA EL DASHBOARD
+// ==================== ENDPOINTS DE DASHBOARD ====================
 
 /**
- * Obtiene resumen general del dashboard
+ * Obtiene el resumen general del dashboard
+ * @returns {object} - Datos del resumen
  */
-export const getDashboardResumen = async () => {
+export const getResumen = async () => {
   try {
+    console.log('📊 Obteniendo resumen del dashboard...');
     const response = await api.get('/dashboard/resumen');
+    console.log('✅ Resumen obtenido exitosamente');
     return response.data;
   } catch (error) {
-    console.error('Error obteniendo resumen del dashboard:', error);
-    throw error.response?.data || { message: 'Error obteniendo resumen del dashboard' };
+    console.error('❌ Error obteniendo resumen del dashboard:', error);
+    throw error.response?.data || { message: 'Error obteniendo resumen' };
   }
 };
 
 /**
  * Obtiene productos con stock bajo
+ * @returns {array} - Lista de productos con stock bajo
  */
 export const getStockBajo = async () => {
   try {
+    console.log('⚠️ Obteniendo productos con stock bajo...');
     const response = await api.get('/dashboard/stock-bajo');
+    console.log('✅ Stock bajo obtenido exitosamente:', response.data.length, 'productos');
     return response.data;
   } catch (error) {
-    console.error('Error obteniendo stock bajo:', error);
-    throw error.response?.data || { message: 'Error obteniendo productos con stock bajo' };
+    console.error('❌ Error obteniendo stock bajo:', error);
+    // Retornar array vacío en caso de error para evitar crashes
+    return [];
   }
 };
 
 /**
- * Obtiene compras recientes
+ * Obtiene las compras recientes
+ * @returns {array} - Lista de compras recientes
  */
 export const getComprasRecientes = async () => {
   try {
+    console.log('🛒 Obteniendo compras recientes...');
     const response = await api.get('/dashboard/compras-recientes');
+    console.log('✅ Compras recientes obtenidas exitosamente');
     return response.data;
   } catch (error) {
-    console.error('Error obteniendo compras recientes:', error);
-    throw error.response?.data || { message: 'Error obteniendo compras recientes' };
+    console.error('❌ Error obteniendo compras recientes:', error);
+    return [];
   }
 };
 
 /**
- * Obtiene ventas mensuales
+ * Obtiene las ventas mensuales
+ * @returns {array} - Datos de ventas por mes
  */
 export const getVentasMensuales = async () => {
   try {
+    console.log('📈 Obteniendo ventas mensuales...');
     const response = await api.get('/dashboard/ventas-mensuales');
+    console.log('✅ Ventas mensuales obtenidas exitosamente');
     return response.data;
   } catch (error) {
-    console.error('Error obteniendo ventas mensuales:', error);
-    throw error.response?.data || { message: 'Error obteniendo ventas mensuales' };
+    console.error('❌ Error obteniendo ventas mensuales:', error);
+    return [];
   }
 };
 
 /**
- * Obtiene distribución de stock
+ * Obtiene la distribución de stock por categoría
+ * @returns {object} - Distribución por categorías
  */
 export const getStockDistribucion = async () => {
   try {
+    console.log('📊 Obteniendo distribución de stock...');
     const response = await api.get('/dashboard/stock-distribucion');
+    console.log('✅ Distribución de stock obtenida exitosamente');
     return response.data;
   } catch (error) {
-    console.error('Error obteniendo distribución de stock:', error);
-    throw error.response?.data || { message: 'Error obteniendo distribución de stock' };
+    console.error('❌ Error obteniendo distribución de stock:', error);
+    return { frutas: 0, verduras: 0, otros: 0 };
   }
 };
 
 /**
- * Obtiene últimos movimientos
+ * Obtiene los últimos movimientos
+ * @returns {array} - Lista de movimientos recientes
  */
 export const getUltimosMovimientos = async () => {
   try {
+    console.log('📋 Obteniendo últimos movimientos...');
     const response = await api.get('/dashboard/ultimos-movimientos');
+    console.log('✅ Últimos movimientos obtenidos exitosamente');
     return response.data;
   } catch (error) {
-    console.error('Error obteniendo últimos movimientos:', error);
-    throw error.response?.data || { message: 'Error obteniendo últimos movimientos' };
+    console.error('❌ Error obteniendo últimos movimientos:', error);
+    return [];
   }
 };
 
 // Objeto principal del servicio de autenticación
 export const authService = {
-  login,
   register,
-  verifyToken,
+  login,
   logout,
+  verifyToken,
   getToken,
-  setToken,
   isAuthenticated,
-  getDashboard,
-  getDashboardResumen,
+  getResumen,
   getStockBajo,
   getComprasRecientes,
   getVentasMensuales,
