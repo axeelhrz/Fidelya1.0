@@ -36,6 +36,7 @@ import {
 } from '@mui/icons-material';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
+
 interface QRGeneratorProps {
   menuId: string;
   menuName: string;
@@ -62,36 +63,59 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
       const svg = qrRef.current?.querySelector('svg');
       if (!svg) return;
 
-      // Crear canvas para convertir SVG a PNG
+      // Crear un canvas con alta resolución para mejor calidad
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      const svgData = new XMLSerializer().serializeToString(svg);
+      // Usar un factor de escala para mejor calidad
+      const scaleFactor = 2;
+      const finalSize = qrSize * scaleFactor;
+      
+      canvas.width = finalSize;
+      canvas.height = finalSize;
+      
+      // Configurar el contexto para alta calidad
+      ctx.imageSmoothingEnabled = false;
+        ctx.fillStyle = qrBgColor;
+      ctx.fillRect(0, 0, finalSize, finalSize);
+
+      // Clonar el SVG y ajustar sus dimensiones
+      const svgClone = svg.cloneNode(true) as SVGElement;
+      svgClone.setAttribute('width', finalSize.toString());
+      svgClone.setAttribute('height', finalSize.toString());
+      
+      // Serializar el SVG con las dimensiones correctas
+      const svgData = new XMLSerializer().serializeToString(svgClone);
       const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
       const svgUrl = URL.createObjectURL(svgBlob);
 
       const img = new Image();
       img.onload = () => {
-        canvas.width = qrSize;
-        canvas.height = qrSize;
-        ctx.fillStyle = qrBgColor;
-        ctx.fillRect(0, 0, qrSize, qrSize);
-        ctx.drawImage(img, 0, 0, qrSize, qrSize);
+        // Dibujar la imagen en el canvas
+        ctx.drawImage(img, 0, 0, finalSize, finalSize);
 
+        // Convertir a blob con alta calidad
         canvas.toBlob((blob) => {
           if (blob) {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `qr-${menuId}-${Date.now()}.png`;
+            link.download = `qr-menu-${menuName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.png`;
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
             URL.revokeObjectURL(url);
           }
-        }, 'image/png');
-
+        }, 'image/png', 1.0); // Máxima calidad
         URL.revokeObjectURL(svgUrl);
       };
+      
+      img.onerror = () => {
+        console.error('Error cargando la imagen SVG');
+        URL.revokeObjectURL(svgUrl);
+      };
+      
       img.src = svgUrl;
     } catch (error) {
       console.error('Error descargando QR:', error);
@@ -99,99 +123,193 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ menuId, menuName }) => {
   };
 
   const copyUrl = async () => {
-    try {
+      try {
       await navigator.clipboard.writeText(menuUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+      } catch (error) {
       console.error('Error copiando URL:', error);
-    }
+      }
   };
 
   const printQR = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+    try {
+      const svg = qrRef.current?.querySelector('svg');
+      if (!svg) return;
 
-    const svg = qrRef.current?.querySelector('svg');
-    if (!svg) return;
+      // Crear una versión del SVG optimizada para impresión
+      const svgClone = svg.cloneNode(true) as SVGElement;
+      
+      // Asegurar que el SVG tenga las dimensiones correctas para impresión
+      const printSize = 300; // Tamaño fijo para impresión
+      svgClone.setAttribute('width', printSize.toString());
+      svgClone.setAttribute('height', printSize.toString());
+      svgClone.setAttribute('viewBox', `0 0 ${printSize} ${printSize}`);
+      
+      const svgData = new XMLSerializer().serializeToString(svgClone);
+      
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return;
 
-    const svgData = new XMLSerializer().serializeToString(svg);
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Código QR - ${menuName}</title>
-          <style>
-            body {
-              font-family: 'Arial', sans-serif;
-              text-align: center;
-              padding: 40px 20px;
-              margin: 0;
-              background: white;
-            }
-            .header {
-              margin-bottom: 30px;
-            }
-            .qr-container {
-              display: inline-block;
-              padding: 30px;
-              border: 3px solid #000;
-              border-radius: 10px;
-              margin: 20px 0;
-              background: white;
-              box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            }
-            .info {
-              margin: 20px 0;
-              font-size: 16px;
-              line-height: 1.6;
-            }
-            .url {
-              font-family: monospace;
-              background: #f5f5f5;
-              padding: 10px;
-              border-radius: 5px;
-              word-break: break-all;
-              margin: 10px 0;
-            }
-            .instructions {
-              font-size: 18px;
-              font-weight: bold;
-              color: #333;
-              margin: 20px 0;
-            }
-            @media print {
-              body { margin: 0; padding: 20px; }
-              .qr-container { box-shadow: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1 style="color: #333; margin-bottom: 10px;">${menuName}</h1>
-            <h2 style="color: #666; font-weight: normal;">Menú Digital</h2>
-          </div>
-          
-          <div class="qr-container">
-            ${svgData}
-          </div>
-          
-          <div class="instructions">
-            📱 Escanea el código QR con tu teléfono para ver el menú
-          </div>
-          
-          <div class="info">
-            <div class="url">${menuUrl}</div>
-            <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString()}</p>
-          </div>
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.print();
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Código QR - ${menuName}</title>
+            <meta charset="utf-8">
+            <style>
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+              
+              body {
+                font-family: 'Arial', sans-serif;
+                text-align: center;
+                padding: 40px 20px;
+                background: white;
+                color: black;
+                line-height: 1.6;
+              }
+              
+              .container {
+                max-width: 600px;
+                margin: 0 auto;
+              }
+              
+              .header {
+                margin-bottom: 30px;
+              }
+              
+              .header h1 {
+                color: #333;
+                margin-bottom: 10px;
+                font-size: 28px;
+                font-weight: bold;
+              }
+              
+              .header h2 {
+                color: #666;
+                font-weight: normal;
+                font-size: 20px;
+              }
+              
+              .qr-container {
+                display: inline-block;
+                padding: 30px;
+                border: 3px solid #000;
+                border-radius: 15px;
+                margin: 30px 0;
+                background: white;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+              }
+              
+              .qr-container svg {
+                display: block;
+                margin: 0 auto;
+              }
+              
+              .instructions {
+                font-size: 20px;
+                font-weight: bold;
+                color: #333;
+                margin: 30px 0;
+                padding: 15px;
+                background: #f8f9fa;
+                border-radius: 10px;
+                border: 2px solid #e9ecef;
+              }
+              
+              .info {
+                margin: 25px 0;
+                font-size: 16px;
+              }
+              
+              .url {
+                font-family: 'Courier New', monospace;
+                background: #f5f5f5;
+                padding: 15px;
+                border-radius: 8px;
+                word-break: break-all;
+                margin: 15px 0;
+                border: 1px solid #ddd;
+                font-size: 14px;
+              }
+              
+              .date {
+                font-weight: bold;
+                color: #555;
+              }
+              
+              @media print {
+                body { 
+                  margin: 0; 
+                  padding: 20px;
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                }
+                
+                .qr-container { 
+                  box-shadow: none;
+                  page-break-inside: avoid;
+                }
+                
+                .container {
+                  page-break-inside: avoid;
+                }
+                
+                @page {
+                  margin: 1cm;
+                  size: A4;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>${menuName}</h1>
+                <h2>Menú Digital</h2>
+              </div>
+              
+              <div class="qr-container">
+                ${svgData}
+              </div>
+              
+              <div class="instructions">
+                📱 Escanea el código QR con tu teléfono para ver el menú digital
+              </div>
+              
+              <div class="info">
+                <div class="url">${menuUrl}</div>
+                <p class="date">Fecha de generación: ${new Date().toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      
+      // Esperar a que se cargue completamente antes de imprimir
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
   };
+
+    } catch (error) {
+      console.error('Error imprimiendo QR:', error);
+    }
+};
 
   const shareQR = async () => {
     if (navigator.share) {
