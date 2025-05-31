@@ -1,22 +1,23 @@
 import axios from 'axios';
-import config from '../config/config';
+// URL base del backend Flask - FORZAR PUERTO 5001
+const API_URL = 'http://localhost:5001/api';
 
-// URL base del backend Flask - ACTUALIZADA AL NUEVO PUERTO
-const API_URL = config.API_BASE_URL || 'http://localhost:5001/api';
+console.log('🔗 API_URL configurada:', API_URL); // Para debugging
 
 // Configurar instancia de axios con configuraciones base
 const api = axios.create({
   baseURL: API_URL,
-  timeout: config.REQUEST_TIMEOUT || 15000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+      timeout: 15000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
   withCredentials: false,
-});
-
+    });
+    
 // Interceptor para agregar token automáticamente a las peticiones
 api.interceptors.request.use(
   (config) => {
+    console.log('📤 Enviando petición a:', config.baseURL + config.url);
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -31,8 +32,13 @@ api.interceptors.request.use(
 
 // Interceptor para manejar respuestas y errores globalmente
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('📥 Respuesta recibida:', response.status, response.config.url);
+    return response;
+  },
   (error) => {
+    console.error('❌ Error en respuesta:', error);
+    
     // Manejar errores de CORS específicamente
     if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
       console.error('Error de CORS o conexión:', error);
@@ -54,7 +60,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 /**
  * Inicia sesión de usuario
  * @param {string} correo - Correo electrónico
@@ -63,11 +68,11 @@ api.interceptors.response.use(
  */
 export const login = async (correo, contraseña) => {
   try {
-    console.log('Intentando login con:', { correo, url: `${API_URL}/login` });
-    
-    const response = await axios.post(`${API_URL}/login`, {
-  correo: correo.trim().toLowerCase(),
-  contraseña,
+    const url = `${API_URL}/login`;
+    console.log('🔐 Intentando login en:', url);
+    const response = await axios.post(url, {
+      correo: correo.trim().toLowerCase(),
+      contraseña,
     }, {
       headers: {
         'Content-Type': 'application/json',
@@ -75,7 +80,7 @@ export const login = async (correo, contraseña) => {
       timeout: 15000,
     });
     
-    console.log('Respuesta de login:', response.data);
+    console.log('✅ Respuesta de login:', response.data);
     
     if (!response.data.token || !response.data.user) {
       throw new Error('Respuesta del servidor inválida');
@@ -83,11 +88,11 @@ export const login = async (correo, contraseña) => {
     
     return response.data;
   } catch (error) {
-    console.error('Error en login:', error);
+    console.error('❌ Error en login:', error);
     
     if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
       throw { message: 'Error de conexión. Verifica que el servidor esté funcionando en puerto 5001.' };
-  }
+    }
     
     throw error.response?.data || { message: 'Error de conexión con el servidor' };
   }
@@ -102,9 +107,11 @@ export const login = async (correo, contraseña) => {
  */
 export const register = async (nombre, correo, contraseña) => {
   try {
-    console.log('Intentando registro con:', { nombre, correo, url: `${API_URL}/register` });
+    const url = `${API_URL}/register`;
+    console.log('📝 Intentando registro en:', url);
+    console.log('📝 Datos:', { nombre, correo });
     
-    const response = await axios.post(`${API_URL}/register`, {
+    const response = await axios.post(url, {
       nombre: nombre.trim(),
       correo: correo.trim().toLowerCase(),
       contraseña,
@@ -115,10 +122,16 @@ export const register = async (nombre, correo, contraseña) => {
       timeout: 15000,
     });
     
-    console.log('Respuesta de registro:', response.data);
+    console.log('✅ Respuesta de registro:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error en registro:', error);
+    console.error('❌ Error en registro:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.data,
+      status: error.response?.status
+    });
     
     if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
       throw { message: 'Error de conexión. Verifica que el servidor esté funcionando en puerto 5001.' };
@@ -141,7 +154,10 @@ export const verifyToken = async (token = null) => {
       return { valid: false };
     }
     
-    const response = await axios.get(`${API_URL}/verify-token`, {
+    const url = `${API_URL}/verify-token`;
+    console.log('🔍 Verificando token en:', url);
+    
+    const response = await axios.get(url, {
       headers: {
         Authorization: `Bearer ${authToken}`,
         'Content-Type': 'application/json',
@@ -151,7 +167,7 @@ export const verifyToken = async (token = null) => {
     
     return response.data;
   } catch (error) {
-    console.error('Error verificando token:', error);
+    console.error('❌ Error verificando token:', error);
     return { valid: false };
   }
 };
