@@ -13,6 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import Dashboard from './pages/Dashboard';
+import InventoryPage from './pages/inventory';
 
 // Componente para manejar la navegación de autenticación
 const AuthNavigator = () => {
@@ -56,6 +57,15 @@ function App() {
                   <Dashboard />
                 </ProtectedRoute>
               }
+            />
+
+            <Route
+              path="/inventario"
+              element={
+                <ProtectedRoute>
+                  <InventoryPage />
+                </ProtectedRoute>
+}
             />
 
             {/* Ruta 404 */}
