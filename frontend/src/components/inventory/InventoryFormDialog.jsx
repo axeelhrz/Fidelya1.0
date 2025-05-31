@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Button,
-  Grid,
+  TextField,
   FormControl,
   InputLabel,
   Select,
@@ -14,19 +13,26 @@ import {
   Box,
   Typography,
   InputAdornment,
+  Grid,
   Alert,
+  IconButton,
+  Divider,
 } from '@mui/material';
 import {
-  Save as SaveIcon,
   Close as CloseIcon,
-  Inventory2 as InventoryIcon,
+  Save as SaveIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Apple as FruitIcon,
+  Grass as VegetableIcon,
+  Category as OtherIcon,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { motion } from 'framer-motion';
 
-// Esquema de validación
+// Esquema de validación con Yup
 const schema = yup.object({
   nombre: yup
     .string()
@@ -36,94 +42,81 @@ const schema = yup.object({
   categoria: yup
     .string()
     .required('La categoría es requerida')
-    .oneOf(['fruta', 'verdura', 'otro'], 'Categoría inválida'),
-  proveedor: yup
-    .string()
-    .max(100, 'El proveedor no puede exceder 100 caracteres'),
+    .oneOf(['frutas', 'verduras', 'otros'], 'Categoría inválida'),
+  precio_unitario: yup
+    .number()
+    .required('El precio es requerido')
+    .positive('El precio debe ser mayor a 0')
+    .max(999999, 'El precio es demasiado alto'),
+  stock_actual: yup
+    .number()
+    .required('El stock actual es requerido')
+    .integer('El stock debe ser un número entero')
+    .min(0, 'El stock no puede ser negativo'),
+  stock_minimo: yup
+    .number()
+    .required('El stock mínimo es requerido')
+    .integer('El stock mínimo debe ser un número entero')
+    .min(0, 'El stock mínimo no puede ser negativo'),
   unidad: yup
     .string()
     .required('La unidad es requerida')
-    .max(20, 'La unidad no puede exceder 20 caracteres'),
-  precio_compra: yup
-    .number()
-    .min(0, 'El precio de compra debe ser mayor o igual a 0')
-    .typeError('Debe ser un número válido'),
-  precio_venta: yup
-    .number()
-    .min(0, 'El precio de venta debe ser mayor o igual a 0')
-    .typeError('Debe ser un número válido'),
-  stock: yup
-    .number()
-    .integer('El stock debe ser un número entero')
-    .min(0, 'El stock debe ser mayor o igual a 0')
-    .typeError('Debe ser un número válido'),
-  stock_minimo: yup
-    .number()
-    .integer('El stock mínimo debe ser un número entero')
-    .min(0, 'El stock mínimo debe ser mayor o igual a 0')
-    .typeError('Debe ser un número válido'),
+    .oneOf(['kg', 'unidad', 'caja'], 'Unidad inválida'),
+  proveedor: yup
+    .string()
+    .max(100, 'El proveedor no puede exceder 100 caracteres'),
 });
 
-const InventoryFormDialog = ({ open, onClose, onSubmit, producto, editMode }) => {
-  const [loading, setLoading] = useState(false);
-
+const InventoryFormDialog = ({ 
+  open, 
+  onClose, 
+  onSubmit, 
+  producto = null, 
+  editMode = false 
+}) => {
   const {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
     watch,
+    formState: { errors, isSubmitting }
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       nombre: '',
-      categoria: 'fruta',
-      proveedor: '',
+      categoria: 'frutas',
+      precio_unitario: '',
+      stock_actual: '',
+      stock_minimo: '',
       unidad: 'kg',
-      precio_compra: 0,
-      precio_venta: 0,
-      stock: 0,
-      stock_minimo: 5,
+      proveedor: '',
     },
   });
 
-  // Observar precios para calcular margen
-  const precioCompra = watch('precio_compra');
-  const precioVenta = watch('precio_venta');
+  const watchedCategoria = watch('categoria');
 
-  // Calcular margen de ganancia
-  const calcularMargen = () => {
-    if (precioCompra > 0 && precioVenta > 0) {
-      const margen = ((precioVenta - precioCompra) / precioCompra) * 100;
-      return margen.toFixed(1);
-    }
-    return '0.0';
-  };
-
-  // Resetear formulario cuando cambie el producto o se abra/cierre
+  // Resetear formulario cuando se abre/cierra o cambia el producto
   useEffect(() => {
     if (open) {
       if (editMode && producto) {
         reset({
           nombre: producto.nombre || '',
-          categoria: producto.categoria || 'fruta',
-          proveedor: producto.proveedor || '',
+          categoria: producto.categoria || 'frutas',
+          precio_unitario: producto.precio_unitario || '',
+          stock_actual: producto.stock_actual || '',
+          stock_minimo: producto.stock_minimo || '',
           unidad: producto.unidad || 'kg',
-          precio_compra: producto.precio_compra || 0,
-          precio_venta: producto.precio_venta || 0,
-          stock: producto.stock || 0,
-          stock_minimo: producto.stock_minimo || 5,
+          proveedor: producto.proveedor || '',
         });
       } else {
         reset({
           nombre: '',
-          categoria: 'fruta',
-          proveedor: '',
+          categoria: 'frutas',
+          precio_unitario: '',
+          stock_actual: '',
+          stock_minimo: '',
           unidad: 'kg',
-          precio_compra: 0,
-          precio_venta: 0,
-          stock: 0,
-          stock_minimo: 5,
+          proveedor: '',
         });
       }
     }
@@ -131,31 +124,46 @@ const InventoryFormDialog = ({ open, onClose, onSubmit, producto, editMode }) =>
 
   const handleFormSubmit = async (data) => {
     try {
-      setLoading(true);
       await onSubmit(data);
+      onClose();
     } catch (error) {
       console.error('Error en formulario:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleClose = () => {
-    if (!loading) {
-      onClose();
+  const getCategoryIcon = (categoria) => {
+    switch (categoria) {
+      case 'frutas':
+        return <FruitIcon sx={{ color: 'success.main' }} />;
+      case 'verduras':
+        return <VegetableIcon sx={{ color: 'primary.main' }} />;
+      default:
+        return <OtherIcon sx={{ color: 'warning.main' }} />;
     }
   };
+
+  const categorias = [
+    { value: 'frutas', label: 'Frutas', icon: <FruitIcon /> },
+    { value: 'verduras', label: 'Verduras', icon: <VegetableIcon /> },
+    { value: 'otros', label: 'Otros', icon: <OtherIcon /> },
+  ];
+
+  const unidades = [
+    { value: 'kg', label: 'Kilogramos (kg)' },
+    { value: 'unidad', label: 'Unidad' },
+    { value: 'caja', label: 'Caja' },
+  ];
 
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={onClose}
       maxWidth="md"
       fullWidth
       PaperProps={{
         sx: {
           borderRadius: 3,
-          minHeight: '600px',
+          minHeight: '60vh',
         },
       }}
     >
@@ -164,21 +172,36 @@ const InventoryFormDialog = ({ open, onClose, onSubmit, producto, editMode }) =>
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <DialogTitle>
-          <Box display="flex" alignItems="center" gap={2}>
-            <InventoryIcon color="primary" />
-            <Typography variant="h6" fontWeight="bold">
-              {editMode ? 'Editar Producto' : 'Nuevo Producto'}
-            </Typography>
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Box display="flex" alignItems="center" gap={2}>
+              {editMode ? <EditIcon color="primary" /> : <AddIcon color="primary" />}
+              <Box>
+                <Typography variant="h6" fontWeight={600}>
+                  {editMode ? 'Editar Producto' : 'Nuevo Producto'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {editMode 
+                    ? 'Modifica los datos del producto' 
+                    : 'Completa la información del nuevo producto'
+                  }
+                </Typography>
+              </Box>
+            </Box>
+            <IconButton onClick={onClose} size="small">
+              <CloseIcon />
+            </IconButton>
           </Box>
         </DialogTitle>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)}>
-          <DialogContent sx={{ pb: 2 }}>
+        <Divider />
+
+        <DialogContent sx={{ pt: 3 }}>
+          <form onSubmit={handleSubmit(handleFormSubmit)}>
             <Grid container spacing={3}>
               {/* Información básica */}
               <Grid item xs={12}>
-                <Typography variant="subtitle1" fontWeight="bold" color="primary" mb={2}>
+                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
                   Información Básica
                 </Typography>
               </Grid>
@@ -190,12 +213,17 @@ const InventoryFormDialog = ({ open, onClose, onSubmit, producto, editMode }) =>
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      fullWidth
                       label="Nombre del producto"
-                      placeholder="Ej: Manzana Roja"
+                      fullWidth
                       error={!!errors.nombre}
                       helperText={errors.nombre?.message}
-                      disabled={loading}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            {getCategoryIcon(watchedCategoria)}
+                          </InputAdornment>
+                        ),
+                      }}
                     />
                   )}
                 />
@@ -208,80 +236,88 @@ const InventoryFormDialog = ({ open, onClose, onSubmit, producto, editMode }) =>
                   render={({ field }) => (
                     <FormControl fullWidth error={!!errors.categoria}>
                       <InputLabel>Categoría</InputLabel>
-                      <Select
-                        {...field}
-                        label="Categoría"
-                        disabled={loading}
-                      >
-                        <MenuItem value="fruta">Fruta</MenuItem>
-                        <MenuItem value="verdura">Verdura</MenuItem>
-                        <MenuItem value="otro">Otro</MenuItem>
+                      <Select {...field} label="Categoría">
+                        {categorias.map((cat) => (
+                          <MenuItem key={cat.value} value={cat.value}>
+                            <Box display="flex" alignItems="center" gap={1}>
+                              {cat.icon}
+                              {cat.label}
+                            </Box>
+                          </MenuItem>
+                        ))}
                       </Select>
+                      {errors.categoria && (
+                        <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                          {errors.categoria.message}
+                        </Typography>
+                      )}
                     </FormControl>
                   )}
                 />
               </Grid>
 
-              <Grid item xs={12} md={8}>
+              <Grid item xs={12} md={6}>
                 <Controller
                   name="proveedor"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
+                      label="Proveedor (opcional)"
                       fullWidth
-                      label="Proveedor"
-                      placeholder="Ej: Frutas del Sur"
                       error={!!errors.proveedor}
                       helperText={errors.proveedor?.message}
-                      disabled={loading}
                     />
                   )}
                 />
               </Grid>
 
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={6}>
                 <Controller
                   name="unidad"
                   control={control}
                   render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth
-                      label="Unidad de medida"
-                      placeholder="Ej: kg, unidad, caja"
-                      error={!!errors.unidad}
-                      helperText={errors.unidad?.message}
-                      disabled={loading}
-                    />
+                    <FormControl fullWidth error={!!errors.unidad}>
+                      <InputLabel>Unidad de medida</InputLabel>
+                      <Select {...field} label="Unidad de medida">
+                        {unidades.map((unidad) => (
+                          <MenuItem key={unidad.value} value={unidad.value}>
+                            {unidad.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {errors.unidad && (
+                        <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                          {errors.unidad.message}
+                        </Typography>
+                      )}
+                    </FormControl>
                   )}
                 />
               </Grid>
 
-              {/* Precios */}
+              {/* Precio y Stock */}
               <Grid item xs={12}>
-                <Typography variant="subtitle1" fontWeight="bold" color="primary" mb={2}>
-                  Precios
+                <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ mt: 2 }}>
+                  Precio y Stock
                 </Typography>
               </Grid>
 
               <Grid item xs={12} md={4}>
                 <Controller
-                  name="precio_compra"
+                  name="precio_unitario"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      fullWidth
-                      label="Precio de compra"
+                      label="Precio unitario"
                       type="number"
-                      inputProps={{ min: 0, step: 0.01 }}
+                      fullWidth
+                      error={!!errors.precio_unitario}
+                      helperText={errors.precio_unitario?.message}
                       InputProps={{
                         startAdornment: <InputAdornment position="start">$</InputAdornment>,
                       }}
-                      error={!!errors.precio_compra}
-                      helperText={errors.precio_compra?.message}
-                      disabled={loading}
                     />
                   )}
                 />
@@ -289,128 +325,73 @@ const InventoryFormDialog = ({ open, onClose, onSubmit, producto, editMode }) =>
 
               <Grid item xs={12} md={4}>
                 <Controller
-                  name="precio_venta"
+                  name="stock_actual"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      fullWidth
-                      label="Precio de venta"
+                      label="Stock actual"
                       type="number"
-                      inputProps={{ min: 0, step: 0.01 }}
-                      InputProps={{
-                        startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                      }}
-                      error={!!errors.precio_venta}
-                      helperText={errors.precio_venta?.message}
-                      disabled={loading}
+                      fullWidth
+                      error={!!errors.stock_actual}
+                      helperText={errors.stock_actual?.message}
                     />
                   )}
                 />
               </Grid>
 
               <Grid item xs={12} md={4}>
-                <Alert
-                  severity={parseFloat(calcularMargen()) > 0 ? "success" : "warning"}
-                  sx={{ height: '100%', display: 'flex', alignItems: 'center' }}
-                >
-                  <Typography variant="body2">
-                    <strong>Margen: {calcularMargen()}%</strong>
-                  </Typography>
-                </Alert>
-              </Grid>
-
-              {/* Stock */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1" fontWeight="bold" color="primary" mb={2}>
-                  Inventario
-                </Typography>
-              </Grid>
-
-
-              <Grid item xs={12} md={6}>
-                <Controller
-                  name="stock"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth
-                      label="Stock inicial"
-                      type="number"
-                      inputProps={{ min: 0, step: 1 }}
-                      error={!!errors.stock}
-                      helperText={errors.stock?.message || (editMode ? "Para ajustar stock, usa la opción 'Ajustar Stock'" : "")}
-                      disabled={loading || editMode}
-                    />
-                  )}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
                 <Controller
                   name="stock_minimo"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      fullWidth
                       label="Stock mínimo"
                       type="number"
-                      inputProps={{ min: 0, step: 1 }}
+                      fullWidth
                       error={!!errors.stock_minimo}
-                      helperText={errors.stock_minimo?.message || "Cantidad mínima antes de alerta"}
-                      disabled={loading}
+                      helperText={errors.stock_minimo?.message || 'Para alertas de stock bajo'}
                     />
                   )}
                 />
               </Grid>
 
-              {editMode && (
-                <Grid item xs={12}>
-                  <Alert severity="info">
-                    <Typography variant="body2">
-                      <strong>Nota:</strong> Para modificar el stock actual, utiliza la función "Ajustar Stock" 
-                      desde la tabla de productos. Esto mantendrá un registro de los movimientos.
-                    </Typography>
-                  </Alert>
-                </Grid>
-              )}
+              {/* Información adicional */}
+              <Grid item xs={12}>
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  <Typography variant="body2">
+                    <strong>Tip:</strong> El stock mínimo se usa para generar alertas automáticas 
+                    cuando el producto esté por agotarse.
+                  </Typography>
+                </Alert>
+              </Grid>
             </Grid>
-          </DialogContent>
+          </form>
+        </DialogContent>
 
-          <DialogActions sx={{ p: 3, pt: 1 }}>
-            <Button
-              onClick={handleClose}
-              disabled={loading}
-              startIcon={<CloseIcon />}
-              sx={{ borderRadius: 2 }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={loading}
-              startIcon={loading ? null : <SaveIcon />}
-              sx={{ borderRadius: 2, minWidth: 120 }}
-            >
-              {loading ? (
-                <Box display="flex" alignItems="center" gap={1}>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  >
-                    <SaveIcon />
-                  </motion.div>
-                  Guardando...
-                </Box>
-              ) : (
-                editMode ? 'Actualizar' : 'Crear Producto'
-              )}
-            </Button>
-          </DialogActions>
-        </form>
+        <Divider />
+
+        <DialogActions sx={{ p: 3, gap: 2 }}>
+          <Button
+            onClick={onClose}
+            variant="outlined"
+            size="large"
+            disabled={isSubmitting}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSubmit(handleFormSubmit)}
+            variant="contained"
+            size="large"
+            startIcon={<SaveIcon />}
+            disabled={isSubmitting}
+            sx={{ minWidth: 120 }}
+          >
+            {isSubmitting ? 'Guardando...' : editMode ? 'Actualizar' : 'Crear'}
+          </Button>
+        </DialogActions>
       </motion.div>
     </Dialog>
   );

@@ -79,6 +79,12 @@ export const obtenerProductos = async (filtros = {}) => {
     if (filtros.stockBajo) {
       params.append('stock_bajo', 'true');
     }
+    if (filtros.precioMin) {
+      params.append('precio_min', filtros.precioMin);
+    }
+    if (filtros.precioMax) {
+      params.append('precio_max', filtros.precioMax);
+    }
     if (filtros.orden) {
       params.append('orden', filtros.orden);
     }
@@ -103,6 +109,7 @@ export const obtenerProductos = async (filtros = {}) => {
  * @param {number} id - ID del producto
  * @returns {object} - Datos del producto
  */
+
 export const obtenerProducto = async (id) => {
   try {
     console.log('📦 Obteniendo producto:', id);
@@ -151,7 +158,7 @@ export const actualizarProducto = async (id, producto) => {
 };
 
 /**
- * Elimina un producto (soft delete)
+ * Elimina un producto
  * @param {number} id - ID del producto
  * @returns {object} - Respuesta del servidor
  */
@@ -168,82 +175,18 @@ export const eliminarProducto = async (id) => {
 };
 
 /**
- * Ajusta el stock de un producto
- * @param {number} id - ID del producto
- * @param {object} movimiento - Datos del movimiento de stock
- * @returns {object} - Respuesta del servidor
- */
-export const ajustarStock = async (id, movimiento) => {
-  try {
-    console.log('📦 Ajustando stock del producto:', id, movimiento);
-    const response = await api.post(`/inventario/${id}/stock`, movimiento);
-    console.log('✅ Stock ajustado:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error ajustando stock:', error);
-    throw error.response?.data || { message: 'Error ajustando stock' };
-  }
-};
-
-/**
  * Obtiene estadísticas del inventario
  * @returns {object} - Estadísticas del inventario
  */
 export const obtenerEstadisticas = async () => {
   try {
     console.log('📊 Obteniendo estadísticas del inventario');
-    const response = await api.get('/inventario/estadisticas');
+    const response = await api.get('/inventario/stats');
     console.log('✅ Estadísticas obtenidas:', response.data);
     return response.data;
   } catch (error) {
     console.error('❌ Error obteniendo estadísticas:', error);
     throw error.response?.data || { message: 'Error obteniendo estadísticas' };
-  }
-};
-
-/**
- * Obtiene el historial de movimientos de un producto
- * @param {number
-Collapse Code
-
-Reject
-Accept
-1 Pending changes
-Continue your response exactly where you left off:
-Reject all
-Accept all
-
-
-Click to continue generating
-Claude 4 sonnet PCAI
-
-
-
-
-
-Continue your response exactly where you left off:
-
-Checkpoint
-Compare
-Restore
-inventoryService.js
-
-
-
-/**
- * Obtiene el historial de movimientos de un producto
- * @param {number} id - ID del producto
- * @returns {object} - Historial de movimientos
- */
-export const obtenerMovimientosProducto = async (id) => {
-  try {
-    console.log('📦 Obteniendo movimientos del producto:', id);
-    const response = await api.get(`/inventario/${id}/movimientos`);
-    console.log('✅ Movimientos obtenidos:', response.data.movimientos.length);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error obteniendo movimientos:', error);
-    throw error.response?.data || { message: 'Error obteniendo movimientos' };
   }
 };
 
@@ -254,12 +197,12 @@ export const obtenerMovimientosProducto = async (id) => {
 export const obtenerProductosStockBajo = async () => {
   try {
     console.log('⚠️ Obteniendo productos con stock bajo');
-    const response = await obtenerProductos({ stockBajo: true });
-    console.log('✅ Productos con stock bajo obtenidos:', response.length);
-    return response;
+    const response = await api.get('/inventario/stock-bajo');
+    console.log('✅ Productos con stock bajo obtenidos:', response.data.length);
+    return response.data;
   } catch (error) {
     console.error('❌ Error obteniendo productos con stock bajo:', error);
-    throw error;
+    throw error.response?.data || { message: 'Error obteniendo productos con stock bajo' };
   }
 };
 
@@ -322,9 +265,7 @@ export const inventoryService = {
   crearProducto,
   actualizarProducto,
   eliminarProducto,
-  ajustarStock,
   obtenerEstadisticas,
-  obtenerMovimientosProducto,
   obtenerProductosStockBajo,
   buscarProductos,
   filtrarPorCategoria,

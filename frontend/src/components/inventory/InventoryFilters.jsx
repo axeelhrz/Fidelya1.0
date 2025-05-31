@@ -1,72 +1,76 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Box,
   Card,
   CardContent,
+  Grid,
   TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Button,
-  Stack,
+  Switch,
+  FormControlLabel,
+  Slider,
   Typography,
+  Box,
   Chip,
-  InputAdornment,
-  ToggleButton,
-  ToggleButtonGroup,
+  IconButton,
+  Collapse,
+  Divider,
+  useTheme,
+  alpha,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   FilterList as FilterIcon,
   Clear as ClearIcon,
-  Warning as WarningIcon,
-  Sort as SortIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
-const InventoryFilters = ({ filtros, onFiltrosChange, totalProductos }) => {
-  const handleBusquedaChange = (event) => {
-    onFiltrosChange({ busqueda: event.target.value });
+const InventoryFilters = ({ filtros, onFiltrosChange, totalProductos = 0 }) => {
+  const theme = useTheme();
+  const [expanded, setExpanded] = useState(false);
+  const [precioRange, setPrecioRange] = useState([0, 100]);
+  const handleFiltroChange = (campo, valor) => {
+    onFiltrosChange({ [campo]: valor });
   };
 
-  const handleCategoriaChange = (event) => {
-    onFiltrosChange({ categoria: event.target.value });
+  const handlePrecioChange = (event, newValue) => {
+    setPrecioRange(newValue);
   };
 
-  const handleStockBajoToggle = () => {
-    onFiltrosChange({ stockBajo: !filtros.stockBajo });
+  const handlePrecioCommitted = (event, newValue) => {
+    onFiltrosChange({
+      precioMin: newValue[0],
+      precioMax: newValue[1],
+    });
   };
 
-  const handleOrdenChange = (event) => {
-    onFiltrosChange({ orden: event.target.value });
-  };
-
-  const handleDireccionChange = (event, newDirection) => {
-    if (newDirection !== null) {
-      onFiltrosChange({ direccion: newDirection });
-    }
-  };
-
-  const handleLimpiarFiltros = () => {
+  const limpiarFiltros = () => {
     onFiltrosChange({
       categoria: 'todos',
       busqueda: '',
       stockBajo: false,
+      precioMin: null,
+      precioMax: null,
       orden: 'nombre',
-      direccion: 'asc'
+      direccion: 'asc',
     });
+    setPrecioRange([0, 100]);
   };
 
-  const tienesFiltrosActivos = () => {
-    return (
-      filtros.categoria !== 'todos' ||
-      filtros.busqueda !== '' ||
-      filtros.stockBajo ||
-      filtros.orden !== 'nombre' ||
-      filtros.direccion !== 'asc'
-    );
+  const contarFiltrosActivos = () => {
+    let count = 0;
+    if (filtros.categoria && filtros.categoria !== 'todos') count++;
+    if (filtros.busqueda) count++;
+    if (filtros.stockBajo) count++;
+    if (filtros.precioMin || filtros.precioMax) count++;
+    return count;
   };
+
+  const filtrosActivos = contarFiltrosActivos();
 
   return (
     <motion.div
@@ -74,169 +78,202 @@ const InventoryFilters = ({ filtros, onFiltrosChange, totalProductos }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Card sx={{ mb: 3, borderRadius: 3 }}>
+      <Card
+        sx={{
+          mb: 3,
+          borderRadius: 3,
+          boxShadow: theme.shadows[2],
+        }}
+      >
         <CardContent sx={{ p: 3 }}>
-          <Box display="flex" alignItems="center" gap={2} mb={3}>
-            <FilterIcon color="primary" />
-            <Typography variant="h6" fontWeight="bold">
-              Filtros y Búsqueda
-            </Typography>
-            <Chip
-              label={`${totalProductos} producto${totalProductos !== 1 ? 's' : ''}`}
-              color="primary"
-              variant="outlined"
-              size="small"
-            />
-            {tienesFiltrosActivos() && (
-              <Button
-                size="small"
-                startIcon={<ClearIcon />}
-                onClick={handleLimpiarFiltros}
-                sx={{ ml: 'auto' }}
-              >
-                Limpiar Filtros
-              </Button>
-            )}
-          </Box>
-
-          <Stack spacing={3}>
-            {/* Primera fila: Búsqueda y Categoría */}
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+          {/* Header con búsqueda principal */}
+          <Grid container spacing={3} alignItems="center">
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Buscar productos"
-                placeholder="Buscar por nombre o proveedor..."
-                value={filtros.busqueda}
-                onChange={handleBusquedaChange}
+                placeholder="Buscar productos o proveedores..."
+                value={filtros.busqueda || ''}
+                onChange={(e) => handleFiltroChange('busqueda', e.target.value)}
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon color="action" />
-                    </InputAdornment>
-                  ),
+                  startAdornment: <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />,
+                  sx: { borderRadius: 2 },
                 }}
-                sx={{ flex: 2 }}
               />
+            </Grid>
 
-              <FormControl sx={{ flex: 1, minWidth: 150 }}>
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
                 <InputLabel>Categoría</InputLabel>
                 <Select
-                  value={filtros.categoria}
+                  value={filtros.categoria || 'todos'}
+                  onChange={(e) => handleFiltroChange('categoria', e.target.value)}
                   label="Categoría"
-                  onChange={handleCategoriaChange}
+                  sx={{ borderRadius: 2 }}
                 >
                   <MenuItem value="todos">Todas las categorías</MenuItem>
-                  <MenuItem value="fruta">Frutas</MenuItem>
-                  <MenuItem value="verdura">Verduras</MenuItem>
-                  <MenuItem value="otro">Otros</MenuItem>
+                  <MenuItem value="frutas">🍎 Frutas</MenuItem>
+                  <MenuItem value="verduras">🥬 Verduras</MenuItem>
+                  <MenuItem value="otros">📦 Otros</MenuItem>
                 </Select>
               </FormControl>
-            </Stack>
+            </Grid>
 
-            {/* Segunda fila: Filtros especiales y ordenamiento */}
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
-              {/* Filtro de stock bajo */}
-              <Button
-                variant={filtros.stockBajo ? "contained" : "outlined"}
-                startIcon={<WarningIcon />}
-                onClick={handleStockBajoToggle}
-                color={filtros.stockBajo ? "warning" : "inherit"}
-                sx={{
-                  borderRadius: 2,
-                  fontWeight: 600,
-                  minWidth: 180,
-                }}
-              >
-                Solo Stock Bajo
-              </Button>
+            <Grid item xs={12} md={3}>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box display="flex" alignItems="center" gap={1}>
+                  <IconButton
+                    onClick={() => setExpanded(!expanded)}
+                    sx={{
+                      bgcolor: filtrosActivos > 0 ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                      color: filtrosActivos > 0 ? theme.palette.primary.main : 'text.secondary',
+                    }}
+                  >
+                    <FilterIcon />
+                  </IconButton>
+                  {filtrosActivos > 0 && (
+                    <Chip
+                      label={`${filtrosActivos} filtro${filtrosActivos > 1 ? 's' : ''}`}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                    />
+                  )}
+                </Box>
+                
+                {filtrosActivos > 0 && (
+                  <IconButton onClick={limpiarFiltros} size="small">
+                    <ClearIcon />
+                  </IconButton>
+                )}
+              </Box>
+            </Grid>
+          </Grid>
 
-              {/* Ordenamiento */}
-              <Box display="flex" alignItems="center" gap={2} flex={1}>
-                <SortIcon color="action" />
-                <FormControl size="small" sx={{ minWidth: 150 }}>
+          {/* Filtros avanzados colapsables */}
+          <Collapse in={expanded}>
+            <Divider sx={{ my: 3 }} />
+            
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={4}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={filtros.stockBajo || false}
+                      onChange={(e) => handleFiltroChange('stockBajo', e.target.checked)}
+                      color="warning"
+                    />
+                  }
+                  label={
+                    <Box>
+                      <Typography variant="body2" fontWeight={500}>
+                        Solo stock bajo
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Productos que requieren reposición
+                      </Typography>
+                    </Box>
+                  }
+                />
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
                   <InputLabel>Ordenar por</InputLabel>
                   <Select
-                    value={filtros.orden}
+                    value={filtros.orden || 'nombre'}
+                    onChange={(e) => handleFiltroChange('orden', e.target.value)}
                     label="Ordenar por"
-                    onChange={handleOrdenChange}
                   >
                     <MenuItem value="nombre">Nombre</MenuItem>
                     <MenuItem value="categoria">Categoría</MenuItem>
-                    <MenuItem value="stock">Stock</MenuItem>
-                    <MenuItem value="precio_venta">Precio</MenuItem>
-                    <MenuItem value="actualizado">Última actualización</MenuItem>
+                    <MenuItem value="stock_actual">Stock</MenuItem>
+                    <MenuItem value="precio_unitario">Precio</MenuItem>
+                    <MenuItem value="creado">Fecha creación</MenuItem>
                   </Select>
                 </FormControl>
+              </Grid>
 
-                <ToggleButtonGroup
-                  value={filtros.direccion}
-                  exclusive
-                  onChange={handleDireccionChange}
-                  size="small"
-                >
-                  <ToggleButton value="asc" aria-label="ascendente">
-                    A-Z
-                  </ToggleButton>
-                  <ToggleButton value="desc" aria-label="descendente">
-                    Z-A
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              </Box>
-            </Stack>
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Dirección</InputLabel>
+                  <Select
+                    value={filtros.direccion || 'asc'}
+                    onChange={(e) => handleFiltroChange('direccion', e.target.value)}
+                    label="Dirección"
+                  >
+                    <MenuItem value="asc">
+                      {expanded ? <ExpandLessIcon sx={{ mr: 1 }} /> : null}
+                      Ascendente
+                    </MenuItem>
+                    <MenuItem value="desc">
+                      {expanded ? <ExpandMoreIcon sx={{ mr: 1 }} /> : null}
+                      Descendente
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
 
-            {/* Indicadores de filtros activos */}
-            {tienesFiltrosActivos() && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                transition={{ duration: 0.3 }}
-              >
-                <Box>
-                  <Typography variant="caption" color="text.secondary" mb={1} display="block">
-                    Filtros activos:
+              <Grid item xs={12}>
+                <Box sx={{ px: 2 }}>
+                  <Typography variant="body2" fontWeight={500} gutterBottom>
+                    Rango de precio: ${precioRange[0]} - ${precioRange[1]}
                   </Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {filtros.categoria !== 'todos' && (
-                      <Chip
-                        label={`Categoría: ${filtros.categoria}`}
-                        size="small"
-                        onDelete={() => onFiltrosChange({ categoria: 'todos' })}
-                        color="primary"
-                        variant="outlined"
-                      />
-                    )}
-                    {filtros.busqueda && (
-                      <Chip
-                        label={`Búsqueda: "${filtros.busqueda}"`}
-                        size="small"
-                        onDelete={() => onFiltrosChange({ busqueda: '' })}
-                        color="primary"
-                        variant="outlined"
-                      />
-                    )}
-                    {filtros.stockBajo && (
-                      <Chip
-                        label="Solo stock bajo"
-                        size="small"
-                        onDelete={() => onFiltrosChange({ stockBajo: false })}
-                        color="warning"
-                        variant="outlined"
-                      />
-                    )}
-                    {(filtros.orden !== 'nombre' || filtros.direccion !== 'asc') && (
-                      <Chip
-                        label={`Orden: ${filtros.orden} (${filtros.direccion === 'asc' ? 'A-Z' : 'Z-A'})`}
-                        size="small"
-                        onDelete={() => onFiltrosChange({ orden: 'nombre', direccion: 'asc' })}
-                        color="primary"
-                        variant="outlined"
-                      />
-                    )}
-                  </Stack>
+                  <Slider
+                    value={precioRange}
+                    onChange={handlePrecioChange}
+                    onChangeCommitted={handlePrecioCommitted}
+                    valueLabelDisplay="auto"
+                    min={0}
+                    max={100}
+                    step={5}
+                    marks={[
+                      { value: 0, label: '$0' },
+                      { value: 25, label: '$25' },
+                      { value: 50, label: '$50' },
+                      { value: 75, label: '$75' },
+                      { value: 100, label: '$100+' },
+                    ]}
+                    sx={{
+                      color: theme.palette.primary.main,
+                      '& .MuiSlider-thumb': {
+                        boxShadow: theme.shadows[2],
+                      },
+                    }}
+                  />
                 </Box>
-              </motion.div>
-            )}
-          </Stack>
+              </Grid>
+            </Grid>
+          </Collapse>
+
+          {/* Resumen de resultados */}
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mt={2}
+            pt={2}
+            borderTop={`1px solid ${theme.palette.divider}`}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {totalProductos} producto{totalProductos !== 1 ? 's' : ''} encontrado{totalProductos !== 1 ? 's' : ''}
+            </Typography>
+            
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="caption" color="text.secondary">
+                Filtros avanzados
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => setExpanded(!expanded)}
+                sx={{
+                  transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.3s ease',
+                }}
+              >
+                <ExpandMoreIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          </Box>
         </CardContent>
       </Card>
     </motion.div>

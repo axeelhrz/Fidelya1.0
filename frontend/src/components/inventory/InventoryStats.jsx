@@ -1,176 +1,240 @@
 import React from 'react';
 import {
-  Box,
+  Grid,
   Card,
   CardContent,
   Typography,
-  Grid,
+  Box,
+  Avatar,
   Chip,
-  Stack,
+  useTheme,
+  alpha,
 } from '@mui/material';
 import {
   Inventory2 as InventoryIcon,
   Warning as WarningIcon,
-  AttachMoney as MoneyIcon,
+  TrendingUp as TrendingUpIcon,
   Category as CategoryIcon,
-  TrendingDown as TrendingDownIcon,
+  AttachMoney as MoneyIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
-const StatCard = ({ title, value, icon, color, subtitle, delay = 0 }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay }}
-  >
-    <Card
-      sx={{
-        height: '100%',
-        background: `linear-gradient(135deg, ${color}15 0%, ${color}05 100%)`,
-        border: `1px solid ${color}30`,
-        borderRadius: 3,
-        transition: 'all 0.3s ease',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: `0 8px 25px ${color}25`,
-        },
-      }}
-    >
-      <CardContent sx={{ p: 3 }}>
-        <Stack direction="row" alignItems="center" spacing={2}>
-          <Box
-            sx={{
-              p: 1.5,
-              borderRadius: 2,
-              backgroundColor: `${color}20`,
-              color: color,
-            }}
-          >
-            {icon}
-          </Box>
-          <Box flex={1}>
-            <Typography variant="h4" fontWeight="bold" color="text.primary">
-              {value}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" fontWeight={500}>
-              {title}
-            </Typography>
-            {subtitle && (
-              <Typography variant="caption" color="text.secondary">
-                {subtitle}
-              </Typography>
-            )}
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
-  </motion.div>
-);
-
 const InventoryStats = ({ estadisticas }) => {
-  const formatCurrency = (value) => {
+  const theme = useTheme();
+
+  if (!estadisticas) {
+    return null;
+  }
+  const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-UY', {
       style: 'currency',
       currency: 'UYU',
-    }).format(value);
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
-  const getCategoriaColor = (categoria) => {
-    const colores = {
-      fruta: '#4CAF50',
-      verdura: '#FF9800',
-      otro: '#2196F3',
-    };
-    return colores[categoria] || '#757575';
-  };
+  const statsCards = [
+    {
+      title: 'Total Productos',
+      value: estadisticas.total_productos,
+      icon: InventoryIcon,
+      color: theme.palette.primary.main,
+      bgColor: alpha(theme.palette.primary.main, 0.1),
+      description: 'Productos registrados',
+    },
+    {
+      title: 'Stock Bajo',
+      value: estadisticas.productos_stock_bajo,
+      icon: WarningIcon,
+      color: theme.palette.warning.main,
+      bgColor: alpha(theme.palette.warning.main, 0.1),
+      description: 'Requieren atención',
+      alert: estadisticas.productos_stock_bajo > 0,
+    },
+    {
+      title: 'Valor Inventario',
+      value: formatCurrency(estadisticas.valor_inventario),
+      icon: MoneyIcon,
+      color: theme.palette.success.main,
+      bgColor: alpha(theme.palette.success.main, 0.1),
+      description: 'Valor total del stock',
+      isMonetary: true,
+    },
+    {
+      title: 'Stock Total',
+      value: estadisticas.stock_total,
+      icon: TrendingUpIcon,
+      color: theme.palette.info.main,
+      bgColor: alpha(theme.palette.info.main, 0.1),
+      description: 'Unidades disponibles',
+    },
+  ];
 
   return (
     <Box sx={{ mb: 4 }}>
-      <Typography variant="h6" fontWeight="bold" color="text.primary" mb={3}>
-        Resumen del Inventario
-      </Typography>
-      
       <Grid container spacing={3}>
-        {/* Total de Productos */}
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Total Productos"
-            value={estadisticas.total_productos}
-            icon={<InventoryIcon />}
-            color="#2196F3"
-            delay={0}
-          />
-        </Grid>
-
-        {/* Productos con Stock Bajo */}
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Stock Bajo"
-            value={estadisticas.productos_stock_bajo}
-            icon={<WarningIcon />}
-            color="#FF5722"
-            subtitle={estadisticas.productos_stock_bajo > 0 ? "Requieren atención" : "Todo en orden"}
-            delay={0.1}
-          />
-        </Grid>
-
-        {/* Valor del Inventario */}
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Valor Inventario"
-            value={formatCurrency(estadisticas.valor_inventario)}
-            icon={<MoneyIcon />}
-            color="#4CAF50"
-            delay={0.2}
-          />
-        </Grid>
-
-        {/* Productos Sin Movimiento */}
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Sin Movimiento"
-            value={estadisticas.productos_sin_movimiento}
-            icon={<TrendingDownIcon />}
-            color="#FF9800"
-            subtitle="Últimos 30 días"
-            delay={0.3}
-          />
-        </Grid>
-      </Grid>
-
-      {/* Distribución por Categorías */}
-      <motion.div
+        {statsCards.map((stat, index) => (
+          <Grid item xs={12} sm={6} md={3} key={stat.title}>
+            <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
       >
-        <Card sx={{ mt: 3, borderRadius: 3 }}>
-          <CardContent sx={{ p: 3 }}>
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
-              <CategoryIcon color="primary" />
-              <Typography variant="h6" fontWeight="bold">
-                Distribución por Categorías
-              </Typography>
-            </Box>
-            
-            <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-              {Object.entries(estadisticas.productos_por_categoria).map(([categoria, cantidad]) => (
-                <Chip
-                  key={categoria}
-                  label={`${categoria.charAt(0).toUpperCase() + categoria.slice(1)}: ${cantidad}`}
+              <Card
                   sx={{
-                    backgroundColor: `${getCategoriaColor(categoria)}20`,
-                    color: getCategoriaColor(categoria),
-                    fontWeight: 600,
-                    borderRadius: 2,
-                    px: 1,
-                  }}
-                />
-              ))}
-            </Stack>
-          </CardContent>
-        </Card>
-      </motion.div>
+                  height: '100%',
+                  borderRadius: 3,
+                  boxShadow: theme.shadows[2],
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: theme.shadows[8],
+                    transform: 'translateY(-4px)',
+                  },
+                  border: stat.alert ? `2px solid ${theme.palette.warning.main}` : 'none',
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box display="flex" alignItems="flex-start" justifyContent="space-between">
+                    <Box flex={1}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        fontWeight={500}
+                        gutterBottom
+                      >
+                        {stat.title}
+                      </Typography>
+                      
+                      <Typography
+                        variant="h4"
+                        fontWeight={700}
+                        color={stat.color}
+                        sx={{ mb: 1 }}
+                      >
+                        {stat.value}
+                      </Typography>
+                      
+                      <Typography variant="caption" color="text.secondary">
+                        {stat.description}
+                      </Typography>
+
+                      {stat.alert && (
+                        <Chip
+                          label="¡Atención!"
+                          color="warning"
+                          size="small"
+                          sx={{ mt: 1, fontWeight: 600 }}
+                        />
+                      )}
+    </Box>
+                    
+                    <Avatar
+                      sx={{
+                        bgcolor: stat.bgColor,
+                        color: stat.color,
+                        width: 56,
+                        height: 56,
+                      }}
+                    >
+                      <stat.icon fontSize="large" />
+                    </Avatar>
+                  </Box>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Grid>
+        ))}
+
+        {/* Distribución por categorías */}
+        {estadisticas.productos_por_categoria && (
+          <Grid item xs={12}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  boxShadow: theme.shadows[2],
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box display="flex" alignItems="center" gap={2} mb={3}>
+                    <Avatar
+                      sx={{
+                        bgcolor: alpha(theme.palette.secondary.main, 0.1),
+                        color: theme.palette.secondary.main,
+                      }}
+                    >
+                      <CategoryIcon />
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h6" fontWeight={600}>
+                        Distribución por Categorías
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Productos organizados por tipo
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Grid container spacing={2}>
+                    {Object.entries(estadisticas.productos_por_categoria).map(([categoria, cantidad]) => {
+                      const getCategoryColor = (cat) => {
+                        switch (cat) {
+                          case 'frutas':
+                            return theme.palette.success.main;
+                          case 'verduras':
+                            return theme.palette.primary.main;
+                          default:
+                            return theme.palette.warning.main;
+                        }
+};
+
+                      const percentage = estadisticas.total_productos > 0 
+                        ? ((cantidad / estadisticas.total_productos) * 100).toFixed(1)
+                        : 0;
+
+                      return (
+                        <Grid item xs={12} sm={4} key={categoria}>
+                          <Box
+                            sx={{
+                              p: 2,
+                              borderRadius: 2,
+                              bgcolor: alpha(getCategoryColor(categoria), 0.1),
+                              border: `1px solid ${alpha(getCategoryColor(categoria), 0.2)}`,
+                            }}
+                          >
+                            <Typography
+                              variant="h5"
+                              fontWeight={700}
+                              color={getCategoryColor(categoria)}
+                            >
+                              {cantidad}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              fontWeight={600}
+                              textTransform="capitalize"
+                            >
+                              {categoria}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {percentage}% del total
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Grid>
+        )}
+      </Grid>
     </Box>
   );
 };

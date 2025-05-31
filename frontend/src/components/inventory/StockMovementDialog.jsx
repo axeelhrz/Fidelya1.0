@@ -1,29 +1,29 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Button,
+  TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Box,
   Typography,
-  Alert,
-  Stack,
+  Box,
+  Avatar,
   Chip,
+  Grid,
+  Alert,
   Divider,
 } from '@mui/material';
 import {
-  Save as SaveIcon,
+  TrendingUp as StockIcon,
+  Add as AddIcon,
+  Remove as RemoveIcon,
+  Edit as AdjustIcon,
   Close as CloseIcon,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-  SwapHoriz as SwapHorizIcon,
-  Inventory2 as InventoryIcon,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -40,104 +40,94 @@ const schema = yup.object({
     .number()
     .required('La cantidad es requerida')
     .positive('La cantidad debe ser mayor a 0')
-    .integer('La cantidad debe ser un número entero')
-    .typeError('Debe ser un número válido'),
+    .integer('La cantidad debe ser un número entero'),
   motivo: yup
     .string()
     .max(255, 'El motivo no puede exceder 255 caracteres'),
 });
 
-const StockMovementDialog = ({ open, onClose, onSubmit, producto }) => {
-  const [loading, setLoading] = useState(false);
-
+const StockMovementDialog = ({ 
+  open, 
+  onClose, 
+  onSubmit, 
+  producto = null 
+}) => {
   const {
     control,
     handleSubmit,
     reset,
     watch,
-    formState: { errors },
+    formState: { errors, isSubmitting }
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       tipo: 'ingreso',
-      cantidad: 1,
+      cantidad: '',
       motivo: '',
     },
   });
 
-  const tipoMovimiento = watch('tipo');
-  const cantidad = watch('cantidad');
+  const watchedTipo = watch('tipo');
 
-  // Calcular nuevo stock
-  const calcularNuevoStock = () => {
-    if (!producto || !cantidad) return producto?.stock || 0;
-    
-    switch (tipoMovimiento) {
-      case 'ingreso':
-        return producto.stock + parseInt(cantidad);
-      case 'egreso':
-        return Math.max(0, producto.stock - parseInt(cantidad));
-      case 'ajuste':
-        return parseInt(cantidad);
-      default:
-        return producto.stock;
+  React.useEffect(() => {
+    if (open) {
+      reset({
+        tipo: 'ingreso',
+        cantidad: '',
+        motivo: '',
+      });
     }
-  };
-
+  }, [open, reset]);
   const handleFormSubmit = async (data) => {
     try {
-      setLoading(true);
       await onSubmit(data);
-      reset();
+      onClose();
     } catch (error) {
       console.error('Error en movimiento de stock:', error);
-    } finally {
-      setLoading(false);
     }
   };
-
-  const handleClose = () => {
-    if (!loading) {
-      reset();
-      onClose();
-    }
-  };
-
-  const getTipoInfo = (tipo) => {
-    const tipos = {
-      ingreso: {
-        icon: <TrendingUpIcon />,
-        color: 'success',
-        label: 'Ingreso de Stock',
-        description: 'Aumenta el stock actual',
-        ejemplos: ['Compra de mercadería', 'Devolución de cliente', 'Corrección por faltante']
-      },
-      egreso: {
-        icon: <TrendingDownIcon />,
-        color: 'error',
-        label: 'Egreso de Stock',
-        description: 'Reduce el stock actual',
-        ejemplos: ['Venta', 'Producto dañado', 'Merma', 'Muestra gratuita']
-      },
-      ajuste: {
-        icon: <SwapHorizIcon />,
-        color: 'warning',
-        label: 'Ajuste de Stock',
-        description: 'Establece un stock específico',
-        ejemplos: ['Inventario físico', 'Corrección de sistema', 'Reconteo']
-      }
-    };
-    return tipos[tipo];
-  };
-
-  const tipoInfo = getTipoInfo(tipoMovimiento);
 
   if (!producto) return null;
+
+  const getTipoConfig = (tipo) => {
+    switch (tipo) {
+      case 'ingreso':
+        return {
+          label: 'Ingreso de Stock',
+          icon: AddIcon,
+          color: 'success',
+          description: 'Agregar productos al inventario',
+        };
+      case 'egreso':
+        return {
+          label: 'Egreso de Stock',
+          icon: RemoveIcon,
+          color: 'error',
+          description: 'Retirar productos del inventario',
+        };
+      case 'ajuste':
+        return {
+          label: 'Ajuste de Stock',
+          icon: AdjustIcon,
+          color: 'warning',
+          description: 'Corregir cantidad en inventario',
+        };
+      default:
+        return {
+          label: 'Movimiento',
+          icon: StockIcon,
+          color: 'primary',
+          description: '',
+        };
+    }
+  };
+
+  const tipoConfig = getTipoConfig(watchedTipo);
 
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={onClose}
       maxWidth="sm"
       fullWidth
       PaperProps={{
@@ -151,207 +141,225 @@ const StockMovementDialog = ({ open, onClose, onSubmit, producto }) => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <DialogTitle>
-          <Box display="flex" alignItems="center" gap={2}>
-            <InventoryIcon color="primary" />
-            <Box>
-              <Typography variant="h6" fontWeight="bold">
-                Ajustar Stock
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {producto.nombre}
-              </Typography>
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Box display="flex" alignItems="center" gap={2}>
+              <Avatar
+                sx={{
+                  bgcolor: `${tipoConfig.color}.main`,
+                  color: 'white',
+                }}
+              >
+                <tipoConfig.icon />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" fontWeight={600}>
+                  Ajustar Stock
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {producto.nombre}
+                </Typography>
+              </Box>
             </Box>
+            <Button onClick={onClose} size="small" sx={{ minWidth: 'auto', p: 1 }}>
+              <CloseIcon />
+            </Button>
           </Box>
         </DialogTitle>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)}>
-          <DialogContent sx={{ pb: 2 }}>
-            <Stack spacing={3}>
-              {/* Información actual del producto */}
-              <Alert severity="info" sx={{ borderRadius: 2 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography variant="body2">
-                    <strong>Stock actual:</strong> {producto.stock} {producto.unidad}
-                  </Typography>
-                  <Chip
-                    label={producto.categoria}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                </Stack>
-              </Alert>
+        <Divider />
 
-              {/* Tipo de movimiento */}
-              <Controller
-                name="tipo"
-                control={control}
-                render={({ field }) => (
-                  <FormControl fullWidth error={!!errors.tipo}>
-                    <InputLabel>Tipo de movimiento</InputLabel>
-                    <Select
-                      {...field}
-                      label="Tipo de movimiento"
-                      disabled={loading}
-                    >
-                      <MenuItem value="ingreso">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <TrendingUpIcon color="success" />
-                          Ingreso de Stock
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="egreso">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <TrendingDownIcon color="error" />
-                          Egreso de Stock
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="ajuste">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <SwapHorizIcon color="warning" />
-                          Ajuste de Stock
-                        </Box>
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
-                )}
+        <DialogContent sx={{ pt: 3 }}>
+          {/* Información del producto */}
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              bgcolor: 'grey.50',
+              border: '1px solid',
+              borderColor: 'grey.200',
+              mb: 3,
+            }}
+          >
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Typography variant="caption" color="text.secondary">
+                  Stock Actual
+                </Typography>
+                <Typography variant="h6" fontWeight={600} color="primary">
+                  {producto.stock_actual} {producto.unidad}
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="caption" color="text.secondary">
+                  Stock Mínimo
+                </Typography>
+                <Typography variant="h6" fontWeight={600}>
+                  {producto.stock_minimo} {producto.unidad}
+                </Typography>
+              </Grid>
+            </Grid>
+            
+            {producto.stock_bajo && (
+              <Chip
+                label="Stock Bajo"
+                color="warning"
+                size="small"
+                sx={{ mt: 1 }}
               />
+            )}
+          </Box>
 
-              {/* Información del tipo seleccionado */}
-              <motion.div
-                key={tipoMovimiento}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Alert severity={tipoInfo.color} sx={{ borderRadius: 2 }}>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight="bold" mb={1}>
-                      {tipoInfo.label}
+          <form onSubmit={handleSubmit(handleFormSubmit)}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Controller
+                  name="tipo"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControl fullWidth error={!!errors.tipo}>
+                      <InputLabel>Tipo de Movimiento</InputLabel>
+                      <Select {...field} label="Tipo de Movimiento">
+                        <MenuItem value="ingreso">
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <AddIcon color="success" />
+                            Ingreso - Agregar stock
+                          </Box>
+                        </MenuItem>
+                        <MenuItem value="egreso">
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <RemoveIcon color="error" />
+                            Egreso - Retirar stock
+                          </Box>
+                        </MenuItem>
+                        <MenuItem value="ajuste">
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <AdjustIcon color="warning" />
+                            Ajuste - Corregir stock
+                          </Box>
+                        </MenuItem>
+                      </Select>
+                      {errors.tipo && (
+                        <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                          {errors.tipo.message}
+                        </Typography>
+                      )}
+                    </FormControl>
+                  )}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Alert severity={tipoConfig.color} sx={{ mb: 2 }}>
+                  <Typography variant="body2">
+                    <strong>{tipoConfig.label}:</strong> {tipoConfig.description}
+                  </Typography>
+                </Alert>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Controller
+                  name="cantidad"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label={`Cantidad ${watchedTipo === 'ajuste' ? '(nueva cantidad total)' : ''}`}
+                      type="number"
+                      fullWidth
+                      error={!!errors.cantidad}
+                      helperText={
+                        errors.cantidad?.message || 
+                        (watchedTipo === 'ajuste' 
+                          ? 'Ingresa la cantidad total que debería tener el producto'
+                          : `Cantidad a ${watchedTipo === 'ingreso' ? 'agregar' : 'retirar'} en ${producto.unidad}`
+                        )
+                      }
+                      InputProps={{
+                        endAdornment: (
+                          <Typography variant="body2" color="text.secondary">
+                            {producto.unidad}
+                          </Typography>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Controller
+                  name="motivo"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Motivo (opcional)"
+                      multiline
+                      rows={3}
+                      fullWidth
+                      error={!!errors.motivo}
+                      helperText={errors.motivo?.message || 'Describe el motivo del movimiento'}
+                      placeholder="Ej: Compra a proveedor, venta, producto dañado, inventario físico..."
+                    />
+                  )}
+                />
+              </Grid>
+
+              {/* Previsualización del resultado */}
+              {watchedTipo && (
+                <Grid item xs={12}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      bgcolor: `${tipoConfig.color}.50`,
+                      border: `1px solid`,
+                      borderColor: `${tipoConfig.color}.200`,
+                    }}
+                  >
+                    <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                      Vista previa del cambio:
                     </Typography>
-                    <Typography variant="body2" mb={1}>
-                      {tipoInfo.description}
+                    <Typography variant="body2">
+                      Stock actual: <strong>{producto.stock_actual} {producto.unidad}</strong>
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Ejemplos: {tipoInfo.ejemplos.join(', ')}
+                    <Typography variant="body2" color={`${tipoConfig.color}.main`}>
+                      {watchedTipo === 'ajuste' 
+                        ? 'Nuevo stock: Se establecerá según la cantidad ingresada'
+                        : `Después del ${watchedTipo}: Se ${watchedTipo === 'ingreso' ? 'sumará' : 'restará'} la cantidad especificada`
+                      }
                     </Typography>
                   </Box>
-                </Alert>
-              </motion.div>
-
-              {/* Cantidad */}
-              <Controller
-                name="cantidad"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label={tipoMovimiento === 'ajuste' ? 'Nuevo stock' : 'Cantidad'}
-                    type="number"
-                    inputProps={{ min: tipoMovimiento === 'ajuste' ? 0 : 1, step: 1 }}
-                    error={!!errors.cantidad}
-                    helperText={
-                      errors.cantidad?.message ||
-                      (tipoMovimiento === 'egreso' && cantidad > producto.stock
-                        ? `⚠️ Stock insuficiente (disponible: ${producto.stock})`
-                        : '')
-                    }
-                    disabled={loading}
-                  />
-                )}
-              />
-
-              {/* Motivo */}
-              <Controller
-                name="motivo"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label="Motivo (opcional)"
-                    placeholder="Describe el motivo del movimiento..."
-                    multiline
-                    rows={2}
-                    error={!!errors.motivo}
-                    helperText={errors.motivo?.message}
-                    disabled={loading}
-                  />
-                )}
-              />
-
-              <Divider />
-
-              {/* Resumen del cambio */}
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  backgroundColor: 'grey.50',
-                  border: '1px solid',
-                  borderColor: 'grey.200',
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" mb={1}>
-                  Resumen del cambio:
-                </Typography>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography variant="body2">
-                    Stock actual: <strong>{producto.stock}</strong>
-                  </Typography>
-                  <Typography variant="h6">→</Typography>
-                  <Typography variant="body2">
-                    Nuevo stock: <strong style={{ color: tipoInfo.color === 'error' ? '#d32f2f' : '#2e7d32' }}>
-                      {calcularNuevoStock()}
-                    </strong>
-                  </Typography>
-                </Stack>
-                
-                {calcularNuevoStock() <= producto.stock_minimo && (
-                  <Alert severity="warning" sx={{ mt: 1, borderRadius: 1 }}>
-                    <Typography variant="caption">
-                      ⚠️ El nuevo stock estará por debajo del mínimo ({producto.stock_minimo})
-                    </Typography>
-                  </Alert>
-                )}
-              </Box>
-            </Stack>
-          </DialogContent>
-
-          <DialogActions sx={{ p: 3, pt: 1 }}>
-            <Button
-              onClick={handleClose}
-              disabled={loading}
-              startIcon={<CloseIcon />}
-              sx={{ borderRadius: 2 }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={loading || (tipoMovimiento === 'egreso' && cantidad > producto.stock)}
-              startIcon={loading ? null : <SaveIcon />}
-              sx={{ borderRadius: 2, minWidth: 120 }}
-            >
-              {loading ? (
-                <Box display="flex" alignItems="center" gap={1}>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  >
-                    <SaveIcon />
-                  </motion.div>
-                  Procesando...
-                </Box>
-              ) : (
-                'Confirmar Movimiento'
+                </Grid>
               )}
-            </Button>
-          </DialogActions>
-        </form>
+            </Grid>
+          </form>
+        </DialogContent>
+
+        <Divider />
+
+        <DialogActions sx={{ p: 3, gap: 2 }}>
+          <Button
+            onClick={onClose}
+            variant="outlined"
+            size="large"
+            disabled={isSubmitting}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSubmit(handleFormSubmit)}
+            variant="contained"
+            color={tipoConfig.color}
+            size="large"
+            startIcon={<tipoConfig.icon />}
+            disabled={isSubmitting}
+            sx={{ minWidth: 140 }}
+          >
+            {isSubmitting ? 'Procesando...' : `Confirmar ${tipoConfig.label}`}
+          </Button>
+        </DialogActions>
       </motion.div>
     </Dialog>
   );
