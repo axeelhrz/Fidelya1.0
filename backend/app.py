@@ -25,7 +25,7 @@ app.config['JWT_EXPIRATION_DELTA'] = timedelta(hours=24)
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'fruteria_user',
-    'password': 'fruteria_password_123',  # ⚠️ CAMBIA ESTO POR TU CONTRASEÑA
+    'password': 'fruteria_password_123',
     'database': 'fruteria_nina',
     'charset': 'utf8mb4',
     'collation': 'utf8mb4_unicode_ci'
@@ -48,7 +48,7 @@ def init_database():
     try:
         # Conectar sin especificar base de datos para crearla
         temp_config = DB_CONFIG.copy()
-        temp_config.pop('database', None)  # Remover database del config temporal
+        temp_config.pop('database', None)
         connection = mysql.connector.connect(**temp_config)
         cursor = connection.cursor()
         
@@ -73,13 +73,113 @@ def init_database():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
         
+        # Crear tablas adicionales para el dashboard
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS productos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                categoria ENUM('frutas', 'verduras', 'otros') DEFAULT 'frutas',
+                stock INT DEFAULT 0,
+                stock_minimo INT DEFAULT 5,
+                precio DECIMAL(10,2) DEFAULT 0.00,
+                creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ventas (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                total DECIMAL(10,2) NOT NULL,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                usuario_id INT,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS compras (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                proveedor VARCHAR(100) NOT NULL,
+                total DECIMAL(10,2) NOT NULL,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS movimientos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                tipo ENUM('venta', 'compra', 'ajuste') NOT NULL,
+                detalle TEXT NOT NULL,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+        
+        # Insertar datos de ejemplo si las tablas están vacías
+        cursor.execute("SELECT COUNT(*) FROM productos")
+        if cursor.fetchone()[0] == 0:
+            productos_ejemplo = [
+                ('Banana', 'frutas', 15, 5, 2.50),
+                ('Manzana', 'frutas', 3, 5, 3.00),
+                ('Naranja', 'frutas', 20, 5, 2.80),
+                ('Lechuga', 'verduras', 8, 3, 1.50),
+                ('Tomate', 'verduras', 12, 5, 4.00),
+                ('Cebolla', 'verduras', 25, 10, 1.20),
+                ('Bolsas', 'otros', 100, 20, 0.50)
+            ]
+            cursor.executemany(
+                "INSERT INTO productos (nombre, categoria, stock, stock_minimo, precio) VALUES (%s, %s, %s, %s, %s)",
+                productos_ejemplo
+        )
+        
+        # Insertar ventas de ejemplo
+        cursor.execute("SELECT COUNT(*) FROM ventas")
+        if cursor.fetchone()[0] == 0:
+            ventas_ejemplo = [
+                (1250.50, '2024-01-15 10:30:00', 1),
+                (890.00, '2024-01-15 14:20:00', 1),
+                (2100.75, '2024-01-14 16:45:00', 1),
+                (1580.25, '2024-01-14 11:15:00', 1),
+                (950.00, '2024-01-13 09:30:00', 1)
+            ]
+            cursor.executemany(
+                "INSERT INTO ventas (total, fecha, usuario_id) VALUES (%s, %s, %s)",
+                ventas_ejemplo
+        )
+        
+        # Insertar compras de ejemplo
+        cursor.execute("SELECT COUNT(*) FROM compras")
+        if cursor.fetchone()[0] == 0:
+            compras_ejemplo = [
+                ('Frutas del Sur', 4500.00, '2024-01-15 08:00:00'),
+                ('Verduras Uruguay', 2900.00, '2024-01-14 07:30:00'),
+                ('Distribuidora Central', 3200.00, '2024-01-13 09:00:00')
+            ]
+            cursor.executemany(
+                "INSERT INTO compras (proveedor, total, fecha) VALUES (%s, %s, %s)",
+                compras_ejemplo
+        )
+        
+        # Insertar movimientos de ejemplo
+        cursor.execute("SELECT COUNT(*) FROM movimientos")
+        if cursor.fetchone()[0] == 0:
+            movimientos_ejemplo = [
+                ('venta', 'Venta por $1800', '2024-01-15 15:30:00'),
+                ('compra', 'Compra por $2500', '2024-01-15 10:12:00'),
+                ('venta', 'Venta por $950', '2024-01-15 09:45:00'),
+                ('ajuste', 'Ajuste de inventario', '2024-01-14 18:00:00'),
+                ('venta', 'Venta por $1200', '2024-01-14 14:20:00')
+            ]
+            cursor.executemany(
+                "INSERT INTO movimientos (tipo, detalle, fecha) VALUES (%s, %s, %s)",
+                movimientos_ejemplo
+            )
+        
         connection.commit()
-        print("Tabla 'usuarios' creada exitosamente")
+        print("Tablas creadas y datos de ejemplo insertados exitosamente")
         print("Base de datos inicializada correctamente")
         
     except mysql.connector.Error as err:
         print(f"Error inicializando base de datos: {err}")
-        print("Verifica que MySQL esté corriendo y que las credenciales sean correctas")
         return False
     except Exception as e:
         print(f"Error inesperado: {e}")
@@ -92,7 +192,6 @@ def init_database():
             print("Conexión a MySQL cerrada")
 
     return True
-
 def jwt_required(f):
     """Decorador para rutas que requieren autenticación"""
     @wraps(f)
@@ -109,7 +208,7 @@ def jwt_required(f):
         
         if not auth_header:
             return jsonify({'message': 'Token requerido'}), 401
-        
+
         try:
             if auth_header.startswith('Bearer '):
                 token = auth_header[7:]
@@ -310,6 +409,272 @@ def verify_token(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
+@app.route('/api/dashboard/resumen', methods=['GET'])
+@jwt_required
+def dashboard_resumen(current_user_id):
+    """Obtiene resumen general del dashboard"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Total de productos
+        cursor.execute("SELECT COUNT(*) FROM productos")
+        total_productos = cursor.fetchone()[0]
+        
+        # Ventas del día
+        cursor.execute("""
+            SELECT COALESCE(SUM(total), 0), COUNT(*) 
+            FROM ventas 
+            WHERE DATE(fecha) = CURDATE()
+        """)
+        ventas_hoy = cursor.fetchone()
+        ventas_del_dia = float(ventas_hoy[0]) if ventas_hoy[0] else 0.0
+        cantidad_ventas = ventas_hoy[1] if ventas_hoy[1] else 0
+        
+        response = jsonify({
+            'totalProductos': total_productos,
+            'ventasDelDia': ventas_del_dia,
+            'cantidadVentas': cantidad_ventas
+        })
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        print(f"Error en dashboard resumen: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/dashboard/stock-bajo', methods=['GET'])
+@jwt_required
+def dashboard_stock_bajo(current_user_id):
+    """Obtiene productos con stock bajo"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        cursor.execute("""
+            SELECT nombre, stock, stock_minimo 
+            FROM productos 
+            WHERE stock <= stock_minimo
+            ORDER BY stock ASC
+        """)
+        
+        productos_bajo_stock = []
+        for row in cursor.fetchall():
+            productos_bajo_stock.append({
+                'nombre': row[0],
+                'stock': row[1],
+                'stockMinimo': row[2]
+            })
+        
+        response = jsonify(productos_bajo_stock)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        print(f"Error en dashboard stock bajo: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/dashboard/compras-recientes', methods=['GET'])
+@jwt_required
+def dashboard_compras_recientes(current_user_id):
+    """Obtiene las últimas compras"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        cursor.execute("""
+            SELECT proveedor, DATE_FORMAT(fecha, '%Y-%m-%d'), total 
+            FROM compras 
+            ORDER BY fecha DESC 
+            LIMIT 3
+        """)
+        
+        compras_recientes = []
+        for row in cursor.fetchall():
+            compras_recientes.append({
+                'proveedor': row[0],
+                'fecha': row[1],
+                'total': float(row[2])
+            })
+        
+        response = jsonify(compras_recientes)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        print(f"Error en dashboard compras recientes: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/dashboard/ventas-mensuales', methods=['GET'])
+@jwt_required
+def dashboard_ventas_mensuales(current_user_id):
+    """Obtiene ventas por mes del año actual"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        cursor.execute("""
+            SELECT 
+                MONTHNAME(fecha) as mes,
+                COALESCE(SUM(total), 0) as total
+            FROM ventas 
+            WHERE YEAR(fecha) = YEAR(CURDATE())
+            GROUP BY MONTH(fecha), MONTHNAME(fecha)
+            ORDER BY MONTH(fecha)
+        """)
+        
+        ventas_mensuales = []
+        meses_con_datos = {}
+        
+        for row in cursor.fetchall():
+            mes_nombre = row[0]
+            total = float(row[1])
+            meses_con_datos[mes_nombre] = total
+        
+        # Asegurar que todos los meses estén representados
+        meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+        
+        for mes in meses:
+            ventas_mensuales.append({
+                'mes': mes,
+                'total': meses_con_datos.get(mes, 0)
+            })
+        
+        response = jsonify(ventas_mensuales)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        print(f"Error en dashboard ventas mensuales: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/dashboard/stock-distribucion', methods=['GET'])
+@jwt_required
+def dashboard_stock_distribucion(current_user_id):
+    """Obtiene distribución de stock por categoría"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        cursor.execute("""
+            SELECT categoria, COUNT(*) 
+            FROM productos 
+            GROUP BY categoria
+        """)
+        
+        distribucion = {'frutas': 0, 'verduras': 0, 'otros': 0}
+        
+        for row in cursor.fetchall():
+            categoria = row[0]
+            cantidad = row[1]
+            distribucion[categoria] = cantidad
+        
+        response = jsonify(distribucion)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        print(f"Error en dashboard stock distribución: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/dashboard/ultimos-movimientos', methods=['GET'])
+@jwt_required
+def dashboard_ultimos_movimientos(current_user_id):
+    """Obtiene los últimos movimientos"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        cursor.execute("""
+            SELECT tipo, detalle, DATE_FORMAT(fecha, '%Y-%m-%d %H:%i') 
+            FROM movimientos 
+            ORDER BY fecha DESC 
+            LIMIT 5
+        """)
+        
+        movimientos = []
+        for row in cursor.fetchall():
+            movimientos.append({
+                'tipo': row[0],
+                'detalle': row[1],
+                'fecha': row[2]
+            })
+        
+        response = jsonify(movimientos)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        print(f"Error en dashboard últimos movimientos: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
 @app.route('/api/dashboard', methods=['GET'])
 @jwt_required
 def dashboard(current_user_id):
@@ -329,7 +694,6 @@ def dashboard(current_user_id):
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Endpoint para verificar que el servidor está funcionando"""
-    # Probar conexión a la base de datos
     db_status = "OK"
     try:
         connection = get_db_connection()
@@ -367,16 +731,22 @@ if __name__ == '__main__':
     if init_database():
         print("=" * 50)
         print("✅ ¡Sistema listo!")
-        print("🌐 Servidor Flask iniciado en: http://localhost:5001")  # Cambio de puerto
+        print("🌐 Servidor Flask iniciado en: http://localhost:5001")
         print("🎯 Frontend esperado en: http://localhost:3000")
         print("📋 Endpoints disponibles:")
         print("   - POST /api/register")
         print("   - POST /api/login") 
         print("   - GET /api/verify-token")
         print("   - GET /api/dashboard")
+        print("   - GET /api/dashboard/resumen")
+        print("   - GET /api/dashboard/stock-bajo")
+        print("   - GET /api/dashboard/compras-recientes")
+        print("   - GET /api/dashboard/ventas-mensuales")
+        print("   - GET /api/dashboard/stock-distribucion")
+        print("   - GET /api/dashboard/ultimos-movimientos")
         print("   - GET /api/health")
         print("=" * 50)
-        app.run(debug=True, port=5001, host='0.0.0.0')  # Cambio de puerto a 5001
+        app.run(debug=True, port=5001, host='0.0.0.0')
     else:
         print("=" * 50)
         print("❌ Error inicializando base de datos")

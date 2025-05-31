@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 // URL base del backend Flask - FORZAR PUERTO 5001
 const API_URL = 'http://localhost:5001/api';
 
@@ -39,7 +40,6 @@ api.interceptors.response.use(
   (error) => {
     console.error('❌ Error en respuesta:', error);
     
-    // Manejar errores de CORS específicamente
     if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
       console.error('Error de CORS o conexión:', error);
       return Promise.reject({
@@ -48,7 +48,6 @@ api.interceptors.response.use(
       });
     }
     
-    // Manejar token expirado o inválido
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('rememberUser');
@@ -60,6 +59,7 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 /**
  * Inicia sesión de usuario
  * @param {string} correo - Correo electrónico
@@ -126,13 +126,6 @@ export const register = async (nombre, correo, contraseña) => {
     return response.data;
   } catch (error) {
     console.error('❌ Error en registro:', error);
-    console.error('❌ Error details:', {
-      message: error.message,
-      code: error.code,
-      response: error.response?.data,
-      status: error.response?.status
-    });
-    
     if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
       throw { message: 'Error de conexión. Verifica que el servidor esté funcionando en puerto 5001.' };
     }
@@ -241,6 +234,86 @@ export const getDashboard = async () => {
   }
 };
 
+// NUEVOS MÉTODOS PARA EL DASHBOARD
+
+/**
+ * Obtiene resumen general del dashboard
+ */
+export const getDashboardResumen = async () => {
+  try {
+    const response = await api.get('/dashboard/resumen');
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo resumen del dashboard:', error);
+    throw error.response?.data || { message: 'Error obteniendo resumen del dashboard' };
+  }
+};
+
+/**
+ * Obtiene productos con stock bajo
+ */
+export const getStockBajo = async () => {
+  try {
+    const response = await api.get('/dashboard/stock-bajo');
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo stock bajo:', error);
+    throw error.response?.data || { message: 'Error obteniendo productos con stock bajo' };
+  }
+};
+
+/**
+ * Obtiene compras recientes
+ */
+export const getComprasRecientes = async () => {
+  try {
+    const response = await api.get('/dashboard/compras-recientes');
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo compras recientes:', error);
+    throw error.response?.data || { message: 'Error obteniendo compras recientes' };
+  }
+};
+
+/**
+ * Obtiene ventas mensuales
+ */
+export const getVentasMensuales = async () => {
+  try {
+    const response = await api.get('/dashboard/ventas-mensuales');
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo ventas mensuales:', error);
+    throw error.response?.data || { message: 'Error obteniendo ventas mensuales' };
+  }
+};
+
+/**
+ * Obtiene distribución de stock
+ */
+export const getStockDistribucion = async () => {
+  try {
+    const response = await api.get('/dashboard/stock-distribucion');
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo distribución de stock:', error);
+    throw error.response?.data || { message: 'Error obteniendo distribución de stock' };
+  }
+};
+
+/**
+ * Obtiene últimos movimientos
+ */
+export const getUltimosMovimientos = async () => {
+  try {
+    const response = await api.get('/dashboard/ultimos-movimientos');
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo últimos movimientos:', error);
+    throw error.response?.data || { message: 'Error obteniendo últimos movimientos' };
+  }
+};
+
 // Objeto principal del servicio de autenticación
 export const authService = {
   login,
@@ -251,6 +324,12 @@ export const authService = {
   setToken,
   isAuthenticated,
   getDashboard,
+  getDashboardResumen,
+  getStockBajo,
+  getComprasRecientes,
+  getVentasMensuales,
+  getStockDistribucion,
+  getUltimosMovimientos,
 };
 
 // Exportación por defecto
