@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -87,7 +87,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
   
   // Configuración del QR
   const [currentConfig, setCurrentConfig] = useState<QRConfig>({
-    size: 256,
+    size: 400,
     level: 'M',
     fgColor: '#000000',
     bgColor: '#FFFFFF',
@@ -119,64 +119,78 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
     setGeneratedQRs(prev => [newQR, ...prev]);
   };
 
-  // Función de descarga mejorada (del segundo componente)
+  // FUNCIÓN DE DESCARGA MEJORADA - APLICANDO LA LÓGICA DEL QRGenerator
   const downloadQR = async (qr: GeneratedQR) => {
     setIsGenerating(true);
     try {
-      // Buscar el SVG específico de este QR
-      const qrCard = document.querySelector(`[data-qr-id="${qr.id}"]`);
-      const svg = qrCard?.querySelector('svg');
+      // CREAR UN NUEVO QR IDÉNTICO PERO EN ALTA RESOLUCIÓN
+      const downloadSize = 1200;
       
-      if (!svg) {
-        console.error('SVG no encontrado');
-        return;
+      // Crear un contenedor temporal para generar el QR en alta resolución
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '-9999px';
+      document.body.appendChild(tempContainer);
+
+      // Importar React DOM para renderizar
+      const { createRoot } = await import('react-dom/client');
+      const root = createRoot(tempContainer);
+
+      // Renderizar el QR exactamente igual pero en alta resolución
+      await new Promise<void>((resolve) => {
+        root.render(
+          <QRCodeSVG
+            value={qr.url}
+            size={downloadSize} // Tamaño grande para descarga
+            level={qr.config.level}
+            fgColor={qr.config.fgColor}
+            bgColor={qr.config.bgColor}
+            includeMargin={qr.config.includeMargin}
+          />
+        );
+        
+        // Esperar a que se renderice
+        setTimeout(() => {
+          resolve();
+        }, 100);
+      });
+
+      // Obtener el SVG recién generado
+      const newSvg = tempContainer.querySelector('svg');
+      if (!newSvg) {
+        throw new Error('No se pudo generar el SVG de alta resolución');
       }
 
-      // Crear un canvas temporal para la conversión
+      // Crear canvas para la conversión
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        console.error('No se pudo crear el contexto del canvas');
-        return;
+        throw new Error('No se pudo crear el contexto del canvas');
       }
 
-      // Configurar el canvas con alta resolución
-      const downloadSize = 512; // Tamaño fijo para descarga de alta calidad
       canvas.width = downloadSize;
       canvas.height = downloadSize;
 
-      // Configurar el contexto para renderizado nítido
+      // Configurar para máxima calidad
       ctx.imageSmoothingEnabled = false;
-      ctx.fillStyle = qr.config.bgColor;
-      ctx.fillRect(0, 0, downloadSize, downloadSize);
 
-      // Crear un SVG limpio con las dimensiones correctas
-      const cleanSvg = `
-        <svg xmlns="http://www.w3.org/2000/svg"
-             width="${downloadSize}"
-             height="${downloadSize}"
-             viewBox="0 0 ${downloadSize} ${downloadSize}"
-             style="background-color: ${qr.config.bgColor};">
-          ${svg.innerHTML}
-        </svg>
-      `;
-
-      // Convertir a blob y crear URL
-      const svgBlob = new Blob([cleanSvg], { type: 'image/svg+xml;charset=utf-8' });
+      // Convertir el SVG a string
+      const svgData = new XMLSerializer().serializeToString(newSvg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
       const url = URL.createObjectURL(svgBlob);
 
-      // Crear imagen y renderizar en canvas
+      // Crear imagen y renderizar
       const img = new Image();
       img.crossOrigin = 'anonymous';
       
       img.onload = () => {
         try {
-          // Limpiar canvas y dibujar fondo
-          ctx.clearRect(0, 0, downloadSize, downloadSize);
+          // Dibujar fondo
           ctx.fillStyle = qr.config.bgColor;
           ctx.fillRect(0, 0, downloadSize, downloadSize);
 
-          // Dibujar la imagen del QR
+          // Dibujar el QR
           ctx.drawImage(img, 0, 0, downloadSize, downloadSize);
 
           // Convertir a PNG y descargar
@@ -187,32 +201,34 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
               link.href = downloadUrl;
               link.download = `qr-${qr.menuId}-${qr.menuName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.png`;
 
-              // Agregar al DOM temporalmente para hacer click
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
 
-              // Limpiar URLs
               URL.revokeObjectURL(downloadUrl);
               URL.revokeObjectURL(url);
               
-              console.log(`✅ QR descargado: ${link.download}`);
-            } else {
-              console.error('Error al crear el blob PNG');
+              console.log(`✅ QR idéntico descargado: ${link.download} (${downloadSize}x${downloadSize}px)`);
             }
           }, 'image/png', 1.0);
+
+          // Limpiar el contenedor temporal
+          document.body.removeChild(tempContainer);
         } catch (error) {
-          console.error('Error al dibujar en canvas:', error);
+          console.error('Error al procesar imagen:', error);
           URL.revokeObjectURL(url);
+          document.body.removeChild(tempContainer);
         }
       };
 
-      img.onerror = (error) => {
-        console.error('Error al cargar imagen SVG:', error);
+      img.onerror = () => {
         URL.revokeObjectURL(url);
+        document.body.removeChild(tempContainer);
+        throw new Error('Error al cargar la imagen');
       };
 
       img.src = url;
+
     } catch (error) {
       console.error('Error general en downloadQR:', error);
     } finally {
@@ -247,35 +263,57 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
     }
   };
 
-  // Función de impresión mejorada (del segundo componente)
-  const printQR = (qr: GeneratedQR) => {
+  // FUNCIÓN DE IMPRESIÓN MEJORADA - APLICANDO LA LÓGICA DEL QRGenerator
+  const printQR = async (qr: GeneratedQR) => {
     setIsGenerating(true);
     try {
-      // Buscar el SVG específico de este QR
-      const qrCard = document.querySelector(`[data-qr-id="${qr.id}"]`);
-      const svg = qrCard?.querySelector('svg');
+      // Crear SVG optimizado para impresión usando la misma lógica
+      const printSize = 600;
       
-      if (!svg) {
-        console.error('SVG no encontrado para imprimir');
-        return;
+      // Crear un contenedor temporal para generar el QR de impresión
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '-9999px';
+      document.body.appendChild(tempContainer);
+
+      // Importar React DOM para renderizar
+      const { createRoot } = await import('react-dom/client');
+      const root = createRoot(tempContainer);
+
+      // Renderizar el QR para impresión
+      await new Promise<void>((resolve) => {
+        root.render(
+          <QRCodeSVG
+            value={qr.url}
+            size={printSize}
+            level="H" // Máxima corrección para impresión
+            fgColor={qr.config.fgColor}
+            bgColor={qr.config.bgColor}
+            includeMargin={true}
+          />
+        );
+        
+        setTimeout(() => {
+          resolve();
+        }, 100);
+      });
+
+      // Obtener el SVG generado
+      const printSvg = tempContainer.querySelector('svg');
+      if (!printSvg) {
+        throw new Error('No se pudo generar el SVG para impresión');
       }
 
-      // Crear SVG optimizado para impresión
-      const printSize = 400;
-      const printSvg = `
-        <svg xmlns="http://www.w3.org/2000/svg"
-             width="${printSize}"
-             height="${printSize}"
-             viewBox="0 0 ${printSize} ${printSize}"
-             style="background-color: ${qr.config.bgColor};">
-          ${svg.innerHTML}
-        </svg>
-      `;
+      // Convertir a string para insertar en HTML
+      const svgString = new XMLSerializer().serializeToString(printSvg);
+      
+      // Limpiar contenedor temporal
+      document.body.removeChild(tempContainer);
 
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
-        console.error('No se pudo abrir ventana de impresión');
-        return;
+        throw new Error('No se pudo abrir ventana de impresión');
       }
 
       const htmlContent = `
@@ -328,7 +366,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
                 border-radius: 20px;
                 margin: 40px auto;
                 background: ${qr.config.bgColor};
-                max-width: 500px;
+                max-width: 700px;
                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
               }
               
@@ -389,6 +427,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
                   background: ${qr.config.bgColor} !important;
                   -webkit-print-color-adjust: exact !important;
                   print-color-adjust: exact !important;
+                  max-width: none;
                 }
                 
                 .qr-container svg {
@@ -412,7 +451,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
               </div>
               
               <div class="qr-container">
-                ${printSvg}
+                ${svgString}
               </div>
               
               <div class="instructions">
@@ -462,7 +501,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
 
   const resetToDefaults = () => {
     setCurrentConfig({
-      size: 256,
+      size: 400,
       level: 'M',
       fgColor: '#000000',
       bgColor: '#FFFFFF',
@@ -759,7 +798,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
                             >
                               <QRCodeSVG
                                 value={qr.url}
-                                size={120}
+                                size={200}
                                 level={qr.config.level}
                                 fgColor={qr.config.fgColor}
                                 bgColor={qr.config.bgColor}
@@ -784,6 +823,9 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
                                 }}
                               >
                                 {qr.url}
+                              
+
+
                               </Typography>
                             </Box>
 
@@ -822,8 +864,6 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
                                     '&:hover': { backgroundColor: 'rgba(212, 175, 55, 0.1)' }
                                   }}
                                 >
-
-
                                   <DownloadIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
@@ -950,14 +990,14 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
               <Slider
                 value={currentConfig.size}
                 onChange={(_, value) => setCurrentConfig(prev => ({ ...prev, size: value as number }))}
-                min={128}
-                max={512}
-                step={32}
+                min={200}
+                max={800}
+                step={50}
                 marks={[
-                  { value: 128, label: '128px' },
-                  { value: 256, label: '256px' },
-                  { value: 384, label: '384px' },
-                  { value: 512, label: '512px' },
+                  { value: 200, label: '200px' },
+                  { value: 400, label: '400px' },
+                  { value: 600, label: '600px' },
+                  { value: 800, label: '800px' },
                 ]}
                 sx={{
                   '& .MuiSlider-thumb': {
@@ -1132,7 +1172,7 @@ const QRMenuGenerator: React.FC<QRMenuGeneratorProps> = ({ menus, onBack }) => {
               >
                 <QRCodeSVG
                   value={selectedMenu ? `${baseUrl}/menu?id=${selectedMenu.id}` : 'https://ejemplo.com/menu'}
-                  size={80}
+                  size={120}
                   level={currentConfig.level}
                   fgColor={currentConfig.fgColor}
                   bgColor={currentConfig.bgColor}
