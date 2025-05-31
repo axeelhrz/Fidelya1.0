@@ -430,6 +430,56 @@ def obtener_productos(current_user_id):
         if 'connection' in locals() and connection.is_connected():
             connection.close()
 
+@app.route('/api/inventario/<int:producto_id>', methods=['GET'])
+@jwt_required
+def obtener_producto(current_user_id, producto_id):
+    """Obtiene un producto específico"""
+    try:
+        print(f"📦 Obteniendo producto {producto_id}")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT id, nombre, categoria, proveedor, unidad, precio_unitario, 
+                   stock_actual, stock_minimo, creado
+            FROM productos 
+            WHERE id = %s
+        """, (producto_id,))
+        
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({'message': 'Producto no encontrado'}), 404
+        
+        producto = {
+            'id': row[0],
+            'nombre': row[1],
+            'categoria': row[2],
+            'proveedor': row[3] or '',
+            'unidad': row[4],
+            'precio_unitario': float(row[5]) if row[5] else 0.0,
+            'stock_actual': row[6],
+            'stock_minimo': row[7],
+            'creado': row[8].isoformat() if row[8] else None,
+            'stock_bajo': row[6] <= row[7]
+        }
+        
+        print(f"✅ Producto obtenido: {producto['nombre']}")
+        response = jsonify(producto)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        print(f"❌ Error obteniendo producto: {e}")
+        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'connection' in locals() and connection.is_connected():
+            connection.close()
+
 @app.route('/api/inventario', methods=['POST'])
 @jwt_required
 def crear_producto(current_user_id):
@@ -454,7 +504,7 @@ def crear_producto(current_user_id):
                 return jsonify({'message': 'El precio no puede ser negativo'}), 400
         except (ValueError, TypeError):
             return jsonify({'message': 'Precio inválido'}), 400
-        
+            
         connection = get_db_connection()
         if not connection:
             return jsonify({'message': 'Error de conexión a la base de datos'}), 500
@@ -480,6 +530,7 @@ def crear_producto(current_user_id):
         connection.commit()
         
         print(f"✅ Producto creado: {data['nombre']} (ID: {producto_id})")
+        
         response = jsonify({
             'message': 'Producto creado exitosamente',
             'id': producto_id
@@ -489,6 +540,121 @@ def crear_producto(current_user_id):
 
     except Exception as e:
         print(f"❌ Error creando producto: {e}")
+        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'connection' in locals() and connection.is_connected():
+            connection.close()
+
+@app.route('/api/inventario/<int:producto_id>', methods=['PUT'])
+@jwt_required
+def actualizar_producto(current_user_id, producto_id):
+    """Actualiza un producto existente"""
+    try:
+        data = request.get_json()
+        print(f"📦 Actualizando producto {producto_id}: {data}")
+        
+        if not data:
+            return jsonify({'message': 'No se recibieron datos'}), 400
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Verificar que el producto existe
+        cursor.execute("SELECT id FROM productos WHERE id = %s", (producto_id,))
+        if not cursor.fetchone():
+            return jsonify({'message': 'Producto no encontrado'}), 404
+        
+        # Validaciones
+        if 'nombre' in data and (not data['nombre'] or len(data['nombre'].strip()) < 2):
+            return jsonify({'message': 'El nombre debe tener al menos 2 caracteres'}), 400
+            
+        if 'precio_unitario' in data:
+            try:
+                precio = float(data['precio_unitario'])
+                if precio < 0:
+                    return jsonify({'message': 'El precio no puede ser negativo'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'message': 'El precio debe ser un número válido'}), 400
+            
+        if 'categoria' in data and data['categoria'] not in ['frutas', 'verduras', 'otros']:
+            return jsonify({'message': 'Categoría inválida'}), 400
+            
+        if 'unidad' in data and data['unidad'] not in ['kg', 'unidad', 'caja']:
+            return jsonify({'message': 'Unidad inválida'}), 400
+        
+        # Construir consulta de actualización dinámicamente
+        campos_actualizables = ['nombre', 'categoria', 'proveedor', 'unidad', 
+                              'precio_unitario', 'stock_actual', 'stock_minimo']
+        
+        campos_update = []
+        valores = []
+        
+        for campo in campos_actualizables:
+            if campo in data:
+                campos_update.append(f"{campo} = %s")
+                if campo in ['stock_actual', 'stock_minimo']:
+                    valores.append(int(data[campo]))
+                else:
+                    valores.append(data[campo].strip() if isinstance(data[campo], str) else data[campo])
+        
+        if not campos_update:
+            return jsonify({'message': 'No hay campos para actualizar'}), 400
+        
+        valores.append(producto_id)
+        
+        query = f"UPDATE productos SET {', '.join(campos_update)} WHERE id = %s"
+        cursor.execute(query, valores)
+        connection.commit()
+        
+        print(f"✅ Producto {producto_id} actualizado exitosamente")
+        response = jsonify({'message': 'Producto actualizado exitosamente'})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        print(f"❌ Error actualizando producto: {e}")
+        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'connection' in locals() and connection.is_connected():
+            connection.close()
+
+@app.route('/api/inventario/<int:producto_id>', methods=['DELETE'])
+@jwt_required
+def eliminar_producto(current_user_id, producto_id):
+    """Elimina un producto"""
+    try:
+        print(f"📦 Eliminando producto {producto_id}")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Verificar que el producto existe
+        cursor.execute("SELECT nombre FROM productos WHERE id = %s", (producto_id,))
+        producto = cursor.fetchone()
+        if not producto:
+            return jsonify({'message': 'Producto no encontrado'}), 404
+        
+        # Eliminar producto
+        cursor.execute("DELETE FROM productos WHERE id = %s", (producto_id,))
+        connection.commit()
+        
+        print(f"✅ Producto {producto_id} ({producto[0]}) eliminado exitosamente")
+        response = jsonify({'message': 'Producto eliminado exitosamente'})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        print(f"❌ Error eliminando producto: {e}")
         return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
     finally:
         if 'cursor' in locals():
@@ -577,23 +743,18 @@ def test_db():
         if test_database():
             response = jsonify({'status': 'OK', 'message': 'Base de datos funcionando correctamente'})
         else:
-            response = jsonify({'status': 'ERROR', 'message': 'Problemas con la base de datos'})
-        
+            response = jsonify({'status': 'ERROR', 'message': 'Error conectando a la base de datos'})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
     except Exception as e:
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-    except Exception as e:
-        response = jsonify({'status': 'ERROR', 'message': f'Error: {str(e)}'})
+        response = jsonify({'status': 'ERROR', 'message': str(e)})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 500
 
 if __name__ == '__main__':
     print("🚀 Iniciando Frutería Nina Backend (Versión Simple)...")
+    print("🚀 Iniciando Frutería Nina Backend (Versión Simple)...")
     print("=" * 60)
-    print("=" * 60)
-    
     if init_simple_database():
         print("=" * 60)
         print("✅ ¡Sistema listo!")
@@ -604,7 +765,10 @@ if __name__ == '__main__':
         print("   - POST /api/register") 
         print("   - GET /api/verify-token")
         print("   - GET /api/inventario")
+        print("   - GET /api/inventario/<id>")
         print("   - POST /api/inventario")
+        print("   - PUT /api/inventario/<id>")
+        print("   - DELETE /api/inventario/<id>")
         print("   - GET /api/inventario/stats")
         print("   - GET /api/health")
         print("   - GET /api/test-db")
