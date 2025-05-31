@@ -121,65 +121,67 @@ const LoginForm = ({ onLogin, loading, error }: {
         >
           <Box
             sx={{ 
-              display: 'inline-flex',
+              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               p: 2,
               mb: 3,
               border: '2px solid #D4AF37',
               background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%)',
-            }}
-          >
+            mx: 'auto',
+              width: 'fit-content'
+          }}
+        >
             <AdminPanelSettings sx={{ color: '#D4AF37', fontSize: 40 }} />
-          </Box>
-          
+      </Box>
+
           <Typography 
             variant={isMobile ? "h5" : "h4"}
             sx={{ 
               fontWeight: 700,
-              color: '#F8F8F8',
+                    color: '#F8F8F8',
               mb: 1,
-              letterSpacing: '0.02em'
+              letterSpacing: '0.02em',
+              textAlign: 'center'
             }}
-          >
+            >
             Panel de Administración
-          </Typography>
-          
+                </Typography>
           <Typography 
             variant="body1" 
             sx={{ 
               color: '#B8B8B8',
-              mb: 4
+              mb: 4,
+              textAlign: 'center'
             }}
-          >
+            >
             Ingresa la contraseña para acceder
-          </Typography>
+                </Typography>
 
           <form onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
+              <TextField
+                fullWidth
               type="password"
               label="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
+                required
               disabled={loading}
               sx={{
                 mb: 3,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 0,
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                },
-              }}
-            />
-
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 0,
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  },
+                }}
+              />
             {error && (
               <Alert severity="error" sx={{ mb: 3, borderRadius: 0 }}>
                 {error}
               </Alert>
             )}
 
-            <Button
+            <Button 
               type="submit"
               variant="contained"
               fullWidth
@@ -190,11 +192,11 @@ const LoginForm = ({ onLogin, loading, error }: {
                 py: 1.5,
                 borderRadius: 0,
                 background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
-                '&:hover': {
+              '&:hover': {
                   background: 'linear-gradient(135deg, #E8C547 0%, #D4AF37 100%)',
-                },
-              }}
-            >
+              },
+            }}
+          >
               {loading ? 'Verificando...' : 'Acceder'}
             </Button>
           </form>
@@ -249,7 +251,7 @@ export default function AdminPage() {
   React.useEffect(() => {
     if (menus.length > 0 && !selectedMenuId) {
       setSelectedMenuId(menus[0].id);
-    }
+}
   }, [menus, selectedMenuId]);
 
   const handleLogin = async (password: string) => {
