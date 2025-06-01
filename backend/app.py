@@ -2019,7 +2019,6 @@ def conflict(error):
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 409
 
-def init_database():
     print("🚀 Iniciando Frutería Nina Backend...")
     print("=" * 60)
     print("=" * 60)
