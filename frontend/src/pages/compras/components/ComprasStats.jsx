@@ -1,74 +1,70 @@
 import React from 'react';
+import {
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Skeleton,
+  useTheme,
+  alpha,
+} from '@mui/material';
+import {
+  ShoppingCart as ShoppingCartIcon,
+  TrendingUp as TrendingUpIcon,
+  Store as StoreIcon,
+  Inventory as InventoryIcon,
+} from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { alpha, styled } from '@mui/material/styles';
-import { Typography, Box, Grid, Card, CardContent, Skeleton } from '@mui/material';
-import { ShoppingCartIcon, TrendingUpIcon, InventoryIcon, StoreIcon } from '@mui/icons-material';
-import { formatCurrency } from '../utils';
 
-const StatCard = ({ title, value, subtitle, icon, color, delay }) => {
-  return (
+const ComprasStats = ({ estadisticas, loading }) => {
+  const theme = useTheme();
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-UY', {
+      style: 'currency',
+      currency: 'UYU',
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const StatCard = ({ title, value, subtitle, icon, color, delay = 0 }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
     >
-      <Box
+      <Card
         sx={{
-          p: 1.5,
-          borderRadius: 2,
-          backgroundColor: alpha(color, 0.1),
-          color: color,
-          mr: 2,
+          height: '100%',
+          borderRadius: 3,
+          boxShadow: theme.shadows[4],
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: theme.shadows[8],
+          },
         }}
       >
-        {icon}
-      </Box>
-      <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-        {title}
-      </Typography>
-      
-      {loading ? (
-        <Box>
-          <Skeleton variant="text" width="60%" height={40} />
-          <Skeleton variant="text" width="80%" height={20} />
-        </Box>
-      ) : (
-        <Box>
-          <Typography variant="h4" component="div" sx={{ fontWeight: 700, mb: 1 }}>
-            {value}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {subtitle}
-          </Typography>
-        </Box>
-      )}
-    </motion.div>
-  );
-};
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Box
+              sx={{
+                
 
-const ComprasStats = ({ estadisticas, loading, theme }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <Card>
-        <CardContent>
-          <Box
-            sx={{
-              p: 1.5,
-              borderRadius: 2,
-              backgroundColor: alpha(color, 0.1),
-              color: color,
-              mr: 2,
-            }}
-          >
-            {icon}
+                p: 1.5,
+                borderRadius: 2,
+                backgroundColor: alpha(color, 0.1),
+                color: color,
+                mr: 2,
+              }}
+            >
+              {icon}
+            </Box>
+            <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
+              {title}
+            </Typography>
           </Box>
-          <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-            {title}
-          </Typography>
           
           {loading ? (
             <Box>
