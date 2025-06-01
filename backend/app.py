@@ -91,7 +91,7 @@ def init_database():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
         
-        # Crear tabla compras (actualizada según especificaciones)
+        # AGREGAR: Crear tabla compras (actualizada según especificaciones)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS compras (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -108,7 +108,7 @@ def init_database():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
         
-        # Crear tabla detalle_compras (nueva según especificaciones)
+        # AGREGAR: Crear tabla detalle_compras (nueva según especificaciones)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS detalle_compras (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -152,6 +152,10 @@ def init_database():
                 INDEX idx_fecha (fecha)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
+        
+        # CAMBIAR: Actualizar tabla movimientos para eliminar la tabla compras antigua
+        cursor.execute("DROP TABLE IF EXISTS compras_old")
+        cursor.execute("RENAME TABLE compras TO compras_old") if False else None  # Solo si existe tabla antigua
         
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS movimientos (
