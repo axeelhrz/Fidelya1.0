@@ -14,6 +14,7 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import InventoryPage from './pages/inventory';
+import ComprasPage from './pages/compras';
 
 // Componente para manejar la navegación de autenticación
 const AuthNavigator = () => {
@@ -64,6 +65,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <InventoryPage />
+                </ProtectedRoute>
+}
+            />
+
+            <Route
+              path="/compras"
+              element={
+                <ProtectedRoute>
+                  <ComprasPage />
                 </ProtectedRoute>
 }
             />
