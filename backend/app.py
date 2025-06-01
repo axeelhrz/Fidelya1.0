@@ -58,9 +58,15 @@ def init_database():
         
         print("✅ Conectado a MySQL exitosamente")
         
-        # Crear base de datos si no existe
-        cursor.execute("CREATE DATABASE IF NOT EXISTS fruteria_nina CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
-        print("✅ Base de datos 'fruteria_nina' creada o ya existe")
+        # Crear base de datos si no existe - CORREGIDO
+        try:
+            cursor.execute("CREATE DATABASE IF NOT EXISTS fruteria_nina CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+            print("✅ Base de datos 'fruteria_nina' creada o ya existe")
+        except mysql.connector.Error as db_err:
+            if db_err.errno == 1007:  # Database exists
+                print("✅ Base de datos 'fruteria_nina' ya existe")
+            else:
+                print(f"⚠️ Error creando base de datos: {db_err}")
         
         # Usar la base de datos
         cursor.execute("USE fruteria_nina")
@@ -196,6 +202,8 @@ def init_database():
                 productos_ejemplo
             )
             print("✅ Productos de ejemplo insertados")
+        else:
+            print("✅ Productos ya existen en la base de datos")
         
         # Crear usuario administrador si no existe
         cursor.execute("SELECT COUNT(*) FROM usuarios")
@@ -206,45 +214,55 @@ def init_database():
                 ('Administrador', 'admin@fruteria.com', hashed_password, 'admin')
             )
             print("✅ Usuario administrador creado")
-        
-        # Insertar ventas de ejemplo
-        cursor.execute("SELECT COUNT(*) FROM ventas")
-        if cursor.fetchone()[0] == 0:
-            ventas_ejemplo = [
-                (1250.50, '2024-01-15 10:30:00', 1),
-                (890.00, '2024-01-15 14:20:00', 1),
-                (2100.75, '2024-01-14 16:45:00', 1),
-                (1580.25, '2024-01-14 11:15:00', 1),
-                (950.00, '2024-01-13 09:30:00', 1)
-            ]
-            cursor.executemany(
-                "INSERT INTO ventas (total, fecha, usuario_id) VALUES (%s, %s, %s)",
-                ventas_ejemplo
-            )
-            print("✅ Ventas de ejemplo insertadas")
-        
-        # Insertar movimientos de ejemplo
-        cursor.execute("SELECT COUNT(*) FROM movimientos")
-        if cursor.fetchone()[0] == 0:
-            movimientos_ejemplo = [
-                ('venta', 'Venta por $1800', '2024-01-15 15:30:00'),
-                ('compra', 'Compra por $2500', '2024-01-15 10:12:00'),
-                ('venta', 'Venta por $950', '2024-01-15 09:45:00'),
-                ('ajuste', 'Ajuste de inventario', '2024-01-14 18:00:00'),
-                ('venta', 'Venta por $1200', '2024-01-14 14:20:00')
-            ]
-            cursor.executemany(
-                "INSERT INTO movimientos (tipo, detalle, fecha) VALUES (%s, %s, %s)",
-                movimientos_ejemplo
-            )
-            print("✅ Movimientos de ejemplo insertados")
-        
-        connection.commit()
-        print("✅ Base de datos inicializada correctamente")
-        return True
+        else:
+            print("✅ Usuario administrador ya existe")
+            
+            # Insertar ventas de ejemplo
+            cursor.execute("SELECT COUNT(*) FROM ventas")
+            if cursor.fetchone()[0] == 0:
+                ventas_ejemplo = [
+                    (1250.50, '2024-01-15 10:30:00', 1),
+                    (890.00, '2024-01-15 14:20:00', 1),
+                    (2100.75, '2024-01-14 16:45:00', 1),
+                    (1580.25, '2024-01-14 11:15:00', 1),
+                    (950.00, '2024-01-13 09:30:00', 1)
+                ]
+                cursor.executemany(
+                    "INSERT INTO ventas (total, fecha, usuario_id) VALUES (%s, %s, %s)",
+                    ventas_ejemplo
+                )
+                print("✅ Ventas de ejemplo insertadas")
+            else:
+                print("✅ Ventas ya existen en la base de datos")
+            
+            # Insertar movimientos de ejemplo
+            cursor.execute("SELECT COUNT(*) FROM movimientos")
+            if cursor.fetchone()[0] == 0:
+                movimientos_ejemplo = [
+                    ('venta', 'Venta por $1800', '2024-01-15 15:30:00'),
+                    ('compra', 'Compra por $2500', '2024-01-15 10:12:00'),
+                    ('venta', 'Venta por $950', '2024-01-15 09:45:00'),
+                    ('ajuste', 'Ajuste de inventario', '2024-01-14 18:00:00'),
+                    ('venta', 'Venta por $1200', '2024-01-14 14:20:00')
+                ]
+                cursor.executemany(
+                    "INSERT INTO movimientos (tipo, detalle, fecha) VALUES (%s, %s, %s)",
+                    movimientos_ejemplo
+                )
+                print("✅ Movimientos de ejemplo insertados")
+            else:
+                print("✅ Movimientos ya existen en la base de datos")
+            
+            connection.commit()
+            print("✅ Base de datos inicializada correctamente")
+            return True
         
     except mysql.connector.Error as err:
-        print(f"❌ Error inicializando base de datos: {err}")
+        print(f"❌ Error de MySQL: {err}")
+        # No retornar False inmediatamente, intentar continuar
+        if err.errno == 1007:  # Database exists
+            print("✅ Continuando con base de datos existente...")
+            return True
         return False
     except Exception as e:
         print(f"❌ Error inesperado: {e}")
