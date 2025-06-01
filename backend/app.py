@@ -21,7 +21,7 @@ CORS(app,
 app.config['SECRET_KEY'] = 'tu_clave_secreta_muy_segura_para_jwt'
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(hours=24)
 
-# Configuración de la base de datos - CORREGIDA
+# Configuración de la base de datos
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'fruteria_user',
@@ -58,7 +58,7 @@ def init_database():
         
         print("✅ Conectado a MySQL exitosamente")
         
-        # Crear base de datos si no existe - CORREGIDO
+        # Crear base de datos si no existe
         try:
             cursor.execute("CREATE DATABASE IF NOT EXISTS fruteria_nina CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
             print("✅ Base de datos 'fruteria_nina' creada o ya existe")
@@ -83,6 +83,23 @@ def init_database():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
         print("✅ Tabla usuarios creada")
+        
+        # Crear tabla clientes
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS clientes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                correo VARCHAR(100) UNIQUE,
+                telefono VARCHAR(20),
+                direccion VARCHAR(255),
+                notas TEXT,
+                creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_nombre (nombre),
+                INDEX idx_correo (correo),
+                INDEX idx_telefono (telefono)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+        print("✅ Tabla clientes creada")
         
         # Crear tabla productos
         cursor.execute("""
@@ -216,50 +233,67 @@ def init_database():
             print("✅ Usuario administrador creado")
         else:
             print("✅ Usuario administrador ya existe")
+        
+        # Insertar clientes de ejemplo si no existen
+        cursor.execute("SELECT COUNT(*) FROM clientes")
+        if cursor.fetchone()[0] == 0:
+            clientes_ejemplo = [
+                ('María González', 'maria.gonzalez@email.com', '099123456', 'Av. 18 de Julio 1234', 'Cliente frecuente, prefiere frutas orgánicas'),
+                ('Juan Pérez', 'juan.perez@email.com', '098765432', 'Bvar. Artigas 567', 'Compra para su restaurante'),
+                ('Ana Rodríguez', 'ana.rodriguez@email.com', '097654321', 'Pocitos 890', 'Cliente mayorista'),
+                ('Carlos Silva', 'carlos.silva@email.com', '096543210', 'Cordón 345', 'Prefiere verduras de estación'),
+                ('Laura Martínez', 'laura.martinez@email.com', '095432109', 'Punta Carretas 678', 'Cliente VIP')
+            ]
+            cursor.executemany(
+                "INSERT INTO clientes (nombre, correo, telefono, direccion, notas) VALUES (%s, %s, %s, %s, %s)",
+                clientes_ejemplo
+            )
+            print("✅ Clientes de ejemplo insertados")
+        else:
+            print("✅ Clientes ya existen en la base de datos")
             
-            # Insertar ventas de ejemplo
-            cursor.execute("SELECT COUNT(*) FROM ventas")
-            if cursor.fetchone()[0] == 0:
-                ventas_ejemplo = [
-                    (1250.50, '2024-01-15 10:30:00', 1),
-                    (890.00, '2024-01-15 14:20:00', 1),
-                    (2100.75, '2024-01-14 16:45:00', 1),
-                    (1580.25, '2024-01-14 11:15:00', 1),
-                    (950.00, '2024-01-13 09:30:00', 1)
-                ]
-                cursor.executemany(
-                    "INSERT INTO ventas (total, fecha, usuario_id) VALUES (%s, %s, %s)",
-                    ventas_ejemplo
-                )
-                print("✅ Ventas de ejemplo insertadas")
-            else:
-                print("✅ Ventas ya existen en la base de datos")
-            
-            # Insertar movimientos de ejemplo
-            cursor.execute("SELECT COUNT(*) FROM movimientos")
-            if cursor.fetchone()[0] == 0:
-                movimientos_ejemplo = [
-                    ('venta', 'Venta por $1800', '2024-01-15 15:30:00'),
-                    ('compra', 'Compra por $2500', '2024-01-15 10:12:00'),
-                    ('venta', 'Venta por $950', '2024-01-15 09:45:00'),
-                    ('ajuste', 'Ajuste de inventario', '2024-01-14 18:00:00'),
-                    ('venta', 'Venta por $1200', '2024-01-14 14:20:00')
-                ]
-                cursor.executemany(
-                    "INSERT INTO movimientos (tipo, detalle, fecha) VALUES (%s, %s, %s)",
-                    movimientos_ejemplo
-                )
-                print("✅ Movimientos de ejemplo insertados")
-            else:
-                print("✅ Movimientos ya existen en la base de datos")
-            
-            connection.commit()
-            print("✅ Base de datos inicializada correctamente")
-            return True
+        # Insertar ventas de ejemplo
+        cursor.execute("SELECT COUNT(*) FROM ventas")
+        if cursor.fetchone()[0] == 0:
+            ventas_ejemplo = [
+                (1250.50, '2024-01-15 10:30:00', 1),
+                (890.00, '2024-01-15 14:20:00', 1),
+                (2100.75, '2024-01-14 16:45:00', 1),
+                (1580.25, '2024-01-14 11:15:00', 1),
+                (950.00, '2024-01-13 09:30:00', 1)
+            ]
+            cursor.executemany(
+                "INSERT INTO ventas (total, fecha, usuario_id) VALUES (%s, %s, %s)",
+                ventas_ejemplo
+            )
+            print("✅ Ventas de ejemplo insertadas")
+        else:
+            print("✅ Ventas ya existen en la base de datos")
+        
+        # Insertar movimientos de ejemplo
+        cursor.execute("SELECT COUNT(*) FROM movimientos")
+        if cursor.fetchone()[0] == 0:
+            movimientos_ejemplo = [
+                ('venta', 'Venta por $1800', '2024-01-15 15:30:00'),
+                ('compra', 'Compra por $2500', '2024-01-15 10:12:00'),
+                ('venta', 'Venta por $950', '2024-01-15 09:45:00'),
+                ('ajuste', 'Ajuste de inventario', '2024-01-14 18:00:00'),
+                ('venta', 'Venta por $1200', '2024-01-14 14:20:00')
+            ]
+            cursor.executemany(
+                "INSERT INTO movimientos (tipo, detalle, fecha) VALUES (%s, %s, %s)",
+                movimientos_ejemplo
+            )
+            print("✅ Movimientos de ejemplo insertados")
+        else:
+            print("✅ Movimientos ya existen en la base de datos")
+        
+        connection.commit()
+        print("✅ Base de datos inicializada correctamente")
+        return True
         
     except mysql.connector.Error as err:
         print(f"❌ Error de MySQL: {err}")
-        # No retornar False inmediatamente, intentar continuar
         if err.errno == 1007:  # Database exists
             print("✅ Continuando con base de datos existente...")
             return True
@@ -486,6 +520,397 @@ def verify_token(current_user_id):
     except Exception as e:
         print(f"Error verificando token: {e}")
         return jsonify({'valid': False, 'message': 'Error interno'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+# ==================== ENDPOINTS DE CLIENTES ====================
+
+@app.route('/api/clientes', methods=['GET'])
+@jwt_required
+def obtener_clientes(current_user_id):
+    """Obtiene todos los clientes con filtros opcionales"""
+    connection = None
+    cursor = None
+    
+    try:
+        print(f"👥 Obteniendo clientes para usuario {current_user_id}")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Obtener parámetros de búsqueda
+        search = request.args.get('q', '').strip()
+        
+        # Construir consulta base
+        query = """
+            SELECT id, nombre, correo, telefono, direccion, notas, creado
+            FROM clientes
+        """
+        params = []
+        
+        # Agregar filtro de búsqueda si existe
+        if search:
+            query += """ 
+                WHERE (nombre LIKE %s OR correo LIKE %s OR telefono LIKE %s)
+            """
+            search_param = f"%{search}%"
+            params.extend([search_param, search_param, search_param])
+        
+        query += " ORDER BY nombre ASC"
+        
+        cursor.execute(query, params)
+        clientes = []
+        rows = cursor.fetchall()
+        
+        for row in rows:
+            cliente = {
+                'id': row[0],
+                'nombre': row[1] or '',
+                'correo': row[2] or '',
+                'telefono': row[3] or '',
+                'direccion': row[4] or '',
+                'notas': row[5] or '',
+                'creado': row[6].isoformat() if row[6] else None
+            }
+            clientes.append(cliente)
+        
+        print(f"✅ Clientes procesados exitosamente: {len(clientes)}")
+        response = jsonify(clientes)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        print(f"❌ Error obteniendo clientes: {e}")
+        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/clientes', methods=['POST'])
+@jwt_required
+def crear_cliente(current_user_id):
+    """Crea un nuevo cliente"""
+    connection = None
+    cursor = None
+    
+    try:
+        data = request.get_json()
+        print(f"👥 Creando cliente: {data}")
+        
+        if not data:
+            return jsonify({'message': 'No se recibieron datos'}), 400
+        
+        # Validaciones básicas
+        if not data.get('nombre') or len(data['nombre'].strip()) < 2:
+            return jsonify({'message': 'El nombre debe tener al menos 2 caracteres'}), 400
+        
+        # Validar email si se proporciona
+        correo = data.get('correo', '').strip()
+        if correo and '@' not in correo:
+            return jsonify({'message': 'El correo electrónico no es válido'}), 400
+        
+        # Validar teléfono si se proporciona
+        telefono = data.get('telefono', '').strip()
+        if telefono and len(telefono) < 8:
+            return jsonify({'message': 'El teléfono debe tener al menos 8 dígitos'}), 400
+            
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Verificar si el correo ya existe (solo si se proporciona)
+        if correo:
+            cursor.execute("SELECT id FROM clientes WHERE correo = %s", (correo,))
+            if cursor.fetchone():
+                return jsonify({'message': 'Ya existe un cliente con este correo electrónico'}), 409
+        
+        # Insertar cliente
+        cursor.execute("""
+            INSERT INTO clientes (nombre, correo, telefono, direccion, notas)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (
+            data['nombre'].strip(),
+            correo if correo else None,
+            telefono if telefono else None,
+            data.get('direccion', '').strip() if data.get('direccion') else None,
+            data.get('notas', '').strip() if data.get('notas') else None
+        ))
+        
+        cliente_id = cursor.lastrowid
+        connection.commit()
+        
+        print(f"✅ Cliente creado: {data['nombre']} (ID: {cliente_id})")
+        response = jsonify({
+            'message': 'Cliente creado exitosamente',
+            'id': cliente_id
+        })
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 201
+
+    except Exception as e:
+        print(f"❌ Error creando cliente: {e}")
+        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/clientes/<int:cliente_id>', methods=['PUT'])
+@jwt_required
+def actualizar_cliente(current_user_id, cliente_id):
+    """Actualiza un cliente existente"""
+    connection = None
+    cursor = None
+    
+    try:
+        data = request.get_json()
+        print(f"👥 Actualizando cliente {cliente_id}: {data}")
+        
+        if not data:
+            return jsonify({'message': 'No se recibieron datos'}), 400
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Verificar que el cliente existe
+        cursor.execute("SELECT id FROM clientes WHERE id = %s", (cliente_id,))
+        if not cursor.fetchone():
+            return jsonify({'message': 'Cliente no encontrado'}), 404
+        
+        # Validaciones
+        if 'nombre' in data and (not data['nombre'] or len(data['nombre'].strip()) < 2):
+            return jsonify({'message': 'El nombre debe tener al menos 2 caracteres'}), 400
+        
+        if 'correo' in data and data['correo']:
+            correo = data['correo'].strip()
+            if '@' not in correo:
+                return jsonify({'message': 'El correo electrónico no es válido'}), 400
+
+            # Verificar que el correo no esté en uso por otro cliente
+            cursor.execute("SELECT id FROM clientes WHERE correo = %s AND id != %s", (correo, cliente_id))
+            if cursor.fetchone():
+                return jsonify({'message': 'Ya existe otro cliente con este correo electrónico'}), 409
+        
+        if 'telefono' in data and data['telefono'] and len(data['telefono'].strip()) < 8:
+            return jsonify({'message': 'El teléfono debe tener al menos 8 dígitos'}), 400
+        
+        # Construir consulta de actualización dinámicamente
+        campos_actualizables = ['nombre', 'correo', 'telefono', 'direccion', 'notas']
+        campos_update = []
+        valores = []
+        
+        for campo in campos_actualizables:
+            if campo in data:
+                campos_update.append(f"{campo} = %s")
+                valor = data[campo].strip() if isinstance(data[campo], str) else data[campo]
+                valores.append(valor if valor else None)
+        
+        if not campos_update:
+            return jsonify({'message': 'No hay campos para actualizar'}), 400
+        
+        valores.append(cliente_id)
+        
+        query = f"UPDATE clientes SET {', '.join(campos_update)} WHERE id = %s"
+        cursor.execute(query, valores)
+        connection.commit()
+        
+        print(f"✅ Cliente {cliente_id} actualizado exitosamente")
+        response = jsonify({'message': 'Cliente actualizado exitosamente'})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        print(f"❌ Error actualizando cliente: {e}")
+        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/clientes/<int:cliente_id>', methods=['DELETE'])
+@jwt_required
+def eliminar_cliente(current_user_id, cliente_id):
+    """Elimina un cliente"""
+    connection = None
+    cursor = None
+    
+    try:
+        print(f"👥 Eliminando cliente {cliente_id}")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Verificar que el cliente existe
+        cursor.execute("SELECT nombre FROM clientes WHERE id = %s", (cliente_id,))
+        cliente = cursor.fetchone()
+        if not cliente:
+            return jsonify({'message': 'Cliente no encontrado'}), 404
+        
+        # Eliminar cliente
+        cursor.execute("DELETE FROM clientes WHERE id = %s", (cliente_id,))
+        connection.commit()
+        
+        print(f"✅ Cliente {cliente_id} ({cliente[0]}) eliminado exitosamente")
+        response = jsonify({'message': 'Cliente eliminado exitosamente'})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        print(f"❌ Error eliminando cliente: {e}")
+        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/clientes/search', methods=['GET'])
+@jwt_required
+def buscar_clientes(current_user_id):
+    """Busca clientes por nombre, correo o teléfono"""
+    connection = None
+    cursor = None
+    
+    try:
+        search_query = request.args.get('q', '').strip()
+        
+        if not search_query:
+            return jsonify({'message': 'Parámetro de búsqueda requerido'}), 400
+        
+        print(f"🔍 Buscando clientes con: {search_query}")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Búsqueda en nombre, correo y teléfono
+        query = """
+            SELECT id, nombre, correo, telefono, direccion, notas, creado
+            FROM clientes
+            WHERE nombre LIKE %s OR correo LIKE %s OR telefono LIKE %s
+            ORDER BY nombre ASC
+            LIMIT 50
+        """
+        
+        search_param = f"%{search_query}%"
+        cursor.execute(query, [search_param, search_param, search_param])
+        
+        clientes = []
+        rows = cursor.fetchall()
+        
+        for row in rows:
+            cliente = {
+                'id': row[0],
+                'nombre': row[1] or '',
+                'correo': row[2] or '',
+                'telefono': row[3] or '',
+                'direccion': row[4] or '',
+                'notas': row[5] or '',
+                'creado': row[6].isoformat() if row[6] else None
+            }
+            clientes.append(cliente)
+        
+        print(f"✅ Encontrados {len(clientes)} clientes")
+        response = jsonify(clientes)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        print(f"❌ Error buscando clientes: {e}")
+        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/clientes/estadisticas', methods=['GET'])
+@jwt_required
+def obtener_estadisticas_clientes(current_user_id):
+    """Obtiene estadísticas de clientes"""
+    connection = None
+    cursor = None
+    
+    try:
+        print(f"📊 Obteniendo estadísticas de clientes para usuario {current_user_id}")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Total de clientes
+        cursor.execute("SELECT COUNT(*) FROM clientes")
+        total_clientes = cursor.fetchone()[0] or 0
+        
+        # Clientes registrados este mes
+        cursor.execute("""
+            SELECT COUNT(*) FROM clientes 
+            WHERE YEAR(creado) = YEAR(CURDATE()) 
+            AND MONTH(creado) = MONTH(CURDATE())
+        """)
+        clientes_mes = cursor.fetchone()[0] or 0
+        
+        # Clientes con correo
+        cursor.execute("SELECT COUNT(*) FROM clientes WHERE correo IS NOT NULL AND correo != ''")
+        clientes_con_correo = cursor.fetchone()[0] or 0
+        
+        # Clientes con teléfono
+        cursor.execute("SELECT COUNT(*) FROM clientes WHERE telefono IS NOT NULL AND telefono != ''")
+        clientes_con_telefono = cursor.fetchone()[0] or 0
+        
+        # Último cliente registrado
+        cursor.execute("""
+            SELECT nombre, DATE_FORMAT(creado, '%Y-%m-%d') 
+            FROM clientes 
+            ORDER BY creado DESC 
+            LIMIT 1
+        """)
+        ultimo_cliente = cursor.fetchone()
+        ultimo_cliente_info = {
+            'nombre': ultimo_cliente[0] if ultimo_cliente else 'N/A',
+            'fecha': ultimo_cliente[1] if ultimo_cliente else 'N/A'
+        }
+        
+        estadisticas = {
+            'total_clientes': total_clientes,
+            'clientes_mes': clientes_mes,
+            'clientes_con_correo': clientes_con_correo,
+            'clientes_con_telefono': clientes_con_telefono,
+            'ultimo_cliente': ultimo_cliente_info,
+            'porcentaje_con_correo': round((clientes_con_correo / total_clientes * 100) if total_clientes > 0 else 0, 1),
+            'porcentaje_con_telefono': round((clientes_con_telefono / total_clientes * 100) if total_clientes > 0 else 0, 1)
+        }
+        
+        print(f"✅ Estadísticas calculadas: {estadisticas}")
+        response = jsonify(estadisticas)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        print(f"❌ Error obteniendo estadísticas de clientes: {e}")
+        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
     finally:
         if cursor:
             cursor.close()
@@ -1030,6 +1455,7 @@ def obtener_compras(current_user_id):
                 compra = {
                     'id': row[0],
                     'proveedor': row[1] if row[1] else 'Sin proveedor',
+
                     'total': float(row[2]) if row[2] is not None else 0.0,
                     'fecha': row[3] if row[3] else '',
                     'notas': row[4] or '',
@@ -1868,6 +2294,7 @@ def root():
         'status': 'running',
         'endpoints': {
             'auth': ['/api/register', '/api/login', '/api/verify-token'],
+            'clientes': ['/api/clientes', '/api/clientes/search', '/api/clientes/estadisticas'],
             'inventory': ['/api/inventario', '/api/inventario/stats'],
             'purchases': ['/api/compras', '/api/compras/estadisticas', '/api/proveedores'],
             'dashboard': ['/api/dashboard', '/api/dashboard/resumen', '/api/dashboard/stock-bajo'],
@@ -1956,6 +2383,11 @@ if __name__ == '__main__':
     print("   - POST /api/register          - Registro de usuarios")
     print("   - POST /api/login             - Inicio de sesión")
     print("   - GET  /api/verify-token      - Verificar token JWT")
+    print("   - GET  /api/clientes          - Listar clientes")
+    print("   - POST /api/clientes          - Crear cliente")
+    print("   - PUT  /api/clientes/<id>     - Actualizar cliente")
+    print("   - DELETE /api/clientes/<id>   - Eliminar cliente")
+    print("   - GET  /api/clientes/search   - Buscar clientes")
     print("   - GET  /api/inventario        - Listar productos")
     print("   - GET  /api/dashboard         - Dashboard principal")
     print("   - GET  /api/health            - Estado del servidor")
@@ -1974,10 +2406,10 @@ if __name__ == '__main__':
     print("💡 Presiona Ctrl+C para detener el servidor")
     print("=" * 60)
 
-        # Iniciar el servidor Flask
+    # Iniciar el servidor Flask
     app.run(
         debug=True, 
         port=5001, 
-            host='0.0.0.0',
-            threaded=True
-        )
+        host='0.0.0.0',
+        threaded=True
+    )
