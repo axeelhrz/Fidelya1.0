@@ -695,15 +695,26 @@ def crear_compra(current_user_id):
 @jwt_required
 def obtener_compras(current_user_id):
     """Obtiene todas las compras del usuario autenticado con filtros opcionales"""
+    connection = None
+    cursor = None
+    
     try:
         print(f"🛒 Obteniendo compras para usuario {current_user_id}")
         
         connection = get_db_connection()
         if not connection:
-            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
-            
+            print("❌ Error: No se pudo conectar a la base de datos")
+            return jsonify([]), 200  # Devolver array vacío en lugar de error
         cursor = connection.cursor()
         
+        # Verificar si la tabla compras existe
+        cursor.execute("SHOW TABLES LIKE 'compras'")
+        if not cursor.fetchone():
+            print("⚠️ Tabla 'compras' no existe, devolviendo array vacío")
+            response = jsonify([])
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
+
         # Obtener parámetros de filtro
         proveedor = request.args.get('proveedor')
         fecha_inicio = request.args.get('fecha_inicio')
@@ -738,7 +749,7 @@ def obtener_compras(current_user_id):
             query += " AND EXISTS (SELECT 1 FROM detalle_compras dc2 WHERE dc2.compra_id = c.id AND dc2.producto LIKE %s)"
             params.append(f"%{producto}%")
         
-        query += " GROUP BY c.id ORDER BY c.fecha DESC, c.creado DESC"
+        query += " GROUP BY c.id ORDER BY c.fecha DESC, c.creado DESC LIMIT 100"
         
         print(f"🔍 Ejecutando consulta: {query}")
         cursor.execute(query, params)
@@ -748,17 +759,21 @@ def obtener_compras(current_user_id):
         print(f"📋 Encontradas {len(rows)} compras")
         
         for row in rows:
-            compra = {
-                'id': row[0],
-                'proveedor': row[1],
-                'total': float(row[2]),
-                'fecha': row[3],
-                'notas': row[4] or '',
-                'creado': row[5].isoformat() if row[5] else None,
-                'cantidad_productos': row[6] or 0
-            }
-            compras.append(compra)
-            print(f"   ✅ {compra['proveedor']} - ${compra['total']:.2f}")
+            try:
+                compra = {
+                    'id': row[0],
+                    'proveedor': row[1] if row[1] else 'Sin proveedor',
+                    'total': float(row[2]) if row[2] is not None else 0.0,
+                    'fecha': row[3] if row[3] else '',
+                    'notas': row[4] or '',
+                    'creado': row[5].isoformat() if row[5] else None,
+                    'cantidad_productos': row[6] or 0
+                }
+                compras.append(compra)
+                print(f"   ✅ {compra['proveedor']} - ${compra['total']:.2f}")
+            except Exception as e:
+                print(f"⚠️ Error procesando compra: {e}")
+                continue
         
         print(f"✅ Compras procesadas exitosamente: {len(compras)}")
         response = jsonify(compras)
@@ -767,11 +782,14 @@ def obtener_compras(current_user_id):
         
     except Exception as e:
         print(f"❌ Error obteniendo compras: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        # En caso de error, devolver array vacío en lugar de error 500
+        response = jsonify([])
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     finally:
-        if 'cursor' in locals():
+        if cursor:
             cursor.close()
-        if 'connection' in locals() and connection.is_connected():
+        if connection and connection.is_connected():
             connection.close()
 
 @app.route('/api/compras/<int:compra_id>', methods=['GET'])
@@ -832,7 +850,7 @@ def obtener_compra(current_user_id, compra_id):
         response = jsonify(compra)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
-        
+
     except Exception as e:
         print(f"❌ Error obteniendo detalle de compra: {e}")
         return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
@@ -855,7 +873,7 @@ def actualizar_compra(current_user_id, compra_id):
         
         if not data:
             return jsonify({'message': 'No se recibieron datos'}), 400
-        
+            
         connection = get_db_connection()
         if not connection:
             return jsonify({'message': 'Error de conexión a la base de datos'}), 500
@@ -867,7 +885,6 @@ def actualizar_compra(current_user_id, compra_id):
             SELECT id FROM compras 
             WHERE id = %s AND usuario_id = %s
         """, (compra_id, current_user_id))
-        
         if not cursor.fetchone():
             return jsonify({'message': 'Compra no encontrada'}), 404
         
@@ -976,7 +993,7 @@ def eliminar_compra(current_user_id, compra_id):
             response = jsonify({'message': 'Compra eliminada exitosamente'})
             response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
             return response, 200
-            
+
         except Exception as e:
             # Revertir transacción en caso de error
             connection.rollback()
@@ -1082,7 +1099,7 @@ def obtener_estadisticas_compras(current_user_id):
         response = jsonify(estadisticas)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
-        
+
     except Exception as e:
         print(f"❌ Error obteniendo estadísticas de compras: {e}")
         return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
@@ -1096,16 +1113,19 @@ def obtener_estadisticas_compras(current_user_id):
 @jwt_required
 def obtener_proveedores(current_user_id):
     """Obtiene lista de proveedores únicos del usuario"""
+    connection = None
+    cursor = None
+    
     try:
         print(f"🏪 Obteniendo proveedores para usuario {current_user_id}")
-        
         connection = get_db_connection()
         if not connection:
+            print("❌ Error: No se pudo conectar a la base de datos")
             return jsonify({'message': 'Error de conexión a la base de datos'}), 500
             
         cursor = connection.cursor()
         
-        # Obtener proveedores únicos de compras
+        # Obtener proveedores únicos de compras del usuario
         cursor.execute("""
             SELECT DISTINCT proveedor 
             FROM compras 
@@ -1115,7 +1135,7 @@ def obtener_proveedores(current_user_id):
         
         proveedores_compras = [row[0] for row in cursor.fetchall()]
         
-        # Obtener proveedores únicos de productos
+        # Obtener proveedores únicos de productos (globales)
         cursor.execute("""
             SELECT DISTINCT proveedor 
             FROM productos 
@@ -1133,18 +1153,20 @@ def obtener_proveedores(current_user_id):
         response = jsonify(todos_proveedores)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
-        
+
     except Exception as e:
         print(f"❌ Error obteniendo proveedores: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        # Devolver lista vacía en caso de error en lugar de error 500
+        response = jsonify([])
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     finally:
-        if 'cursor' in locals():
+        if cursor:
             cursor.close()
-        if 'connection' in locals() and connection.is_connected():
+        if connection and connection.is_connected():
             connection.close()
 
 # ==================== ENDPOINTS DE INVENTARIO ====================
-
 @app.route('/api/inventario', methods=['GET'])
 @jwt_required
 def obtener_productos(current_user_id):
@@ -1193,7 +1215,7 @@ def obtener_productos(current_user_id):
         response = jsonify(productos)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
-        
+
     except Exception as e:
         print(f"❌ Error obteniendo productos: {e}")
         return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
@@ -1220,13 +1242,13 @@ def crear_producto(current_user_id):
             
         if not data.get('categoria'):
             return jsonify({'message': 'La categoría es requerida'}), 400
-            
         try:
             precio = float(data.get('precio_unitario', 0))
             if precio < 0:
                 return jsonify({'message': 'El precio no puede ser negativo'}), 400
         except (ValueError, TypeError):
             return jsonify({'message': 'Precio inválido'}), 400
+            
         connection = get_db_connection()
         if not connection:
             return jsonify({'message': 'Error de conexión a la base de datos'}), 500
@@ -1997,10 +2019,9 @@ def conflict(error):
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 409
 
-# ==================== FUNCIÓN PRINCIPAL ====================
-
-if __name__ == '__main__':
+def init_database():
     print("🚀 Iniciando Frutería Nina Backend...")
+    print("=" * 60)
     print("=" * 60)
     
     if init_database():

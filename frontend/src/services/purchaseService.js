@@ -91,7 +91,9 @@ export const obtenerCompras = async (filtros = {}) => {
     return response.data;
   } catch (error) {
     console.error('❌ Error obteniendo compras:', error);
-    throw error.response?.data || { message: 'Error obteniendo compras' };
+    // Devolver array vacío en caso de error
+    console.log('🔄 Devolviendo lista vacía de compras como fallback');
+    return [];
   }
 };
 
@@ -192,7 +194,9 @@ export const obtenerProveedores = async () => {
     return response.data;
   } catch (error) {
     console.error('❌ Error obteniendo proveedores:', error);
-    throw error.response?.data || { message: 'Error obteniendo proveedores' };
+    // Devolver array vacío en caso de error en lugar de lanzar excepción
+    console.log('🔄 Devolviendo lista vacía de proveedores como fallback');
+    return [];
   }
 };
 
