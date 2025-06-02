@@ -1,124 +1,69 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, Box } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
-
-// Context
+import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './context/AuthContext';
-
-// Theme
+import ProtectedRoute from './components/ProtectedRoute';
 import theme from './theme/theme';
 
-// Components
-import ProtectedRoute from './components/ProtectedRoute';
-
-// Pages
+// Páginas de autenticación
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
-import Dashboard from './pages/dashboard/index';
-import InventoryPage from './pages/inventory/index';
-import ComprasPage from './pages/compras/index';
-import ClientesPage from './pages/clientes'; // Nueva página de clientes
 
-// Estilos globales
-import './App.css';
+// Páginas principales
+import Dashboard from './pages/Dashboard';
+import InventoryPage from './pages/inventory';
+import ClientesPage from './pages/clientes';
+import ComprasPage from './pages/compras';
+import VentasPage from './pages/ventas';
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
         <Router>
-          <Box sx={{ 
-            minHeight: '100vh',
-            backgroundColor: 'background.default',
-            fontFamily: '"Inter", "Roboto", sans-serif'
-          }}>
-            <AnimatePresence mode="wait">
-              <Routes>
+          <Routes>
                 {/* Rutas públicas */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+            
             {/* Rutas protegidas */}
                 <Route path="/dashboard" element={
                 <ProtectedRoute>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Dashboard />
-                    </motion.div>
+                <Dashboard />
                   </ProtectedRoute>
                 } />
                 
                 <Route path="/inventario" element={
                   <ProtectedRoute>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
-                    >
                       <InventoryPage />
-                    </motion.div>
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/compras" element={
+            <Route path="/clientes" element={
                   <ProtectedRoute>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <ComprasPage />
-                    </motion.div>
-                  </ProtectedRoute>
-                } />
-
-                {/* Nueva ruta de clientes */}
-                <Route path="/clientes" element={
-                  <ProtectedRoute>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
-                    >
                       <ClientesPage />
-                    </motion.div>
                   </ProtectedRoute>
                 } />
                 
-                {/* Redirección por defecto */}
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                
-                {/* Ruta 404 */}
-                <Route path="*" element={
-                  <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center', 
-                    minHeight: '100vh',
-                    flexDirection: 'column',
-                    gap: 2
-                  }}>
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <h1>404 - Página no encontrada</h1>
-                      <p>La página que buscas no existe.</p>
-                    </motion.div>
-                  </Box>
+            <Route path="/compras" element={
+              <ProtectedRoute>
+                <ComprasPage />
+              </ProtectedRoute>
                 } />
-              </Routes>
-            </AnimatePresence>
-          </Box>
+            
+            <Route path="/ventas" element={
+              <ProtectedRoute>
+                <VentasPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Redirección por defecto */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            
+            {/* Ruta 404 */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
         </Router>
       </AuthProvider>
     </ThemeProvider>

@@ -177,18 +177,49 @@ def init_database():
         """)
         print("✅ Tabla movimientos_stock creada")
         
-        # Crear tabla ventas
+        # Crear tabla ventas actualizada
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS ventas (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                cliente_id INT NULL,
+                usuario_id INT NOT NULL,
                 fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                usuario_id INT,
-                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
-                INDEX idx_fecha (fecha)
+                forma_pago ENUM('efectivo', 'tarjeta', 'transferencia', 'mixto') DEFAULT 'efectivo',
+                subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                descuento DECIMAL(10,2) DEFAULT 0.00,
+                impuestos DECIMAL(10,2) DEFAULT 0.00,
+                total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                estado ENUM('borrador', 'completada', 'cancelada') DEFAULT 'completada',
+                observaciones TEXT,
+                creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                actualizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE SET NULL,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                INDEX idx_fecha (fecha),
+                INDEX idx_usuario (usuario_id),
+                INDEX idx_cliente (cliente_id),
+                INDEX idx_estado (estado),
+                INDEX idx_forma_pago (forma_pago)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
         print("✅ Tabla ventas creada")
+        
+        # Crear tabla detalle_ventas
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS detalle_ventas (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                venta_id INT NOT NULL,
+                producto_id INT NOT NULL,
+                cantidad DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                precio_unitario DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE,
+                FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE,
+                INDEX idx_venta (venta_id),
+                INDEX idx_producto (producto_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+        print("✅ Tabla detalle_ventas creada")
         
         # Crear tabla movimientos
         cursor.execute("""
@@ -447,6 +478,776 @@ def verify_token(current_user_id):
     except Exception as e:
         print(f"Error verificando token: {e}")
         return jsonify({'valid': False, 'message': 'Error interno'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+# ==================== ENDPOINTS DE VENTAS ====================
+
+@app.route('/api/ventas', methods=['POST'])
+@jwt_required
+def crear_venta(current_user_id):
+    """Crea una nueva venta y actualiza el stock automáticamente"""
+    connection = None
+    cursor = None
+    
+    try:
+        data = request.get_json()
+        print(f"💰 Creando venta para usuario {current_user_id}: {data}")
+        
+        if not data:
+            return jsonify({'message': 'No se recibieron datos'}), 400
+        
+        # Validaciones básicas
+        if not data.get('productos') or len(data['productos']) == 0:
+            return jsonify({'message': 'Debe incluir al menos un producto'}), 400
+
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Validar cliente si se proporciona
+        cliente_id = data.get('cliente_id')
+        if cliente_id:
+            cursor.execute("SELECT id FROM clientes WHERE id = %s", (cliente_id,))
+            if not cursor.fetchone():
+                return jsonify({'message': 'Cliente no encontrado'}), 404
+        
+        # Validar y calcular totales
+        productos_validados = []
+        subtotal_total = 0
+        
+        for producto in data['productos']:
+            if not all(k in producto for k in ('producto_id', 'cantidad', 'precio_unitario')):
+                return jsonify({'message': 'Cada producto debe tener: producto_id, cantidad, precio_unitario'}), 400
+            
+            try:
+                cantidad = float(producto['cantidad'])
+                precio_unitario = float(producto['precio_unitario'])
+                if cantidad <= 0 or precio_unitario <= 0:
+                    return jsonify({'message': 'Cantidad y precio deben ser mayores a 0'}), 400
+                
+                # Verificar que el producto existe y hay stock suficiente
+                cursor.execute("SELECT id, nombre, stock_actual FROM productos WHERE id = %s", (producto['producto_id'],))
+                producto_db = cursor.fetchone()
+                if not producto_db:
+                    return jsonify({'message': f'Producto con ID {producto["producto_id"]} no encontrado'}), 404
+                
+                if producto_db[2] < cantidad:
+                    return jsonify({'message': f'Stock insuficiente para {producto_db[1]}. Disponible: {producto_db[2]}'}), 400
+                
+                subtotal = cantidad * precio_unitario
+                subtotal_total += subtotal
+                
+                productos_validados.append({
+                    'producto_id': producto['producto_id'],
+                    'nombre': producto_db[1],
+                    'cantidad': cantidad,
+                    'precio_unitario': precio_unitario,
+                    'subtotal': subtotal
+                })
+            except (ValueError, TypeError):
+                return jsonify({'message': 'Cantidad y precio deben ser números válidos'}), 400
+        
+        # Calcular descuento e impuestos
+        descuento = float(data.get('descuento', 0))
+        impuestos = float(data.get('impuestos', 0))
+        total = subtotal_total - descuento + impuestos
+        
+        # Iniciar transacción
+        cursor.execute("START TRANSACTION")
+        
+        try:
+            # Insertar venta principal
+            cursor.execute("""
+                INSERT INTO ventas (cliente_id, usuario_id, forma_pago, subtotal, descuento, impuestos, total, estado, observaciones)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                cliente_id,
+                current_user_id,
+                data.get('forma_pago', 'efectivo'),
+                subtotal_total,
+                descuento,
+                impuestos,
+                total,
+                data.get('estado', 'completada'),
+                data.get('observaciones', '')
+            ))
+            
+            venta_id = cursor.lastrowid
+            
+            # Insertar detalles de venta y actualizar stock
+            for producto in productos_validados:
+                # Insertar detalle
+                cursor.execute("""
+                    INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (
+                    venta_id,
+                    producto['producto_id'],
+                    producto['cantidad'],
+                    producto['precio_unitario'],
+                    producto['subtotal']
+                ))
+                
+                # Actualizar stock del producto
+                cursor.execute("""
+                    UPDATE productos 
+                    SET stock_actual = stock_actual - %s 
+                    WHERE id = %s
+                """, (int(producto['cantidad']), producto['producto_id']))
+                
+                # Registrar movimiento de stock
+                cursor.execute("""
+                    INSERT INTO movimientos_stock (producto_id, tipo, cantidad, motivo, usuario_id)
+                    VALUES (%s, 'egreso', %s, %s, %s)
+                """, (
+                    producto['producto_id'],
+                    int(producto['cantidad']),
+                    f'Venta #{venta_id}',
+                    current_user_id
+                ))
+                
+                print(f"✅ Stock actualizado para {producto['nombre']}: -{producto['cantidad']}")
+            
+            # Registrar movimiento general
+            cursor.execute("""
+                INSERT INTO movimientos (tipo, detalle)
+                VALUES ('venta', %s)
+            """, (f'Venta #{venta_id} por ${total:.2f}',))
+            
+            # Confirmar transacción
+            connection.commit()
+            
+            print(f"✅ Venta {venta_id} creada exitosamente por ${total:.2f}")
+            
+            response = jsonify({
+                'message': 'Venta registrada exitosamente',
+                'venta_id': venta_id,
+                'total': total
+            })
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 201
+            
+        except Exception as e:
+            # Revertir transacción en caso de error
+            connection.rollback()
+            raise e
+
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos creando venta: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
+    except Exception as e:
+        print(f"❌ Error creando venta: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/ventas', methods=['GET'])
+@jwt_required
+def obtener_ventas(current_user_id):
+    """Obtiene todas las ventas con filtros opcionales"""
+    connection = None
+    cursor = None
+    
+    try:
+        print(f"💰 Obteniendo ventas para usuario {current_user_id}")
+        
+        connection = get_db_connection()
+        if not connection:
+            print("❌ Error: No se pudo conectar a la base de datos")
+            response = jsonify([])
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
+            
+        cursor = connection.cursor()
+        
+        # Verificar si la tabla ventas existe
+        cursor.execute("SHOW TABLES LIKE 'ventas'")
+        if not cursor.fetchone():
+            print("⚠️ Tabla 'ventas' no existe, devolviendo array vacío")
+            response = jsonify([])
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
+
+        # Obtener parámetros de filtro
+        fecha_inicio = request.args.get('fecha_inicio')
+        fecha_fin = request.args.get('fecha_fin')
+        cliente_id = request.args.get('cliente_id')
+        usuario_id = request.args.get('usuario_id')
+        forma_pago = request.args.get('forma_pago')
+        producto = request.args.get('producto')
+        
+        # Construir consulta base
+        query = """
+            SELECT v.id, v.cliente_id, c.nombre as cliente_nombre, v.usuario_id, u.nombre as usuario_nombre,
+                   DATE_FORMAT(v.fecha, '%Y-%m-%d %H:%i:%s') as fecha, v.forma_pago, v.subtotal, v.descuento, 
+                   v.impuestos, v.total, v.estado, v.observaciones,
+                   COUNT(dv.id) as cantidad_productos
+            FROM ventas v
+            LEFT JOIN clientes c ON v.cliente_id = c.id
+            LEFT JOIN usuarios u ON v.usuario_id = u.id
+            LEFT JOIN detalle_ventas dv ON v.id = dv.venta_id
+            WHERE 1=1
+        """
+        params = []
+        
+        # Agregar filtros
+        if fecha_inicio:
+            query += " AND DATE(v.fecha) >= %s"
+            params.append(fecha_inicio)
+            
+        if fecha_fin:
+            query += " AND DATE(v.fecha) <= %s"
+            params.append(fecha_fin)
+            
+        if cliente_id:
+            query += " AND v.cliente_id = %s"
+            params.append(cliente_id)
+            
+        if usuario_id:
+            query += " AND v.usuario_id = %s"
+            params.append(usuario_id)
+            
+        if forma_pago:
+            query += " AND v.forma_pago = %s"
+            params.append(forma_pago)
+            
+        if producto:
+            query += """ AND EXISTS (
+                SELECT 1 FROM detalle_ventas dv2 
+                INNER JOIN productos p ON dv2.producto_id = p.id 
+                WHERE dv2.venta_id = v.id AND p.nombre LIKE %s
+            )"""
+            params.append(f"%{producto}%")
+        
+        query += " GROUP BY v.id ORDER BY v.fecha DESC LIMIT 100"
+        
+
+
+        print(f"🔍 Ejecutando consulta: {query}")
+        cursor.execute(query, params)
+        
+        ventas = []
+        rows = cursor.fetchall()
+        print(f"📋 Encontradas {len(rows)} ventas")
+        
+        for row in rows:
+            try:
+                venta = {
+                    'id': row[0],
+                    'cliente_id': row[1],
+                    'cliente_nombre': row[2] or 'Venta rápida',
+                    'usuario_id': row[3],
+                    'usuario_nombre': row[4] or 'Usuario desconocido',
+                    'fecha': row[5] if row[5] else '',
+                    'forma_pago': row[6] or 'efectivo',
+                    'subtotal': float(row[7]) if row[7] is not None else 0.0,
+                    'descuento': float(row[8]) if row[8] is not None else 0.0,
+                    'impuestos': float(row[9]) if row[9] is not None else 0.0,
+                    'total': float(row[10]) if row[10] is not None else 0.0,
+                    'estado': row[11] or 'completada',
+                    'observaciones': row[12] or '',
+                    'cantidad_productos': row[13] or 0
+                }
+                ventas.append(venta)
+                print(f"   ✅ {venta['cliente_nombre']} - ${venta['total']:.2f}")
+            except Exception as e:
+                print(f"⚠️ Error procesando venta: {e}")
+                continue
+        
+        print(f"✅ Ventas procesadas exitosamente: {len(ventas)}")
+        response = jsonify(ventas)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos obteniendo ventas: {db_err}")
+        response = jsonify([])
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+    except Exception as e:
+        print(f"❌ Error obteniendo ventas: {e}")
+        response = jsonify([])
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/ventas/<int:venta_id>', methods=['GET'])
+@jwt_required
+def obtener_venta(current_user_id, venta_id):
+    """Obtiene el detalle completo de una venta específica"""
+    connection = None
+    cursor = None
+    
+    try:
+        print(f"💰 Obteniendo detalle de venta {venta_id} para usuario {current_user_id}")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Obtener datos principales de la venta
+        cursor.execute("""
+            SELECT v.id, v.cliente_id, c.nombre as cliente_nombre, c.correo as cliente_correo, 
+                   c.telefono as cliente_telefono, v.usuario_id, u.nombre as usuario_nombre,
+                   DATE_FORMAT(v.fecha, '%Y-%m-%d %H:%i:%s') as fecha, v.forma_pago, v.subtotal, 
+                   v.descuento, v.impuestos, v.total, v.estado, v.observaciones
+            FROM ventas v
+            LEFT JOIN clientes c ON v.cliente_id = c.id
+            LEFT JOIN usuarios u ON v.usuario_id = u.id
+            WHERE v.id = %s
+        """, (venta_id,))
+        
+        venta_data = cursor.fetchone()
+        if not venta_data:
+            return jsonify({'message': 'Venta no encontrada'}), 404
+        
+        # Obtener detalles de productos
+        cursor.execute("""
+            SELECT dv.producto_id, p.nombre as producto_nombre, dv.cantidad, dv.precio_unitario, dv.subtotal
+            FROM detalle_ventas dv
+            INNER JOIN productos p ON dv.producto_id = p.id
+            WHERE dv.venta_id = %s
+            ORDER BY p.nombre
+        """, (venta_id,))
+        
+        productos = []
+        for row in cursor.fetchall():
+            producto = {
+                'producto_id': row[0],
+                'producto_nombre': row[1],
+                'cantidad': float(row[2]),
+                'precio_unitario': float(row[3]),
+                'subtotal': float(row[4])
+            }
+            productos.append(producto)
+        
+        venta = {
+            'id': venta_data[0],
+            'cliente_id': venta_data[1],
+            'cliente': {
+                'nombre': venta_data[2] or 'Venta rápida',
+                'correo': venta_data[3] or '',
+                'telefono': venta_data[4] or ''
+            } if venta_data[1] else None,
+            'usuario_id': venta_data[5],
+            'usuario_nombre': venta_data[6],
+            'fecha': venta_data[7],
+            'forma_pago': venta_data[8],
+            'subtotal': float(venta_data[9]),
+            'descuento': float(venta_data[10]),
+            'impuestos': float(venta_data[11]),
+            'total': float(venta_data[12]),
+            'estado': venta_data[13],
+            'observaciones': venta_data[14] or '',
+            'productos': productos
+        }
+        
+        print(f"✅ Detalle de venta obtenido: {venta['cliente']['nombre'] if venta['cliente'] else 'Venta rápida'} - {len(productos)} productos")
+        response = jsonify(venta)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos obteniendo detalle de venta: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
+    except Exception as e:
+        print(f"❌ Error obteniendo detalle de venta: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/ventas/<int:venta_id>', methods=['PUT'])
+@jwt_required
+def actualizar_venta(current_user_id, venta_id):
+    """Actualiza una venta existente (solo en estado borrador o si es admin)"""
+    connection = None
+    cursor = None
+    
+    try:
+        data = request.get_json()
+        print(f"💰 Actualizando venta {venta_id} para usuario {current_user_id}: {data}")
+        
+        if not data:
+            return jsonify({'message': 'No se recibieron datos'}), 400
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Verificar que la venta existe y obtener su estado
+        cursor.execute("""
+            SELECT estado, usuario_id, DATE(fecha) as fecha_venta 
+            FROM ventas 
+            WHERE id = %s
+        """, (venta_id,))
+        
+        venta = cursor.fetchone()
+        if not venta:
+            return jsonify({'message': 'Venta no encontrada'}), 404
+        
+        # Verificar permisos de edición
+        cursor.execute("SELECT rol FROM usuarios WHERE id = %s", (current_user_id,))
+        user_role = cursor.fetchone()
+        
+        # Solo se puede editar si:
+        # 1. La venta está en borrador, O
+        # 2. El usuario es admin, O
+        # 3. Es el mismo día y el usuario es el creador
+        hoy = datetime.now().date()
+        puede_editar = (
+            venta[0] == 'borrador' or 
+            (user_role and user_role[0] == 'admin') or
+            (venta[2] == hoy and venta[1] == current_user_id)
+        )
+        
+        if not puede_editar:
+            return jsonify({'message': 'No tienes permisos para editar esta venta'}), 403
+        
+        # Construir consulta de actualización dinámicamente
+        campos_actualizables = ['cliente_id', 'forma_pago', 'descuento', 'impuestos', 'estado', 'observaciones']
+        campos_update = []
+        valores = []
+        
+        for campo in campos_actualizables:
+            if campo in data:
+                campos_update.append(f"{campo} = %s")
+                valores.append(data[campo])
+        
+        if not campos_update:
+            return jsonify({'message': 'No hay campos para actualizar'}), 400
+        
+        valores.append(venta_id)
+        
+        query = f"UPDATE ventas SET {', '.join(campos_update)}, actualizado = NOW() WHERE id = %s"
+        cursor.execute(query, valores)
+        connection.commit()
+        
+        print(f"✅ Venta {venta_id} actualizada exitosamente")
+        response = jsonify({'message': 'Venta actualizada exitosamente'})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos actualizando venta: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
+    except Exception as e:
+        print(f"❌ Error actualizando venta: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/ventas/<int:venta_id>', methods=['DELETE'])
+@jwt_required
+def eliminar_venta(current_user_id, venta_id):
+    """Elimina una venta (solo del día y no cobradas)"""
+    connection = None
+    cursor = None
+    
+    try:
+        print(f"💰 Eliminando venta {venta_id} para usuario {current_user_id}")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Verificar que la venta existe y obtener información
+        cursor.execute("""
+            SELECT estado, usuario_id, DATE(fecha) as fecha_venta, total
+            FROM ventas 
+            WHERE id = %s
+        """, (venta_id,))
+        
+        venta = cursor.fetchone()
+        if not venta:
+            return jsonify({'message': 'Venta no encontrada'}), 404
+        
+        # Verificar permisos de eliminación
+        cursor.execute("SELECT rol FROM usuarios WHERE id = %s", (current_user_id,))
+        user_role = cursor.fetchone()
+        
+        hoy = datetime.now().date()
+        puede_eliminar = (
+            (user_role and user_role[0] == 'admin') or
+            (venta[2] == hoy and venta[1] == current_user_id and venta[0] != 'completada')
+        )
+        
+        if not puede_eliminar:
+            return jsonify({'message': 'Solo se pueden eliminar ventas del día y no completadas'}), 403
+        
+        # Iniciar transacción
+        cursor.execute("START TRANSACTION")
+        
+        try:
+            # Obtener productos de la venta para restaurar stock
+            cursor.execute("""
+                SELECT producto_id, cantidad 
+                FROM detalle_ventas 
+                WHERE venta_id = %s
+            """, (venta_id,))
+            
+            productos_venta = cursor.fetchall()
+            
+            # Restaurar stock de productos
+            for producto_id, cantidad in productos_venta:
+                cursor.execute("""
+                    UPDATE productos 
+                    SET stock_actual = stock_actual + %s 
+                    WHERE id = %s
+                """, (int(cantidad), producto_id))
+                
+                # Registrar movimiento de stock
+                cursor.execute("""
+                    INSERT INTO movimientos_stock (producto_id, tipo, cantidad, motivo, usuario_id)
+                    VALUES (%s, 'ingreso', %s, %s, %s)
+                """, (
+                    producto_id,
+                    int(cantidad),
+                    f'Eliminación de venta #{venta_id}',
+                    current_user_id
+                ))
+            
+            # Eliminar venta (los detalles se eliminan automáticamente por CASCADE)
+            cursor.execute("DELETE FROM ventas WHERE id = %s", (venta_id,))
+            
+            # Registrar movimiento
+            cursor.execute("""
+                INSERT INTO movimientos (tipo, detalle)
+                VALUES ('venta', %s)
+            """, (f'Eliminación de venta #{venta_id} por ${venta[3]:.2f}',))
+            
+            # Confirmar transacción
+            connection.commit()
+            
+            print(f"✅ Venta {venta_id} eliminada exitosamente")
+            response = jsonify({'message': 'Venta eliminada exitosamente'})
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
+
+        except Exception as e:
+            # Revertir transacción en caso de error
+            connection.rollback()
+            raise e
+
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos eliminando venta: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
+    except Exception as e:
+        print(f"❌ Error eliminando venta: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/ventas/estadisticas', methods=['GET'])
+@jwt_required
+def obtener_estadisticas_ventas(current_user_id):
+    """Obtiene estadísticas de ventas"""
+    connection = None
+    cursor = None
+    
+    try:
+        print(f"📊 Obteniendo estadísticas de ventas para usuario {current_user_id}")
+        
+        connection = get_db_connection()
+        if not connection:
+            estadisticas_default = {
+                'ventas_hoy': 0,
+                'ingresos_hoy': 0.0,
+                'ventas_mes': 0,
+                'ingresos_mes': 0.0,
+                'venta_promedio': 0.0,
+                'producto_mas_vendido': 'N/A',
+                'forma_pago_preferida': 'efectivo',
+                'ventas_por_forma_pago': {},
+                'ventas_por_dia': []
+            }
+            response = jsonify(estadisticas_default)
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
+            
+        cursor = connection.cursor()
+        
+        # Verificar si la tabla ventas existe
+        cursor.execute("SHOW TABLES LIKE 'ventas'")
+        if not cursor.fetchone():
+            estadisticas_default = {
+                'ventas_hoy': 0,
+                'ingresos_hoy': 0.0,
+                'ventas_mes': 0,
+                'ingresos_mes': 0.0,
+                'venta_promedio': 0.0,
+                'producto_mas_vendido': 'N/A',
+                'forma_pago_preferida': 'efectivo',
+                'ventas_por_forma_pago': {},
+                'ventas_por_dia': []
+            }
+            response = jsonify(estadisticas_default)
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
+        
+        # Ventas e ingresos de hoy
+        cursor.execute("""
+            SELECT COUNT(*), COALESCE(SUM(total), 0)
+            FROM ventas 
+            WHERE DATE(fecha) = CURDATE() AND estado = 'completada'
+        """)
+        ventas_hoy = cursor.fetchone()
+        total_ventas_hoy = ventas_hoy[0] if ventas_hoy else 0
+        ingresos_hoy = float(ventas_hoy[1]) if ventas_hoy else 0.0
+        
+        # Ventas e ingresos del mes
+        cursor.execute("""
+            SELECT COUNT(*), COALESCE(SUM(total), 0)
+            FROM ventas 
+            WHERE YEAR(fecha) = YEAR(CURDATE()) 
+            AND MONTH(fecha) = MONTH(CURDATE())
+            AND estado = 'completada'
+        """)
+        ventas_mes = cursor.fetchone()
+        total_ventas_mes = ventas_mes[0] if ventas_mes else 0
+        ingresos_mes = float(ventas_mes[1]) if ventas_mes else 0.0
+        
+        # Venta promedio
+        cursor.execute("""
+            SELECT AVG(total) FROM ventas 
+            WHERE estado = 'completada' AND total > 0
+        """)
+        venta_promedio = cursor.fetchone()[0]
+        venta_promedio = float(venta_promedio) if venta_promedio else 0.0
+        
+        # Producto más vendido
+        cursor.execute("""
+            SELECT p.nombre, SUM(dv.cantidad) as total_vendido
+            FROM detalle_ventas dv
+            INNER JOIN productos p ON dv.producto_id = p.id
+            INNER JOIN ventas v ON dv.venta_id = v.id
+            WHERE v.estado = 'completada'
+            GROUP BY p.id, p.nombre
+            ORDER BY total_vendido DESC
+            LIMIT 1
+        """)
+        producto_top = cursor.fetchone()
+        producto_mas_vendido = producto_top[0] if producto_top else 'N/A'
+        
+        # Forma de pago preferida
+        cursor.execute("""
+            SELECT forma_pago, COUNT(*) as frecuencia
+            FROM ventas 
+            WHERE estado = 'completada'
+            GROUP BY forma_pago 
+            ORDER BY frecuencia DESC 
+            LIMIT 1
+        """)
+        forma_pago_top = cursor.fetchone()
+        forma_pago_preferida = forma_pago_top[0] if forma_pago_top else 'efectivo'
+        
+        # Ventas por forma de pago
+        cursor.execute("""
+            SELECT forma_pago, COUNT(*), SUM(total)
+            FROM ventas 
+            WHERE estado = 'completada'
+            GROUP BY forma_pago
+        """)
+        ventas_por_forma_pago = {}
+        for row in cursor.fetchall():
+            ventas_por_forma_pago[row[0]] = {
+                'cantidad': row[1],
+                'total': float(row[2])
+            }
+        
+        # Ventas por día (últimos 7 días)
+        cursor.execute("""
+            SELECT DATE(fecha) as dia, COUNT(*), SUM(total)
+            FROM ventas 
+            WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+            AND estado = 'completada'
+            GROUP BY DATE(fecha)
+            ORDER BY dia DESC
+        """)
+        ventas_por_dia = []
+        for row in cursor.fetchall():
+            ventas_por_dia.append({
+                'fecha': row[0].strftime('%Y-%m-%d'),
+                'cantidad': row[1],
+                'total': float(row[2])
+            })
+        
+        estadisticas = {
+            'ventas_hoy': total_ventas_hoy,
+            'ingresos_hoy': ingresos_hoy,
+            'ventas_mes': total_ventas_mes,
+            'ingresos_mes': ingresos_mes,
+            'venta_promedio': venta_promedio,
+            'producto_mas_vendido': producto_mas_vendido,
+            'forma_pago_preferida': forma_pago_preferida,
+            'ventas_por_forma_pago': ventas_por_forma_pago,
+            'ventas_por_dia': ventas_por_dia
+        }
+        
+        print(f"✅ Estadísticas calculadas: {estadisticas}")
+        response = jsonify(estadisticas)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos obteniendo estadísticas de ventas: {db_err}")
+        estadisticas_default = {
+            'ventas_hoy': 0,
+            'ingresos_hoy': 0.0,
+            'ventas_mes': 0,
+            'ingresos_mes': 0.0,
+            'venta_promedio': 0.0,
+            'producto_mas_vendido': 'N/A',
+            'forma_pago_preferida': 'efectivo',
+            'ventas_por_forma_pago': {},
+            'ventas_por_dia': []
+        }
+        response = jsonify(estadisticas_default)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+    except Exception as e:
+        print(f"❌ Error obteniendo estadísticas de ventas: {e}")
+        estadisticas_default = {
+            'ventas_hoy': 0,
+            'ingresos_hoy': 0.0,
+            'ventas_mes': 0,
+            'ingresos_mes': 0.0,
+            'venta_promedio': 0.0,
+            'producto_mas_vendido': 'N/A',
+            'forma_pago_preferida': 'efectivo',
+            'ventas_por_forma_pago': {},
+            'ventas_por_dia': []
+        }
+        response = jsonify(estadisticas_default)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     finally:
         if cursor:
             cursor.close()
@@ -739,7 +1540,6 @@ def eliminar_cliente(current_user_id, cliente_id):
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
-
 
 @app.route('/api/clientes/search', methods=['GET'])
 @jwt_required
@@ -1994,7 +2794,7 @@ def dashboard_resumen(current_user_id):
             cursor.execute("""
                 SELECT COALESCE(SUM(total), 0), COUNT(*) 
                 FROM ventas 
-                WHERE DATE(fecha) = CURDATE()
+                WHERE DATE(fecha) = CURDATE() AND estado = 'completada'
             """)
             ventas_hoy = cursor.fetchone()
             if ventas_hoy:
@@ -2112,6 +2912,7 @@ def dashboard_stock_bajo(current_user_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
         
+
     except mysql.connector.Error as db_err:
         print(f"❌ Error de base de datos en stock bajo: {db_err}")
         response = jsonify([])
@@ -2186,6 +2987,7 @@ def root():
             'clientes': ['/api/clientes', '/api/clientes/search', '/api/clientes/estadisticas'],
             'inventory': ['/api/inventario', '/api/inventario/stats'],
             'purchases': ['/api/compras', '/api/compras/estadisticas', '/api/proveedores'],
+            'ventas': ['/api/ventas', '/api/ventas/estadisticas'],
             'dashboard': ['/api/dashboard', '/api/dashboard/resumen', '/api/dashboard/stock-bajo'],
             'health': '/api/health'
         }
@@ -2278,6 +3080,12 @@ if __name__ == '__main__':
     print("   - DELETE /api/clientes/<id>   - Eliminar cliente")
     print("   - GET  /api/clientes/search   - Buscar clientes")
     print("   - GET  /api/inventario        - Listar productos")
+    print("   - POST /api/ventas            - Crear venta")
+    print("   - GET  /api/ventas            - Listar ventas")
+    print("   - GET  /api/ventas/<id>       - Detalle de venta")
+    print("   - PUT  /api/ventas/<id>       - Editar venta")
+    print("   - DELETE /api/ventas/<id>     - Eliminar venta")
+    print("   - GET  /api/ventas/estadisticas - Estadísticas de ventas")
     print("   - GET  /api/dashboard         - Dashboard principal")
     print("   - GET  /api/health            - Estado del servidor")
     print("   - GET  /                      - Información de la API")
