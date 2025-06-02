@@ -20,57 +20,91 @@ import {
   Paper,
   Chip,
   Alert,
-  useTheme,
-  alpha,
+  Divider,
+  InputAdornment,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   Add as AddIcon,
   Delete as DeleteIcon,
   ShoppingCart as ShoppingCartIcon,
+  Receipt as ReceiptIcon,
+  AttachMoney as MoneyIcon,
 } from '@mui/icons-material';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import { purchaseService } from '../../../services/purchaseService';
+import { proveedorService } from '../../../services/proveedorService';
 import { inventoryService } from '../../../services/inventoryService';
 
+// Esquema de validación
+const schema = yup.object().shape({
+  proveedor_id: yup.number().required('El proveedor es requerido'),
+  fecha: yup.string().required('La fecha es requerida'),
+  nro_comprobante: yup.string(),
+  observaciones: yup.string(),
+  productos: yup.array().of(
+    yup.object().shape({
+      producto_id: yup.number().required('Producto requerido'),
+      cantidad: yup.number().positive('Cantidad debe ser mayor a 0').required('Cantidad requerida'),
+      precio_unitario: yup.number().positive('Precio debe ser mayor a 0').required('Precio requerido'),
+    })
+  ).min(1, 'Debe agregar al menos un producto'),
+});
+
 const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null }) => {
-  const theme = useTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [proveedores, setProveedores] = useState([]);
   const [productos, setProductos] = useState([]);
   
-  // Estados del formulario
-  const [formData, setFormData] = useState({
-    proveedor: '',
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors }
+  } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      proveedor_id: '',
     fecha: new Date().toISOString().split('T')[0],
-    notas: '',
-    productos: []
+      nro_comprobante: '',
+      observaciones: '',
+      productos: [{ producto_id: '', cantidad: '', precio_unitario: '' }]
+    }
   });
 
-  // Estado para nuevo producto
-  const [nuevoProducto, setNuevoProducto] = useState({
-    producto: '',
-    cantidad: '',
-    unidad: 'kg',
-    precio_unitario: ''
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'productos'
   });
 
+  const watchedProductos = watch('productos');
   useEffect(() => {
     if (open) {
       cargarDatos();
       if (mode === 'edit' && compra) {
         cargarDatosCompra();
       } else {
-        resetForm();
+        reset({
+          proveedor_id: '',
+      fecha: new Date().toISOString().split('T')[0],
+          nro_comprobante: '',
+          observaciones: '',
+          productos: [{ producto_id: '', cantidad: '', precio_unitario: '' }]
+    });
       }
     }
-  }, [open, mode, compra]);
+  }, [open, mode, compra, reset]);
 
   const cargarDatos = async () => {
     try {
       const [proveedoresData, productosData] = await Promise.all([
-        purchaseService.obtenerProveedores(),
+        proveedorService.obtenerProveedores(),
         inventoryService.obtenerProductos()
       ]);
       setProveedores(proveedoresData);
@@ -84,132 +118,33 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
   const cargarDatosCompra = async () => {
     try {
       const compraDetalle = await purchaseService.obtenerCompra(compra.id);
-      setFormData({
-        proveedor: compraDetalle.proveedor,
+      reset({
+        proveedor_id: compraDetalle.proveedor_id,
         fecha: compraDetalle.fecha,
-        notas: compraDetalle.notas || '',
-        productos: compraDetalle.productos || []
+        nro_comprobante: compraDetalle.nro_comprobante || '',
+        observaciones: compraDetalle.observaciones || '',
+        productos: compraDetalle.productos.map(p => ({
+          producto_id: p.producto_id,
+          cantidad: p.cantidad,
+          precio_unitario: p.precio_unitario
+        }))
       });
     } catch (error) {
       console.error('Error cargando compra:', error);
       setError('Error cargando datos de la compra');
     }
-  };
+};
 
-  const resetForm = () => {
-    setFormData({
-      proveedor: '',
-      fecha: new Date().toISOString().split('T')[0],
-      notas: '',
-      productos: []
-    });
-    setNuevoProducto({
-      producto: '',
-      cantidad: '',
-      unidad: 'kg',
-      precio_unitario: ''
-    });
-    setError(null);
-  };
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleProductoChange = (field, value) => {
-    setNuevoProducto(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const agregarProducto = () => {
-    if (!nuevoProducto.producto || !nuevoProducto.cantidad || !nuevoProducto.precio_unitario) {
-      setError('Todos los campos del producto son requeridos');
-      return;
-    }
-
-    const cantidad = parseFloat(nuevoProducto.cantidad);
-    const precio = parseFloat(nuevoProducto.precio_unitario);
-
-    if (cantidad <= 0 || precio <= 0) {
-      setError('Cantidad y precio deben ser mayores a 0');
-      return;
-    }
-
-    const subtotal = cantidad * precio;
-
-    const producto = {
-      producto: nuevoProducto.producto,
-      cantidad: cantidad,
-      unidad: nuevoProducto.unidad,
-      precio_unitario: precio,
-      subtotal: subtotal
-    };
-
-    setFormData(prev => ({
-      ...prev,
-      productos: [...prev.productos, producto]
-    }));
-
-    setNuevoProducto({
-      producto: '',
-      cantidad: '',
-      unidad: 'kg',
-      precio_unitario: ''
-    });
-    setError(null);
-  };
-
-  const eliminarProducto = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      productos: prev.productos.filter((_, i) => i !== index)
-    }));
-  };
-
-  const calcularTotal = () => {
-    return formData.productos.reduce((total, producto) => total + producto.subtotal, 0);
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-UY', {
-      style: 'currency',
-      currency: 'UYU',
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  const handleSubmit = async () => {
-    if (!formData.proveedor || !formData.fecha || formData.productos.length === 0) {
-      setError('Proveedor, fecha y al menos un producto son requeridos');
-      return;
-    }
-
+  const onSubmit = async (data) => {
     setLoading(true);
     setError(null);
 
     try {
-      const compraData = {
-        proveedor: formData.proveedor,
-        fecha: formData.fecha,
-        notas: formData.notas,
-        productos: formData.productos
-      };
-
       if (mode === 'create') {
-        await purchaseService.crearCompra(compraData);
+        await purchaseService.crearCompra(data);
       } else {
-        await purchaseService.actualizarCompra(compra.id, {
-          proveedor: formData.proveedor,
-          fecha: formData.fecha,
-          notas: formData.notas
-        });
+        await purchaseService.actualizarCompra(compra.id, data);
       }
-
       onSuccess();
     } catch (error) {
       console.error('Error guardando compra:', error);
@@ -219,246 +154,355 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
     }
   };
 
-  const productosDisponibles = productos.map(p => p.nombre);
+  const agregarProducto = () => {
+    append({ producto_id: '', cantidad: '', precio_unitario: '' });
+  };
+
+  const eliminarProducto = (index) => {
+    if (fields.length > 1) {
+      remove(index);
+    }
+  };
+
+  const calcularSubtotal = (cantidad, precio) => {
+    const cant = parseFloat(cantidad) || 0;
+    const prec = parseFloat(precio) || 0;
+    return cant * prec;
+  };
+
+  const calcularTotal = () => {
+    return watchedProductos.reduce((total, producto) => {
+      return total + calcularSubtotal(producto.cantidad, producto.precio_unitario);
+    }, 0);
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount || 0);
+  };
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={onClose}
       maxWidth="lg"
       fullWidth
       PaperProps={{
-        sx: { borderRadius: 3 }
+        sx: { borderRadius: 3, maxHeight: '90vh' }
       }}
     >
-      <DialogTitle sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        pb: 2,
-        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <ShoppingCartIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {mode === 'create' ? 'Registrar Nueva Compra' : 'Editar Compra'}
-          </Typography>
+      <DialogTitle sx={{ pb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <ShoppingCartIcon sx={{ mr: 2, color: 'primary.main' }} />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              {mode === 'create' ? 'Nueva Compra' : 'Editar Compra'}
+            </Typography>
+          </Box>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
         </Box>
-        <IconButton onClick={onClose} size="small">
-          <CloseIcon />
-        </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 3 }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <DialogContent sx={{ pt: 2 }}>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
 
-        <Grid container spacing={3}>
           {/* Información básica */}
-          <Grid item xs={12} md={6}>
-            <Autocomplete
-              options={proveedores}
-              value={formData.proveedor}
-              onChange={(event, newValue) => handleInputChange('proveedor', newValue || '')}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Proveedor *"
-                  placeholder="Seleccionar o escribir proveedor"
-                  variant="outlined"
-                  fullWidth
+          <Paper sx={{ p: 3, mb: 3, borderRadius: 2, bgcolor: 'grey.50' }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              Información de la Compra
+            </Typography>
+            
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <Controller
+                  name="proveedor_id"
+                  control={control}
+                  render={({ field }) => (
+                    <Autocomplete
+                      {...field}
+                      options={proveedores}
+                      getOptionLabel={(option) => option.nombre || ''}
+                      value={proveedores.find(p => p.id === field.value) || null}
+                      onChange={(event, newValue) => {
+                        field.onChange(newValue?.id || '');
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Proveedor *"
+                          error={!!errors.proveedor_id}
+                          helperText={errors.proveedor_id?.message}
+                          fullWidth
+                        />
+                      )}
+                      renderOption={(props, option) => (
+                        <Box component="li" {...props}>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {option.nombre}
+                            </Typography>
+                            {option.rut && (
+                              <Typography variant="caption" color="text.secondary">
+                                RUT: {option.rut}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      )}
+                    />
+                  )}
                 />
-              )}
-              freeSolo
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Fecha *"
-              type="date"
-              value={formData.fecha}
-              onChange={(e) => handleInputChange('fecha', e.target.value)}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              fullWidth
-              variant="outlined"
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              label="Notas"
-              value={formData.notas}
-              onChange={(e) => handleInputChange('notas', e.target.value)}
-              placeholder="Notas adicionales sobre la compra"
-              multiline
-              rows={2}
-              fullWidth
-              variant="outlined"
-            />
-          </Grid>
-        </Grid>
-
-        {/* Agregar productos */}
-        {mode === 'create' && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Agregar Productos
-            </Typography>
-            
-            <Paper sx={{ p: 3, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={3}>
-                  <Autocomplete
-                    options={productosDisponibles}
-                    value={nuevoProducto.producto}
-                    onChange={(event, newValue) => handleProductoChange('producto', newValue || '')}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Producto"
-                        size="small"
-                        fullWidth
-                      />
-                    )}
-                    freeSolo
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={2}>
-                  <TextField
-                    label="Cantidad"
-                    type="number"
-                    value={nuevoProducto.cantidad}
-                    onChange={(e) => handleProductoChange('cantidad', e.target.value)}
-                    size="small"
-                    fullWidth
-                    inputProps={{ min: 0, step: 0.01 }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={2}>
-                  <Autocomplete
-                    options={['kg', 'unidad', 'caja']}
-                    value={nuevoProducto.unidad}
-                    onChange={(event, newValue) => handleProductoChange('unidad', newValue || 'kg')}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Unidad"
-                        size="small"
-                        fullWidth
-                      />
-                    )}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={3}>
-                  <TextField
-                    label="Precio Unitario"
-                    type="number"
-                    value={nuevoProducto.precio_unitario}
-                    onChange={(e) => handleProductoChange('precio_unitario', e.target.value)}
-                    size="small"
-                    fullWidth
-                    inputProps={{ min: 0, step: 0.01 }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={2}>
-                  <Button
-                    variant="contained"
-                    onClick={agregarProducto}
-                    startIcon={<AddIcon />}
-                    fullWidth
-                    size="small"
-                  >
-                    Agregar
-                  </Button>
-                </Grid>
               </Grid>
-            </Paper>
-          </Box>
-        )}
 
-        {/* Lista de productos */}
-        {formData.productos.length > 0 && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Productos de la Compra
-            </Typography>
-            
-            <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+              <Grid item xs={12} md={3}>
+                <Controller
+                  name="fecha"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Fecha *"
+                      type="date"
+                      error={!!errors.fecha}
+                      helperText={errors.fecha?.message}
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={3}>
+                <Controller
+                  name="nro_comprobante"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Nº Comprobante"
+                      placeholder="Ej: FAC-001234"
+                      fullWidth
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <ReceiptIcon sx={{ color: 'text.secondary' }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Controller
+                  name="observaciones"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Observaciones"
+                      multiline
+                      rows={2}
+                      placeholder="Notas adicionales sobre la compra..."
+                      fullWidth
+                    />
+                  )}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+
+          {/* Productos */}
+          <Paper sx={{ p: 3, borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Productos
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={agregarProducto}
+                size="small"
+              >
+                Agregar Producto
+              </Button>
+            </Box>
+
+            <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                  <TableRow sx={{ bgcolor: 'grey.100' }}>
                     <TableCell sx={{ fontWeight: 600 }}>Producto</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Cantidad</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Unidad</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Precio Unit.</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Subtotal</TableCell>
-                    {mode === 'create' && (
-                      <TableCell sx={{ fontWeight: 600 }} align="center">Acciones</TableCell>
-                    )}
+                    <TableCell sx={{ fontWeight: 600, width: 120 }}>Cantidad</TableCell>
+                    <TableCell sx={{ fontWeight: 600, width: 120 }}>Precio Unit.</TableCell>
+                    <TableCell sx={{ fontWeight: 600, width: 120 }}>Subtotal</TableCell>
+                    <TableCell sx={{ fontWeight: 600, width: 60 }}>Acción</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {formData.productos.map((producto, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{producto.producto}</TableCell>
-                      <TableCell>{producto.cantidad}</TableCell>
-                      <TableCell>{producto.unidad}</TableCell>
-                      <TableCell>{formatCurrency(producto.precio_unitario)}</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>
-                        {formatCurrency(producto.subtotal)}
-                      </TableCell>
-                      {mode === 'create' && (
-                        <TableCell align="center">
-                          <IconButton
+                  <AnimatePresence>
+                    {fields.map((field, index) => (
+                      <motion.tr
+                        key={field.id}
+                        component={TableRow}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <TableCell>
+                          <Controller
+                            name={`productos.${index}.producto_id`}
+                            control={control}
+                            render={({ field: productField }) => (
+                              <Autocomplete
+                                {...productField}
+                                options={productos}
+                                getOptionLabel={(option) => option.nombre || ''}
+                                value={productos.find(p => p.id === productField.value) || null}
+                                onChange={(event, newValue) => {
+                                  productField.onChange(newValue?.id || '');
+                                  if (newValue) {
+                                    setValue(`productos.${index}.precio_unitario`, newValue.precio_unitario || '');
+                                  }
+                                }}
+                                renderInput={(params) => (
+                                  <TextField
+                                    {...params}
+                                    size="small"
+                                    error={!!errors.productos?.[index]?.producto_id}
+                                    placeholder="Seleccionar producto"
+                                  />
+                                )}
+                                renderOption={(props, option) => (
+                                  <Box component="li" {...props}>
+                                    <Box>
+                                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                        {option.nombre}
+                                      </Typography>
+                                      <Typography variant="caption" color="text.secondary">
+                                        Stock: {option.stock_actual} {option.unidad} | ${option.precio_unitario}
+                                      </Typography>
+                                    </Box>
+                                  </Box>
+                                )}
+                              />
+                            )}
+                          />
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Controller
+                            name={`productos.${index}.cantidad`}
+                            control={control}
+                            render={({ field: cantField }) => (
+                              <TextField
+                                {...cantField}
+                                size="small"
+                                type="number"
+                                inputProps={{ min: 0, step: 0.01 }}
+                                error={!!errors.productos?.[index]?.cantidad}
+                                fullWidth
+                              />
+                            )}
+                          />
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Controller
+                            name={`productos.${index}.precio_unitario`}
+                            control={control}
+                            render={({ field: precioField }) => (
+                              <TextField
+                                {...precioField}
+                                size="small"
+                                type="number"
+                                inputProps={{ min: 0, step: 0.01 }}
+                                error={!!errors.productos?.[index]?.precio_unitario}
+                                InputProps={{
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <MoneyIcon sx={{ fontSize: 16 }} />
+                                    </InputAdornment>
+                                  ),
+                                }}
+                                fullWidth
+                              />
+                            )}
+                          />
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Chip
+                            label={formatCurrency(calcularSubtotal(
+                              watchedProductos[index]?.cantidad,
+                              watchedProductos[index]?.precio_unitario
+                            ))}
+                            color="success"
+                            variant="outlined"
                             size="small"
+                          />
+                        </TableCell>
+                        
+                        <TableCell>
+                          <IconButton
                             onClick={() => eliminarProducto(index)}
-                            sx={{ color: theme.palette.error.main }}
+                            disabled={fields.length === 1}
+                            size="small"
+                            color="error"
                           >
                             <DeleteIcon fontSize="small" />
                           </IconButton>
                         </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                  <TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
-                    <TableCell colSpan={mode === 'create' ? 4 : 3} sx={{ fontWeight: 600 }}>
-                      TOTAL
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 700, fontSize: '1.1rem' }}>
-                      {formatCurrency(calcularTotal())}
-                    </TableCell>
-                    {mode === 'create' && <TableCell />}
-                  </TableRow>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
                 </TableBody>
               </Table>
             </TableContainer>
-          </Box>
-        )}
-      </DialogContent>
 
-      <DialogActions sx={{ p: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
-        <Button onClick={onClose} variant="outlined">
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          disabled={loading || formData.productos.length === 0}
-          sx={{ minWidth: 120 }}
-        >
-          {loading ? 'Guardando...' : (mode === 'create' ? 'Registrar Compra' : 'Actualizar')}
-        </Button>
-      </DialogActions>
+            {/* Total */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Paper sx={{ p: 2, bgcolor: 'success.light', color: 'success.contrastText' }}>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  Total: {formatCurrency(calcularTotal())}
+                </Typography>
+              </Paper>
+            </Box>
+
+            {errors.productos && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {errors.productos.message}
+              </Alert>
+            )}
+          </Paper>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 3, pt: 2 }}>
+          <Button onClick={onClose} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={loading}
+            sx={{ minWidth: 120 }}
+          >
+            {loading ? 'Guardando...' : mode === 'create' ? 'Crear Compra' : 'Actualizar'}
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 };

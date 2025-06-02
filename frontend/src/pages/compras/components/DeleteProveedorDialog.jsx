@@ -16,48 +16,27 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { purchaseService } from '../../../services/purchaseService';
+import { proveedorService } from '../../../services/proveedorService';
 
-const DeleteCompraDialog = ({ open, onClose, onSuccess, compra }) => {
+const DeleteProveedorDialog = ({ open, onClose, onSuccess, proveedor }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  if (!compra) return null;
+  if (!proveedor) return null;
 
   const handleDelete = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      await purchaseService.eliminarCompra(compra.id);
-      onSuccess();
+      await proveedorService.eliminarProveedor(proveedor.id);
+      onSuccess('Proveedor eliminado exitosamente');
     } catch (error) {
-      console.error('Error eliminando compra:', error);
-      setError(error.message || 'Error al eliminar la compra');
+      console.error('Error eliminando proveedor:', error);
+      setError(error.message || 'Error al eliminar el proveedor');
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Sin fecha';
-    try {
-      return new Date(dateString).toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    } catch (error) {
-      return 'Fecha inválida';
-    }
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(amount || 0);
   };
 
   return (
@@ -74,7 +53,7 @@ const DeleteCompraDialog = ({ open, onClose, onSuccess, compra }) => {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <WarningIcon sx={{ mr: 2, color: 'error.main' }} />
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Eliminar Compra
+            Eliminar Proveedor
           </Typography>
         </Box>
       </DialogTitle>
@@ -93,73 +72,65 @@ const DeleteCompraDialog = ({ open, onClose, onSuccess, compra }) => {
 
           <Alert severity="warning" sx={{ mb: 3 }}>
             <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-              ¿Estás seguro de que deseas eliminar esta compra?
+              ¿Estás seguro de que deseas eliminar este proveedor?
             </Typography>
             <Typography variant="body2">
-              Esta acción no se puede deshacer y se revertirá el stock de los productos.
+              Esta acción no se puede deshacer. El proveedor no se podrá eliminar si tiene compras asociadas.
+
             </Typography>
           </Alert>
 
           <Paper sx={{ p: 3, borderRadius: 2, bgcolor: 'grey.50' }}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              Detalles de la compra a eliminar:
+              Detalles del proveedor a eliminar:
             </Typography>
             
-
             <Box sx={{ mt: 2 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  ID de Compra:
+                  ID:
                 </Typography>
-                <Chip label={`#${compra.id}`} size="small" variant="outlined" />
+                <Chip label={`#${proveedor.id}`} size="small" variant="outlined" />
               </Box>
               
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Proveedor:
+                  Nombre:
                 </Typography>
                 <Typography variant="body2">
-                  {compra.proveedor_nombre || 'Sin proveedor'}
+                  {proveedor.nombre}
                 </Typography>
               </Box>
               
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Fecha:
-                </Typography>
-                <Typography variant="body2">
-                  {formatDate(compra.fecha)}
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Productos:
-                </Typography>
-                <Chip 
-                  label={`${compra.cantidad_productos || 0} items`} 
-                  size="small" 
-                  color="info" 
-                  variant="outlined" 
-                />
-              </Box>
-              
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Total:
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: 'error.main' }}>
-                  {formatCurrency(compra.total)}
-                </Typography>
-              </Box>
-              
-              {compra.nro_comprobante && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              {proveedor.rut && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    Comprobante:
+                    RUT:
                   </Typography>
                   <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                    {compra.nro_comprobante}
+                    {proveedor.rut}
+                  </Typography>
+                </Box>
+              )}
+              
+              {proveedor.telefono && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    Teléfono:
+                  </Typography>
+                  <Typography variant="body2">
+                    {proveedor.telefono}
+                  </Typography>
+                </Box>
+              )}
+              
+              {proveedor.direccion && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    Dirección:
+                  </Typography>
+                  <Typography variant="body2" sx={{ maxWidth: 200, textAlign: 'right' }}>
+                    {proveedor.direccion}
                   </Typography>
                 </Box>
               )}
@@ -187,4 +158,4 @@ const DeleteCompraDialog = ({ open, onClose, onSuccess, compra }) => {
   );
 };
 
-export default DeleteCompraDialog;
+export default DeleteProveedorDialog;

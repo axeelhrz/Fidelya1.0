@@ -2,22 +2,25 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   TextField,
+  MenuItem,
   Button,
   Grid,
-  Autocomplete,
-  Typography,
+  InputAdornment,
   Chip,
-  useTheme,
+  Typography,
+  Autocomplete,
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  Clear as ClearIcon,
   FilterList as FilterIcon,
+  Clear as ClearIcon,
+  DateRange as DateIcon,
+  Business as BusinessIcon,
 } from '@mui/icons-material';
-import { purchaseService } from '../../../services/purchaseService';
+import { motion } from 'framer-motion';
+import { proveedorService } from '../../../services/proveedorService';
 
 const ComprasFilters = ({ filtros, onFiltrosChange }) => {
-  const theme = useTheme();
   const [proveedores, setProveedores] = useState([]);
   const [localFiltros, setLocalFiltros] = useState(filtros);
 
@@ -31,27 +34,25 @@ const ComprasFilters = ({ filtros, onFiltrosChange }) => {
 
   const cargarProveedores = async () => {
     try {
-      const proveedoresData = await purchaseService.obtenerProveedores();
-      setProveedores(proveedoresData);
+      const data = await proveedorService.obtenerProveedores();
+      setProveedores(data);
     } catch (error) {
       console.error('Error cargando proveedores:', error);
     }
   };
 
-  const handleInputChange = (field, value) => {
-    setLocalFiltros(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleFiltroChange = (campo, valor) => {
+    const nuevosFiltros = {
+      ...localFiltros,
+      [campo]: valor
+    };
+    setLocalFiltros(nuevosFiltros);
+    onFiltrosChange(nuevosFiltros);
   };
 
-  const handleApplyFilters = () => {
-    onFiltrosChange(localFiltros);
-  };
-
-  const handleClearFilters = () => {
+  const limpiarFiltros = () => {
     const filtrosVacios = {
-      proveedor: '',
+      proveedor_id: '',
       fecha_inicio: '',
       fecha_fin: '',
       producto: ''
@@ -60,102 +61,207 @@ const ComprasFilters = ({ filtros, onFiltrosChange }) => {
     onFiltrosChange(filtrosVacios);
   };
 
-  const hasActiveFilters = Object.values(localFiltros).some(value => value !== '');
+  const hayFiltrosActivos = Object.values(localFiltros).some(valor => valor !== '');
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <FilterIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Box sx={{ mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <FilterIcon sx={{ mr: 1, color: 'primary.main' }} />
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
           Filtros de Búsqueda
         </Typography>
-        {hasActiveFilters && (
+          {hayFiltrosActivos && (
           <Chip
             label="Filtros activos"
-            color="primary"
-            size="small"
+              size="small"
+              color="primary"
             sx={{ ml: 2 }}
           />
         )}
       </Box>
 
-      <Grid container spacing={3}>
+        <Grid container spacing={2} alignItems="center">
+          {/* Filtro por Proveedor */}
         <Grid item xs={12} sm={6} md={3}>
           <Autocomplete
-            options={proveedores}
-            value={localFiltros.proveedor}
-            onChange={(event, newValue) => handleInputChange('proveedor', newValue || '')}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Proveedor"
-                placeholder="Seleccionar proveedor"
-                variant="outlined"
-                fullWidth
-              />
-            )}
-            freeSolo
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <TextField
-            label="Fecha Inicio"
-            type="date"
-            value={localFiltros.fecha_inicio}
-            onChange={(e) => handleInputChange('fecha_inicio', e.target.value)}
-            InputLabelProps={{
-              shrink: true,
+              value={proveedores.find(p => p.id === localFiltros.proveedor_id) || null}
+              onChange={(event, newValue) => {
+                handleFiltroChange('proveedor_id', newValue?.id || '');
             }}
-            fullWidth
-            variant="outlined"
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
+              options={proveedores}
+              getOptionLabel={(option) => option.nombre || ''}
+              renderInput={(params) => (
           <TextField
-            label="Fecha Fin"
-            type="date"
-            value={localFiltros.fecha_fin}
-            onChange={(e) => handleInputChange('fecha_fin', e.target.value)}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            fullWidth
+                  {...params}
+                  label="Proveedor"
             variant="outlined"
+                  size="small"
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <BusinessIcon sx={{ color: 'text.secondary' }} />
+                      </InputAdornment>
+                    ),
+                  }}
           />
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <TextField
-            label="Producto"
-            value={localFiltros.producto}
-            onChange={(e) => handleInputChange('producto', e.target.value)}
-            placeholder="Buscar por producto"
-            fullWidth
-            variant="outlined"
-          />
-        </Grid>
-      </Grid>
-
-      <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
-        <Button
-          variant="outlined"
-          startIcon={<ClearIcon />}
-          onClick={handleClearFilters}
-          disabled={!hasActiveFilters}
-        >
-          Limpiar
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<SearchIcon />}
-          onClick={handleApplyFilters}
-        >
-          Aplicar Filtros
-        </Button>
+              )}
+              renderOption={(props, option) => (
+                <Box component="li" {...props}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {option.nombre}
+                    </Typography>
+                    {option.rut && (
+                      <Typography variant="caption" color="text.secondary">
+                        RUT: {option.rut}
+                      </Typography>
+                    )}
       </Box>
     </Box>
+              )}
+              noOptionsText="No se encontraron proveedores"
+              sx={{ width: '100%' }}
+            />
+          </Grid>
+
+          {/* Filtro por Fecha Inicio */}
+          <Grid item xs={12} sm={6} md={2}>
+            <TextField
+              label="Fecha Inicio"
+              type="date"
+              value={localFiltros.fecha_inicio}
+              onChange={(e) => handleFiltroChange('fecha_inicio', e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              InputLabelProps={{
+                shrink: true,
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <DateIcon sx={{ color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+
+          {/* Filtro por Fecha Fin */}
+          <Grid item xs={12} sm={6} md={2}>
+            <TextField
+              label="Fecha Fin"
+              type="date"
+              value={localFiltros.fecha_fin}
+              onChange={(e) => handleFiltroChange('fecha_fin', e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              InputLabelProps={{
+                shrink: true,
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <DateIcon sx={{ color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+
+          {/* Filtro por Producto */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField
+              label="Buscar Producto"
+              value={localFiltros.producto}
+              onChange={(e) => handleFiltroChange('producto', e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              placeholder="Nombre del producto..."
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+
+          {/* Botón Limpiar Filtros */}
+          <Grid item xs={12} sm={6} md={2}>
+            <Button
+              variant="outlined"
+              onClick={limpiarFiltros}
+              disabled={!hayFiltrosActivos}
+              startIcon={<ClearIcon />}
+              fullWidth
+              sx={{
+                height: 40,
+                borderColor: 'grey.300',
+                color: 'text.secondary',
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  color: 'primary.main',
+                },
+              }}
+            >
+              Limpiar
+            </Button>
+          </Grid>
+        </Grid>
+
+        {/* Chips de filtros activos */}
+        {hayFiltrosActivos && (
+          <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {localFiltros.proveedor_id && (
+              <Chip
+                label={`Proveedor: ${proveedores.find(p => p.id === localFiltros.proveedor_id)?.nombre || 'Desconocido'}`}
+                onDelete={() => handleFiltroChange('proveedor_id', '')}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            )}
+            {localFiltros.fecha_inicio && (
+              <Chip
+                label={`Desde: ${localFiltros.fecha_inicio}`}
+                onDelete={() => handleFiltroChange('fecha_inicio', '')}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            )}
+            {localFiltros.fecha_fin && (
+              <Chip
+                label={`Hasta: ${localFiltros.fecha_fin}`}
+                onDelete={() => handleFiltroChange('fecha_fin', '')}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            )}
+            {localFiltros.producto && (
+              <Chip
+                label={`Producto: ${localFiltros.producto}`}
+                onDelete={() => handleFiltroChange('producto', '')}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            )}
+          </Box>
+        )}
+      </Box>
+    </motion.div>
   );
 };
 

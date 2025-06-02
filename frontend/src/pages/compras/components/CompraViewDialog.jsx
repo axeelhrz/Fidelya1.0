@@ -8,52 +8,60 @@ import {
   Typography,
   Box,
   Grid,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Chip,
   Divider,
   IconButton,
-  useTheme,
-  alpha,
+  Avatar,
 } from '@mui/material';
 import {
   Close as CloseIcon,
-  Visibility as VisibilityIcon,
-  Store as StoreIcon,
-  CalendarToday as CalendarIcon,
+  Business as BusinessIcon,
   Receipt as ReceiptIcon,
-  Notes as NotesIcon,
+  CalendarToday as CalendarIcon,
+  AttachMoney as MoneyIcon,
+  Inventory as InventoryIcon,
+  Print as PrintIcon,
 } from '@mui/icons-material';
+import { motion } from 'framer-motion';
 
 const CompraViewDialog = ({ open, onClose, compra }) => {
-  const theme = useTheme();
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-UY', {
-      style: 'currency',
-      currency: 'UYU',
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('es-UY', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
   if (!compra) return null;
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Sin fecha';
+    try {
+      return new Date(dateString).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return 'Fecha inválida';
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount || 0);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={onClose}
       maxWidth="md"
       fullWidth
@@ -61,180 +69,229 @@ const CompraViewDialog = ({ open, onClose, compra }) => {
         sx: { borderRadius: 3 }
       }}
     >
-      <DialogTitle sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        pb: 2,
-        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <VisibilityIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Detalle de Compra #{compra.id}
-          </Typography>
+      <DialogTitle sx={{ pb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <ReceiptIcon sx={{ mr: 2, color: 'primary.main' }} />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Detalle de Compra #{compra.id}
+            </Typography>
+          </Box>
+          <Box>
+            <IconButton onClick={handlePrint} sx={{ mr: 1 }}>
+              <PrintIcon />
+            </IconButton>
+            <IconButton onClick={onClose} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
         </Box>
-        <IconButton onClick={onClose} size="small">
-          <CloseIcon />
-        </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 3 }}>
-        {/* Información general */}
-        <Paper sx={{ p: 3, mb: 3, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <StoreIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                <Typography variant="subtitle2" color="text.secondary">
-                  Proveedor
+      <DialogContent sx={{ pt: 2 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* Información del Proveedor */}
+          <Paper sx={{ p: 3, mb: 3, borderRadius: 2, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Avatar sx={{ bgcolor: 'primary.dark', mr: 2 }}>
+                <BusinessIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {compra.proveedor?.nombre || 'Proveedor no disponible'}
                 </Typography>
+                {compra.proveedor?.rut && (
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    RUT: {compra.proveedor.rut}
+                  </Typography>
+                )}
+                {compra.proveedor?.telefono && (
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Teléfono: {compra.proveedor.telefono}
+                  </Typography>
+                )}
               </Box>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {compra.proveedor}
-              </Typography>
+            </Box>
+          </Paper>
+
+          {/* Información de la Compra */}
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid item xs={12} md={6}>
+              <Paper sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <CalendarIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Fecha de Compra
+                  </Typography>
+                </Box>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {formatDate(compra.fecha)}
+                </Typography>
+              </Paper>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <CalendarIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                <Typography variant="subtitle2" color="text.secondary">
-                  Fecha de Compra
+            <Grid item xs={12} md={6}>
+              <Paper sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <ReceiptIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Nº Comprobante
+                  </Typography>
+                </Box>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {compra.nro_comprobante || 'Sin comprobante'}
                 </Typography>
-              </Box>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {formatDate(compra.fecha)}
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <ReceiptIcon sx={{ mr: 1, color: theme.palette.success.main }} />
-                <Typography variant="subtitle2" color="text.secondary">
-                  Total de la Compra
-                </Typography>
-              </Box>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: theme.palette.success.main }}>
-                {formatCurrency(compra.total)}
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Cantidad de Productos
-                </Typography>
-              </Box>
-              <Chip
-                label={`${compra.productos?.length || 0} productos`}
-                color="primary"
-                variant="outlined"
-                size="medium"
-              />
+              </Paper>
             </Grid>
           </Grid>
 
-          {compra.notas && (
-            <>
-              <Divider sx={{ my: 3 }} />
-              <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <NotesIcon sx={{ mr: 1, color: theme.palette.info.main }} />
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Notas
-                  </Typography>
-                </Box>
-                <Typography variant="body1">
-                  {compra.notas}
+          {/* Productos */}
+          <Paper sx={{ borderRadius: 2, overflow: 'hidden', mb: 3 }}>
+            <Box sx={{ p: 2, bgcolor: 'grey.50', borderBottom: '1px solid', borderColor: 'divider' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <InventoryIcon sx={{ mr: 1, color: 'primary.main' }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Productos Comprados
                 </Typography>
+                <Chip
+                  label={`${compra.productos?.length || 0} items`}
+                  size="small"
+                  color="primary"
+                  sx={{ ml: 2 }}
+                />
               </Box>
-            </>
-          )}
-        </Paper>
+            </Box>
 
-        {/* Detalle de productos */}
-        {compra.productos && compra.productos.length > 0 && (
-          <Box>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Productos Comprados
-            </Typography>
-            
-            <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+            <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                  <TableRow sx={{ bgcolor: 'grey.100' }}>
                     <TableCell sx={{ fontWeight: 600 }}>Producto</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }} align="center">Cantidad</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }} align="center">Unidad</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }} align="right">Precio Unitario</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }} align="right">Subtotal</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 600 }}>Cantidad</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 600 }}>Unidad</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 600 }}>Precio Unit.</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 600 }}>Subtotal</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {compra.productos.map((producto, index) => (
-                    <TableRow 
+                  {compra.productos?.map((producto, index) => (
+                    <motion.tr
                       key={index}
+                      component={TableRow}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
                       sx={{
-                        '&:hover': {
-                          bgcolor: alpha(theme.palette.primary.main, 0.04),
-                        },
+                        '&:hover': { bgcolor: 'action.hover' },
+                        '&:last-child td': { border: 0 }
                       }}
                     >
                       <TableCell>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          {producto.producto}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="body2">
-                          {producto.cantidad}
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {producto.producto_nombre}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
                         <Chip
-                          label={producto.unidad}
+                          label={producto.cantidad}
                           size="small"
                           variant="outlined"
-                          color="secondary"
+                          color="info"
                         />
                       </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="body2" color="text.secondary">
+                          {producto.unidad}
+                        </Typography>
+                      </TableCell>
                       <TableCell align="right">
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
                           {formatCurrency(producto.precio_unitario)}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 700,
+                            color: 'success.main'
+                          }}
+                        >
                           {formatCurrency(producto.subtotal)}
                         </Typography>
                       </TableCell>
-                    </TableRow>
+                    </motion.tr>
                   ))}
-                  
-                  {/* Fila de total */}
-                  <TableRow sx={{ bgcolor: alpha(theme.palette.success.main, 0.1) }}>
-                    <TableCell colSpan={4} sx={{ fontWeight: 700, fontSize: '1.1rem' }}>
-                      TOTAL GENERAL
-                    </TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 700, fontSize: '1.2rem', color: theme.palette.success.main }}>
-                      {formatCurrency(compra.total)}
-                    </TableCell>
-                  </TableRow>
                 </TableBody>
               </Table>
             </TableContainer>
-          </Box>
-        )}
+          </Paper>
 
-        {/* Información adicional */}
-        <Paper sx={{ p: 2, mt: 3, bgcolor: alpha(theme.palette.info.main, 0.02) }}>
-          <Typography variant="caption" color="text.secondary">
-            Compra registrada el {new Date(compra.creado).toLocaleString('es-UY')}
-          </Typography>
-        </Paper>
+          {/* Total y Observaciones */}
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={8}>
+              {compra.observaciones && (
+                <Paper sx={{ p: 3, borderRadius: 2, bgcolor: 'grey.50' }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Observaciones
+                  </Typography>
+                  <Typography variant="body2">
+                    {compra.observaciones}
+                  </Typography>
+                </Paper>
+              )}
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <Paper
+                sx={{
+                  p: 3,
+                  borderRadius: 2,
+                  bgcolor: 'success.light',
+                  color: 'success.contrastText',
+                  textAlign: 'center'
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
+                  <MoneyIcon sx={{ mr: 1 }} />
+                  <Typography variant="subtitle2">
+                    Total de la Compra
+                  </Typography>
+                </Box>
+                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                  {formatCurrency(compra.total)}
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+
+          {/* Información adicional */}
+          <Divider sx={{ my: 3 }} />
+          
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="caption" color="text.secondary">
+              Compra registrada el: {formatDate(compra.creado)}
+            </Typography>
+            
+            {compra.comprobante_pdf && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ReceiptIcon />}
+                onClick={() => window.open(compra.comprobante_pdf, '_blank')}
+              >
+                Ver Comprobante PDF
+              </Button>
+            )}
+          </Box>
+        </motion.div>
       </DialogContent>
 
-      <DialogActions sx={{ p: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+      <DialogActions sx={{ p: 3, pt: 2 }}>
         <Button onClick={onClose} variant="contained">
           Cerrar
         </Button>

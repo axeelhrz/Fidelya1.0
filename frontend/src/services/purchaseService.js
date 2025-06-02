@@ -70,8 +70,8 @@ export const obtenerCompras = async (filtros = {}) => {
   try {
     const params = new URLSearchParams();
     
-    if (filtros.proveedor) {
-      params.append('proveedor', filtros.proveedor);
+    if (filtros.proveedor_id) {
+      params.append('proveedor_id', filtros.proveedor_id);
     }
     if (filtros.fecha_inicio) {
       params.append('fecha_inicio', filtros.fecha_inicio);
@@ -106,7 +106,7 @@ export const obtenerCompra = async (id) => {
   try {
     console.log('🛒 Obteniendo compra:', id);
     const response = await api.get(`/compras/${id}`);
-    console.log('✅ Compra obtenida:', response.data.proveedor);
+    console.log('✅ Compra obtenida:', response.data.proveedor?.nombre);
     return response.data;
   } catch (error) {
     console.error('❌ Error obteniendo compra:', error);
@@ -121,7 +121,7 @@ export const obtenerCompra = async (id) => {
  */
 export const crearCompra = async (compra) => {
   try {
-    console.log('🛒 Creando compra:', compra.proveedor);
+    console.log('🛒 Creando compra:', compra);
     const response = await api.post('/compras', compra);
     console.log('✅ Compra creada:', response.data);
     return response.data;
@@ -178,7 +178,16 @@ export const obtenerEstadisticasCompras = async () => {
     return response.data;
   } catch (error) {
     console.error('❌ Error obteniendo estadísticas:', error);
-    throw error.response?.data || { message: 'Error obteniendo estadísticas' };
+    // Devolver estadísticas por defecto en caso de error
+    return {
+      total_invertido_mes: 0.0,
+      compras_mes: 0,
+      gasto_promedio: 0.0,
+      top_proveedores: [],
+      productos_mas_comprados: [],
+      total_compras: 0,
+      gasto_total: 0.0
+    };
   }
 };
 

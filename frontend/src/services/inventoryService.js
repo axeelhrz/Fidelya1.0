@@ -4,7 +4,7 @@ import config from '../config/config';
 // URL base del backend Flask
 const API_URL = config.API_BASE_URL;
 
-console.log('🔗 Inventory API_URL configurada:', API_URL);
+console.log('📦 Inventory API_URL configurada:', API_URL);
 
 // Configurar instancia de axios con configuraciones base
 const api = axios.create({
@@ -62,45 +62,20 @@ api.interceptors.response.use(
 );
 
 /**
- * Obtiene todos los productos con filtros opcionales
- * @param {object} filtros - Filtros de búsqueda
+ * Obtiene todos los productos del inventario
  * @returns {array} - Lista de productos
  */
-export const obtenerProductos = async (filtros = {}) => {
+export const obtenerProductos = async () => {
   try {
-    const params = new URLSearchParams();
-    
-    if (filtros.categoria && filtros.categoria !== 'todos') {
-      params.append('categoria', filtros.categoria);
-    }
-    if (filtros.busqueda) {
-      params.append('busqueda', filtros.busqueda);
-    }
-    if (filtros.stockBajo) {
-      params.append('stock_bajo', 'true');
-    }
-    if (filtros.precioMin) {
-      params.append('precio_min', filtros.precioMin);
-    }
-    if (filtros.precioMax) {
-      params.append('precio_max', filtros.precioMax);
-    }
-    if (filtros.orden) {
-      params.append('orden', filtros.orden);
-    }
-    if (filtros.direccion) {
-      params.append('direccion', filtros.direccion);
-    }
-    
-    const url = `/inventario${params.toString() ? '?' + params.toString() : ''}`;
-    console.log('📦 Obteniendo productos:', url);
-    
-    const response = await api.get(url);
+    console.log('📦 Obteniendo productos del inventario');
+    const response = await api.get('/inventario');
     console.log('✅ Productos obtenidos:', response.data.length);
     return response.data;
   } catch (error) {
     console.error('❌ Error obteniendo productos:', error);
-    throw error.response?.data || { message: 'Error obteniendo productos' };
+    // Devolver array vacío en caso de error
+    console.log('🔄 Devolviendo lista vacía de productos como fallback');
+    return [];
   }
 };
 
@@ -109,7 +84,6 @@ export const obtenerProductos = async (filtros = {}) => {
  * @param {number} id - ID del producto
  * @returns {object} - Datos del producto
  */
-
 export const obtenerProducto = async (id) => {
   try {
     console.log('📦 Obteniendo producto:', id);
@@ -178,7 +152,7 @@ export const eliminarProducto = async (id) => {
  * Obtiene estadísticas del inventario
  * @returns {object} - Estadísticas del inventario
  */
-export const obtenerEstadisticas = async () => {
+export const obtenerEstadisticasInventario = async () => {
   try {
     console.log('📊 Obteniendo estadísticas del inventario');
     const response = await api.get('/inventario/stats');
@@ -186,75 +160,15 @@ export const obtenerEstadisticas = async () => {
     return response.data;
   } catch (error) {
     console.error('❌ Error obteniendo estadísticas:', error);
-    throw error.response?.data || { message: 'Error obteniendo estadísticas' };
-  }
+    // Devolver estadísticas por defecto en caso de error
+    return {
+      total_productos: 0,
+      productos_stock_bajo: 0,
+      valor_inventario: 0.0,
+      stock_total: 0,
+      productos_por_categoria: {},
+      categorias_principales: []
 };
-
-/**
- * Obtiene productos con stock bajo
- * @returns {array} - Lista de productos con stock bajo
- */
-export const obtenerProductosStockBajo = async () => {
-  try {
-    console.log('⚠️ Obteniendo productos con stock bajo');
-    const response = await api.get('/inventario/stock-bajo');
-    console.log('✅ Productos con stock bajo obtenidos:', response.data.length);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error obteniendo productos con stock bajo:', error);
-    throw error.response?.data || { message: 'Error obteniendo productos con stock bajo' };
-  }
-};
-
-/**
- * Busca productos por nombre o proveedor
- * @param {string} termino - Término de búsqueda
- * @returns {array} - Lista de productos encontrados
- */
-export const buscarProductos = async (termino) => {
-  try {
-    console.log('🔍 Buscando productos:', termino);
-    const response = await obtenerProductos({ busqueda: termino });
-    console.log('✅ Productos encontrados:', response.length);
-    return response;
-  } catch (error) {
-    console.error('❌ Error buscando productos:', error);
-    throw error;
-  }
-};
-
-/**
- * Filtra productos por categoría
- * @param {string} categoria - Categoría a filtrar
- * @returns {array} - Lista de productos filtrados
- */
-export const filtrarPorCategoria = async (categoria) => {
-  try {
-    console.log('🏷️ Filtrando productos por categoría:', categoria);
-    const response = await obtenerProductos({ categoria });
-    console.log('✅ Productos filtrados:', response.length);
-    return response;
-  } catch (error) {
-    console.error('❌ Error filtrando productos:', error);
-    throw error;
-  }
-};
-
-/**
- * Ordena productos por campo específico
- * @param {string} campo - Campo por el cual ordenar
- * @param {string} direccion - Dirección del ordenamiento (asc/desc)
- * @returns {array} - Lista de productos ordenados
- */
-export const ordenarProductos = async (campo, direccion = 'asc') => {
-  try {
-    console.log('📊 Ordenando productos por:', campo, direccion);
-    const response = await obtenerProductos({ orden: campo, direccion });
-    console.log('✅ Productos ordenados:', response.length);
-    return response;
-  } catch (error) {
-    console.error('❌ Error ordenando productos:', error);
-    throw error;
   }
 };
 
@@ -265,11 +179,7 @@ export const inventoryService = {
   crearProducto,
   actualizarProducto,
   eliminarProducto,
-  obtenerEstadisticas,
-  obtenerProductosStockBajo,
-  buscarProductos,
-  filtrarPorCategoria,
-  ordenarProductos,
+  obtenerEstadisticasInventario,
 };
 
 // Exportación por defecto

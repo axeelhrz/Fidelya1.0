@@ -6,35 +6,40 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TableSortLabel,
+  TablePagination,
   Paper,
   IconButton,
   Chip,
   Typography,
   Box,
   Tooltip,
-  Stack,
-  useTheme,
-  alpha,
+  Avatar,
+  Skeleton,
+  TableSortLabel,
 } from '@mui/material';
 import {
   Visibility as ViewIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  ShoppingCart as ShoppingCartIcon,
+  Receipt as ReceiptIcon,
+  Business as BusinessIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
-const ComprasTable = ({ 
-  compras = [], 
-  onEdit, 
-  onView, 
-  onDelete, 
-  loading = false 
-}) => {
-  const theme = useTheme();
+const ComprasTable = ({ compras, loading, onEdit, onView, onDelete }) => {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [orderBy, setOrderBy] = useState('fecha');
   const [order, setOrder] = useState('desc');
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -42,32 +47,21 @@ const ComprasTable = ({
     setOrderBy(property);
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-UY', {
-      style: 'currency',
-      currency: 'UYU',
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('es-UY', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  };
-
   const sortedCompras = React.useMemo(() => {
+    if (!compras) return [];
+    
     return [...compras].sort((a, b) => {
       let aValue = a[orderBy];
       let bValue = b[orderBy];
-
-      if (orderBy === 'total') {
+      
+      if (orderBy === 'fecha') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      } else if (orderBy === 'total') {
         aValue = parseFloat(aValue) || 0;
         bValue = parseFloat(bValue) || 0;
       }
-
+      
       if (order === 'asc') {
         return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
       } else {
@@ -76,54 +70,103 @@ const ComprasTable = ({
     });
   }, [compras, order, orderBy]);
 
+  const paginatedCompras = sortedCompras.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Sin fecha';
+    try {
+      return new Date(dateString).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return 'Fecha inválida';
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount || 0);
+  };
+
   if (loading) {
     return (
-      <Paper sx={{ p: 3, textAlign: 'center' }}>
-        <Typography>Cargando compras...</Typography>
-      </Paper>
+      <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              {['Proveedor', 'Fecha', 'Comprobante', 'Productos', 'Total', 'Acciones'].map((header) => (
+                <TableCell key={header}>
+                  <Skeleton variant="text" width={80} />
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {[...Array(5)].map((_, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Skeleton variant="circular" width={32} height={32} sx={{ mr: 2 }} />
+                    <Skeleton variant="text" width={120} />
+                  </Box>
+                </TableCell>
+                <TableCell><Skeleton variant="text" width={80} /></TableCell>
+                <TableCell><Skeleton variant="text" width={100} /></TableCell>
+                <TableCell><Skeleton variant="text" width={60} /></TableCell>
+                <TableCell><Skeleton variant="text" width={80} /></TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Skeleton variant="circular" width={32} height={32} />
+                    <Skeleton variant="circular" width={32} height={32} />
+                    <Skeleton variant="circular" width={32} height={32} />
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     );
   }
 
-  if (compras.length === 0) {
+  if (!compras || compras.length === 0) {
     return (
-      <Paper sx={{ p: 4, textAlign: 'center' }}>
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          gap={2}
-          sx={{ opacity: 0.6 }}
-        >
-          <ShoppingCartIcon sx={{ fontSize: 64, color: 'text.secondary' }} />
-          <Typography variant="h6" color="text.secondary">
-            No hay compras registradas
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Registra tu primera compra para comenzar
-          </Typography>
-        </Box>
+      <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
+        <ReceiptIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+        <Typography variant="h6" color="text.secondary" gutterBottom>
+          No hay compras registradas
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Las compras que registres aparecerán aquí
+        </Typography>
       </Paper>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <TableContainer 
-        component={Paper} 
-        sx={{ 
-          borderRadius: 3,
-          overflow: 'hidden',
-          boxShadow: theme.shadows[4],
-        }}
-      >
+    <Box>
+      <TableContainer component={Paper} sx={{ borderRadius: 3, overflow: 'hidden' }}>
         <Table stickyHeader>
           <TableHead>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+            <TableRow sx={{ bgcolor: 'grey.50' }}>
+              <TableCell sx={{ fontWeight: 600, bgcolor: 'grey.50' }}>
+                <TableSortLabel
+                  active={orderBy === 'proveedor_nombre'}
+                  direction={orderBy === 'proveedor_nombre' ? order : 'asc'}
+                  onClick={() => handleRequestSort('proveedor_nombre')}
+                >
+                  Proveedor
+                </TableSortLabel>
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, bgcolor: 'grey.50' }}>
                 <TableSortLabel
                   active={orderBy === 'fecha'}
                   direction={orderBy === 'fecha' ? order : 'asc'}
@@ -132,16 +175,13 @@ const ComprasTable = ({
                   Fecha
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
-                <TableSortLabel
-                  active={orderBy === 'proveedor'}
-                  direction={orderBy === 'proveedor' ? order : 'asc'}
-                  onClick={() => handleRequestSort('proveedor')}
-                >
-                  Proveedor
-                </TableSortLabel>
+              <TableCell sx={{ fontWeight: 600, bgcolor: 'grey.50' }}>
+                Comprobante
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+              <TableCell sx={{ fontWeight: 600, bgcolor: 'grey.50', textAlign: 'center' }}>
+                Productos
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, bgcolor: 'grey.50', textAlign: 'right' }}>
                 <TableSortLabel
                   active={orderBy === 'total'}
                   direction={orderBy === 'total' ? order : 'asc'}
@@ -150,88 +190,102 @@ const ComprasTable = ({
                   Total
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
-                Productos
-              </TableCell>
-              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
-                Notas
-              </TableCell>
-              <TableCell 
-                align="center" 
-                sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}
-              >
+              <TableCell sx={{ fontWeight: 600, bgcolor: 'grey.50', textAlign: 'center' }}>
                 Acciones
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedCompras.map((compra, index) => (
+            {paginatedCompras.map((compra, index) => (
               <motion.tr
                 key={compra.id}
                 component={TableRow}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
                 sx={{
                   '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.04),
+                    bgcolor: 'action.hover',
                   },
+                  '&:last-child td, &:last-child th': { border: 0 },
                 }}
               >
                 <TableCell>
-                  <Typography variant="body2" fontWeight={600}>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: 'primary.main',
+                        width: 32,
+                        height: 32,
+                        mr: 2,
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      <BusinessIcon fontSize="small" />
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {compra.proveedor_nombre || 'Sin proveedor'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        ID: {compra.id}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </TableCell>
+                
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
                     {formatDate(compra.fecha)}
                   </Typography>
                 </TableCell>
                 
                 <TableCell>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight={600}>
-                      {compra.proveedor}
+                  {compra.nro_comprobante ? (
+                    <Chip
+                      label={compra.nro_comprobante}
+                      size="small"
+                      variant="outlined"
+                      sx={{ fontFamily: 'monospace' }}
+                    />
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">
+                      Sin comprobante
                     </Typography>
-                  </Box>
+                  )}
                 </TableCell>
                 
-                <TableCell>
-                  <Typography variant="body2" fontWeight={600} color="primary">
+                <TableCell align="center">
+                  <Chip
+                    label={`${compra.cantidad_productos || 0} items`}
+                    size="small"
+                    color="info"
+                    variant="outlined"
+                  />
+                </TableCell>
+                
+                <TableCell align="right">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 700,
+                      color: 'success.main',
+                      fontSize: '1rem',
+                    }}
+                  >
                     {formatCurrency(compra.total)}
                   </Typography>
                 </TableCell>
                 
-                <TableCell>
-                  <Chip
-                    label={`${compra.cantidad_productos} productos`}
-                    size="small"
-                    variant="outlined"
-                    color="primary"
-                  />
-                </TableCell>
-                
-                <TableCell>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      maxWidth: 150,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {compra.notas || 'Sin notas'}
-                  </Typography>
-                </TableCell>
-                
                 <TableCell align="center">
-                  <Stack direction="row" spacing={1} justifyContent="center">
-                    <Tooltip title="Ver detalle">
+                  <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                    <Tooltip title="Ver detalles">
                       <IconButton
                         size="small"
                         onClick={() => onView(compra)}
                         sx={{
-                          color: theme.palette.info.main,
-                          '&:hover': {
-                            bgcolor: alpha(theme.palette.info.main, 0.1),
-                          },
+                          color: 'info.main',
+                          '&:hover': { bgcolor: 'info.light', color: 'white' },
                         }}
                       >
                         <ViewIcon fontSize="small" />
@@ -243,10 +297,8 @@ const ComprasTable = ({
                         size="small"
                         onClick={() => onEdit(compra)}
                         sx={{
-                          color: theme.palette.primary.main,
-                          '&:hover': {
-                            bgcolor: alpha(theme.palette.primary.main, 0.1),
-                          },
+                          color: 'warning.main',
+                          '&:hover': { bgcolor: 'warning.light', color: 'white' },
                         }}
                       >
                         <EditIcon fontSize="small" />
@@ -258,23 +310,41 @@ const ComprasTable = ({
                         size="small"
                         onClick={() => onDelete(compra)}
                         sx={{
-                          color: theme.palette.error.main,
-                          '&:hover': {
-                            bgcolor: alpha(theme.palette.error.main, 0.1),
-                          },
+                          color: 'error.main',
+                          '&:hover': { bgcolor: 'error.light', color: 'white' },
                         }}
                       >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                  </Stack>
+                  </Box>
                 </TableCell>
               </motion.tr>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-    </motion.div>
+
+      {/* Paginación */}
+      <TablePagination
+        component="div"
+        count={sortedCompras.length}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPageOptions={[5, 10, 25, 50]}
+        labelRowsPerPage="Filas por página:"
+        labelDisplayedRows={({ from, to, count }) =>
+          `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+        }
+        sx={{
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'grey.50',
+        }}
+      />
+    </Box>
   );
 };
 

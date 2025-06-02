@@ -15,7 +15,9 @@ import {
   Chip,
   Fab,
   useTheme,
-  alpha,
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -25,8 +27,14 @@ import {
   Dashboard as DashboardIcon,
   Notifications,
   Refresh as RefreshIcon,
+  Business as BusinessIcon,
+  Home as HomeIcon,
+  Inventory as InventoryIcon,
+  People as PeopleIcon,
+  Receipt as ReceiptIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { purchaseService } from '../../services/purchaseService';
 
@@ -37,9 +45,11 @@ import CompraViewDialog from './components/CompraViewDialog';
 import DeleteCompraDialog from './components/DeleteCompraDialog';
 import ComprasStats from './components/ComprasStats';
 import ComprasFilters from './components/ComprasFilters';
+import SuppliersManager from './components/SuppliersManager';
 
 const ComprasPage = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [anchorEl, setAnchorEl] = useState(null);
   
@@ -55,15 +65,19 @@ const ComprasPage = () => {
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openViewDialog, setOpenViewDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openSuppliersManager, setOpenSuppliersManager] = useState(false);
   const [selectedCompra, setSelectedCompra] = useState(null);
   
   // Estados para filtros
   const [filtros, setFiltros] = useState({
-    proveedor: '',
+    proveedor_id: '',
     fecha_inicio: '',
     fecha_fin: '',
     producto: ''
   });
+
+  // Estado para SpeedDial
+  const [speedDialOpen, setSpeedDialOpen] = useState(false);
 
   useEffect(() => {
     cargarDatos();
@@ -102,9 +116,14 @@ const ComprasPage = () => {
     handleMenuClose();
   };
 
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
+
   const handleCreateCompra = () => {
     setSelectedCompra(null);
     setOpenCreateDialog(true);
+    setSpeedDialOpen(false);
   };
 
   const handleEditCompra = (compra) => {
@@ -120,6 +139,11 @@ const ComprasPage = () => {
   const handleDeleteCompra = (compra) => {
     setSelectedCompra(compra);
     setOpenDeleteDialog(true);
+  };
+
+  const handleOpenSuppliersManager = () => {
+    setOpenSuppliersManager(true);
+    setSpeedDialOpen(false);
   };
 
   const handleCompraCreated = async () => {
@@ -146,11 +170,24 @@ const ComprasPage = () => {
 
   const handleCloseError = () => {
     setError(null);
-  };
+};
 
   const handleCloseSuccess = () => {
     setSuccess(null);
   };
+
+  const speedDialActions = [
+    {
+      icon: <AddIcon />,
+      name: 'Nueva Compra',
+      onClick: handleCreateCompra,
+    },
+    {
+      icon: <BusinessIcon />,
+      name: 'Gestionar Proveedores',
+      onClick: handleOpenSuppliersManager,
+    },
+  ];
 
   return (
     <Box sx={{ flexGrow: 1, minHeight: '100vh', backgroundColor: '#F5F5F5' }}>
@@ -163,6 +200,23 @@ const ComprasPage = () => {
           </Typography>
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {/* Botones de navegación */}
+            <IconButton color="inherit" onClick={() => handleNavigation('/dashboard')}>
+              <HomeIcon />
+            </IconButton>
+            
+            <IconButton color="inherit" onClick={() => handleNavigation('/inventario')}>
+              <InventoryIcon />
+            </IconButton>
+            
+            <IconButton color="inherit" onClick={() => handleNavigation('/clientes')}>
+              <PeopleIcon />
+            </IconButton>
+            
+            <IconButton color="inherit" onClick={() => handleNavigation('/ventas')}>
+              <ReceiptIcon />
+            </IconButton>
+            
             <IconButton color="inherit" onClick={cargarDatos}>
               <RefreshIcon />
             </IconButton>
@@ -256,6 +310,25 @@ const ComprasPage = () => {
         </motion.div>
       </Box>
 
+      {/* SpeedDial para acciones rápidas */}
+      <SpeedDial
+        ariaLabel="Acciones de compras"
+        sx={{ position: 'fixed', bottom: 24, right: 24 }}
+        icon={<SpeedDialIcon />}
+        open={speedDialOpen}
+        onOpen={() => setSpeedDialOpen(true)}
+        onClose={() => setSpeedDialOpen(false)}
+      >
+        {speedDialActions.map((action) => (
+          <SpeedDialAction
+            key={action.name}
+            icon={action.icon}
+            tooltipTitle={action.name}
+            onClick={action.onClick}
+          />
+        ))}
+      </SpeedDial>
+
       {/* Botón flotante para agregar compra */}
       <Fab
         color="primary"
@@ -303,6 +376,11 @@ const ComprasPage = () => {
         onClose={() => setOpenDeleteDialog(false)}
         onSuccess={handleCompraDeleted}
         compra={selectedCompra}
+      />
+
+      <SuppliersManager
+        open={openSuppliersManager}
+        onClose={() => setOpenSuppliersManager(false)}
       />
 
       {/* Snackbars para notificaciones */}
