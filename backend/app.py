@@ -73,7 +73,7 @@ def create_tables():
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_CONFIG['database']} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
         cursor.execute(f"USE {DB_CONFIG['database']}")
         
-        # Crear tablas existentes
+        # Tablas existentes + NUEVAS TABLAS DE CONFIGURACIÓN
         tables = {
             'usuarios': """
                 CREATE TABLE IF NOT EXISTS usuarios (
@@ -368,6 +368,39 @@ def create_tables():
                     frecuencia ENUM('inmediata', 'diaria', 'semanal') DEFAULT 'inmediata',
                     FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
                     UNIQUE KEY unique_usuario (usuario_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """,
+            
+            # NUEVAS TABLAS PARA CONFIGURACIÓN
+            'configuracion': """
+                CREATE TABLE IF NOT EXISTS configuracion (
+                    id INT PRIMARY KEY,
+                    iva DECIMAL(5,2) DEFAULT 22.00,
+                    moneda VARCHAR(10) DEFAULT 'UYU',
+                    decimales INT DEFAULT 2,
+                    nombre_fruteria VARCHAR(255) DEFAULT 'Frutería Nina',
+                    direccion TEXT,
+                    telefono VARCHAR(50),
+                    email VARCHAR(100),
+                    rut VARCHAR(50),
+                    logo_url TEXT,
+                    creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    actualizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """,
+            
+            'categorias': """
+                CREATE TABLE IF NOT EXISTS categorias (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    tipo ENUM('producto', 'gasto') NOT NULL,
+                    nombre VARCHAR(100) NOT NULL,
+                    descripcion TEXT,
+                    activo BOOLEAN DEFAULT TRUE,
+                    creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    actualizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    INDEX idx_tipo (tipo),
+                    INDEX idx_activo (activo),
+                    INDEX idx_nombre (nombre)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """
         }
@@ -1270,10 +1303,45 @@ def init_database():
                 """, cliente)
             logger.info("✅ Clientes de ejemplo creados")
         
+        # INICIALIZAR CONFIGURACIÓN POR DEFECTO
+        cursor.execute("SELECT COUNT(*) FROM configuracion WHERE id = 1")
+        if cursor.fetchone()[0] == 0:
+            cursor.execute("""
+                INSERT INTO configuracion (
+                    id, iva, moneda, decimales, nombre_fruteria,
+                    direccion, telefono, email, rut
+                ) VALUES (1, 22.0, 'UYU', 2, 'Frutería Nina', 
+                         'Dirección de ejemplo', '+598 99 123 456', 
+                         'contacto@fruteria.com', '123456789012')
+            """)
+            logger.info("✅ Configuración por defecto creada")
+        
+        # CREAR CATEGORÍAS POR DEFECTO
+        cursor.execute("SELECT COUNT(*) FROM categorias")
+        if cursor.fetchone()[0] == 0:
+            categorias_defecto = [
+                ('producto', 'Frutas Tropicales', 'Frutas de clima tropical'),
+                ('producto', 'Frutas de Estación', 'Frutas según temporada'),
+                ('producto', 'Verduras de Hoja', 'Lechugas, espinacas, etc.'),
+                ('producto', 'Verduras de Raíz', 'Zanahorias, remolachas, etc.'),
+                ('producto', 'Productos Orgánicos', 'Productos sin químicos'),
+                ('gasto', 'Sueldos y Salarios', 'Pagos a empleados'),
+                ('gasto', 'Alquiler', 'Alquiler del local'),
+                ('gasto', 'Servicios', 'Luz, agua, internet, etc.'),
+                ('gasto', 'Transporte', 'Fletes y combustible'),
+                ('gasto', 'Mantenimiento', 'Reparaciones y mantenimiento')
+        ]
+            
+            for categoria in categorias_defecto:
+                cursor.execute("""
+                    INSERT INTO categorias (tipo, nombre, descripcion)
+                    VALUES (%s, %s, %s)
+                """, categoria)
+            logger.info("✅ Categorías por defecto creadas")
+        
         connection.commit()
         logger.info("✅ Base de datos inicializada correctamente")
         return True
-        
     except Exception as e:
         logger.error(f"❌ Error inicializando base de datos: {e}")
         if connection:
@@ -1331,7 +1399,7 @@ def health_check():
     })
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 200
-
+        
 @app.route('/', methods=['GET'])
 def root():
     """Información de la API"""
@@ -1446,7 +1514,6 @@ def method_not_allowed(error):
     })
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 405
-
 # ==================== ENDPOINTS DE NOTIFICACIONES ====================
 
 @app.route('/api/notificaciones', methods=['GET'])
@@ -1546,9 +1613,8 @@ def enviar_notificacion_email(current_user_id):
                 f"Asunto: {data['asunto']}",
                 'email'
             )
-            
             response = jsonify({'message': 'Email enviado exitosamente'})
-    else:
+        else:
             response = jsonify({'message': 'Error enviando email'})
         
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")

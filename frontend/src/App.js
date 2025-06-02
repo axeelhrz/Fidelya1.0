@@ -16,6 +16,7 @@ import ClientesPage from './pages/clientes';
 import ReportesFinancierosPage from './pages/ReportesFinancieros';
 import CierreCajaPage from './pages/CierreCaja';
 import FacturacionPage from './pages/Facturacion';
+import ConfiguracionPage from './pages/Configuracion';
 
 // Componente de ruta protegida
 import ProtectedRoute from './components/ProtectedRoute';
@@ -120,12 +121,22 @@ const AppRoutes = () => {
         } 
       />
 
-      {/* NUEVA RUTA PARA FACTURACIÓN */}
+      {/* Ruta para Facturación */}
       <Route 
         path="/facturacion" 
         element={
           <ProtectedRoute requiredRoles={['admin', 'cajero', 'operador']}>
             <FacturacionPage />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* NUEVA RUTA PARA CONFIGURACIÓN */}
+      <Route 
+        path="/configuracion" 
+        element={
+          <ProtectedRoute requiredRoles={['admin']}>
+            <ConfiguracionPage />
           </ProtectedRoute>
         } 
       />
