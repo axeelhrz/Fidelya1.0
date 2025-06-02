@@ -1959,6 +1959,319 @@ def conflict(error):
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 409
 
+# ==================== ENDPOINTS DE INVENTARIO MEJORADOS ====================
+
+@app.route('/api/inventario/stats', methods=['GET'])
+@jwt_required
+def obtener_estadisticas_inventario(current_user_id):
+    """Obtener estadísticas detalladas del inventario"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({
+                'total_productos': 0,
+                'productos_stock_bajo': 0,
+                'valor_inventario': 0.0,
+                'stock_total': 0,
+                'productos_por_categoria': {},
+                'categorias_principales': []
+            }), 200
+            
+        cursor = connection.cursor()
+        
+        # Total de productos activos
+        cursor.execute("SELECT COUNT(*) FROM productos WHERE activo = TRUE")
+        total_productos = cursor.fetchone()[0] or 0
+        
+        # Productos con stock bajo
+        cursor.execute("""
+            SELECT COUNT(*) FROM productos 
+            WHERE stock_actual <= stock_minimo AND activo = TRUE
+        """)
+        productos_stock_bajo = cursor.fetchone()[0] or 0
+        
+        # Valor total del inventario
+        cursor.execute("""
+            SELECT COALESCE(SUM(stock_actual * precio_unitario), 0) 
+            FROM productos WHERE activo = TRUE
+        """)
+        valor_inventario = float(cursor.fetchone()[0] or 0)
+        
+        # Stock total
+        cursor.execute("""
+            SELECT COALESCE(SUM(stock_actual), 0) 
+            FROM productos WHERE activo = TRUE
+        """)
+        stock_total = float(cursor.fetchone()[0] or 0)
+        
+        # Productos por categoría
+        cursor.execute("""
+            SELECT categoria, COUNT(*) 
+            FROM productos 
+            WHERE activo = TRUE 
+            GROUP BY categoria
+        """)
+        productos_por_categoria = {}
+        for row in cursor.fetchall():
+            productos_por_categoria[row[0]] = row[1]
+        
+        # Categorías principales (con más productos)
+        categorias_principales = sorted(
+            productos_por_categoria.items(), 
+            key=lambda x: x[1], 
+            reverse=True
+        )[:3]
+        
+        # Productos más vendidos (últimos 30 días)
+        cursor.execute("""
+            SELECT p.nombre, COALESCE(SUM(dv.cantidad), 0) as total_vendido
+            FROM productos p
+            LEFT JOIN detalle_ventas dv ON p.id = dv.producto_id
+            LEFT JOIN ventas v ON dv.venta_id = v.id
+            WHERE p.activo = TRUE 
+            AND (v.fecha >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) OR v.fecha IS NULL)
+            GROUP BY p.id, p.nombre
+            ORDER BY total_vendido DESC
+            LIMIT 5
+        """)
+        productos_mas_vendidos = []
+        for row in cursor.fetchall():
+            productos_mas_vendidos.append({
+                'nombre': row[0],
+                'cantidad_vendida': float(row[1])
+            })
+        
+        estadisticas = {
+            'total_productos': total_productos,
+            'productos_stock_bajo': productos_stock_bajo,
+            'valor_inventario': valor_inventario,
+            'stock_total': stock_total,
+            'productos_por_categoria': productos_por_categoria,
+            'categorias_principales': [{'categoria': cat, 'cantidad': cant} for cat, cant in categorias_principales],
+            'productos_mas_vendidos': productos_mas_vendidos
+        }
+        
+        response = jsonify(estadisticas)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"Error obteniendo estadísticas de inventario: {e}")
+        return jsonify({
+            'total_productos': 0,
+            'productos_stock_bajo': 0,
+            'valor_inventario': 0.0,
+            'stock_total': 0,
+            'productos_por_categoria': {},
+            'categorias_principales': []
+        }), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/movimientos', methods=['GET'])
+@jwt_required
+def obtener_movimientos_stock(current_user_id):
+    """Listar movimientos de stock con filtros"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify([]), 200
+            
+        cursor = connection.cursor()
+        
+        # Obtener parámetros de filtros
+        producto_id = request.args.get('producto_id')
+        tipo = request.args.get('tipo')
+        fecha_inicio = request.args.get('fecha_inicio')
+        fecha_fin = request.args.get('fecha_fin')
+        limit = int(request.args.get('limit', 50))
+        
+        # Construir consulta
+        query = """
+            SELECT ms.id, ms.tipo, ms.cantidad, ms.motivo, ms.fecha,
+                   p.nombre as producto_nombre, p.unidad,
+                   u.nombre as usuario_nombre
+            FROM movimientos_stock ms
+            INNER JOIN productos p ON ms.producto_id = p.id
+            LEFT JOIN usuarios u ON ms.usuario_id = u.id
+            WHERE 1=1
+        """
+        params = []
+        
+        if producto_id:
+            query += " AND ms.producto_id = %s"
+            params.append(producto_id)
+        
+        if tipo:
+            query += " AND ms.tipo = %s"
+            params.append(tipo)
+        
+        if fecha_inicio:
+            query += " AND DATE(ms.fecha) >= %s"
+            params.append(fecha_inicio)
+        
+        if fecha_fin:
+            query += " AND DATE(ms.fecha) <= %s"
+            params.append(fecha_fin)
+        
+        query += " ORDER BY ms.fecha DESC, ms.id DESC LIMIT %s"
+        params.append(limit)
+        
+        cursor.execute(query, params)
+        movimientos = []
+        
+        for row in cursor.fetchall():
+            movimiento = {
+                'id': row[0],
+                'tipo': row[1],
+                'cantidad': float(row[2]),
+                'motivo': row[3] or '',
+                'fecha': row[4].isoformat() if row[4] else None,
+                'producto_nombre': row[5],
+                'unidad': row[6],
+                'usuario_nombre': row[7] or 'Sistema'
+            }
+            movimientos.append(movimiento)
+        
+        response = jsonify(movimientos)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"Error obteniendo movimientos de stock: {e}")
+        return jsonify([]), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/productos/export/pdf', methods=['GET'])
+@jwt_required
+def exportar_productos_pdf(current_user_id):
+    """Exportar productos a PDF"""
+    try:
+        # Por ahora retornamos un mensaje, la implementación completa requiere librerías adicionales
+        response = jsonify({
+            'message': 'Funcionalidad de exportación PDF en desarrollo',
+            'url': '/api/productos/export/pdf',
+            'formato': 'application/pdf'
+        })
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+    except Exception as e:
+        logger.error(f"Error exportando PDF: {e}")
+        return jsonify({'message': 'Error en exportación PDF'}), 500
+
+@app.route('/api/productos/export/excel', methods=['GET'])
+@jwt_required
+def exportar_productos_excel(current_user_id):
+    """Exportar productos a Excel"""
+    try:
+        # Por ahora retornamos un mensaje, la implementación completa requiere librerías adicionales
+        response = jsonify({
+            'message': 'Funcionalidad de exportación Excel en desarrollo',
+            'url': '/api/productos/export/excel',
+            'formato': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        })
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+    except Exception as e:
+        logger.error(f"Error exportando Excel: {e}")
+        return jsonify({'message': 'Error en exportación Excel'}), 500
+
+# Actualizar el endpoint de productos para mejorar filtros
+@app.route('/api/productos', methods=['GET'])
+@jwt_required
+def obtener_productos_mejorado(current_user_id):
+    """Listar productos con filtros mejorados"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify([]), 200
+            
+        cursor = connection.cursor()
+        
+        # Obtener parámetros de filtros
+        search = request.args.get('q', '').strip()
+        categoria = request.args.get('categoria')
+        activo = request.args.get('activo', 'true').lower() == 'true'
+        stock_bajo = request.args.get('stock_bajo', 'false').lower() == 'true'
+        orden = request.args.get('orden', 'nombre')
+        direccion = request.args.get('direccion', 'asc')
+        
+        # Construir consulta
+        query = """
+            SELECT p.id, p.nombre, p.categoria, p.unidad, p.stock_actual, p.stock_minimo, 
+                   p.precio_unitario, p.activo, p.creado, pr.nombre as proveedor_nombre,
+                   CASE WHEN p.stock_actual <= p.stock_minimo THEN 1 ELSE 0 END as stock_bajo
+            FROM productos p
+            LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
+            WHERE p.activo = %s
+        """
+        params = [activo]
+        
+        if search:
+            query += " AND (p.nombre LIKE %s OR pr.nombre LIKE %s)"
+            search_param = f"%{search}%"
+            params.extend([search_param, search_param])
+        
+        if categoria and categoria != 'todos':
+            query += " AND p.categoria = %s"
+            params.append(categoria)
+        
+        if stock_bajo:
+            query += " AND p.stock_actual <= p.stock_minimo"
+        
+        # Ordenamiento
+        orden_valido = orden if orden in ['nombre', 'categoria', 'stock_actual', 'precio_unitario', 'creado'] else 'nombre'
+        direccion_valida = 'DESC' if direccion.lower() == 'desc' else 'ASC'
+        query += f" ORDER BY p.{orden_valido} {direccion_valida}"
+        
+        cursor.execute(query, params)
+        productos = []
+        
+        for row in cursor.fetchall():
+            producto = {
+                'id': row[0],
+                'nombre': row[1],
+                'categoria': row[2],
+                'unidad': row[3],
+                'stock_actual': float(row[4]),
+                'stock_minimo': float(row[5]),
+                'precio_unitario': float(row[6]),
+                'activo': bool(row[7]),
+                'creado': row[8].isoformat() if row[8] else None,
+                'proveedor': row[9] or 'Sin proveedor',
+                'stock_bajo': bool(row[10])
+            }
+            productos.append(producto)
+        
+        response = jsonify(productos)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"Error obteniendo productos: {e}")
+        return jsonify([]), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
 # ==================== FUNCIÓN PRINCIPAL ====================
 
 if __name__ == '__main__':

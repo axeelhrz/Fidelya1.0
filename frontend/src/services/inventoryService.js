@@ -62,19 +62,27 @@ api.interceptors.response.use(
 );
 
 /**
- * Obtiene todos los productos del inventario
+ * Obtiene todos los productos del inventario con filtros mejorados
+ * @param {object} filtros - Filtros para la búsqueda
  * @returns {array} - Lista de productos
  */
-export const obtenerProductos = async () => {
+export const obtenerProductos = async (filtros = {}) => {
   try {
-    console.log('📦 Obteniendo productos del inventario');
-    const response = await api.get('/inventario');
+    console.log('📦 Obteniendo productos del inventario con filtros:', filtros);
+    
+    // Construir parámetros de consulta
+    const params = new URLSearchParams();
+    
+    if (filtros.busqueda) params.append('q', filtros.busqueda);
+    if (filtros.categoria && filtros.categoria !== 'todos') params.append('categoria', filtros.categoria);
+    if (filtros.stockBajo) params.append('stock_bajo', 'true');
+    if (filtros.orden) params.append('orden', filtros.orden);
+    if (filtros.direccion) params.append('direccion', filtros.direccion);
+    const response = await api.get(`/productos?${params.toString()}`);
     console.log('✅ Productos obtenidos:', response.data.length);
     return response.data;
   } catch (error) {
     console.error('❌ Error obteniendo productos:', error);
-    // Devolver array vacío en caso de error
-    console.log('🔄 Devolviendo lista vacía de productos como fallback');
     return [];
   }
 };
@@ -87,7 +95,7 @@ export const obtenerProductos = async () => {
 export const obtenerProducto = async (id) => {
   try {
     console.log('📦 Obteniendo producto:', id);
-    const response = await api.get(`/inventario/${id}`);
+    const response = await api.get(`/productos/${id}`);
     console.log('✅ Producto obtenido:', response.data.nombre);
     return response.data;
   } catch (error) {
@@ -104,7 +112,7 @@ export const obtenerProducto = async (id) => {
 export const crearProducto = async (producto) => {
   try {
     console.log('📦 Creando producto:', producto.nombre);
-    const response = await api.post('/inventario', producto);
+    const response = await api.post('/productos', producto);
     console.log('✅ Producto creado:', response.data);
     return response.data;
   } catch (error) {
@@ -122,7 +130,7 @@ export const crearProducto = async (producto) => {
 export const actualizarProducto = async (id, producto) => {
   try {
     console.log('📦 Actualizando producto:', id);
-    const response = await api.put(`/inventario/${id}`, producto);
+    const response = await api.put(`/productos/${id}`, producto);
     console.log('✅ Producto actualizado:', response.data);
     return response.data;
   } catch (error) {
@@ -139,7 +147,7 @@ export const actualizarProducto = async (id, producto) => {
 export const eliminarProducto = async (id) => {
   try {
     console.log('📦 Eliminando producto:', id);
-    const response = await api.delete(`/inventario/${id}`);
+    const response = await api.delete(`/productos/${id}`);
     console.log('✅ Producto eliminado:', response.data);
     return response.data;
   } catch (error) {
@@ -149,10 +157,26 @@ export const eliminarProducto = async (id) => {
 };
 
 /**
- * Obtiene estadísticas del inventario
+ * Obtiene productos con stock bajo
+ * @returns {array} - Lista de productos con stock bajo
+ */
+export const obtenerProductosStockBajo = async () => {
+  try {
+    console.log('⚠️ Obteniendo productos con stock bajo');
+    const response = await api.get('/stock-bajo');
+    console.log('✅ Productos con stock bajo obtenidos:', response.data.length);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error obteniendo productos con stock bajo:', error);
+    return [];
+  }
+};
+
+/**
+ * Obtiene estadísticas detalladas del inventario
  * @returns {object} - Estadísticas del inventario
  */
-export const obtenerEstadisticasInventario = async () => {
+export const obtenerEstadisticas = async () => {
   try {
     console.log('📊 Obteniendo estadísticas del inventario');
     const response = await api.get('/inventario/stats');
@@ -160,7 +184,6 @@ export const obtenerEstadisticasInventario = async () => {
     return response.data;
   } catch (error) {
     console.error('❌ Error obteniendo estadísticas:', error);
-    // Devolver estadísticas por defecto en caso de error
     return {
       total_productos: 0,
       productos_stock_bajo: 0,
@@ -172,14 +195,93 @@ export const obtenerEstadisticasInventario = async () => {
   }
 };
 
+/**
+ * Registra un movimiento de stock
+ * @param {object} movimiento - Datos del movimiento
+ * @returns {object} - Respuesta del servidor
+ */
+export const registrarMovimientoStock = async (movimiento) => {
+  try {
+    console.log('📝 Registrando movimiento de stock:', movimiento);
+    const response = await api.post('/stock/movimiento', movimiento);
+    console.log('✅ Movimiento registrado:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error registrando movimiento:', error);
+    throw error.response?.data || { message: 'Error registrando movimiento' };
+  }
+};
+
+/**
+ * Obtiene historial de movimientos de stock
+ * @param {object} filtros - Filtros para la búsqueda
+ * @returns {array} - Lista de movimientos
+ */
+export const obtenerMovimientos = async (filtros = {}) => {
+  try {
+    console.log('📋 Obteniendo movimientos de stock con filtros:', filtros);
+    
+    const params = new URLSearchParams();
+    if (filtros.producto_id) params.append('producto_id', filtros.producto_id);
+    if (filtros.tipo) params.append('tipo', filtros.tipo);
+    if (filtros.fecha_inicio) params.append('fecha_inicio', filtros.fecha_inicio);
+    if (filtros.fecha_fin) params.append('fecha_fin', filtros.fecha_fin);
+    if (filtros.limit) params.append('limit', filtros.limit);
+    
+    const response = await api.get(`/movimientos?${params.toString()}`);
+    console.log('✅ Movimientos obtenidos:', response.data.length);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error obteniendo movimientos:', error);
+    return [];
+  }
+};
+
+/**
+ * Exporta productos a PDF
+ * @returns {object} - Información de exportación
+ */
+export const exportarProductosPDF = async () => {
+  try {
+    console.log('📄 Exportando productos a PDF');
+    const response = await api.get('/productos/export/pdf');
+    console.log('✅ Exportación PDF iniciada:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error exportando PDF:', error);
+    throw error.response?.data || { message: 'Error exportando PDF' };
+  }
+};
+
+/**
+ * Exporta productos a Excel
+ * @returns {object} - Información de exportación
+ */
+export const exportarProductosExcel = async () => {
+  try {
+    console.log('📊 Exportando productos a Excel');
+    const response = await api.get('/productos/export/excel');
+    console.log('✅ Exportación Excel iniciada:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error exportando Excel:', error);
+    throw error.response?.data || { message: 'Error exportando Excel' };
+  }
+};
+
 // Objeto principal del servicio de inventario
-export const inventoryService = {
+const inventoryService = {
   obtenerProductos,
   obtenerProducto,
   crearProducto,
   actualizarProducto,
   eliminarProducto,
-  obtenerEstadisticasInventario,
+  obtenerProductosStockBajo,
+  obtenerEstadisticas,
+  registrarMovimientoStock,
+  obtenerMovimientos,
+  exportarProductosPDF,
+  exportarProductosExcel,
 };
 
 // Exportación por defecto
