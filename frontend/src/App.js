@@ -1,77 +1,167 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
+import { CssBaseline, Box, CircularProgress } from '@mui/material';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import theme from './theme/theme';
 
-// Páginas de autenticación
+// Importar páginas
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
-
-// Páginas principales
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/dashboard';
 import InventoryPage from './pages/inventory';
-import ClientesPage from './pages/clientes';
-import ComprasPage from './pages/compras';
 import VentasPage from './pages/ventas';
-import ReportesFinancieros from './pages/ReportesFinancieros';
+import ComprasPage from './pages/compras';
+import ClientesPage from './pages/clientes';
+import ReportesFinancierosPage from './pages/ReportesFinancieros';
+import CierreCajaPage from './pages/CierreCaja';
 
+// Componente de ruta protegida
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Componente de carga
+const LoadingScreen = () => (
+  <Box 
+    sx={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh',
+      backgroundColor: '#f5f5f5'
+    }}
+  >
+    <CircularProgress size={60} />
+  </Box>
+);
+
+// Componente principal de rutas
+const AppRoutes = () => {
+  const { isAuthenticated, loading, user } = useAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  return (
+    <Routes>
+      {/* Rutas públicas */}
+      <Route 
+        path="/login" 
+        element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" replace />} 
+      />
+      <Route 
+        path="/register" 
+        element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" replace />} 
+      />
+
+      {/* Rutas protegidas */}
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/inventory" 
+        element={
+          <ProtectedRoute>
+            <InventoryPage />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/ventas" 
+        element={
+          <ProtectedRoute>
+            <VentasPage />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/compras" 
+        element={
+          <ProtectedRoute>
+            <ComprasPage />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/clientes" 
+        element={
+          <ProtectedRoute>
+            <ClientesPage />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/reportes" 
+        element={
+          <ProtectedRoute>
+            <ReportesFinancierosPage />
+          </ProtectedRoute>
+        } 
+      />
+
+      {/* Nueva ruta para Cierre de Caja */}
+      <Route 
+        path="/cierre-caja" 
+        element={
+          <ProtectedRoute requiredRoles={['admin', 'cajero']}>
+            <CierreCajaPage />
+          </ProtectedRoute>
+        } 
+      />
+
+      {/* Redirecciones */}
+      <Route 
+        path="/" 
+        element={
+          isAuthenticated ? 
+            <Navigate to="/dashboard" replace /> : 
+            <Navigate to="/login" replace />
+        } 
+      />
+      
+      {/* Ruta 404 */}
+      <Route 
+        path="*" 
+        element={
+          isAuthenticated ? 
+            <Navigate to="/dashboard" replace /> : 
+            <Navigate to="/login" replace />
+        } 
+      />
+    </Routes>
+  );
+};
+
+// Componente principal de la aplicación
 function App() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <LoadingScreen />;
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
         <Router>
-          <Routes>
-            {/* Rutas públicas */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-        
-            {/* Rutas protegidas */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-    
-            <Route path="/inventario" element={
-              <ProtectedRoute>
-                <InventoryPage />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/clientes" element={
-              <ProtectedRoute>
-                <ClientesPage />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/compras" element={
-              <ProtectedRoute>
-                <ComprasPage />
-              </ProtectedRoute>
-            } />
-        
-            <Route path="/ventas" element={
-              <ProtectedRoute>
-                <VentasPage />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/reportes" element={
-              <ProtectedRoute>
-                <ReportesFinancieros />
-              </ProtectedRoute>
-            } />
-        
-            {/* Redirección por defecto */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
-            {/* Ruta 404 */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
+          <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+            <AppRoutes />
+          </Box>
         </Router>
       </AuthProvider>
     </ThemeProvider>
