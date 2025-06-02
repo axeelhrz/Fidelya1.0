@@ -2184,6 +2184,226 @@ def obtener_dashboard(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
+# ==================== ENDPOINTS DE DASHBOARD ADICIONALES ====================
+
+@app.route('/api/dashboard/compras-recientes', methods=['GET'])
+@jwt_required
+def obtener_compras_recientes(current_user_id):
+    """Obtener compras recientes para el dashboard"""
+    connection = None
+    cursor = None
+    
+    try:
+        logger.info(f"🛒 Obteniendo compras recientes para dashboard")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify([]), 200
+            
+        cursor = connection.cursor()
+        
+        # Obtener últimas 10 compras
+        cursor.execute("""
+            SELECT c.id, c.total, c.fecha, p.nombre as proveedor_nombre, c.numero_factura
+            FROM compras c
+            LEFT JOIN proveedores p ON c.proveedor_id = p.id
+            WHERE c.estado = 'completada'
+            ORDER BY c.fecha DESC
+            LIMIT 10
+        """)
+        
+        compras_recientes = []
+        for row in cursor.fetchall():
+            compra = {
+                'id': row[0],
+                'total': float(row[1]),
+                'fecha': row[2].isoformat() if row[2] else None,
+                'proveedor_nombre': row[3] or 'Sin proveedor',
+                'numero_factura': row[4] or ''
+            }
+            compras_recientes.append(compra)
+        
+        logger.info(f"✅ Compras recientes obtenidas: {len(compras_recientes)}")
+        response = jsonify(compras_recientes)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo compras recientes: {e}")
+        return jsonify([]), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/dashboard/ventas-mensuales', methods=['GET'])
+@jwt_required
+def obtener_ventas_mensuales(current_user_id):
+    """Obtener datos de ventas mensuales para gráficos"""
+    connection = None
+    cursor = None
+    
+    try:
+        logger.info(f"📊 Obteniendo ventas mensuales para dashboard")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify([]), 200
+            
+        cursor = connection.cursor()
+        
+        # Obtener ventas de los últimos 12 meses
+        cursor.execute("""
+            SELECT 
+                YEAR(fecha) as año,
+                MONTH(fecha) as mes,
+                COUNT(*) as cantidad,
+                SUM(total) as total
+            FROM ventas 
+            WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+            AND estado = 'completada'
+            GROUP BY YEAR(fecha), MONTH(fecha)
+            ORDER BY año ASC, mes ASC
+        """)
+        
+        ventas_mensuales = []
+        for row in cursor.fetchall():
+            venta_mes = {
+                'año': row[0],
+                'mes': row[1],
+                'cantidad': row[2] or 0,
+                'total': float(row[3]) if row[3] else 0.0
+            }
+            ventas_mensuales.append(venta_mes)
+        
+        logger.info(f"✅ Ventas mensuales obtenidas: {len(ventas_mensuales)}")
+        response = jsonify(ventas_mensuales)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo ventas mensuales: {e}")
+        return jsonify([]), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/dashboard/stock-distribucion', methods=['GET'])
+@jwt_required
+def obtener_stock_distribucion(current_user_id):
+    """Obtener distribución de stock por categorías"""
+    connection = None
+    cursor = None
+    
+    try:
+        logger.info(f"📦 Obteniendo distribución de stock para dashboard")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify([]), 200
+            
+        cursor = connection.cursor()
+        
+        # Obtener distribución por categorías
+        cursor.execute("""
+            SELECT 
+                categoria,
+                COUNT(*) as cantidad_productos,
+                SUM(stock_actual) as stock_total,
+                SUM(stock_actual * precio_unitario) as valor_total
+            FROM productos 
+            WHERE activo = TRUE
+            GROUP BY categoria
+            ORDER BY cantidad_productos DESC
+        """)
+        
+        distribucion_stock = []
+        for row in cursor.fetchall():
+            categoria = {
+                'categoria': row[0],
+                'cantidad_productos': row[1] or 0,
+                'stock_total': float(row[2]) if row[2] else 0.0,
+                'valor_total': float(row[3]) if row[3] else 0.0
+            }
+            distribucion_stock.append(categoria)
+        
+        logger.info(f"✅ Distribución de stock obtenida: {len(distribucion_stock)}")
+        response = jsonify(distribucion_stock)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo distribución de stock: {e}")
+        return jsonify([]), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/dashboard/ultimos-movimientos', methods=['GET'])
+@jwt_required
+def obtener_ultimos_movimientos(current_user_id):
+    """Obtener últimos movimientos de stock"""
+    connection = None
+    cursor = None
+    
+    try:
+        logger.info(f"📦 Obteniendo últimos movimientos para dashboard")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify([]), 200
+            
+        cursor = connection.cursor()
+        
+        # Obtener últimos 15 movimientos
+        cursor.execute("""
+            SELECT 
+                ms.id,
+                ms.tipo,
+                ms.cantidad,
+                ms.motivo,
+                ms.fecha,
+                p.nombre as producto_nombre,
+                u.nombre as usuario_nombre
+            FROM movimientos_stock ms
+            INNER JOIN productos p ON ms.producto_id = p.id
+            LEFT JOIN usuarios u ON ms.usuario_id = u.id
+            ORDER BY ms.fecha DESC
+            LIMIT 15
+        """)
+        
+        ultimos_movimientos = []
+        for row in cursor.fetchall():
+            movimiento = {
+                'id': row[0],
+                'tipo': row[1],
+                'cantidad': float(row[2]),
+                'motivo': row[3] or '',
+                'fecha': row[4].isoformat() if row[4] else None,
+                'producto_nombre': row[5],
+                'usuario_nombre': row[6] or 'Sistema'
+            }
+            ultimos_movimientos.append(movimiento)
+        
+        logger.info(f"✅ Últimos movimientos obtenidos: {len(ultimos_movimientos)}")
+        response = jsonify(ultimos_movimientos)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo últimos movimientos: {e}")
+        return jsonify([]), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
 # ==================== ENDPOINTS DE MOVIMIENTOS DE STOCK ====================
 
 @app.route('/api/movimientos-stock', methods=['GET'])
@@ -2313,7 +2533,7 @@ def crear_movimiento_stock(current_user_id):
         cursor.execute(
             "UPDATE productos SET stock_actual = %s WHERE id = %s",
             (nuevo_stock, data['producto_id'])
-        )
+    )
         
         # Registrar movimiento
         cursor.execute("""
@@ -2689,6 +2909,18 @@ def method_not_allowed(error):
     response = jsonify({'message': 'Método no permitido'})
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 405
+
+# ==================== MANEJO DE OPCIONES CORS ====================
+
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = jsonify({'message': 'OK'})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response, 200
 
 # ==================== INICIALIZACIÓN ====================
 
