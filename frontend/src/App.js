@@ -16,6 +16,8 @@ import InventoryPage from './pages/inventory';
 import ClientesPage from './pages/clientes';
 import ComprasPage from './pages/compras';
 import VentasPage from './pages/ventas';
+import ReportesFinancieros from './pages/ReportesFinancieros';
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
@@ -23,44 +25,50 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-                {/* Rutas públicas */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-            
+            {/* Rutas públicas */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+        
             {/* Rutas protegidas */}
-                <Route path="/dashboard" element={
-                <ProtectedRoute>
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
                 <Dashboard />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/inventario" element={
-                  <ProtectedRoute>
-                      <InventoryPage />
-                  </ProtectedRoute>
-                } />
-                
+              </ProtectedRoute>
+            } />
+    
+            <Route path="/inventario" element={
+              <ProtectedRoute>
+                <InventoryPage />
+              </ProtectedRoute>
+            } />
+            
             <Route path="/clientes" element={
-                  <ProtectedRoute>
-                      <ClientesPage />
-                  </ProtectedRoute>
-                } />
-                
+              <ProtectedRoute>
+                <ClientesPage />
+              </ProtectedRoute>
+            } />
+            
             <Route path="/compras" element={
               <ProtectedRoute>
                 <ComprasPage />
               </ProtectedRoute>
-                } />
-            
+            } />
+        
             <Route path="/ventas" element={
               <ProtectedRoute>
                 <VentasPage />
               </ProtectedRoute>
             } />
-            
+
+            <Route path="/reportes" element={
+              <ProtectedRoute>
+                <ReportesFinancieros />
+              </ProtectedRoute>
+            } />
+        
             {/* Redirección por defecto */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            
+        
             {/* Ruta 404 */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

@@ -9,7 +9,7 @@ console.log('📊 Reportes API_URL configurada:', API_URL);
 // Configurar instancia de axios con configuraciones base
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 15000,
+  timeout: 30000, // Timeout más largo para reportes
   headers: {
     'Content-Type': 'application/json',
   },
@@ -44,7 +44,7 @@ api.interceptors.response.use(
     if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
       console.error('Error de CORS o conexión:', error);
       return Promise.reject({
-        message: 'Error de conexión. Verifica que el servidor esté funcionando en puerto 5001.',
+        message: 'Error de conexión. Verifica que el servidor esté funcionando.',
         type: 'NETWORK_ERROR'
       });
     }
@@ -62,199 +62,281 @@ api.interceptors.response.use(
 );
 
 /**
- * Obtiene el resumen financiero con KPIs principales
- * @param {object} filtros - Filtros de fecha
- * @returns {object} - Resumen financiero
+ * Obtiene reporte de ingresos
+ * @param {object} filtros - Filtros de fecha y agrupación
+ * @returns {object} - Datos del reporte de ingresos
  */
-export const obtenerResumenFinanciero = async (filtros = {}) => {
+export const obtenerReporteIngresos = async (filtros = {}) => {
   try {
     const params = new URLSearchParams();
     
-    if (filtros.fecha_desde) {
-      params.append('fecha_desde', filtros.fecha_desde);
-    }
-    if (filtros.fecha_hasta) {
-      params.append('fecha_hasta', filtros.fecha_hasta);
-    }
+    if (filtros.fecha_inicio) params.append('fecha_inicio', filtros.fecha_inicio);
+    if (filtros.fecha_fin) params.append('fecha_fin', filtros.fecha_fin);
+    if (filtros.agrupacion) params.append('agrupacion', filtros.agrupacion);
     
-    const url = `/reportes/resumen${params.toString() ? '?' + params.toString() : ''}`;
-    console.log('📊 Obteniendo resumen financiero:', url);
-    
-    const response = await api.get(url);
-    console.log('✅ Resumen financiero obtenido:', response.data);
+    console.log('📊 Obteniendo reporte de ingresos:', filtros);
+    const response = await api.get(`/reportes/ingresos?${params.toString()}`);
+    console.log('✅ Reporte de ingresos obtenido:', response.data.resumen?.total_ingresos || 0);
     return response.data;
   } catch (error) {
-    console.error('❌ Error obteniendo resumen financiero:', error);
+    console.error('❌ Error obteniendo reporte de ingresos:', error);
     return {
-      ingresos: 0.0,
-      egresos: 0.0,
-      balance: 0.0,
-      impuestos: 0.0
+      ingresos: [],
+      resumen: {
+        total_ingresos: 0,
+        total_ventas: 0,
+        venta_promedio: 0,
+        venta_minima: 0,
+        venta_maxima: 0
+      },
+      filtros: filtros,
+      fecha_generacion: new Date().toISOString()
     };
   }
 };
 
 /**
- * Obtiene el listado detallado de movimientos financieros
- * @param {object} filtros - Filtros de búsqueda
- * @returns {array} - Lista de movimientos
- */
-export const obtenerMovimientosFinancieros = async (filtros = {}) => {
-  try {
-    const params = new URLSearchParams();
-    
-    if (filtros.fecha_desde) {
-      params.append('fecha_desde', filtros.fecha_desde);
-    }
-    if (filtros.fecha_hasta) {
-      params.append('fecha_hasta', filtros.fecha_hasta);
-    }
-    if (filtros.tipo) {
-      params.append('tipo', filtros.tipo);
-    }
-    if (filtros.categoria) {
-      params.append('categoria', filtros.categoria);
-    }
-    if (filtros.cliente_id) {
-      params.append('cliente_id', filtros.cliente_id);
-    }
-    if (filtros.proveedor_id) {
-      params.append('proveedor_id', filtros.proveedor_id);
-    }
-    
-    const url = `/reportes/movimientos${params.toString() ? '?' + params.toString() : ''}`;
-    console.log('📊 Obteniendo movimientos financieros:', url);
-    
-    const response = await api.get(url);
-    console.log('✅ Movimientos financieros obtenidos:', response.data.length);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error obteniendo movimientos financieros:', error);
-    return [];
-  }
-};
-
-/**
- * Obtiene datos para el gráfico de ingresos vs egresos
+ * Obtiene reporte de egresos
  * @param {object} filtros - Filtros de fecha
- * @returns {array} - Datos del gráfico
+ * @returns {object} - Datos del reporte de egresos
  */
-export const obtenerGraficoIngresosEgresos = async (filtros = {}) => {
+export const obtenerReporteEgresos = async (filtros = {}) => {
   try {
     const params = new URLSearchParams();
     
-    if (filtros.fecha_desde) {
-      params.append('fecha_desde', filtros.fecha_desde);
-    }
-    if (filtros.fecha_hasta) {
-      params.append('fecha_hasta', filtros.fecha_hasta);
-    }
+    if (filtros.fecha_inicio) params.append('fecha_inicio', filtros.fecha_inicio);
+    if (filtros.fecha_fin) params.append('fecha_fin', filtros.fecha_fin);
     
-    const url = `/reportes/grafico/ingresos-egresos${params.toString() ? '?' + params.toString() : ''}`;
-    console.log('📊 Obteniendo gráfico ingresos-egresos:', url);
-    
-    const response = await api.get(url);
-    console.log('✅ Datos del gráfico obtenidos:', response.data.length);
+    console.log('📊 Obteniendo reporte de egresos:', filtros);
+    const response = await api.get(`/reportes/egresos?${params.toString()}`);
+    console.log('✅ Reporte de egresos obtenido:', response.data.resumen?.total_egresos || 0);
     return response.data;
   } catch (error) {
-    console.error('❌ Error obteniendo gráfico ingresos-egresos:', error);
-    return [];
+    console.error('❌ Error obteniendo reporte de egresos:', error);
+    return {
+      egresos: [],
+      resumen: {
+        total_egresos: 0,
+        total_transacciones: 0,
+        egreso_promedio: 0,
+        categoria_mayor_gasto: 'N/A'
+      },
+      filtros: filtros,
+      fecha_generacion: new Date().toISOString()
+};
   }
 };
 
 /**
- * Obtiene datos para el gráfico de distribución por categorías
- * @param {object} filtros - Filtros de búsqueda
- * @returns {array} - Datos del gráfico
+ * Obtiene estado de resultados
+ * @param {object} filtros - Filtros de fecha
+ * @returns {object} - Estado de resultados completo
  */
-export const obtenerGraficoCategorias = async (filtros = {}) => {
+export const obtenerEstadoResultados = async (filtros = {}) => {
   try {
     const params = new URLSearchParams();
     
-    if (filtros.tipo) {
-      params.append('tipo', filtros.tipo);
-    }
-    if (filtros.fecha_desde) {
-      params.append('fecha_desde', filtros.fecha_desde);
-    }
-    if (filtros.fecha_hasta) {
-      params.append('fecha_hasta', filtros.fecha_hasta);
-    }
+    if (filtros.fecha_inicio) params.append('fecha_inicio', filtros.fecha_inicio);
+    if (filtros.fecha_fin) params.append('fecha_fin', filtros.fecha_fin);
     
-    const url = `/reportes/grafico/categorias${params.toString() ? '?' + params.toString() : ''}`;
-    console.log('📊 Obteniendo gráfico de categorías:', url);
-    
-    const response = await api.get(url);
-    console.log('✅ Datos del gráfico de categorías obtenidos:', response.data.length);
+    console.log('📊 Obteniendo estado de resultados:', filtros);
+    const response = await api.get(`/reportes/estado-resultados?${params.toString()}`);
+    console.log('✅ Estado de resultados obtenido:', response.data.resultado?.utilidad_neta || 0);
     return response.data;
   } catch (error) {
-    console.error('❌ Error obteniendo gráfico de categorías:', error);
-    return [];
+    console.error('❌ Error obteniendo estado de resultados:', error);
+    return {
+      ingresos: {
+        ventas_productos: 0,
+        otros_ingresos: 0,
+        total_ingresos: 0
+      },
+      egresos: {
+        costo_productos: 0,
+        gastos_operativos: 0,
+        gastos_administrativos: 0,
+        otros_gastos: 0,
+        total_egresos: 0
+      },
+      resultado: {
+        utilidad_bruta: 0,
+        utilidad_operativa: 0,
+        utilidad_neta: 0,
+        margen_utilidad: 0
+      },
+      metricas: {
+        numero_ventas: 0,
+        numero_compras: 0,
+        venta_promedio: 0,
+        compra_promedio: 0,
+        punto_equilibrio: 0,
+        roi_porcentaje: 0
+      },
+      analisis: {
+        estado: 'equilibrio',
+        nivel_riesgo: 'medio',
+        recomendacion: 'Datos insuficientes'
+      },
+      filtros: filtros,
+      fecha_generacion: new Date().toISOString()
+};
   }
 };
 
 /**
- * Exporta reporte a PDF
- * @param {object} filtros - Filtros del reporte
+ * Obtiene reporte de ventas por producto
+ * @param {object} filtros - Filtros de fecha y límite
+ * @returns {object} - Reporte de ventas por producto
+ */
+export const obtenerReporteVentasPorProducto = async (filtros = {}) => {
+  try {
+    const params = new URLSearchParams();
+    
+    if (filtros.fecha_inicio) params.append('fecha_inicio', filtros.fecha_inicio);
+    if (filtros.fecha_fin) params.append('fecha_fin', filtros.fecha_fin);
+    if (filtros.limite) params.append('limite', filtros.limite);
+    
+    console.log('📊 Obteniendo reporte de ventas por producto:', filtros);
+    const response = await api.get(`/reportes/ventas-por-producto?${params.toString()}`);
+    console.log('✅ Reporte de ventas por producto obtenido:', response.data.productos?.length || 0, 'productos');
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error obteniendo reporte de ventas por producto:', error);
+    return {
+      productos: [],
+      categorias: [],
+      resumen: {
+        total_productos_vendidos: 0,
+        total_ventas: 0,
+        total_ingresos: 0,
+        total_unidades_vendidas: 0,
+        ingreso_promedio_por_producto: 0,
+        producto_mas_vendido: 'N/A',
+        categoria_mas_vendida: 'N/A'
+      },
+      filtros: filtros,
+      fecha_generacion: new Date().toISOString()
+};
+  }
+};
+
+/**
+ * Obtiene reporte de inventario
+ * @returns {object} - Estado completo del inventario
+ */
+export const obtenerReporteInventario = async () => {
+  try {
+    console.log('📊 Obteniendo reporte de inventario');
+    const response = await api.get('/reportes/inventario');
+    console.log('✅ Reporte de inventario obtenido:', response.data.productos?.length || 0, 'productos');
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error obteniendo reporte de inventario:', error);
+    return {
+      productos: [],
+      resumen: {
+        total_productos: 0,
+        valor_total_inventario: 0,
+        productos_sin_stock: 0,
+        productos_stock_bajo: 0,
+        productos_stock_normal: 0,
+        productos_excedente: 0,
+        porcentaje_productos_criticos: 0
+      },
+      por_categoria: {},
+      productos_criticos: [],
+      productos_baja_rotacion: [],
+      movimientos_recientes: [],
+      alertas: [],
+      fecha_generacion: new Date().toISOString()
+    };
+  }
+};
+
+/**
+ * Exporta un reporte en formato PDF o Excel
+ * @param {string} tipoReporte - Tipo de reporte a exportar
+ * @param {string} formato - 'pdf' o 'excel'
+ * @param {object} filtros - Filtros aplicados al reporte
  * @returns {object} - Información de la exportación
  */
-export const exportarReportePDF = async (filtros = {}) => {
+export const exportarReporte = async (tipoReporte, formato, filtros = {}) => {
   try {
-    const params = new URLSearchParams();
+    console.log('📤 Exportando reporte:', tipoReporte, 'en formato:', formato);
     
-    Object.keys(filtros).forEach(key => {
-      if (filtros[key]) {
-        params.append(key, filtros[key]);
-      }
-    });
+    const data = {
+      tipo_reporte: tipoReporte,
+      formato: formato,
+      filtros: filtros
+    };
     
-    const url = `/reportes/export/pdf${params.toString() ? '?' + params.toString() : ''}`;
-    console.log('📊 Exportando reporte a PDF:', url);
-    
-    const response = await api.get(url);
-    console.log('✅ Información de exportación PDF:', response.data);
+    const response = await api.post('/reportes/exportar', data);
+    console.log('✅ Reporte exportado:', response.data.nombre_archivo);
     return response.data;
   } catch (error) {
-    console.error('❌ Error exportando a PDF:', error);
-    throw error.response?.data || { message: 'Error exportando a PDF' };
+    console.error('❌ Error exportando reporte:', error);
+    throw error.response?.data || { message: 'Error exportando reporte' };
   }
 };
 
 /**
- * Exporta reporte a Excel
- * @param {object} filtros - Filtros del reporte
- * @returns {object} - Información de la exportación
+ * Obtiene todos los reportes disponibles con sus datos
+ * @param {object} filtros - Filtros globales para todos los reportes
+ * @returns {object} - Todos los reportes consolidados
  */
-export const exportarReporteExcel = async (filtros = {}) => {
+export const obtenerTodosLosReportes = async (filtros = {}) => {
   try {
-    const params = new URLSearchParams();
+    console.log('📊 Obteniendo todos los reportes con filtros:', filtros);
     
-    Object.keys(filtros).forEach(key => {
-      if (filtros[key]) {
-        params.append(key, filtros[key]);
-      }
-    });
+    // Ejecutar todas las consultas en paralelo
+    const [
+      reporteIngresos,
+      reporteEgresos,
+      estadoResultados,
+      reporteVentasProducto,
+      reporteInventario
+    ] = await Promise.allSettled([
+      obtenerReporteIngresos(filtros),
+      obtenerReporteEgresos(filtros),
+      obtenerEstadoResultados(filtros),
+      obtenerReporteVentasPorProducto(filtros),
+      obtenerReporteInventario()
+    ]);
     
-    const url = `/reportes/export/excel${params.toString() ? '?' + params.toString() : ''}`;
-    console.log('📊 Exportando reporte a Excel:', url);
+    const resultado = {
+      ingresos: reporteIngresos.status === 'fulfilled' ? reporteIngresos.value : null,
+      egresos: reporteEgresos.status === 'fulfilled' ? reporteEgresos.value : null,
+      estado_resultados: estadoResultados.status === 'fulfilled' ? estadoResultados.value : null,
+      ventas_por_producto: reporteVentasProducto.status === 'fulfilled' ? reporteVentasProducto.value : null,
+      inventario: reporteInventario.status === 'fulfilled' ? reporteInventario.value : null,
+      filtros_aplicados: filtros,
+      fecha_generacion: new Date().toISOString(),
+      errores: [
+        reporteIngresos.status === 'rejected' ? { tipo: 'ingresos', error: reporteIngresos.reason } : null,
+        reporteEgresos.status === 'rejected' ? { tipo: 'egresos', error: reporteEgresos.reason } : null,
+        estadoResultados.status === 'rejected' ? { tipo: 'estado_resultados', error: estadoResultados.reason } : null,
+        reporteVentasProducto.status === 'rejected' ? { tipo: 'ventas_por_producto', error: reporteVentasProducto.reason } : null,
+        reporteInventario.status === 'rejected' ? { tipo: 'inventario', error: reporteInventario.reason } : null
+      ].filter(error => error !== null)
+    };
     
-    const response = await api.get(url);
-    console.log('✅ Información de exportación Excel:', response.data);
-    return response.data;
+    console.log('✅ Todos los reportes obtenidos. Errores:', resultado.errores.length);
+    return resultado;
   } catch (error) {
-    console.error('❌ Error exportando a Excel:', error);
-    throw error.response?.data || { message: 'Error exportando a Excel' };
+    console.error('❌ Error obteniendo todos los reportes:', error);
+    throw error;
   }
 };
 
 // Objeto principal del servicio de reportes
-export const reportesService = {
-  obtenerResumenFinanciero,
-  obtenerMovimientosFinancieros,
-  obtenerGraficoIngresosEgresos,
-  obtenerGraficoCategorias,
-  exportarReportePDF,
-  exportarReporteExcel,
+const reportesService = {
+  obtenerReporteIngresos,
+  obtenerReporteEgresos,
+  obtenerEstadoResultados,
+  obtenerReporteVentasPorProducto,
+  obtenerReporteInventario,
+  exportarReporte,
+  obtenerTodosLosReportes,
 };
 
 // Exportación por defecto
