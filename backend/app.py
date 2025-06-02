@@ -80,6 +80,37 @@ def init_database():
         # Usar la base de datos
         cursor.execute("USE fruteria_nina")
         
+        # Verificar si las tablas ya existen
+        cursor.execute("SHOW TABLES")
+        existing_tables = [table[0] for table in cursor.fetchall()]
+        
+        if existing_tables:
+            logger.info(f"✅ Base de datos ya inicializada con {len(existing_tables)} tablas")
+            logger.info("📋 Tablas existentes: " + ", ".join(existing_tables))
+            
+            # Verificar usuario administrador
+        try:
+                cursor.execute("SELECT COUNT(*) FROM usuarios WHERE rol = 'admin'")
+                admin_count = cursor.fetchone()[0]
+                if admin_count == 0:
+                    logger.info("🔧 Creando usuario administrador...")
+                    hashed_password = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt())
+        cursor.execute(
+                        "INSERT INTO usuarios (nombre, correo, contraseña, rol) VALUES (%s, %s, %s, %s)",
+                        ('Administrador', 'admin@fruteria.com', hashed_password, 'admin')
+        )
+        connection.commit()
+                    logger.info("✅ Usuario administrador creado")
+        else:
+                    logger.info(f"✅ Usuario administrador ya existe ({admin_count} admin(s))")
+    except Exception as e:
+                logger.warning(f"⚠️ Error verificando usuario administrador: {e}")
+            
+            return True
+        
+        # Si no hay tablas, crear toda la estructura
+        logger.info("🔧 Creando estructura de base de datos...")
+        
         # Crear tabla usuarios
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS usuarios (
@@ -277,85 +308,75 @@ def init_database():
         """)
         logger.info("✅ Tabla movimientos creada")
         
-        # Crear usuario administrador si no existe
-        cursor.execute("SELECT COUNT(*) FROM usuarios")
-        if cursor.fetchone()[0] == 0:
-            hashed_password = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt())
-            cursor.execute(
-                "INSERT INTO usuarios (nombre, correo, contraseña, rol) VALUES (%s, %s, %s, %s)",
-                ('Administrador', 'admin@fruteria.com', hashed_password, 'admin')
-            )
-            logger.info("✅ Usuario administrador creado")
-        else:
-            logger.info("✅ Usuario administrador ya existe")
+        # Crear usuario administrador
+        hashed_password = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt())
+        cursor.execute(
+            "INSERT INTO usuarios (nombre, correo, contraseña, rol) VALUES (%s, %s, %s, %s)",
+            ('Administrador', 'admin@fruteria.com', hashed_password, 'admin')
+        )
+        logger.info("✅ Usuario administrador creado")
         
         # Insertar datos de ejemplo para proveedores
-        cursor.execute("SELECT COUNT(*) FROM proveedores")
-        if cursor.fetchone()[0] == 0:
-            proveedores_ejemplo = [
-                ('Frutas del Valle', 'Juan Pérez', '555-0101', 'juan@frutasdelvalle.com', 'Av. Principal 123', 'Proveedor principal de frutas'),
-                ('Verduras Frescas S.A.', 'María González', '555-0102', 'maria@verdurasfrescas.com', 'Calle Verde 456', 'Especialistas en verduras orgánicas'),
-                ('Distribuidora Central', 'Carlos López', '555-0103', 'carlos@distribuidora.com', 'Zona Industrial 789', 'Distribuidor mayorista'),
-                ('Mercado Local', 'Ana Rodríguez', '555-0104', 'ana@mercadolocal.com', 'Plaza Central 321', 'Proveedor local de temporada')
-            ]
-            
-            for proveedor in proveedores_ejemplo:
-                cursor.execute("""
-                    INSERT INTO proveedores (nombre, contacto, telefono, correo, direccion, notas)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """, proveedor)
-            logger.info("✅ Proveedores de ejemplo creados")
+        proveedores_ejemplo = [
+            ('Frutas del Valle', 'Juan Pérez', '555-0101', 'juan@frutasdelvalle.com', 'Av. Principal 123', 'Proveedor principal de frutas'),
+            ('Verduras Frescas S.A.', 'María González', '555-0102', 'maria@verdurasfrescas.com', 'Calle Verde 456', 'Especialistas en verduras orgánicas'),
+            ('Distribuidora Central', 'Carlos López', '555-0103', 'carlos@distribuidora.com', 'Zona Industrial 789', 'Distribuidor mayorista'),
+            ('Mercado Local', 'Ana Rodríguez', '555-0104', 'ana@mercadolocal.com', 'Plaza Central 321', 'Proveedor local de temporada')
+        ]
+        
+        for proveedor in proveedores_ejemplo:
+        cursor.execute("""
+                INSERT INTO proveedores (nombre, contacto, telefono, correo, direccion, notas)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, proveedor)
+        logger.info("✅ Proveedores de ejemplo creados")
         
         # Insertar datos de ejemplo para productos
-        cursor.execute("SELECT COUNT(*) FROM productos")
-        if cursor.fetchone()[0] == 0:
-            # Obtener IDs de proveedores
-            cursor.execute("SELECT id FROM proveedores LIMIT 4")
-            proveedores_ids = [row[0] for row in cursor.fetchall()]
-            
-            productos_ejemplo = [
-                ('Manzana Roja', 'frutas', 'kg', 50.0, 10.0, 3.50, proveedores_ids[0] if proveedores_ids else None),
-                ('Banana', 'frutas', 'kg', 30.0, 5.0, 2.80, proveedores_ids[0] if proveedores_ids else None),
-                ('Naranja', 'frutas', 'kg', 40.0, 8.0, 3.20, proveedores_ids[0] if proveedores_ids else None),
-                ('Lechuga', 'verduras', 'unidad', 25.0, 5.0, 1.50, proveedores_ids[1] if proveedores_ids else None),
-                ('Tomate', 'verduras', 'kg', 35.0, 7.0, 4.20, proveedores_ids[1] if proveedores_ids else None),
-                ('Zanahoria', 'verduras', 'kg', 20.0, 5.0, 2.50, proveedores_ids[1] if proveedores_ids else None),
-                ('Papas', 'verduras', 'kg', 60.0, 15.0, 2.00, proveedores_ids[2] if proveedores_ids else None),
-                ('Cebolla', 'verduras', 'kg', 45.0, 10.0, 1.80, proveedores_ids[2] if proveedores_ids else None)
-            ]
-            
-            for producto in productos_ejemplo:
-                cursor.execute("""
-                    INSERT INTO productos (nombre, categoria, unidad, stock_actual, stock_minimo, precio_unitario, proveedor_id)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """, producto)
-            logger.info("✅ Productos de ejemplo creados")
+        cursor.execute("SELECT id FROM proveedores LIMIT 4")
+        proveedores_ids = [row[0] for row in cursor.fetchall()]
+        
+        productos_ejemplo = [
+            ('Manzana Roja', 'frutas', 'kg', 50.0, 10.0, 3.50, proveedores_ids[0] if proveedores_ids else None),
+            ('Banana', 'frutas', 'kg', 30.0, 5.0, 2.80, proveedores_ids[0] if proveedores_ids else None),
+            ('Naranja', 'frutas', 'kg', 40.0, 8.0, 3.20, proveedores_ids[0] if proveedores_ids else None),
+            ('Lechuga', 'verduras', 'unidad', 25.0, 5.0, 1.50, proveedores_ids[1] if proveedores_ids else None),
+            ('Tomate', 'verduras', 'kg', 35.0, 7.0, 4.20, proveedores_ids[1] if proveedores_ids else None),
+            ('Zanahoria', 'verduras', 'kg', 20.0, 5.0, 2.50, proveedores_ids[1] if proveedores_ids else None),
+            ('Papas', 'verduras', 'kg', 60.0, 15.0, 2.00, proveedores_ids[2] if proveedores_ids else None),
+            ('Cebolla', 'verduras', 'kg', 45.0, 10.0, 1.80, proveedores_ids[2] if proveedores_ids else None)
+        ]
+        
+        for producto in productos_ejemplo:
+        cursor.execute("""
+                INSERT INTO productos (nombre, categoria, unidad, stock_actual, stock_minimo, precio_unitario, proveedor_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, producto)
+        logger.info("✅ Productos de ejemplo creados")
         
         # Insertar datos de ejemplo para clientes
-        cursor.execute("SELECT COUNT(*) FROM clientes")
-        if cursor.fetchone()[0] == 0:
-            clientes_ejemplo = [
-                ('Cliente General', None, None, None, 'Cliente para ventas rápidas'),
-                ('Restaurante El Buen Sabor', 'restaurante@buensabor.com', '555-1001', 'Av. Gastronómica 100', 'Cliente mayorista - restaurante'),
-                ('Supermercado La Esquina', 'compras@laesquina.com', '555-1002', 'Calle Comercial 200', 'Supermercado local'),
-                ('María Fernández', 'maria.fernandez@email.com', '555-1003', 'Residencial Los Pinos 45', 'Cliente frecuente'),
-                ('Hotel Plaza', 'cocina@hotelplaza.com', '555-1004', 'Plaza Principal 1', 'Hotel - pedidos semanales')
-            ]
-            
-            for cliente in clientes_ejemplo:
-                cursor.execute("""
-                    INSERT INTO clientes (nombre, correo, telefono, direccion, notas)
-                    VALUES (%s, %s, %s, %s, %s)
-                """, cliente)
-            logger.info("✅ Clientes de ejemplo creados")
+        clientes_ejemplo = [
+            ('Cliente General', None, None, None, 'Cliente para ventas rápidas'),
+            ('Restaurante El Buen Sabor', 'restaurante@buensabor.com', '555-1001', 'Av. Gastronómica 100', 'Cliente mayorista - restaurante'),
+            ('Supermercado La Esquina', 'compras@laesquina.com', '555-1002', 'Calle Comercial 200', 'Supermercado local'),
+            ('María Fernández', 'maria.fernandez@email.com', '555-1003', 'Residencial Los Pinos 45', 'Cliente frecuente'),
+            ('Hotel Plaza', 'cocina@hotelplaza.com', '555-1004', 'Plaza Principal 1', 'Hotel - pedidos semanales')
+        ]
+        
+        for cliente in clientes_ejemplo:
+        cursor.execute("""
+                INSERT INTO clientes (nombre, correo, telefono, direccion, notas)
+                VALUES (%s, %s, %s, %s, %s)
+            """, cliente)
+        logger.info("✅ Clientes de ejemplo creados")
         
         connection.commit()
-        logger.info("✅ Base de datos inicializada correctamente")
+        logger.info("✅ Base de datos inicializada correctamente con datos de ejemplo")
         return True
         
     except mysql.connector.Error as err:
         logger.error(f"❌ Error de MySQL: {err}")
-        if err.errno == 1007:  # Database exists
+        # Si es error de tabla existente, continuar normalmente
+        if err.errno == 1050:  # Table already exists
             logger.info("✅ Continuando con base de datos existente...")
             return True
         return False
@@ -374,7 +395,7 @@ def jwt_required(f):
     def decorated(*args, **kwargs):
         if request.method == "OPTIONS":
             response = jsonify()
-            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
             response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
             response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
             response.headers.add('Access-Control-Allow-Credentials', "true")
@@ -388,7 +409,7 @@ def jwt_required(f):
         try:
             if auth_header.startswith('Bearer '):
                 token = auth_header[7:]
-            else:
+    else:
                 token = auth_header
                 
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
@@ -463,7 +484,7 @@ def register():
             (nombre, correo, hashed_password)
         )
         connection.commit()
-        
+    
         logger.info(f"Usuario registrado exitosamente: {correo}")
         response = jsonify({
             'message': 'Usuario registrado exitosamente',
@@ -507,7 +528,7 @@ def login():
         cursor.execute(
             "SELECT id, nombre, contraseña, rol FROM usuarios WHERE correo = %s",
             (correo,)
-        )
+    )
         user = cursor.fetchone()
         
         if not user or not bcrypt.checkpw(contraseña.encode('utf-8'), user[2].encode('utf-8')):
@@ -2248,7 +2269,6 @@ def obtener_venta_detalle(current_user_id, venta_id):
             'productos': productos
         }
         
-
         logger.info(f"✅ Detalle de venta {venta_id} obtenido")
         response = jsonify(venta)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
