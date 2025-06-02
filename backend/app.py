@@ -42,9 +42,10 @@ def get_db_connection():
     try:
         connection = mysql.connector.connect(**DB_CONFIG)
         if connection.is_connected():
+            logger.info("✅ Conexión a la base de datos establecida")
             return connection
         else:
-            logger.error("❌ Error: Conexión no establecida")
+            logger.error("❌ No se pudo establecer conexión a la base de datos")
             return None
     except mysql.connector.Error as err:
         logger.error(f"❌ Error conectando a la base de datos: {err}")
@@ -59,13 +60,11 @@ def init_database():
     cursor = None
     
     try:
-        # Conectar sin especificar base de datos para crearla
-        temp_config = DB_CONFIG.copy()
-        temp_config.pop('database', None)
-        connection = mysql.connector.connect(**temp_config)
+        connection = get_db_connection()
+        if not connection:
+            return False
+            
         cursor = connection.cursor()
-        
-        logger.info("✅ Conectado a MySQL exitosamente")
         
         # Crear base de datos si no existe
         try:
@@ -76,34 +75,34 @@ def init_database():
                 logger.info("✅ Base de datos 'fruteria_nina' ya existe")
             else:
                 logger.warning(f"⚠️ Error creando base de datos: {db_err}")
-        
+
         # Usar la base de datos
         cursor.execute("USE fruteria_nina")
-        
+
         # Verificar si las tablas ya existen
         cursor.execute("SHOW TABLES")
         existing_tables = [table[0] for table in cursor.fetchall()]
-        
+
         if existing_tables:
-            logger.info(f"✅ Base de datos ya inicializada con {len(existing_tables)} tablas")
+            logger.info(f"✅ Base de datos existente con {len(existing_tables)} tablas")
             logger.info("📋 Tablas existentes: " + ", ".join(existing_tables))
             
             # Verificar usuario administrador
-        try:
+            try:
                 cursor.execute("SELECT COUNT(*) FROM usuarios WHERE rol = 'admin'")
                 admin_count = cursor.fetchone()[0]
                 if admin_count == 0:
                     logger.info("🔧 Creando usuario administrador...")
                     hashed_password = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt())
-        cursor.execute(
+                    cursor.execute(
                         "INSERT INTO usuarios (nombre, correo, contraseña, rol) VALUES (%s, %s, %s, %s)",
                         ('Administrador', 'admin@fruteria.com', hashed_password, 'admin')
-        )
-        connection.commit()
+                    )
+                    connection.commit()
                     logger.info("✅ Usuario administrador creado")
-        else:
+                else:
                     logger.info(f"✅ Usuario administrador ya existe ({admin_count} admin(s))")
-    except Exception as e:
+            except Exception as e:
                 logger.warning(f"⚠️ Error verificando usuario administrador: {e}")
             
             return True
@@ -325,7 +324,7 @@ def init_database():
         ]
         
         for proveedor in proveedores_ejemplo:
-        cursor.execute("""
+            cursor.execute("""
                 INSERT INTO proveedores (nombre, contacto, telefono, correo, direccion, notas)
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, proveedor)
@@ -347,7 +346,7 @@ def init_database():
         ]
         
         for producto in productos_ejemplo:
-        cursor.execute("""
+            cursor.execute("""
                 INSERT INTO productos (nombre, categoria, unidad, stock_actual, stock_minimo, precio_unitario, proveedor_id)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, producto)
@@ -363,7 +362,7 @@ def init_database():
         ]
         
         for cliente in clientes_ejemplo:
-        cursor.execute("""
+            cursor.execute("""
                 INSERT INTO clientes (nombre, correo, telefono, direccion, notas)
                 VALUES (%s, %s, %s, %s, %s)
             """, cliente)
@@ -373,15 +372,8 @@ def init_database():
         logger.info("✅ Base de datos inicializada correctamente con datos de ejemplo")
         return True
         
-    except mysql.connector.Error as err:
-        logger.error(f"❌ Error de MySQL: {err}")
-        # Si es error de tabla existente, continuar normalmente
-        if err.errno == 1050:  # Table already exists
-            logger.info("✅ Continuando con base de datos existente...")
-            return True
-        return False
     except Exception as e:
-        logger.error(f"❌ Error inesperado: {e}")
+        logger.error(f"❌ Error inicializando base de datos: {e}")
         return False
     finally:
         if cursor:
@@ -394,47 +386,27 @@ def jwt_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if request.method == "OPTIONS":
-            response = jsonify()
-    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-            response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
-            response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
-            response.headers.add('Access-Control-Allow-Credentials', "true")
-            return response
+            return jsonify({'message': 'OK'}), 200
         
         auth_header = request.headers.get('Authorization')
         
         if not auth_header:
-            return jsonify({'message': 'Token requerido'}), 401
+            return jsonify({'message': 'Token de autorización requerido'}), 401
 
         try:
-            if auth_header.startswith('Bearer '):
-                token = auth_header[7:]
-    else:
-                token = auth_header
-                
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            current_user_id = data['user_id']
-            
+            token = auth_header.split(' ')[1] if ' ' in auth_header else auth_header
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            current_user_id = payload['user_id']
         except jwt.ExpiredSignatureError:
             return jsonify({'message': 'Token expirado'}), 401
         except jwt.InvalidTokenError:
             return jsonify({'message': 'Token inválido'}), 401
         except Exception as e:
-            logger.error(f"Error en jwt_required: {e}")
-            return jsonify({'message': 'Error procesando token'}), 401
+            logger.error(f"Error validando token: {e}")
+            return jsonify({'message': 'Token inválido'}), 401
             
         return f(current_user_id, *args, **kwargs)
     return decorated
-
-@app.before_request
-def handle_preflight():
-    if request.method == "OPTIONS":
-        response = jsonify()
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
-        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
-        response.headers.add('Access-Control-Allow-Credentials', "true")
-        return response
 
 # ==================== ENDPOINTS DE AUTENTICACIÓN ====================
 
@@ -473,19 +445,19 @@ def register():
         # Verificar si el usuario ya existe
         cursor.execute("SELECT id FROM usuarios WHERE correo = %s", (correo,))
         if cursor.fetchone():
-            return jsonify({'message': 'El correo ya está registrado'}), 409
-            
+            return jsonify({'message': 'El usuario ya existe'}), 409
+        
         # Hashear contraseña
         hashed_password = bcrypt.hashpw(contraseña.encode('utf-8'), bcrypt.gensalt())
         
         # Insertar usuario
         cursor.execute(
-            "INSERT INTO usuarios (nombre, correo, contraseña) VALUES (%s, %s, %s)",
-            (nombre, correo, hashed_password)
+            "INSERT INTO usuarios (nombre, correo, contraseña, rol) VALUES (%s, %s, %s, %s)",
+            (nombre, correo, hashed_password, 'operador')
         )
+        
         connection.commit()
-    
-        logger.info(f"Usuario registrado exitosamente: {correo}")
+        
         response = jsonify({
             'message': 'Usuario registrado exitosamente',
             'success': True
@@ -494,7 +466,7 @@ def register():
         return response, 201
 
     except Exception as e:
-        logger.error(f"Error en registro: {e}")
+        logger.error(f"❌ Error registrando usuario: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
@@ -515,8 +487,8 @@ def login():
             return jsonify({'message': 'No se recibieron datos'}), 400
         
         if not all(k in data for k in ('correo', 'contraseña')):
-            return jsonify({'message': 'Correo y contraseña requeridos'}), 400
-            
+            return jsonify({'message': 'Faltan campos requeridos: correo, contraseña'}), 400
+        
         correo = data['correo'].strip().lower()
         contraseña = data['contraseña']
         
@@ -528,21 +500,18 @@ def login():
         cursor.execute(
             "SELECT id, nombre, contraseña, rol FROM usuarios WHERE correo = %s",
             (correo,)
-    )
+        )
         user = cursor.fetchone()
         
         if not user or not bcrypt.checkpw(contraseña.encode('utf-8'), user[2].encode('utf-8')):
-            return jsonify({'message': 'Credenciales incorrectas'}), 401
-            
+            return jsonify({'message': 'Correo o contraseña incorrectos'}), 401
+
         # Generar token JWT
-        payload = {
+        token = jwt.encode({
             'user_id': user[0],
-            'correo': correo,
-            'rol': user[3],
             'exp': datetime.utcnow() + app.config['JWT_EXPIRATION_DELTA']
-        }
-        token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
-        
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+
         logger.info(f"Login exitoso para usuario: {correo}")
         response = jsonify({
             'token': token,
@@ -551,14 +520,13 @@ def login():
                 'nombre': user[1],
                 'correo': correo,
                 'rol': user[3]
-            },
-            'message': 'Inicio de sesión exitoso'
+            }
         })
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
     except Exception as e:
-        logger.error(f"Error en login: {e}")
+        logger.error(f"❌ Error en login: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
@@ -569,14 +537,14 @@ def login():
 @app.route('/api/verify-token', methods=['GET'])
 @jwt_required
 def verify_token(current_user_id):
-    """Verifica si el token es válido"""
+    """Verificar validez del token"""
     connection = None
     cursor = None
     
     try:
         connection = get_db_connection()
         if not connection:
-            return jsonify({'valid': False, 'message': 'Error de base de datos'}), 500
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
             
         cursor = connection.cursor()
         cursor.execute(
@@ -610,72 +578,6 @@ def verify_token(current_user_id):
 
 # ==================== ENDPOINTS DE PROVEEDORES ====================
 
-@app.route('/api/proveedores', methods=['GET'])
-@jwt_required
-def obtener_proveedores(current_user_id):
-    """Listar proveedores con búsqueda"""
-    connection = None
-    cursor = None
-    
-    try:
-        logger.info(f"🏪 Obteniendo proveedores para usuario {current_user_id}")
-        
-        connection = get_db_connection()
-        if not connection:
-            return jsonify([]), 200
-            
-        cursor = connection.cursor()
-        
-        # Obtener parámetros de búsqueda
-        search = request.args.get('q', '').strip()
-        activo = request.args.get('activo', 'true').lower() == 'true'
-        
-        # Construir consulta
-        query = """
-            SELECT id, nombre, contacto, telefono, correo, direccion, notas, activo, creado
-            FROM proveedores
-            WHERE activo = %s
-        """
-        params = [activo]
-        
-        if search:
-            query += " AND (nombre LIKE %s OR contacto LIKE %s OR correo LIKE %s)"
-            search_param = f"%{search}%"
-            params.extend([search_param, search_param, search_param])
-        
-        query += " ORDER BY nombre ASC"
-        
-        cursor.execute(query, params)
-        proveedores = []
-        
-        for row in cursor.fetchall():
-            proveedor = {
-                'id': row[0],
-                'nombre': row[1],
-                'contacto': row[2] or '',
-                'telefono': row[3] or '',
-                'correo': row[4] or '',
-                'direccion': row[5] or '',
-                'notas': row[6] or '',
-                'activo': bool(row[7]),
-                'creado': row[8].isoformat() if row[8] else None
-            }
-            proveedores.append(proveedor)
-        
-        logger.info(f"✅ Proveedores obtenidos: {len(proveedores)}")
-        response = jsonify(proveedores)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-
-    except Exception as e:
-        logger.error(f"❌ Error obteniendo proveedores: {e}")
-        return jsonify([]), 200
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
-
 @app.route('/api/proveedores', methods=['POST'])
 @jwt_required
 def crear_proveedor(current_user_id):
@@ -688,8 +590,7 @@ def crear_proveedor(current_user_id):
         logger.info(f"🏪 Creando proveedor: {data}")
         
         if not data or not data.get('nombre'):
-            return jsonify({'message': 'El nombre del proveedor es requerido'}), 
-
+            return jsonify({'message': 'El nombre del proveedor es requerido'}), 400
 
         connection = get_db_connection()
         if not connection:
@@ -729,6 +630,73 @@ def crear_proveedor(current_user_id):
     except Exception as e:
         logger.error(f"❌ Error creando proveedor: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/proveedores', methods=['GET'])
+@jwt_required
+def obtener_proveedores(current_user_id):
+    """Listar proveedores con búsqueda"""
+    connection = None
+    cursor = None
+    
+    try:
+        logger.info(f"🏪 Obteniendo proveedores para usuario {current_user_id}")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify([]), 200
+            
+        cursor = connection.cursor()
+        
+        # Obtener parámetros de búsqueda
+        search = request.args.get('q', '').strip()
+        activo = request.args.get('activo', 'true').lower() == 'true'
+        
+        # Construir consulta
+        query = """
+            SELECT id, nombre, contacto, telefono, correo, direccion, notas, activo, creado
+            FROM proveedores
+            WHERE activo = %s
+        """
+        params = [activo]
+        
+
+        if search:
+            query += " AND (nombre LIKE %s OR contacto LIKE %s OR correo LIKE %s)"
+            search_param = f"%{search}%"
+            params.extend([search_param, search_param, search_param])
+        
+        query += " ORDER BY nombre ASC"
+        
+        cursor.execute(query, params)
+        proveedores = []
+        
+        for row in cursor.fetchall():
+            proveedor = {
+                'id': row[0],
+                'nombre': row[1],
+                'contacto': row[2] or '',
+                'telefono': row[3] or '',
+                'correo': row[4] or '',
+                'direccion': row[5] or '',
+                'notas': row[6] or '',
+                'activo': bool(row[7]),
+                'creado': row[8].isoformat() if row[8] else None
+            }
+            proveedores.append(proveedor)
+        
+        logger.info(f"✅ Proveedores obtenidos: {len(proveedores)}")
+        response = jsonify(proveedores)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo proveedores: {e}")
+        return jsonify([]), 200
     finally:
         if cursor:
             cursor.close()
@@ -1453,6 +1421,7 @@ def actualizar_producto(current_user_id, producto_id):
         if connection and connection.is_connected():
             connection.close()
 
+
 @app.route('/api/productos/<int:producto_id>', methods=['DELETE'])
 @jwt_required
 def eliminar_producto(current_user_id, producto_id):
@@ -1522,8 +1491,6 @@ def obtener_estadisticas_productos(current_user_id):
         logger.info(f"📊 Obteniendo estadísticas de productos")
         
         connection = get_db_connection()
-
-
         if not connection:
             estadisticas_default = {
                 'total_productos': 0,
@@ -1627,378 +1594,6 @@ def obtener_estadisticas_productos(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
-# ==================== ENDPOINTS DE COMPRAS ====================
-
-@app.route('/api/compras', methods=['GET'])
-@jwt_required
-def obtener_compras(current_user_id):
-    """Listar compras con filtros"""
-    connection = None
-    cursor = None
-    
-    try:
-        logger.info(f"🛒 Obteniendo compras para usuario {current_user_id}")
-        
-        connection = get_db_connection()
-        if not connection:
-            return jsonify([]), 200
-            
-        cursor = connection.cursor()
-        
-        # Obtener parámetros de filtros
-        fecha_inicio = request.args.get('fecha_inicio')
-        fecha_fin = request.args.get('fecha_fin')
-        proveedor_id = request.args.get('proveedor_id')
-        estado = request.args.get('estado', 'completada')
-        
-        # Construir consulta
-        query = """
-            SELECT c.id, c.numero_factura, c.total, c.fecha, c.estado, c.notas, c.creado,
-                   p.nombre as proveedor_nombre, u.nombre as usuario_nombre
-            FROM compras c
-            LEFT JOIN proveedores p ON c.proveedor_id = p.id
-            LEFT JOIN usuarios u ON c.usuario_id = u.id
-            WHERE c.estado = %s
-        """
-        params = [estado]
-        
-        if fecha_inicio:
-            query += " AND c.fecha >= %s"
-            params.append(fecha_inicio)
-        
-        if fecha_fin:
-            query += " AND c.fecha <= %s"
-            params.append(fecha_fin)
-        
-        if proveedor_id:
-            query += " AND c.proveedor_id = %s"
-            params.append(proveedor_id)
-        
-        query += " ORDER BY c.fecha DESC, c.id DESC"
-        
-        cursor.execute(query, params)
-        compras = []
-        
-        for row in cursor.fetchall():
-            compra = {
-                'id': row[0],
-                'numero_factura': row[1] or '',
-                'total': float(row[2]),
-                'fecha': row[3].isoformat() if row[3] else None,
-                'estado': row[4],
-                'notas': row[5] or '',
-                'creado': row[6].isoformat() if row[6] else None,
-                'proveedor_nombre': row[7] or 'Sin proveedor',
-                'usuario_nombre': row[8] or 'Usuario desconocido'
-            }
-            compras.append(compra)
-        
-        logger.info(f"✅ Compras obtenidas: {len(compras)}")
-        response = jsonify(compras)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-
-    except Exception as e:
-        logger.error(f"❌ Error obteniendo compras: {e}")
-        return jsonify([]), 200
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
-
-@app.route('/api/compras', methods=['POST'])
-@jwt_required
-def crear_compra(current_user_id):
-    """Crear nueva compra"""
-    connection = None
-    cursor = None
-    
-    try:
-        data = request.get_json()
-        logger.info(f"🛒 Creando compra: {data}")
-        
-        if not data or not data.get('productos') or not isinstance(data['productos'], list):
-            return jsonify({'message': 'Se requiere una lista de productos'}), 400
-        
-        connection = get_db_connection()
-        if not connection:
-            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
-            
-        cursor = connection.cursor()
-        
-        # Calcular total
-        total = 0
-        for producto in data['productos']:
-            if not all(k in producto for k in ('producto_id', 'cantidad', 'precio_unitario')):
-                return jsonify({'message': 'Cada producto debe tener producto_id, cantidad y precio_unitario'}), 400
-            total += float(producto['cantidad']) * float(producto['precio_unitario'])
-        
-        # Insertar compra
-        cursor.execute("""
-            INSERT INTO compras (usuario_id, proveedor_id, numero_factura, total, fecha, notas)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (
-            current_user_id,
-            data.get('proveedor_id') or None,
-            data.get('numero_factura', '').strip() or None,
-            total,
-            data.get('fecha', datetime.now().date()),
-            data.get('notas', '').strip() or None
-        ))
-        
-        compra_id = cursor.lastrowid
-        
-        # Insertar detalles de compra y actualizar stock
-        for producto in data['productos']:
-            # Insertar detalle
-            subtotal = float(producto['cantidad']) * float(producto['precio_unitario'])
-            cursor.execute("""
-                INSERT INTO detalle_compras (compra_id, producto_id, cantidad, precio_unitario, subtotal)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (
-                compra_id,
-                producto['producto_id'],
-                float(producto['cantidad']),
-                float(producto['precio_unitario']),
-                subtotal
-            ))
-            
-            # Actualizar stock del producto
-            cursor.execute("""
-                UPDATE productos 
-                SET stock_actual = stock_actual + %s 
-                WHERE id = %s
-            """, (float(producto['cantidad']), producto['producto_id']))
-            
-            # Registrar movimiento de stock
-            cursor.execute("""
-                INSERT INTO movimientos_stock (producto_id, tipo, cantidad, motivo, referencia_id, referencia_tipo, usuario_id)
-                VALUES (%s, 'ingreso', %s, 'Compra', %s, 'compra', %s)
-            """, (
-                producto['producto_id'],
-                float(producto['cantidad']),
-                compra_id,
-                current_user_id
-            ))
-        
-        connection.commit()
-        
-        logger.info(f"✅ Compra creada: ID {compra_id}, Total: ${total}")
-        response = jsonify({
-            'message': 'Compra creada exitosamente',
-            'id': compra_id,
-            'total': total
-        })
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 201
-
-    except Exception as e:
-        logger.error(f"❌ Error creando compra: {e}")
-        if connection:
-            connection.rollback()
-        return jsonify({'message': 'Error interno del servidor'}), 500
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
-
-@app.route('/api/compras/<int:compra_id>', methods=['GET'])
-@jwt_required
-def obtener_compra_detalle(current_user_id, compra_id):
-    """Obtener detalle de una compra específica"""
-    connection = None
-    cursor = None
-    
-    try:
-        logger.info(f"🛒 Obteniendo detalle de compra {compra_id}")
-        
-        connection = get_db_connection()
-        if not connection:
-            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
-            
-        cursor = connection.cursor()
-        
-        # Obtener datos de la compra
-        cursor.execute("""
-            SELECT c.id, c.numero_factura, c.total, c.fecha, c.estado, c.notas, c.creado,
-                   p.nombre as proveedor_nombre, u.nombre as usuario_nombre
-            FROM compras c
-            LEFT JOIN proveedores p ON c.proveedor_id = p.id
-            LEFT JOIN usuarios u ON c.usuario_id = u.id
-            WHERE c.id = %s
-        """, (compra_id,))
-        
-        compra_data = cursor.fetchone()
-        if not compra_data:
-            return jsonify({'message': 'Compra no encontrada'}), 404
-        
-        # Obtener detalles de productos
-        cursor.execute("""
-            SELECT dc.producto_id, dc.cantidad, dc.precio_unitario, dc.subtotal,
-                   p.nombre as producto_nombre, p.unidad
-            FROM detalle_compras dc
-            INNER JOIN productos p ON dc.producto_id = p.id
-            WHERE dc.compra_id = %s
-        """, (compra_id,))
-        
-        productos = []
-        for row in cursor.fetchall():
-            producto = {
-                'producto_id': row[0],
-                'cantidad': float(row[1]),
-                'precio_unitario': float(row[2]),
-                'subtotal': float(row[3]),
-                'producto_nombre': row[4],
-                'unidad': row[5]
-            }
-            productos.append(producto)
-        
-        compra = {
-            'id': compra_data[0],
-            'numero_factura': compra_data[1] or '',
-            'total': float(compra_data[2]),
-            'fecha': compra_data[3].isoformat() if compra_data[3] else None,
-            'estado': compra_data[4],
-            'notas': compra_data[5] or '',
-            'creado': compra_data[6].isoformat() if compra_data[6] else None,
-            'proveedor_nombre': compra_data[7] or 'Sin proveedor',
-            'usuario_nombre': compra_data[8] or 'Usuario desconocido',
-            'productos': productos
-        }
-        
-        logger.info(f"✅ Detalle de compra {compra_id} obtenido")
-        response = jsonify(compra)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-
-    except Exception as e:
-        logger.error(f"❌ Error obteniendo detalle de compra: {e}")
-        return jsonify({'message': 'Error interno del servidor'}), 500
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
-
-@app.route('/api/compras/estadisticas', methods=['GET'])
-@jwt_required
-def obtener_estadisticas_compras(current_user_id):
-    """Estadísticas de compras"""
-    connection = None
-    cursor = None
-    
-    try:
-        logger.info(f"📊 Obteniendo estadísticas de compras")
-        
-        connection = get_db_connection()
-        if not connection:
-            estadisticas_default = {
-                'total_compras': 0,
-                'compras_mes': 0,
-                'total_gastado': 0.0,
-                'gasto_mes': 0.0,
-                'proveedor_frecuente': 'N/A',
-                'promedio_compra': 0.0,
-                'productos_comprados': 0
-            }
-            response = jsonify(estadisticas_default)
-            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-            return response, 200
-            
-        cursor = connection.cursor()
-        
-        # Total de compras
-        cursor.execute("SELECT COUNT(*) FROM compras WHERE estado = 'completada'")
-        total_compras = cursor.fetchone()[0] or 0
-        
-        # Compras del mes actual
-        cursor.execute("""
-            SELECT COUNT(*) 
-            FROM compras 
-            WHERE YEAR(fecha) = YEAR(CURDATE()) 
-            AND MONTH(fecha) = MONTH(CURDATE())
-            AND estado = 'completada'
-        """)
-        compras_mes = cursor.fetchone()[0] or 0
-        
-        # Total gastado
-        cursor.execute("SELECT SUM(total) FROM compras WHERE estado = 'completada'")
-        total_gastado = cursor.fetchone()[0]
-        total_gastado = float(total_gastado) if total_gastado else 0.0
-        
-        # Gasto del mes actual
-        cursor.execute("""
-            SELECT SUM(total) 
-            FROM compras 
-            WHERE YEAR(fecha) = YEAR(CURDATE()) 
-            AND MONTH(fecha) = MONTH(CURDATE())
-            AND estado = 'completada'
-        """)
-        gasto_mes = cursor.fetchone()[0]
-        gasto_mes = float(gasto_mes) if gasto_mes else 0.0
-        
-        # Proveedor más frecuente
-        cursor.execute("""
-            SELECT p.nombre, COUNT(*) as frecuencia
-            FROM compras c
-            INNER JOIN proveedores p ON c.proveedor_id = p.id
-            WHERE c.estado = 'completada'
-            GROUP BY p.id, p.nombre 
-            ORDER BY frecuencia DESC 
-            LIMIT 1
-        """)
-        proveedor_frecuente = cursor.fetchone()
-        proveedor_top = proveedor_frecuente[0] if proveedor_frecuente else 'N/A'
-        
-        # Promedio por compra
-        promedio_compra = total_gastado / total_compras if total_compras > 0 else 0.0
-        
-        # Total de productos diferentes comprados
-        cursor.execute("""
-            SELECT COUNT(DISTINCT producto_id) 
-            FROM detalle_compras dc
-            INNER JOIN compras c ON dc.compra_id = c.id
-            WHERE c.estado = 'completada'
-        """)
-        productos_comprados = cursor.fetchone()[0] or 0
-        
-        estadisticas = {
-            'total_compras': total_compras,
-            'compras_mes': compras_mes,
-            'total_gastado': total_gastado,
-            'gasto_mes': gasto_mes,
-            'proveedor_frecuente': proveedor_top,
-            'promedio_compra': promedio_compra,
-            'productos_comprados': productos_comprados
-        }
-        
-        logger.info(f"✅ Estadísticas de compras calculadas: {estadisticas}")
-        response = jsonify(estadisticas)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-
-    except Exception as e:
-        logger.error(f"❌ Error obteniendo estadísticas de compras: {e}")
-        estadisticas_default = {
-            'total_compras': 0,
-            'compras_mes': 0,
-            'total_gastado': 0.0,
-            'gasto_mes': 0.0,
-            'proveedor_frecuente': 'N/A',
-            'promedio_compra': 0.0,
-            'productos_comprados': 0
-        }
-        response = jsonify(estadisticas_default)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
-
 # ==================== ENDPOINTS DE VENTAS ====================
 
 @app.route('/api/ventas', methods=['GET'])
@@ -2021,7 +1616,6 @@ def obtener_ventas(current_user_id):
         fecha_inicio = request.args.get('fecha_inicio')
         fecha_fin = request.args.get('fecha_fin')
         cliente_id = request.args.get('cliente_id')
-        forma_pago = request.args.get('forma_pago')
         estado = request.args.get('estado', 'completada')
         
         # Construir consulta
@@ -2047,10 +1641,6 @@ def obtener_ventas(current_user_id):
         if cliente_id:
             query += " AND v.cliente_id = %s"
             params.append(cliente_id)
-        
-        if forma_pago:
-            query += " AND v.forma_pago = %s"
-            params.append(forma_pago)
         
         query += " ORDER BY v.fecha DESC, v.id DESC"
         
@@ -2100,7 +1690,7 @@ def crear_venta(current_user_id):
         logger.info(f"💰 Creando venta: {data}")
         
         if not data or not data.get('productos') or not isinstance(data['productos'], list):
-            return jsonify({'message': 'Se requiere una lista de productos'}), 400
+            return jsonify({'message': 'Faltan productos en la venta'}), 400
         
         connection = get_db_connection()
         if not connection:
@@ -2108,29 +1698,31 @@ def crear_venta(current_user_id):
             
         cursor = connection.cursor()
         
-        # Verificar stock disponible
+        # Verificar stock disponible antes de procesar
         for producto in data['productos']:
             if not all(k in producto for k in ('producto_id', 'cantidad', 'precio_unitario')):
-                return jsonify({'message': 'Cada producto debe tener producto_id, cantidad y precio_unitario'}), 400
+                return jsonify({'message': 'Faltan campos requeridos en productos'}), 400
             
             cursor.execute("SELECT stock_actual FROM productos WHERE id = %s", (producto['producto_id'],))
             stock_result = cursor.fetchone()
             if not stock_result:
-                return jsonify({'message': f'Producto {producto["producto_id"]} no encontrado'}), 400
+                return jsonify({'message': f'Producto {producto["producto_id"]} no encontrado'}), 404
             
             if float(stock_result[0]) < float(producto['cantidad']):
                 return jsonify({'message': f'Stock insuficiente para producto {producto["producto_id"]}'}), 400
         
         # Calcular totales
-        subtotal = sum(float(p['cantidad']) * float(p['precio_unitario']) for p in data['productos'])
+        subtotal = 0
+        for producto in data['productos']:
+            subtotal += float(producto['cantidad']) * float(producto['precio_unitario'])
+        
         descuento = float(data.get('descuento', 0))
         impuestos = float(data.get('impuestos', 0))
         total = subtotal - descuento + impuestos
         
         # Insertar venta
         cursor.execute("""
-            INSERT INTO ventas (cliente_id, usuario_id, numero_venta, forma_pago, subtotal, 
-                              descuento, impuestos, total, observaciones)
+            INSERT INTO ventas (cliente_id, usuario_id, numero_venta, forma_pago, subtotal, descuento, impuestos, total, observaciones)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             data.get('cliente_id') or None,
@@ -2219,7 +1811,7 @@ def obtener_venta_detalle(current_user_id, venta_id):
         
         # Obtener datos de la venta
         cursor.execute("""
-            SELECT v.id, v.numero_venta, v.fecha, v.forma_pago, v.subtotal, v.descuento,
+            SELECT v.id, v.numero_venta, v.fecha, v.forma_pago, v.subtotal, v.descuento, 
                    v.impuestos, v.total, v.estado, v.observaciones,
                    c.nombre as cliente_nombre, u.nombre as usuario_nombre
             FROM ventas v
@@ -2253,6 +1845,7 @@ def obtener_venta_detalle(current_user_id, venta_id):
             }
             productos.append(producto)
         
+        # Construir respuesta
         venta = {
             'id': venta_data[0],
             'numero_venta': venta_data[1] or '',
@@ -2755,6 +2348,183 @@ def crear_movimiento_stock(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
+# ==================== ENDPOINTS DE COMPRAS ====================
+
+@app.route('/api/compras', methods=['GET'])
+@jwt_required
+def obtener_compras(current_user_id):
+    """Listar compras con filtros"""
+    connection = None
+    cursor = None
+    
+    try:
+        logger.info(f"🛒 Obteniendo compras para usuario {current_user_id}")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify([]), 200
+            
+        cursor = connection.cursor()
+        
+        # Obtener parámetros de filtros
+        fecha_inicio = request.args.get('fecha_inicio')
+        fecha_fin = request.args.get('fecha_fin')
+        proveedor_id = request.args.get('proveedor_id')
+        estado = request.args.get('estado', 'completada')
+        
+        # Construir consulta
+        query = """
+            SELECT c.id, c.numero_factura, c.total, c.fecha, c.estado, c.notas, c.creado,
+                   p.nombre as proveedor_nombre, u.nombre as usuario_nombre
+            FROM compras c
+            LEFT JOIN proveedores p ON c.proveedor_id = p.id
+            LEFT JOIN usuarios u ON c.usuario_id = u.id
+            WHERE c.estado = %s
+        """
+        params = [estado]
+        
+        if fecha_inicio:
+            query += " AND c.fecha >= %s"
+            params.append(fecha_inicio)
+        
+        if fecha_fin:
+            query += " AND c.fecha <= %s"
+            params.append(fecha_fin)
+        
+        if proveedor_id:
+            query += " AND c.proveedor_id = %s"
+            params.append(proveedor_id)
+        
+        query += " ORDER BY c.fecha DESC, c.id DESC"
+        
+        cursor.execute(query, params)
+        compras = []
+        
+        for row in cursor.fetchall():
+            compra = {
+                'id': row[0],
+                'numero_factura': row[1] or '',
+                'total': float(row[2]),
+                'fecha': row[3].isoformat() if row[3] else None,
+                'estado': row[4],
+                'notas': row[5] or '',
+                'creado': row[6].isoformat() if row[6] else None,
+                'proveedor_nombre': row[7] or 'Sin proveedor',
+                'usuario_nombre': row[8] or 'Usuario desconocido'
+            }
+            compras.append(compra)
+        
+        logger.info(f"✅ Compras obtenidas: {len(compras)}")
+        response = jsonify(compras)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo compras: {e}")
+        return jsonify([]), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/compras', methods=['POST'])
+@jwt_required
+def crear_compra(current_user_id):
+    """Crear nueva compra"""
+    connection = None
+    cursor = None
+    
+    try:
+        data = request.get_json()
+        logger.info(f"🛒 Creando compra: {data}")
+        
+        if not data or not data.get('productos') or not isinstance(data['productos'], list):
+            return jsonify({'message': 'Faltan productos en la compra'}), 400
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Calcular total
+        total = 0
+        for producto in data['productos']:
+            if not all(k in producto for k in ('producto_id', 'cantidad', 'precio_unitario')):
+                return jsonify({'message': 'Faltan campos requeridos en productos'}), 400
+            total += float(producto['cantidad']) * float(producto['precio_unitario'])
+        
+        # Insertar compra
+        cursor.execute("""
+            INSERT INTO compras (usuario_id, proveedor_id, numero_factura, total, fecha, notas)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (
+            current_user_id,
+            data.get('proveedor_id') or None,
+            data.get('numero_factura', '').strip() or None,
+            total,
+            data.get('fecha', datetime.now().date()),
+            data.get('notas', '').strip() or None
+        ))
+        
+        compra_id = cursor.lastrowid
+        
+        # Insertar detalles de compra y actualizar stock
+        for producto in data['productos']:
+            # Insertar detalle
+            subtotal_producto = float(producto['cantidad']) * float(producto['precio_unitario'])
+            cursor.execute("""
+                INSERT INTO detalle_compras (compra_id, producto_id, cantidad, precio_unitario, subtotal)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                compra_id,
+                producto['producto_id'],
+                float(producto['cantidad']),
+                float(producto['precio_unitario']),
+                subtotal_producto
+            ))
+            
+            # Actualizar stock del producto
+            cursor.execute("""
+                UPDATE productos 
+                SET stock_actual = stock_actual + %s 
+                WHERE id = %s
+            """, (float(producto['cantidad']), producto['producto_id']))
+            
+            # Registrar movimiento de stock
+            cursor.execute("""
+                INSERT INTO movimientos_stock (producto_id, tipo, cantidad, motivo, referencia_id, referencia_tipo, usuario_id)
+                VALUES (%s, 'ingreso', %s, 'Compra', %s, 'compra', %s)
+            """, (
+                producto['producto_id'],
+                float(producto['cantidad']),
+                compra_id,
+                current_user_id
+            ))
+        
+        connection.commit()
+        
+        logger.info(f"✅ Compra creada: ID {compra_id}, Total: ${total}")
+        response = jsonify({
+            'message': 'Compra creada exitosamente',
+            'id': compra_id,
+            'total': total
+        })
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 201
+
+    except Exception as e:
+        logger.error(f"❌ Error creando compra: {e}")
+        if connection:
+            connection.rollback()
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
 # ==================== ENDPOINTS DE REPORTES ====================
 
 @app.route('/api/reportes/ventas', methods=['GET'])
@@ -2887,6 +2657,19 @@ def reporte_ventas(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
+# ==================== ENDPOINTS DE PRUEBA ====================
+
+@app.route('/api/test', methods=['GET'])
+def test():
+    """Endpoint de prueba"""
+    response = jsonify({
+        'message': 'API funcionando correctamente',
+        'timestamp': datetime.now().isoformat(),
+        'status': 'OK'
+    })
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    return response, 200
+
 # ==================== MANEJO DE ERRORES ====================
 
 @app.errorhandler(404)
@@ -2923,7 +2706,7 @@ if __name__ == '__main__':
     logger.info("🌐 Iniciando servidor Flask...")
     app.run(
         host='0.0.0.0',
-        port=5001,
+        port=5000,
         debug=True,
         threaded=True
     )
