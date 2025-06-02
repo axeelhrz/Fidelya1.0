@@ -73,7 +73,7 @@ def create_tables():
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_CONFIG['database']} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
         cursor.execute(f"USE {DB_CONFIG['database']}")
         
-        # Crear tablas
+        # Crear tablas existentes
         tables = {
             'usuarios': """
                 CREATE TABLE IF NOT EXISTS usuarios (
@@ -141,12 +141,14 @@ def create_tables():
                     correo VARCHAR(150),
                     telefono VARCHAR(20),
                     direccion TEXT,
+                    documento VARCHAR(20),
                     notas TEXT,
                     activo BOOLEAN DEFAULT TRUE,
                     creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     actualizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     INDEX idx_nombre (nombre),
                     INDEX idx_correo (correo),
+                    INDEX idx_documento (documento),
                     INDEX idx_activo (activo)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """,
@@ -190,6 +192,48 @@ def create_tables():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """,
             
+            # NUEVAS TABLAS PARA FACTURACIÓN
+            'facturas': """
+                CREATE TABLE IF NOT EXISTS facturas (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    nro_factura VARCHAR(20) UNIQUE NOT NULL,
+                    id_venta INT,
+                    cliente_nombre VARCHAR(100) NOT NULL,
+                    cliente_documento VARCHAR(20),
+                    cliente_direccion TEXT,
+                    cliente_telefono VARCHAR(20),
+                    subtotal DECIMAL(10,2) NOT NULL,
+                    iva DECIMAL(10,2) DEFAULT 0,
+                    total DECIMAL(10,2) NOT NULL,
+                    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    generado_por INT NOT NULL,
+                    observaciones TEXT,
+                    estado ENUM('emitida', 'anulada') DEFAULT 'emitida',
+                    creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (id_venta) REFERENCES ventas(id) ON DELETE SET NULL,
+                    FOREIGN KEY (generado_por) REFERENCES usuarios(id) ON DELETE RESTRICT,
+                    INDEX idx_nro_factura (nro_factura),
+                    INDEX idx_fecha (fecha),
+                    INDEX idx_cliente (cliente_nombre),
+                    INDEX idx_estado (estado),
+                    INDEX idx_generado_por (generado_por)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """,
+            
+            'detalle_factura': """
+                CREATE TABLE IF NOT EXISTS detalle_factura (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    id_factura INT NOT NULL,
+                    producto VARCHAR(100) NOT NULL,
+                    cantidad DECIMAL(10,3) NOT NULL,
+                    precio_unitario DECIMAL(10,2) NOT NULL,
+                    total_producto DECIMAL(10,2) NOT NULL,
+                    FOREIGN KEY (id_factura) REFERENCES facturas(id) ON DELETE CASCADE,
+                    INDEX idx_factura (id_factura)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """,
+            
+            # Tablas existentes restantes...
             'compras': """
                 CREATE TABLE IF NOT EXISTS compras (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -292,6 +336,39 @@ def create_tables():
                     actualizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     INDEX idx_clave (clave)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """,
+            
+            # NUEVAS TABLAS PARA NOTIFICACIONES
+            'notificaciones': """
+                CREATE TABLE IF NOT EXISTS notificaciones (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    usuario_id INT,
+                    tipo ENUM('stock', 'pago', 'cobro', 'general') NOT NULL,
+                    titulo VARCHAR(255),
+                    mensaje TEXT,
+                    leida BOOLEAN DEFAULT FALSE,
+                    canal ENUM('web', 'email', 'sms') DEFAULT 'web',
+                    referencia_id INT,
+                    referencia_tipo VARCHAR(50),
+                    creada TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+                    INDEX idx_usuario_leida (usuario_id, leida),
+                    INDEX idx_tipo (tipo),
+                    INDEX idx_creada (creada)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """,
+            
+            'preferencias_notificaciones': """
+                CREATE TABLE IF NOT EXISTS preferencias_notificaciones (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    usuario_id INT,
+                    recibir_email BOOLEAN DEFAULT TRUE,
+                    recibir_sms BOOLEAN DEFAULT FALSE,
+                    telefono VARCHAR(20),
+                    frecuencia ENUM('inmediata', 'diaria', 'semanal') DEFAULT 'inmediata',
+                    FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+                    UNIQUE KEY unique_usuario (usuario_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """
         }
         
@@ -305,140 +382,6 @@ def create_tables():
         
     except Exception as e:
         logger.error(f"❌ Error creando tablas: {e}")
-        return False
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
-
-def init_database():
-    """Inicializar base de datos con datos de ejemplo"""
-    connection = None
-    cursor = None
-    
-    try:
-        connection = get_db_connection()
-        if not connection:
-            return False
-            
-        cursor = connection.cursor()
-        
-        # Verificar y crear usuario administrador
-        cursor.execute("SELECT COUNT(*) FROM usuarios WHERE rol = 'admin'")
-        admin_count = cursor.fetchone()[0]
-        
-        if admin_count == 0:
-            admin_password = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt())
-            cursor.execute("""
-                INSERT INTO usuarios (nombre, correo, password_hash, rol)
-                VALUES ('Administrador', 'admin@fruteria.com', %s, 'admin')
-            """, (admin_password.decode('utf-8'),))
-            logger.info("✅ Usuario administrador creado")
-        
-        # Crear usuario cajero de ejemplo
-        cursor.execute("SELECT COUNT(*) FROM usuarios WHERE rol = 'cajero'")
-        cajero_count = cursor.fetchone()[0]
-        
-        if cajero_count == 0:
-            cajero_password = bcrypt.hashpw('cajero123'.encode('utf-8'), bcrypt.gensalt())
-            cursor.execute("""
-                INSERT INTO usuarios (nombre, correo, password_hash, rol)
-                VALUES ('Cajero Principal', 'cajero@fruteria.com', %s, 'cajero')
-            """, (cajero_password.decode('utf-8'),))
-            logger.info("✅ Usuario cajero creado")
-        
-        # Configuraciones del sistema
-        configuraciones_default = [
-            ('stock_minimo_global', '5', 'Stock mínimo por defecto para nuevos productos', 'number'),
-            ('alertas_stock_activas', 'true', 'Activar alertas automáticas de stock bajo', 'boolean'),
-            ('dias_analisis_rotacion', '30', 'Días para análisis de rotación de inventario', 'number'),
-            ('formato_codigo_barras', 'EAN13', 'Formato de código de barras por defecto', 'string'),
-            ('moneda_sistema', 'UYU', 'Moneda del sistema', 'string'),
-            ('precision_decimales', '2', 'Precisión decimal para precios y cantidades', 'number')
-        ]
-        
-        for config in configuraciones_default:
-            cursor.execute("""
-                INSERT IGNORE INTO configuracion_sistema (clave, valor, descripcion, tipo)
-                VALUES (%s, %s, %s, %s)
-            """, config)
-        
-        # Crear proveedores de ejemplo
-        cursor.execute("SELECT COUNT(*) FROM proveedores")
-        if cursor.fetchone()[0] == 0:
-            proveedores_ejemplo = [
-                ('Distribuidora Central', 'Juan Pérez', '099123456', 'juan@distribuidora.com', 'Av. Central 123'),
-                ('Frutas del Norte', 'María González', '098765432', 'maria@frutasnorte.com', 'Ruta 5 Km 45'),
-                ('Verduras Orgánicas', 'Carlos López', '097654321', 'carlos@organicas.com', 'Zona Rural 456')
-            ]
-            
-            for proveedor in proveedores_ejemplo:
-                cursor.execute("""
-                    INSERT INTO proveedores (nombre, contacto, telefono, correo, direccion)
-                    VALUES (%s, %s, %s, %s, %s)
-                """, proveedor)
-            logger.info("✅ Proveedores de ejemplo creados")
-
-        # Insertar productos de ejemplo MEJORADOS
-        cursor.execute("SELECT COUNT(*) FROM productos")
-        if cursor.fetchone()[0] == 0:
-            # Obtener IDs de proveedores
-            cursor.execute("SELECT id FROM proveedores ORDER BY id")
-            proveedores_ids = [row[0] for row in cursor.fetchall()]
-            
-            productos_ejemplo = [
-                # Frutas
-                ('Manzana Roja', 'frutas', 'kg', 50.0, 10.0, 3.50, 2.80, 'Manzanas rojas frescas y crujientes', proveedores_ids[0] if proveedores_ids else None),
-                ('Banana', 'frutas', 'kg', 30.0, 5.0, 2.80, 2.20, 'Bananas maduras y dulces', proveedores_ids[0] if proveedores_ids else None),
-                ('Naranja', 'frutas', 'kg', 40.0, 8.0, 4.20, 3.50, 'Naranjas jugosas para zumo', proveedores_ids[0] if proveedores_ids else None),
-                ('Pera', 'frutas', 'kg', 25.0, 6.0, 4.80, 3.90, 'Peras dulces y suaves', proveedores_ids[0] if proveedores_ids else None),
-                ('Uva Verde', 'frutas', 'kg', 15.0, 3.0, 6.50, 5.20, 'Uvas verdes sin semilla', proveedores_ids[0] if proveedores_ids else None),
-                # Verduras
-                ('Tomate', 'verduras', 'kg', 35.0, 8.0, 5.20, 4.10, 'Tomates frescos de invernadero', proveedores_ids[1] if len(proveedores_ids) > 1 else None),
-                ('Lechuga', 'verduras', 'unidad', 20.0, 5.0, 2.50, 1.80, 'Lechuga crespa fresca', proveedores_ids[1] if len(proveedores_ids) > 1 else None),
-                ('Papa', 'verduras', 'kg', 80.0, 15.0, 1.80, 1.20, 'Papas lavadas nacionales', proveedores_ids[2] if len(proveedores_ids) > 2 else None),
-                ('Zanahoria', 'verduras', 'kg', 30.0, 7.0, 3.20, 2.50, 'Zanahorias frescas', proveedores_ids[2] if len(proveedores_ids) > 2 else None),
-                ('Cebolla', 'verduras', 'kg', 45.0, 10.0, 2.90, 2.10, 'Cebollas blancas', proveedores_ids[2] if len(proveedores_ids) > 2 else None),
-                # Otros
-                ('Aceite de Oliva', 'otros', 'litro', 12.0, 2.0, 8.90, 6.50, 'Aceite de oliva extra virgen', proveedores_ids[1] if len(proveedores_ids) > 1 else None),
-                ('Miel Natural', 'otros', 'unidad', 8.0, 1.0, 12.50, 9.80, 'Miel pura de abeja', proveedores_ids[1] if len(proveedores_ids) > 1 else None)
-            ]
-            
-            for producto in productos_ejemplo:
-                cursor.execute("""
-                    INSERT INTO productos (nombre, categoria, unidad, stock_actual, stock_minimo, 
-                                         precio_unitario, precio_compra, descripcion, proveedor_id)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, producto)
-            logger.info("✅ Productos de ejemplo creados")
-        
-        # Insertar clientes de ejemplo
-        cursor.execute("SELECT COUNT(*) FROM clientes")
-        if cursor.fetchone()[0] == 0:
-            clientes_ejemplo = [
-                ('Cliente General', '', '', '', 'Cliente por defecto para ventas sin cliente específico'),
-                ('Restaurante El Buen Sabor', 'restaurante@buensabor.com', '099887766', 'Av. Principal 456', 'Cliente mayorista'),
-                ('Supermercado Villa', 'compras@villa.com', '098776655', 'Calle Comercial 789', 'Cliente corporativo'),
-                ('Panadería Central', 'panaderia@central.com', '097665544', 'Centro 123', 'Cliente frecuente'),
-                ('Hotel Plaza', 'compras@hotelplaza.com', '096554433', 'Plaza Principal 456', 'Cliente premium')
-            ]
-            
-            for cliente in clientes_ejemplo:
-                cursor.execute("""
-                    INSERT INTO clientes (nombre, correo, telefono, direccion, notas)
-                    VALUES (%s, %s, %s, %s, %s)
-                """, cliente)
-            logger.info("✅ Clientes de ejemplo creados")
-        
-        connection.commit()
-        logger.info("✅ Base de datos inicializada correctamente")
-        return True
-        
-    except Exception as e:
-        logger.error(f"❌ Error inicializando base de datos: {e}")
-        if connection:
-            connection.rollback()
         return False
     finally:
         if cursor:
@@ -513,123 +456,93 @@ def role_required(allowed_roles):
         return decorated
     return decorator
 
-# ==================== ENDPOINTS DE CIERRE DE CAJA ====================
+# ==================== ENDPOINTS DE FACTURACIÓN ====================
 
-@app.route('/api/cierre-caja/hoy', methods=['GET'])
-@role_required(['admin', 'cajero'])
-def obtener_resumen_ventas_hoy(current_user_id):
-    """Obtiene resumen automático de ventas del día actual"""
+def generar_numero_factura():
+    """Genera el siguiente número de factura correlativo"""
     connection = None
     cursor = None
     
     try:
         connection = get_db_connection()
         if not connection:
-            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            return None
             
         cursor = connection.cursor()
         
-        # Obtener fecha actual
-        fecha_hoy = datetime.now().date()
-        
-        # Verificar si ya existe un cierre para hoy
+        # Obtener el último número de factura
         cursor.execute("""
-            SELECT id, total_ventas_esperado, total_efectivo_contado, diferencia, 
-                   numero_ventas, observaciones, hora_cierre, estado
-            FROM cierres_caja 
-            WHERE usuario_id = %s AND fecha_cierre = %s
-        """, (current_user_id, fecha_hoy))
+            SELECT nro_factura FROM facturas 
+            WHERE nro_factura LIKE 'FCT-%' 
+            ORDER BY id DESC LIMIT 1
+        """)
         
-        cierre_existente = cursor.fetchone()
+        ultimo_numero = cursor.fetchone()
         
-        # Obtener resumen de ventas del día
-        cursor.execute("""
-            SELECT 
-                COUNT(*) as numero_ventas,
-                COALESCE(SUM(CASE WHEN forma_pago = 'efectivo' THEN total ELSE 0 END), 0) as total_efectivo,
-                COALESCE(SUM(CASE WHEN forma_pago = 'tarjeta' THEN total ELSE 0 END), 0) as total_tarjeta,
-                COALESCE(SUM(CASE WHEN forma_pago = 'transferencia' THEN total ELSE 0 END), 0) as total_transferencia,
-                COALESCE(SUM(total), 0) as total_ventas
-            FROM ventas 
-            WHERE DATE(fecha) = %s AND estado = 'completada'
-        """, (fecha_hoy,))
+        if ultimo_numero:
+            # Extraer el número y incrementar
+            numero_actual = int(ultimo_numero[0].split('-')[1])
+            nuevo_numero = numero_actual + 1
+        else:
+            # Primera factura
+            nuevo_numero = 1
         
-        resumen_ventas = cursor.fetchone()
+        # Formatear con ceros a la izquierda
+        nro_factura = f"FCT-{nuevo_numero:06d}"
         
-        # Obtener detalle de ventas por producto
-        cursor.execute("""
-            SELECT p.nombre, p.categoria, SUM(dv.cantidad) as cantidad_vendida, 
-                   SUM(dv.subtotal) as total_producto
-            FROM detalle_ventas dv
-            INNER JOIN ventas v ON dv.venta_id = v.id
-            INNER JOIN productos p ON dv.producto_id = p.id
-            WHERE DATE(v.fecha) = %s AND v.estado = 'completada'
-            GROUP BY p.id, p.nombre, p.categoria
-            ORDER BY total_producto DESC
-        """, (fecha_hoy,))
+        return nro_factura
         
-        detalle_productos = []
-        for row in cursor.fetchall():
-            detalle_productos.append({
-                'nombre': row[0],
-                'categoria': row[1],
-                'cantidad_vendida': float(row[2]),
-                'total_producto': float(row[3])
-            })
-        
-        resultado = {
-            'fecha': fecha_hoy.isoformat(),
-            'cierre_existente': None,
-            'resumen_ventas': {
-                'numero_ventas': int(resumen_ventas[0]) if resumen_ventas[0] else 0,
-                'total_efectivo': float(resumen_ventas[1]) if resumen_ventas[1] else 0,
-                'total_tarjeta': float(resumen_ventas[2]) if resumen_ventas[2] else 0,
-                'total_transferencia': float(resumen_ventas[3]) if resumen_ventas[3] else 0,
-                'total_ventas': float(resumen_ventas[4]) if resumen_ventas[4] else 0
-            },
-            'detalle_productos': detalle_productos,
-            'puede_cerrar': True
-        }
-        
-        # Si existe un cierre, incluir la información
-        if cierre_existente:
-            resultado['cierre_existente'] = {
-                'id': cierre_existente[0],
-                'total_ventas_esperado': float(cierre_existente[1]),
-                'total_efectivo_contado': float(cierre_existente[2]),
-                'diferencia': float(cierre_existente[3]),
-                'numero_ventas': int(cierre_existente[4]),
-                'observaciones': cierre_existente[5] or '',
-                'hora_cierre': cierre_existente[6].isoformat() if cierre_existente[6] else None,
-                'estado': cierre_existente[7]
-            }
-            resultado['puede_cerrar'] = cierre_existente[7] == 'abierto'
-        
-        response = jsonify(resultado)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-
     except Exception as e:
-        logger.error(f"Error obteniendo resumen de ventas del día: {e}")
-        return jsonify({'message': 'Error interno del servidor'}), 500
+        logger.error(f"Error generando número de factura: {e}")
+        return None
     finally:
         if cursor:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
 
-@app.route('/api/cierre-caja/registrar', methods=['POST'])
-@role_required(['admin', 'cajero'])
-def registrar_cierre_caja(current_user_id):
-    """Registra el cierre de caja diario"""
+@app.route('/api/facturas/ultimo-numero', methods=['GET'])
+@jwt_required
+def obtener_ultimo_numero_factura(current_user_id):
+    """Obtiene el último número correlativo registrado"""
+    try:
+        nro_factura = generar_numero_factura()
+        
+        if nro_factura:
+            response = jsonify({
+                'ultimo_numero': nro_factura,
+                'siguiente_numero': nro_factura
+            })
+        else:
+            response = jsonify({
+                'ultimo_numero': 'FCT-000000',
+                'siguiente_numero': 'FCT-000001'
+            })
+        
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo último número de factura: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
+@app.route('/api/facturas/crear', methods=['POST'])
+@jwt_required
+def crear_factura(current_user_id):
+    """Crear nueva factura"""
     connection = None
     cursor = None
     
     try:
         data = request.get_json()
         
-        if not data or 'total_efectivo_contado' not in data:
-            return jsonify({'message': 'El total de efectivo contado es requerido'}), 400
+        # Validar datos requeridos
+        required_fields = ['cliente_nombre', 'productos', 'subtotal', 'total']
+        if not data or not all(field in data for field in required_fields):
+            return jsonify({'message': 'Faltan campos requeridos'}), 400
+        
+        if not data['productos'] or len(data['productos']) == 0:
+            return jsonify({'message': 'Debe incluir al menos un producto'}), 400
         
         connection = get_db_connection()
         if not connection:
@@ -637,107 +550,92 @@ def registrar_cierre_caja(current_user_id):
             
         cursor = connection.cursor()
         
-        # Obtener fecha actual
-        fecha_hoy = datetime.now().date()
+        # Generar número de factura
+        nro_factura = generar_numero_factura()
+        if not nro_factura:
+            return jsonify({'message': 'Error generando número de factura'}), 500
         
-        # Verificar si ya existe un cierre cerrado para hoy
+        # Calcular IVA (22% en Uruguay)
+        subtotal = float(data['subtotal'])
+        iva = subtotal * 0.22
+        total = float(data['total'])
+        
+        # Insertar factura
         cursor.execute("""
-            SELECT id, estado FROM cierres_caja 
-            WHERE usuario_id = %s AND fecha_cierre = %s
-        """, (current_user_id, fecha_hoy))
+            INSERT INTO facturas (
+                nro_factura, id_venta, cliente_nombre, cliente_documento, 
+                cliente_direccion, cliente_telefono, subtotal, iva, total, 
+                generado_por, observaciones
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            nro_factura,
+            data.get('id_venta'),
+            data['cliente_nombre'],
+            data.get('cliente_documento', ''),
+            data.get('cliente_direccion', ''),
+            data.get('cliente_telefono', ''),
+            subtotal,
+            iva,
+            total,
+            current_user_id,
+            data.get('observaciones', '')
+        ))
         
-        cierre_existente = cursor.fetchone()
+        factura_id = cursor.lastrowid
         
-        if cierre_existente and cierre_existente[1] == 'cerrado':
-            return jsonify({'message': 'Ya existe un cierre de caja para el día de hoy'}), 409
-        
-        # Calcular totales de ventas del día
-        cursor.execute("""
-            SELECT 
-                COUNT(*) as numero_ventas,
-                COALESCE(SUM(CASE WHEN forma_pago = 'efectivo' THEN total ELSE 0 END), 0) as total_efectivo_esperado
-            FROM ventas 
-            WHERE DATE(fecha) = %s AND estado = 'completada'
-        """, (fecha_hoy,))
-        
-        ventas_data = cursor.fetchone()
-        numero_ventas = int(ventas_data[0]) if ventas_data[0] else 0
-        total_efectivo_esperado = float(ventas_data[1]) if ventas_data[1] else 0
-        
-        total_efectivo_contado = float(data['total_efectivo_contado'])
-        observaciones = data.get('observaciones', '').strip() or None
-        
-        if cierre_existente:
-            # Actualizar cierre existente
+        # Insertar detalle de productos
+        for producto in data['productos']:
             cursor.execute("""
-                UPDATE cierres_caja 
-                SET total_ventas_esperado = %s, total_efectivo_contado = %s, 
-                    numero_ventas = %s, observaciones = %s, estado = 'cerrado',
-                    hora_cierre = CURRENT_TIMESTAMP
-                WHERE id = %s
+                INSERT INTO detalle_factura (
+                    id_factura, producto, cantidad, precio_unitario, total_producto
+                ) VALUES (%s, %s, %s, %s, %s)
             """, (
-                total_efectivo_esperado,
-                total_efectivo_contado,
-                numero_ventas,
-                observaciones,
-                cierre_existente[0]
+                factura_id,
+                producto['nombre'],
+                float(producto['cantidad']),
+                float(producto['precio_unitario']),
+                float(producto['total'])
             ))
-            cierre_id = cierre_existente[0]
-        else:
-            # Crear nuevo cierre
-            cursor.execute("""
-                INSERT INTO cierres_caja (usuario_id, fecha_cierre, total_ventas_esperado, 
-                                        total_efectivo_contado, numero_ventas, observaciones, estado)
-                VALUES (%s, %s, %s, %s, %s, %s, 'cerrado')
-            """, (
-                current_user_id,
-                fecha_hoy,
-                total_efectivo_esperado,
-                total_efectivo_contado,
-                numero_ventas,
-                observaciones
-            ))
-            cierre_id = cursor.lastrowid
         
         connection.commit()
         
-        # Obtener el cierre completo para respuesta
+        # Obtener la factura completa para respuesta
         cursor.execute("""
-            SELECT cc.id, cc.fecha_cierre, cc.hora_cierre, cc.total_ventas_esperado,
-                   cc.total_efectivo_contado, cc.diferencia, cc.numero_ventas,
-                   cc.observaciones, cc.estado, u.nombre as usuario_nombre
-            FROM cierres_caja cc
-            INNER JOIN usuarios u ON cc.usuario_id = u.id
-            WHERE cc.id = %s
-        """, (cierre_id,))
+            SELECT f.id, f.nro_factura, f.cliente_nombre, f.cliente_documento,
+                   f.subtotal, f.iva, f.total, f.fecha, f.observaciones,
+                   u.nombre as generado_por_nombre
+            FROM facturas f
+            INNER JOIN usuarios u ON f.generado_por = u.id
+            WHERE f.id = %s
+        """, (factura_id,))
         
-        cierre_data = cursor.fetchone()
+        factura_data = cursor.fetchone()
         
         resultado = {
-            'id': cierre_data[0],
-            'fecha_cierre': cierre_data[1].isoformat(),
-            'hora_cierre': cierre_data[2].isoformat() if cierre_data[2] else None,
-            'total_ventas_esperado': float(cierre_data[3]),
-            'total_efectivo_contado': float(cierre_data[4]),
-            'diferencia': float(cierre_data[5]),
-            'numero_ventas': int(cierre_data[6]),
-            'observaciones': cierre_data[7] or '',
-            'estado': cierre_data[8],
-            'usuario_nombre': cierre_data[9],
-            'estado_diferencia': 'correcto' if float(cierre_data[5]) == 0 else 'faltante' if float(cierre_data[5]) < 0 else 'sobrante'
+            'id': factura_data[0],
+            'nro_factura': factura_data[1],
+            'cliente_nombre': factura_data[2],
+            'cliente_documento': factura_data[3] or '',
+            'subtotal': float(factura_data[4]),
+            'iva': float(factura_data[5]),
+            'total': float(factura_data[6]),
+            'fecha': factura_data[7].isoformat() if factura_data[7] else None,
+            'observaciones': factura_data[8] or '',
+            'generado_por_nombre': factura_data[9],
+            'productos': data['productos']
         }
         
-        logger.info(f"Cierre de caja registrado: ID {cierre_id}, Diferencia: {cierre_data[5]}")
+        logger.info(f"Factura creada: {nro_factura} por usuario {current_user_id}")
         
         response = jsonify({
-            'message': 'Cierre de caja registrado exitosamente',
-            'cierre': resultado
+            'message': 'Factura creada exitosamente',
+            'factura': resultado
         })
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 201
 
     except Exception as e:
-        logger.error(f"Error registrando cierre de caja: {e}")
+        logger.error(f"Error creando factura: {e}")
         if connection:
             connection.rollback()
         return jsonify({'message': 'Error interno del servidor'}), 500
@@ -747,10 +645,10 @@ def registrar_cierre_caja(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
-@app.route('/api/cierre-caja/historial', methods=['GET'])
-@role_required(['admin', 'cajero'])
-def obtener_historial_cierres(current_user_id):
-    """Lista de cierres anteriores"""
+@app.route('/api/facturas/historial', methods=['GET'])
+@jwt_required
+def obtener_historial_facturas(current_user_id):
+    """Obtener lista completa de facturas"""
     connection = None
     cursor = None
     
@@ -764,64 +662,64 @@ def obtener_historial_cierres(current_user_id):
         # Obtener parámetros de filtros
         fecha_inicio = request.args.get('fecha_inicio')
         fecha_fin = request.args.get('fecha_fin')
-        limite = int(request.args.get('limite', 30))
+        cliente = request.args.get('cliente', '').strip()
+        numero = request.args.get('numero', '').strip()
+        limite = int(request.args.get('limite', 50))
         
         # Construir consulta
         query = """
-            SELECT cc.id, cc.fecha_cierre, cc.hora_cierre, cc.total_ventas_esperado,
-                   cc.total_efectivo_contado, cc.diferencia, cc.numero_ventas,
-                   cc.observaciones, cc.estado, u.nombre as usuario_nombre
-            FROM cierres_caja cc
-            INNER JOIN usuarios u ON cc.usuario_id = u.id
+            SELECT f.id, f.nro_factura, f.cliente_nombre, f.cliente_documento,
+                   f.subtotal, f.iva, f.total, f.fecha, f.estado,
+                   u.nombre as generado_por_nombre
+            FROM facturas f
+            INNER JOIN usuarios u ON f.generado_por = u.id
             WHERE 1=1
         """
         params = []
         
-        # Solo mostrar cierres del usuario actual si no es admin
-        cursor.execute("SELECT rol FROM usuarios WHERE id = %s", (current_user_id,))
-        user_role = cursor.fetchone()
-        
-        if user_role and user_role[0] != 'admin':
-            query += " AND cc.usuario_id = %s"
-            params.append(current_user_id)
-        
         if fecha_inicio:
-            query += " AND cc.fecha_cierre >= %s"
+            query += " AND DATE(f.fecha) >= %s"
             params.append(fecha_inicio)
         
         if fecha_fin:
-            query += " AND cc.fecha_cierre <= %s"
+            query += " AND DATE(f.fecha) <= %s"
             params.append(fecha_fin)
         
-        query += " ORDER BY cc.fecha_cierre DESC, cc.hora_cierre DESC LIMIT %s"
+        if cliente:
+            query += " AND f.cliente_nombre LIKE %s"
+            params.append(f"%{cliente}%")
+        
+        if numero:
+            query += " AND f.nro_factura LIKE %s"
+            params.append(f"%{numero}%")
+        
+        query += " ORDER BY f.fecha DESC, f.id DESC LIMIT %s"
         params.append(limite)
         
         cursor.execute(query, params)
         
-        cierres = []
+        facturas = []
         for row in cursor.fetchall():
-            diferencia = float(row[5])
-            cierre = {
+            factura = {
                 'id': row[0],
-                'fecha_cierre': row[1].isoformat(),
-                'hora_cierre': row[2].isoformat() if row[2] else None,
-                'total_ventas_esperado': float(row[3]),
-                'total_efectivo_contado': float(row[4]),
-                'diferencia': diferencia,
-                'numero_ventas': int(row[6]),
-                'observaciones': row[7] or '',
+                'nro_factura': row[1],
+                'cliente_nombre': row[2],
+                'cliente_documento': row[3] or '',
+                'subtotal': float(row[4]),
+                'iva': float(row[5]),
+                'total': float(row[6]),
+                'fecha': row[7].isoformat() if row[7] else None,
                 'estado': row[8],
-                'usuario_nombre': row[9],
-                'estado_diferencia': 'correcto' if diferencia == 0 else 'faltante' if diferencia < 0 else 'sobrante'
+                'generado_por_nombre': row[9]
             }
-            cierres.append(cierre)
+            facturas.append(factura)
         
-        response = jsonify(cierres)
+        response = jsonify(facturas)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
     except Exception as e:
-        logger.error(f"Error obteniendo historial de cierres: {e}")
+        logger.error(f"Error obteniendo historial de facturas: {e}")
         return jsonify([]), 200
     finally:
         if cursor:
@@ -829,10 +727,10 @@ def obtener_historial_cierres(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
-@app.route('/api/cierre-caja/detalle/<int:cierre_id>', methods=['GET'])
-@role_required(['admin', 'cajero'])
-def obtener_detalle_cierre(current_user_id, cierre_id):
-    """Detalle de un cierre específico"""
+@app.route('/api/facturas/<int:factura_id>', methods=['GET'])
+@jwt_required
+def obtener_detalle_factura(current_user_id, factura_id):
+    """Ver detalle de una factura"""
     connection = None
     cursor = None
     
@@ -843,84 +741,55 @@ def obtener_detalle_cierre(current_user_id, cierre_id):
             
         cursor = connection.cursor()
         
-        # Verificar permisos
-        cursor.execute("SELECT rol FROM usuarios WHERE id = %s", (current_user_id,))
-        user_role = cursor.fetchone()
-        
-        query_cierre = """
-            SELECT cc.id, cc.fecha_cierre, cc.hora_cierre, cc.total_ventas_esperado,
-                   cc.total_efectivo_contado, cc.diferencia, cc.numero_ventas,
-                   cc.observaciones, cc.estado, u.nombre as usuario_nombre, cc.usuario_id
-            FROM cierres_caja cc
-            INNER JOIN usuarios u ON cc.usuario_id = u.id
-            WHERE cc.id = %s
-        """
-        
-        # Si no es admin, solo puede ver sus propios cierres
-        if user_role and user_role[0] != 'admin':
-            query_cierre += " AND cc.usuario_id = %s"
-            cursor.execute(query_cierre, (cierre_id, current_user_id))
-        else:
-            cursor.execute(query_cierre, (cierre_id,))
-        
-        cierre_data = cursor.fetchone()
-        
-        if not cierre_data:
-            return jsonify({'message': 'Cierre no encontrado'}), 404
-        
-        # Obtener detalle de ventas del día del cierre
+        # Obtener datos de la factura
         cursor.execute("""
-            SELECT v.id, v.numero_venta, v.fecha, v.forma_pago, v.total,
-                   c.nombre as cliente_nombre
-            FROM ventas v
-            LEFT JOIN clientes c ON v.cliente_id = c.id
-            WHERE DATE(v.fecha) = %s AND v.estado = 'completada'
-            ORDER BY v.fecha ASC
-        """, (cierre_data[1],))
+            SELECT f.id, f.nro_factura, f.cliente_nombre, f.cliente_documento,
+                   f.cliente_direccion, f.cliente_telefono, f.subtotal, f.iva, 
+                   f.total, f.fecha, f.estado, f.observaciones,
+                   u.nombre as generado_por_nombre
+            FROM facturas f
+            INNER JOIN usuarios u ON f.generado_por = u.id
+            WHERE f.id = %s
+        """, (factura_id,))
         
-        ventas_detalle = []
-        for row in cursor.fetchall():
-            venta = {
-                'id': row[0],
-                'numero_venta': row[1] or f'V-{row[0]}',
-                'fecha': row[2].isoformat() if row[2] else None,
-                'forma_pago': row[3],
-                'total': float(row[4]),
-                'cliente_nombre': row[5] or 'Cliente General'
-            }
-            ventas_detalle.append(venta)
+        factura_data = cursor.fetchone()
         
-        # Obtener resumen por forma de pago
+        if not factura_data:
+            return jsonify({'message': 'Factura no encontrada'}), 404
+        
+        # Obtener detalle de productos
         cursor.execute("""
-            SELECT forma_pago, COUNT(*) as cantidad, SUM(total) as total
-            FROM ventas
-            WHERE DATE(fecha) = %s AND estado = 'completada'
-            GROUP BY forma_pago
-        """, (cierre_data[1],))
+            SELECT producto, cantidad, precio_unitario, total_producto
+            FROM detalle_factura
+            WHERE id_factura = %s
+            ORDER BY id
+        """, (factura_id,))
         
-        resumen_formas_pago = {}
+        productos = []
         for row in cursor.fetchall():
-            resumen_formas_pago[row[0]] = {
-                'cantidad': int(row[1]),
-                'total': float(row[2])
+            producto = {
+                'nombre': row[0],
+                'cantidad': float(row[1]),
+                'precio_unitario': float(row[2]),
+                'total': float(row[3])
             }
-        
-        diferencia = float(cierre_data[5])
+            productos.append(producto)
         
         resultado = {
-            'id': cierre_data[0],
-            'fecha_cierre': cierre_data[1].isoformat(),
-            'hora_cierre': cierre_data[2].isoformat() if cierre_data[2] else None,
-            'total_ventas_esperado': float(cierre_data[3]),
-            'total_efectivo_contado': float(cierre_data[4]),
-            'diferencia': diferencia,
-            'numero_ventas': int(cierre_data[6]),
-            'observaciones': cierre_data[7] or '',
-            'estado': cierre_data[8],
-            'usuario_nombre': cierre_data[9],
-            'estado_diferencia': 'correcto' if diferencia == 0 else 'faltante' if diferencia < 0 else 'sobrante',
-            'ventas_detalle': ventas_detalle,
-            'resumen_formas_pago': resumen_formas_pago
+            'id': factura_data[0],
+            'nro_factura': factura_data[1],
+            'cliente_nombre': factura_data[2],
+            'cliente_documento': factura_data[3] or '',
+            'cliente_direccion': factura_data[4] or '',
+            'cliente_telefono': factura_data[5] or '',
+            'subtotal': float(factura_data[6]),
+            'iva': float(factura_data[7]),
+            'total': float(factura_data[8]),
+            'fecha': factura_data[9].isoformat() if factura_data[9] else None,
+            'estado': factura_data[10],
+            'observaciones': factura_data[11] or '',
+            'generado_por_nombre': factura_data[12],
+            'productos': productos
         }
         
         response = jsonify(resultado)
@@ -928,7 +797,7 @@ def obtener_detalle_cierre(current_user_id, cierre_id):
         return response, 200
 
     except Exception as e:
-        logger.error(f"Error obteniendo detalle de cierre: {e}")
+        logger.error(f"Error obteniendo detalle de factura: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
@@ -936,19 +805,19 @@ def obtener_detalle_cierre(current_user_id, cierre_id):
         if connection and connection.is_connected():
             connection.close()
 
-@app.route('/api/cierre-caja/exportar-pdf/<int:cierre_id>', methods=['POST'])
-@role_required(['admin', 'cajero'])
-def exportar_cierre_pdf(current_user_id, cierre_id):
-    """Exporta cierre en PDF profesional"""
+@app.route('/api/facturas/exportar/<int:factura_id>', methods=['POST'])
+@jwt_required
+def exportar_factura_pdf(current_user_id, factura_id):
+    """Exportar una factura a PDF"""
     try:
         # Simular exportación PDF (en producción usar reportlab)
-        nombre_archivo = f"cierre_caja_{cierre_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        nombre_archivo = f"factura_{factura_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         
         resultado = {
-            'mensaje': 'Cierre de caja exportado exitosamente',
+            'mensaje': 'Factura exportada exitosamente',
             'nombre_archivo': nombre_archivo,
             'formato': 'pdf',
-            'url_descarga': f'/api/cierre-caja/descargar/{nombre_archivo}',
+            'url_descarga': f'/api/facturas/descargar/{nombre_archivo}',
             'fecha_generacion': datetime.now().isoformat()
         }
         
@@ -957,8 +826,9 @@ def exportar_cierre_pdf(current_user_id, cierre_id):
         return response, 200
 
     except Exception as e:
-        logger.error(f"Error exportando cierre PDF: {e}")
+        logger.error(f"Error exportando factura PDF: {e}")
         return jsonify({'error': 'Error interno del servidor'}), 500
+
 
 # ==================== ENDPOINTS DE AUTENTICACIÓN ====================
 
@@ -1233,12 +1103,12 @@ def obtener_productos(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
-# ==================== ENDPOINTS DE VENTAS ====================
+# ==================== ENDPOINTS DE CLIENTES ====================
 
-@app.route('/api/ventas', methods=['GET'])
+@app.route('/api/clientes', methods=['GET'])
 @jwt_required
-def obtener_ventas(current_user_id):
-    """Listar ventas con filtros"""
+def obtener_clientes(current_user_id):
+    """Listar clientes activos"""
     connection = None
     cursor = None
     
@@ -1250,68 +1120,44 @@ def obtener_ventas(current_user_id):
         cursor = connection.cursor()
         
         # Obtener parámetros de filtros
-        fecha_inicio = request.args.get('fecha_inicio')
-        fecha_fin = request.args.get('fecha_fin')
-        cliente_id = request.args.get('cliente_id')
-        forma_pago = request.args.get('forma_pago')
-        estado = request.args.get('estado', 'completada')
+        search = request.args.get('q', '').strip()
+        activo = request.args.get('activo', 'true').lower() == 'true'
         
         # Construir consulta
         query = """
-            SELECT v.id, v.numero_venta, v.fecha, v.forma_pago, v.subtotal, v.descuento, 
-                   v.impuestos, v.total, v.estado, v.observaciones,
-                   c.nombre as cliente_nombre, u.nombre as usuario_nombre
-            FROM ventas v
-            LEFT JOIN clientes c ON v.cliente_id = c.id
-            LEFT JOIN usuarios u ON v.usuario_id = u.id
-            WHERE v.estado = %s
+            SELECT id, nombre, correo, telefono, direccion, documento
+            FROM clientes
+            WHERE activo = %s
         """
-        params = [estado]
+        params = [activo]
         
-        if fecha_inicio:
-            query += " AND DATE(v.fecha) >= %s"
-            params.append(fecha_inicio)
+        if search:
+            query += " AND (nombre LIKE %s OR correo LIKE %s OR documento LIKE %s)"
+            search_param = f"%{search}%"
+            params.extend([search_param, search_param, search_param])
         
-        if fecha_fin:
-            query += " AND DATE(v.fecha) <= %s"
-            params.append(fecha_fin)
-        
-        if cliente_id:
-            query += " AND v.cliente_id = %s"
-            params.append(cliente_id)
-        
-        if forma_pago:
-            query += " AND v.forma_pago = %s"
-            params.append(forma_pago)
-        
-        query += " ORDER BY v.fecha DESC, v.id DESC"
+        query += " ORDER BY nombre ASC"
         
         cursor.execute(query, params)
-        ventas = []
+        clientes = []
         
         for row in cursor.fetchall():
-            venta = {
+            cliente = {
                 'id': row[0],
-                'numero_venta': row[1] or '',
-                'fecha': row[2].isoformat() if row[2] else None,
-                'forma_pago': row[3],
-                'subtotal': float(row[4]),
-                'descuento': float(row[5]),
-                'impuestos': float(row[6]),
-                'total': float(row[7]),
-                'estado': row[8],
-                'observaciones': row[9] or '',
-                'cliente_nombre': row[10] or 'Cliente General',
-                'usuario_nombre': row[11] or 'Usuario desconocido'
+                'nombre': row[1],
+                'correo': row[2] or '',
+                'telefono': row[3] or '',
+                'direccion': row[4] or '',
+                'documento': row[5] or ''
             }
-            ventas.append(venta)
+            clientes.append(cliente)
         
-        response = jsonify(ventas)
+        response = jsonify(clientes)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
     except Exception as e:
-        logger.error(f"Error obteniendo ventas: {e}")
+        logger.error(f"Error obteniendo clientes: {e}")
         return jsonify([]), 200
     finally:
         if cursor:
@@ -1319,103 +1165,120 @@ def obtener_ventas(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
-# ==================== ENDPOINTS DE DASHBOARD ====================
+# ==================== FUNCIÓN DE INICIALIZACIÓN ====================
 
-@app.route('/api/dashboard', methods=['GET'])
-@jwt_required
-def obtener_datos_dashboard(current_user_id):
-    """Obtener datos para el dashboard"""
+def init_database():
+    """Inicializar base de datos con datos de ejemplo"""
     connection = None
     cursor = None
     
     try:
         connection = get_db_connection()
         if not connection:
-            return jsonify({
-                'ventas_hoy': {'total': 0, 'cantidad': 0},
-                'productos_stock_bajo': 0,
-                'valor_inventario': 0,
-                'actividad_reciente': []
-            }), 200
+            return False
             
         cursor = connection.cursor()
         
-        # Ventas de hoy
-        cursor.execute("""
-            SELECT COALESCE(SUM(total), 0) as total_ventas, COUNT(*) as cantidad_ventas
-            FROM ventas 
-            WHERE DATE(fecha) = CURDATE() AND estado = 'completada'
-        """)
-        ventas_hoy = cursor.fetchone()
+        # Verificar y crear usuario administrador
+        cursor.execute("SELECT COUNT(*) FROM usuarios WHERE rol = 'admin'")
+        admin_count = cursor.fetchone()[0]
         
-        # Productos con stock bajo
-        cursor.execute("""
-            SELECT COUNT(*) FROM productos 
-            WHERE stock_actual <= stock_minimo AND activo = TRUE
-        """)
-        productos_stock_bajo = cursor.fetchone()[0] or 0
+        if admin_count == 0:
+            admin_password = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt())
+            cursor.execute("""
+                INSERT INTO usuarios (nombre, correo, password_hash, rol)
+                VALUES ('Administrador', 'admin@fruteria.com', %s, 'admin')
+            """, (admin_password.decode('utf-8'),))
+            logger.info("✅ Usuario administrador creado")
         
-        # Valor del inventario
-        cursor.execute("""
-            SELECT COALESCE(SUM(stock_actual * precio_unitario), 0) 
-            FROM productos WHERE activo = TRUE
-        """)
-        valor_inventario = float(cursor.fetchone()[0] or 0)
+        # Crear usuario cajero de ejemplo
+        cursor.execute("SELECT COUNT(*) FROM usuarios WHERE rol = 'cajero'")
+        cajero_count = cursor.fetchone()[0]
         
-        # Actividad reciente (últimos movimientos)
-        cursor.execute("""
-            SELECT 'stock' as tipo, CONCAT('Movimiento de stock: ', p.nombre) as detalle, 
-                   ms.fecha, u.nombre as usuario
-            FROM movimientos_stock ms
-            INNER JOIN productos p ON ms.producto_id = p.id
-            LEFT JOIN usuarios u ON ms.usuario_id = u.id
-            WHERE ms.fecha >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+        if cajero_count == 0:
+            cajero_password = bcrypt.hashpw('cajero123'.encode('utf-8'), bcrypt.gensalt())
+            cursor.execute("""
+                INSERT INTO usuarios (nombre, correo, password_hash, rol)
+                VALUES ('Cajero Principal', 'cajero@fruteria.com', %s, 'cajero')
+            """, (cajero_password.decode('utf-8'),))
+            logger.info("✅ Usuario cajero creado")
+        
+        # Crear proveedores de ejemplo
+        cursor.execute("SELECT COUNT(*) FROM proveedores")
+        if cursor.fetchone()[0] == 0:
+            proveedores_ejemplo = [
+                ('Distribuidora Central', 'Juan Pérez', '099123456', 'juan@distribuidora.com', 'Av. Central 123'),
+                ('Frutas del Norte', 'María González', '098765432', 'maria@frutasnorte.com', 'Ruta 5 Km 45'),
+                ('Verduras Orgánicas', 'Carlos López', '097654321', 'carlos@organicas.com', 'Zona Rural 456')
+            ]
             
-            UNION ALL
-            
-            SELECT 'venta' as tipo, CONCAT('Venta #', v.id, ' - $', v.total) as detalle,
-                   v.fecha, u.nombre as usuario
-            FROM ventas v
-            LEFT JOIN usuarios u ON v.usuario_id = u.id
-            WHERE v.fecha >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-            AND v.estado = 'completada'
-            
-            ORDER BY fecha DESC
-            LIMIT 10
-        """)
-        
-        actividad_reciente = []
-        for row in cursor.fetchall():
-            actividad = {
-                'tipo': row[0],
-                'detalle': row[1],
-                'fecha': row[2].isoformat() if row[2] else None,
-                'usuario': row[3] or 'Sistema'
-            }
-            actividad_reciente.append(actividad)
-        
-        dashboard_data = {
-            'ventas_hoy': {
-                'total': float(ventas_hoy[0] or 0),
-                'cantidad': ventas_hoy[1] or 0
-            },
-            'productos_stock_bajo': productos_stock_bajo,
-            'valor_inventario': valor_inventario,
-            'actividad_reciente': actividad_reciente
-        }
-        
-        response = jsonify(dashboard_data)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
+            for proveedor in proveedores_ejemplo:
+                cursor.execute("""
+                    INSERT INTO proveedores (nombre, contacto, telefono, correo, direccion)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, proveedor)
+            logger.info("✅ Proveedores de ejemplo creados")
 
+        # Insertar productos de ejemplo
+        cursor.execute("SELECT COUNT(*) FROM productos")
+        if cursor.fetchone()[0] == 0:
+            # Obtener IDs de proveedores
+            cursor.execute("SELECT id FROM proveedores ORDER BY id")
+            proveedores_ids = [row[0] for row in cursor.fetchall()]
+            
+            productos_ejemplo = [
+                # Frutas
+                ('Manzana Roja', 'frutas', 'kg', 50.0, 10.0, 3.50, 2.80, 'Manzanas rojas frescas y crujientes', proveedores_ids[0] if proveedores_ids else None),
+                ('Banana', 'frutas', 'kg', 30.0, 5.0, 2.80, 2.20, 'Bananas maduras y dulces', proveedores_ids[0] if proveedores_ids else None),
+                ('Naranja', 'frutas', 'kg', 40.0, 8.0, 4.20, 3.50, 'Naranjas jugosas para zumo', proveedores_ids[0] if proveedores_ids else None),
+                ('Pera', 'frutas', 'kg', 25.0, 6.0, 4.80, 3.90, 'Peras dulces y suaves', proveedores_ids[0] if proveedores_ids else None),
+                ('Uva Verde', 'frutas', 'kg', 15.0, 3.0, 6.50, 5.20, 'Uvas verdes sin semilla', proveedores_ids[0] if proveedores_ids else None),
+                # Verduras
+                ('Tomate', 'verduras', 'kg', 35.0, 8.0, 5.20, 4.10, 'Tomates frescos de invernadero', proveedores_ids[1] if len(proveedores_ids) > 1 else None),
+                ('Lechuga', 'verduras', 'unidad', 20.0, 5.0, 2.50, 1.80, 'Lechuga crespa fresca', proveedores_ids[1] if len(proveedores_ids) > 1 else None),
+                ('Papa', 'verduras', 'kg', 80.0, 15.0, 1.80, 1.20, 'Papas lavadas nacionales', proveedores_ids[2] if len(proveedores_ids) > 2 else None),
+                ('Zanahoria', 'verduras', 'kg', 30.0, 7.0, 3.20, 2.50, 'Zanahorias frescas', proveedores_ids[2] if len(proveedores_ids) > 2 else None),
+                ('Cebolla', 'verduras', 'kg', 45.0, 10.0, 2.90, 2.10, 'Cebollas blancas', proveedores_ids[2] if len(proveedores_ids) > 2 else None),
+                # Otros
+                ('Aceite de Oliva', 'otros', 'litro', 12.0, 2.0, 8.90, 6.50, 'Aceite de oliva extra virgen', proveedores_ids[1] if len(proveedores_ids) > 1 else None),
+                ('Miel Natural', 'otros', 'unidad', 8.0, 1.0, 12.50, 9.80, 'Miel pura de abeja', proveedores_ids[1] if len(proveedores_ids) > 1 else None)
+            ]
+            
+            for producto in productos_ejemplo:
+                cursor.execute("""
+                    INSERT INTO productos (nombre, categoria, unidad, stock_actual, stock_minimo, 
+                                         precio_unitario, precio_compra, descripcion, proveedor_id)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, producto)
+            logger.info("✅ Productos de ejemplo creados")
+        
+        # Insertar clientes de ejemplo
+        cursor.execute("SELECT COUNT(*) FROM clientes")
+        if cursor.fetchone()[0] == 0:
+            clientes_ejemplo = [
+                ('Cliente General', '', '', '', '', 'Cliente por defecto para ventas sin cliente específico'),
+                ('Restaurante El Buen Sabor', 'restaurante@buensabor.com', '099887766', 'Av. Principal 456', '12345678', 'Cliente mayorista'),
+                ('Supermercado Villa', 'compras@villa.com', '098776655', 'Calle Comercial 789', '87654321', 'Cliente corporativo'),
+                ('Panadería Central', 'panaderia@central.com', '097665544', 'Centro 123', '11223344', 'Cliente frecuente'),
+                ('Hotel Plaza', 'compras@hotelplaza.com', '096554433', 'Plaza Principal 456', '44332211', 'Cliente premium')
+            ]
+            
+            for cliente in clientes_ejemplo:
+                cursor.execute("""
+                    INSERT INTO clientes (nombre, correo, telefono, direccion, documento, notas)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, cliente)
+            logger.info("✅ Clientes de ejemplo creados")
+        
+        connection.commit()
+        logger.info("✅ Base de datos inicializada correctamente")
+        return True
+        
     except Exception as e:
-        logger.error(f"Error obteniendo datos del dashboard: {e}")
-        return jsonify({
-            'ventas_hoy': {'total': 0, 'cantidad': 0},
-            'productos_stock_bajo': 0,
-            'valor_inventario': 0,
-            'actividad_reciente': []
-        }), 200
+        logger.error(f"❌ Error inicializando base de datos: {e}")
+        if connection:
+            connection.rollback()
+        return False
     finally:
         if cursor:
             cursor.close()
@@ -1447,7 +1310,7 @@ def health_check():
         'database': db_status,
         'message': 'Servidor Flask funcionando correctamente',
         'timestamp': datetime.utcnow().isoformat(),
-        'version': '5.0.0 - Sistema Completo con Cierre de Caja',
+        'version': '6.0.0 - Sistema Completo con Facturación',
         'features': [
             'Autenticación JWT',
             'Gestión de Productos',
@@ -1462,7 +1325,8 @@ def health_check():
             'Reportes de Inventario',
             'Exportación PDF/Excel',
             'Dashboard Avanzado',
-            'Cierre de Caja Diario'
+            'Cierre de Caja Diario',
+            'Módulo de Facturación Completo'
         ]
     })
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
@@ -1472,10 +1336,10 @@ def health_check():
 def root():
     """Información de la API"""
     response = jsonify({
-        'message': 'API Frutería Nina - Sistema Completo v5.0',
-        'version': '5.0.0',
+        'message': 'API Frutería Nina - Sistema Completo v6.0 con Facturación',
+        'version': '6.0.0',
         'status': 'running',
-        'description': 'Sistema completo de gestión para frutería con cierre de caja diario',
+        'description': 'Sistema completo de gestión para frutería con módulo de facturación profesional',
         'modules': {
             'authentication': '✅ Completo - JWT con roles',
             'products': '✅ Completo - CRUD con categorías',
@@ -1485,7 +1349,8 @@ def root():
             'suppliers': '✅ Completo - Gestión de proveedores',
             'stock_movements': '✅ Completo - Trazabilidad total',
             'financial_reports': '✅ Completo - Reportes contables',
-            'cash_closure': '✅ NUEVO - Cierre de caja diario',
+            'cash_closure': '✅ Completo - Cierre de caja diario',
+            'invoicing': '✅ NUEVO - Módulo de facturación completo',
             'export_functionality': '✅ Completo - PDF/Excel'
         },
         'endpoints': {
@@ -1494,47 +1359,51 @@ def root():
                 'POST /api/login', 
                 'POST /api/verify-token'
             ],
-            'cash_closure': [
-                'GET /api/cierre-caja/hoy',
-                'POST /api/cierre-caja/registrar',
-                'GET /api/cierre-caja/historial',
-                'GET /api/cierre-caja/detalle/<id>',
-                'POST /api/cierre-caja/exportar-pdf/<id>'
+            'invoicing': [
+                'GET /api/facturas/ultimo-numero',
+                'POST /api/facturas/crear',
+                'GET /api/facturas/historial',
+                'GET /api/facturas/<id>',
+                'POST /api/facturas/exportar/<id>'
             ],
             'products': [
                 'GET /api/productos'
             ],
-            'sales': [
-                'GET /api/ventas'
-            ],
-            'dashboard': [
-                'GET /api/dashboard'
+            'clients': [
+                'GET /api/clientes'
             ],
             'system': [
                 'GET /api/health',
                 'GET /'
             ]
         },
-        'new_features_v5': [
-            '💰 Módulo Completo de Cierre de Caja',
-            '📊 Resumen Automático de Ventas del Día',
-            '🔍 Comparación Efectivo Esperado vs Real',
-            '📋 Historial Completo de Cierres',
-            '📄 Exportación PDF de Cierres',
-            '🔐 Control de Permisos por Rol',
-            '⚠️ Validación de Un Cierre por Día',
-            '📈 Análisis de Diferencias de Caja',
-            '🎯 Interfaz Profesional para Cajeros',
-            '📱 Responsive Design Optimizado'
+        'new_features_v6': [
+            '🧾 Módulo Completo de Facturación',
+            '📄 Emisión de Comprobantes Profesionales',
+            '🔢 Numeración Correlativa Automática (FCT-000001)',
+            '👥 Gestión Completa de Datos del Cliente',
+            '📊 Cálculo Automático de IVA y Totales',
+            '📋 Historial Completo de Facturas',
+            '🔍 Filtros Avanzados por Cliente, Fecha y Número',
+            '📄 Exportación PDF Profesional',
+            '💼 Integración con Sistema de Ventas',
+            '🔐 Control de Permisos y Auditoría',
+            '📱 Interfaz Responsive y Moderna',
+            '⚡ Validación en Tiempo Real'
         ],
-        'roles': {
-            'admin': 'Acceso completo al sistema',
-            'cajero': 'Acceso a cierre de caja y ventas',
-            'operador': 'Acceso básico al sistema'
+        'invoice_features': {
+            'numbering': 'Correlativo automático FCT-XXXXXX',
+            'client_data': 'Nombre, documento, dirección, teléfono',
+            'products': 'Detalle completo con cantidades y precios',
+            'calculations': 'Subtotal, IVA (22%), Total automático',
+            'export': 'PDF profesional con datos fiscales',
+            'history': 'Búsqueda y filtros avanzados',
+            'integration': 'Vinculación con ventas del sistema'
         }
     })
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 200
+
 
 # ==================== MANEJO DE ERRORES ====================
 
@@ -1545,12 +1414,13 @@ def not_found(error):
         'error': 'Not Found',
         'status_code': 404,
         'available_endpoints': [
-            '/api/cierre-caja/hoy',
-            '/api/cierre-caja/registrar',
-            '/api/cierre-caja/historial',
+            '/api/facturas/ultimo-numero',
+            '/api/facturas/crear',
+            '/api/facturas/historial',
+            '/api/facturas/<id>',
+            '/api/facturas/exportar/<id>',
             '/api/productos',
-            '/api/ventas',
-            '/api/dashboard',
+            '/api/clientes',
             '/api/health'
         ]
     })
@@ -1577,10 +1447,230 @@ def method_not_allowed(error):
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 405
 
+# ==================== ENDPOINTS DE NOTIFICACIONES ====================
+
+@app.route('/api/notificaciones', methods=['GET'])
+@jwt_required
+def obtener_notificaciones(current_user_id):
+    """Obtener todas las notificaciones del usuario"""
+    try:
+        # Obtener parámetros de filtros
+        tipo = request.args.get('tipo')
+        leida = request.args.get('leida')
+        fecha_desde = request.args.get('fecha_desde')
+        fecha_hasta = request.args.get('fecha_hasta')
+        limite = int(request.args.get('limite', 50))
+        
+        filtros = {}
+        if tipo:
+            filtros['tipo'] = tipo
+        if leida is not None:
+            filtros['leida'] = leida.lower() == 'true'
+        if fecha_desde:
+            filtros['fecha_desde'] = fecha_desde
+        if fecha_hasta:
+            filtros['fecha_hasta'] = fecha_hasta
+        if limite:
+            filtros['limite'] = limite
+        
+        notificaciones = NotificacionesController.obtener_notificaciones(current_user_id, filtros)
+        
+        response = jsonify(notificaciones)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo notificaciones: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
+@app.route('/api/notificaciones/no-leidas', methods=['GET'])
+@jwt_required
+def contar_notificaciones_no_leidas(current_user_id):
+    """Contar notificaciones no leídas"""
+    try:
+        count = NotificacionesController.contar_no_leidas(current_user_id)
+        
+        response = jsonify({'count': count})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        logger.error(f"Error contando notificaciones no leídas: {e}")
+        return jsonify({'count': 0}), 200
+
+@app.route('/api/notificaciones/marcar-leidas', methods=['POST'])
+@jwt_required
+def marcar_notificaciones_leidas(current_user_id):
+    """Marcar notificaciones como leídas"""
+    try:
+        data = request.get_json()
+        notificacion_ids = data.get('notificacion_ids') if data else None
+        
+        success = NotificacionesController.marcar_como_leidas(current_user_id, notificacion_ids)
+        
+        if success:
+            response = jsonify({'message': 'Notificaciones marcadas como leídas'})
+        else:
+            response = jsonify({'message': 'Error marcando notificaciones'})
+        
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200 if success else 500
+        
+    except Exception as e:
+        logger.error(f"Error marcando notificaciones como leídas: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
+@app.route('/api/notificaciones/enviar-email', methods=['POST'])
+@jwt_required
+def enviar_notificacion_email(current_user_id):
+    """Enviar notificación por email"""
+    try:
+        data = request.get_json()
+        
+        if not data or not all(k in data for k in ('destinatario', 'asunto', 'mensaje')):
+            return jsonify({'message': 'Faltan campos requeridos'}), 400
+        
+        email_service = EmailService()
+        success = email_service._enviar_email(
+            data['destinatario'],
+            data['asunto'],
+            data['mensaje']
+        )
+        
+        if success:
+            # Crear notificación en el sistema
+            NotificacionesController.crear_notificacion(
+                current_user_id,
+                'general',
+                f"Email enviado a {data['destinatario']}",
+                f"Asunto: {data['asunto']}",
+                'email'
+            )
+            
+            response = jsonify({'message': 'Email enviado exitosamente'})
+    else:
+            response = jsonify({'message': 'Error enviando email'})
+        
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200 if success else 500
+        
+    except Exception as e:
+        logger.error(f"Error enviando email: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
+@app.route('/api/notificaciones/enviar-sms', methods=['POST'])
+@jwt_required
+def enviar_notificacion_sms(current_user_id):
+    """Enviar notificación por SMS"""
+    try:
+        data = request.get_json()
+        
+        if not data or not all(k in data for k in ('telefono', 'mensaje')):
+            return jsonify({'message': 'Faltan campos requeridos'}), 400
+        
+        sms_service = SMSService()
+        success = sms_service._enviar_sms(data['telefono'], data['mensaje'])
+        
+        if success:
+            # Crear notificación en el sistema
+            NotificacionesController.crear_notificacion(
+                current_user_id,
+                'general',
+                f"SMS enviado a {data['telefono']}",
+                data['mensaje'],
+                'sms'
+            )
+            
+            response = jsonify({'message': 'SMS enviado exitosamente'})
+        else:
+            response = jsonify({'message': 'Error enviando SMS'})
+        
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200 if success else 500
+        
+    except Exception as e:
+        logger.error(f"Error enviando SMS: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
+@app.route('/api/notificaciones/configuracion', methods=['GET'])
+@jwt_required
+def obtener_configuracion_notificaciones(current_user_id):
+    """Obtener configuración de notificaciones del usuario"""
+    try:
+        configuracion = NotificacionesController.obtener_configuracion(current_user_id)
+        
+        if configuracion:
+            response = jsonify(configuracion)
+        else:
+            response = jsonify({'message': 'Error obteniendo configuración'})
+        
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200 if configuracion else 500
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo configuración: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
+@app.route('/api/notificaciones/configuracion', methods=['PUT'])
+@jwt_required
+def actualizar_configuracion_notificaciones(current_user_id):
+    """Actualizar configuración de notificaciones"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'message': 'Datos de configuración requeridos'}), 400
+        
+        success = NotificacionesController.actualizar_configuracion(current_user_id, data)
+        
+        if success:
+            response = jsonify({'message': 'Configuración actualizada exitosamente'})
+        else:
+            response = jsonify({'message': 'Error actualizando configuración'})
+        
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200 if success else 500
+        
+    except Exception as e:
+        logger.error(f"Error actualizando configuración: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
+@app.route('/api/notificaciones/verificar-alertas', methods=['POST'])
+@jwt_required
+@role_required(['admin', 'operador'])
+def verificar_alertas_sistema(current_user_id):
+    """Verificar y generar alertas automáticas del sistema"""
+    try:
+        # Verificar alertas de stock
+        productos_stock_bajo = NotificacionesController.verificar_alertas_stock()
+        
+        # Verificar pagos pendientes
+        pagos_pendientes = NotificacionesController.verificar_pagos_pendientes()
+        
+        # Verificar cobros pendientes
+        cobros_pendientes = NotificacionesController.verificar_cobros_pendientes()
+        
+        resultado = {
+            'alertas_generadas': {
+                'stock_bajo': len(productos_stock_bajo),
+                'pagos_pendientes': len(pagos_pendientes),
+                'cobros_pendientes': len(cobros_pendientes)
+            },
+            'mensaje': 'Verificación de alertas completada'
+        }
+        
+        response = jsonify(resultado)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        logger.error(f"Error verificando alertas: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
 # ==================== FUNCIÓN PRINCIPAL ====================
 
 if __name__ == '__main__':
-    print("🚀 Iniciando Frutería Nina Backend - Sistema Completo v5.0...")
+    print("🚀 Iniciando Frutería Nina Backend - Sistema Completo v6.0 con Facturación...")
     print("=" * 100)
     
     # Crear tablas primero
@@ -1588,7 +1678,7 @@ if __name__ == '__main__':
         # Luego inicializar datos
         if init_database():
             print("=" * 100)
-            print("✅ ¡Sistema Completo de Frutería Nina v5.0 Listo!")
+            print("✅ ¡Sistema Completo de Frutería Nina v6.0 con Facturación Listo!")
             print("🌐 Servidor Flask iniciado en: http://localhost:5001")
             print("🎯 Frontend esperado en: http://localhost:3000")
             print("")
@@ -1602,7 +1692,19 @@ if __name__ == '__main__':
             print("   ✅ Middleware de autenticación")
             print("   ✅ Control de permisos por rol")
             print("")
-            print("💰 CIERRE DE CAJA DIARIO (NUEVO):")
+            print("🧾 MÓDULO DE FACTURACIÓN (NUEVO):")
+            print("   ✅ Emisión de comprobantes profesionales")
+            print("   ✅ Numeración correlativa automática (FCT-000001)")
+            print("   ✅ Gestión completa de datos del cliente")
+            print("   ✅ Cálculo automático de IVA (22%) y totales")
+            print("   ✅ Detalle completo de productos vendidos")
+            print("   ✅ Historial completo con filtros avanzados")
+            print("   ✅ Exportación a PDF profesional")
+            print("   ✅ Integración con sistema de ventas")
+            print("   ✅ Control de permisos y auditoría")
+            print("   ✅ Validación en tiempo real")
+            print("")
+            print("💰 CIERRE DE CAJA DIARIO:")
             print("   ✅ Resumen automático de ventas del día")
             print("   ✅ Registro de efectivo contado")
             print("   ✅ Comparación automática de diferencias")
@@ -1610,7 +1712,6 @@ if __name__ == '__main__':
             print("   ✅ Exportación a PDF profesional")
             print("   ✅ Control de un cierre por día")
             print("   ✅ Validación de permisos por rol")
-            print("   ✅ Análisis de diferencias (correcto/faltante/sobrante)")
             print("")
             print("📦 GESTIÓN DE PRODUCTOS:")
             print("   ✅ CRUD completo de productos")
@@ -1619,12 +1720,18 @@ if __name__ == '__main__':
             print("   ✅ Precios de compra y venta")
             print("   ✅ Gestión de proveedores")
             print("")
+            print("👥 GESTIÓN DE CLIENTES:")
+            print("   ✅ CRUD completo de clientes")
+            print("   ✅ Datos fiscales completos")
+            print("   ✅ Historial de compras")
+            print("   ✅ Integración con facturación")
+            print("")
             print("💰 GESTIÓN DE VENTAS:")
             print("   ✅ Registro de ventas con detalle")
             print("   ✅ Múltiples formas de pago")
             print("   ✅ Control automático de stock")
             print("   ✅ Historial completo de ventas")
-            print("   ✅ Integración con cierre de caja")
+            print("   ✅ Integración con facturación")
             print("")
             print("📈 DASHBOARD AVANZADO:")
             print("   ✅ KPIs en tiempo real")
@@ -1643,24 +1750,40 @@ if __name__ == '__main__':
             print("   ✅ Validación de datos")
             print("")
             print("=" * 100)
-            print("🎉 ¡Sistema de Frutería Nina v5.0 con Cierre de Caja Listo!")
+            print("🎉 ¡Sistema de Frutería Nina v6.0 con Facturación Completa Listo!")
             print("💡 Presiona Ctrl+C para detener el servidor")
             print("🔗 Documentación completa: http://localhost:5001/")
             print("📊 Health check: http://localhost:5001/api/health")
-            print("💰 Cierre de caja disponible en: http://localhost:3000/cierre-caja")
+            print("🧾 Facturación disponible en: http://localhost:3000/facturacion")
             print("")
-            print("🆕 NUEVAS FUNCIONALIDADES v5.0:")
-            print("   💰 Módulo completo de cierre de caja diario")
-            print("   📊 Resumen automático de ventas del día")
-            print("   🔍 Comparación efectivo esperado vs real")
-            print("   📋 Historial completo de cierres")
+            print("🆕 NUEVAS FUNCIONALIDADES v6.0:")
+            print("   🧾 Módulo completo de facturación profesional")
+            print("   📄 Emisión de comprobantes con numeración correlativa")
+            print("   👥 Gestión completa de datos fiscales del cliente")
+            print("   📊 Cálculo automático de IVA y totales")
+            print("   📋 Historial completo con filtros avanzados")
             print("   📄 Exportación PDF profesional")
-            print("   🔐 Control de permisos por rol")
-            print("   ⚠️ Validación de un cierre por día")
+            print("   💼 Integración total con sistema de ventas")
+            print("   🔐 Control de permisos y auditoría completa")
+            print("")
+            print("🧾 ENDPOINTS DE FACTURACIÓN:")
+            print("   GET  /api/facturas/ultimo-numero - Obtener próximo número")
+            print("   POST /api/facturas/crear - Crear nueva factura")
+            print("   GET  /api/facturas/historial - Lista de facturas")
+            print("   GET  /api/facturas/<id> - Detalle de factura")
+            print("   POST /api/facturas/exportar/<id> - Exportar PDF")
             print("")
             print("👥 USUARIOS DE EJEMPLO:")
             print("   🔑 Admin: admin@fruteria.com / admin123")
             print("   💰 Cajero: cajero@fruteria.com / cajero123")
+            print("")
+            print("📋 FORMATO DE FACTURA:")
+            print("   📄 Número: FCT-000001, FCT-000002, ...")
+            print("   👤 Cliente: Nombre, documento, dirección, teléfono")
+            print("   📦 Productos: Detalle completo con cantidades y precios")
+            print("   💰 Cálculos: Subtotal + IVA (22%) = Total")
+            print("   📅 Fecha y hora de emisión")
+            print("   👨‍💼 Usuario que genera la factura")
             print("")
             print("=" * 100)
             
