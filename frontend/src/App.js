@@ -15,6 +15,7 @@ import ComprasPage from './pages/compras';
 import ClientesPage from './pages/clientes';
 import ReportesFinancierosPage from './pages/ReportesFinancieros';
 import CierreCajaPage from './pages/CierreCaja';
+import FacturacionPage from './pages/Facturacion';
 
 // Componente de ruta protegida
 import ProtectedRoute from './components/ProtectedRoute';
@@ -109,7 +110,7 @@ const AppRoutes = () => {
         } 
       />
 
-      {/* Nueva ruta para Cierre de Caja */}
+      {/* Ruta para Cierre de Caja */}
       <Route 
         path="/cierre-caja" 
         element={
@@ -119,6 +120,16 @@ const AppRoutes = () => {
         } 
       />
 
+      {/* NUEVA RUTA PARA FACTURACIÓN */}
+      <Route 
+        path="/facturacion" 
+        element={
+          <ProtectedRoute requiredRoles={['admin', 'cajero', 'operador']}>
+            <FacturacionPage />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Redirecciones */}
       <Route 
         path="/" 
