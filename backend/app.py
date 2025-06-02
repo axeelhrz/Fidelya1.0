@@ -8,8 +8,17 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from functools import wraps
 import smtplib
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
+
+# Fix for email import issues
+try:
+    from email.mime.text import MimeText
+    from email.mime.multipart import MimeMultipart
+except ImportError:
+    # Alternative import for problematic environments
+    import email.mime.text as mime_text
+    import email.mime.multipart as mime_multipart
+    MimeText = mime_text.MimeText
+    MimeMultipart = mime_multipart.MimeMultipart
 
 # Configuración de logging
 logging.basicConfig(
