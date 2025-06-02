@@ -2761,6 +2761,385 @@ def dashboard_resumen(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
+# ==================== ENDPOINTS DE CLIENTES ====================
+
+@app.route('/api/clientes', methods=['GET'])
+@jwt_required
+def obtener_clientes(current_user_id):
+    """Listar clientes"""
+    connection = None
+    cursor = None
+    try:
+        logger.info(f"👥 Obteniendo clientes")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify([]), 200
+            
+            cursor = connection.cursor()
+        
+        # Obtener parámetros de búsqueda
+        search = request.args.get('q', '').strip()
+        activo = request.args.get('activo', 'true').lower() == 'true'
+        
+        # Construir consulta
+        query = """
+            SELECT id, nombre, correo, telefono, direccion, notas, activo, creado
+            FROM clientes
+            WHERE activo = %s
+        """
+        params = [activo]
+        
+        if search:
+            query += " AND (nombre LIKE %s OR correo LIKE %s OR telefono LIKE %s)"
+            search_param = f"%{search}%"
+            params.extend([search_param, search_param, search_param])
+        
+        query += " ORDER BY nombre ASC"
+        cursor.execute(query, params)
+        clientes = []
+        for row in cursor.fetchall():
+            cliente = {
+                'id': row[0],
+                'nombre': row[1] or '',
+                'correo': row[2] or '',
+                'telefono': row[3] or '',
+                'direccion': row[4] or '',
+                'notas': row[5] or '',
+                'activo': bool(row[6]),
+                'creado': row[7].isoformat() if row[7] else None
+            }
+            clientes.append(cliente)
+        
+        logger.info(f"✅ Clientes obtenidos: {len(clientes)}")
+        response = jsonify(clientes)
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    return response, 200
+
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo clientes: {e}")
+        return jsonify([]), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+@app.route('/api/clientes', methods=['POST'])
+@jwt_required
+def crear_cliente(current_user_id):
+    """Crear cliente"""
+    connection = None
+    cursor = None
+    
+    try:
+        data = request.get_json()
+        logger.info(f"👥 Creando cliente: {data}")
+        
+        if not data or not data.get('nombre'):
+            return jsonify({'message': 'El nombre del cliente es requerido'}), 400
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Validar email si se proporciona
+        correo = data.get('correo', '').strip()
+        if correo:
+            if '@' not in correo:
+                return jsonify({'message': 'El correo electrónico no es válido'}), 400
+            
+            # Verificar si el correo ya existe
+            cursor.execute("SELECT id FROM clientes WHERE correo = %s", (correo,))
+            if cursor.fetchone():
+                return jsonify({'message': 'Ya existe un cliente con este correo electrónico'}), 409
+        
+        # Insertar cliente
+        cursor.execute("""
+            INSERT INTO clientes (nombre, correo, telefono, direccion, notas)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (
+            data['nombre'].strip(),
+            correo if correo else None,
+            data.get('telefono', '').strip() or None,
+            data.get('direccion', '').strip() or None,
+            data.get('notas', '').strip() or None
+        ))
+        
+        cliente_id = cursor.lastrowid
+        connection.commit()
+        
+        logger.info(f"✅ Cliente creado: {data['nombre']} (ID: {cliente_id})")
+    response = jsonify({
+            'message': 'Cliente creado exitosamente',
+            'id': cliente_id
+        })
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 201
+
+    except Exception as e:
+        logger.error(f"❌ Error creando cliente: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/clientes/<int:cliente_id>', methods=['PUT'])
+@jwt_required
+def actualizar_cliente(current_user_id, cliente_id):
+    """Actualizar cliente"""
+    connection = None
+    cursor = None
+    
+    try:
+        data = request.get_json()
+        logger.info(f"👥 Actualizando cliente {cliente_id}: {data}")
+        
+        if not data:
+            return jsonify({'message': 'No se recibieron datos'}), 400
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Verificar que el cliente existe
+        cursor.execute("SELECT id FROM clientes WHERE id = %s", (cliente_id,))
+        if not cursor.fetchone():
+            return jsonify({'message': 'Cliente no encontrado'}), 404
+        
+        # Validar correo si se proporciona
+        if 'correo' in data and data['correo']:
+            correo = data['correo'].strip()
+            if '@' not in correo:
+                return jsonify({'message': 'El correo electrónico no es válido'}), 400
+            
+            # Verificar que el correo no esté en uso por otro cliente
+            cursor.execute("SELECT id FROM clientes WHERE correo = %s AND id != %s", (correo, cliente_id))
+            if cursor.fetchone():
+                return jsonify({'message': 'Ya existe otro cliente con este correo electrónico'}), 409
+        
+        # Construir consulta de actualización
+        campos_actualizables = ['nombre', 'correo', 'telefono', 'direccion', 'notas', 'activo']
+        campos_update = []
+        valores = []
+        
+        for campo in campos_actualizables:
+            if campo in data:
+                campos_update.append(f"{campo} = %s")
+                if campo == 'activo':
+                    valores.append(bool(data[campo]))
+                else:
+                    valor = data[campo].strip() if isinstance(data[campo], str) else data[campo]
+                    valores.append(valor if valor else None)
+        
+        if not campos_update:
+            return jsonify({'message': 'No hay campos para actualizar'}), 400
+        
+        valores.append(cliente_id)
+        
+        query = f"UPDATE clientes SET {', '.join(campos_update)} WHERE id = %s"
+        cursor.execute(query, valores)
+        connection.commit()
+        
+        logger.info(f"✅ Cliente {cliente_id} actualizado exitosamente")
+        response = jsonify({'message': 'Cliente actualizado exitosamente'})
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"❌ Error actualizando cliente: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/clientes/<int:cliente_id>', methods=['DELETE'])
+@jwt_required
+def eliminar_cliente(current_user_id, cliente_id):
+    """Eliminar cliente"""
+    connection = None
+    cursor = None
+    
+    try:
+        logger.info(f"👥 Eliminando cliente {cliente_id}")
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Verificar que el cliente existe
+        cursor.execute("SELECT nombre FROM clientes WHERE id = %s", (cliente_id,))
+        cliente = cursor.fetchone()
+        if not cliente:
+            return jsonify({'message': 'Cliente no encontrado'}), 404
+        
+        # Verificar si tiene ventas asociadas
+        cursor.execute("SELECT COUNT(*) FROM ventas WHERE cliente_id = %s", (cliente_id,))
+        ventas_count = cursor.fetchone()[0]
+        
+        if ventas_count > 0:
+            # Solo desactivar si tiene ventas asociadas
+            cursor.execute("UPDATE clientes SET activo = FALSE WHERE id = %s", (cliente_id,))
+            mensaje = 'Cliente desactivado (tiene ventas asociadas)'
+        else:
+            # Eliminar completamente si no tiene ventas
+            cursor.execute("DELETE FROM clientes WHERE id = %s", (cliente_id,))
+            mensaje = 'Cliente eliminado exitosamente'
+        
+        connection.commit()
+        
+        logger.info(f"✅ Cliente {cliente_id} ({cliente[0]}) procesado")
+        response = jsonify({'message': mensaje})
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"❌ Error eliminando cliente: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+# ==================== ENDPOINTS DE CLIENTES ====================
+
+@app.route('/api/clientes/estadisticas', methods=['GET'])
+@jwt_required
+def obtener_estadisticas_clientes(current_user_id):
+    """Estadísticas de clientes"""
+    connection = None
+    cursor = None
+    
+    try:
+        logger.info(f"📊 Obteniendo estadísticas de clientes")
+        
+        connection = get_db_connection()
+        if not connection:
+            estadisticas_default = {
+                'total_clientes': 0,
+                'clientes_mes': 0,
+                'cliente_frecuente': 'N/A',
+                'ventas_por_cliente': 0.0,
+                'clientes_activos': 0,
+                'clientes_con_ventas': 0,
+                'promedio_compras_cliente': 0.0
+            }
+            response = jsonify(estadisticas_default)
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
+
+        cursor = connection.cursor()
+        
+        # Total de clientes
+        cursor.execute("SELECT COUNT(*) FROM clientes WHERE activo = TRUE")
+        total_clientes = cursor.fetchone()[0] or 0
+        
+        # Clientes nuevos del mes actual
+        cursor.execute("""
+            SELECT COUNT(*) 
+            FROM clientes 
+            WHERE YEAR(creado) = YEAR(CURDATE()) 
+            AND MONTH(creado) = MONTH(CURDATE())
+            AND activo = TRUE
+        """)
+        clientes_mes = cursor.fetchone()[0] or 0
+        
+        # Cliente más frecuente (con más ventas)
+        cursor.execute("""
+            SELECT c.nombre, COUNT(*) as frecuencia
+            FROM ventas v
+            INNER JOIN clientes c ON v.cliente_id = c.id
+            WHERE v.estado = 'completada'
+            GROUP BY c.id, c.nombre 
+            ORDER BY frecuencia DESC 
+            LIMIT 1
+        """)
+        cliente_frecuente = cursor.fetchone()
+        cliente_top = cliente_frecuente[0] if cliente_frecuente else 'N/A'
+        
+        # Promedio de ventas por cliente
+        cursor.execute("""
+            SELECT AVG(total_por_cliente) 
+            FROM (
+                SELECT SUM(v.total) as total_por_cliente
+                FROM ventas v
+                WHERE v.cliente_id IS NOT NULL AND v.estado = 'completada'
+                GROUP BY v.cliente_id
+            ) as subquery
+        """)
+        ventas_por_cliente = cursor.fetchone()[0]
+        ventas_por_cliente = float(ventas_por_cliente) if ventas_por_cliente else 0.0
+        
+        # Clientes activos
+        cursor.execute("SELECT COUNT(*) FROM clientes WHERE activo = TRUE")
+        clientes_activos = cursor.fetchone()[0] or 0
+        
+        # Clientes con al menos una venta
+        cursor.execute("""
+            SELECT COUNT(DISTINCT cliente_id) 
+            FROM ventas 
+            WHERE cliente_id IS NOT NULL AND estado = 'completada'
+        """)
+        clientes_con_ventas = cursor.fetchone()[0] or 0
+        
+        # Promedio de compras por cliente
+        cursor.execute("""
+            SELECT AVG(compras_por_cliente) 
+            FROM (
+                SELECT COUNT(*) as compras_por_cliente
+                FROM ventas v
+                WHERE v.cliente_id IS NOT NULL AND v.estado = 'completada'
+                GROUP BY v.cliente_id
+            ) as subquery
+        """)
+        promedio_compras = cursor.fetchone()[0]
+        promedio_compras_cliente = float(promedio_compras) if promedio_compras else 0.0
+        
+        estadisticas = {
+            'total_clientes': total_clientes,
+            'clientes_mes': clientes_mes,
+            'cliente_frecuente': cliente_top,
+            'ventas_por_cliente': ventas_por_cliente,
+            'clientes_activos': clientes_activos,
+            'clientes_con_ventas': clientes_con_ventas,
+            'promedio_compras_cliente': promedio_compras_cliente
+        }
+        
+        logger.info(f"✅ Estadísticas de clientes calculadas: {estadisticas}")
+        response = jsonify(estadisticas)
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo estadísticas de clientes: {e}")
+        estadisticas_default = {
+            'total_clientes': 0,
+            'clientes_mes': 0,
+            'cliente_frecuente': 'N/A',
+            'ventas_por_cliente': 0.0,
+            'clientes_activos': 0,
+            'clientes_con_ventas': 0,
+            'promedio_compras_cliente': 0.0
+        }
+        response = jsonify(estadisticas_default)
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
 # ==================== ENDPOINTS GENERALES ====================
 
 @app.route('/api/health', methods=['GET'])
@@ -2780,7 +3159,6 @@ def health_check():
     except Exception as e:
         logger.error(f"Error en health check: {e}")
         db_status = "ERROR"
-    
     response = jsonify({
         'status': 'OK',
         'database': db_status,
@@ -2830,7 +3208,6 @@ def root():
     })
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 200
-
 # ==================== MANEJO DE ERRORES ====================
 
 @app.errorhandler(404)
