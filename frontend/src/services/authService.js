@@ -128,7 +128,8 @@ export const verifyToken = async (token = null) => {
     }
     
     console.log('🔍 Verificando token...');
-    const response = await api.get('/verify-token');
+    // Cambiar de GET a POST para coincidir con el backend
+    const response = await api.post('/verify-token');
     return response.data;
   } catch (error) {
     console.error('❌ Error verificando token:', error);
