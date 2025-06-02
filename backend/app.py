@@ -2745,6 +2745,151 @@ def crear_compra(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
+# ==================== ENDPOINTS DE COMPRAS - ESTADÍSTICAS ====================
+
+@app.route('/api/compras/estadisticas', methods=['GET'])
+@jwt_required
+def obtener_estadisticas_compras(current_user_id):
+    """Estadísticas de compras"""
+    connection = None
+    cursor = None
+    
+    try:
+        logger.info(f"📊 Obteniendo estadísticas de compras")
+        
+        connection = get_db_connection()
+        if not connection:
+            estadisticas_default = {
+                'total_compras': 0,
+                'compras_mes': 0,
+                'total_gastado': 0.0,
+                'gastado_mes': 0.0,
+                'promedio_compra': 0.0,
+                'proveedor_frecuente': 'N/A',
+                'productos_comprados': 0,
+                'compras_hoy': 0,
+                'gastado_hoy': 0.0
+            }
+            response = jsonify(estadisticas_default)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+        cursor = connection.cursor()
+        
+        # Total de compras
+        cursor.execute("SELECT COUNT(*) FROM compras WHERE estado = 'completada'")
+        total_compras = cursor.fetchone()[0] or 0
+        
+        # Compras del mes actual
+        cursor.execute("""
+            SELECT COUNT(*) 
+            FROM compras 
+            WHERE YEAR(fecha) = YEAR(CURDATE()) 
+            AND MONTH(fecha) = MONTH(CURDATE())
+            AND estado = 'completada'
+        """)
+        compras_mes = cursor.fetchone()[0] or 0
+        
+        # Total gastado
+        cursor.execute("SELECT SUM(total) FROM compras WHERE estado = 'completada'")
+        total_gastado = cursor.fetchone()[0]
+        total_gastado = float(total_gastado) if total_gastado else 0.0
+        
+        # Gastado del mes actual
+        cursor.execute("""
+            SELECT SUM(total) 
+            FROM compras 
+            WHERE YEAR(fecha) = YEAR(CURDATE()) 
+            AND MONTH(fecha) = MONTH(CURDATE())
+            AND estado = 'completada'
+        """)
+        gastado_mes = cursor.fetchone()[0]
+        gastado_mes = float(gastado_mes) if gastado_mes else 0.0
+        
+        # Promedio por compra
+        promedio_compra = total_gastado / total_compras if total_compras > 0 else 0.0
+        
+        # Proveedor más frecuente
+        cursor.execute("""
+            SELECT p.nombre, COUNT(*) as frecuencia
+            FROM compras c
+            INNER JOIN proveedores p ON c.proveedor_id = p.id
+            WHERE c.estado = 'completada'
+            GROUP BY p.id, p.nombre 
+            ORDER BY frecuencia DESC 
+            LIMIT 1
+        """)
+        proveedor_result = cursor.fetchone()
+        proveedor_frecuente = proveedor_result[0] if proveedor_result else 'N/A'
+        
+        # Total de productos comprados (cantidad)
+        cursor.execute("""
+            SELECT SUM(dc.cantidad) 
+            FROM detalle_compras dc
+            INNER JOIN compras c ON dc.compra_id = c.id
+            WHERE c.estado = 'completada'
+        """)
+        productos_comprados = cursor.fetchone()[0]
+        productos_comprados = float(productos_comprados) if productos_comprados else 0.0
+        
+        # Compras de hoy
+        cursor.execute("""
+            SELECT COUNT(*) 
+            FROM compras 
+            WHERE DATE(fecha) = CURDATE()
+            AND estado = 'completada'
+        """)
+        compras_hoy = cursor.fetchone()[0] or 0
+        
+        # Gastado hoy
+        cursor.execute("""
+            SELECT SUM(total) 
+            FROM compras 
+            WHERE DATE(fecha) = CURDATE()
+            AND estado = 'completada'
+        """)
+        gastado_hoy = cursor.fetchone()[0]
+        gastado_hoy = float(gastado_hoy) if gastado_hoy else 0.0
+        
+        estadisticas = {
+            'total_compras': total_compras,
+            'compras_mes': compras_mes,
+            'total_gastado': total_gastado,
+            'gastado_mes': gastado_mes,
+            'promedio_compra': promedio_compra,
+            'proveedor_frecuente': proveedor_frecuente,
+            'productos_comprados': int(productos_comprados),
+            'compras_hoy': compras_hoy,
+            'gastado_hoy': gastado_hoy
+        }
+        
+        logger.info(f"✅ Estadísticas de compras calculadas: {estadisticas}")
+        response = jsonify(estadisticas)
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    return response, 200
+
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo estadísticas de compras: {e}")
+        estadisticas_default = {
+            'total_compras': 0,
+            'compras_mes': 0,
+            'total_gastado': 0.0,
+            'gastado_mes': 0.0,
+            'promedio_compra': 0.0,
+            'proveedor_frecuente': 'N/A',
+            'productos_comprados': 0,
+            'compras_hoy': 0,
+            'gastado_hoy': 0.0
+        }
+        response = jsonify(estadisticas_default)
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
 # ==================== ENDPOINTS DE REPORTES ====================
 
 @app.route('/api/reportes/ventas', methods=['GET'])
@@ -2865,7 +3010,7 @@ def reporte_ventas(current_user_id):
         
         logger.info(f"✅ Reporte de ventas generado")
         response = jsonify(reporte)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
     except Exception as e:
@@ -2895,7 +3040,7 @@ def test():
 @app.errorhandler(404)
 def not_found(error):
     response = jsonify({'message': 'Endpoint no encontrado'})
-    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 404
 
 @app.errorhandler(500)
@@ -2909,7 +3054,6 @@ def method_not_allowed(error):
     response = jsonify({'message': 'Método no permitido'})
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response, 405
-
 # ==================== MANEJO DE OPCIONES CORS ====================
 
 @app.before_request
