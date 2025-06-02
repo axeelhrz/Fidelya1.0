@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Snackbar, Alert } from '@mui/material';
-import { useState } from 'react';
 import AuthFormWrapper from '../../components/auth/AuthFormWrapper';
 import LoginForm from '../../components/auth/LoginForm';
 
-const LoginPage = ({ onSwitchToRegister }) => {
+const LoginPage = () => {
   const navigate = useNavigate();
   const [welcomeSnackbar, setWelcomeSnackbar] = useState(false);
   const [welcomeUser, setWelcomeUser] = useState('');
+
+  const handleSwitchToRegister = () => {
+    navigate('/register');
+  };
 
   const handleLoginSuccess = (user) => {
     setWelcomeUser(user.nombre);
@@ -26,7 +29,7 @@ const LoginPage = ({ onSwitchToRegister }) => {
         subtitle="Accede a tu cuenta para gestionar tu frutería"
       >
         <LoginForm 
-          onSwitchToRegister={onSwitchToRegister}
+          onSwitchToRegister={handleSwitchToRegister}
           onLoginSuccess={handleLoginSuccess}
         />
       </AuthFormWrapper>
