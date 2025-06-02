@@ -1034,7 +1034,6 @@ def crear_venta(current_user_id):
         for producto in data['productos']:
             if not all(k in producto for k in ('producto_id', 'cantidad', 'precio_unitario')):
                 return jsonify({'message': 'Faltan campos requeridos en productos'}), 400
-            
             cursor.execute("SELECT stock_actual FROM productos WHERE id = %s", (producto['producto_id'],))
             stock_result = cursor.fetchone()
             if not stock_result or stock_result[0] < float(producto['cantidad']):
@@ -2271,6 +2270,437 @@ def obtener_productos_mejorado(current_user_id):
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+
+# ==================== ENDPOINTS DE REPORTES FINANCIEROS ====================
+
+@app.route('/api/reportes/resumen', methods=['GET'])
+@jwt_required
+def obtener_resumen_financiero(current_user_id):
+    """Obtener resumen financiero con KPIs principales"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({
+                'ingresos': 0.0,
+                'egresos': 0.0,
+                'balance': 0.0,
+                'impuestos': 0.0
+            }), 200
+            
+        cursor = connection.cursor()
+        
+        # Obtener parámetros de filtros
+        fecha_desde = request.args.get('fecha_desde')
+        fecha_hasta = request.args.get('fecha_hasta')
+        
+        # Construir condiciones de fecha
+        fecha_condicion = ""
+        params_ingresos = []
+        params_egresos = []
+        
+        if fecha_desde and fecha_hasta:
+            fecha_condicion = " AND DATE(fecha) BETWEEN %s AND %s"
+            params_ingresos = [fecha_desde, fecha_hasta]
+            params_egresos = [fecha_desde, fecha_hasta]
+        elif fecha_desde:
+            fecha_condicion = " AND DATE(fecha) >= %s"
+            params_ingresos = [fecha_desde]
+            params_egresos = [fecha_desde]
+        elif fecha_hasta:
+            fecha_condicion = " AND DATE(fecha) <= %s"
+            params_ingresos = [fecha_hasta]
+            params_egresos = [fecha_hasta]
+        
+        # Calcular ingresos totales (ventas)
+        query_ingresos = f"""
+            SELECT COALESCE(SUM(total), 0) as total_ingresos,
+                   COALESCE(SUM(impuestos), 0) as total_impuestos
+            FROM ventas 
+            WHERE estado = 'completada' {fecha_condicion}
+        """
+        cursor.execute(query_ingresos, params_ingresos)
+        ingresos_data = cursor.fetchone()
+        total_ingresos = float(ingresos_data[0]) if ingresos_data[0] else 0.0
+        total_impuestos = float(ingresos_data[1]) if ingresos_data[1] else 0.0
+        
+        # Calcular egresos totales (compras)
+        query_egresos = f"""
+            SELECT COALESCE(SUM(total), 0) as total_egresos
+            FROM compras 
+            WHERE estado = 'completada' {fecha_condicion}
+        """
+        cursor.execute(query_egresos, params_egresos)
+        egresos_data = cursor.fetchone()
+        total_egresos = float(egresos_data[0]) if egresos_data[0] else 0.0
+        
+        # Calcular balance neto
+        balance_neto = total_ingresos - total_egresos
+        
+        resumen = {
+            'ingresos': total_ingresos,
+            'egresos': total_egresos,
+            'balance': balance_neto,
+            'impuestos': total_impuestos
+        }
+        
+        response = jsonify(resumen)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"Error obteniendo resumen financiero: {e}")
+        return jsonify({
+            'ingresos': 0.0,
+            'egresos': 0.0,
+            'balance': 0.0,
+            'impuestos': 0.0
+        }), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/reportes/movimientos', methods=['GET'])
+@jwt_required
+def obtener_movimientos_financieros(current_user_id):
+    """Obtener listado detallado de movimientos financieros"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify([]), 200
+            
+        cursor = connection.cursor()
+        
+        # Obtener parámetros de filtros
+        fecha_desde = request.args.get('fecha_desde')
+        fecha_hasta = request.args.get('fecha_hasta')
+        tipo = request.args.get('tipo')  # venta, compra, movimiento
+        categoria = request.args.get('categoria')
+        cliente_id = request.args.get('cliente_id')
+        proveedor_id = request.args.get('proveedor_id')
+        
+        movimientos = []
+        
+        # Obtener ventas si se solicita
+        if not tipo or tipo == 'venta':
+            query_ventas = """
+                SELECT v.fecha, 'venta' as tipo, 
+                       CONCAT('Venta #', v.id, ' - ', COALESCE(c.nombre, 'Cliente General')) as detalle,
+                       v.total as monto, u.nombre as responsable
+                FROM ventas v
+                LEFT JOIN clientes c ON v.cliente_id = c.id
+                LEFT JOIN usuarios u ON v.usuario_id = u.id
+                WHERE v.estado = 'completada'
+            """
+            params_ventas = []
+            
+            if fecha_desde:
+                query_ventas += " AND DATE(v.fecha) >= %s"
+                params_ventas.append(fecha_desde)
+            if fecha_hasta:
+                query_ventas += " AND DATE(v.fecha) <= %s"
+                params_ventas.append(fecha_hasta)
+            if cliente_id:
+                query_ventas += " AND v.cliente_id = %s"
+                params_ventas.append(cliente_id)
+            
+            cursor.execute(query_ventas, params_ventas)
+            for row in cursor.fetchall():
+                movimientos.append({
+                    'fecha': row[0].isoformat() if row[0] else None,
+                    'tipo': row[1],
+                    'detalle': row[2],
+                    'monto': float(row[3]),
+                    'responsable': row[4] or 'Usuario desconocido'
+                })
+        
+        # Obtener compras si se solicita
+        if not tipo or tipo == 'compra':
+            query_compras = """
+                SELECT c.fecha, 'compra' as tipo,
+                       CONCAT('Compra #', c.id, ' - ', COALESCE(p.nombre, 'Sin proveedor')) as detalle,
+                       c.total as monto, u.nombre as responsable
+                FROM compras c
+                LEFT JOIN proveedores p ON c.proveedor_id = p.id
+                LEFT JOIN usuarios u ON c.usuario_id = u.id
+                WHERE c.estado = 'completada'
+            """
+            params_compras = []
+            
+            if fecha_desde:
+                query_compras += " AND DATE(c.fecha) >= %s"
+                params_compras.append(fecha_desde)
+            if fecha_hasta:
+                query_compras += " AND DATE(c.fecha) <= %s"
+                params_compras.append(fecha_hasta)
+            if proveedor_id:
+                query_compras += " AND c.proveedor_id = %s"
+                params_compras.append(proveedor_id)
+            
+            cursor.execute(query_compras, params_compras)
+            for row in cursor.fetchall():
+                movimientos.append({
+                    'fecha': row[0].isoformat() if row[0] else None,
+                    'tipo': row[1],
+                    'detalle': row[2],
+                    'monto': float(row[3]),
+                    'responsable': row[4] or 'Usuario desconocido'
+                })
+        
+        # Obtener movimientos de stock si se solicita
+        if not tipo or tipo == 'movimiento':
+            query_movimientos = """
+                SELECT ms.fecha, 'movimiento' as tipo,
+                       CONCAT('Ajuste de stock - ', p.nombre, ' (', ms.tipo, ')') as detalle,
+                       0 as monto, u.nombre as responsable
+                FROM movimientos_stock ms
+                INNER JOIN productos p ON ms.producto_id = p.id
+                LEFT JOIN usuarios u ON ms.usuario_id = u.id
+                WHERE ms.referencia_tipo = 'ajuste'
+            """
+            params_movimientos = []
+            
+            if fecha_desde:
+                query_movimientos += " AND DATE(ms.fecha) >= %s"
+                params_movimientos.append(fecha_desde)
+            if fecha_hasta:
+                query_movimientos += " AND DATE(ms.fecha) <= %s"
+                params_movimientos.append(fecha_hasta)
+            
+            cursor.execute(query_movimientos, params_movimientos)
+            for row in cursor.fetchall():
+                movimientos.append({
+                    'fecha': row[0].isoformat() if row[0] else None,
+                    'tipo': row[1],
+                    'detalle': row[2],
+                    'monto': float(row[3]),
+                    'responsable': row[4] or 'Sistema'
+                })
+        
+        # Ordenar por fecha descendente
+        movimientos.sort(key=lambda x: x['fecha'] or '', reverse=True)
+        
+        response = jsonify(movimientos)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"Error obteniendo movimientos financieros: {e}")
+        return jsonify([]), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/reportes/grafico/ingresos-egresos', methods=['GET'])
+@jwt_required
+def obtener_grafico_ingresos_egresos(current_user_id):
+    """Obtener datos para gráfico de ingresos vs egresos por mes"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify([]), 200
+            
+        cursor = connection.cursor()
+        
+        # Obtener datos de los últimos 12 meses
+        cursor.execute("""
+            SELECT 
+                DATE_FORMAT(fecha, '%Y-%m') as mes,
+                MONTHNAME(fecha) as nombre_mes,
+                YEAR(fecha) as año
+            FROM (
+                SELECT fecha FROM ventas WHERE estado = 'completada'
+                UNION
+                SELECT fecha FROM compras WHERE estado = 'completada'
+            ) as fechas
+            WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+            GROUP BY DATE_FORMAT(fecha, '%Y-%m'), MONTHNAME(fecha), YEAR(fecha)
+            ORDER BY mes ASC
+        """)
+        
+        meses_data = cursor.fetchall()
+        resultado = []
+        
+        for mes_data in meses_data:
+            mes = mes_data[0]
+            nombre_mes = mes_data[1]
+            año = mes_data[2]
+            
+            # Obtener ingresos del mes
+            cursor.execute("""
+                SELECT COALESCE(SUM(total), 0)
+                FROM ventas 
+                WHERE estado = 'completada' 
+                AND DATE_FORMAT(fecha, '%Y-%m') = %s
+            """, (mes,))
+            ingresos = float(cursor.fetchone()[0])
+            
+            # Obtener egresos del mes
+            cursor.execute("""
+                SELECT COALESCE(SUM(total), 0)
+                FROM compras 
+                WHERE estado = 'completada' 
+                AND DATE_FORMAT(fecha, '%Y-%m') = %s
+            """, (mes,))
+            egresos = float(cursor.fetchone()[0])
+            
+            resultado.append({
+                'mes': f"{nombre_mes} {año}",
+                'ingresos': ingresos,
+                'egresos': egresos
+            })
+        
+        response = jsonify(resultado)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"Error obteniendo gráfico ingresos-egresos: {e}")
+        return jsonify([]), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/reportes/grafico/categorias', methods=['GET'])
+@jwt_required
+def obtener_grafico_categorias(current_user_id):
+    """Obtener distribución por categoría de productos"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify([]), 200
+            
+        cursor = connection.cursor()
+        
+        # Obtener parámetros
+        tipo_reporte = request.args.get('tipo', 'venta')  # venta o compra
+        fecha_desde = request.args.get('fecha_desde')
+        fecha_hasta = request.args.get('fecha_hasta')
+        
+        if tipo_reporte == 'venta':
+            query = """
+                SELECT p.categoria, COALESCE(SUM(dv.subtotal), 0) as total
+                FROM productos p
+                INNER JOIN detalle_ventas dv ON p.id = dv.producto_id
+                INNER JOIN ventas v ON dv.venta_id = v.id
+                WHERE v.estado = 'completada'
+            """
+            params = []
+            
+            if fecha_desde:
+                query += " AND DATE(v.fecha) >= %s"
+                params.append(fecha_desde)
+            if fecha_hasta:
+                query += " AND DATE(v.fecha) <= %s"
+                params.append(fecha_hasta)
+                
+            query += " GROUP BY p.categoria ORDER BY total DESC"
+            
+        else:  # compra
+            query = """
+                SELECT p.categoria, COALESCE(SUM(dc.subtotal), 0) as total
+                FROM productos p
+                INNER JOIN detalle_compras dc ON p.id = dc.producto_id
+                INNER JOIN compras c ON dc.compra_id = c.id
+                WHERE c.estado = 'completada'
+            """
+            params = []
+            
+            if fecha_desde:
+                query += " AND DATE(c.fecha) >= %s"
+                params.append(fecha_desde)
+            if fecha_hasta:
+                query += " AND DATE(c.fecha) <= %s"
+                params.append(fecha_hasta)
+                
+            query += " GROUP BY p.categoria ORDER BY total DESC"
+        
+        cursor.execute(query, params)
+        resultado = []
+        
+        for row in cursor.fetchall():
+            categoria = row[0].capitalize() if row[0] else 'Sin categoría'
+            total = float(row[1])
+            if total > 0:  # Solo incluir categorías con movimiento
+                resultado.append({
+                    'categoria': categoria,
+                    'total': total
+                })
+        
+        response = jsonify(resultado)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"Error obteniendo gráfico de categorías: {e}")
+        return jsonify([]), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/reportes/export/pdf', methods=['GET'])
+@jwt_required
+def exportar_reporte_pdf(current_user_id):
+    """Exportar reporte financiero a PDF"""
+    try:
+        # Por ahora retornamos información sobre la funcionalidad
+        # La implementación completa requiere configuración adicional
+        response = jsonify({
+            'message': 'Funcionalidad de exportación PDF disponible',
+            'url': '/api/reportes/export/pdf',
+            'formato': 'application/pdf',
+            'parametros_disponibles': [
+                'fecha_desde', 'fecha_hasta', 'tipo', 'categoria'
+            ],
+            'nota': 'Implementación completa requiere configuración adicional'
+        })
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+    except Exception as e:
+        logger.error(f"Error exportando PDF: {e}")
+        return jsonify({'message': 'Error en exportación PDF'}), 500
+
+@app.route('/api/reportes/export/excel', methods=['GET'])
+@jwt_required
+def exportar_reporte_excel(current_user_id):
+    """Exportar reporte financiero a Excel"""
+    try:
+        # Por ahora retornamos información sobre la funcionalidad
+        # La implementación completa requiere configuración adicional
+        response = jsonify({
+            'message': 'Funcionalidad de exportación Excel disponible',
+            'url': '/api/reportes/export/excel',
+            'formato': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'parametros_disponibles': [
+                'fecha_desde', 'fecha_hasta', 'tipo', 'categoria'
+            ],
+            'pestañas_incluidas': ['Resumen', 'Ingresos', 'Egresos', 'Movimientos'],
+            'nota': 'Implementación completa requiere configuración adicional'
+        })
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+    except Exception as e:
+        logger.error(f"Error exportando Excel: {e}")
+        return jsonify({'message': 'Error en exportación Excel'}), 500
 
 # ==================== FUNCIÓN PRINCIPAL ====================
 

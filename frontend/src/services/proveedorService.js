@@ -16,20 +16,16 @@ const api = axios.create({
   withCredentials: false,
 });
 
-// Interceptor para agregar token automáticamente a las peticiones
+// Interceptor para agregar token
 api.interceptors.request.use(
   (config) => {
-    console.log('📤 Enviando petición de proveedores a:', config.baseURL + config.url);
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    console.error('Error en interceptor de request:', error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Interceptor para manejar respuestas y errores globalmente
@@ -72,6 +68,9 @@ export const obtenerProveedores = async (filtros = {}) => {
     
     if (filtros.q) {
       params.append('q', filtros.q);
+    }
+    if (filtros.activo !== undefined) {
+      params.append('activo', filtros.activo);
     }
     
     const url = `/proveedores${params.toString() ? '?' + params.toString() : ''}`;
@@ -177,11 +176,6 @@ export const buscarProveedores = async (query) => {
 // Objeto principal del servicio de proveedores
 export const proveedorService = {
   obtenerProveedores,
-  obtenerProveedor,
-  crearProveedor,
-  actualizarProveedor,
-  eliminarProveedor,
-  buscarProveedores,
 };
 
 // Exportación por defecto
