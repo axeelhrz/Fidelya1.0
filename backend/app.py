@@ -2051,7 +2051,7 @@ if __name__ == '__main__':
         # Iniciar el servidor Flask
         app.run(
             debug=True, 
-            port=5000, 
+            port=5001, 
             host='0.0.0.0',
             threaded=True
         )
