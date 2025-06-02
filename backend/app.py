@@ -31,8 +31,8 @@ CORS(app,
 # Configuración de base de datos
 DB_CONFIG = {
     'host': os.environ.get('DB_HOST', 'localhost'),
-    'user': os.environ.get('DB_USER', 'root'),
-    'password': os.environ.get('DB_PASSWORD', 'Admin2024!'),
+    'user': os.environ.get('DB_USER', 'fruteria_nina'),  # Change this
+    'password': os.environ.get('DB_PASSWORD', 'Admin123'),  # Change this
     'database': os.environ.get('DB_NAME', 'fruteria_nina'),
     'charset': 'utf8mb4',
     'collation': 'utf8mb4_unicode_ci',
