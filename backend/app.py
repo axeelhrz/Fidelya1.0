@@ -36,7 +36,11 @@ def get_db_connection():
     """Obtiene conexión a la base de datos con manejo de errores mejorado"""
     try:
         connection = mysql.connector.connect(**DB_CONFIG)
-        return connection
+        if connection.is_connected():
+            return connection
+        else:
+            print("❌ Error: Conexión no establecida")
+            return None
     except mysql.connector.Error as err:
         print(f"❌ Error conectando a la base de datos: {err}")
         return None
@@ -199,29 +203,6 @@ def init_database():
         """)
         print("✅ Tabla movimientos creada")
         
-        # Insertar datos de ejemplo si las tablas están vacías
-        cursor.execute("SELECT COUNT(*) FROM productos")
-        if cursor.fetchone()[0] == 0:
-            productos_ejemplo = [
-                ('Banana', 'frutas', 'kg', 15, 5, 2.50, 'Frutas del Sur'),
-                ('Manzana Roja', 'frutas', 'kg', 3, 5, 3.00, 'Frutas del Sur'),
-                ('Naranja', 'frutas', 'kg', 20, 5, 2.80, 'Frutas del Sur'),
-                ('Lechuga', 'verduras', 'unidad', 8, 3, 1.50, 'Verduras Uruguay'),
-                ('Tomate', 'verduras', 'kg', 12, 5, 4.00, 'Verduras Uruguay'),
-                ('Cebolla', 'verduras', 'kg', 25, 10, 1.20, 'Verduras Uruguay'),
-                ('Bolsas Plásticas', 'otros', 'caja', 100, 20, 0.50, 'Distribuidora Central'),
-                ('Pera', 'frutas', 'kg', 2, 5, 3.50, 'Frutas del Sur'),
-                ('Zanahoria', 'verduras', 'kg', 18, 8, 1.80, 'Verduras Uruguay'),
-                ('Limón', 'frutas', 'kg', 30, 10, 2.00, 'Frutas del Sur')
-            ]
-            cursor.executemany(
-                "INSERT INTO productos (nombre, categoria, unidad, stock_actual, stock_minimo, precio_unitario, proveedor) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                productos_ejemplo
-            )
-            print("✅ Productos de ejemplo insertados")
-        else:
-            print("✅ Productos ya existen en la base de datos")
-        
         # Crear usuario administrador si no existe
         cursor.execute("SELECT COUNT(*) FROM usuarios")
         if cursor.fetchone()[0] == 0:
@@ -233,60 +214,6 @@ def init_database():
             print("✅ Usuario administrador creado")
         else:
             print("✅ Usuario administrador ya existe")
-        
-        # Insertar clientes de ejemplo si no existen
-        cursor.execute("SELECT COUNT(*) FROM clientes")
-        if cursor.fetchone()[0] == 0:
-            clientes_ejemplo = [
-                ('María González', 'maria.gonzalez@email.com', '099123456', 'Av. 18 de Julio 1234', 'Cliente frecuente, prefiere frutas orgánicas'),
-                ('Juan Pérez', 'juan.perez@email.com', '098765432', 'Bvar. Artigas 567', 'Compra para su restaurante'),
-                ('Ana Rodríguez', 'ana.rodriguez@email.com', '097654321', 'Pocitos 890', 'Cliente mayorista'),
-                ('Carlos Silva', 'carlos.silva@email.com', '096543210', 'Cordón 345', 'Prefiere verduras de estación'),
-                ('Laura Martínez', 'laura.martinez@email.com', '095432109', 'Punta Carretas 678', 'Cliente VIP')
-            ]
-            cursor.executemany(
-                "INSERT INTO clientes (nombre, correo, telefono, direccion, notas) VALUES (%s, %s, %s, %s, %s)",
-                clientes_ejemplo
-            )
-            print("✅ Clientes de ejemplo insertados")
-        else:
-            print("✅ Clientes ya existen en la base de datos")
-            
-        # Insertar ventas de ejemplo
-        cursor.execute("SELECT COUNT(*) FROM ventas")
-        if cursor.fetchone()[0] == 0:
-            ventas_ejemplo = [
-                (1250.50, '2024-01-15 10:30:00', 1),
-                (890.00, '2024-01-15 14:20:00', 1),
-                (2100.75, '2024-01-14 16:45:00', 1),
-                (1580.25, '2024-01-14 11:15:00', 1),
-                (950.00, '2024-01-13 09:30:00', 1)
-            ]
-            cursor.executemany(
-                "INSERT INTO ventas (total, fecha, usuario_id) VALUES (%s, %s, %s)",
-                ventas_ejemplo
-            )
-            print("✅ Ventas de ejemplo insertadas")
-        else:
-            print("✅ Ventas ya existen en la base de datos")
-        
-        # Insertar movimientos de ejemplo
-        cursor.execute("SELECT COUNT(*) FROM movimientos")
-        if cursor.fetchone()[0] == 0:
-            movimientos_ejemplo = [
-                ('venta', 'Venta por $1800', '2024-01-15 15:30:00'),
-                ('compra', 'Compra por $2500', '2024-01-15 10:12:00'),
-                ('venta', 'Venta por $950', '2024-01-15 09:45:00'),
-                ('ajuste', 'Ajuste de inventario', '2024-01-14 18:00:00'),
-                ('venta', 'Venta por $1200', '2024-01-14 14:20:00')
-            ]
-            cursor.executemany(
-                "INSERT INTO movimientos (tipo, detalle, fecha) VALUES (%s, %s, %s)",
-                movimientos_ejemplo
-            )
-            print("✅ Movimientos de ejemplo insertados")
-        else:
-            print("✅ Movimientos ya existen en la base de datos")
         
         connection.commit()
         print("✅ Base de datos inicializada correctamente")
@@ -540,9 +467,20 @@ def obtener_clientes(current_user_id):
         
         connection = get_db_connection()
         if not connection:
-            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            print("❌ Error: No se pudo conectar a la base de datos")
+            response = jsonify([])
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
             
         cursor = connection.cursor()
+        
+        # Verificar si la tabla clientes existe
+        cursor.execute("SHOW TABLES LIKE 'clientes'")
+        if not cursor.fetchone():
+            print("⚠️ Tabla 'clientes' no existe, devolviendo array vacío")
+            response = jsonify([])
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
         
         # Obtener parámetros de búsqueda
         search = request.args.get('q', '').strip()
@@ -569,25 +507,36 @@ def obtener_clientes(current_user_id):
         rows = cursor.fetchall()
         
         for row in rows:
-            cliente = {
-                'id': row[0],
-                'nombre': row[1] or '',
-                'correo': row[2] or '',
-                'telefono': row[3] or '',
-                'direccion': row[4] or '',
-                'notas': row[5] or '',
-                'creado': row[6].isoformat() if row[6] else None
-            }
-            clientes.append(cliente)
+            try:
+                cliente = {
+                    'id': row[0],
+                    'nombre': row[1] or '',
+                    'correo': row[2] or '',
+                    'telefono': row[3] or '',
+                    'direccion': row[4] or '',
+                    'notas': row[5] or '',
+                    'creado': row[6].isoformat() if row[6] else None
+                }
+                clientes.append(cliente)
+            except Exception as e:
+                print(f"⚠️ Error procesando cliente: {e}")
+                continue
         
         print(f"✅ Clientes procesados exitosamente: {len(clientes)}")
         response = jsonify(clientes)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos obteniendo clientes: {db_err}")
+        response = jsonify([])
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     except Exception as e:
-        print(f"❌ Error obteniendo clientes: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        print(f"❌ Error general obteniendo clientes: {e}")
+        response = jsonify([])
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     finally:
         if cursor:
             cursor.close()
@@ -657,9 +606,12 @@ def crear_cliente(current_user_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 201
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos creando cliente: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
     except Exception as e:
         print(f"❌ Error creando cliente: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
             cursor.close()
@@ -733,9 +685,12 @@ def actualizar_cliente(current_user_id, cliente_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos actualizando cliente: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
     except Exception as e:
         print(f"❌ Error actualizando cliente: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
             cursor.close()
@@ -773,14 +728,18 @@ def eliminar_cliente(current_user_id, cliente_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos eliminando cliente: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
     except Exception as e:
         print(f"❌ Error eliminando cliente: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+
 
 @app.route('/api/clientes/search', methods=['GET'])
 @jwt_required
@@ -819,25 +778,32 @@ def buscar_clientes(current_user_id):
         rows = cursor.fetchall()
         
         for row in rows:
-            cliente = {
-                'id': row[0],
-                'nombre': row[1] or '',
-                'correo': row[2] or '',
-                'telefono': row[3] or '',
-                'direccion': row[4] or '',
-                'notas': row[5] or '',
-                'creado': row[6].isoformat() if row[6] else None
-            }
-            clientes.append(cliente)
+            try:
+                cliente = {
+                    'id': row[0],
+                    'nombre': row[1] or '',
+                    'correo': row[2] or '',
+                    'telefono': row[3] or '',
+                    'direccion': row[4] or '',
+                    'notas': row[5] or '',
+                    'creado': row[6].isoformat() if row[6] else None
+                }
+                clientes.append(cliente)
+            except Exception as e:
+                print(f"⚠️ Error procesando cliente: {e}")
+                continue
         
         print(f"✅ Encontrados {len(clientes)} clientes")
         response = jsonify(clientes)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos buscando clientes: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
     except Exception as e:
         print(f"❌ Error buscando clientes: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
             cursor.close()
@@ -856,9 +822,38 @@ def obtener_estadisticas_clientes(current_user_id):
         
         connection = get_db_connection()
         if not connection:
-            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            print("❌ Error: No se pudo conectar a la base de datos")
+            estadisticas_default = {
+                'total_clientes': 0,
+                'clientes_mes': 0,
+                'clientes_con_correo': 0,
+                'clientes_con_telefono': 0,
+                'ultimo_cliente': {'nombre': 'N/A', 'fecha': 'N/A'},
+                'porcentaje_con_correo': 0,
+                'porcentaje_con_telefono': 0
+            }
+            response = jsonify(estadisticas_default)
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
             
         cursor = connection.cursor()
+        
+        # Verificar si la tabla clientes existe
+        cursor.execute("SHOW TABLES LIKE 'clientes'")
+        if not cursor.fetchone():
+            print("⚠️ Tabla 'clientes' no existe")
+            estadisticas_default = {
+                'total_clientes': 0,
+                'clientes_mes': 0,
+                'clientes_con_correo': 0,
+                'clientes_con_telefono': 0,
+                'ultimo_cliente': {'nombre': 'N/A', 'fecha': 'N/A'},
+                'porcentaje_con_correo': 0,
+                'porcentaje_con_telefono': 0
+            }
+            response = jsonify(estadisticas_default)
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
         
         # Total de clientes
         cursor.execute("SELECT COUNT(*) FROM clientes")
@@ -908,9 +903,34 @@ def obtener_estadisticas_clientes(current_user_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos obteniendo estadísticas: {db_err}")
+        estadisticas_default = {
+            'total_clientes': 0,
+            'clientes_mes': 0,
+            'clientes_con_correo': 0,
+            'clientes_con_telefono': 0,
+            'ultimo_cliente': {'nombre': 'N/A', 'fecha': 'N/A'},
+            'porcentaje_con_correo': 0,
+            'porcentaje_con_telefono': 0
+        }
+        response = jsonify(estadisticas_default)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     except Exception as e:
         print(f"❌ Error obteniendo estadísticas de clientes: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        estadisticas_default = {
+            'total_clientes': 0,
+            'clientes_mes': 0,
+            'clientes_con_correo': 0,
+            'clientes_con_telefono': 0,
+            'ultimo_cliente': {'nombre': 'N/A', 'fecha': 'N/A'},
+            'porcentaje_con_correo': 0,
+            'porcentaje_con_telefono': 0
+        }
+        response = jsonify(estadisticas_default)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     finally:
         if cursor:
             cursor.close()
@@ -932,9 +952,19 @@ def obtener_productos(current_user_id):
         connection = get_db_connection()
         if not connection:
             print("❌ No se pudo conectar a la base de datos")
-            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            response = jsonify([])
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
             
         cursor = connection.cursor()
+        
+        # Verificar si la tabla productos existe
+        cursor.execute("SHOW TABLES LIKE 'productos'")
+        if not cursor.fetchone():
+            print("⚠️ Tabla 'productos' no existe")
+            response = jsonify([])
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
         
         query = """
             SELECT id, nombre, categoria, proveedor, unidad, precio_unitario, 
@@ -948,28 +978,39 @@ def obtener_productos(current_user_id):
         rows = cursor.fetchall()
         
         for row in rows:
-            producto = {
-                'id': row[0],
-                'nombre': row[1],
-                'categoria': row[2],
-                'proveedor': row[3] or '',
-                'unidad': row[4],
-                'precio_unitario': float(row[5]) if row[5] else 0.0,
-                'stock_actual': row[6],
-                'stock_minimo': row[7],
-                'creado': row[8].isoformat() if row[8] else None,
-                'stock_bajo': row[6] <= row[7]
-            }
-            productos.append(producto)
+            try:
+                producto = {
+                    'id': row[0],
+                    'nombre': row[1],
+                    'categoria': row[2],
+                    'proveedor': row[3] or '',
+                    'unidad': row[4],
+                    'precio_unitario': float(row[5]) if row[5] else 0.0,
+                    'stock_actual': row[6],
+                    'stock_minimo': row[7],
+                    'creado': row[8].isoformat() if row[8] else None,
+                    'stock_bajo': row[6] <= row[7]
+                }
+                productos.append(producto)
+            except Exception as e:
+                print(f"⚠️ Error procesando producto: {e}")
+                continue
         
         print(f"✅ Productos procesados exitosamente: {len(productos)}")
         response = jsonify(productos)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos obteniendo productos: {db_err}")
+        response = jsonify([])
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     except Exception as e:
         print(f"❌ Error obteniendo productos: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        response = jsonify([])
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     finally:
         if cursor:
             cursor.close()
@@ -1036,9 +1077,12 @@ def crear_producto(current_user_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 201
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos creando producto: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
     except Exception as e:
         print(f"❌ Error creando producto: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
             cursor.close()
@@ -1117,9 +1161,12 @@ def actualizar_producto(current_user_id, producto_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos actualizando producto: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
     except Exception as e:
         print(f"❌ Error actualizando producto: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
             cursor.close()
@@ -1157,9 +1204,12 @@ def eliminar_producto(current_user_id, producto_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos eliminando producto: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
     except Exception as e:
         print(f"❌ Error eliminando producto: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
             cursor.close()
@@ -1178,16 +1228,41 @@ def obtener_estadisticas_inventario(current_user_id):
         
         connection = get_db_connection()
         if not connection:
-            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            estadisticas_default = {
+                'total_productos': 0,
+                'productos_stock_bajo': 0,
+                'valor_inventario': 0.0,
+                'stock_total': 0,
+                'productos_por_categoria': {},
+                'categorias_principales': []
+            }
+            response = jsonify(estadisticas_default)
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
             
         cursor = connection.cursor()
         
+        # Verificar si la tabla productos existe
+        cursor.execute("SHOW TABLES LIKE 'productos'")
+        if not cursor.fetchone():
+            estadisticas_default = {
+                'total_productos': 0,
+                'productos_stock_bajo': 0,
+                'valor_inventario': 0.0,
+                'stock_total': 0,
+                'productos_por_categoria': {},
+                'categorias_principales': []
+            }
+            response = jsonify(estadisticas_default)
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
+        
         # Estadísticas básicas
         cursor.execute("SELECT COUNT(*) FROM productos")
-        total_productos = cursor.fetchone()[0]
+        total_productos = cursor.fetchone()[0] or 0
         
         cursor.execute("SELECT COUNT(*) FROM productos WHERE stock_actual <= stock_minimo")
-        productos_stock_bajo = cursor.fetchone()[0]
+        productos_stock_bajo = cursor.fetchone()[0] or 0
         
         cursor.execute("SELECT SUM(stock_actual * precio_unitario) FROM productos")
         valor_inventario = cursor.fetchone()[0] or 0.0
@@ -1215,9 +1290,32 @@ def obtener_estadisticas_inventario(current_user_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
         
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos obteniendo estadísticas: {db_err}")
+        estadisticas_default = {
+            'total_productos': 0,
+            'productos_stock_bajo': 0,
+            'valor_inventario': 0.0,
+            'stock_total': 0,
+            'productos_por_categoria': {},
+            'categorias_principales': []
+        }
+        response = jsonify(estadisticas_default)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     except Exception as e:
         print(f"❌ Error obteniendo estadísticas: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        estadisticas_default = {
+            'total_productos': 0,
+            'productos_stock_bajo': 0,
+            'valor_inventario': 0.0,
+            'stock_total': 0,
+            'productos_por_categoria': {},
+            'categorias_principales': []
+        }
+        response = jsonify(estadisticas_default)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     finally:
         if cursor:
             cursor.close()
@@ -1373,9 +1471,12 @@ def crear_compra(current_user_id):
             connection.rollback()
             raise e
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos creando compra: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
     except Exception as e:
         print(f"❌ Error creando compra: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
             cursor.close()
@@ -1395,7 +1496,9 @@ def obtener_compras(current_user_id):
         connection = get_db_connection()
         if not connection:
             print("❌ Error: No se pudo conectar a la base de datos")
-            return jsonify([]), 200
+            response = jsonify([])
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
             
         cursor = connection.cursor()
         
@@ -1455,7 +1558,6 @@ def obtener_compras(current_user_id):
                 compra = {
                     'id': row[0],
                     'proveedor': row[1] if row[1] else 'Sin proveedor',
-
                     'total': float(row[2]) if row[2] is not None else 0.0,
                     'fecha': row[3] if row[3] else '',
                     'notas': row[4] or '',
@@ -1473,9 +1575,13 @@ def obtener_compras(current_user_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
         
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos obteniendo compras: {db_err}")
+        response = jsonify([])
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     except Exception as e:
         print(f"❌ Error obteniendo compras: {e}")
-        # En caso de error, devolver array vacío en lugar de error 500
         response = jsonify([])
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
@@ -1547,77 +1653,12 @@ def obtener_compra(current_user_id, compra_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos obteniendo detalle de compra: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
     except Exception as e:
         print(f"❌ Error obteniendo detalle de compra: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
-
-@app.route('/api/compras/<int:compra_id>', methods=['PUT'])
-@jwt_required
-def actualizar_compra(current_user_id, compra_id):
-    """Actualiza una compra existente"""
-    connection = None
-    cursor = None
-    
-    try:
-        data = request.get_json()
-        print(f"🛒 Actualizando compra {compra_id} para usuario {current_user_id}: {data}")
-        
-        if not data:
-            return jsonify({'message': 'No se recibieron datos'}), 400
-            
-        connection = get_db_connection()
-        if not connection:
-            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
-            
-        cursor = connection.cursor()
-        
-        # Verificar que la compra existe y pertenece al usuario
-        cursor.execute("""
-            SELECT id FROM compras 
-            WHERE id = %s AND usuario_id = %s
-        """, (compra_id, current_user_id))
-        if not cursor.fetchone():
-            return jsonify({'message': 'Compra no encontrada'}), 404
-        
-        # Validaciones básicas
-        if 'proveedor' in data and (not data['proveedor'] or len(data['proveedor'].strip()) < 2):
-            return jsonify({'message': 'El proveedor debe tener al menos 2 caracteres'}), 400
-            
-        if 'fecha' in data and not data['fecha']:
-            return jsonify({'message': 'La fecha no puede estar vacía'}), 400
-        
-        # Construir consulta de actualización dinámicamente
-        campos_actualizables = ['proveedor', 'fecha', 'notas']
-        campos_update = []
-        valores = []
-        
-        for campo in campos_actualizables:
-            if campo in data:
-                campos_update.append(f"{campo} = %s")
-                valores.append(data[campo].strip() if isinstance(data[campo], str) else data[campo])
-        
-        if not campos_update:
-            return jsonify({'message': 'No hay campos para actualizar'}), 400
-        
-        valores.append(compra_id)
-        
-        query = f"UPDATE compras SET {', '.join(campos_update)} WHERE id = %s"
-        cursor.execute(query, valores)
-        connection.commit()
-        
-        print(f"✅ Compra {compra_id} actualizada exitosamente")
-        response = jsonify({'message': 'Compra actualizada exitosamente'})
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-
-    except Exception as e:
-        print(f"❌ Error actualizando compra: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
             cursor.close()
@@ -1676,9 +1717,12 @@ def eliminar_compra(current_user_id, compra_id):
             connection.rollback()
             raise e
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos eliminando compra: {db_err}")
+        return jsonify({'message': 'Error de base de datos'}), 500
     except Exception as e:
         print(f"❌ Error eliminando compra: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
             cursor.close()
@@ -1697,9 +1741,36 @@ def obtener_estadisticas_compras(current_user_id):
         
         connection = get_db_connection()
         if not connection:
-            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            estadisticas_default = {
+                'compras_mes': 0,
+                'gasto_mes': 0.0,
+                'gasto_promedio': 0.0,
+                'proveedor_frecuente': 'N/A',
+                'productos_mas_comprados': [],
+                'total_compras': 0,
+                'gasto_total': 0.0
+            }
+            response = jsonify(estadisticas_default)
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
             
         cursor = connection.cursor()
+        
+        # Verificar si la tabla compras existe
+        cursor.execute("SHOW TABLES LIKE 'compras'")
+        if not cursor.fetchone():
+            estadisticas_default = {
+                'compras_mes': 0,
+                'gasto_mes': 0.0,
+                'gasto_promedio': 0.0,
+                'proveedor_frecuente': 'N/A',
+                'productos_mas_comprados': [],
+                'total_compras': 0,
+                'gasto_total': 0.0
+            }
+            response = jsonify(estadisticas_default)
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
         
         # Total de compras del mes actual
         cursor.execute("""
@@ -1780,9 +1851,34 @@ def obtener_estadisticas_compras(current_user_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos obteniendo estadísticas de compras: {db_err}")
+        estadisticas_default = {
+            'compras_mes': 0,
+            'gasto_mes': 0.0,
+            'gasto_promedio': 0.0,
+            'proveedor_frecuente': 'N/A',
+            'productos_mas_comprados': [],
+            'total_compras': 0,
+            'gasto_total': 0.0
+        }
+        response = jsonify(estadisticas_default)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     except Exception as e:
         print(f"❌ Error obteniendo estadísticas de compras: {e}")
-        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
+        estadisticas_default = {
+            'compras_mes': 0,
+            'gasto_mes': 0.0,
+            'gasto_promedio': 0.0,
+            'proveedor_frecuente': 'N/A',
+            'productos_mas_comprados': [],
+            'total_compras': 0,
+            'gasto_total': 0.0
+        }
+        response = jsonify(estadisticas_default)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     finally:
         if cursor:
             cursor.close()
@@ -1801,9 +1897,7 @@ def obtener_proveedores(current_user_id):
         connection = get_db_connection()
         if not connection:
             print("❌ Error: No se pudo conectar a la base de datos")
-            # Devolver proveedores por defecto
-            proveedores_default = ['Frutas del Sur', 'Verduras Uruguay', 'Distribuidora Central']
-            response = jsonify(proveedores_default)
+            response = jsonify([])
             response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
             return response, 200
             
@@ -1833,20 +1927,19 @@ def obtener_proveedores(current_user_id):
         todos_proveedores = list(set(proveedores_compras + proveedores_productos))
         todos_proveedores.sort()
         
-        # Si no hay proveedores, usar los por defecto
-        if not todos_proveedores:
-            todos_proveedores = ['Frutas del Sur', 'Verduras Uruguay', 'Distribuidora Central']
-        
         print(f"✅ Encontrados {len(todos_proveedores)} proveedores únicos")
         response = jsonify(todos_proveedores)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
 
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos obteniendo proveedores: {db_err}")
+        response = jsonify([])
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     except Exception as e:
         print(f"❌ Error obteniendo proveedores: {e}")
-        # Devolver proveedores por defecto en caso de error
-        proveedores_default = ['Frutas del Sur', 'Verduras Uruguay', 'Distribuidora Central']
-        response = jsonify(proveedores_default)
+        response = jsonify([])
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
     finally:
@@ -1870,7 +1963,15 @@ def dashboard_resumen(current_user_id):
         connection = get_db_connection()
         if not connection:
             print("❌ Error: No se pudo conectar a la base de datos")
-            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            resumen_default = {
+                'totalProductos': 0,
+                'ventasDelDia': 0.0,
+                'cantidadVentas': 0,
+                'productosStockBajo': 0
+            }
+            response = jsonify(resumen_default)
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
             
         cursor = connection.cursor()
         
@@ -1917,19 +2018,34 @@ def dashboard_resumen(current_user_id):
             'productosStockBajo': productos_stock_bajo
         }
         
-
         print(f"✅ Resumen calculado exitosamente: {resumen}")
         
         response = jsonify(resumen)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
         
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos en dashboard resumen: {db_err}")
+        resumen_default = {
+            'totalProductos': 0,
+            'ventasDelDia': 0.0,
+            'cantidadVentas': 0,
+            'productosStockBajo': 0
+        }
+        response = jsonify(resumen_default)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     except Exception as e:
         print(f"❌ Error general en dashboard resumen: {e}")
-        return jsonify({
-            'message': 'Error interno del servidor',
-            'error': str(e)
-        }), 500
+        resumen_default = {
+            'totalProductos': 0,
+            'ventasDelDia': 0.0,
+            'cantidadVentas': 0,
+            'productosStockBajo': 0
+        }
+        response = jsonify(resumen_default)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     finally:
         if cursor:
             cursor.close()
@@ -1949,9 +2065,19 @@ def dashboard_stock_bajo(current_user_id):
         connection = get_db_connection()
         if not connection:
             print("❌ Error: No se pudo conectar a la base de datos")
-            return jsonify([]), 200
+            response = jsonify([])
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
             
         cursor = connection.cursor()
+        
+        # Verificar si la tabla productos existe
+        cursor.execute("SHOW TABLES LIKE 'productos'")
+        if not cursor.fetchone():
+            print("⚠️ Tabla 'productos' no existe")
+            response = jsonify([])
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
         
         query = """
             SELECT nombre, stock_actual, stock_minimo, unidad, categoria
@@ -1986,250 +2112,13 @@ def dashboard_stock_bajo(current_user_id):
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
         
+    except mysql.connector.Error as db_err:
+        print(f"❌ Error de base de datos en stock bajo: {db_err}")
+        response = jsonify([])
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
     except Exception as e:
         print(f"❌ Error general en stock bajo: {e}")
-        response = jsonify([])
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
-
-@app.route('/api/dashboard/compras-recientes', methods=['GET'])
-@jwt_required
-def dashboard_compras_recientes(current_user_id):
-    """Obtiene las últimas compras"""
-    connection = None
-    cursor = None
-    
-    try:
-        print(f"🔍 Obteniendo compras recientes para usuario {current_user_id}")
-        
-        connection = get_db_connection()
-        if not connection:
-            print("❌ Error: No se pudo conectar a la base de datos")
-            return jsonify([]), 200
-            
-        cursor = connection.cursor()
-        
-        cursor.execute("""
-            SELECT proveedor, DATE_FORMAT(fecha, '%Y-%m-%d'), total 
-            FROM compras 
-            ORDER BY fecha DESC 
-            LIMIT 5
-        """)
-        
-        compras_recientes = []
-        rows = cursor.fetchall()
-        
-        for row in rows:
-            try:
-                compra = {
-                    'proveedor': row[0] if row[0] else 'Sin proveedor',
-                    'fecha': row[1] if row[1] else '',
-                    'total': float(row[2]) if row[2] is not None else 0.0
-                }
-                compras_recientes.append(compra)
-            except Exception as e:
-                print(f"⚠️ Error procesando compra: {e}")
-                continue
-        
-        print(f"✅ Total compras procesadas: {len(compras_recientes)}")
-        
-        response = jsonify(compras_recientes)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-        
-    except Exception as e:
-        print(f"❌ Error en dashboard compras recientes: {e}")
-        response = jsonify([])
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
-
-@app.route('/api/dashboard/ventas-mensuales', methods=['GET'])
-@jwt_required
-def dashboard_ventas_mensuales(current_user_id):
-    """Obtiene ventas por mes del año actual"""
-    connection = None
-    cursor = None
-    
-    try:
-        print(f"🔍 Obteniendo ventas mensuales para usuario {current_user_id}")
-        
-        connection = get_db_connection()
-        if not connection:
-            print("❌ Error: No se pudo conectar a la base de datos")
-            return jsonify([]), 200
-            
-        cursor = connection.cursor()
-        
-        cursor.execute("""
-            SELECT 
-                MONTH(fecha) as mes_num,
-                MONTHNAME(fecha) as mes,
-                COALESCE(SUM(total), 0) as total
-            FROM ventas 
-            WHERE YEAR(fecha) = YEAR(CURDATE())
-            GROUP BY MONTH(fecha), MONTHNAME(fecha)
-            ORDER BY MONTH(fecha)
-        """)
-        
-        ventas_mensuales = []
-        meses_con_datos = {}
-        
-        rows = cursor.fetchall()
-        
-        for row in rows:
-            try:
-                mes_nombre = row[1] if row[1] else ''
-                total = float(row[2]) if row[2] is not None else 0.0
-                meses_con_datos[mes_nombre] = total
-            except Exception as e:
-                print(f"⚠️ Error procesando mes: {e}")
-                continue
-        
-        # Asegurar que todos los meses estén representados
-        meses = ['January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December']
-        
-        meses_es = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-        
-        for i, mes_en in enumerate(meses):
-            ventas_mensuales.append({
-                'mes': meses_es[i],
-                'total': meses_con_datos.get(mes_en, 0)
-            })
-        
-        print(f"✅ Total meses procesados: {len(ventas_mensuales)}")
-        
-        response = jsonify(ventas_mensuales)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-
-    except Exception as e:
-        print(f"❌ Error en dashboard ventas mensuales: {e}")
-        response = jsonify([])
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
-
-@app.route('/api/dashboard/stock-distribucion', methods=['GET'])
-@jwt_required
-def dashboard_stock_distribucion(current_user_id):
-    """Obtiene distribución de stock por categoría"""
-    connection = None
-    cursor = None
-    
-    try:
-        print(f"🔍 Obteniendo distribución de stock para usuario {current_user_id}")
-        
-        connection = get_db_connection()
-        if not connection:
-            print("❌ Error: No se pudo conectar a la base de datos")
-            distribucion_default = {'frutas': 0, 'verduras': 0, 'otros': 0}
-            response = jsonify(distribucion_default)
-            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-            return response, 200
-            
-        cursor = connection.cursor()
-        
-        cursor.execute("""
-            SELECT categoria, COUNT(*) 
-            FROM productos 
-            GROUP BY categoria
-        """)
-        
-        distribucion = {'frutas': 0, 'verduras': 0, 'otros': 0}
-        
-        rows = cursor.fetchall()
-        
-        for row in rows:
-            try:
-                categoria = row[0] if row[0] else 'otros'
-                cantidad = int(row[1]) if row[1] is not None else 0
-                if categoria in distribucion:
-                    distribucion[categoria] = cantidad
-            except Exception as e:
-                print(f"⚠️ Error procesando categoría: {e}")
-                continue
-        
-        print(f"✅ Distribución final: {distribucion}")
-        
-        response = jsonify(distribucion)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-
-    except Exception as e:
-        print(f"❌ Error en dashboard stock distribución: {e}")
-        distribucion_default = {'frutas': 0, 'verduras': 0, 'otros': 0}
-        response = jsonify(distribucion_default)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
-
-@app.route('/api/dashboard/ultimos-movimientos', methods=['GET'])
-@jwt_required
-def dashboard_ultimos_movimientos(current_user_id):
-    """Obtiene los últimos movimientos"""
-    connection = None
-    cursor = None
-    
-    try:
-        print(f"🔍 Obteniendo últimos movimientos para usuario {current_user_id}")
-        
-        connection = get_db_connection()
-        if not connection:
-            print("❌ Error: No se pudo conectar a la base de datos")
-            return jsonify([]), 200
-            
-        cursor = connection.cursor()
-        
-        cursor.execute("""
-            SELECT tipo, detalle, DATE_FORMAT(fecha, '%Y-%m-%d %H:%i') 
-            FROM movimientos 
-            ORDER BY fecha DESC 
-            LIMIT 10
-        """)
-        
-        movimientos = []
-        rows = cursor.fetchall()
-        
-        for row in rows:
-            try:
-                movimiento = {
-                    'tipo': row[0] if row[0] else 'sin_tipo',
-                    'detalle': row[1] if row[1] else 'Sin detalle',
-                    'fecha': row[2] if row[2] else ''
-                }
-                movimientos.append(movimiento)
-            except Exception as e:
-                print(f"⚠️ Error procesando movimiento: {e}")
-                continue
-        
-        print(f"✅ Total movimientos procesados: {len(movimientos)}")
-        
-        response = jsonify(movimientos)
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        return response, 200
-
-    except Exception as e:
-        print(f"❌ Error en dashboard últimos movimientos: {e}")
         response = jsonify([])
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
