@@ -137,7 +137,22 @@ const createCustomTheme = (mode = 'light') => {
       '0px 25px 50px -12px rgba(0, 0, 0, 0.25)',
       '0px 35px 60px -12px rgba(0, 0, 0, 0.3)',
       '0px 45px 70px -12px rgba(0, 0, 0, 0.35)',
-      // ... más sombras según necesidad
+      '0px 2px 4px rgba(0, 0, 0, 0.1)',
+      '0px 4px 8px rgba(0, 0, 0, 0.12)',
+      '0px 8px 16px rgba(0, 0, 0, 0.14)',
+      '0px 12px 24px rgba(0, 0, 0, 0.16)',
+      '0px 16px 32px rgba(0, 0, 0, 0.18)',
+      '0px 20px 40px rgba(0, 0, 0, 0.20)',
+      '0px 24px 48px rgba(0, 0, 0, 0.22)',
+      '0px 28px 56px rgba(0, 0, 0, 0.24)',
+      '0px 32px 64px rgba(0, 0, 0, 0.26)',
+      '0px 36px 72px rgba(0, 0, 0, 0.28)',
+      '0px 40px 80px rgba(0, 0, 0, 0.30)',
+      '0px 44px 88px rgba(0, 0, 0, 0.32)',
+      '0px 48px 96px rgba(0, 0, 0, 0.34)',
+      '0px 52px 104px rgba(0, 0, 0, 0.36)',
+      '0px 56px 112px rgba(0, 0, 0, 0.38)',
+      '0px 60px 120px rgba(0, 0, 0, 0.40)',
     ],
     components: {
       MuiButton: {
@@ -247,6 +262,54 @@ const createCustomTheme = (mode = 'light') => {
             '& .MuiAlert-root': {
               borderRadius: 12,
             },
+          },
+        },
+      },
+      MuiSpeedDial: {
+        styleOverrides: {
+          fab: {
+            boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.15)',
+            '&:hover': {
+              boxShadow: '0px 12px 24px rgba(0, 0, 0, 0.2)',
+    },
+          },
+        },
+      },
+      MuiSpeedDialAction: {
+        styleOverrides: {
+          fab: {
+            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.12)',
+            '&:hover': {
+              boxShadow: '0px 6px 12px rgba(0, 0, 0, 0.15)',
+            },
+          },
+        },
+      },
+      MuiMenu: {
+        styleOverrides: {
+          paper: {
+            borderRadius: 12,
+            boxShadow: '0px 8px 32px rgba(0, 0, 0, 0.12)',
+            border: `1px solid ${mode === 'dark' ? '#334155' : '#E2E8F0'}`,
+          },
+        },
+      },
+      MuiMenuItem: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+            margin: '2px 8px',
+            '&:hover': {
+              backgroundColor: mode === 'dark' ? '#334155' : '#F1F5F9',
+            },
+          },
+        },
+      },
+      MuiDrawer: {
+        styleOverrides: {
+          paper: {
+            borderRadius: 0,
+            boxShadow: '0px 0px 20px rgba(0, 0, 0, 0.05)',
           },
         },
       },
