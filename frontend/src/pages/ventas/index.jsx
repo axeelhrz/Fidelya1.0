@@ -1,432 +1,434 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
+  Container,
   Typography,
   Button,
   Paper,
-  useTheme,
-  alpha,
-  Fab,
-  Zoom,
-  Backdrop,
-  CircularProgress,
   Alert,
   Snackbar,
-  Container,
+  Fab,
+  useTheme,
+  alpha,
+  Breadcrumbs,
+  Link,
+  Slide,
 } from '@mui/material';
 import {
-  Add,
-  Refresh,
-  FilterList,
-  Analytics,
-  TrendingUp,
+  Add as AddIcon,
+  Refresh as RefreshIcon,
+  FilterList as FilterListIcon,
+  Home as HomeIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import PageHeader from '../../components/layout/PageHeader';
+import { useAuth } from '../../context/AuthContext';
+import { ventasService } from '../../services/ventasService';
+
+// Importar componentes modernizados
 import VentasStats from './components/VentasStats';
 import VentasTable from './components/VentasTable';
 import VentasFilters from './components/VentasFilters';
 import VentaDialog from './components/VentaDialog';
 import VentaViewDialog from './components/VentaViewDialog';
 import DeleteVentaDialog from './components/DeleteVentaDialog';
-import { ventasService } from '../../services/ventasService';
 
 const VentasPage = () => {
   const theme = useTheme();
-  // Estados principales
+  const { user } = useAuth();
+  // Estados para datos
   const [ventas, setVentas] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);
-  const [datosRelacionados, setDatosRelacionados] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  // Estados de filtros
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  
+  // Estados para diálogos
+  const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openViewDialog, setOpenViewDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedVenta, setSelectedVenta] = useState(null);
+  
+  // Estados para filtros
+  const [showFilters, setShowFilters] = useState(false);
   const [filtros, setFiltros] = useState({
     fecha_inicio: '',
     fecha_fin: '',
     cliente_id: '',
     usuario_id: '',
     forma_pago: '',
-    producto: '',
-    estado: ''
+    producto: ''
   });
-  const [mostrarFiltros, setMostrarFiltros] = useState(false);
-
-  // Estados de diálogos
-  const [ventaDialog, setVentaDialog] = useState({ open: false, venta: null, mode: 'create' });
-  const [viewDialog, setViewDialog] = useState({ open: false, venta: null });
-  const [deleteDialog, setDeleteDialog] = useState({ open: false, venta: null });
-  
-  // Estados de notificaciones
-  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
-
-  // Cargar datos iniciales
   useEffect(() => {
-    cargarDatosIniciales();
-  }, []);
-
-  // Cargar ventas cuando cambian los filtros
-  useEffect(() => {
-    if (datosRelacionados) {
-      cargarVentas();
-    }
-  }, [filtros, datosRelacionados]);
-
-  const cargarDatosIniciales = async () => {
-    setLoading(true);
-    try {
-      // Cargar todos los datos en paralelo para mejor rendimiento
-      const [
-        ventasData,
-        estadisticasData,
-        relacionadosData
-      ] = await Promise.all([
-        ventasService.obtenerVentas(filtros),
-        ventasService.obtenerEstadisticasVentas(),
-        ventasService.obtenerDatosRelacionados()
-      ]);
-      
-      setVentas(ventasData);
-      setEstadisticas(estadisticasData);
-      setDatosRelacionados(relacionadosData);
-      
-      console.log('✅ Datos de ventas cargados:', {
-        ventas: ventasData.length,
-        estadisticas: estadisticasData,
-        relacionados: relacionadosData
-      });
-    } catch (error) {
-      console.error('❌ Error cargando datos de ventas:', error);
-      mostrarNotificacion('Error cargando datos de ventas', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cargarVentas = async () => {
-    try {
-      const ventasData = await ventasService.obtenerVentas(filtros);
-      setVentas(ventasData);
-    } catch (error) {
-      console.error('❌ Error cargando ventas:', error);
-      mostrarNotificacion('Error cargando ventas', 'error');
-    }
-  };
-
-  const cargarEstadisticas = async () => {
-    try {
-      const estadisticasData = await ventasService.obtenerEstadisticasVentas();
-      setEstadisticas(estadisticasData);
-    } catch (error) {
-      console.error('❌ Error cargando estadísticas:', error);
-    }
-  };
-
-  const refrescarDatos = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([
-        cargarVentas(),
-        cargarEstadisticas()
-      ]);
-      mostrarNotificacion('Datos actualizados correctamente', 'success');
-    } catch (error) {
-      console.error('❌ Error refrescando datos:', error);
-      mostrarNotificacion('Error actualizando datos', 'error');
-    } finally {
-      setRefreshing(false);
-    }
+    cargarDatos();
   }, [filtros]);
 
-  const mostrarNotificacion = (message, severity = 'success') => {
-    setNotification({ open: true, message, severity });
+  const cargarDatos = async (showRefreshIndicator = false) => {
+    if (showRefreshIndicator) {
+    setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+    setError(null);
+    
+    try {
+      console.log('🔄 Cargando datos de ventas...');
+      
+      const [ventasData, statsData] = await Promise.all([
+        ventasService.obtenerVentas(filtros),
+        ventasService.obtenerEstadisticasVentas()
+      ]);
+      
+      console.log('✅ Datos cargados:', {
+        ventas: ventasData.length,
+        estadisticas: statsData
+      });
+      
+      setVentas(ventasData);
+      setEstadisticas(statsData);
+    } catch (error) {
+      console.error('❌ Error cargando datos de ventas:', error);
+      setError('Error al cargar los datos de ventas. Por favor, intenta nuevamente.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
-  const cerrarNotificacion = () => {
-    setNotification({ ...notification, open: false });
+  const handleRefresh = () => {
+    cargarDatos(true);
   };
 
-  // Handlers de diálogos
   const handleCreateVenta = () => {
-    setVentaDialog({ open: true, venta: null, mode: 'create' });
+    setSelectedVenta(null);
+    setOpenCreateDialog(true);
   };
 
   const handleEditVenta = (venta) => {
-    setVentaDialog({ open: true, venta, mode: 'edit' });
+    setSelectedVenta(venta);
+    setOpenEditDialog(true);
   };
 
   const handleViewVenta = (venta) => {
-    setViewDialog({ open: true, venta });
+    setSelectedVenta(venta);
+    setOpenViewDialog(true);
   };
 
   const handleDeleteVenta = (venta) => {
-    setDeleteDialog({ open: true, venta });
+    setSelectedVenta(venta);
+    setOpenDeleteDialog(true);
   };
 
-  const handleCloseVentaDialog = () => {
-    setVentaDialog({ open: false, venta: null, mode: 'create' });
+  const handleVentaCreated = async () => {
+    setOpenCreateDialog(false);
+    setSuccess('Venta registrada exitosamente');
+    await cargarDatos();
   };
 
-  const handleCloseViewDialog = () => {
-    setViewDialog({ open: false, venta: null });
-  };
-
-  const handleCloseDeleteDialog = () => {
-    setDeleteDialog({ open: false, venta: null });
-  };
-
-  // Handlers de CRUD
-  const handleVentaCreated = async (nuevaVenta) => {
-    try {
-      await cargarVentas();
-      await cargarEstadisticas();
-      mostrarNotificacion('Venta creada exitosamente', 'success');
-      handleCloseVentaDialog();
-    } catch (error) {
-      console.error('❌ Error después de crear venta:', error);
-    }
-};
-
-  const handleVentaUpdated = async (ventaActualizada) => {
-    try {
-      await cargarVentas();
-      await cargarEstadisticas();
-      mostrarNotificacion('Venta actualizada exitosamente', 'success');
-      handleCloseVentaDialog();
-    } catch (error) {
-      console.error('❌ Error después de actualizar venta:', error);
-    }
+  const handleVentaUpdated = async () => {
+    setOpenEditDialog(false);
+    setSuccess('Venta actualizada exitosamente');
+    await cargarDatos();
   };
 
   const handleVentaDeleted = async () => {
-    try {
-      await cargarVentas();
-      await cargarEstadisticas();
-      mostrarNotificacion('Venta eliminada exitosamente', 'success');
-      handleCloseDeleteDialog();
-    } catch (error) {
-      console.error('❌ Error después de eliminar venta:', error);
-    }
+    setOpenDeleteDialog(false);
+    setSuccess('Venta eliminada exitosamente');
+    await cargarDatos();
   };
 
-  // Handler de filtros
   const handleFiltrosChange = (nuevosFiltros) => {
     setFiltros(nuevosFiltros);
 };
 
-  const limpiarFiltros = () => {
-    setFiltros({
-      fecha_inicio: '',
-      fecha_fin: '',
-      cliente_id: '',
-      usuario_id: '',
-      forma_pago: '',
-      producto: '',
-      estado: ''
-    });
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
+  };
+
+  const handleCloseError = () => {
+    setError(null);
+};
+
+  const handleCloseSuccess = () => {
+    setSuccess(null);
+  };
+
+  const pageVariants = {
+    initial: { opacity: 0, y: 20 },
+    in: { opacity: 1, y: 0 },
+    out: { opacity: 0, y: -20 }
+  };
+
+  const pageTransition = {
+    type: 'tween',
+    ease: 'anticipate',
+    duration: 0.5
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {/* Header */}
-        <PageHeader
-          title="💰 Gestión de Ventas"
-          subtitle="Administra y analiza todas las ventas de la frutería"
-          actions={
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              <Button
-                variant="outlined"
-                startIcon={<FilterList />}
-                onClick={() => setMostrarFiltros(!mostrarFiltros)}
-                sx={{ borderRadius: 2 }}
+    <motion.div
+      initial="initial"
+      animate="in"
+      exit="out"
+      variants={pageVariants}
+      transition={pageTransition}
+    >
+      <Box sx={{ 
+        minHeight: '100vh', 
+        backgroundColor: theme.palette.background.default,
+        pb: 4
+      }}>
+        <Container maxWidth="xl" sx={{ pt: 3 }}>
+          {/* Breadcrumbs */}
+          <Breadcrumbs 
+            aria-label="breadcrumb" 
+            sx={{ mb: 2, color: theme.palette.text.secondary }}
+          >
+            <Link 
+              underline="hover" 
+              color="inherit" 
+              href="/dashboard"
+              sx={{ display: 'flex', alignItems: 'center' }}
+            >
+              <HomeIcon sx={{ mr: 0.5, fontSize: 20 }} />
+              Dashboard
+            </Link>
+            <Typography color="text.primary" sx={{ fontWeight: 500 }}>
+              Ventas
+            </Typography>
+          </Breadcrumbs>
+
+          {/* Header */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'flex-start',
+            mb: 4,
+            flexWrap: 'wrap',
+            gap: 2
+          }}>
+            <Box>
+              <Typography 
+                variant="h4" 
+                component="h1" 
+                sx={{ 
+                  fontWeight: 800,
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  mb: 1
+                }}
               >
-                Filtros
-              </Button>
+                Gestión de Ventas
+              </Typography>
+              <Typography 
+                variant="body1" 
+                color="text.secondary"
+                sx={{ maxWidth: 600 }}
+              >
+                Registra ventas, controla el inventario automáticamente y genera reportes detallados
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               <Button
                 variant="outlined"
-                startIcon={<Refresh />}
-                onClick={refrescarDatos}
+                startIcon={<FilterListIcon />}
+                onClick={toggleFilters}
+                sx={{ 
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 600
+                }}
+              >
+                {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+              </Button>
+              
+              <Button
+                variant="outlined"
+                startIcon={refreshing ? <RefreshIcon sx={{ animation: 'spin 1s linear infinite' }} /> : <RefreshIcon />}
+                onClick={handleRefresh}
                 disabled={refreshing}
-                sx={{ borderRadius: 2 }}
+                sx={{ 
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 600
+                }}
               >
-                {refreshing ? 'Actualizando...' : 'Actualizar'}
+                Actualizar
               </Button>
+
               <Button
                 variant="contained"
-                startIcon={<Add />}
+                startIcon={<AddIcon />}
                 onClick={handleCreateVenta}
                 sx={{ 
-                  borderRadius: 2,
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 600,
                   boxShadow: theme.shadows[4],
                   '&:hover': {
                     boxShadow: theme.shadows[8],
-                  }
+                    transform: 'translateY(-2px)'
+                  },
+                  transition: 'all 0.2s ease-in-out'
                 }}
               >
                 Nueva Venta
               </Button>
             </Box>
-          }
-        />
+          </Box>
 
-        {/* Filtros */}
-        <AnimatePresence>
-          {mostrarFiltros && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Paper sx={{ p: 3, mb: 3, borderRadius: 3 }}>
-                <VentasFilters
-                  filtros={filtros}
-                  onFiltrosChange={handleFiltrosChange}
-                  onLimpiarFiltros={limpiarFiltros}
-                  datosRelacionados={datosRelacionados}
-                />
-              </Paper>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* Estadísticas - Pasando tanto estadisticas como ventas */}
+          <VentasStats 
+            estadisticas={estadisticas} 
+            loading={loading}
+            ventas={ventas}
+          />
 
-        {/* Estadísticas */}
-        <VentasStats 
-          estadisticas={estadisticas} 
-          loading={loading}
-          datosRelacionados={datosRelacionados}
-        />
+          {/* Filtros */}
+          <AnimatePresence>
+            {showFilters && (
+              <Slide direction="down" in={showFilters} mountOnEnter unmountOnExit>
+                <Paper 
+                  sx={{ 
+                    p: 3, 
+                    mb: 3, 
+                    borderRadius: 4,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                    backgroundColor: alpha(theme.palette.primary.main, 0.02)
+                  }}
+                >
+                  <VentasFilters 
+                    filtros={filtros}
+                    onFiltrosChange={handleFiltrosChange}
+                  />
+                </Paper>
+              </Slide>
+            )}
+          </AnimatePresence>
 
-        {/* Tabla de Ventas */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Paper sx={{ borderRadius: 3, overflow: 'hidden' }}>
-            <Box sx={{ 
-              p: 3, 
-              bgcolor: alpha(theme.palette.primary.main, 0.05),
-              borderBottom: `1px solid ${theme.palette.divider}`
-            }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                  <Typography variant="h6" fontWeight={600}>
-                    📋 Lista de Ventas
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {ventas.length} ventas encontradas
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Analytics color="primary" />
-                  <Typography variant="body2" color="primary.main" fontWeight={500}>
-                    Total: {new Intl.NumberFormat('es-UY', {
-                      style: 'currency',
-                      currency: 'UYU',
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }).format(ventas.reduce((sum, venta) => sum + (venta.total || 0), 0))}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-            
+          {/* Tabla de ventas */}
+          <Paper 
+            sx={{ 
+              borderRadius: 4, 
+              overflow: 'hidden',
+              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              boxShadow: theme.shadows[2]
+            }}
+          >
             <VentasTable
               ventas={ventas}
+              loading={loading}
               onEdit={handleEditVenta}
               onView={handleViewVenta}
               onDelete={handleDeleteVenta}
-              loading={loading}
-              datosRelacionados={datosRelacionados}
             />
           </Paper>
-        </motion.div>
+        </Container>
 
-        {/* FAB para nueva venta */}
-        <Zoom in={!loading}>
-          <Fab
-            color="primary"
-            aria-label="Nueva venta"
-            onClick={handleCreateVenta}
-            sx={{
-              position: 'fixed',
-              bottom: 24,
-              right: 24,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-              boxShadow: theme.shadows[8],
-              '&:hover': {
-                boxShadow: theme.shadows[12],
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
-          >
-            <Add />
-          </Fab>
-        </Zoom>
+        {/* Botón flotante para agregar venta */}
+        <Fab
+          color="primary"
+          aria-label="agregar venta"
+          onClick={handleCreateVenta}
+          sx={{
+            position: 'fixed',
+            bottom: 32,
+            right: 32,
+            width: 64,
+            height: 64,
+            boxShadow: theme.shadows[8],
+            '&:hover': {
+              transform: 'scale(1.1)',
+              boxShadow: theme.shadows[12],
+            },
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+          }}
+        >
+          <AddIcon sx={{ fontSize: 28 }} />
+        </Fab>
 
         {/* Diálogos */}
         <VentaDialog
-          open={ventaDialog.open}
-          onClose={handleCloseVentaDialog}
-          venta={ventaDialog.venta}
-          mode={ventaDialog.mode}
-          onVentaCreated={handleVentaCreated}
-          onVentaUpdated={handleVentaUpdated}
-          datosRelacionados={datosRelacionados}
+          open={openCreateDialog}
+          onClose={() => setOpenCreateDialog(false)}
+          onSuccess={handleVentaCreated}
+          mode="create"
+        />
+
+        <VentaDialog
+          open={openEditDialog}
+          onClose={() => setOpenEditDialog(false)}
+          onSuccess={handleVentaUpdated}
+          mode="edit"
+          venta={selectedVenta}
         />
 
         <VentaViewDialog
-          open={viewDialog.open}
-          onClose={handleCloseViewDialog}
-          venta={viewDialog.venta}
-          datosRelacionados={datosRelacionados}
+          open={openViewDialog}
+          onClose={() => setOpenViewDialog(false)}
+          venta={selectedVenta}
         />
 
         <DeleteVentaDialog
-          open={deleteDialog.open}
-          onClose={handleCloseDeleteDialog}
-          venta={deleteDialog.venta}
-          onVentaDeleted={handleVentaDeleted}
+          open={openDeleteDialog}
+          onClose={() => setOpenDeleteDialog(false)}
+          onSuccess={handleVentaDeleted}
+          venta={selectedVenta}
         />
 
-        {/* Backdrop para loading */}
-        <Backdrop
-          sx={{ color: '#fff', zIndex: theme.zIndex.drawer + 1 }}
-          open={loading}
-        >
-          <Box sx={{ textAlign: 'center' }}>
-            <CircularProgress color="inherit" size={60} />
-            <Typography variant="h6" sx={{ mt: 2 }}>
-              Cargando datos de ventas...
-            </Typography>
-          </Box>
-        </Backdrop>
-
-        {/* Notificaciones */}
+        {/* Snackbars para notificaciones */}
         <Snackbar
-          open={notification.open}
+          open={!!error}
           autoHideDuration={6000}
-          onClose={cerrarNotificacion}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          onClose={handleCloseError}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
-          <Alert
-            onClose={cerrarNotificacion}
-            severity={notification.severity}
-            variant="filled"
-            sx={{ width: '100%' }}
+          <Alert 
+            onClose={handleCloseError} 
+            severity="error" 
+            sx={{ 
+              width: '100%',
+              borderRadius: 3,
+              fontWeight: 500
+            }}
           >
-            {notification.message}
+            {error}
           </Alert>
         </Snackbar>
-      </motion.div>
-    </Container>
+
+        <Snackbar
+          open={!!success}
+          autoHideDuration={4000}
+          onClose={handleCloseSuccess}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleCloseSuccess} 
+            severity="success" 
+            sx={{ 
+              width: '100%',
+              borderRadius: 3,
+              fontWeight: 500
+            }}
+          >
+            {success}
+          </Alert>
+        </Snackbar>
+      </Box>
+
+      {/* Estilos para animaciones */}
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </motion.div>
   );
 };
 
