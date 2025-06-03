@@ -1,0 +1,226 @@
+    setSettings(prev => ({ ...prev, [key]: value }))
+  }
+
+  if (loading || loadingSettings) {
+    return (
+      <div className="p-6">
+        <div className="space-y-6">
+          {[1, 2, 3].map(i => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  <div className="h-10 bg-gray-200 rounded"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (!guardian?.is_staff) {
+    return null
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Configuración del Sistema</h1>
+          <p className="text-muted-foreground">
+            Gestiona las configuraciones generales del casino escolar
+          </p>
+        </div>
+        <Button onClick={saveSettings} disabled={saving}>
+          <Save className="h-4 w-4 mr-2" />
+          {saving ? 'Guardando...' : 'Guardar Cambios'}
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Configuración de Pedidos */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Configuración de Pedidos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="cutoff-time">Hora límite para pedidos</Label>
+              <Input
+                id="cutoff-time"
+                type="time"
+                value={settings.order_cutoff_time.substring(0, 5)}
+                onChange={(e) => updateSetting('order_cutoff_time', e.target.value + ':00')}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Los pedidos no se podrán realizar después de esta hora
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="precio-estudiante">Precio por defecto - Estudiantes</Label>
+              <Input
+                id="precio-estudiante"
+                type="number"
+                value={settings.precio_estudiante_default}
+                onChange={(e) => updateSetting('precio_estudiante_default', e.target.value)}
+                placeholder="4500"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Precio en centavos (4500 = $4.500)
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="precio-funcionario">Precio por defecto - Funcionarios</Label>
+              <Input
+                id="precio-funcionario"
+                type="number"
+                value={settings.precio_funcionario_default}
+                onChange={(e) => updateSetting('precio_funcionario_default', e.target.value)}
+                placeholder="5500"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Precio en centavos (5500 = $5.500)
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Configuración General */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Configuración General
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="system-name">Nombre del sistema</Label>
+              <Input
+                id="system-name"
+                value={settings.system_name}
+                onChange={(e) => updateSetting('system_name', e.target.value)}
+                placeholder="Casino Escolar"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="contact-email">Email de contacto</Label>
+              <Input
+                id="contact-email"
+                type="email"
+                value={settings.contact_email}
+                onChange={(e) => updateSetting('contact_email', e.target.value)}
+                placeholder="casino@colegio.cl"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="welcome-message">Mensaje de bienvenida</Label>
+              <Textarea
+                id="welcome-message"
+                value={settings.welcome_message}
+                onChange={(e) => updateSetting('welcome_message', e.target.value)}
+                placeholder="Bienvenido al sistema de pedidos del casino escolar"
+                rows={3}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Configuración de Notificaciones */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Notificaciones
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="email-notifications">Notificaciones por email</Label>
+                <p className="text-xs text-muted-foreground">
+                  Enviar confirmaciones de pago por email
+                </p>
+              </div>
+              <Switch
+                id="email-notifications"
+                checked={settings.email_notifications_enabled === 'true'}
+                onCheckedChange={(checked) => 
+                  updateSetting('email_notifications_enabled', checked ? 'true' : 'false')
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Configuración de Sistema */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Sistema
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="maintenance-mode">Modo mantenimiento</Label>
+                <p className="text-xs text-muted-foreground">
+                  Deshabilitar temporalmente el sistema para usuarios
+                </p>
+              </div>
+              <Switch
+                id="maintenance-mode"
+                checked={settings.maintenance_mode === 'true'}
+                onCheckedChange={(checked) => 
+                  updateSetting('maintenance_mode', checked ? 'true' : 'false')
+                }
+              />
+            </div>
+
+            {settings.maintenance_mode === 'true' && (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  ⚠️ El modo mantenimiento está activado. Los usuarios no podrán realizar pedidos.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Información adicional */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Información del Sistema</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <Label className="text-muted-foreground">Versión</Label>
+              <p className="font-medium">1.0.0</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Última actualización</Label>
+              <p className="font-medium">{new Date().toLocaleDateString('es-CL')}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Base de datos</Label>
+              <p className="font-medium">Supabase</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

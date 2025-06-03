@@ -1,62 +1,57 @@
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { Database } from '@/lib/supabase/types'
 
-export async function middleware(request: NextRequest) {
-  // DESHABILITADO: Permitir acceso libre a toda la app para desarrollo
-  return NextResponse.next()
-
-  // Código original comentado para referencia futura
-  /*
+export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req: request, res })
+  const supabase = createMiddlewareClient<Database>({ req, res })
 
+  // Verificar sesión
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // Si el usuario no está autenticado y está intentando acceder a una ruta protegida
-  if (!session && isProtectedRoute(request.nextUrl.pathname)) {
-    const redirectUrl = new URL('/auth/login', request.url)
+// Rutas que requieren autenticación
+  const protectedRoutes = ['/dashboard', '/pedidos', '/perfil', '/admin']
+  const adminRoutes = ['/admin']
+  
+  const isProtectedRoute = protectedRoutes.some(route => 
+    req.nextUrl.pathname.startsWith(route)
+  )
+  const isAdminRoute = adminRoutes.some(route => 
+    req.nextUrl.pathname.startsWith(route)
+  )
+
+  // Redirigir a login si no hay sesión en ruta protegida
+  if (isProtectedRoute && !session) {
+    const redirectUrl = new URL('/auth/login', req.url)
+    redirectUrl.searchParams.set('redirectTo', req.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
   }
 
-  // Si el usuario está autenticado y está intentando acceder a una ruta de auth
-  if (!session && !request.nextUrl.pathname.includes("/auth/login") && !request.nextUrl.pathname.includes("/auth/registro")) {
-    const redirectUrl = new URL('/dashboard', request.url)
-    return NextResponse.redirect(redirectUrl)
+  // Verificar permisos de admin
+  if (isAdminRoute && session) {
+    const { data: guardian } = await supabase
+      .from('guardians')
+      .select('is_staff')
+      .eq('user_id', session.user.id)
+      .single()
+
+    if (!guardian?.is_staff) {
+      return NextResponse.redirect(new URL('/dashboard', req.url))
+    }
+  }
+
+  // Redirigir a dashboard si ya está logueado y trata de acceder a auth
+  if (session && req.nextUrl.pathname.startsWith('/auth')) {
+    return NextResponse.redirect(new URL('/dashboard', req.url))
   }
 
   return res
-  */
 }
-
-// Rutas que requieren autenticación
-function isProtectedRoute(pathname: string): boolean {
-  const protectedRoutes = [
-    '/dashboard',
-    '/pedidos',
-    '/menu',
-    '/perfil',
-  ]
-  return protectedRoutes.some(route => pathname.startsWith(route))
-}
-
-// Rutas de autenticación (login/registro)
-function isAuthRoute(pathname: string): boolean {
-  const authRoutes = ['/auth/login', '/auth/registro']
-  return authRoutes.includes(pathname)
-}
-
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
   ],
 }

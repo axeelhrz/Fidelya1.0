@@ -1,133 +1,134 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { User } from '@supabase/supabase-js'
 import { supabase } from "@/lib/supabase/client"
+import { Guardian, Student } from "@/lib/supabase/types"
+import { AuthService } from "@/lib/auth/authHelpers"
 
-export interface Student {
-  id: string
-  name: string
-  grade: string
-  section: string
-  level: string
-  tipo?: string // 'Estudiante' o 'Funcionario'
-}
-
-export interface Guardian {
-  id: string
-  user_id: string
-  full_name: string
-  email: string
-  phone: string
-  is_staff: boolean
-  students: Student[]
-}
-
-interface UserContextType {
+export interface UserContextType {
+  user: User | null
   guardian: Guardian | null
+  students: Student[]
   loading: boolean
   refreshUser: () => Promise<void>
+  refreshStudents: () => Promise<void>
   setGuardian: (g: Guardian | null) => void
+  isStaff: boolean
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
 export function UserProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
   const [guardian, setGuardian] = useState<Guardian | null>(null)
+  const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
   
   const refreshUser = async () => {
-    setLoading(true)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      setGuardian(null)
-      setLoading(false)
-      return
+    try {
+      const { user: currentUser, guardian: currentGuardian } = await AuthService.getCurrentUser()
+      setUser(currentUser)
+      setGuardian(currentGuardian)
+      
+      if (currentGuardian) {
+        await refreshStudents()
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error)
     }
-    // Fetch apoderado (cliente) usando el correo electrónico del usuario
-    const { data: clienteData, error } = await supabase
-      .from("clientes")
-      .select("*, hijos")
-      .eq("correo_apoderado", user.email)
-      .maybeSingle();
-    if (error && (error.code || error.message)) {
-      console.error("Error al obtener cliente:", error)
-    } else if (!clienteData) {
-      console.warn("No se encontró un cliente para el usuario autenticado.");
-      setGuardian(null);
-      setLoading(false);
-      return;
-    }
-    let hijos: any[] = [];
-    if (clienteData) {
-      // Si hijos viene como JSON string
-      if (typeof clienteData.hijos === "string") {
-        try {
-          const hijosRaw = JSON.parse(clienteData.hijos);
-          hijos = Array.isArray(hijosRaw)
-            ? hijosRaw.map((hijo: any, idx: number) => ({
-                id: `${clienteData.id}-${idx}`,
-                name: hijo?.nombre ?? "",
-                grade: hijo?.curso ?? "",
-                section: hijo?.letra ?? "",
-                level: hijo?.nivel ?? "",
-                tipo: hijo?.tipo ?? "Estudiante",
-              }))
-            : [];
-        } catch (e) {
-          hijos = [];
-        }
-      } else if (Array.isArray(clienteData.hijos)) {
-        hijos = clienteData.hijos.map((hijo: any, idx: number) => ({
-          id: `${clienteData.id}-${idx}`,
-          name: hijo?.nombre ?? "",
-          grade: hijo?.curso ?? "",
-          section: hijo?.letra ?? "",
-          level: hijo?.nivel ?? "",
-          tipo: hijo?.tipo ?? "Estudiante",
-        }));
-      } else if (clienteData.hijos && typeof clienteData.hijos === "object") {
-        hijos = Object.values(clienteData.hijos).map((hijo: any, idx: number) => ({
-          id: `${clienteData.id}-${idx}`,
-          name: hijo?.nombre ?? "",
-          grade: hijo?.curso ?? "",
-          section: hijo?.letra ?? "",
-          level: hijo?.nivel ?? "",
-          tipo: hijo?.tipo ?? "Estudiante",
-        }));
-      }  
-      console.log("Cliente hijos parseado:", hijos)
-      // Mapear correctamente los campos de la base de datos a la interfaz
-      setGuardian({
-        id: clienteData.id,
-        user_id: clienteData.user_id || "",
-        full_name: clienteData.nombre_apoderado || "",
-        email: clienteData.correo_apoderado || "",
-        phone: clienteData.telefono_apoderado || "",
-        is_staff: clienteData.tipo_usuario === "funcionario",
-        students: hijos || [],
-      })
-    } else {
-      setGuardian(null)
-    }
-    setLoading(false)
   }
 
+  const refreshStudents = async () => {
+    if (!guardian?.id) return
+
+    try {
+      const { data: studentsData, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('guardian_id', guardian.id)
+        .eq('is_active', true)
+        .order('name')
+
+      if (error) {
+        console.error('Error loading students:', error)
+        return
+      }
+
+      setStudents(studentsData || [])
+    } catch (error) {
+      console.error('Error refreshing students:', error)
+    }
+  }
   useEffect(() => {
-    refreshUser()
-    // eslint-disable-next-line
+    // Obtener sesión inicial
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          setUser(session.user)
+          await refreshUser()
+        }
+      } catch (error) {
+        console.error('Error getting initial session:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    getInitialSession()
+
+    // Escuchar cambios de autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email)
+        
+        if (session?.user) {
+          setUser(session.user)
+          await refreshUser()
+        } else {
+          setUser(null)
+          setGuardian(null)
+          setStudents([])
+        }
+        
+        setLoading(false)
+      }
+    )
+
+    return () => subscription.unsubscribe()
   }, [])
 
+  // Refrescar estudiantes cuando cambie el guardian
+  useEffect(() => {
+    if (guardian?.id) {
+      refreshStudents()
+    }
+  }, [guardian?.id])
+
+  const value: UserContextType = {
+    user,
+    guardian,
+    students,
+    loading,
+    refreshUser,
+    refreshStudents,
+    setGuardian,
+    isStaff: guardian?.is_staff || false
+  }
+
   return (
-    <UserContext.Provider value={{ guardian, loading, refreshUser, setGuardian }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   )
 }
 
 export function useUser() {
-  const ctx = useContext(UserContext)
-  if (!ctx) throw new Error("useUser must be used within UserProvider")
-  return ctx
+  const context = useContext(UserContext)
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider')
+  }
+  return context
 }
