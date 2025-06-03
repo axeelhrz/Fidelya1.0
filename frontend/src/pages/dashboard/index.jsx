@@ -184,10 +184,10 @@ const Dashboard = () => {
               </motion.div>
           </Grid>
 
-            {/* Fila 2: Gráficos principales - Altura uniforme */}
-            <Grid item xs={12} lg={8}>
+            {/* Fila 2: Gráficos principales - Altura uniforme y misma proporción */}
+            <Grid item xs={12} md={6}>
               <motion.div variants={itemVariants}>
-                <Box sx={{ height: 400 }}>
+                <Box sx={{ height: 450 }}>
                   <MonthlySalesChart 
                     data={dashboardData.ventasMensuales} 
                     loading={loading} 
@@ -196,9 +196,9 @@ const Dashboard = () => {
               </motion.div>
             </Grid>
             
-            <Grid item xs={12} lg={4}>
+            <Grid item xs={12} md={6}>
               <motion.div variants={itemVariants}>
-                <Box sx={{ height: 400 }}>
+                <Box sx={{ height: 450 }}>
                   <StockDistributionChart 
                     data={dashboardData.stockDistribucion} 
                     loading={loading} 
@@ -207,15 +207,17 @@ const Dashboard = () => {
               </motion.div>
             </Grid>
 
-            {/* Fila 3: Lista de actividad reciente */}
+            {/* Fila 3: Actividad reciente - Extensión horizontal completa */}
             <Grid item xs={12}>
               <motion.div variants={itemVariants}>
-                <RecentActivityList 
-                  data={dashboardData.ultimosMovimientos} 
-                  loading={loading} 
+                <Box sx={{ height: 320 }}>
+                  <RecentActivityList 
+                    data={dashboardData.ultimosMovimientos} 
+                    loading={loading} 
                 />
+                </Box>
               </motion.div>
-            </Grid>
+          </Grid>
           </Grid>
         </motion.div>
       </Container>

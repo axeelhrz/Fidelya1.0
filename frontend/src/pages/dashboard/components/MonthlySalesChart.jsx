@@ -71,18 +71,22 @@ const MonthlySalesChart = ({ data, loading }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.5 }}
+      style={{ height: '100%' }}
     >
       <Card 
         sx={{ 
           height: '100%',
+                  display: 'flex',
+          flexDirection: 'column',
           background: `linear-gradient(135deg, 
             ${alpha(theme.palette.background.paper, 0.8)} 0%, 
             ${alpha(theme.palette.background.paper, 0.95)} 100%)`,
           backdropFilter: 'blur(20px)',
           border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-        }}
-      >
-        <CardContent sx={{ p: 3 }}>
+                }}
+              >
+        <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+          {/* Header */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box
@@ -91,8 +95,8 @@ const MonthlySalesChart = ({ data, loading }) => {
                   height: 40,
                   borderRadius: 2,
                   background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
-                  display: 'flex',
-                  alignItems: 'center',
+                display: 'flex',
+                alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
                 }}
@@ -118,31 +122,31 @@ const MonthlySalesChart = ({ data, loading }) => {
                 borderRadius: 1,
                 backgroundColor: alpha(theme.palette.success.main, 0.1),
               }}
-            >
+                >
               <TrendingUp sx={{ fontSize: 16, color: theme.palette.success.main }} />
               <Typography 
                 variant="caption" 
                 sx={{ 
                   color: theme.palette.success.main,
                   fontWeight: 600
-                }}
-              >
+                    }}
+                  >
                 Crecimiento
               </Typography>
             </Box>
           </Box>
-          
-          {loading ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 4 }}>
-              <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                {[...Array(6)].map((_, i) => (
-                  <Skeleton key={i} variant="rectangular" height={20} sx={{ flex: 1, borderRadius: 1 }} />
-                ))}
+          {/* Chart Content */}
+          <Box sx={{ flex: 1, minHeight: 0 }}>
+            {loading ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 4, height: '100%' }}>
+                <Skeleton variant="rectangular" height="70%" sx={{ borderRadius: 2 }} />
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  {[...Array(6)].map((_, i) => (
+                    <Skeleton key={i} variant="rectangular" height={20} sx={{ flex: 1, borderRadius: 1 }} />
+                  ))}
+                </Box>
               </Box>
-            </Box>
-          ) : (
-            <Box sx={{ height: 320, mt: 2 }}>
+            ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart 
                   data={data} 
@@ -198,8 +202,8 @@ const MonthlySalesChart = ({ data, loading }) => {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-            </Box>
-          )}
+            )}
+          </Box>
         </CardContent>
       </Card>
     </motion.div>
