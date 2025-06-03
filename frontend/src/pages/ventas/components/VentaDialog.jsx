@@ -251,7 +251,6 @@ const VentaDialog = ({ open, onClose, onSuccess, mode = 'create', venta = null }
 
   const handleNext = () => {
     if (activeStep === 0) {
-      // Validar información básica si es necesario
       setActiveStep(1);
     } else if (activeStep === 1) {
       if (formData.productos.length === 0) {

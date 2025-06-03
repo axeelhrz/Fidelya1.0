@@ -63,14 +63,14 @@ const VentasTable = ({ ventas, loading, onEdit, onView, onDelete }) => {
       return {
         date: date.toLocaleDateString('es-UY', {
           day: '2-digit',
-        month: '2-digit',
+          month: '2-digit',
           year: 'numeric'
         }),
         time: date.toLocaleTimeString('es-UY', {
           hour: '2-digit',
           minute: '2-digit'
         })
-  };
+      };
     } catch (error) {
       return { date: 'Fecha inválida', time: '' };
     }
@@ -83,13 +83,13 @@ const VentasTable = ({ ventas, loading, onEdit, onView, onDelete }) => {
           color: 'success', 
           label: 'Completada',
           icon: '✅'
-  };
+        };
       case 'borrador':
         return { 
           color: 'warning', 
           label: 'Borrador',
           icon: '📝'
-};
+        };
       case 'cancelada':
         return { 
           color: 'error', 
@@ -152,11 +152,9 @@ const VentasTable = ({ ventas, loading, onEdit, onView, onDelete }) => {
           onDelete(selectedVenta);
           break;
         case 'print':
-          // Implementar impresión
           console.log('Imprimir venta:', selectedVenta.id);
           break;
         case 'share':
-          // Implementar compartir
           console.log('Compartir venta:', selectedVenta.id);
           break;
       }

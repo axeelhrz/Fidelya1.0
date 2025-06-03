@@ -25,7 +25,6 @@ import {
   Avatar,
   Stack,
   Fade,
-  motion,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -38,6 +37,7 @@ import {
   Share as ShareIcon,
   Download as DownloadIcon,
 } from '@mui/icons-material';
+import { motion } from 'framer-motion';
 
 const VentaViewDialog = ({ open, onClose, venta }) => {
   const theme = useTheme();
@@ -477,7 +477,6 @@ const VentaViewDialog = ({ open, onClose, venta }) => {
             startIcon={<PrintIcon />}
             sx={{ borderRadius: 3 }}
             onClick={() => {
-              // Implementar impresión
               console.log('Imprimir venta:', venta.id);
             }}
           >
@@ -489,7 +488,6 @@ const VentaViewDialog = ({ open, onClose, venta }) => {
             startIcon={<ShareIcon />}
             sx={{ borderRadius: 3 }}
             onClick={() => {
-              // Implementar compartir
               console.log('Compartir venta:', venta.id);
             }}
           >

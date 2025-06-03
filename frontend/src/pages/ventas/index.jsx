@@ -39,6 +39,7 @@ import DeleteVentaDialog from './components/DeleteVentaDialog';
 const VentasPage = () => {
   const theme = useTheme();
   const { user } = useAuth();
+  
   // Estados para datos
   const [ventas, setVentas] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);
