@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import Sidebar from './Sidebar';
-const DRAWER_WIDTH = 280;
+const DRAWER_WIDTH = 72;
 const DRAWER_WIDTH_COLLAPSED = 72;
 
 const MainLayout = ({ children, title }) => {
