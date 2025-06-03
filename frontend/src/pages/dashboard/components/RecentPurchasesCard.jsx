@@ -51,10 +51,13 @@ const RecentPurchasesCard = ({ data, loading }) => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.4 }}
+      style={{ height: '100%' }}
     >
       <Card
         sx={{
           height: '100%',
+                  display: 'flex',
+          flexDirection: 'column',
           background: `linear-gradient(135deg, 
             ${alpha(theme.palette.secondary.main, 0.1)} 0%, 
             ${alpha(theme.palette.secondary.light, 0.05)} 100%)`,
@@ -63,8 +66,8 @@ const RecentPurchasesCard = ({ data, loading }) => {
           position: 'relative',
           overflow: 'hidden',
           cursor: 'pointer',
-        }}
-      >
+                }}
+              >
         {/* Elemento decorativo de fondo */}
         <Box
           sx={{
@@ -76,12 +79,23 @@ const RecentPurchasesCard = ({ data, loading }) => {
             borderRadius: '50%',
             background: `radial-gradient(circle, ${alpha(theme.palette.secondary.main, 0.1)} 0%, transparent 70%)`,
             zIndex: 0,
-          }}
+                }}
         />
 
-        <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
-            <Box>
+        <CardContent 
+          sx={{ 
+            p: 3, 
+            position: 'relative', 
+            zIndex: 1,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between'
+                }}
+              >
+          {/* Sección superior: Título e ícono */}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ flex: 1 }}>
               <Typography 
                 variant="subtitle2" 
                 sx={{ 
@@ -104,7 +118,8 @@ const RecentPurchasesCard = ({ data, loading }) => {
                   sx={{ 
                     fontWeight: 700,
                     color: theme.palette.text.primary,
-                    lineHeight: 1.2
+                    lineHeight: 1.2,
+                    fontSize: { xs: '1.75rem', sm: '2rem' }
                   }}
                 >
                   {data?.length || 0}
@@ -123,15 +138,17 @@ const RecentPurchasesCard = ({ data, loading }) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: `0 8px 20px ${alpha(theme.palette.secondary.main, 0.3)}`,
+                  flexShrink: 0
                 }}
               >
                 <LocalShipping sx={{ fontSize: 24, color: 'white' }} />
               </Box>
-            </motion.div>
+    </motion.div>
           </Box>
           
+          {/* Sección inferior: Estado */}
           {!loading && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 'auto' }}>
               <Box
                 sx={{
                   display: 'flex',

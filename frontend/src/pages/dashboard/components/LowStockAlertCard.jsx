@@ -23,6 +23,7 @@ import {
   NotificationsActive,
   TrendingDown
 } from '@mui/icons-material';
+
 const LowStockAlertCard = ({ data, loading }) => {
   const theme = useTheme();
 
@@ -56,10 +57,13 @@ const LowStockAlertCard = ({ data, loading }) => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.3 }}
+      style={{ height: '100%' }}
     >
       <Card
         sx={{
           height: '100%',
+                    display: 'flex',
+          flexDirection: 'column',
           background: hasLowStock 
             ? `linear-gradient(135deg, 
                 ${alpha(theme.palette.error.main, 0.1)} 0%, 
@@ -72,11 +76,11 @@ const LowStockAlertCard = ({ data, loading }) => {
           position: 'relative',
           overflow: 'hidden',
           cursor: 'pointer',
-        }}
-      >
+                  }}
+                >
         {/* Elemento decorativo de fondo */}
-        <Box
-          sx={{
+                    <Box
+                      sx={{
             position: 'absolute',
             top: -20,
             right: -20,
@@ -85,12 +89,23 @@ const LowStockAlertCard = ({ data, loading }) => {
             borderRadius: '50%',
             background: `radial-gradient(circle, ${alpha(hasLowStock ? theme.palette.error.main : theme.palette.success.main, 0.1)} 0%, transparent 70%)`,
             zIndex: 0,
-          }}
+                      }}
         />
 
-        <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
-            <Box>
+        <CardContent 
+          sx={{ 
+            p: 3, 
+            position: 'relative', 
+            zIndex: 1,
+            height: '100%',
+                        display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between'
+                      }}
+                    >
+          {/* Sección superior: Título e ícono */}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ flex: 1 }}>
               <Typography 
                 variant="subtitle2" 
                 sx={{ 
@@ -101,10 +116,9 @@ const LowStockAlertCard = ({ data, loading }) => {
                   fontSize: '0.75rem',
                   mb: 1
                 }}
-              >
+                  >
                 Stock Bajo
-              </Typography>
-              
+                  </Typography>
               {loading ? (
                 <Skeleton variant="text" width={60} height={40} />
               ) : (
@@ -113,7 +127,8 @@ const LowStockAlertCard = ({ data, loading }) => {
                   sx={{ 
                     fontWeight: 700,
                     color: hasLowStock ? theme.palette.error.main : theme.palette.success.main,
-                    lineHeight: 1.2
+                    lineHeight: 1.2,
+                    fontSize: { xs: '1.75rem', sm: '2rem' }
                   }}
                 >
                   {hasLowStock ? data.length : 0}
@@ -145,6 +160,7 @@ const LowStockAlertCard = ({ data, loading }) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     boxShadow: `0 8px 20px ${alpha(hasLowStock ? theme.palette.error.main : theme.palette.success.main, 0.3)}`,
+                    flexShrink: 0
                   }}
                 >
                   {hasLowStock ? (
@@ -154,11 +170,12 @@ const LowStockAlertCard = ({ data, loading }) => {
                   )}
                 </Box>
               </Badge>
-            </motion.div>
+    </motion.div>
           </Box>
           
+          {/* Sección inferior: Estado */}
           {loading ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 'auto' }}>
               <Skeleton variant="rectangular" height={20} />
               <Skeleton variant="rectangular" height={20} width="80%" />
             </Box>
@@ -171,8 +188,9 @@ const LowStockAlertCard = ({ data, loading }) => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
+                  style={{ marginTop: 'auto' }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                     <Box
                       sx={{
                         display: 'flex',
@@ -214,8 +232,9 @@ const LowStockAlertCard = ({ data, loading }) => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
+                  style={{ marginTop: 'auto' }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                     <Box
                       sx={{
                         display: 'flex',

@@ -139,59 +139,71 @@ const Dashboard = () => {
 
           {/* Grid principal del dashboard */}
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            {/* Fila 1: Tarjetas de resumen con animación escalonada */}
+            {/* Fila 1: Tarjetas de resumen principales - Altura fija y uniforme */}
             <Grid item xs={12} sm={6} lg={3}>
               <motion.div variants={itemVariants}>
-                <InventorySummaryCard 
-                  data={dashboardData.resumen} 
-                  loading={loading} 
+                <Box sx={{ height: 180 }}>
+                  <InventorySummaryCard 
+                    data={dashboardData.resumen} 
+                    loading={loading} 
                 />
+                </Box>
               </motion.div>
             </Grid>
             
             <Grid item xs={12} sm={6} lg={3}>
               <motion.div variants={itemVariants}>
-                <DailySalesCard 
-                  data={dashboardData.resumen} 
-                  loading={loading} 
+                <Box sx={{ height: 180 }}>
+                  <DailySalesCard 
+                    data={dashboardData.resumen} 
+                    loading={loading} 
                 />
-              </motion.div>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} lg={3}>
-              <motion.div variants={itemVariants}>
-                <LowStockAlertCard 
-                  data={dashboardData.stockBajo} 
-                  loading={loading} 
-                />
-              </motion.div>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} lg={3}>
-              <motion.div variants={itemVariants}>
-                <RecentPurchasesCard 
-                  data={dashboardData.comprasRecientes} 
-                  loading={loading} 
-                />
+                </Box>
               </motion.div>
             </Grid>
 
-            {/* Fila 2: Gráficos principales */}
+            <Grid item xs={12} sm={6} lg={3}>
+              <motion.div variants={itemVariants}>
+                <Box sx={{ height: 180 }}>
+                  <LowStockAlertCard 
+                    data={dashboardData.stockBajo} 
+                    loading={loading} 
+                />
+                </Box>
+              </motion.div>
+            </Grid>
+
+            <Grid item xs={12} sm={6} lg={3}>
+              <motion.div variants={itemVariants}>
+                <Box sx={{ height: 180 }}>
+                  <RecentPurchasesCard 
+                    data={dashboardData.comprasRecientes} 
+                    loading={loading} 
+                />
+                </Box>
+              </motion.div>
+          </Grid>
+
+            {/* Fila 2: Gráficos principales - Altura uniforme */}
             <Grid item xs={12} lg={8}>
               <motion.div variants={itemVariants}>
-                <MonthlySalesChart 
-                  data={dashboardData.ventasMensuales} 
-                  loading={loading} 
-                />
+                <Box sx={{ height: 400 }}>
+                  <MonthlySalesChart 
+                    data={dashboardData.ventasMensuales} 
+                    loading={loading} 
+                  />
+    </Box>
               </motion.div>
             </Grid>
             
             <Grid item xs={12} lg={4}>
               <motion.div variants={itemVariants}>
-                <StockDistributionChart 
-                  data={dashboardData.stockDistribucion} 
-                  loading={loading} 
-                />
+                <Box sx={{ height: 400 }}>
+                  <StockDistributionChart 
+                    data={dashboardData.stockDistribucion} 
+                    loading={loading} 
+                  />
+                </Box>
               </motion.div>
             </Grid>
 

@@ -51,10 +51,13 @@ const DailySalesCard = ({ data, loading }) => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.2 }}
+      style={{ height: '100%' }}
     >
       <Card
         sx={{
           height: '100%',
+                  display: 'flex',
+          flexDirection: 'column',
           background: `linear-gradient(135deg, 
             ${alpha(theme.palette.success.main, 0.1)} 0%, 
             ${alpha(theme.palette.success.light, 0.05)} 100%)`,
@@ -63,8 +66,8 @@ const DailySalesCard = ({ data, loading }) => {
           position: 'relative',
           overflow: 'hidden',
           cursor: 'pointer',
-        }}
-      >
+                }}
+              >
         {/* Elemento decorativo de fondo */}
         <Box
           sx={{
@@ -76,12 +79,23 @@ const DailySalesCard = ({ data, loading }) => {
             borderRadius: '50%',
             background: `radial-gradient(circle, ${alpha(theme.palette.success.main, 0.1)} 0%, transparent 70%)`,
             zIndex: 0,
-          }}
+                }}
         />
 
-        <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
-            <Box>
+        <CardContent 
+          sx={{ 
+            p: 3, 
+            position: 'relative', 
+            zIndex: 1,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between'
+                }}
+              >
+          {/* Sección superior: Título e ícono */}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ flex: 1 }}>
               <Typography 
                 variant="subtitle2" 
                 sx={{ 
@@ -105,7 +119,7 @@ const DailySalesCard = ({ data, loading }) => {
                     fontWeight: 700,
                     color: theme.palette.text.primary,
                     lineHeight: 1.2,
-                    fontSize: { xs: '1.5rem', md: '2rem' }
+                    fontSize: { xs: '1.25rem', sm: '1.5rem' }
                   }}
                 >
                   {formatCurrency(data?.ventasDelDia || 0)}
@@ -124,15 +138,17 @@ const DailySalesCard = ({ data, loading }) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: `0 8px 20px ${alpha(theme.palette.success.main, 0.3)}`,
+                  flexShrink: 0
                 }}
               >
                 <AttachMoney sx={{ fontSize: 24, color: 'white' }} />
               </Box>
-            </motion.div>
+    </motion.div>
           </Box>
           
+          {/* Sección inferior: Estado */}
           {!loading && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 'auto' }}>
               <Box
                 sx={{
                   display: 'flex',
