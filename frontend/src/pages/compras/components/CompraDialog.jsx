@@ -48,7 +48,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { purchaseService } from '../../../services/purchaseService';
 import { proveedorService } from '../../../services/proveedorService';
-import { inventoryService } from '../../../services/inventoryService';
+import inventoryService from '../../../services/inventoryService';
 
 const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null }) => {
   const theme = useTheme();
