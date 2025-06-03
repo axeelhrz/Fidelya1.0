@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline, Box, CircularProgress } from '@mui/material';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import theme from './theme/theme';
+import createCustomTheme from './theme/theme';
 
 // Importar páginas
 import LoginPage from './pages/auth/LoginPage';
@@ -22,6 +22,9 @@ import NotificacionesPage from './pages/Notificaciones';
 // Componente de ruta protegida
 import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './components/layout/MainLayout';
+
+// Crear el tema
+const theme = createCustomTheme('light');
 
 // Componente de carga
 const LoadingScreen = () => (

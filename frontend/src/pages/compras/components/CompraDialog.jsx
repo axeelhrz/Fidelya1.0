@@ -59,11 +59,11 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
   
   // Estados del formulario
   const [formData, setFormData] = useState({
-      proveedor_id: '',
+    proveedor_id: '',
     fecha: new Date().toISOString().split('T')[0],
     numero_comprobante: '',
     metodo_pago: 'efectivo',
-      observaciones: '',
+    observaciones: '',
     detalles: []
   });
 
@@ -90,6 +90,7 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
       }
     }
   }, [open, mode, compra]);
+
   const cargarDatos = async () => {
     try {
       const [proveedoresData, productosData] = await Promise.all([
@@ -115,7 +116,7 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
         [field]: null
       }));
     }
-};
+  };
 
   const handleProductoChange = (field, value) => {
     setNuevoProducto(prev => {
@@ -139,10 +140,14 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
 
     const producto = productos.find(p => p.id === nuevoProducto.producto_id);
     const detalle = {
-      ...nuevoProducto,
+      id: nuevoProducto.producto_id, // Usar el ID del producto para el backend
+      producto_id: nuevoProducto.producto_id,
+      cantidad: parseFloat(nuevoProducto.cantidad),
+      precio_unitario: parseFloat(nuevoProducto.precio_unitario),
+      subtotal: parseFloat(nuevoProducto.subtotal),
       producto_nombre: producto?.nombre || '',
-      id: Date.now() // ID temporal para la tabla
-  };
+      temp_id: Date.now() // ID temporal solo para la tabla del frontend
+    };
 
     setFormData(prev => ({
       ...prev,
@@ -191,10 +196,25 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
 
     setLoading(true);
     try {
+      // Preparar datos para el backend - cambiar 'detalles' por 'productos'
       const compraData = {
-        ...formData,
-        total: calcularTotal()
-};
+        proveedor_id: formData.proveedor_id,
+        fecha: formData.fecha,
+        numero_comprobante: formData.numero_comprobante,
+        metodo_pago: formData.metodo_pago,
+        observaciones: formData.observaciones,
+        productos: formData.detalles.map(detalle => ({
+          id: detalle.producto_id,
+          cantidad: detalle.cantidad,
+          precio_unitario: detalle.precio_unitario,
+          subtotal: detalle.subtotal
+        })),
+        total: calcularTotal(),
+        subtotal: calcularTotal(), // El backend también espera subtotal
+        impuestos: 0 // Agregar impuestos si es necesario
+      };
+
+      console.log('Enviando datos de compra:', compraData);
 
       if (mode === 'create') {
         await purchaseService.crearCompra(compraData);
@@ -679,7 +699,7 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
                           <AnimatePresence>
                             {formData.detalles.map((detalle, index) => (
                               <motion.tr
-                                key={detalle.id || index}
+                                key={detalle.temp_id || index}
                                 component={TableRow}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -806,7 +826,9 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
                 textTransform: 'none',
                 fontWeight: 600,
                 background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                boxShadow: `0 4px 12px ${alpha(theme
+
+.palette.primary.main, 0.3)}`,
                 '&:hover': {
                   boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
                 },
