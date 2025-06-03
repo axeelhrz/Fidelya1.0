@@ -6,36 +6,29 @@ import {
   Paper,
   Alert,
   Snackbar,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Menu,
-  MenuItem,
-  Avatar,
-  Chip,
   Fab,
-  useTheme,
   SpeedDial,
   SpeedDialAction,
   SpeedDialIcon,
+  Container,
+  Fade,
+  useTheme,
+  alpha,
+  Breadcrumbs,
+  Link,
+  Chip,
 } from '@mui/material';
 import {
   Add as AddIcon,
   ShoppingCart as ShoppingCartIcon,
-  AccountCircle,
-  ExitToApp,
-  Dashboard as DashboardIcon,
-  Notifications,
-  Refresh as RefreshIcon,
   Business as BusinessIcon,
+  Refresh as RefreshIcon,
   Home as HomeIcon,
-  Inventory as InventoryIcon,
-  People as PeopleIcon,
-  Receipt as ReceiptIcon,
+  TrendingUp as TrendingUpIcon,
+  Assessment as AssessmentIcon,
 } from '@mui/icons-material';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { purchaseService } from '../../services/purchaseService';
 
 // Importar componentes específicos de compras
@@ -50,9 +43,6 @@ import SuppliersManager from './components/SuppliersManager';
 const ComprasPage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const [anchorEl, setAnchorEl] = useState(null);
-  
   // Estados para datos
   const [compras, setCompras] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);
@@ -101,23 +91,6 @@ const ComprasPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleLogout = () => {
-    logout();
-    handleMenuClose();
-  };
-
-  const handleNavigation = (path) => {
-    navigate(path);
   };
 
   const handleCreateCompra = () => {
@@ -187,133 +160,225 @@ const ComprasPage = () => {
       name: 'Gestionar Proveedores',
       onClick: handleOpenSuppliersManager,
     },
+    {
+      icon: <RefreshIcon />,
+      name: 'Actualizar Datos',
+      onClick: cargarDatos,
+          },
   ];
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.1
+      }
+    }
+};
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    }
+  };
+
   return (
-    <Box sx={{ flexGrow: 1, minHeight: '100vh', backgroundColor: '#F5F5F5' }}>
-      {/* AppBar */}
-      <AppBar position="static" sx={{ backgroundColor: '#4CAF50', boxShadow: 2 }}>
-        <Toolbar>
-          <ShoppingCartIcon sx={{ mr: 2 }} />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
-            Frutería Nina - Gestión de Compras
-          </Typography>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {/* Botones de navegación */}
-            <IconButton color="inherit" onClick={() => handleNavigation('/dashboard')}>
-              <HomeIcon />
-            </IconButton>
-            
-            <IconButton color="inherit" onClick={() => handleNavigation('/inventario')}>
-              <InventoryIcon />
-            </IconButton>
-            
-            <IconButton color="inherit" onClick={() => handleNavigation('/clientes')}>
-              <PeopleIcon />
-            </IconButton>
-            
-            <IconButton color="inherit" onClick={() => handleNavigation('/ventas')}>
-              <ReceiptIcon />
-            </IconButton>
-            
-            <IconButton color="inherit" onClick={cargarDatos}>
-              <RefreshIcon />
-            </IconButton>
-            
-            <IconButton color="inherit">
-              <Notifications />
-            </IconButton>
-            
-            <Chip
-              label={user?.rol || 'Usuario'}
-              sx={{
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                fontWeight: 500
-              }}
-              size="small"
-            />
-            
-            <IconButton
-              size="large"
-              onClick={handleMenuOpen}
-              color="inherit"
-            >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: '#FF9800', fontWeight: 600 }}>
-                {user?.nombre?.charAt(0).toUpperCase()}
-              </Avatar>
-            </IconButton>
-          </Box>
-
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-            PaperProps={{
-              sx: { mt: 1, minWidth: 180 }
-            }}
-          >
-            <MenuItem onClick={handleMenuClose}>
-              <AccountCircle sx={{ mr: 1 }} />
-              Mi Perfil
-            </MenuItem>
-            <MenuItem onClick={handleLogout}>
-              <ExitToApp sx={{ mr: 1 }} />
-              Cerrar Sesión
-            </MenuItem>
-          </Menu>
-        </Toolbar>
-      </AppBar>
-
-      {/* Contenido principal */}
-      <Box sx={{ p: 3 }}>
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha(theme.palette.secondary.main, 0.02)} 100%)`,
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '200px',
+          background: `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.05)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
+          zIndex: 0,
+        }
+      }}
+    >
+      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1, py: 3 }}>
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
         >
-          {/* Encabezado */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 600, mb: 1 }}>
-              Gestión de Compras
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Administra las compras a proveedores y controla el inventario automáticamente
-            </Typography>
-          </Box>
+          {/* Header con Breadcrumbs */}
+          <motion.div variants={itemVariants}>
+            <Box sx={{ mb: 4 }}>
+              <Breadcrumbs 
+                aria-label="breadcrumb" 
+                sx={{ 
+                  mb: 2,
+                  '& .MuiBreadcrumbs-separator': {
+                    color: 'text.secondary'
+                  }
+                }}
+              >
+                <Link 
+                  underline="hover" 
+                  color="inherit" 
+                  href="/dashboard"
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    '&:hover': { color: 'primary.main' }
+                  }}
+                >
+                  <HomeIcon sx={{ mr: 0.5, fontSize: 16 }} />
+                  Dashboard
+                </Link>
+                <Typography 
+                  color="text.primary" 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    fontWeight: 600
+                  }}
+                >
+                  <ShoppingCartIcon sx={{ mr: 0.5, fontSize: 16 }} />
+                  Gestión de Compras
+                </Typography>
+              </Breadcrumbs>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+                <Box>
+                  <Typography 
+                    variant="h4" 
+                    component="h1" 
+                    sx={{ 
+                      fontWeight: 700, 
+                      mb: 1,
+                      background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.success.main} 100%)`,
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    Gestión de Compras
+                  </Typography>
+                  <Typography 
+                    variant="body1" 
+                    color="text.secondary"
+                    sx={{ maxWidth: 600 }}
+                  >
+                    Administra las compras a proveedores, controla el inventario automáticamente y mantén un registro detallado de todas las transacciones
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                  <Chip
+                    icon={<TrendingUpIcon />}
+                    label={`${compras?.length || 0} Compras`}
+                    color="primary"
+                    variant="outlined"
+                    sx={{ fontWeight: 600 }}
+                  />
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleCreateCompra}
+                    sx={{
+                      borderRadius: 3,
+                      px: 3,
+                      py: 1.5,
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                      boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+                      },
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    Nueva Compra
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          </motion.div>
 
           {/* Estadísticas */}
-          <ComprasStats 
-            estadisticas={estadisticas} 
-            loading={loading} 
-          />
+          <motion.div variants={itemVariants}>
+            <ComprasStats 
+              estadisticas={estadisticas} 
+              loading={loading} 
+            />
+          </motion.div>
 
           {/* Filtros */}
-          <Paper sx={{ p: 3, mb: 3, borderRadius: 3 }}>
-            <ComprasFilters 
-              filtros={filtros}
-              onFiltrosChange={handleFiltrosChange}
-            />
-          </Paper>
+          <motion.div variants={itemVariants}>
+            <Paper 
+              sx={{ 
+                p: 3, 
+                mb: 3, 
+                borderRadius: 4,
+                background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)} 0%, ${alpha(theme.palette.background.paper, 0.95)} 100%)`,
+                backdropFilter: 'blur(10px)',
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.08)}`,
+              }}
+            >
+              <ComprasFilters 
+                filtros={filtros}
+                onFiltrosChange={handleFiltrosChange}
+              />
+            </Paper>
+          </motion.div>
 
           {/* Tabla de compras */}
-          <Paper sx={{ borderRadius: 3, overflow: 'hidden' }}>
-            <ComprasTable
-              compras={compras}
-              loading={loading}
-              onEdit={handleEditCompra}
-              onView={handleViewCompra}
-              onDelete={handleDeleteCompra}
-            />
-          </Paper>
+          <motion.div variants={itemVariants}>
+            <Paper 
+              sx={{ 
+                borderRadius: 4, 
+                overflow: 'hidden',
+                background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)} 0%, ${alpha(theme.palette.background.paper, 0.95)} 100%)`,
+                backdropFilter: 'blur(10px)',
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.08)}`,
+              }}
+            >
+              <ComprasTable
+                compras={compras}
+                loading={loading}
+                onEdit={handleEditCompra}
+                onView={handleViewCompra}
+                onDelete={handleDeleteCompra}
+              />
+            </Paper>
+          </motion.div>
         </motion.div>
-      </Box>
+      </Container>
 
       {/* SpeedDial para acciones rápidas */}
       <SpeedDial
         ariaLabel="Acciones de compras"
-        sx={{ position: 'fixed', bottom: 24, right: 24 }}
+        sx={{ 
+          position: 'fixed', 
+          bottom: 24, 
+          right: 24,
+          '& .MuiFab-primary': {
+            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+            boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.3)}`,
+            '&:hover': {
+              transform: 'scale(1.1)',
+              boxShadow: `0 12px 35px ${alpha(theme.palette.primary.main, 0.4)}`,
+            },
+          }
+        }}
         icon={<SpeedDialIcon />}
         open={speedDialOpen}
         onOpen={() => setSpeedDialOpen(true)}
@@ -325,6 +390,11 @@ const ComprasPage = () => {
             icon={action.icon}
             tooltipTitle={action.name}
             onClick={action.onClick}
+            sx={{
+              '& .MuiFab-primary': {
+                background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
+              }
+            }}
           />
         ))}
       </SpeedDial>
@@ -384,27 +454,65 @@ const ComprasPage = () => {
       />
 
       {/* Snackbars para notificaciones */}
-      <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        onClose={handleCloseError}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
-          {error}
-        </Alert>
-      </Snackbar>
+      <AnimatePresence>
+        {error && (
+          <Snackbar
+            open={!!error}
+            autoHideDuration={6000}
+            onClose={handleCloseError}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.9 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <Alert 
+                onClose={handleCloseError} 
+                severity="error" 
+                sx={{ 
+                  width: '100%',
+                  borderRadius: 3,
+                  boxShadow: theme.shadows[8]
+                }}
+              >
+                {error}
+              </Alert>
+            </motion.div>
+          </Snackbar>
+        )}
+      </AnimatePresence>
 
-      <Snackbar
-        open={!!success}
-        autoHideDuration={4000}
-        onClose={handleCloseSuccess}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseSuccess} severity="success" sx={{ width: '100%' }}>
-          {success}
-        </Alert>
-      </Snackbar>
+      <AnimatePresence>
+        {success && (
+          <Snackbar
+            open={!!success}
+            autoHideDuration={4000}
+            onClose={handleCloseSuccess}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.9 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <Alert 
+                onClose={handleCloseSuccess} 
+                severity="success" 
+                sx={{ 
+                  width: '100%',
+                  borderRadius: 3,
+                  boxShadow: theme.shadows[8]
+                }}
+              >
+                {success}
+              </Alert>
+            </motion.div>
+          </Snackbar>
+        )}
+      </AnimatePresence>
     </Box>
   );
 };
