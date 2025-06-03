@@ -4,103 +4,92 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   TextField,
+  Button,
   Grid,
-  Box,
   Typography,
+  Box,
   IconButton,
-  Autocomplete,
+  Divider,
+  Chip,
+  Avatar,
+  Card,
+  CardContent,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Chip,
-  Alert,
-  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   InputAdornment,
+  Tooltip,
+  Fade,
+  useTheme,
+  alpha,
+  Autocomplete,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   Add as AddIcon,
   Delete as DeleteIcon,
   ShoppingCart as ShoppingCartIcon,
+  Business as BusinessIcon,
   Receipt as ReceiptIcon,
-  AttachMoney as MoneyIcon,
+  AttachMoney as AttachMoneyIcon,
+  CalendarToday as CalendarIcon,
+  Inventory as InventoryIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import { purchaseService } from '../../../services/purchaseService';
 import { proveedorService } from '../../../services/proveedorService';
-import inventoryService from '../../../services/inventoryService';
-
-// Esquema de validación
-const schema = yup.object().shape({
-  proveedor_id: yup.number().required('El proveedor es requerido'),
-  fecha: yup.string().required('La fecha es requerida'),
-  nro_comprobante: yup.string(),
-  observaciones: yup.string(),
-  productos: yup.array().of(
-    yup.object().shape({
-      producto_id: yup.number().required('Producto requerido'),
-      cantidad: yup.number().positive('Cantidad debe ser mayor a 0').required('Cantidad requerida'),
-      precio_unitario: yup.number().positive('Precio debe ser mayor a 0').required('Precio requerido'),
-    })
-  ).min(1, 'Debe agregar al menos un producto'),
-});
+import { inventoryService } from '../../../services/inventoryService';
 
 const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null }) => {
+  const theme = useTheme();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [proveedores, setProveedores] = useState([]);
   const [productos, setProductos] = useState([]);
+  const [errors, setErrors] = useState({});
   
-  const {
-    control,
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-    formState: { errors }
-  } = useForm({
-    resolver: yupResolver(schema),
-    defaultValues: {
+  // Estados del formulario
+  const [formData, setFormData] = useState({
       proveedor_id: '',
     fecha: new Date().toISOString().split('T')[0],
-      nro_comprobante: '',
+    numero_comprobante: '',
+    metodo_pago: 'efectivo',
       observaciones: '',
-      productos: [{ producto_id: '', cantidad: '', precio_unitario: '' }]
-    }
+    detalles: []
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'productos'
+  // Estado para nuevo producto
+  const [nuevoProducto, setNuevoProducto] = useState({
+    producto_id: '',
+    cantidad: '',
+    precio_unitario: '',
+    subtotal: 0
   });
 
-  const watchedProductos = watch('productos');
   useEffect(() => {
     if (open) {
       cargarDatos();
       if (mode === 'edit' && compra) {
-        cargarDatosCompra();
-      } else {
-        reset({
-          proveedor_id: '',
-      fecha: new Date().toISOString().split('T')[0],
-          nro_comprobante: '',
-          observaciones: '',
-          productos: [{ producto_id: '', cantidad: '', precio_unitario: '' }]
-    });
+        setFormData({
+          proveedor_id: compra.proveedor_id || '',
+          fecha: compra.fecha ? compra.fecha.split('T')[0] : new Date().toISOString().split('T')[0],
+          numero_comprobante: compra.numero_comprobante || '',
+          metodo_pago: compra.metodo_pago || 'efectivo',
+          observaciones: compra.observaciones || '',
+          detalles: compra.detalles || []
+        });
       }
     }
-  }, [open, mode, compra, reset]);
-
+  }, [open, mode, compra]);
   const cargarDatos = async () => {
     try {
       const [proveedoresData, productosData] = await Promise.all([
@@ -111,399 +100,728 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
       setProductos(productosData);
     } catch (error) {
       console.error('Error cargando datos:', error);
-      setError('Error cargando datos necesarios');
     }
   };
 
-  const cargarDatosCompra = async () => {
-    try {
-      const compraDetalle = await purchaseService.obtenerCompra(compra.id);
-      reset({
-        proveedor_id: compraDetalle.proveedor_id,
-        fecha: compraDetalle.fecha,
-        nro_comprobante: compraDetalle.nro_comprobante || '',
-        observaciones: compraDetalle.observaciones || '',
-        productos: compraDetalle.productos.map(p => ({
-          producto_id: p.producto_id,
-          cantidad: p.cantidad,
-          precio_unitario: p.precio_unitario
-        }))
-      });
-    } catch (error) {
-      console.error('Error cargando compra:', error);
-      setError('Error cargando datos de la compra');
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    // Limpiar error del campo
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: null
+      }));
     }
 };
 
-  const onSubmit = async (data) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      if (mode === 'create') {
-        await purchaseService.crearCompra(data);
-      } else {
-        await purchaseService.actualizarCompra(compra.id, data);
+  const handleProductoChange = (field, value) => {
+    setNuevoProducto(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      // Calcular subtotal automáticamente
+      if (field === 'cantidad' || field === 'precio_unitario') {
+        const cantidad = parseFloat(updated.cantidad) || 0;
+        const precio = parseFloat(updated.precio_unitario) || 0;
+        updated.subtotal = cantidad * precio;
       }
+      
+      return updated;
+    });
+  };
+
+  const agregarProducto = () => {
+    if (!nuevoProducto.producto_id || !nuevoProducto.cantidad || !nuevoProducto.precio_unitario) {
+      return;
+    }
+
+    const producto = productos.find(p => p.id === nuevoProducto.producto_id);
+    const detalle = {
+      ...nuevoProducto,
+      producto_nombre: producto?.nombre || '',
+      id: Date.now() // ID temporal para la tabla
+  };
+
+    setFormData(prev => ({
+      ...prev,
+      detalles: [...prev.detalles, detalle]
+    }));
+
+    // Limpiar formulario de producto
+    setNuevoProducto({
+      producto_id: '',
+      cantidad: '',
+      precio_unitario: '',
+      subtotal: 0
+    });
+  };
+
+  const eliminarProducto = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      detalles: prev.detalles.filter((_, i) => i !== index)
+    }));
+  };
+
+  const calcularTotal = () => {
+    return formData.detalles.reduce((total, detalle) => total + (detalle.subtotal || 0), 0);
+  };
+
+  const validarFormulario = () => {
+    const newErrors = {};
+
+    if (!formData.proveedor_id) {
+      newErrors.proveedor_id = 'Selecciona un proveedor';
+    }
+    if (!formData.fecha) {
+      newErrors.fecha = 'Ingresa la fecha';
+    }
+    if (formData.detalles.length === 0) {
+      newErrors.detalles = 'Agrega al menos un producto';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validarFormulario()) return;
+
+    setLoading(true);
+    try {
+      const compraData = {
+        ...formData,
+        total: calcularTotal()
+};
+
+      if (mode === 'create') {
+        await purchaseService.crearCompra(compraData);
+      } else {
+        await purchaseService.actualizarCompra(compra.id, compraData);
+      }
+
       onSuccess();
+      handleClose();
     } catch (error) {
       console.error('Error guardando compra:', error);
-      setError(error.message || 'Error al guardar la compra');
     } finally {
       setLoading(false);
     }
   };
 
-  const agregarProducto = () => {
-    append({ producto_id: '', cantidad: '', precio_unitario: '' });
+  const handleClose = () => {
+    setFormData({
+      proveedor_id: '',
+      fecha: new Date().toISOString().split('T')[0],
+      numero_comprobante: '',
+      metodo_pago: 'efectivo',
+      observaciones: '',
+      detalles: []
+    });
+    setNuevoProducto({
+      producto_id: '',
+      cantidad: '',
+      precio_unitario: '',
+      subtotal: 0
+    });
+    setErrors({});
+    onClose();
   };
 
-  const eliminarProducto = (index) => {
-    if (fields.length > 1) {
-      remove(index);
+  const dialogVariants = {
+    hidden: { opacity: 0, scale: 0.8, y: 50 },
+    visible: { 
+      opacity: 1, 
+      scale: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      scale: 0.8, 
+      y: 50,
+      transition: { duration: 0.2 }
     }
   };
 
-  const calcularSubtotal = (cantidad, precio) => {
-    const cant = parseFloat(cantidad) || 0;
-    const prec = parseFloat(precio) || 0;
-    return cant * prec;
-  };
-
-  const calcularTotal = () => {
-    return watchedProductos.reduce((total, producto) => {
-      return total + calcularSubtotal(producto.cantidad, producto.precio_unitario);
-    }, 0);
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(amount || 0);
-  };
-
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="lg"
-      fullWidth
-      PaperProps={{
-        sx: { borderRadius: 3, maxHeight: '90vh' }
-      }}
-    >
-      <DialogTitle sx={{ pb: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <ShoppingCartIcon sx={{ mr: 2, color: 'primary.main' }} />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              {mode === 'create' ? 'Nueva Compra' : 'Editar Compra'}
-            </Typography>
-          </Box>
-          <IconButton onClick={onClose} size="small">
-            <CloseIcon />
-          </IconButton>
-        </Box>
-      </DialogTitle>
-
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogContent sx={{ pt: 2 }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          {/* Información básica */}
-          <Paper sx={{ p: 3, mb: 3, borderRadius: 2, bgcolor: 'grey.50' }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Información de la Compra
-            </Typography>
-            
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <Controller
-                  name="proveedor_id"
-                  control={control}
-                  render={({ field }) => (
-                    <Autocomplete
-                      {...field}
-                      options={proveedores}
-                      getOptionLabel={(option) => option.nombre || ''}
-                      value={proveedores.find(p => p.id === field.value) || null}
-                      onChange={(event, newValue) => {
-                        field.onChange(newValue?.id || '');
-                      }}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Proveedor *"
-                          error={!!errors.proveedor_id}
-                          helperText={errors.proveedor_id?.message}
-                          fullWidth
-                        />
-                      )}
-                      renderOption={(props, option) => (
-                        <Box component="li" {...props}>
-                          <Box>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                              {option.nombre}
-                            </Typography>
-                            {option.rut && (
-                              <Typography variant="caption" color="text.secondary">
-                                RUT: {option.rut}
-                              </Typography>
-                            )}
-                          </Box>
-                        </Box>
-                      )}
-                    />
-                  )}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={3}>
-                <Controller
-                  name="fecha"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Fecha *"
-                      type="date"
-                      error={!!errors.fecha}
-                      helperText={errors.fecha?.message}
-                      fullWidth
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  )}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={3}>
-                <Controller
-                  name="nro_comprobante"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Nº Comprobante"
-                      placeholder="Ej: FAC-001234"
-                      fullWidth
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <ReceiptIcon sx={{ color: 'text.secondary' }} />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  )}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Controller
-                  name="observaciones"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Observaciones"
-                      multiline
-                      rows={2}
-                      placeholder="Notas adicionales sobre la compra..."
-                      fullWidth
-                    />
-                  )}
-                />
-              </Grid>
-            </Grid>
-          </Paper>
-
-          {/* Productos */}
-          <Paper sx={{ p: 3, borderRadius: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Productos
-              </Typography>
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={agregarProducto}
-                size="small"
+    <AnimatePresence>
+      {open && (
+        <Dialog
+          open={open}
+          onClose={handleClose}
+          maxWidth="lg"
+          fullWidth
+          PaperProps={{
+            component: motion.div,
+            variants: dialogVariants,
+            initial: "hidden",
+            animate: "visible",
+            exit: "exit",
+            sx: {
+              borderRadius: 4,
+              background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.95)} 0%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`,
+              backdropFilter: 'blur(20px)',
+              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              boxShadow: `0 24px 48px ${alpha(theme.palette.common.black, 0.15)}`,
+            }
+          }}
+          BackdropProps={{
+            sx: {
+              backgroundColor: alpha(theme.palette.common.black, 0.7),
+              backdropFilter: 'blur(8px)',
+            }
+          }}
+        >
+          {/* Header del diálogo */}
+          <DialogTitle
+            sx={{
+              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+              color: 'white',
+              p: 3,
+              position: 'relative',
+              overflow: 'hidden',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="4"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+                opacity: 0.3,
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar
+                  sx={{
+                    bgcolor: alpha(theme.palette.common.white, 0.2),
+                    color: 'white',
+                    width: 48,
+                    height: 48,
+                  }}
+                >
+                  <ShoppingCartIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+                    {mode === 'create' ? 'Nueva Compra' : 'Editar Compra'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    {mode === 'create' 
+                      ? 'Registra una nueva compra a proveedor'
+                      : `Modificar compra #${compra?.id || ''}`
+                    }
+                  </Typography>
+                </Box>
+              </Box>
+              <IconButton
+                onClick={handleClose}
+                sx={{
+                  color: 'white',
+                  bgcolor: alpha(theme.palette.common.white, 0.1),
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.common.white, 0.2),
+                    transform: 'rotate(90deg)',
+                  },
+                  transition: 'all 0.3s ease',
+                }}
               >
-                Agregar Producto
-              </Button>
+                <CloseIcon />
+              </IconButton>
             </Box>
+          </DialogTitle>
 
-            <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ bgcolor: 'grey.100' }}>
-                    <TableCell sx={{ fontWeight: 600 }}>Producto</TableCell>
-                    <TableCell sx={{ fontWeight: 600, width: 120 }}>Cantidad</TableCell>
-                    <TableCell sx={{ fontWeight: 600, width: 120 }}>Precio Unit.</TableCell>
-                    <TableCell sx={{ fontWeight: 600, width: 120 }}>Subtotal</TableCell>
-                    <TableCell sx={{ fontWeight: 600, width: 60 }}>Acción</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <AnimatePresence>
-                    {fields.map((field, index) => (
-                      <motion.tr
-                        key={field.id}
-                        component={TableRow}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
+          <DialogContent sx={{ p: 0 }}>
+            <Box sx={{ p: 3 }}>
+              {/* Información general */}
+              <Card 
+                sx={{ 
+                  mb: 3,
+                  borderRadius: 3,
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.05)}`,
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <BusinessIcon sx={{ color: 'primary.main', mr: 1 }} />
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      Información General
+                    </Typography>
+                  </Box>
+
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                      <Autocomplete
+                        value={proveedores.find(p => p.id === formData.proveedor_id) || null}
+                        onChange={(event, newValue) => {
+                          handleInputChange('proveedor_id', newValue?.id || '');
+                        }}
+                        options={proveedores}
+                        getOptionLabel={(option) => option.nombre || ''}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Proveedor *"
+                            error={!!errors.proveedor_id}
+                            helperText={errors.proveedor_id}
+                            InputProps={{
+                              ...params.InputProps,
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <BusinessIcon color="action" />
+                                </InputAdornment>
+                              ),
+                            }}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: 3,
+                              }
+                            }}
+                          />
+                        )}
+                        renderOption={(props, option) => (
+                          <Box component="li" {...props}>
+                            <Avatar
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                mr: 2,
+                                bgcolor: 'primary.main',
+                                fontSize: '0.875rem',
+                              }}
+                            >
+                              {option.nombre?.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                {option.nombre}
+                              </Typography>
+                              {option.rut && (
+                                <Typography variant="caption" color="text.secondary">
+                                  RUT: {option.rut}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        type="date"
+                        label="Fecha de compra *"
+                        value={formData.fecha}
+                        onChange={(e) => handleInputChange('fecha', e.target.value)}
+                        error={!!errors.fecha}
+                        helperText={errors.fecha}
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <CalendarIcon color="action" />
+                            </InputAdornment>
+                          ),
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 3,
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Número de comprobante"
+                        value={formData.numero_comprobante}
+                        onChange={(e) => handleInputChange('numero_comprobante', e.target.value)}
+                        placeholder="Ej: FAC-001234"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <ReceiptIcon color="action" />
+                            </InputAdornment>
+                          ),
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 3,
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth>
+                        <InputLabel>Método de pago</InputLabel>
+                        <Select
+                          value={formData.metodo_pago}
+                          onChange={(e) => handleInputChange('metodo_pago', e.target.value)}
+                          label="Método de pago"
+                          startAdornment={
+                            <InputAdornment position="start">
+                              <AttachMoneyIcon color="action" sx={{ ml: 1 }} />
+                            </InputAdornment>
+                          }
+                          sx={{
+                            borderRadius: 3,
+                          }}
+                        >
+                          <MenuItem value="efectivo">Efectivo</MenuItem>
+                          <MenuItem value="transferencia">Transferencia</MenuItem>
+                          <MenuItem value="cheque">Cheque</MenuItem>
+                          <MenuItem value="credito">Crédito</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={3}
+                        label="Observaciones"
+                        value={formData.observaciones}
+                        onChange={(e) => handleInputChange('observaciones', e.target.value)}
+                        placeholder="Notas adicionales sobre la compra..."
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 3,
+                          }
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+
+              {/* Agregar productos */}
+              <Card 
+                sx={{ 
+                  mb: 3,
+                  borderRadius: 3,
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.05)}`,
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <InventoryIcon sx={{ color: 'primary.main', mr: 1 }} />
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      Agregar Productos
+                    </Typography>
+                  </Box>
+
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} md={4}>
+                      <Autocomplete
+                        value={productos.find(p => p.id === nuevoProducto.producto_id) || null}
+                        onChange={(event, newValue) => {
+                          handleProductoChange('producto_id', newValue?.id || '');
+                        }}
+                        options={productos}
+                        getOptionLabel={(option) => option.nombre || ''}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Producto"
+                            size="small"
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: 2,
+                              }
+                            }}
+                          />
+                        )}
+                        renderOption={(props, option) => (
+                          <Box component="li" {...props}>
+                            <Avatar
+                              sx={{
+                                width: 24,
+                                height: 24,
+                                mr: 1,
+                                bgcolor: 'secondary.main',
+                                fontSize: '0.75rem',
+                              }}
+                            >
+                              {option.nombre?.charAt(0).toUpperCase()}
+                            </Avatar>
+                            {option.nombre}
+                          </Box>
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={2}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="number"
+                        label="Cantidad"
+                        value={nuevoProducto.cantidad}
+                        onChange={(e) => handleProductoChange('cantidad', e.target.value)}
+                        inputProps={{ min: 0, step: 0.01 }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={2}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="number"
+                        label="Precio unitario"
+                        value={nuevoProducto.precio_unitario}
+                        onChange={(e) => handleProductoChange('precio_unitario', e.target.value)}
+                        inputProps={{ min: 0, step: 0.01 }}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={2}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Subtotal"
+                        value={nuevoProducto.subtotal.toFixed(2)}
+                        InputProps={{
+                          readOnly: true,
+                          startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                            bgcolor: alpha(theme.palette.success.main, 0.05),
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={2}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        onClick={agregarProducto}
+                        disabled={!nuevoProducto.producto_id || !nuevoProducto.cantidad || !nuevoProducto.precio_unitario}
+                        startIcon={<AddIcon />}
+                        sx={{
+                          borderRadius: 2,
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`,
+                        }}
                       >
-                        <TableCell>
-                          <Controller
-                            name={`productos.${index}.producto_id`}
-                            control={control}
-                            render={({ field: productField }) => (
-                              <Autocomplete
-                                {...productField}
-                                options={productos}
-                                getOptionLabel={(option) => option.nombre || ''}
-                                value={productos.find(p => p.id === productField.value) || null}
-                                onChange={(event, newValue) => {
-                                  productField.onChange(newValue?.id || '');
-                                  if (newValue) {
-                                    setValue(`productos.${index}.precio_unitario`, newValue.precio_unitario || '');
+                        Agregar
+                      </Button>
+                    </Grid>
+                  </Grid>
+
+                  {errors.detalles && (
+                    <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                      {errors.detalles}
+                    </Typography>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Lista de productos */}
+              {formData.detalles.length > 0 && (
+                <Card 
+                  sx={{ 
+                    mb: 3,
+                    borderRadius: 3,
+                    border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                    boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.05)}`,
+                  }}
+                >
+                  <CardContent sx={{ p: 0 }}>
+                    <Box sx={{ p: 3, pb: 0 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                        Productos Agregados
+                      </Typography>
+                    </Box>
+
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+                            <TableCell sx={{ fontWeight: 600 }}>Producto</TableCell>
+                            <TableCell align="center" sx={{ fontWeight: 600 }}>Cantidad</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 600 }}>Precio Unit.</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 600 }}>Subtotal</TableCell>
+                            <TableCell align="center" sx={{ fontWeight: 600 }}>Acciones</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          <AnimatePresence>
+                            {formData.detalles.map((detalle, index) => (
+                              <motion.tr
+                                key={detalle.id || index}
+                                component={TableRow}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                transition={{ duration: 0.2 }}
+                                sx={{
+                                  '&:hover': {
+                                    bgcolor: alpha(theme.palette.primary.main, 0.02),
                                   }
                                 }}
-                                renderInput={(params) => (
-                                  <TextField
-                                    {...params}
-                                    size="small"
-                                    error={!!errors.productos?.[index]?.producto_id}
-                                    placeholder="Seleccionar producto"
-                                  />
-                                )}
-                                renderOption={(props, option) => (
-                                  <Box component="li" {...props}>
-                                    <Box>
-                                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                        {option.nombre}
-                                      </Typography>
-                                      <Typography variant="caption" color="text.secondary">
-                                        Stock: {option.stock_actual} {option.unidad} | ${option.precio_unitario}
-                                      </Typography>
-                                    </Box>
+                              >
+                                <TableCell>
+                                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <Avatar
+                                      sx={{
+                                        width: 24,
+                                        height: 24,
+                                        mr: 1,
+                                        bgcolor: 'secondary.main',
+                                        fontSize: '0.75rem',
+                                      }}
+                                    >
+                                      {detalle.producto_nombre?.charAt(0).toUpperCase()}
+                                    </Avatar>
+                                    {detalle.producto_nombre}
                                   </Box>
-                                )}
-                              />
-                            )}
-                          />
-                        </TableCell>
-                        
-                        <TableCell>
-                          <Controller
-                            name={`productos.${index}.cantidad`}
-                            control={control}
-                            render={({ field: cantField }) => (
-                              <TextField
-                                {...cantField}
-                                size="small"
-                                type="number"
-                                inputProps={{ min: 0, step: 0.01 }}
-                                error={!!errors.productos?.[index]?.cantidad}
-                                fullWidth
-                              />
-                            )}
-                          />
-                        </TableCell>
-                        
-                        <TableCell>
-                          <Controller
-                            name={`productos.${index}.precio_unitario`}
-                            control={control}
-                            render={({ field: precioField }) => (
-                              <TextField
-                                {...precioField}
-                                size="small"
-                                type="number"
-                                inputProps={{ min: 0, step: 0.01 }}
-                                error={!!errors.productos?.[index]?.precio_unitario}
-                                InputProps={{
-                                  startAdornment: (
-                                    <InputAdornment position="start">
-                                      <MoneyIcon sx={{ fontSize: 16 }} />
-                                    </InputAdornment>
-                                  ),
-                                }}
-                                fullWidth
-                              />
-                            )}
-                          />
-                        </TableCell>
-                        
-                        <TableCell>
-                          <Chip
-                            label={formatCurrency(calcularSubtotal(
-                              watchedProductos[index]?.cantidad,
-                              watchedProductos[index]?.precio_unitario
+                                </TableCell>
+                                <TableCell align="center">
+                                  <Chip
+                                    label={detalle.cantidad}
+                                    size="small"
+                                    color="primary"
+                                    variant="outlined"
+                                  />
+                                </TableCell>
+                                <TableCell align="right">
+                                  ${parseFloat(detalle.precio_unitario).toFixed(2)}
+                                </TableCell>
+                                <TableCell align="right">
+                                  <Typography sx={{ fontWeight: 600, color: 'success.main' }}>
+                                    ${detalle.subtotal.toFixed(2)}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell align="center">
+                                  <Tooltip title="Eliminar producto">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => eliminarProducto(index)}
+                                      sx={{
+                                        color: 'error.main',
+                                        '&:hover': {
+                                          bgcolor: alpha(theme.palette.error.main, 0.1),
+                                        }
+                                      }}
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                </TableCell>
+                              </motion.tr>
                             ))}
-                            color="success"
-                            variant="outlined"
-                            size="small"
-                          />
-                        </TableCell>
-                        
-                        <TableCell>
-                          <IconButton
-                            onClick={() => eliminarProducto(index)}
-                            disabled={fields.length === 1}
-                            size="small"
-                            color="error"
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </TableCell>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                </TableBody>
-              </Table>
-            </TableContainer>
+                          </AnimatePresence>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
 
-            {/* Total */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-              <Paper sx={{ p: 2, bgcolor: 'success.light', color: 'success.contrastText' }}>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Total: {formatCurrency(calcularTotal())}
-                </Typography>
-              </Paper>
+                    {/* Total */}
+                    <Box sx={{ p: 3, pt: 2, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                          Total de la compra:
+                        </Typography>
+                        <Typography 
+                          variant="h4" 
+                          sx={{ 
+                            fontWeight: 700,
+                            color: 'success.main',
+                            background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`,
+                            backgroundClip: 'text',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                          }}
+                        >
+                          ${calcularTotal().toFixed(2)}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              )}
             </Box>
+          </DialogContent>
 
-            {errors.productos && (
-              <Alert severity="error" sx={{ mt: 2 }}>
-                {errors.productos.message}
-              </Alert>
-            )}
-          </Paper>
-        </DialogContent>
+          <Divider />
 
-        <DialogActions sx={{ p: 3, pt: 2 }}>
-          <Button onClick={onClose} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={loading}
-            sx={{ minWidth: 120 }}
-          >
-            {loading ? 'Guardando...' : mode === 'create' ? 'Crear Compra' : 'Actualizar'}
-          </Button>
-        </DialogActions>
-      </form>
-    </Dialog>
+          <DialogActions sx={{ p: 3, gap: 2 }}>
+            <Button
+              onClick={handleClose}
+              variant="outlined"
+              startIcon={<CancelIcon />}
+              sx={{
+                borderRadius: 3,
+                px: 3,
+                textTransform: 'none',
+                fontWeight: 600,
+                borderColor: alpha(theme.palette.grey[400], 0.5),
+                color: 'text.secondary',
+                '&:hover': {
+                  borderColor: 'grey.400',
+                  bgcolor: alpha(theme.palette.grey[400], 0.05),
+                },
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              variant="contained"
+              disabled={loading || formData.detalles.length === 0}
+              startIcon={loading ? null : <SaveIcon />}
+              sx={{
+                borderRadius: 3,
+                px: 4,
+                textTransform: 'none',
+                fontWeight: 600,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                '&:hover': {
+                  boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+                },
+                '&:disabled': {
+                  background: alpha(theme.palette.grey[400], 0.3),
+                  color: 'text.disabled',
+                },
+              }}
+            >
+              {loading ? 'Guardando...' : (mode === 'create' ? 'Crear Compra' : 'Actualizar Compra')}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+    </AnimatePresence>
   );
 };
 
