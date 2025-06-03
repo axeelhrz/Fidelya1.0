@@ -481,8 +481,12 @@ def register():
     try:
         data = request.get_json()
         
-        if not data or not all(k in data for k in ('nombre', 'correo', 'password')):
-            return jsonify({'message': 'Faltan campos requeridos: nombre, correo, password'}), 400
+        # Fix: Accept both 'password' and 'contraseña' to match frontend
+        if not data or not all(k in data for k in ('nombre', 'correo')) or not (data.get('password') or data.get('contraseña')):
+            return jsonify({'message': 'Faltan campos requeridos: nombre, correo, contraseña'}), 400
+        
+        # Get password from either field name
+        password = data.get('contraseña') or data.get('password')
         
         connection = get_db_connection()
         if not connection:
@@ -496,7 +500,7 @@ def register():
             return jsonify({'message': 'El correo ya está registrado'}), 409
         
         # Hashear password
-        hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         
         # Insertar usuario
         cursor.execute("""
@@ -550,8 +554,12 @@ def login():
     try:
         data = request.get_json()
         
-        if not data or not all(k in data for k in ('correo', 'password')):
+        # Fix: Accept both 'password' and 'contraseña' to match frontend
+        if not data or not data.get('correo') or not (data.get('password') or data.get('contraseña')):
             return jsonify({'message': 'Correo y contraseña son requeridos'}), 400
+        
+        # Get password from either field name
+        password = data.get('contraseña') or data.get('password')
         
         connection = get_db_connection()
         if not connection:
@@ -572,7 +580,7 @@ def login():
             return jsonify({'message': 'Credenciales inválidas'}), 401
         
         # Verificar password
-        if not bcrypt.checkpw(data['password'].encode('utf-8'), user[2].encode('utf-8')):
+        if not bcrypt.checkpw(password.encode('utf-8'), user[2].encode('utf-8')):
             return jsonify({'message': 'Credenciales inválidas'}), 401
         
         # Generar token JWT
