@@ -2617,6 +2617,8 @@ def verificar_alertas_sistema(current_user_id):
 
 # ==================== ENDPOINTS DE VENTAS ====================
 
+# ==================== ENDPOINTS DE VENTAS ====================
+
 @app.route('/api/ventas', methods=['GET'])
 @jwt_required
 def obtener_ventas(current_user_id):
@@ -2712,7 +2714,11 @@ def crear_venta(current_user_id):
     try:
         data = request.get_json()
         
-        if not data or not data.get('productos') or not data.get('total'):
+        # Validar datos requeridos
+        if not data:
+            return jsonify({'message': 'Datos de venta requeridos'}), 400
+        
+        if not data.get('productos') or len(data.get('productos', [])) == 0:
             return jsonify({'message': 'Productos y total son requeridos'}), 400
         
         connection = get_db_connection()
@@ -2721,27 +2727,43 @@ def crear_venta(current_user_id):
             
         cursor = connection.cursor()
         
+        # Calcular totales
+        subtotal = 0
+        for producto in data['productos']:
+            if not all(k in producto for k in ('producto_id', 'cantidad', 'precio_unitario')):
+                return jsonify({'message': 'Datos de producto incompletos'}), 400
+            
+            cantidad = float(producto['cantidad'])
+            precio_unitario = float(producto['precio_unitario'])
+            subtotal += cantidad * precio_unitario
+        
+        descuento = float(data.get('descuento', 0))
+        impuestos = float(data.get('impuestos', 0))
+        total = subtotal - descuento + impuestos
+        
+        if total <= 0:
+            return jsonify({'message': 'El total de la venta debe ser mayor a 0'}), 400
+        
         # Generar número de venta
         cursor.execute("SELECT COUNT(*) FROM ventas WHERE DATE(fecha) = CURDATE()")
-        ventas_hoy = cursor.fetchone()[0] + 1
-        numero_venta = f"V{datetime.now().strftime('%Y%m%d')}-{ventas_hoy:04d}"
+        ventas_hoy = cursor.fetchone()[0]
+        numero_venta = f"V{datetime.now().strftime('%Y%m%d')}-{ventas_hoy + 1:04d}"
         
         # Insertar venta
         cursor.execute("""
             INSERT INTO ventas (
-                cliente_id, usuario_id, numero_venta, forma_pago, subtotal,
-                descuento, impuestos, total, estado, observaciones
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                cliente_id, usuario_id, numero_venta, forma_pago, 
+                subtotal, descuento, impuestos, total, observaciones
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             data.get('cliente_id'),
             current_user_id,
             numero_venta,
             data.get('forma_pago', 'efectivo'),
-            float(data.get('subtotal', 0)),
-            float(data.get('descuento', 0)),
-            float(data.get('impuestos', 0)),
-            float(data['total']),
-            data.get('estado', 'completada'),
+            subtotal,
+            descuento,
+            impuestos,
+            total,
             data.get('observaciones', '')
         ))
         
@@ -2749,44 +2771,64 @@ def crear_venta(current_user_id):
         
         # Insertar detalles de venta y actualizar stock
         for producto in data['productos']:
-            # Insertar detalle
+            producto_id = producto['producto_id']
+            cantidad = float(producto['cantidad'])
+            precio_unitario = float(producto['precio_unitario'])
+            subtotal_producto = cantidad * precio_unitario
+            
+            # Verificar stock disponible
+            cursor.execute("SELECT stock_actual, nombre FROM productos WHERE id = %s", (producto_id,))
+            producto_info = cursor.fetchone()
+            
+            if not producto_info:
+                connection.rollback()
+                return jsonify({'message': f'Producto con ID {producto_id} no encontrado'}), 400
+            
+            stock_actual = float(producto_info[0])
+            nombre_producto = producto_info[1]
+            
+            if stock_actual < cantidad:
+                connection.rollback()
+                return jsonify({'message': f'Stock insuficiente para {nombre_producto}. Disponible: {stock_actual}'}), 400
+            
+            # Insertar detalle de venta
             cursor.execute("""
                 INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal)
                 VALUES (%s, %s, %s, %s, %s)
-            """, (
-                venta_id,
-                producto['id'],
-                float(producto['cantidad']),
-                float(producto['precio_unitario']),
-                float(producto['subtotal'])
-            ))
+            """, (venta_id, producto_id, cantidad, precio_unitario, subtotal_producto))
             
-            # Actualizar stock
+            # Actualizar stock del producto
+            nuevo_stock = stock_actual - cantidad
             cursor.execute("""
-                UPDATE productos SET stock_actual = stock_actual - %s WHERE id = %s
-            """, (float(producto['cantidad']), producto['id']))
+                UPDATE productos SET stock_actual = %s WHERE id = %s
+            """, (nuevo_stock, producto_id))
             
             # Registrar movimiento de stock
             cursor.execute("""
                 INSERT INTO movimientos_stock (
-                    producto_id, tipo, cantidad, motivo, referencia_id, referencia_tipo, usuario_id
-                ) VALUES (%s, 'egreso', %s, 'Venta', %s, 'venta', %s)
-            """, (producto['id'], float(producto['cantidad']), venta_id, current_user_id))
+                    producto_id, tipo, cantidad, cantidad_anterior, cantidad_nueva,
+                    motivo, referencia_id, referencia_tipo, usuario_id
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                producto_id, 'egreso', cantidad, stock_actual, nuevo_stock,
+                f'Venta {numero_venta}', venta_id, 'venta', current_user_id
+            ))
         
         connection.commit()
         
         response = jsonify({
             'message': 'Venta creada exitosamente',
             'id': venta_id,
-            'numero_venta': numero_venta
+            'numero_venta': numero_venta,
+            'total': total
         })
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 201
 
     except Exception as e:
-        logger.error(f"Error creando venta: {e}")
         if connection:
             connection.rollback()
+        logger.error(f"Error creando venta: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
@@ -2797,7 +2839,7 @@ def crear_venta(current_user_id):
 @app.route('/api/ventas/<int:venta_id>', methods=['GET'])
 @jwt_required
 def obtener_venta(current_user_id, venta_id):
-    """Obtener detalle de una venta"""
+    """Obtener una venta específica con sus detalles"""
     connection = None
     cursor = None
     
@@ -2808,12 +2850,12 @@ def obtener_venta(current_user_id, venta_id):
             
         cursor = connection.cursor()
         
-        # Obtener venta
+        # Obtener datos de la venta
         cursor.execute("""
             SELECT v.id, v.numero_venta, v.fecha, v.forma_pago, v.subtotal,
                    v.descuento, v.impuestos, v.total, v.estado, v.observaciones,
-                   COALESCE(c.nombre, 'Cliente General') as cliente_nombre,
-                   u.nombre as usuario_nombre, v.cliente_id
+                   v.cliente_id, COALESCE(c.nombre, 'Cliente General') as cliente_nombre,
+                   u.nombre as usuario_nombre
             FROM ventas v
             LEFT JOIN clientes c ON v.cliente_id = c.id
             LEFT JOIN usuarios u ON v.usuario_id = u.id
@@ -2824,10 +2866,10 @@ def obtener_venta(current_user_id, venta_id):
         if not venta_row:
             return jsonify({'message': 'Venta no encontrada'}), 404
         
-        # Obtener detalles
+        # Obtener detalles de la venta
         cursor.execute("""
-            SELECT dv.id, dv.producto_id, p.nombre as producto_nombre,
-                   dv.cantidad, dv.precio_unitario, dv.subtotal, p.unidad
+            SELECT dv.producto_id, p.nombre as producto_nombre, dv.cantidad,
+                   dv.precio_unitario, dv.subtotal, p.unidad
             FROM detalle_ventas dv
             INNER JOIN productos p ON dv.producto_id = p.id
             WHERE dv.venta_id = %s
@@ -2835,16 +2877,14 @@ def obtener_venta(current_user_id, venta_id):
         
         productos = []
         for row in cursor.fetchall():
-            producto = {
-                'id': row[0],
-                'producto_id': row[1],
-                'producto_nombre': row[2],
-                'cantidad': float(row[3]),
-                'precio_unitario': float(row[4]),
-                'subtotal': float(row[5]),
-                'unidad': row[6]
-            }
-            productos.append(producto)
+            productos.append({
+                'producto_id': row[0],
+                'producto_nombre': row[1],
+                'cantidad': float(row[2]),
+                'precio_unitario': float(row[3]),
+                'subtotal': float(row[4]),
+                'unidad': row[5]
+            })
         
         venta = {
             'id': venta_row[0],
@@ -2857,9 +2897,9 @@ def obtener_venta(current_user_id, venta_id):
             'total': float(venta_row[7]),
             'estado': venta_row[8],
             'observaciones': venta_row[9] or '',
-            'cliente_nombre': venta_row[10],
-            'usuario_nombre': venta_row[11],
-            'cliente_id': venta_row[12],
+            'cliente_id': venta_row[10],
+            'cliente_nombre': venta_row[11],
+            'usuario_nombre': venta_row[12],
             'productos': productos
         }
         
@@ -2869,6 +2909,148 @@ def obtener_venta(current_user_id, venta_id):
 
     except Exception as e:
         logger.error(f"Error obteniendo venta: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/ventas/<int:venta_id>', methods=['PUT'])
+@jwt_required
+def actualizar_venta(current_user_id, venta_id):
+    """Actualizar una venta existente (solo datos básicos, no productos)"""
+    connection = None
+    cursor = None
+    
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'message': 'Datos requeridos'}), 400
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Verificar que la venta existe
+        cursor.execute("SELECT id, estado FROM ventas WHERE id = %s", (venta_id,))
+        venta = cursor.fetchone()
+        if not venta:
+            return jsonify({'message': 'Venta no encontrada'}), 404
+        
+        if venta[1] == 'cancelada':
+            return jsonify({'message': 'No se puede modificar una venta cancelada'}), 400
+        
+        # Actualizar solo campos permitidos
+        cursor.execute("""
+            UPDATE ventas SET
+                cliente_id = %s, forma_pago = %s, descuento = %s,
+                impuestos = %s, observaciones = %s
+            WHERE id = %s
+        """, (
+            data.get('cliente_id'),
+            data.get('forma_pago', 'efectivo'),
+            float(data.get('descuento', 0)),
+            float(data.get('impuestos', 0)),
+            data.get('observaciones', ''),
+            venta_id
+        ))
+        
+        # Recalcular total si se modificaron descuentos o impuestos
+        cursor.execute("SELECT subtotal FROM ventas WHERE id = %s", (venta_id,))
+        subtotal = float(cursor.fetchone()[0])
+        
+        descuento = float(data.get('descuento', 0))
+        impuestos = float(data.get('impuestos', 0))
+        nuevo_total = subtotal - descuento + impuestos
+        
+        cursor.execute("UPDATE ventas SET total = %s WHERE id = %s", (nuevo_total, venta_id))
+        
+        connection.commit()
+        
+        response = jsonify({'message': 'Venta actualizada exitosamente'})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"Error actualizando venta: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/api/ventas/<int:venta_id>', methods=['DELETE'])
+@jwt_required
+def cancelar_venta(current_user_id, venta_id):
+    """Cancelar una venta (restaurar stock)"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Verificar que la venta existe y no está cancelada
+        cursor.execute("SELECT id, estado, numero_venta FROM ventas WHERE id = %s", (venta_id,))
+        venta = cursor.fetchone()
+        if not venta:
+            return jsonify({'message': 'Venta no encontrada'}), 404
+        
+        if venta[1] == 'cancelada':
+            return jsonify({'message': 'La venta ya está cancelada'}), 400
+        
+        numero_venta = venta[2]
+        
+        # Obtener productos de la venta para restaurar stock
+        cursor.execute("""
+            SELECT dv.producto_id, dv.cantidad, p.nombre, p.stock_actual
+            FROM detalle_ventas dv
+            INNER JOIN productos p ON dv.producto_id = p.id
+            WHERE dv.venta_id = %s
+        """, (venta_id,))
+        
+        productos_venta = cursor.fetchall()
+        
+        # Restaurar stock de cada producto
+        for producto_id, cantidad, nombre_producto, stock_actual in productos_venta:
+            nuevo_stock = float(stock_actual) + float(cantidad)
+            
+            cursor.execute("""
+                UPDATE productos SET stock_actual = %s WHERE id = %s
+            """, (nuevo_stock, producto_id))
+            
+            # Registrar movimiento de stock
+            cursor.execute("""
+                INSERT INTO movimientos_stock (
+                    producto_id, tipo, cantidad, cantidad_anterior, cantidad_nueva,
+                    motivo, referencia_id, referencia_tipo, usuario_id
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                producto_id, 'ingreso', float(cantidad), float(stock_actual), nuevo_stock,
+                f'Cancelación venta {numero_venta}', venta_id, 'venta', current_user_id
+            ))
+        
+        # Marcar venta como cancelada
+        cursor.execute("UPDATE ventas SET estado = 'cancelada' WHERE id = %s", (venta_id,))
+        
+        connection.commit()
+        
+        response = jsonify({'message': 'Venta cancelada exitosamente'})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        if connection:
+            connection.rollback()
+        logger.error(f"Error cancelando venta: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
     finally:
         if cursor:
