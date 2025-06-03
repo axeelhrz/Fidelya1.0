@@ -10,7 +10,7 @@ import {
   Skeleton
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { Inventory, TrendingUp, Package } from '@mui/icons-material';
+import { TrendingUp, Package } from '@mui/icons-material';
 
 const InventorySummaryCard = ({ data, loading }) => {
   const theme = useTheme();
