@@ -1,27 +1,143 @@
-import Image from "next/image";
-import { formatPrice, formatDate } from 'utils';
-import { Card, CardHeader, CardTitle, CardContent, Badge, Users, ShoppingCart, DollarSign, Calendar, Clock, TrendingUp, AlertCircle } from 'components';
+"use client"
+import { useEffect, useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { 
+  Users, 
+  ShoppingCart, 
+  DollarSign, 
+  TrendingUp,
+  Calendar,
+  Clock,
+  AlertCircle
+} from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
+import { useUser } from '@/context/UserContext'
+import { redirect } from 'next/navigation'
+
+interface DashboardStats {
+  totalStudents: number
+  totalOrders: number
+  totalRevenue: number
+  todayOrders: number
+  pendingOrders: number
+  paidOrders: number
+  recentOrders: any[]
+}
 
 export default function AdminDashboard() {
-  const guardian = {
-    is_staff: true
-  };
-  const stats = {
-    totalStudents: 100,
-    totalOrders: 50,
-    totalRevenue: 1000,
-    todayOrders: 10,
-    pendingOrders: 5,
-    paidOrders: 30,
-    totalOrders: 50,
-    recentOrders: [
-      { id: 1, students: { name: 'John Doe', grade: '10', section: 'A' }, guardians: { full_name: 'Jane Doe' }, dia_entrega: '2023-10-01', total_amount: 100, status: 'PAGADO', created_at: '2023-10-01T12:00:00' },
-      { id: 2, students: { name: 'Jane Smith', grade: '11', section: 'B' }, guardians: { full_name: 'John Smith' }, dia_entrega: '2023-10-02', total_amount: 200, status: 'PENDIENTE', created_at: '2023-10-02T12:00:00' }
-    ]
-  };
+  const { guardian, loading } = useUser()
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loadingStats, setLoadingStats] = useState(true)
 
-  const loading = false;
-  const loadingStats = false;
+  // Verificar permisos de admin
+  useEffect(() => {
+    if (!loading && (!guardian || !guardian.is_staff)) {
+      redirect('/dashboard')
+    }
+  }, [guardian, loading])
+
+  useEffect(() => {
+    if (guardian?.is_staff) {
+      loadDashboardStats()
+    }
+  }, [guardian])
+
+  const loadDashboardStats = async () => {
+    try {
+      setLoadingStats(true)
+
+      // Obtener estadísticas en paralelo
+      const [
+        studentsResult,
+        ordersResult,
+        todayOrdersResult,
+        recentOrdersResult
+      ] = await Promise.all([
+        // Total estudiantes activos
+        supabase
+          .from('students')
+          .select('id', { count: 'exact' })
+          .eq('is_active', true),
+
+        // Total pedidos y revenue
+        supabase
+          .from('orders')
+          .select('id, total_amount, status', { count: 'exact' }),
+
+        // Pedidos de hoy
+        supabase
+          .from('orders')
+          .select('id, status', { count: 'exact' })
+          .eq('fecha_pedido', new Date().toISOString().split('T')[0]),
+
+        // Pedidos recientes
+        supabase
+          .from('orders')
+          .select(`
+            id,
+            total_amount,
+            status,
+            created_at,
+            dia_entrega,
+            students (
+              name,
+              grade,
+              section
+            ),
+            guardians (
+              full_name
+            )
+          `)
+          .order('created_at', { ascending: false })
+          .limit(10)
+      ])
+
+      // Procesar resultados
+      const totalStudents = studentsResult.count || 0
+      const totalOrders = ordersResult.count || 0
+      const orders = ordersResult.data || []
+      
+      const totalRevenue = orders
+        .filter(order => order.status === 'PAGADO')
+        .reduce((sum, order) => sum + order.total_amount, 0)
+
+      const todayOrders = todayOrdersResult.count || 0
+      const pendingOrders = orders.filter(order => order.status === 'PENDIENTE').length
+      const paidOrders = orders.filter(order => order.status === 'PAGADO').length
+
+      setStats({
+        totalStudents,
+        totalOrders,
+        totalRevenue,
+        todayOrders,
+        pendingOrders,
+        paidOrders,
+        recentOrders: recentOrdersResult.data || []
+      })
+
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error)
+    } finally {
+      setLoadingStats(false)
+    }
+  }
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP'
+    }).format(price)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
 
   if (loading || loadingStats) {
     return (

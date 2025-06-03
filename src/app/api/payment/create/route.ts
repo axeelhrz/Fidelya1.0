@@ -1,222 +1,244 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { createServiceClient } from '@/lib/supabase/client'
 
-// Función para verificar si estamos en fase de compilación o en tiempo de ejecución
-function isRuntimeEnvironment() {
-  return typeof window === 'undefined' && process.env.NODE_ENV === 'production';
+// Configuración GetNet
+const GETNET_CONFIG = {
+  login: process.env.GETNET_LOGIN!,
+  secretKey: process.env.GETNET_SECRET!,
+  baseUrl: process.env.GETNET_BASE_URL!,
+  appUrl: process.env.NEXT_PUBLIC_APP_URL!
 }
 
-// Solo registramos las variables si estamos en tiempo de ejecución, no en build time
-if (isRuntimeEnvironment()) {
-  console.log('Variables de entorno cargadas en runtime:', {
-    GETNET_LOGIN: process.env.GETNET_LOGIN,
-    GETNET_SECRET: process.env.GETNET_SECRET?.substring(0, 3) + '...',
-    GETNET_BASE_URL: process.env.GETNET_BASE_URL,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL
-  });
+interface PaymentRequest {
+  orderId: string
+  amount: number
+  description: string
+  buyerEmail: string
+  buyerName: string
 }
-// Durante la compilación no mostraremos estos valores
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // 1. Extraer datos de la solicitud
-    const { transactionId, montoTotal, orderData } = await req.json()
-    console.log('Solicitud de pago recibida:', { transactionId, montoTotal, orderDataPresent: !!orderData })
-
-    // 2. Verificar variables de entorno
-    if (!process.env.GETNET_LOGIN || !process.env.GETNET_SECRET || !process.env.GETNET_BASE_URL || !process.env.NEXT_PUBLIC_APP_URL) {
-      console.error('Variables de entorno faltantes:', { 
-        login: !!process.env.GETNET_LOGIN, 
-        secret: !!process.env.GETNET_SECRET,
-        baseUrl: !!process.env.GETNET_BASE_URL,
-        appUrl: !!process.env.NEXT_PUBLIC_APP_URL
-      })
-      return NextResponse.json({
-        error: 'Configuración de GetNet incompleta',
-        missingVars: {
-          login: !process.env.GETNET_LOGIN,
-          secret: !process.env.GETNET_SECRET,
-          baseUrl: !process.env.GETNET_BASE_URL,
-          appUrl: !process.env.NEXT_PUBLIC_APP_URL
-        }
-      }, { status: 500 })
+    // 1. Validar variables de entorno
+    if (!GETNET_CONFIG.login || !GETNET_CONFIG.secretKey || !GETNET_CONFIG.baseUrl) {
+      console.error('Variables de entorno GetNet no configuradas')
+      return NextResponse.json(
+        { error: 'Configuración de pagos no disponible' },
+        { status: 500 }
+      )
     }
 
-    // 3. Generar credenciales de autenticación exactamente como lo indica GetNet
+    // 2. Obtener datos del request
+    const body: PaymentRequest = await request.json()
+
+    const { orderId, amount, description, buyerEmail, buyerName } = body
+
+    // 3. Validar datos requeridos
+    if (!orderId || !amount || !buyerEmail || !buyerName) {
+      return NextResponse.json(
+        { error: 'Datos de pago incompletos' },
+        { status: 400 }
+      )
+    }
+
+    // 4. Verificar que el pedido existe y está pendiente
+    const supabase = createServiceClient()
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', orderId)
+      .eq('status', 'PENDIENTE')
+      .single()
+
+    if (orderError || !order) {
+      return NextResponse.json(
+        { error: 'Pedido no encontrado o ya procesado' },
+        { status: 404 }
+      )
+    }
+
+    // 5. Verificar que el monto coincide
+    if (order.total_amount !== amount) {
+      return NextResponse.json(
+        { error: 'El monto no coincide con el pedido' },
+        { status: 400 }
+      )
+    }
+
+    // 6. Generar datos de autenticación GetNet
+    const seed = new Date().toISOString()
+    const rawNonce = crypto.randomBytes(16)
+    const nonce = rawNonce.toString('base64')
     
-    // Credenciales
-    const login = process.env.GETNET_LOGIN || '';
-    const secretKey = process.env.GETNET_SECRET || '';
-    
-    console.log('Credenciales:', { 
-      login, 
-      secretKeyLength: secretKey.length,
-      secretKeyStart: secretKey.substring(0, 3) + '...' 
-    });
-    
-    // Generar seed con formato ISO-8601 en UTC exacto sin manipulaciones
-    // IMPORTANTE: Usando el tiempo exacto actual, siguiendo requerimientos de GetNet
-    const seedDate = new Date();
-    
-    // Usar formato ISO completo con UTC (Z) sin manipular offsetes manualmente
-    // GetNet compara contra UTC, no contra hora local de Chile
-    const seed = seedDate.toISOString();
-    
-    // Debug de tiempo para diagnóstico
-    console.log('⏰ Diagnóstico de tiempo:');
-    console.log('- Seed enviado a GetNet (UTC):', seed);
-    console.log('- Formato correcto según GetNet: ISO-8601 con Z');
-    console.log('- Sin manipulaciones manuales ni offsetes estáticos');
-    console.log('- Hora actual del sistema:', new Date().toISOString());
-    
-    // Generar nonce como bytes aleatorios y luego Base64
-    const rawNonce = crypto.randomBytes(16);
-    const nonce = rawNonce.toString('base64');
-    
-    // Generar tranKey concatenando rawNonce, seed y secretKey, luego SHA-256 y Base64
     const hash = crypto.createHash('sha256')
-      .update(Buffer.concat([rawNonce, Buffer.from(seed), Buffer.from(secretKey)]))
-      .digest();
-    const tranKey = hash.toString('base64');
-    
-    // Imprimir datos de autenticación para depuración
-    console.log('Datos de autenticación:', {
-      login,
+      .update(Buffer.concat([
+        rawNonce, 
+        Buffer.from(seed), 
+        Buffer.from(GETNET_CONFIG.secretKey)
+      ]))
+      .digest()
+    const tranKey = hash.toString('base64')
+
+    // 7. Preparar datos del pago
+    const paymentData = {
+      auth: {
+        login: GETNET_CONFIG.login,
+        tranKey,
+        nonce,
+        seed
+      },
+      payment: {
+        reference: orderId,
+        description: description || `Pedido Casino Escolar #${orderId.substring(0, 8)}`,
+        amount: {
+          currency: 'CLP',
+          total: amount
+        }
+      },
+      buyer: {
+        name: buyerName,
+        email: buyerEmail
+      },
+      returnUrl: `${GETNET_CONFIG.appUrl}/payment/result?orderId=${orderId}`,
+      cancelUrl: `${GETNET_CONFIG.appUrl}/pedidos/nuevo?cancelled=true`,
+      ipAddress: request.headers.get('x-forwarded-for') || 
+                 request.headers.get('x-real-ip') || 
+                 '127.0.0.1',
+      userAgent: request.headers.get('user-agent') || 'Unknown'
+    }
+
+    console.log('🔐 Datos de autenticación GetNet:', {
+      login: GETNET_CONFIG.login,
       seed,
       nonce: nonce.substring(0, 10) + '...',
       tranKeyLength: tranKey.length
-    });
-
-    // 4. Construir carga útil
-    const payload = {
-      auth: { login, tranKey, nonce, seed },
-      payment: {
-        reference: transactionId,
-        description: `Pedido Casino TX ${transactionId}`,
-        amount: { currency: 'CLP', total: montoTotal }
-      },
-      // Fecha de expiración coherente con el seed: formato ISO en UTC
-      // 15 minutos desde el momento actual, sin manipulaciones manuales
-      expiration: new Date(seedDate.getTime() + 15 * 60 * 1000).toISOString(), // 15 minutos en formato UTC
-      // Añadimos parámetros a la URL de retorno para identificar la transacción
-      // El requestId será agregado automáticamente por GetNet a la URL
-      returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/result?transactionId=${transactionId}`,
-      // Omitir pantalla de resultado y redirigir directamente a returnUrl
-      skipResult: true,
-      ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
-      userAgent: req.headers.get('user-agent'),
-      // Añadir configuración adicional que podría requerir GetNet
-      locale: 'es_CL'
-    }
-
-    console.log('Enviando solicitud a GetNet:', {
-      url: `${process.env.GETNET_BASE_URL}/api/session/`,
-      payload
     })
 
-    // 5. Enviar solicitud a GetNet
-    // Asegurarnos de que la URL está bien formada
-    if (!process.env.GETNET_BASE_URL) {
-      throw new Error('URL base de GetNet no disponible')
-    }
-    
-    const getnetApiUrl = `${process.env.GETNET_BASE_URL}/api/session/`
-    console.log('URL completa de API GetNet:', getnetApiUrl)
-    
-    const response = await fetch(
-      getnetApiUrl,
-      { 
-        method: 'POST', 
-        headers: {'Content-Type':'application/json'}, 
-        body: JSON.stringify(payload) 
-      }
-    )
+    console.log('💳 Datos del pago:', {
+      reference: paymentData.payment.reference,
+      amount: paymentData.payment.amount,
+      buyer: paymentData.buyer,
+      returnUrl: paymentData.returnUrl
+    })
 
-    // 6. Procesar respuesta
-    const responseText = await response.text()
-    console.log('Respuesta raw de GetNet:', responseText)
-    
-    // Intentar parsear como JSON si es posible
-    let data
+    // 8. Crear registro de pago
+    const { data: payment, error: paymentError } = await supabase
+      .from('payments')
+      .insert({
+        order_id: orderId,
+        amount,
+        status: 'PENDING',
+        payment_method: 'GETNET_CHECKOUT'
+      })
+      .select()
+      .single()
+
+    if (paymentError) {
+      console.error('Error creando registro de pago:', paymentError)
+      return NextResponse.json(
+        { error: 'Error interno procesando pago' },
+        { status: 500 }
+      )
+    }
+
+    // 9. Llamar a GetNet
     try {
-      data = JSON.parse(responseText)
-      console.log('Respuesta JSON de GetNet:', data)
-    } catch (parseError) {
-      console.error('No se pudo parsear la respuesta como JSON:', parseError)
-      return NextResponse.json({ 
-        error: 'Respuesta no válida de GetNet', 
-        responseText 
-      }, { status: 500 })
-    }
-    
-    // Verificar si hay error
-    if (!response.ok) {
-      // Extraer mensaje de error de manera segura
-      let errorMessage = 'Error en la API de GetNet';
-      
-      try {
-        if (data.status && data.status.status) {
-          errorMessage = `GetNet status: ${data.status.status}`;
-        } else if (data.error) {
-          errorMessage = typeof data.error === 'string'
-            ? data.error
-            : JSON.stringify(data.error);
-        } else if (data.message) {
-          errorMessage = data.message;
-        }
-      } catch (e) {
-        console.error('Error al procesar mensaje de error:', e);
+      const getnetResponse = await fetch(`${GETNET_CONFIG.baseUrl}/api/session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(paymentData)
+      })
+
+      const responseText = await getnetResponse.text()
+      console.log('📡 Respuesta GetNet (raw):', responseText)
+
+      if (!getnetResponse.ok) {
+        console.error('Error en respuesta GetNet:', {
+          status: getnetResponse.status,
+          statusText: getnetResponse.statusText,
+          body: responseText
+        })
+
+        // Actualizar estado del pago
+        await supabase
+          .from('payments')
+          .update({ 
+            status: 'REJECTED',
+            getnet_response: { error: responseText, status: getnetResponse.status }
+          })
+          .eq('id', payment.id)
+
+        return NextResponse.json(
+          { error: 'Error en el servicio de pagos' },
+          { status: 500 }
+        )
       }
+
+      let getnetData
+      try {
+        getnetData = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('Error parseando respuesta GetNet:', parseError)
+        return NextResponse.json(
+          { error: 'Respuesta inválida del servicio de pagos' },
+          { status: 500 }
+        )
+      }
+
+      console.log('✅ Respuesta GetNet procesada:', getnetData)
+
+      // 10. Actualizar registro de pago con respuesta de GetNet
+      await supabase
+        .from('payments')
+        .update({
+          getnet_transaction_id: getnetData.requestId || getnetData.sessionId,
+          getnet_response: getnetData
+        })
+        .eq('id', payment.id)
+
+      // 11. Verificar si GetNet devolvió URL de checkout
+      if (getnetData.processUrl) {
+        return NextResponse.json({
+          success: true,
+          checkoutUrl: getnetData.processUrl,
+          sessionId: getnetData.requestId || getnetData.sessionId,
+          paymentId: payment.id
+        })
+      } else {
+        console.error('GetNet no devolvió URL de checkout:', getnetData)
+        return NextResponse.json(
+          { error: 'No se pudo generar el checkout de pago' },
+          { status: 500 }
+        )
+      }
+
+    } catch (fetchError) {
+      console.error('Error conectando con GetNet:', fetchError)
       
-      console.error('Error en respuesta de GetNet:', JSON.stringify(data, null, 2));
-      
-      return NextResponse.json({ 
-        error: errorMessage,
-        statusCode: response.status,
-        statusText: response.statusText
-      }, { status: response.status });
-    }
-    
-    // 7. Validar datos recibidos
-    if (!data.processUrl) {
-      console.error('Respuesta de GetNet no contiene processUrl:', data)
-      
-      // Devolver toda la respuesta para depuración
-      return NextResponse.json({ 
-        error: 'Respuesta inválida de GetNet', 
-        data, 
-        responseStatus: response.status,
-        responseStatusText: response.statusText
-      }, { status: 200 })
+      // Actualizar estado del pago
+      await supabase
+        .from('payments')
+        .update({ 
+          status: 'REJECTED',
+          getnet_response: { error: 'Connection failed', details: String(fetchError) }
+        })
+        .eq('id', payment.id)
+
+      return NextResponse.json(
+        { error: 'Error conectando con el servicio de pagos' },
+        { status: 500 }
+      )
     }
 
-    // 8. Guardamos los datos del pedido en localStorage en el cliente
-    // En vez de usar supabase directamente, lo manejaremos desde el webhook 
-    // con una implementación posterior
-    if (orderData && Array.isArray(orderData) && orderData.length > 0) {
-      console.log(`Recibidos ${orderData.length} registros de pedido para transaction_id: ${transactionId}`);
-      // No hacemos nada en el servidor con estos datos por ahora
-      // Para debugging
-      console.log('Los datos del pedido serán procesados por el webhook cuando reciba la notificación de GetNet');
-    } else {
-      console.warn('No se recibieron datos de pedido');
-    }
-    
-    // 9. Devolver resultado
-    // Devolver processUrl, requestId y el returnUrl que debe usar el Lightbox
-    const result = {
-      processUrl: data.processUrl,
-      requestId: data.requestId,
-      originalTransactionId: transactionId,
-      // Instrucción para el Lightbox: returnUrl con ambos parámetros y skipResult
-      returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/result?transactionId=${transactionId}&requestId=${data.requestId}`,
-      skipResult: true
-    }
-    return NextResponse.json(result)
-  } catch (e: any) {
-    console.error("Error completo de GetNet CREATE:", e)
-    return NextResponse.json({ 
-      error: e.message || 'Error al procesar la solicitud de pago' 
-    }, { status: 500 })
+  } catch (error) {
+    console.error('Error general en create payment:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
   }
 }

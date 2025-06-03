@@ -1,3 +1,109 @@
+import { supabase } from '@/lib/supabase/client'
+import { AuthError, User } from '@supabase/supabase-js'
+import { Guardian, GuardianInsert } from '@/lib/supabase/types'
+
+export interface AuthResponse {
+  success: boolean
+  error?: string
+  user?: User
+  guardian?: Guardian
+}
+
+export interface RegisterData {
+  email: string
+  password: string
+  fullName: string
+  phone?: string
+}
+
+export class AuthService {
+  /**
+   * Registrar nuevo usuario
+   */
+  static async register(data: RegisterData): Promise<AuthResponse> {
+    try {
+      // 1. Crear usuario en Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.fullName,
+            phone: data.phone
+          }
+        }
+      })
+
+      if (authError) {
+        return { success: false, error: authError.message }
+      }
+
+      if (!authData.user) {
+        return { success: false, error: 'No se pudo crear el usuario' }
+      }
+
+      // 2. Crear perfil de guardian
+      const guardianData: GuardianInsert = {
+        user_id: authData.user.id,
+        full_name: data.fullName,
+        email: data.email,
+        phone: data.phone || null,
+        is_staff: false
+      }
+
+      const { data: guardian, error: guardianError } = await supabase
+        .from('guardians')
+        .insert(guardianData)
+        .select()
+        .single()
+
+      if (guardianError) {
+        console.error('Error creando guardian:', guardianError)
+        return { success: false, error: 'Error creando perfil de usuario' }
+      }
+
+      return {
+        success: true,
+        user: authData.user,
+        guardian
+      }
+    } catch (error) {
+      console.error('Error en registro:', error)
+      return { success: false, error: 'Error interno del servidor' }
+    }
+  }
+
+  /**
+   * Iniciar sesión
+   */
+  static async login(email: string, password: string): Promise<AuthResponse> {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      if (!data.user) {
+        return { success: false, error: 'No se pudo iniciar sesión' }
+      }
+
+      // Obtener datos del guardian
+      const { data: guardian, error: guardianError } = await supabase
+        .from('guardians')
+        .select('*')
+        .eq('user_id', data.user.id)
+        .single()
+
+      if (guardianError) {
+        console.error('Error obteniendo guardian:', guardianError)
+        return { success: false, error: 'Error obteniendo datos del usuario' }
+      }
+
+      return {
         success: true,
         user: data.user,
         guardian
