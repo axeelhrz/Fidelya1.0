@@ -34,13 +34,15 @@ const ModernLowStockAlert = ({ productos = [], onAjustarStock, sx = {} }) => {
   }
 
   const formatNumber = (value) => {
-    return new Intl.NumberFormat('es-CO').format(value);
+    const number = Number(value) || 0;
+    return new Intl.NumberFormat('es-CO').format(number);
   };
 
   const getStockSeverity = (producto) => {
-    const { stock_actual, stock_minimo } = producto;
-    if (stock_actual === 0) return 'critical';
-    if (stock_actual <= stock_minimo * 0.5) return 'high';
+    const stockActual = Number(producto.stock_actual) || 0;
+    const stockMinimo = Number(producto.stock_minimo) || 0;
+    if (stockActual === 0) return 'critical';
+    if (stockMinimo > 0 && stockActual <= stockMinimo * 0.5) return 'high';
     return 'medium';
   };
 

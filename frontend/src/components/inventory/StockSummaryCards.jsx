@@ -38,61 +38,82 @@ const StockSummaryCards = ({
   }
 
   const formatCurrency = (amount) => {
+    const value = Number(amount) || 0;
     return new Intl.NumberFormat('es-UY', {
       style: 'currency',
       currency: 'UYU',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(value);
   };
 
   const formatNumber = (number) => {
-    return new Intl.NumberFormat('es-UY').format(number);
+    const value = Number(number) || 0;
+    return new Intl.NumberFormat('es-UY').format(value);
+  };
+
+  const safeCalculatePercentage = (numerator, denominator) => {
+    const num = Number(numerator) || 0;
+    const den = Number(denominator) || 0;
+    if (den === 0) return 0;
+    const result = (num / den) * 100;
+    return isNaN(result) ? 0 : result;
   };
 
   const getTrendIcon = (trend) => {
-    if (trend > 0) return <TrendingUpIcon fontSize="small" sx={{ color: 'success.main' }} />;
-    if (trend < 0) return <TrendingDownIcon fontSize="small" sx={{ color: 'error.main' }} />;
+    const trendValue = Number(trend) || 0;
+    if (trendValue > 0) return <TrendingUpIcon fontSize="small" sx={{ color: 'success.main' }} />;
+    if (trendValue < 0) return <TrendingDownIcon fontSize="small" sx={{ color: 'error.main' }} />;
     return null;
   };
 
   const getTrendColor = (trend) => {
-    if (trend > 0) return 'success.main';
-    if (trend < 0) return 'error.main';
+    const trendValue = Number(trend) || 0;
+    if (trendValue > 0) return 'success.main';
+    if (trendValue < 0) return 'error.main';
     return 'text.secondary';
   };
+
+  // Extraer valores de forma segura
+  const totalProductos = Number(estadisticas.estadisticas_generales?.total_productos) || 0;
+  const productosStockBajo = Number(estadisticas.estadisticas_generales?.productos_stock_bajo) || 0;
+  const productosSinStock = Number(estadisticas.estadisticas_generales?.productos_sin_stock) || 0;
+  const valorInventario = Number(estadisticas.estadisticas_generales?.valor_inventario) || 0;
+  const tendenciaPorcentual = Number(estadisticas.tendencias?.tendencia_porcentual) || 0;
+  const productosNuevosMes = Number(estadisticas.tendencias?.productos_nuevos_mes) || 0;
+
+  // Calcular porcentaje de stock bajo de forma segura
+  const porcentajeStockBajo = safeCalculatePercentage(productosStockBajo, totalProductos);
 
   const cards = [
     {
       id: 'total_productos',
       title: 'Total Productos',
-      value: formatNumber(estadisticas.estadisticas_generales?.total_productos || 0),
+      value: formatNumber(totalProductos),
       icon: InventoryIcon,
       color: theme.palette.primary.main,
       bgColor: alpha(theme.palette.primary.main, 0.1),
       description: 'Productos activos',
-      trend: estadisticas.tendencias?.tendencia_porcentual || 0,
-      subtitle: `+${estadisticas.tendencias?.productos_nuevos_mes || 0} este mes`,
+      trend: tendenciaPorcentual,
+      subtitle: `+${productosNuevosMes} este mes`,
       clickable: true,
     },
     {
       id: 'stock_bajo',
       title: 'Stock Bajo',
-      value: formatNumber(estadisticas.estadisticas_generales?.productos_stock_bajo || 0),
+      value: formatNumber(productosStockBajo),
       icon: WarningIcon,
       color: theme.palette.warning.main,
       bgColor: alpha(theme.palette.warning.main, 0.1),
       description: 'Requieren reposición',
-      alert: (estadisticas.estadisticas_generales?.productos_stock_bajo || 0) > 0,
-      percentage: estadisticas.estadisticas_generales?.total_productos > 0 
-        ? ((estadisticas.estadisticas_generales.productos_stock_bajo / estadisticas.estadisticas_generales.total_productos) * 100).toFixed(1)
-        : 0,
+      alert: productosStockBajo > 0,
+      percentage: porcentajeStockBajo.toFixed(1),
       clickable: true,
     },
     {
       id: 'valor_inventario',
       title: 'Valor Inventario',
-      value: formatCurrency(estadisticas.estadisticas_generales?.valor_inventario || 0),
+      value: formatCurrency(valorInventario),
       icon: MoneyIcon,
       color: theme.palette.success.main,
       bgColor: alpha(theme.palette.success.main, 0.1),
@@ -103,12 +124,12 @@ const StockSummaryCards = ({
     {
       id: 'sin_stock',
       title: 'Sin Stock',
-      value: formatNumber(estadisticas.estadisticas_generales?.productos_sin_stock || 0),
+      value: formatNumber(productosSinStock),
       icon: AssessmentIcon,
       color: theme.palette.error.main,
       bgColor: alpha(theme.palette.error.main, 0.1),
       description: 'Productos agotados',
-      alert: (estadisticas.estadisticas_generales?.productos_sin_stock || 0) > 0,
+      alert: productosSinStock > 0,
       critical: true,
       clickable: true,
     },
@@ -123,7 +144,10 @@ const StockSummaryCards = ({
         </Typography>
         <Box display="flex" alignItems="center" gap={1}>
           <Typography variant="caption" color="text.secondary">
-            Última actualización: {new Date(estadisticas.fecha_actualizacion).toLocaleTimeString('es-UY')}
+            Última actualización: {estadisticas.fecha_actualizacion ? 
+              new Date(estadisticas.fecha_actualizacion).toLocaleTimeString('es-UY') : 
+              'No disponible'
+            }
           </Typography>
           <Tooltip title="Actualizar datos">
             <IconButton 
@@ -208,7 +232,7 @@ const StockSummaryCards = ({
                           {card.title}
                         </Typography>
                         {card.trend !== undefined && card.trend !== 0 && (
-                          <Tooltip title={`${card.trend > 0 ? '+' : ''}${card.trend.toFixed(1)}% vs mes anterior`}>
+                          <Tooltip title={`${card.trend > 0 ? '+' : ''}${Number(card.trend).toFixed(1)}% vs mes anterior`}>
                             {getTrendIcon(card.trend)}
                           </Tooltip>
                         )}
@@ -246,8 +270,8 @@ const StockSummaryCards = ({
                           </Typography>
                           <LinearProgress
                             variant="determinate"
-                            value={Math.min(parseFloat(card.percentage), 100)}
-                            color={card.percentage > 20 ? "error" : "warning"}
+                            value={Math.min(Math.max(parseFloat(card.percentage) || 0, 0), 100)}
+                            color={parseFloat(card.percentage) > 20 ? "error" : "warning"}
                             sx={{ mt: 0.5, height: 4, borderRadius: 2 }}
                           />
                         </Box>
@@ -319,7 +343,7 @@ const StockSummaryCards = ({
                   <Grid item xs={6}>
                     <Box textAlign="center" p={2} borderRadius={2} bgcolor={alpha(theme.palette.success.main, 0.1)}>
                       <Typography variant="h5" fontWeight={700} color="success.main">
-                        {estadisticas.movimientos_recientes?.ingresos || 0}
+                        {formatNumber(estadisticas.movimientos_recientes?.ingresos || 0)}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         Ingresos
@@ -329,7 +353,7 @@ const StockSummaryCards = ({
                   <Grid item xs={6}>
                     <Box textAlign="center" p={2} borderRadius={2} bgcolor={alpha(theme.palette.error.main, 0.1)}>
                       <Typography variant="h5" fontWeight={700} color="error.main">
-                        {estadisticas.movimientos_recientes?.egresos || 0}
+                        {formatNumber(estadisticas.movimientos_recientes?.egresos || 0)}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         Egresos
@@ -339,7 +363,7 @@ const StockSummaryCards = ({
                   <Grid item xs={12}>
                     <Box textAlign="center" p={2} borderRadius={2} bgcolor={alpha(theme.palette.warning.main, 0.1)}>
                       <Typography variant="h5" fontWeight={700} color="warning.main">
-                        {estadisticas.movimientos_recientes?.ajustes || 0}
+                        {formatNumber(estadisticas.movimientos_recientes?.ajustes || 0)}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         Ajustes manuales
@@ -415,13 +439,13 @@ const StockSummaryCards = ({
                             {proveedor.nombre}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {proveedor.productos_suministrados} productos
+                            {formatNumber(proveedor.productos_suministrados || 0)} productos
                           </Typography>
                         </Box>
                       </Box>
                       <Box textAlign="right">
                         <Typography variant="body2" color="primary" fontWeight={600}>
-                          {formatCurrency(proveedor.valor_inventario)}
+                          {formatCurrency(proveedor.valor_inventario || 0)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           valor stock

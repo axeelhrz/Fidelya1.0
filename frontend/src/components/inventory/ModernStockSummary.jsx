@@ -24,27 +24,39 @@ const ModernStockSummary = ({ resumen, loading = false, sx = {} }) => {
   const theme = useTheme();
 
   const formatCurrency = (value) => {
+    const amount = Number(value) || 0;
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0,
-    }).format(value);
+    }).format(amount);
   };
 
   const formatNumber = (value) => {
-    return new Intl.NumberFormat('es-CO').format(value);
+    const number = Number(value) || 0;
+    return new Intl.NumberFormat('es-CO').format(number);
+  };
+
+  const safeCalculatePercentage = (numerator, denominator) => {
+    const num = Number(numerator) || 0;
+    const den = Number(denominator) || 0;
+    if (den === 0) return 0;
+    const result = (num / den) * 100;
+    return isNaN(result) ? 0 : result;
   };
 
   const getStockHealthColor = (percentage) => {
-    if (percentage >= 80) return theme.palette.success.main;
-    if (percentage >= 60) return theme.palette.warning.main;
+    const value = Number(percentage) || 0;
+    if (value >= 80) return theme.palette.success.main;
+    if (value >= 60) return theme.palette.warning.main;
     return theme.palette.error.main;
   };
 
   const getStockHealthLabel = (percentage) => {
-    if (percentage >= 80) return 'Excelente';
-    if (percentage >= 60) return 'Bueno';
-    if (percentage >= 40) return 'Regular';
+    const value = Number(percentage) || 0;
+    if (value >= 80) return 'Excelente';
+    if (value >= 60) return 'Bueno';
+    if (value >= 40) return 'Regular';
     return 'Crítico';
   };
 
@@ -68,14 +80,22 @@ const ModernStockSummary = ({ resumen, loading = false, sx = {} }) => {
 
   if (!resumen) return null;
 
-  const stockSaludable = resumen.total_productos > 0 
-    ? ((resumen.total_productos - resumen.productos_stock_bajo - resumen.productos_sin_stock) / resumen.total_productos) * 100
-    : 0;
+  // Extraer valores de forma segura
+  const totalProductos = Number(resumen.total_productos) || 0;
+  const productosStockBajo = Number(resumen.productos_stock_bajo) || 0;
+  const productosSinStock = Number(resumen.productos_sin_stock) || 0;
+  const valorTotalInventario = Number(resumen.valor_total_inventario) || 0;
+
+  // Calcular salud del stock de forma segura
+  const stockSaludable = safeCalculatePercentage(
+    totalProductos - productosStockBajo - productosSinStock,
+    totalProductos
+  );
 
   const cards = [
     {
       title: 'Total Productos',
-      value: formatNumber(resumen.total_productos || 0),
+      value: formatNumber(totalProductos),
       icon: <InventoryIcon />,
       color: theme.palette.primary.main,
       bgColor: alpha(theme.palette.primary.main, 0.1),
@@ -83,7 +103,7 @@ const ModernStockSummary = ({ resumen, loading = false, sx = {} }) => {
     },
     {
       title: 'Valor Inventario',
-      value: formatCurrency(resumen.valor_total_inventario || 0),
+      value: formatCurrency(valorTotalInventario),
       icon: <MoneyIcon />,
       color: theme.palette.success.main,
       bgColor: alpha(theme.palette.success.main, 0.1),
@@ -91,21 +111,21 @@ const ModernStockSummary = ({ resumen, loading = false, sx = {} }) => {
     },
     {
       title: 'Stock Bajo',
-      value: formatNumber(resumen.productos_stock_bajo || 0),
+      value: formatNumber(productosStockBajo),
       icon: <TrendingDownIcon />,
       color: theme.palette.warning.main,
       bgColor: alpha(theme.palette.warning.main, 0.1),
       subtitle: 'Requieren reposición',
-      alert: (resumen.productos_stock_bajo || 0) > 0,
+      alert: productosStockBajo > 0,
     },
     {
       title: 'Sin Stock',
-      value: formatNumber(resumen.productos_sin_stock || 0),
+      value: formatNumber(productosSinStock),
       icon: <WarningIcon />,
       color: theme.palette.error.main,
       bgColor: alpha(theme.palette.error.main, 0.1),
       subtitle: 'Productos agotados',
-      alert: (resumen.productos_sin_stock || 0) > 0,
+      alert: productosSinStock > 0,
     },
   ];
 
@@ -235,7 +255,7 @@ const ModernStockSummary = ({ resumen, loading = false, sx = {} }) => {
             
             <LinearProgress
               variant="determinate"
-              value={stockSaludable}
+              value={Math.min(Math.max(stockSaludable, 0), 100)}
               sx={{
                 height: 8,
                 borderRadius: 4,
@@ -306,10 +326,10 @@ const ModernStockSummary = ({ resumen, loading = false, sx = {} }) => {
                         {categoria.categoria}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {formatNumber(categoria.total_productos)} productos
+                        {formatNumber(categoria.total_productos || 0)} productos
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {formatCurrency(categoria.valor_total)}
+                        {formatCurrency(categoria.valor_total || 0)}
                       </Typography>
                     </Box>
                   </Grid>
