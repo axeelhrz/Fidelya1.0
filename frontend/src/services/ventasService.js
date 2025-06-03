@@ -173,12 +173,12 @@ export const eliminarVenta = async (id) => {
 };
 
 /**
- * Obtiene estadísticas de ventas
+ * Obtiene estadísticas completas de ventas con datos relacionados
  * @returns {object} - Estadísticas de ventas
  */
 export const obtenerEstadisticasVentas = async () => {
   try {
-    console.log('📊 Obteniendo estadísticas de ventas');
+    console.log('📊 Obteniendo estadísticas completas de ventas');
     const response = await api.get('/ventas/estadisticas');
     console.log('✅ Estadísticas obtenidas:', response.data);
     return response.data;
@@ -194,7 +194,133 @@ export const obtenerEstadisticasVentas = async () => {
       producto_mas_vendido: 'N/A',
       forma_pago_preferida: 'efectivo',
       ventas_por_forma_pago: {},
-      ventas_por_dia: []
+      ventas_por_dia: [],
+      // Nuevos datos relacionados
+      clientes_frecuentes: [],
+      productos_mas_vendidos: [],
+      vendedores_top: [],
+      categorias_mas_vendidas: [],
+      tendencias_semanales: [],
+      comparacion_mes_anterior: {},
+      metricas_por_vendedor: [],
+      productos_por_categoria: {},
+      clientes_nuevos_mes: 0,
+      ticket_promedio_por_cliente: {},
+      horarios_pico: [],
+      dias_semana_mas_activos: []
+    };
+  }
+};
+
+/**
+ * Obtiene datos relacionados de ventas (clientes, productos, vendedores)
+ * @returns {object} - Datos relacionados
+ */
+export const obtenerDatosRelacionados = async () => {
+  try {
+    console.log('🔗 Obteniendo datos relacionados de ventas');
+    const response = await api.get('/ventas/datos-relacionados');
+    console.log('✅ Datos relacionados obtenidos:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error obteniendo datos relacionados:', error);
+    return {
+      clientes_activos: [],
+      productos_disponibles: [],
+      vendedores_activos: [],
+      categorias_productos: [],
+      formas_pago_disponibles: ['efectivo', 'tarjeta', 'transferencia', 'mixto']
+};
+  }
+};
+
+/**
+ * Obtiene análisis de rendimiento por vendedor
+ * @param {string} periodo - Período de análisis (dia, semana, mes)
+ * @returns {object} - Análisis de rendimiento
+ */
+export const obtenerAnalisisVendedores = async (periodo = 'mes') => {
+  try {
+    console.log('👨‍💼 Obteniendo análisis de vendedores:', periodo);
+    const response = await api.get(`/ventas/analisis-vendedores?periodo=${periodo}`);
+    console.log('✅ Análisis de vendedores obtenido:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error obteniendo análisis de vendedores:', error);
+    return {
+      vendedores: [],
+      comparaciones: {},
+      tendencias: {},
+      objetivos: {}
+    };
+  }
+};
+
+/**
+ * Obtiene análisis de productos más vendidos con detalles
+ * @param {string} periodo - Período de análisis
+ * @returns {object} - Análisis de productos
+ */
+export const obtenerAnalisisProductos = async (periodo = 'mes') => {
+  try {
+    console.log('📦 Obteniendo análisis de productos:', periodo);
+    const response = await api.get(`/ventas/analisis-productos?periodo=${periodo}`);
+    console.log('✅ Análisis de productos obtenido:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error obteniendo análisis de productos:', error);
+    return {
+      productos_top: [],
+      categorias_performance: {},
+      tendencias_productos: {},
+      productos_declive: []
+    };
+  }
+};
+
+/**
+ * Obtiene análisis de clientes y su comportamiento
+ * @param {string} periodo - Período de análisis
+ * @returns {object} - Análisis de clientes
+ */
+export const obtenerAnalisisClientes = async (periodo = 'mes') => {
+  try {
+    console.log('👥 Obteniendo análisis de clientes:', periodo);
+    const response = await api.get(`/ventas/analisis-clientes?periodo=${periodo}`);
+    console.log('✅ Análisis de clientes obtenido:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error obteniendo análisis de clientes:', error);
+    return {
+      clientes_frecuentes: [],
+      clientes_nuevos: [],
+      comportamiento_compra: {},
+      segmentacion_clientes: {},
+      clientes_vip: []
+    };
+  }
+};
+
+/**
+ * Obtiene métricas de rendimiento en tiempo real
+ * @returns {object} - Métricas en tiempo real
+ */
+export const obtenerMetricasEnTiempoReal = async () => {
+  try {
+    console.log('⚡ Obteniendo métricas en tiempo real');
+    const response = await api.get('/ventas/metricas-tiempo-real');
+    console.log('✅ Métricas en tiempo real obtenidas:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error obteniendo métricas en tiempo real:', error);
+    return {
+      ventas_ultima_hora: 0,
+      ingresos_ultima_hora: 0,
+      productos_vendidos_hoy: 0,
+      clientes_atendidos_hoy: 0,
+      vendedor_del_dia: null,
+      producto_estrella_hoy: null,
+      tendencia_actual: 'estable'
     };
   }
 };
@@ -207,6 +333,11 @@ export const ventasService = {
   actualizarVenta,
   eliminarVenta,
   obtenerEstadisticasVentas,
+  obtenerDatosRelacionados,
+  obtenerAnalisisVendedores,
+  obtenerAnalisisProductos,
+  obtenerAnalisisClientes,
+  obtenerMetricasEnTiempoReal,
 };
 
 // Exportación por defecto

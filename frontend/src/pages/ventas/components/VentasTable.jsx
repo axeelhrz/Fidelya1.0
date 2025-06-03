@@ -6,46 +6,75 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination,
   Paper,
   IconButton,
   Chip,
   Typography,
   Box,
-  Skeleton,
   Tooltip,
-  useTheme,
-  alpha,
   Avatar,
   Stack,
-  InputAdornment,
-  TextField,
-  Menu,
-  MenuItem,
-  ListItemIcon,
+  Badge,
+  TablePagination,
+  useTheme,
+  alpha,
+  Collapse,
+  List,
+  ListItem,
   ListItemText,
+  ListItemAvatar,
+  Divider,
 } from '@mui/material';
 import {
-  Visibility as VisibilityIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Person as PersonIcon,
-  ShoppingCart as ShoppingCartIcon,
-  MoreVert as MoreVertIcon,
-  Search as SearchIcon,
-  Receipt as ReceiptIcon,
-  Print as PrintIcon,
-  Share as ShareIcon,
+  Visibility,
+  Edit,
+  Delete,
+  ExpandMore,
+  ExpandLess,
+  Person,
+  ShoppingCart,
+  AttachMoney,
+  Receipt,
+  Schedule,
+  TrendingUp,
+  Star,
+  LocalOffer,
+  CreditCard,
+  Info,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const VentasTable = ({ ventas, loading, onEdit, onView, onDelete }) => {
+const VentasTable = ({ 
+  ventas, 
+  onEdit, 
+  onView, 
+  onDelete, 
+  loading,
+  datosRelacionados 
+}) => {
   const theme = useTheme();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [selectedVenta, setSelectedVenta] = useState(null);
+  const [expandedRows, setExpandedRows] = useState(new Set());
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const toggleRowExpansion = (ventaId) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(ventaId)) {
+      newExpanded.delete(ventaId);
+    } else {
+      newExpanded.add(ventaId);
+    }
+    setExpandedRows(newExpanded);
+  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-UY', {
@@ -59,505 +88,578 @@ const VentasTable = ({ ventas, loading, onEdit, onView, onDelete }) => {
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
-      const date = new Date(dateString);
-      return {
-        date: date.toLocaleDateString('es-UY', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
-        }),
-        time: date.toLocaleTimeString('es-UY', {
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-      };
-    } catch (error) {
-      return { date: 'Fecha inválida', time: '' };
+      return new Date(dateString).toLocaleDateString('es-UY', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return 'N/A';
     }
   };
 
-  const getEstadoConfig = (estado) => {
-    switch (estado) {
+  const getEstadoColor = (estado) => {
+    switch (estado?.toLowerCase()) {
       case 'completada':
-        return { 
-          color: 'success', 
-          label: 'Completada',
-          icon: '✅'
-        };
-      case 'borrador':
-        return { 
-          color: 'warning', 
-          label: 'Borrador',
-          icon: '📝'
-        };
+        return 'success';
+      case 'pendiente':
+        return 'warning';
       case 'cancelada':
-        return { 
-          color: 'error', 
-          label: 'Cancelada',
-          icon: '❌'
-        };
+        return 'error';
       default:
-        return { 
-          color: 'default', 
-          label: 'Completada',
-          icon: '✅'
-        };
+        return 'default';
     }
   };
 
-  const getFormaPagoConfig = (formaPago) => {
-    switch (formaPago) {
+  const getFormaPagoIcon = (formaPago) => {
+    switch (formaPago?.toLowerCase()) {
       case 'efectivo':
-        return { color: '#10B981', icon: '💵', label: 'Efectivo' };
+        return '💵';
       case 'tarjeta':
-        return { color: '#3B82F6', icon: '💳', label: 'Tarjeta' };
+        return '💳';
       case 'transferencia':
-        return { color: '#F59E0B', icon: '🏦', label: 'Transferencia' };
+        return '🏦';
       case 'mixto':
-        return { color: '#8B5CF6', icon: '🔄', label: 'Mixto' };
+        return '🔄';
       default:
-        return { color: theme.palette.grey[500], icon: '💵', label: 'Efectivo' };
+        return '💰';
     }
   };
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleMenuOpen = (event, venta) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedVenta(venta);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedVenta(null);
-  };
-
-  const handleMenuAction = (action) => {
-    if (selectedVenta) {
-      switch (action) {
-        case 'view':
-          onView(selectedVenta);
-          break;
-        case 'edit':
-          onEdit(selectedVenta);
-          break;
-        case 'delete':
-          onDelete(selectedVenta);
-          break;
-        case 'print':
-          console.log('Imprimir venta:', selectedVenta.id);
-          break;
-        case 'share':
-          console.log('Compartir venta:', selectedVenta.id);
-          break;
-      }
+  const getClienteInfo = (clienteId, clienteNombre) => {
+    if (!clienteId && !clienteNombre) {
+      return { nombre: 'Venta Rápida', tipo: 'anonimo', avatar: '👤' };
     }
-    handleMenuClose();
+    
+    const cliente = datosRelacionados?.clientes_activos?.find(c => c.id === clienteId);
+    if (cliente) {
+      return {
+        nombre: cliente.nombre,
+        tipo: cliente.tipo || 'regular',
+        avatar: cliente.nombre.charAt(0).toUpperCase(),
+        telefono: cliente.telefono,
+        email: cliente.email,
+        totalCompras: cliente.total_compras || 0
+      };
+    }
+    
+    return {
+      nombre: clienteNombre || 'Cliente',
+      tipo: 'regular',
+      avatar: (clienteNombre || 'C').charAt(0).toUpperCase()
+    };
   };
 
-  // Filtrar ventas por término de búsqueda
-  const filteredVentas = ventas.filter(venta => 
-    venta.cliente_nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    venta.usuario_nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    venta.id?.toString().includes(searchTerm)
-  );
+  const getVendedorInfo = (usuarioId, usuarioNombre) => {
+    const vendedor = datosRelacionados?.vendedores_activos?.find(v => v.id === usuarioId);
+    if (vendedor) {
+      return {
+        nombre: vendedor.nombre,
+        rol: vendedor.rol,
+        avatar: vendedor.nombre.charAt(0).toUpperCase(),
+        ventasHoy: vendedor.ventas_hoy || 0,
+        metaAlcanzada: vendedor.meta_alcanzada || false
+      };
+    }
+    
+    return {
+      nombre: usuarioNombre || 'Vendedor',
+      rol: 'operador',
+      avatar: (usuarioNombre || 'V').charAt(0).toUpperCase()
+    };
+  };
 
-  // Paginación
-  const paginatedVentas = filteredVentas.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  const calcularMetricas = (venta) => {
+    const productos = venta.productos || [];
+    const totalProductos = productos.reduce((sum, p) => sum + (p.cantidad || 0), 0);
+    const ticketPromedio = venta.total / Math.max(totalProductos, 1);
+    
+    return {
+      totalProductos,
+      ticketPromedio,
+      margenEstimado: ((venta.total - (venta.total * 0.7)) / venta.total * 100) || 0,
+      productosUnicos: productos.length
+    };
+  };
+
+  // Ventas paginadas
+  const ventasPaginadas = ventas.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   if (loading) {
     return (
-      <Box>
-        {/* Header con búsqueda skeleton */}
-        <Box sx={{ p: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-          <Skeleton variant="rectangular" width={300} height={40} sx={{ borderRadius: 2 }} />
-        </Box>
-        
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.05) }}>
-                {['Fecha', 'Cliente', 'Productos', 'Forma de Pago', 'Total', 'Estado', 'Acciones'].map((header) => (
-                  <TableCell key={header} sx={{ fontWeight: 700, py: 2 }}>
-                    <Skeleton variant="text" width={80} />
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {[...Array(5)].map((_, index) => (
-                <TableRow key={index}>
-                  {[...Array(7)].map((_, cellIndex) => (
-                    <TableCell key={cellIndex}>
-                      <Skeleton variant="text" height={40} />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
+      <Paper sx={{ p: 3, textAlign: 'center' }}>
+        <Typography>Cargando ventas...</Typography>
+      </Paper>
     );
   }
 
   if (!ventas || ventas.length === 0) {
     return (
-      <Box sx={{ p: 6, textAlign: 'center' }}>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <ShoppingCartIcon sx={{ fontSize: 80, color: theme.palette.grey[400], mb: 2 }} />
-          <Typography variant="h5" color="text.secondary" gutterBottom sx={{ fontWeight: 600 }}>
-            No hay ventas registradas
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Las ventas aparecerán aquí una vez que comiences a registrarlas
-          </Typography>
-        </motion.div>
-      </Box>
+      <Paper sx={{ p: 3, textAlign: 'center' }}>
+        <Typography variant="h6" color="text.secondary">
+          No hay ventas registradas
+        </Typography>
+      </Paper>
     );
   }
 
   return (
-    <Box>
-      {/* Header con búsqueda */}
-      <Box sx={{ 
-        p: 3, 
-        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        backgroundColor: alpha(theme.palette.primary.main, 0.02)
-      }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
-            📋 Lista de Ventas
-          </Typography>
-          <Chip 
-            label={`${filteredVentas.length} venta${filteredVentas.length !== 1 ? 's' : ''}`}
-            color="primary"
-            variant="outlined"
-            sx={{ fontWeight: 600 }}
-          />
-        </Box>
-        
-        <TextField
-          placeholder="Buscar por cliente, vendedor o ID de venta..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          size="small"
-          sx={{ 
-            maxWidth: 400,
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: theme.palette.background.paper,
-            }
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="action" />
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
-
-      <TableContainer>
-        <Table>
+    <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 3 }}>
+      <TableContainer sx={{ maxHeight: 600 }}>
+        <Table stickyHeader>
           <TableHead>
-            <TableRow sx={{ 
-              backgroundColor: alpha(theme.palette.primary.main, 0.05),
-              '& .MuiTableCell-head': {
-                borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`
-              }
-            }}>
-              <TableCell sx={{ fontWeight: 700, py: 2 }}>Fecha</TableCell>
-              <TableCell sx={{ fontWeight: 700, py: 2 }}>Cliente</TableCell>
-              <TableCell sx={{ fontWeight: 700, py: 2 }}>Productos</TableCell>
-              <TableCell sx={{ fontWeight: 700, py: 2 }}>Forma de Pago</TableCell>
-              <TableCell sx={{ fontWeight: 700, py: 2 }}>Total</TableCell>
-              <TableCell sx={{ fontWeight: 700, py: 2 }}>Estado</TableCell>
-              <TableCell sx={{ fontWeight: 700, py: 2 }} align="center">Acciones</TableCell>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                Detalles
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                Cliente
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                Vendedor
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                Fecha
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                Productos
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                Pago
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                Total
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                Estado
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                Acciones
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             <AnimatePresence>
-              {paginatedVentas.map((venta, index) => {
-                const fechaFormateada = formatDate(venta.fecha);
-                const estadoConfig = getEstadoConfig(venta.estado);
-                const formaPagoConfig = getFormaPagoConfig(venta.forma_pago);
+              {ventasPaginadas.map((venta, index) => {
+                const clienteInfo = getClienteInfo(venta.cliente_id, venta.cliente_nombre);
+                const vendedorInfo = getVendedorInfo(venta.usuario_id, venta.usuario_nombre);
+                const metricas = calcularMetricas(venta);
+                const isExpanded = expandedRows.has(venta.id);
 
                 return (
-                  <motion.tr
-                    key={venta.id}
-                    component={TableRow}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    sx={{
-                      '&:hover': {
-                        backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                        transform: 'scale(1.01)',
-                      },
-                      transition: 'all 0.2s ease-in-out',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => onView(venta)}
-                  >
-                    <TableCell sx={{ py: 2 }}>
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {fechaFormateada.date}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {fechaFormateada.time}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    
-                    <TableCell sx={{ py: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar 
-                          sx={{ 
-                            width: 36, 
-                            height: 36, 
-                            mr: 2,
-                            backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                            color: theme.palette.primary.main
-                          }}
-                        >
-                          {venta.cliente_nombre ? venta.cliente_nombre.charAt(0).toUpperCase() : <PersonIcon />}
-                        </Avatar>
+                  <React.Fragment key={venta.id}>
+                    <motion.tr
+                      component={TableRow}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                        },
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => toggleRowExpansion(venta.id)}
+                    >
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <IconButton size="small">
+                            {isExpanded ? <ExpandLess /> : <ExpandMore />}
+                          </IconButton>
+                          <Box>
+                            <Typography variant="body2" fontWeight={600}>
+                              #{venta.numero_venta || venta.id}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {metricas.productosUnicos} productos únicos
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Badge
+                            badgeContent={clienteInfo.totalCompras > 10 ? '⭐' : null}
+                            color="primary"
+                          >
+                            <Avatar
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                bgcolor: clienteInfo.tipo === 'vip' ? theme.palette.warning.main : theme.palette.primary.main,
+                                fontSize: '0.875rem'
+                              }}
+                            >
+                              {clienteInfo.avatar}
+                            </Avatar>
+                          </Badge>
+                          <Box>
+                            <Typography variant="body2" fontWeight={500}>
+                              {clienteInfo.nombre}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {clienteInfo.tipo === 'vip' ? '👑 VIP' : 
+                               clienteInfo.tipo === 'anonimo' ? '👤 Anónimo' : '👤 Regular'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Badge
+                            badgeContent={vendedorInfo.metaAlcanzada ? '🎯' : null}
+                            color="success"
+                          >
+                            <Avatar
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                bgcolor: vendedorInfo.rol === 'admin' ? theme.palette.error.main : theme.palette.secondary.main,
+                                fontSize: '0.875rem'
+                              }}
+                            >
+                              {vendedorInfo.avatar}
+                            </Avatar>
+                          </Badge>
+                          <Box>
+                            <Typography variant="body2" fontWeight={500}>
+                              {vendedorInfo.nombre}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {vendedorInfo.ventasHoy} ventas hoy
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+
+                      <TableCell>
                         <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {venta.cliente_nombre || 'Venta rápida'}
+                          <Typography variant="body2">
+                            {formatDate(venta.fecha)}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            por {venta.usuario_nombre || 'Usuario desconocido'}
+                            {new Date(venta.fecha).toLocaleTimeString('es-UY', { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
                           </Typography>
                         </Box>
-                      </Box>
-                    </TableCell>
-                    
-                    <TableCell sx={{ py: 2 }}>
-                      <Chip
-                        label={`${venta.cantidad_productos} producto${venta.cantidad_productos !== 1 ? 's' : ''}`}
-                        size="small"
-                        icon={<ShoppingCartIcon />}
-                        sx={{
-                          backgroundColor: alpha(theme.palette.info.main, 0.1),
-                          color: theme.palette.info.main,
-                          fontWeight: 600,
-                          '& .MuiChip-icon': {
-                            fontSize: 16
-                          }
-                        }}
-                      />
-                    </TableCell>
-                    
-                    <TableCell sx={{ py: 2 }}>
-                      <Chip
-                        label={formaPagoConfig.label}
-                        size="small"
-                        sx={{
-                          backgroundColor: alpha(formaPagoConfig.color, 0.1),
-                          color: formaPagoConfig.color,
-                          fontWeight: 600,
-                          '&::before': {
-                            content: `"${formaPagoConfig.icon}"`,
-                            marginRight: 1
-                          }
-                        }}
-                      />
-                    </TableCell>
-                    
-                    <TableCell sx={{ py: 2 }}>
-                      <Typography 
-                        variant="h6" 
-                        sx={{ 
-                          fontWeight: 700, 
-                          color: theme.palette.success.main,
-                          fontSize: '1rem'
-                        }}
-                      >
-                        {formatCurrency(venta.total)}
-                      </Typography>
-                    </TableCell>
-                    
-                    <TableCell sx={{ py: 2 }}>
-                      <Chip
-                        label={estadoConfig.label}
-                        color={estadoConfig.color}
-                        size="small"
-                        sx={{ 
-                          fontWeight: 600,
-                          '&::before': {
-                            content: `"${estadoConfig.icon}"`,
-                            marginRight: 1
-                          }
-                        }}
-                      />
-                    </TableCell>
-                    
-                    <TableCell align="center" sx={{ py: 2 }}>
-                      <Stack direction="row" spacing={0.5} justifyContent="center">
-                        <Tooltip title="Ver detalle" arrow>
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onView(venta);
-                            }}
-                            sx={{ 
-                              color: theme.palette.info.main,
-                              '&:hover': {
-                                backgroundColor: alpha(theme.palette.info.main, 0.1),
-                                transform: 'scale(1.1)'
-                              },
-                              transition: 'all 0.2s ease-in-out'
-                            }}
-                          >
-                            <VisibilityIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        
-                        <Tooltip title="Editar" arrow>
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onEdit(venta);
-                            }}
-                            sx={{ 
-                              color: theme.palette.warning.main,
-                              '&:hover': {
-                                backgroundColor: alpha(theme.palette.warning.main, 0.1),
-                                transform: 'scale(1.1)'
-                              },
-                              transition: 'all 0.2s ease-in-out'
-                            }}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        
-                        <Tooltip title="Más opciones" arrow>
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMenuOpen(e, venta);
-                            }}
-                            sx={{ 
-                              color: theme.palette.text.secondary,
-                              '&:hover': {
-                                backgroundColor: alpha(theme.palette.text.secondary, 0.1),
-                                transform: 'scale(1.1)'
-                              },
-                              transition: 'all 0.2s ease-in-out'
-                            }}
-                          >
-                            <MoreVertIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
-                    </TableCell>
-                  </motion.tr>
+                      </TableCell>
+
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <ShoppingCart sx={{ fontSize: 16, color: theme.palette.primary.main }} />
+                          <Box>
+                            <Typography variant="body2" fontWeight={500}>
+                              {metricas.totalProductos} unidades
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {metricas.productosUnicos} productos
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography sx={{ fontSize: '1.2rem' }}>
+                            {getFormaPagoIcon(venta.forma_pago)}
+                          </Typography>
+                          <Box>
+                            <Typography variant="body2" fontWeight={500}>
+                              {venta.forma_pago?.charAt(0).toUpperCase() + venta.forma_pago?.slice(1) || 'N/A'}
+                            </Typography>
+                            {venta.descuento > 0 && (
+                              <Typography variant="caption" color="success.main">
+                                -{formatCurrency(venta.descuento)} desc.
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      </TableCell>
+
+                      <TableCell>
+                        <Box>
+                          <Typography variant="h6" fontWeight={600} color="primary.main">
+                            {formatCurrency(venta.total)}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Ticket: {formatCurrency(metricas.ticketPromedio)}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+
+                      <TableCell>
+                        <Chip
+                          label={venta.estado?.charAt(0).toUpperCase() + venta.estado?.slice(1) || 'N/A'}
+                          color={getEstadoColor(venta.estado)}
+                          size="small"
+                          sx={{ fontWeight: 500 }}
+                        />
+                      </TableCell>
+
+                      <TableCell>
+                        <Stack direction="row" spacing={0.5}>
+                          <Tooltip title="Ver detalles">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onView(venta);
+                              }}
+                              sx={{ color: theme.palette.info.main }}
+                            >
+                              <Visibility fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Editar">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(venta);
+                              }}
+                              sx={{ color: theme.palette.warning.main }}
+                            >
+                              <Edit fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Eliminar">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(venta);
+                              }}
+                              sx={{ color: theme.palette.error.main }}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+                    </motion.tr>
+
+                    {/* Fila expandida con detalles */}
+                    <TableRow>
+                      <TableCell colSpan={9} sx={{ p: 0, border: 'none' }}>
+                        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                          <Box sx={{ 
+                            p: 3, 
+                            bgcolor: alpha(theme.palette.primary.main, 0.02),
+                            borderLeft: `4px solid ${theme.palette.primary.main}`
+                          }}>
+                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Info color="primary" />
+                              Detalles de la Venta #{venta.numero_venta || venta.id}
+                            </Typography>
+                            
+                            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 3, mt: 2 }}>
+                              {/* Información del Cliente */}
+                              <Box>
+                                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                                  👤 Información del Cliente
+                                </Typography>
+                                <List dense>
+                                  <ListItem>
+                                    <ListItemAvatar>
+                                      <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                                        <Person />
+                                      </Avatar>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                      primary={clienteInfo.nombre}
+                                      secondary={`Tipo: ${clienteInfo.tipo} ${clienteInfo.totalCompras ? `• ${clienteInfo.totalCompras} compras` : ''}`}
+                                    />
+                                  </ListItem>
+                                  {clienteInfo.telefono && (
+                                    <ListItem>
+                                      <ListItemText
+                                        primary="Teléfono"
+                                        secondary={clienteInfo.telefono}
+                                        sx={{ pl: 7 }}
+                                      />
+                                    </ListItem>
+                                  )}
+                                  {clienteInfo.email && (
+                                    <ListItem>
+                                      <ListItemText
+                                        primary="Email"
+                                        secondary={clienteInfo.email}
+                                        sx={{ pl: 7 }}
+                                      />
+                                    </ListItem>
+                                  )}
+                                </List>
+                              </Box>
+
+                              {/* Productos Vendidos */}
+                              <Box>
+                                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                                  🛒 Productos Vendidos
+                                </Typography>
+                                <List dense>
+                                  {venta.productos?.slice(0, 5).map((producto, idx) => (
+                                    <ListItem key={idx}>
+                                      <ListItemAvatar>
+                                        <Avatar sx={{ bgcolor: theme.palette.success.main }}>
+                                          <LocalOffer />
+                                        </Avatar>
+                                      </ListItemAvatar>
+                                      <ListItemText
+                                        primary={producto.nombre}
+                                        secondary={`${producto.cantidad} ${producto.unidad} × ${formatCurrency(producto.precio_unitario)} = ${formatCurrency(producto.subtotal)}`}
+                                      />
+                                    </ListItem>
+                                  )) || []}
+                                  {venta.productos?.length > 5 && (
+                                    <ListItem>
+                                      <ListItemText
+                                        primary={`+${venta.productos.length - 5} productos más...`}
+                                        sx={{ pl: 7, fontStyle: 'italic' }}
+                                      />
+                                    </ListItem>
+                                  )}
+                                </List>
+                              </Box>
+
+                              {/* Métricas de Venta */}
+                              <Box>
+                                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                                  📊 Métricas de Venta
+                                </Typography>
+                                <List dense>
+                                  <ListItem>
+                                    <ListItemAvatar>
+                                      <Avatar sx={{ bgcolor: theme.palette.info.main }}>
+                                        <AttachMoney />
+                                      </Avatar>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                      primary="Subtotal"
+                                      secondary={formatCurrency(venta.subtotal || venta.total - (venta.impuestos || 0))}
+                                    />
+                                  </ListItem>
+                                  {venta.descuento > 0 && (
+                                    <ListItem>
+                                      <ListItemAvatar>
+                                        <Avatar sx={{ bgcolor: theme.palette.success.main }}>
+                                          <LocalOffer />
+                                        </Avatar>
+                                      </ListItemAvatar>
+                                      <ListItemText
+                                        primary="Descuento"
+                                        secondary={formatCurrency(venta.descuento)}
+                                      />
+                                    </ListItem>
+                                  )}
+                                  {venta.impuestos > 0 && (
+                                    <ListItem>
+                                      <ListItemAvatar>
+                                        <Avatar sx={{ bgcolor: theme.palette.warning.main }}>
+                                          <Receipt />
+                                        </Avatar>
+                                      </ListItemAvatar>
+                                      <ListItemText
+                                        primary="Impuestos"
+                                        secondary={formatCurrency(venta.impuestos)}
+                                      />
+                                    </ListItem>
+                                  )}
+                                  <ListItem>
+                                    <ListItemAvatar>
+                                      <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                                        <TrendingUp />
+                                      </Avatar>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                      primary="Margen Estimado"
+                                      secondary={`${metricas.margenEstimado.toFixed(1)}%`}
+                                    />
+                                  </ListItem>
+                                </List>
+                              </Box>
+
+                              {/* Información Adicional */}
+                              <Box>
+                                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                                  ℹ️ Información Adicional
+                                </Typography>
+                                <List dense>
+                                  <ListItem>
+                                    <ListItemAvatar>
+                                      <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
+                                        <Schedule />
+                                      </Avatar>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                      primary="Hora de Venta"
+                                      secondary={new Date(venta.fecha).toLocaleTimeString('es-UY')}
+                                    />
+                                  </ListItem>
+                                  <ListItem>
+                                    <ListItemAvatar>
+                                      <Avatar sx={{ bgcolor: theme.palette.info.main }}>
+                                        <CreditCard />
+                                      </Avatar>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                      primary="Método de Pago"
+                                      secondary={`${getFormaPagoIcon(venta.forma_pago)} ${venta.forma_pago?.charAt(0).toUpperCase() + venta.forma_pago?.slice(1)}`}
+                                    />
+                                  </ListItem>
+                                  {venta.observaciones && (
+                                    <ListItem>
+                                      <ListItemText
+                                        primary="Observaciones"
+                                        secondary={venta.observaciones}
+                                        sx={{ pl: 7 }}
+                                      />
+                                    </ListItem>
+                                  )}
+                                  <ListItem>
+                                    <ListItemText
+                                      primary="Ticket Promedio"
+                                      secondary={formatCurrency(metricas.ticketPromedio)}
+                                      sx={{ pl: 7 }}
+                                    />
+                                  </ListItem>
+                                </List>
+                              </Box>
+                            </Box>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                    </TableRow>
+                  </React.Fragment>
                 );
               })}
             </AnimatePresence>
           </TableBody>
         </Table>
       </TableContainer>
-
-      {/* Paginación */}
+      
       <TablePagination
         rowsPerPageOptions={[5, 10, 25, 50]}
         component="div"
-        count={filteredVentas.length}
+        count={ventas.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         labelRowsPerPage="Filas por página:"
-        labelDisplayedRows={({ from, to, count }) => 
-          `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
-        }
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
         sx={{
-          borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          backgroundColor: alpha(theme.palette.primary.main, 0.02),
-          '& .MuiTablePagination-toolbar': {
-            px: 3
-          }
+          borderTop: `1px solid ${theme.palette.divider}`,
+          bgcolor: alpha(theme.palette.primary.main, 0.02)
         }}
       />
-
-      {/* Menú contextual */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: theme.shadows[8],
-            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-            minWidth: 200
-          }
-        }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-      >
-        <MenuItem onClick={() => handleMenuAction('view')}>
-          <ListItemIcon>
-            <VisibilityIcon fontSize="small" color="info" />
-          </ListItemIcon>
-          <ListItemText primary="Ver detalle" />
-        </MenuItem>
-        
-        <MenuItem onClick={() => handleMenuAction('edit')}>
-          <ListItemIcon>
-            <EditIcon fontSize="small" color="warning" />
-          </ListItemIcon>
-          <ListItemText primary="Editar" />
-        </MenuItem>
-        
-        <MenuItem onClick={() => handleMenuAction('print')}>
-          <ListItemIcon>
-            <PrintIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText primary="Imprimir" />
-        </MenuItem>
-        
-        <MenuItem onClick={() => handleMenuAction('share')}>
-          <ListItemIcon>
-            <ShareIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText primary="Compartir" />
-        </MenuItem>
-        
-        <MenuItem 
-          onClick={() => handleMenuAction('delete')}
-          sx={{ color: theme.palette.error.main }}
-        >
-          <ListItemIcon>
-            <DeleteIcon fontSize="small" color="error" />
-          </ListItemIcon>
-          <ListItemText primary="Eliminar" />
-        </MenuItem>
-      </Menu>
-    </Box>
+    </Paper>
   );
 };
 
