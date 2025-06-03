@@ -10,7 +10,7 @@ import {
   Skeleton
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { TrendingUp, Package } from '@mui/icons-material';
+import { TrendingUp, Inventory } from '@mui/icons-material';
 
 const InventorySummaryCard = ({ data, loading }) => {
   const theme = useTheme();
@@ -117,7 +117,7 @@ const InventorySummaryCard = ({ data, loading }) => {
                   boxShadow: `0 8px 20px ${alpha(theme.palette.warning.main, 0.3)}`,
                 }}
               >
-                <Package sx={{ fontSize: 24, color: 'white' }} />
+                <Inventory sx={{ fontSize: 24, color: 'white' }} />
               </Box>
             </motion.div>
           </Box>
