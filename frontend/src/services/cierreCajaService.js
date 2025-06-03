@@ -1,267 +1,494 @@
 import axios from 'axios';
-import config from '../config/config';
+import { config } from '../config/config';
 
-// URL base del backend Flask
-const API_URL = config.API_BASE_URL;
+class CierreCajaService {
+  constructor() {
+    this.baseURL = `${config.API_BASE_URL}/api/cierre-caja`;
+    this.cache = new Map();
+    this.cacheTimeout = 5 * 60 * 1000; // 5 minutos
+  }
 
-console.log('💰 Cierre Caja API_URL configurada:', API_URL);
-
-// Configurar instancia de axios con configuraciones base
-const api = axios.create({
-  baseURL: API_URL,
-  timeout: 30000, // Timeout más largo para operaciones de cierre
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: false,
-});
-
-// Interceptor para agregar token automáticamente a las peticiones
-api.interceptors.request.use(
+  // Configurar interceptores de axios
+  setupInterceptors() {
+    axios.interceptors.request.use(
   (config) => {
-    console.log('📤 Enviando petición de cierre de caja a:', config.baseURL + config.url);
-    const token = localStorage.getItem('token');
+        const token = localStorage.getItem(config.JWT_STORAGE_KEY || 'token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    console.error('Error en interceptor de request:', error);
-    return Promise.reject(error);
-  }
+      (error) => Promise.reject(error)
 );
 
-// Interceptor para manejar respuestas y errores globalmente
-api.interceptors.response.use(
-  (response) => {
-    console.log('📥 Respuesta de cierre de caja recibida:', response.status, response.config.url);
-    return response;
-  },
+    axios.interceptors.response.use(
+      (response) => response,
   (error) => {
-    console.error('❌ Error en respuesta de cierre de caja:', error);
-    
-    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-      console.error('Error de CORS o conexión:', error);
-      return Promise.reject({
-        message: 'Error de conexión. Verifica que el servidor esté funcionando.',
-        type: 'NETWORK_ERROR'
-      });
-    }
-    
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('rememberUser');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+          localStorage.removeItem(config.JWT_STORAGE_KEY || 'token');
+          window.location.href = '/login';
       }
+        return Promise.reject(error);
     }
-    
-    if (error.response?.status === 403) {
-      return Promise.reject({
-        message: 'No tienes permisos para realizar esta acción. Se requiere rol de administrador o cajero.',
-        type: 'PERMISSION_ERROR'
-      });
-    }
-    
-    return Promise.reject(error);
-  }
 );
-
-/**
- * Obtiene resumen automático de ventas del día actual
- * @returns {object} - Resumen de ventas y estado del cierre
- */
-export const obtenerResumenVentasHoy = async () => {
-  try {
-    console.log('💰 Obteniendo resumen de ventas del día');
-    const response = await api.get('/cierre-caja/hoy');
-    console.log('✅ Resumen de ventas obtenido:', response.data.resumen_ventas?.total_ventas || 0);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error obteniendo resumen de ventas:', error);
-    throw error.response?.data || { message: 'Error obteniendo resumen de ventas del día' };
   }
-};
 
-/**
- * Registra el cierre de caja diario
- * @param {object} datoscierre - Datos del cierre de caja
- * @returns {object} - Respuesta del servidor con el cierre registrado
- */
-export const registrarCierreCaja = async (datosCierre) => {
-  try {
-    console.log('💰 Registrando cierre de caja:', datosCierre);
-    const response = await api.post('/cierre-caja/registrar', datosCierre);
-    console.log('✅ Cierre de caja registrado:', response.data.cierre?.id);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error registrando cierre de caja:', error);
-    throw error.response?.data || { message: 'Error registrando cierre de caja' };
+  // Gestión de caché
+  getCacheKey(endpoint, params = {}) {
+    return `${endpoint}_${JSON.stringify(params)}`;
   }
-};
 
-/**
- * Obtiene historial de cierres de caja
- * @param {object} filtros - Filtros de búsqueda
- * @returns {array} - Lista de cierres anteriores
- */
-export const obtenerHistorialCierres = async (filtros = {}) => {
-  try {
-    const params = new URLSearchParams();
-    
-    if (filtros.fecha_inicio) {
-      params.append('fecha_inicio', filtros.fecha_inicio);
+  setCache(key, data) {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now()
+    });
+  }
+
+  getCache(key) {
+    const cached = this.cache.get(key);
+    if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
+      return cached.data;
     }
-    if (filtros.fecha_fin) {
-      params.append('fecha_fin', filtros.fecha_fin);
-    }
-    if (filtros.limite) {
-      params.append('limite', filtros.limite);
-    }
-    
-    const url = `/cierre-caja/historial${params.toString() ? '?' + params.toString() : ''}`;
-    console.log('💰 Obteniendo historial de cierres:', url);
-    
-    const response = await api.get(url);
-    console.log('✅ Historial de cierres obtenido:', response.data.length);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error obteniendo historial de cierres:', error);
-    // Devolver array vacío en caso de error
-    console.log('🔄 Devolviendo lista vacía de cierres como fallback');
-    return [];
+    this.cache.delete(key);
+    return null;
   }
-};
 
-/**
- * Obtiene detalle de un cierre específico
- * @param {number} cierreId - ID del cierre
- * @returns {object} - Detalle completo del cierre
- */
-export const obtenerDetalleCierre = async (cierreId) => {
-  try {
-    console.log('💰 Obteniendo detalle de cierre:', cierreId);
-    const response = await api.get(`/cierre-caja/detalle/${cierreId}`);
-    console.log('✅ Detalle de cierre obtenido:', response.data.fecha_cierre);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error obteniendo detalle de cierre:', error);
-    throw error.response?.data || { message: 'Error obteniendo detalle del cierre' };
+  clearCache() {
+    this.cache.clear();
   }
-};
 
-/**
- * Exporta un cierre en formato PDF
- * @param {number} cierreId - ID del cierre a exportar
- * @returns {object} - Información de la exportación
- */
-export const exportarCierrePDF = async (cierreId) => {
-  try {
-    console.log('📤 Exportando cierre a PDF:', cierreId);
-    const response = await api.post(`/cierre-caja/exportar-pdf/${cierreId}`);
-    console.log('✅ Cierre exportado a PDF:', response.data.nombre_archivo);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error exportando cierre a PDF:', error);
-    throw error.response?.data || { message: 'Error exportando cierre a PDF' };
-  }
-};
-
-/**
- * Valida si el usuario tiene permisos para cierre de caja
- * @returns {boolean} - true si tiene permisos
- */
-export const validarPermisosCierreCaja = () => {
-  try {
+  // Validaciones de permisos
+  validarPermisosCierreCaja() {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const rolesPermitidos = ['admin', 'cajero'];
-    return rolesPermitidos.includes(user.rol);
-  } catch (error) {
-    console.error('Error validando permisos:', error);
-    return false;
+    const rolesPermitidos = ['administrador', 'cajero', 'gerente'];
+    return rolesPermitidos.includes(user.rol?.toLowerCase());
   }
-};
 
-/**
- * Calcula el estado de la diferencia de caja
- * @param {number} diferencia - Diferencia entre esperado y contado
- * @returns {object} - Estado y color de la diferencia
- */
-export const calcularEstadoDiferencia = (diferencia) => {
-  if (diferencia === 0) {
-    return {
-      estado: 'correcto',
-      color: 'success',
-      icono: 'CheckCircle',
-      mensaje: 'Caja correcta'
-    };
-  } else if (diferencia < 0) {
-    return {
-      estado: 'faltante',
-      color: 'error',
-      icono: 'Warning',
-      mensaje: `Faltante: $${Math.abs(diferencia).toFixed(2)}`
-    };
-  } else {
-    return {
-      estado: 'sobrante',
-      color: 'info',
-      icono: 'Info',
-      mensaje: `Sobrante: $${diferencia.toFixed(2)}`
-    };
-  }
-};
-
-/**
- * Formatea la fecha para mostrar en la interfaz
- * @param {string} fecha - Fecha en formato ISO
- * @returns {string} - Fecha formateada
- */
-export const formatearFechaCierre = (fecha) => {
+  // Obtener resumen de ventas del día
+  async obtenerResumenVentasHoy() {
+    const cacheKey = this.getCacheKey('resumen_ventas_hoy');
+    const cached = this.getCache(cacheKey);
+    if (cached) return cached;
   try {
-    const date = new Date(fecha);
-    return date.toLocaleDateString('es-UY', {
+      const response = await axios.get(`${this.baseURL}/resumen-ventas-hoy`);
+      const data = {
+        resumen_ventas: {
+          numero_ventas: response.data.numero_ventas || 0,
+          total_efectivo: response.data.total_efectivo || 0,
+          total_tarjeta: response.data.total_tarjeta || 0,
+          total_transferencia: response.data.total_transferencia || 0,
+          total_ventas: response.data.total_ventas || 0,
+          venta_promedio: response.data.venta_promedio || 0,
+          comparacion_ayer: response.data.comparacion_ayer || {},
+          tendencia_semanal: response.data.tendencia_semanal || [],
+          productos_top: response.data.productos_top || [],
+          metricas_tiempo: response.data.metricas_tiempo || {}
+        },
+        cierre_existente: response.data.cierre_existente || null,
+        puede_cerrar: response.data.puede_cerrar || false
+};
+
+      this.setCache(cacheKey, data);
+      return data;
+  } catch (error) {
+      console.error('Error obteniendo resumen de ventas:', error);
+      throw new Error(
+        error.response?.data?.message || 
+        'Error al obtener el resumen de ventas del día'
+      );
+  }
+  }
+
+  // Registrar cierre de caja
+  async registrarCierreCaja(datosCompletos) {
+    try {
+      // Validar datos antes de enviar
+      this.validarDatosCierre(datosCompletos);
+
+      const response = await axios.post(`${this.baseURL}/registrar`, {
+        total_efectivo_contado: datosCompletos.total_efectivo_contado,
+        observaciones: datosCompletos.observaciones,
+        tiempo_conteo: datosCompletos.tiempo_conteo || 0,
+        denominaciones_detalle: datosCompletos.denominaciones_detalle || null,
+        verificacion_seguridad: datosCompletos.verificacion_seguridad || false,
+        metadata: {
+          timestamp: new Date().toISOString(),
+          user_agent: navigator.userAgent,
+          ip_address: 'client_side' // Se obtiene en el backend
+        }
+      });
+
+      // Limpiar caché después de registrar
+      this.clearCache();
+
+      return {
+        cierre: response.data.cierre,
+        mensaje: response.data.mensaje || 'Cierre registrado exitosamente'
+};
+    } catch (error) {
+      console.error('Error registrando cierre:', error);
+      throw new Error(
+        error.response?.data?.message || 
+        'Error al registrar el cierre de caja'
+      );
+    }
+  }
+
+  // Validar datos del cierre
+  validarDatosCierre(datos) {
+    if (typeof datos.total_efectivo_contado !== 'number' || datos.total_efectivo_contado < 0) {
+      throw new Error('El total de efectivo contado debe ser un número válido mayor o igual a 0');
+    }
+
+    if (datos.observaciones && datos.observaciones.length > 500) {
+      throw new Error('Las observaciones no pueden exceder 500 caracteres');
+    }
+
+    if (!datos.verificacion_seguridad) {
+      throw new Error('Debe verificar la seguridad del conteo antes de proceder');
+    }
+
+    return true;
+  }
+
+  // Obtener historial de cierres
+  async obtenerHistorialCierres(filtros = {}) {
+    const cacheKey = this.getCacheKey('historial_cierres', filtros);
+    const cached = this.getCache(cacheKey);
+    if (cached) return cached;
+
+    try {
+      const params = new URLSearchParams();
+      
+      if (filtros.limite) params.append('limite', filtros.limite);
+      if (filtros.fecha_inicio) params.append('fecha_inicio', filtros.fecha_inicio);
+      if (filtros.fecha_fin) params.append('fecha_fin', filtros.fecha_fin);
+      if (filtros.usuario) params.append('usuario', filtros.usuario);
+      if (filtros.estado_diferencia && filtros.estado_diferencia !== 'todos') {
+        params.append('estado_diferencia', filtros.estado_diferencia);
+      }
+      if (filtros.precision_min) params.append('precision_min', filtros.precision_min);
+
+      const response = await axios.get(`${this.baseURL}/historial?${params.toString()}`);
+      
+      const historial = response.data.map(cierre => ({
+        ...cierre,
+        diferencia: cierre.diferencia || 0,
+        precision: this.calcularPrecision(cierre.diferencia, cierre.total_ventas_esperado)
+      }));
+
+      this.setCache(cacheKey, historial);
+      return historial;
+    } catch (error) {
+      console.error('Error obteniendo historial:', error);
+      throw new Error(
+        error.response?.data?.message || 
+        'Error al obtener el historial de cierres'
+      );
+    }
+  }
+
+  // Obtener métricas del cajero
+  async obtenerMetricasCajero() {
+    const cacheKey = this.getCacheKey('metricas_cajero');
+    const cached = this.getCache(cacheKey);
+    if (cached) return cached;
+
+    try {
+      const response = await axios.get(`${this.baseURL}/metricas-cajero`);
+      const metricas = {
+        precision_promedio: response.data.precision_promedio || 0,
+        total_cierres: response.data.total_cierres || 0,
+        racha_actual: response.data.racha_actual || 0,
+        cierres_perfectos: response.data.cierres_perfectos || 0,
+        diferencia_promedio: response.data.diferencia_promedio || 0,
+        tiempo_promedio_conteo: response.data.tiempo_promedio_conteo || 0,
+        tendencia_precision: response.data.tendencia_precision || []
+};
+
+      this.setCache(cacheKey, metricas);
+      return metricas;
+    } catch (error) {
+      console.error('Error obteniendo métricas:', error);
+      return {
+        precision_promedio: 0,
+        total_cierres: 0,
+        racha_actual: 0,
+        cierres_perfectos: 0,
+        diferencia_promedio: 0,
+        tiempo_promedio_conteo: 0,
+        tendencia_precision: []
+      };
+    }
+  }
+
+  // Obtener notificaciones de cierre
+  async obtenerNotificacionesCierre() {
+    try {
+      const response = await axios.get(`${this.baseURL}/notificaciones`);
+      return response.data || [];
+    } catch (error) {
+      console.error('Error obteniendo notificaciones:', error);
+      return [];
+    }
+  }
+
+  // Obtener detalle de un cierre específico
+  async obtenerDetalleCierre(cierreId) {
+    const cacheKey = this.getCacheKey('detalle_cierre', { id: cierreId });
+    const cached = this.getCache(cacheKey);
+    if (cached) return cached;
+
+    try {
+      const response = await axios.get(`${this.baseURL}/detalle/${cierreId}`);
+      const detalle = {
+        ...response.data,
+        precision: this.calcularPrecision(response.data.diferencia, response.data.total_ventas_esperado)
+      };
+
+      this.setCache(cacheKey, detalle);
+      return detalle;
+    } catch (error) {
+      console.error('Error obteniendo detalle del cierre:', error);
+      throw new Error(
+        error.response?.data?.message || 
+        'Error al obtener el detalle del cierre'
+      );
+    }
+  }
+
+  // Exportar cierre a PDF
+  async exportarCierrePDF(cierreId, configuracion = {}) {
+    try {
+      const response = await axios.post(`${this.baseURL}/exportar-pdf/${cierreId}`, {
+        configuracion: {
+          plantilla: configuracion.plantilla || 'completa',
+          incluir_graficos: configuracion.incluirGraficos || true,
+          incluir_firma_digital: configuracion.incluirFirmaDigital || true,
+          incluir_codigo_qr: configuracion.incluirCodigoQR || true,
+          incluir_detalle_ventas: configuracion.incluirDetalleVentas || true,
+          incluir_comparacion: configuracion.incluirComparacion || true,
+          incluir_recomendaciones: configuracion.incluirRecomendaciones || false,
+          formato: configuracion.formato || 'A4',
+          orientacion: configuracion.orientacion || 'vertical',
+          idioma: configuracion.idioma || 'es'
+        }
+      }, {
+        responseType: 'blob' // Para manejar archivos binarios
+      });
+
+      // Crear URL para descarga
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      
+      return {
+        url_descarga: url,
+        nombre_archivo: `cierre_caja_${cierreId}_${new Date().toISOString().split('T')[0]}.pdf`,
+        size: blob.size
+      };
+    } catch (error) {
+      console.error('Error exportando PDF:', error);
+      throw new Error(
+        error.response?.data?.message || 
+        'Error al generar el PDF del cierre'
+      );
+    }
+  }
+
+  // Enviar cierre por email
+  async enviarCierrePorEmail(cierreId, configuracion = {}) {
+    try {
+      const response = await axios.post(`${this.baseURL}/enviar-email/${cierreId}`, {
+        configuracion,
+        destinatarios: configuracion.destinatarios || []
+      });
+
+      return {
+        mensaje: response.data.mensaje || 'Email enviado exitosamente',
+        destinatarios: response.data.destinatarios || []
+      };
+    } catch (error) {
+      console.error('Error enviando email:', error);
+      throw new Error(
+        error.response?.data?.message || 
+        'Error al enviar el PDF por email'
+      );
+    }
+  }
+
+  // Exportar historial a Excel
+  async exportarHistorialExcel(filtros = {}) {
+    try {
+      const response = await axios.post(`${this.baseURL}/exportar-excel`, {
+        filtros
+      }, {
+        responseType: 'blob'
+      });
+
+      const blob = new Blob([response.data], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      });
+      const url = window.URL.createObjectURL(blob);
+      
+      return {
+        url_descarga: url,
+        nombre_archivo: `historial_cierres_${new Date().toISOString().split('T')[0]}.xlsx`
+      };
+    } catch (error) {
+      console.error('Error exportando Excel:', error);
+      throw new Error(
+        error.response?.data?.message || 
+        'Error al generar el archivo Excel'
+      );
+    }
+  }
+
+  // Sincronizar datos
+  async sincronizarDatos() {
+    try {
+      const response = await axios.post(`${this.baseURL}/sincronizar`);
+      this.clearCache(); // Limpiar caché después de sincronizar
+      return response.data;
+    } catch (error) {
+      console.error('Error sincronizando datos:', error);
+      throw new Error(
+        error.response?.data?.message || 
+        'Error al sincronizar los datos'
+      );
+    }
+  }
+
+  // Generar vista previa de PDF
+  async generarVistaPreviaPDF(cierreId, configuracion = {}) {
+    try {
+      const response = await axios.post(`${this.baseURL}/vista-previa-pdf/${cierreId}`, {
+        configuracion
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error generando vista previa:', error);
+      throw new Error(
+        error.response?.data?.message || 
+        'Error al generar la vista previa'
+      );
+    }
+  }
+
+  // Utilidades de cálculo
+  calcularPrecision(diferencia, totalEsperado) {
+    if (totalEsperado <= 0) return 100;
+    return Math.max(0, 100 - (Math.abs(diferencia) / totalEsperado * 100));
+  }
+
+  calcularEstadoDiferencia(diferencia) {
+    if (diferencia === 0) {
+      return {
+        estado: 'correcto',
+        color: 'success',
+        mensaje: 'Caja balanceada correctamente'
+      };
+    } else if (diferencia < 0) {
+      return {
+        estado: 'faltante',
+        color: 'error',
+        mensaje: `Faltante de $${Math.abs(diferencia).toFixed(2)}`
+      };
+    } else {
+      return {
+        estado: 'sobrante',
+        color: 'info',
+        mensaje: `Sobrante de $${diferencia.toFixed(2)}`
+      };
+    }
+  }
+
+  // Utilidades de formato
+  formatearFechaCierre(fecha) {
+    return new Date(fecha).toLocaleDateString('es-UY', {
+      weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
-  } catch (error) {
-    console.error('Error formateando fecha:', error);
-    return fecha;
   }
-};
 
-/**
- * Formatea la hora para mostrar en la interfaz
- * @param {string} fecha - Fecha/hora en formato ISO
- * @returns {string} - Hora formateada
- */
-export const formatearHoraCierre = (fecha) => {
-  try {
-    const date = new Date(fecha);
-    return date.toLocaleTimeString('es-UY', {
+  formatearHoraCierre(hora) {
+    return new Date(`2000-01-01T${hora}`).toLocaleTimeString('es-UY', {
       hour: '2-digit',
       minute: '2-digit'
     });
-  } catch (error) {
-    console.error('Error formateando hora:', error);
-    return fecha;
   }
-};
 
-// Objeto principal del servicio de cierre de caja
-export const cierreCajaService = {
-  obtenerResumenVentasHoy,
-  registrarCierreCaja,
-  obtenerHistorialCierres,
-  obtenerDetalleCierre,
-  exportarCierrePDF,
-  validarPermisosCierreCaja,
-  calcularEstadoDiferencia,
-  formatearFechaCierre,
-  formatearHoraCierre,
-};
+  formatearMoneda(monto) {
+    return new Intl.NumberFormat('es-UY', {
+      style: 'currency',
+      currency: 'UYU'
+    }).format(monto);
+  }
 
-// Exportación por defecto
-export default cierreCajaService;
+  // Validaciones de negocio
+  validarHorarioCierre() {
+    const ahora = new Date();
+    const horaActual = ahora.getHours();
+    
+    // Permitir cierre solo después de las 18:00 o antes de las 6:00 (para turnos nocturnos)
+    return horaActual >= 18 || horaActual < 6;
+  }
+
+  validarCierreYaRealizado(cierreExistente) {
+    return cierreExistente && cierreExistente.estado === 'cerrado';
+  }
+
+  // Métricas y análisis
+  calcularTendenciaPrecision(historial) {
+    if (!historial || historial.length < 2) return 'estable';
+    
+    const ultimosCinco = historial.slice(-5);
+    const promedio = ultimosCinco.reduce((acc, cierre) => acc + cierre.precision, 0) / ultimosCinco.length;
+    
+    if (promedio >= 98) return 'excelente';
+    if (promedio >= 95) return 'buena';
+    if (promedio >= 90) return 'regular';
+    return 'necesita_mejora';
+  }
+
+  calcularRiesgoOperacional(diferencia, totalEsperado) {
+    if (totalEsperado <= 0) return 'bajo';
+    
+    const porcentajeDiferencia = (Math.abs(diferencia) / totalEsperado) * 100;
+    
+    if (porcentajeDiferencia >= 10) return 'alto';
+    if (porcentajeDiferencia >= 5) return 'medio';
+    return 'bajo';
+  }
+
+  // Configuración y preferencias
+  guardarConfiguracionExportacion(configuracion) {
+    localStorage.setItem('cierre_caja_export_config', JSON.stringify(configuracion));
+  }
+
+  obtenerConfiguracionExportacion() {
+    const config = localStorage.getItem('cierre_caja_export_config');
+    return config ? JSON.parse(config) : {
+      plantilla: 'completa',
+      incluirGraficos: true,
+      incluirFirmaDigital: true,
+      incluirCodigoQR: true,
+      incluirDetalleVentas: true,
+      incluirComparacion: true,
+      incluirRecomendaciones: false,
+      formato: 'A4',
+      orientacion: 'vertical',
+      idioma: 'es'
+    };
+  }
+}
+
+// Crear instancia única del servicio
+const cierreCajaService = new CierreCajaService();
+
+// Configurar interceptores al crear la instancia
+cierreCajaService.setupInterceptors();
+export { cierreCajaService };
