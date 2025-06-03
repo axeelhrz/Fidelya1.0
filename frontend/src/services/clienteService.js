@@ -45,7 +45,7 @@ export const obtenerClientes = async (filtros = {}) => {
       params.append('limite', filtros.limite);
     }
     
-    const url = `/api/clientes${params.toString() ? '?' + params.toString() : ''}`;
+    const url = `/clientes${params.toString() ? '?' + params.toString() : ''}`;
     const response = await api.get(url);
     return response.data;
   } catch (error) {
@@ -62,7 +62,7 @@ export const obtenerClientes = async (filtros = {}) => {
 export const crearCliente = async (cliente) => {
   try {
     console.log('👥 Creando cliente:', cliente.nombre);
-    const response = await api.post('/api/clientes', cliente);
+    const response = await api.post('/clientes', cliente);
     console.log('✅ Cliente creado:', response.data);
     return response.data;
   } catch (error) {
@@ -80,7 +80,7 @@ export const crearCliente = async (cliente) => {
 export const actualizarCliente = async (id, cliente) => {
   try {
     console.log('👥 Actualizando cliente:', id);
-    const response = await api.put(`/api/clientes/${id}`, cliente);
+    const response = await api.put(`/clientes/${id}`, cliente);
     console.log('✅ Cliente actualizado:', response.data);
     return response.data;
   } catch (error) {
@@ -97,7 +97,7 @@ export const actualizarCliente = async (id, cliente) => {
 export const eliminarCliente = async (id) => {
   try {
     console.log('👥 Eliminando cliente:', id);
-    const response = await api.delete(`/api/clientes/${id}`);
+    const response = await api.delete(`/clientes/${id}`);
     console.log('✅ Cliente eliminado:', response.data);
     return response.data;
   } catch (error) {
@@ -113,7 +113,7 @@ export const eliminarCliente = async (id) => {
 export const obtenerEstadisticasClientes = async () => {
   try {
     console.log('📊 Obteniendo estadísticas de clientes');
-    const response = await api.get('/api/clientes/estadisticas');
+    const response = await api.get('/clientes/estadisticas');
     console.log('✅ Estadísticas obtenidas:', response.data);
     return response.data;
   } catch (error) {

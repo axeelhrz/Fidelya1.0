@@ -75,7 +75,7 @@ api.interceptors.response.use(
 export const obtenerResumenVentasHoy = async () => {
   try {
     console.log('💰 Obteniendo resumen de ventas del día');
-    const response = await api.get('/api/cierre-caja/hoy');
+    const response = await api.get('/cierre-caja/hoy');
     console.log('✅ Resumen de ventas obtenido:', response.data.resumen_ventas?.total_ventas || 0);
     return response.data;
   } catch (error) {
@@ -92,7 +92,7 @@ export const obtenerResumenVentasHoy = async () => {
 export const registrarCierreCaja = async (datosCierre) => {
   try {
     console.log('💰 Registrando cierre de caja:', datosCierre);
-    const response = await api.post('/api/cierre-caja/registrar', datosCierre);
+    const response = await api.post('/cierre-caja/registrar', datosCierre);
     console.log('✅ Cierre de caja registrado:', response.data.cierre?.id);
     return response.data;
   } catch (error) {
@@ -120,7 +120,7 @@ export const obtenerHistorialCierres = async (filtros = {}) => {
       params.append('limite', filtros.limite);
     }
     
-    const url = `/api/cierre-caja/historial${params.toString() ? '?' + params.toString() : ''}`;
+    const url = `/cierre-caja/historial${params.toString() ? '?' + params.toString() : ''}`;
     console.log('💰 Obteniendo historial de cierres:', url);
     
     const response = await api.get(url);
@@ -142,7 +142,7 @@ export const obtenerHistorialCierres = async (filtros = {}) => {
 export const obtenerDetalleCierre = async (cierreId) => {
   try {
     console.log('💰 Obteniendo detalle de cierre:', cierreId);
-    const response = await api.get(`/api/cierre-caja/detalle/${cierreId}`);
+    const response = await api.get(`/cierre-caja/detalle/${cierreId}`);
     console.log('✅ Detalle de cierre obtenido:', response.data.fecha_cierre);
     return response.data;
   } catch (error) {
@@ -159,7 +159,7 @@ export const obtenerDetalleCierre = async (cierreId) => {
 export const exportarCierrePDF = async (cierreId) => {
   try {
     console.log('📤 Exportando cierre a PDF:', cierreId);
-    const response = await api.post(`/api/cierre-caja/exportar-pdf/${cierreId}`);
+    const response = await api.post(`/cierre-caja/exportar-pdf/${cierreId}`);
     console.log('✅ Cierre exportado a PDF:', response.data.nombre_archivo);
     return response.data;
   } catch (error) {
