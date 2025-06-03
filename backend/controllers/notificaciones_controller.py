@@ -2,8 +2,6 @@ import mysql.connector
 from datetime import datetime, timedelta
 import logging
 import smtplib
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
 import os
 
 # Configurar logging
@@ -527,95 +525,3 @@ class NotificacionesController:
                 cursor.close()
             if connection and connection.is_connected():
                 connection.close()
-
-class EmailService:
-    """Servicio para envío de emails"""
-    
-    @staticmethod
-    def enviar_email(destinatario, asunto, mensaje):
-        """Enviar email de notificación"""
-        try:
-            # Configuración SMTP (ajustar según proveedor)
-            smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
-            smtp_port = int(os.environ.get('SMTP_PORT', '587'))
-            smtp_user = os.environ.get('SMTP_USER', '')
-            smtp_password = os.environ.get('SMTP_PASSWORD', '')
-            
-            if not smtp_user or not smtp_password:
-                logger.warning("Configuración SMTP no disponible")
-                return False
-            
-            # Crear mensaje
-            msg = MimeMultipart()
-            msg['From'] = smtp_user
-            msg['To'] = destinatario
-            msg['Subject'] = asunto
-            
-            # Cuerpo del mensaje
-            body = f"""
-            <html>
-            <body>
-                <h2>Frutería Nina - Notificación</h2>
-                <p>{mensaje}</p>
-                <hr>
-                <p><small>Este es un mensaje automático del sistema de gestión Frutería Nina.</small></p>
-            </body>
-            </html>
-            """
-            
-            msg.attach(MimeText(body, 'html'))
-            
-            # Enviar email
-            server = smtplib.SMTP(smtp_server, smtp_port)
-            server.starttls()
-            server.login(smtp_user, smtp_password)
-            text = msg.as_string()
-            server.sendmail(smtp_user, destinatario, text)
-            server.quit()
-            
-            logger.info(f"Email enviado exitosamente a {destinatario}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error enviando email: {e}")
-            return False
-
-class SMSService:
-    """Servicio para envío de SMS"""
-    
-    @staticmethod
-    def enviar_sms(telefono, mensaje):
-        """Enviar SMS de notificación"""
-        try:
-            # Aquí se integraría con un proveedor de SMS como Twilio
-            # Por ahora simularemos el envío
-            
-            # Ejemplo con Twilio (requiere instalación: pip install twilio)
-            # from twilio.rest import Client
-            # 
-            # account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
-            # auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
-            # from_number = os.environ.get('TWILIO_PHONE_NUMBER')
-            # 
-            # if not all([account_sid, auth_token, from_number]):
-            #     logger.warning("Configuración Twilio no disponible")
-            #     return False
-            # 
-            # client = Client(account_sid, auth_token)
-            # 
-            # message = client.messages.create(
-            #     body=mensaje,
-            #     from_=from_number,
-            #     to=telefono
-            # )
-            # 
-            # logger.info(f"SMS enviado exitosamente a {telefono}: {message.sid}")
-            # return True
-            
-            # Simulación
-            logger.info(f"SMS simulado enviado a {telefono}: {mensaje}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error enviando SMS: {e}")
-            return False
