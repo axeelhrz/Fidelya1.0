@@ -193,6 +193,7 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse, darkMode, onToggl
 
     const isExpanded = expandedGroups[group.id];
     const hasActiveChild = group.children?.some(child => isActiveRoute(child.url || ''));
+
     return (
       <Box key={group.id} sx={{ mb: 1 }}>
         {!collapsed && (
