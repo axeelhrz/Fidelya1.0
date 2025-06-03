@@ -17,9 +17,11 @@ import ReportesFinancierosPage from './pages/ReportesFinancieros';
 import CierreCajaPage from './pages/CierreCaja';
 import FacturacionPage from './pages/Facturacion';
 import ConfiguracionPage from './pages/Configuracion';
+import NotificacionesPage from './pages/Notificaciones';
 
 // Componente de ruta protegida
 import ProtectedRoute from './components/ProtectedRoute';
+import MainLayout from './components/layout/MainLayout';
 
 // Componente de carga
 const LoadingScreen = () => (
@@ -35,6 +37,29 @@ const LoadingScreen = () => (
     <CircularProgress size={60} />
   </Box>
 );
+
+// Configuración de títulos para cada página
+const pageConfig = {
+  '/dashboard': 'Dashboard',
+  '/inventory': 'Gestión de Inventario',
+  '/ventas': 'Gestión de Ventas',
+  '/compras': 'Gestión de Compras',
+  '/clientes': 'Gestión de Clientes',
+  '/reportes': 'Reportes Financieros',
+  '/cierre-caja': 'Cierre de Caja',
+  '/facturacion': 'Facturación',
+  '/configuracion': 'Configuración del Sistema',
+  '/notificaciones': 'Centro de Notificaciones'
+};
+
+// Componente wrapper para páginas protegidas
+const ProtectedPageWrapper = ({ children, title }) => {
+  return (
+    <MainLayout title={title}>
+      {children}
+    </MainLayout>
+  );
+};
 
 // Componente principal de rutas
 const AppRoutes = () => {
@@ -56,12 +81,14 @@ const AppRoutes = () => {
         element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" replace />} 
       />
 
-      {/* Rutas protegidas */}
+      {/* Rutas protegidas con layout */}
       <Route 
         path="/dashboard" 
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <ProtectedPageWrapper title={pageConfig['/dashboard']}>
+              <Dashboard />
+            </ProtectedPageWrapper>
           </ProtectedRoute>
         } 
       />
@@ -70,7 +97,9 @@ const AppRoutes = () => {
         path="/inventory" 
         element={
           <ProtectedRoute>
-            <InventoryPage />
+            <ProtectedPageWrapper title={pageConfig['/inventory']}>
+              <InventoryPage />
+            </ProtectedPageWrapper>
           </ProtectedRoute>
         } 
       />
@@ -79,7 +108,9 @@ const AppRoutes = () => {
         path="/ventas" 
         element={
           <ProtectedRoute>
-            <VentasPage />
+            <ProtectedPageWrapper title={pageConfig['/ventas']}>
+              <VentasPage />
+            </ProtectedPageWrapper>
           </ProtectedRoute>
         } 
       />
@@ -88,7 +119,9 @@ const AppRoutes = () => {
         path="/compras" 
         element={
           <ProtectedRoute>
-            <ComprasPage />
+            <ProtectedPageWrapper title={pageConfig['/compras']}>
+              <ComprasPage />
+            </ProtectedPageWrapper>
           </ProtectedRoute>
         } 
       />
@@ -97,7 +130,9 @@ const AppRoutes = () => {
         path="/clientes" 
         element={
           <ProtectedRoute>
-            <ClientesPage />
+            <ProtectedPageWrapper title={pageConfig['/clientes']}>
+              <ClientesPage />
+            </ProtectedPageWrapper>
           </ProtectedRoute>
         } 
       />
@@ -106,37 +141,53 @@ const AppRoutes = () => {
         path="/reportes" 
         element={
           <ProtectedRoute>
-            <ReportesFinancierosPage />
+            <ProtectedPageWrapper title={pageConfig['/reportes']}>
+              <ReportesFinancierosPage />
+            </ProtectedPageWrapper>
           </ProtectedRoute>
         } 
       />
 
-      {/* Ruta para Cierre de Caja */}
       <Route 
         path="/cierre-caja" 
         element={
           <ProtectedRoute requiredRoles={['admin', 'cajero']}>
-            <CierreCajaPage />
+            <ProtectedPageWrapper title={pageConfig['/cierre-caja']}>
+              <CierreCajaPage />
+            </ProtectedPageWrapper>
           </ProtectedRoute>
         } 
       />
 
-      {/* Ruta para Facturación */}
       <Route 
         path="/facturacion" 
         element={
           <ProtectedRoute requiredRoles={['admin', 'cajero', 'operador']}>
-            <FacturacionPage />
+            <ProtectedPageWrapper title={pageConfig['/facturacion']}>
+              <FacturacionPage />
+            </ProtectedPageWrapper>
           </ProtectedRoute>
         } 
       />
       
-      {/* NUEVA RUTA PARA CONFIGURACIÓN */}
       <Route 
         path="/configuracion" 
         element={
           <ProtectedRoute requiredRoles={['admin']}>
-            <ConfiguracionPage />
+            <ProtectedPageWrapper title={pageConfig['/configuracion']}>
+              <ConfiguracionPage />
+            </ProtectedPageWrapper>
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/notificaciones" 
+        element={
+          <ProtectedRoute>
+            <ProtectedPageWrapper title={pageConfig['/notificaciones']}>
+              <NotificacionesPage />
+            </ProtectedPageWrapper>
           </ProtectedRoute>
         } 
       />
@@ -181,7 +232,7 @@ function App() {
       <CssBaseline />
       <AuthProvider>
         <Router>
-          <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+          <Box sx={{ minHeight: '100vh' }}>
             <AppRoutes />
           </Box>
         </Router>

@@ -1,7 +1,8 @@
 import { createTheme } from '@mui/material/styles';
 
-const theme = createTheme({
+const getDesignTokens = (mode) => ({
   palette: {
+    mode,
     primary: {
       main: '#62a83d', // Verde manzana
       light: '#8bc34a',
@@ -12,23 +13,34 @@ const theme = createTheme({
       main: '#ffaa00', // Naranja suave
       light: '#ffcc33',
       dark: '#cc8800',
-      contrastText: '#333333',
+      contrastText: mode === 'dark' ? '#ffffff' : '#333333',
     },
     background: {
-      default: '#f5f5f5', // Fondo general
-      paper: '#ffffff',   // Fondo tarjeta
+      default: mode === 'dark' ? '#121212' : '#f5f5f5',
+      paper: mode === 'dark' ? '#1e1e1e' : '#ffffff',
     },
     text: {
-      primary: '#333333',   // Texto principal
-      secondary: '#666666', // Texto secundario
+      primary: mode === 'dark' ? '#ffffff' : '#333333',
+      secondary: mode === 'dark' ? '#b3b3b3' : '#666666',
     },
     error: {
-      main: '#e53935', // Rojo MUI
+      main: '#e53935',
     },
     success: {
-      main: '#43a047', // Verde MUI
+      main: '#43a047',
     },
+    warning: {
+      main: '#ffaa00',
+    },
+    info: {
+      main: '#2196f3',
+    },
+    divider: mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
   },
+});
+
+const createAppTheme = (mode = 'light') => createTheme({
+  ...getDesignTokens(mode),
   typography: {
     fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
@@ -53,22 +65,22 @@ const theme = createTheme({
     },
     h6: {
       fontWeight: 600,
-      fontSize: '1rem',
-    },
+          fontSize: '1rem',
+        },
     button: {
       fontWeight: 500,
       textTransform: 'none',
-    },
+          },
     body1: {
       fontWeight: 400,
-    },
+        },
     body2: {
       fontWeight: 400,
+      },
     },
-  },
   shape: {
-    borderRadius: 18, // Especificado en el diseño
-  },
+            borderRadius: 12,
+            },
   components: {
     MuiButton: {
       styleOverrides: {
@@ -84,9 +96,9 @@ const theme = createTheme({
           '&:hover': {
             boxShadow: '0 6px 16px rgba(98, 168, 61, 0.4)',
             transform: 'translateY(-2px)',
-          },
-        },
       },
+    },
+  },
     },
     MuiTextField: {
       styleOverrides: {
@@ -108,19 +120,25 @@ const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 18, // Especificado en el diseño
-          boxShadow: 'rgba(0,0,0,0.1) 0px 4px 20px', // Especificado en el diseño
+          borderRadius: 12,
+          boxShadow: mode === 'dark' 
+            ? 'rgba(0,0,0,0.3) 0px 4px 20px' 
+            : 'rgba(0,0,0,0.1) 0px 4px 20px',
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 18,
-          boxShadow: 'rgba(0,0,0,0.08) 0px 4px 16px',
+          borderRadius: 12,
+          boxShadow: mode === 'dark'
+            ? 'rgba(0,0,0,0.2) 0px 4px 16px'
+            : 'rgba(0,0,0,0.08) 0px 4px 16px',
           transition: 'all 0.3s ease',
           '&:hover': {
-            boxShadow: 'rgba(0,0,0,0.12) 0px 8px 24px',
+            boxShadow: mode === 'dark'
+              ? 'rgba(0,0,0,0.3) 0px 8px 24px'
+              : 'rgba(0,0,0,0.12) 0px 8px 24px',
             transform: 'translateY(-4px)',
           },
         },
@@ -133,7 +151,29 @@ const theme = createTheme({
         },
       },
     },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: mode === 'dark' ? '#1e1e1e' : '#ffffff',
+          borderRight: mode === 'dark' 
+            ? '1px solid rgba(255, 255, 255, 0.12)' 
+            : '1px solid rgba(0, 0, 0, 0.12)',
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: mode === 'dark' ? '#1e1e1e' : '#ffffff',
+          color: mode === 'dark' ? '#ffffff' : '#333333',
+        },
+      },
+    },
   },
 });
 
+// Exportar tema por defecto (modo claro)
+const theme = createAppTheme('light');
+
 export default theme;
+export { createAppTheme };
