@@ -10,7 +10,6 @@ import {
   useTheme,
   alpha,
   Paper,
-  Collapse,
   IconButton,
   Stack,
   Divider,
