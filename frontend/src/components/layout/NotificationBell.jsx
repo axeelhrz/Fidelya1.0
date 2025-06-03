@@ -57,7 +57,7 @@ const NotificationBell = ({ size = 'medium', showTooltip = true }) => {
         limite: 5,
         leida: false 
       });
-      setRecentNotifications(notifications);
+      setRecentNotifications(notificaciones);
     } catch (error) {
       console.error('Error cargando notificaciones recientes:', error);
     }
