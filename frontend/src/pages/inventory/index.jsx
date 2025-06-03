@@ -320,8 +320,6 @@ const InventoryPageEnhanced = () => {
     setTabValue(newValue);
   };
 
-
-
   // Handlers para exportación
   const handleExportarPDF = async () => {
     try {
@@ -653,6 +651,8 @@ const InventoryPageEnhanced = () => {
               {/* Modo de edición masiva */}
               {bulkEditMode && (
                 <Card sx={{ mb: 3, borderRadius: 3, bgcolor: alpha(theme.palette.info.main, 0.1) }}>
+
+
                   <CardContent>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                       <Box display="flex" alignItems="center" gap={2}>

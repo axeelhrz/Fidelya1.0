@@ -37,7 +37,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { purchaseService } from '../../../services/purchaseService';
 import { proveedorService } from '../../../services/proveedorService';
-import { inventoryService } from '../../../services/inventoryService';
+import inventoryService from '../../../services/inventoryService';
 
 // Esquema de validación
 const schema = yup.object().shape({

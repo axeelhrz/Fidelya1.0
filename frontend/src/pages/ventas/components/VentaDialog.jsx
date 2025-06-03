@@ -36,7 +36,7 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { ventasService } from '../../../services/ventasService';
-import { inventoryService } from '../../../services/inventoryService';
+import inventoryService from '../../../services/inventoryService';
 import { clienteService } from '../../../services/clienteService';
 
 const VentaDialog = ({ open, onClose, onSuccess, mode = 'create', venta = null }) => {
