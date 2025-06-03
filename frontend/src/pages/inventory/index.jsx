@@ -38,7 +38,7 @@ import {
   Assessment as StatsIcon,
   QrCodeScanner as ScannerIcon,
   Refresh as RefreshIcon,
-  BulkEdit as BulkEditIcon,
+  Edit as BulkEditIcon,
   Analytics as AnalyticsIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -862,8 +862,6 @@ const InventoryPageEnhanced = () => {
               <Grid item xs={12} md={6}>
                 <Card sx={{ borderRadius: 3, height: '100%' }}>
                   <CardContent>
-
-
                     <Typography variant="h6" fontWeight={600} gutterBottom>
                       Productos Más Vendidos (30 días)
                     </Typography>
