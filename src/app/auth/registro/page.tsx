@@ -1,135 +1,240 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { supabase } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
+import React, { useState } from 'react'
+import Link from 'next/link'
+import { AuthLayout } from '@/components/auth/AuthLayout'
+import { FormInput } from '@/components/auth/FormInput'
+import { SubmitButton } from '@/components/auth/SubmitButton'
+import { useAuth } from '@/hooks/useAuth'
+import { useFormValidation, commonValidationRules } from '@/hooks/useFormValidation'
+import { Checkbox } from '@/components/ui/checkbox'
 export default function RegisterPage() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    acceptTerms: false
+  })
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setLoading(true)
+  const { register, loading, error } = useAuth()
 
-    try {
-      const formData = new FormData(event.currentTarget)
-      const email = formData.get("email") as string
-      const password = formData.get("password") as string
-      const confirmPassword = formData.get("confirmPassword") as string
-
-      if (!email || !password || !confirmPassword) {
-        throw new Error("Por favor complete todos los campos")
+  const validationRules = {
+    fullName: commonValidationRules.fullName,
+    email: commonValidationRules.email,
+    phone: commonValidationRules.phone,
+    password: commonValidationRules.password,
+    confirmPassword: {
+      required: true,
+      custom: (value: string) => {
+        if (value !== formData.password) {
+          return 'Las contraseñas no coinciden'
+        }
+        return null
       }
-
-      if (password !== confirmPassword) {
-        throw new Error("Las contraseñas no coinciden")
-      }
-
-      if (password.length < 6) {
-        throw new Error("La contraseña debe tener al menos 6 caracteres")
-      }
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-
-      if (error) throw error
-
-      toast({
-        title: "Registro exitoso",
-        description: "Se ha enviado un correo de confirmación.",
-      })
-
-      router.push("/auth/login")
-    } catch (error: any) {
-      console.error("Error signing up:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.message || "No se pudo completar el registro. Inténtelo nuevamente.",
-      })
-    } finally {
-      setLoading(false)
     }
   }
 
+  const { validateField, validateForm, getFieldValidation, isFormValid } = useFormValidation(validationRules)
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target
+    const newValue = type === 'checkbox' ? checked : value
+
+    setFormData(prev => ({ ...prev, [name]: newValue }))
+
+    // Validate field on change (except checkbox)
+    if (type !== 'checkbox') {
+      validateField(name, value)
+      
+      // Re-validate confirm password when password changes
+      if (name === 'password' && formData.confirmPassword) {
+        validateField('confirmPassword', formData.confirmPassword)
+      }
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    const { acceptTerms, ...validationData } = formData
+    if (!validateForm(validationData)) {
+      return
+    }
+
+    if (!formData.acceptTerms) {
+      alert('Debes aceptar los términos y condiciones')
+      return
+    }
+
+    const success = await register({
+      email: formData.email,
+      password: formData.password,
+      fullName: formData.fullName,
+      phone: formData.phone
+    })
+
+    if (success) {
+      // Reset form on successful registration
+      setFormData({
+        fullName: '',
+        email: '',
+        phone: '',
+        password: '',
+        confirmPassword: '',
+        acceptTerms: false
+      })
+    }
+  }
+
+  const fullNameValidation = getFieldValidation('fullName')
+  const emailValidation = getFieldValidation('email')
+  const phoneValidation = getFieldValidation('phone')
+  const passwordValidation = getFieldValidation('password')
+  const confirmPasswordValidation = getFieldValidation('confirmPassword')
+
+  const isFormCompleteAndValid = isFormValid && formData.acceptTerms
   return (
-    <div className="container max-w-lg mx-auto py-8 px-4">
-      <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Crear Cuenta</CardTitle>
-          <CardDescription className="text-center">
-            Regístrate para comenzar a usar el sistema
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Correo Electrónico
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="nombre@ejemplo.com"
-                required
-              />
-            </div>
+    <AuthLayout 
+      title="Crear Cuenta"
+      subtitle="Casino Escolar"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <FormInput
+          name="fullName"
+          type="text"
+          label="Nombre Completo"
+          placeholder="Ingresa tu nombre completo"
+          value={formData.fullName}
+          onChange={handleInputChange}
+          icon="user"
+          error={fullNameValidation.error || undefined}
+          success={fullNameValidation.success || undefined}
+          autoComplete="name"
+          required
+        />
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                Contraseña
-              </label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                placeholder="Mínimo 6 caracteres"
-              />
-            </div>
+        <FormInput
+          name="email"
+          type="email"
+          label="Correo Electrónico"
+          placeholder="tu@email.com"
+          value={formData.email}
+          onChange={handleInputChange}
+          icon="email"
+          error={emailValidation.error || undefined}
+          success={emailValidation.success || undefined}
+          autoComplete="email"
+          required
+        />
 
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium">
-                Confirmar Contraseña
-              </label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                placeholder="Repita su contraseña"
-              />
-            </div>
+        <FormInput
+          name="phone"
+          type="tel"
+          label="Teléfono"
+          placeholder="+56912345678"
+          value={formData.phone}
+          onChange={handleInputChange}
+          icon="phone"
+          error={phoneValidation.error || undefined}
+          success={phoneValidation.success || undefined}
+          autoComplete="tel"
+          required
+        />
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Registrando..." : "Registrarse"}
-            </Button>
+        <FormInput
+          name="password"
+          type="password"
+          label="Contraseña"
+          placeholder="Crea una contraseña segura"
+          value={formData.password}
+          onChange={handleInputChange}
+          icon="password"
+          showPasswordToggle
+          strengthMeter
+          error={passwordValidation.error || undefined}
+          success={passwordValidation.success || undefined}
+          autoComplete="new-password"
+          required
+        />
 
-            <p className="text-center text-sm text-muted-foreground">
-              ¿Ya tienes una cuenta?{" "}
-              <Link
-                href="/auth/login"
-                className="text-primary hover:underline font-medium"
-              >
-                Inicia sesión
-              </Link>
-            </p>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+        <FormInput
+          name="confirmPassword"
+          type="password"
+          label="Confirmar Contraseña"
+          placeholder="Repite tu contraseña"
+          value={formData.confirmPassword}
+          onChange={handleInputChange}
+          icon="password"
+          showPasswordToggle
+          error={confirmPasswordValidation.error || undefined}
+          success={confirmPasswordValidation.success || undefined}
+          autoComplete="new-password"
+          required
+        />
+
+        <div className="flex items-start space-x-2">
+          <Checkbox
+            id="acceptTerms"
+            name="acceptTerms"
+            checked={formData.acceptTerms}
+            onCheckedChange={(checked) => 
+              setFormData(prev => ({ ...prev, acceptTerms: checked as boolean }))
+            }
+            className="mt-1"
+          />
+          <label 
+            htmlFor="acceptTerms" 
+            className="text-sm text-gray-700 cursor-pointer leading-relaxed"
+          >
+            Acepto los{' '}
+            <Link 
+              href="/terms" 
+              className="font-medium text-blue-600 hover:text-blue-500 smooth-transition"
+              target="_blank"
+            >
+              términos y condiciones
+            </Link>
+            {' '}y la{' '}
+            <Link 
+              href="/privacy" 
+              className="font-medium text-blue-600 hover:text-blue-500 smooth-transition"
+              target="_blank"
+            >
+              política de privacidad
+            </Link>
+          </label>
+        </div>
+
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg animate-slideUp">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        <SubmitButton
+          type="submit"
+          loading={loading}
+          loadingText="Creando cuenta..."
+          disabled={!isFormCompleteAndValid}
+          className="w-full"
+        >
+          Crear Cuenta
+        </SubmitButton>
+
+        <div className="text-center">
+          <p className="text-sm text-gray-600">
+            ¿Ya tienes cuenta?{' '}
+            <Link 
+              href="/auth/login"
+              className="font-medium text-blue-600 hover:text-blue-500 smooth-transition"
+            >
+              Inicia sesión
+            </Link>
+          </p>
+        </div>
+      </form>
+    </AuthLayout>
   )
 }

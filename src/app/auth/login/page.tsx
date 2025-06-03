@@ -1,110 +1,168 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { supabase } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
+import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { AuthLayout } from '@/components/auth/AuthLayout'
+import { FormInput } from '@/components/auth/FormInput'
+import { SubmitButton } from '@/components/auth/SubmitButton'
+import { useAuth } from '@/hooks/useAuth'
+import { useFormValidation, commonValidationRules } from '@/hooks/useFormValidation'
+import { Checkbox } from '@/components/ui/checkbox'
 export default function LoginPage() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    rememberMe: false
+  })
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setLoading(true)
+  const { login, loading, error } = useAuth()
+  const searchParams = useSearchParams()
+  const message = searchParams.get('message')
 
-    try {
-      const formData = new FormData(event.currentTarget)
-      const email = formData.get("email") as string
-      const password = formData.get("password") as string
+  const validationRules = {
+    email: commonValidationRules.email,
+    password: { required: true, minLength: 1 } // Simplified for login
+  }
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+  const { validateField, validateForm, getFieldValidation, isFormValid } = useFormValidation(validationRules)
 
-      if (error) throw error
+  // Check for remembered login
+  useEffect(() => {
+    const rememberMe = localStorage.getItem('rememberMe')
+    if (rememberMe) {
+      setFormData(prev => ({ ...prev, rememberMe: true }))
+    }
+  }, [])
 
-      toast({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido de vuelta.",
-      })
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target
+    const newValue = type === 'checkbox' ? checked : value
 
-      // Redirigir a /admin si es c.wevarh@gmail.com
-      if (email.toLowerCase() === "c.wevarh@gmail.com") {
-        router.push("/admin")
-      } else {
-        router.push("/dashboard")
-      }
-    } catch (error) {
-      console.error("Error signing in:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo iniciar sesión. Verifique sus credenciales.",
-      })
-    } finally {
-      setLoading(false)
+    setFormData(prev => ({ ...prev, [name]: newValue }))
+
+    // Validate field on change (except checkbox)
+    if (type !== 'checkbox') {
+      validateField(name, value)
     }
   }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    const fieldsToValidate = { email: formData.email, password: formData.password }
+    if (!validateForm(fieldsToValidate)) {
+      return
+    }
+
+    const success = await login({
+      email: formData.email,
+      password: formData.password,
+      rememberMe: formData.rememberMe
+    })
+
+    if (success) {
+      // Reset form on successful login
+      setFormData({ email: '', password: '', rememberMe: false })
+    }
+  }
+
+  const emailValidation = getFieldValidation('email')
+  const passwordValidation = getFieldValidation('password')
   return (
-    <div className="container max-w-lg mx-auto py-8 px-4">
-      <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Iniciar Sesión</CardTitle>
-          <CardDescription className="text-center">
-            Ingrese sus credenciales para acceder a su cuenta
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Correo Electrónico
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="nombre@ejemplo.com"
-                required
-              />
-            </div>
+    <AuthLayout 
+      title="Casino Escolar"
+      subtitle="Inicia sesión en tu cuenta"
+    >
+      {message && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-700">{message}</p>
+        </div>
+      )}
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                Contraseña
-              </label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-              />
-            </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <FormInput
+          name="email"
+          type="email"
+          label="Correo Electrónico"
+          placeholder="tu@email.com"
+          value={formData.email}
+          onChange={handleInputChange}
+          icon="email"
+          error={emailValidation.error ?? undefined}
+          success={emailValidation.success ?? undefined}
+          autoComplete="email"
+          required
+        />
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
-            </Button>
+        <FormInput
+          name="password"
+          type="password"
+          label="Contraseña"
+          placeholder="Ingresa tu contraseña"
+          value={formData.password}
+          onChange={handleInputChange}
+          icon="password"
+          showPasswordToggle
+          error={passwordValidation.error ?? undefined}
+          autoComplete="current-password"
+          required
+        />
 
-            <p className="text-center text-sm text-muted-foreground">
-              ¿No tienes una cuenta?{" "}
-              <Link
-                href="/auth/registro"
-                className="text-primary hover:underline font-medium"
-              >
-                Regístrate aquí
-              </Link>
-            </p>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="rememberMe"
+              name="rememberMe"
+              checked={formData.rememberMe}
+              onCheckedChange={(checked) => 
+                setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
+              }
+            />
+            <label 
+              htmlFor="rememberMe" 
+              className="text-sm font-medium text-gray-700 cursor-pointer"
+            >
+              Recordarme
+            </label>
+          </div>
+
+          <Link 
+            href="/auth/forgot-password"
+            className="text-sm font-medium text-blue-600 hover:text-blue-500 smooth-transition"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
+
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg animate-slideUp">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        <SubmitButton
+          type="submit"
+          loading={loading}
+          loadingText="Iniciando sesión..."
+          disabled={!isFormValid}
+          className="w-full"
+        >
+          Iniciar Sesión
+        </SubmitButton>
+
+        <div className="text-center">
+          <p className="text-sm text-gray-600">
+            ¿No tienes cuenta?{' '}
+            <Link 
+              href="/auth/registro"
+              className="font-medium text-blue-600 hover:text-blue-500 smooth-transition"
+            >
+              Regístrate aquí
+            </Link>
+          </p>
+        </div>
+      </form>
+    </AuthLayout>
   )
 }
