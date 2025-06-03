@@ -37,7 +37,7 @@ DB_CONFIG = {
     'charset': 'utf8mb4',
     'collation': 'utf8mb4_unicode_ci',
     'autocommit': False,
-    'raise_on_warnings': True
+    'raise_on_warnings': False  # Cambiar a False para evitar warnings como errores
 }
 
 def get_db_connection():
@@ -72,6 +72,12 @@ def create_tables():
         # Verificar que estamos usando la base de datos correcta
         cursor.execute(f"USE {DB_CONFIG['database']}")
         logger.info(f"✅ Conectado a la base de datos: {DB_CONFIG['database']}")
+        
+        # Verificar si las tablas ya existen
+        cursor.execute("SHOW TABLES LIKE 'usuarios'")
+        if cursor.fetchone():
+            logger.info("✅ Las tablas ya existen, omitiendo creación")
+            return True
         
         # Definir todas las tablas
         tables = {
@@ -376,13 +382,27 @@ def create_tables():
         }
         
         for table_name, table_sql in tables.items():
-            cursor.execute(table_sql)
-            logger.info(f"✅ Tabla '{table_name}' creada/verificada")
+            try:
+                cursor.execute(table_sql)
+                logger.info(f"✅ Tabla '{table_name}' creada/verificada")
+            except mysql.connector.Error as e:
+                if e.errno == 1050:  # Table already exists
+                    logger.info(f"✅ Tabla '{table_name}' ya existe")
+                else:
+                    logger.error(f"❌ Error creando tabla '{table_name}': {e}")
+                    raise
         
         connection.commit()
         logger.info("✅ Todas las tablas creadas exitosamente")
         return True
         
+    except mysql.connector.Error as e:
+        if e.errno == 1050:  # Table already exists
+            logger.info("✅ Las tablas ya existen, continuando...")
+            return True
+        else:
+            logger.error(f"❌ Error creando tablas: {e}")
+            return False
     except Exception as e:
         logger.error(f"❌ Error creando tablas: {e}")
         return False
@@ -392,6 +412,7 @@ def create_tables():
         if connection and connection.is_connected():
             connection.close()
 
+# ... rest of the code remains the same ...
 def jwt_required(f):
     """Decorador para rutas que requieren autenticación"""
     @wraps(f)
@@ -1356,7 +1377,7 @@ def inicializar_datos_base():
             connection.close()
 
 if __name__ == '__main__':
-    logger.info("🚀 Iniciando Frutería Nina Backend - Sistema Simplificado v8.0...")
+    logger.info("🚀 Iniciando Frutería Nina Backend - Sistema Simplificado v8.1...")
     logger.info("=" * 100)
     
     # Crear tablas
@@ -1370,7 +1391,7 @@ if __name__ == '__main__':
             logger.info("🔑 Contraseña admin: admin123")
             logger.info("📧 Usuario cajero: cajero@fruteria.com")
             logger.info("🔑 Contraseña cajero: cajero123")
-            logger.info("🌐 Servidor iniciando en http://localhost:5000")
+            logger.info("🌐 Servidor iniciando en http://localhost:5001")
             logger.info("=" * 100)
             logger.info("📋 Endpoints principales disponibles:")
             logger.info("   🔐 Autenticación: /api/register, /api/login, /api/verify-token")
