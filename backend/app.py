@@ -1774,6 +1774,128 @@ def obtener_resumen_inventario_completo(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
+            # ==================== ENDPOINT TEMPORAL PARA TESTING ====================
+
+@app.route('/api/test/crear-productos-stock-bajo', methods=['POST'])
+@jwt_required
+def crear_productos_stock_bajo_test(current_user_id):
+    """Endpoint temporal para crear productos con stock bajo para testing"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Actualizar algunos productos existentes para que tengan stock bajo
+        productos_stock_bajo = [
+            # Actualizar Uva Verde: stock_actual = 2, stock_minimo = 3
+            (2.0, 3.0, 5),  # id = 5 (Uva Verde)
+            # Actualizar Lechuga: stock_actual = 3, stock_minimo = 5  
+            (3.0, 5.0, 7),  # id = 7 (Lechuga)
+            # Actualizar Miel Natural: stock_actual = 0, stock_minimo = 1
+            (0.0, 1.0, 12), # id = 12 (Miel Natural)
+            # Actualizar Banana: stock_actual = 4, stock_minimo = 5
+            (4.0, 5.0, 2),  # id = 2 (Banana)
+        ]
+        
+        productos_actualizados = []
+        
+        for stock_actual, stock_minimo, producto_id in productos_stock_bajo:
+            # Verificar que el producto existe
+            cursor.execute("SELECT nombre FROM productos WHERE id = %s", (producto_id,))
+            producto = cursor.fetchone()
+            
+            if producto:
+                # Actualizar el producto
+                cursor.execute("""
+                    UPDATE productos 
+                    SET stock_actual = %s, stock_minimo = %s 
+                    WHERE id = %s
+                """, (stock_actual, stock_minimo, producto_id))
+                
+                productos_actualizados.append({
+                    'id': producto_id,
+                    'nombre': producto[0],
+                    'stock_actual': stock_actual,
+                    'stock_minimo': stock_minimo
+                })
+        
+        connection.commit()
+        
+        # Verificar cuántos productos tienen stock bajo ahora
+        cursor.execute("""
+            SELECT COUNT(*) FROM productos 
+            WHERE activo = TRUE AND stock_actual <= stock_minimo
+        """)
+        total_stock_bajo = cursor.fetchone()[0]
+        
+        response = jsonify({
+            'message': 'Productos con stock bajo creados exitosamente',
+            'productos_actualizados': productos_actualizados,
+            'total_productos_stock_bajo': total_stock_bajo
+        })
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"Error creando productos con stock bajo: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+# ==================== ENDPOINT PARA RESETEAR PRODUCTOS ====================
+
+@app.route('/api/test/resetear-productos', methods=['POST'])
+@jwt_required
+def resetear_productos_test(current_user_id):
+    """Endpoint temporal para resetear productos a stock normal"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Resetear productos a stock normal
+        productos_reset = [
+            (15.0, 3.0, 5),   # Uva Verde
+            (20.0, 5.0, 7),   # Lechuga  
+            (8.0, 1.0, 12),   # Miel Natural
+            (30.0, 5.0, 2),   # Banana
+        ]
+        
+        for stock_actual, stock_minimo, producto_id in productos_reset:
+            cursor.execute("""
+                UPDATE productos 
+                SET stock_actual = %s, stock_minimo = %s 
+                WHERE id = %s
+            """, (stock_actual, stock_minimo, producto_id))
+        
+        connection.commit()
+        
+        response = jsonify({'message': 'Productos reseteados exitosamente'})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"Error reseteando productos: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
 # ==================== ENDPOINTS DE MOVIMIENTOS DE STOCK ====================
 
 @app.route('/api/stock/movimiento', methods=['POST'])

@@ -14,7 +14,8 @@ import {
   alpha,
   Skeleton,
   Badge,
-  Fade
+  Fade,
+  Button
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -23,17 +24,19 @@ import {
   CheckCircle, 
   NotificationsActive,
   TrendingDown,
-  Update
+  Update,
+  Refresh
 } from '@mui/icons-material';
 
 const LowStockAlertCard = ({ data, loading, updateTrigger }) => {
   const theme = useTheme();
   const [previousCount, setPreviousCount] = useState(null);
   const [showUpdateIndicator, setShowUpdateIndicator] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
 
   // Detectar cambios en el número de productos con stock bajo
   useEffect(() => {
-    const currentCount = data?.length || 0;
+    const currentCount = Array.isArray(data) ? data.length : 0;
     if (previousCount !== null && currentCount !== previousCount) {
       setShowUpdateIndicator(true);
       const timer = setTimeout(() => {
@@ -42,7 +45,31 @@ const LowStockAlertCard = ({ data, loading, updateTrigger }) => {
       return () => clearTimeout(timer);
     }
     setPreviousCount(currentCount);
-  }, [data?.length, previousCount]);
+  }, [data, previousCount]);
+
+  // Función para crear productos de prueba con stock bajo
+  const handleCreateTestProducts = async () => {
+    setLocalLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/test/crear-productos-stock-bajo', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        // Forzar actualización del dashboard
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error creando productos de prueba:', error);
+    } finally {
+      setLocalLoading(false);
+    }
+  };
 
   const cardVariants = {
     hover: {
@@ -89,7 +116,14 @@ const LowStockAlertCard = ({ data, loading, updateTrigger }) => {
     }
   };
 
-  const hasLowStock = data && data.length > 0;
+  // Asegurar que data sea un array y calcular correctamente
+  const stockBajoArray = Array.isArray(data) ? data : [];
+  const hasLowStock = stockBajoArray.length > 0;
+  const stockBajoCount = stockBajoArray.length;
+
+  console.log('LowStockAlertCard - Data recibida:', data);
+  console.log('LowStockAlertCard - Array procesado:', stockBajoArray);
+  console.log('LowStockAlertCard - Cantidad:', stockBajoCount);
 
   return (
     <motion.div
@@ -210,7 +244,7 @@ const LowStockAlertCard = ({ data, loading, updateTrigger }) => {
                       fontSize: { xs: '1.75rem', sm: '2rem' }
                     }}
                   >
-                    {hasLowStock ? data.length : 0}
+                    {stockBajoCount}
                   </Typography>
                 </motion.div>
               )}
@@ -221,7 +255,7 @@ const LowStockAlertCard = ({ data, loading, updateTrigger }) => {
               animate={showUpdateIndicator ? "updated" : ""}
             >
               <Badge
-                badgeContent={hasLowStock ? data.length : 0}
+                badgeContent={hasLowStock ? stockBajoCount : 0}
                 color="error"
                 invisible={!hasLowStock}
                 sx={{
@@ -305,7 +339,7 @@ const LowStockAlertCard = ({ data, loading, updateTrigger }) => {
                       fontSize: '0.75rem'
                     }}
                   >
-                    {data.length} producto{data.length > 1 ? 's' : ''} con stock insuficiente
+                    {stockBajoCount} producto{stockBajoCount > 1 ? 's' : ''} con stock insuficiente
                   </Typography>
                 </motion.div>
               ) : (
@@ -346,11 +380,30 @@ const LowStockAlertCard = ({ data, loading, updateTrigger }) => {
                     variant="body2" 
                     sx={{ 
                       color: theme.palette.text.secondary,
-                      fontSize: '0.75rem'
+                      fontSize: '0.75rem',
+                      mb: 1
                     }}
                   >
                     Todos los productos tienen stock suficiente
                   </Typography>
+
+                  {/* Botón para crear productos de prueba */}
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="warning"
+                    startIcon={localLoading ? <CircularProgress size={14} /> : <Refresh />}
+                    onClick={handleCreateTestProducts}
+                    disabled={localLoading}
+                    sx={{
+                      fontSize: '0.7rem',
+                      textTransform: 'none',
+                      borderRadius: 1,
+                      mt: 0.5
+                    }}
+                  >
+                    {localLoading ? 'Creando...' : 'Simular Stock Bajo'}
+                  </Button>
                 </motion.div>
               )}
             </AnimatePresence>
