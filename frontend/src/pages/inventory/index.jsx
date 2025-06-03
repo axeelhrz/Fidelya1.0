@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -13,7 +13,6 @@ import {
   Card,
   CardContent,
   Divider,
-  Fab,
   SpeedDial,
   SpeedDialAction,
   SpeedDialIcon,
@@ -39,7 +38,6 @@ import {
   Assessment as StatsIcon,
   QrCodeScanner as ScannerIcon,
   Refresh as RefreshIcon,
-  Settings as SettingsIcon,
   BulkEdit as BulkEditIcon,
   Analytics as AnalyticsIcon,
 } from '@mui/icons-material';
@@ -122,24 +120,61 @@ const InventoryPageEnhanced = () => {
     tiene_anterior: false
   });
 
-  // Cargar datos iniciales
-  useEffect(() => {
-    cargarDatosIniciales();
+  const cargarResumenInventario = useCallback(async () => {
+    try {
+      setLoadingResumen(true);
+      const data = await inventoryServiceEnhanced.obtenerResumenInventario();
+      setResumenInventario(data);
+    } catch (error) {
+      console.error('Error cargando resumen:', error);
+    } finally {
+      setLoadingResumen(false);
+    }
   }, []);
 
-  // Recargar productos cuando cambien los filtros
-  useEffect(() => {
-    cargarProductos();
+  const cargarProductos = useCallback(async () => {
+    try {
+      const data = await inventoryServiceEnhanced.busquedaAvanzadaProductos(filtros);
+      setProductos(data.productos);
+      setPaginacion(data.paginacion);
+    } catch (error) {
+      console.error('Error cargando productos:', error);
+      setError(error.message || 'Error cargando productos');
+    }
   }, [filtros]);
 
-  // Cargar movimientos cuando cambie la pestaña o filtros
-  useEffect(() => {
-    if (tabValue === 1) {
-      cargarMovimientos();
+  const cargarProveedores = useCallback(async () => {
+    try {
+      const data = await proveedorService.obtenerProveedores();
+      setProveedores(data);
+    } catch (error) {
+      console.error('Error cargando proveedores:', error);
     }
-  }, [tabValue, filtrosMovimientos]);
+  }, []);
 
-  const cargarDatosIniciales = async () => {
+  const cargarFiltrosGuardados = useCallback(async () => {
+    try {
+      const data = await inventoryServiceEnhanced.obtenerFiltrosPersonalizados();
+      setFiltrosGuardados(data);
+    } catch (error) {
+      console.error('Error cargando filtros guardados:', error);
+    }
+  }, []);
+
+  const cargarMovimientos = useCallback(async () => {
+    try {
+      setLoadingMovimientos(true);
+      const data = await movimientoService.obtenerMovimientos(filtrosMovimientos);
+      setMovimientos(data);
+    } catch (error) {
+      console.error('Error cargando movimientos:', error);
+      setError('Error cargando movimientos de stock');
+    } finally {
+      setLoadingMovimientos(false);
+    }
+  }, [filtrosMovimientos]);
+
+  const cargarDatosIniciales = useCallback(async () => {
     try {
       setLoading(true);
       await Promise.all([
@@ -154,64 +189,24 @@ const InventoryPageEnhanced = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [cargarResumenInventario, cargarProveedores, cargarFiltrosGuardados, cargarProductos]);
 
-  const cargarResumenInventario = async () => {
-    try {
-      setLoadingResumen(true);
-      const data = await inventoryServiceEnhanced.obtenerResumenInventario();
-      setResumenInventario(data);
-    } catch (error) {
-      console.error('Error cargando resumen:', error);
-    } finally {
-      setLoadingResumen(false);
+  // Cargar datos iniciales
+  useEffect(() => {
+    cargarDatosIniciales();
+  }, [cargarDatosIniciales]);
+
+  // Recargar productos cuando cambien los filtros
+  useEffect(() => {
+    cargarProductos();
+  }, [cargarProductos]);
+
+  // Cargar movimientos cuando cambie la pestaña o filtros
+  useEffect(() => {
+    if (tabValue === 1) {
+      cargarMovimientos();
     }
-  };
-
-  const cargarProductos = async () => {
-    try {
-      const data = await inventoryServiceEnhanced.busquedaAvanzadaProductos(filtros);
-      setProductos(data.productos);
-      setPaginacion(data.paginacion);
-    } catch (error) {
-      console.error('Error cargando productos:', error);
-      setError(error.message || 'Error cargando productos');
-    }
-  };
-
-  const cargarProveedores = async () => {
-    try {
-      const data = await proveedorService.obtenerProveedores();
-
-
-
-      setProveedores(data);
-    } catch (error) {
-      console.error('Error cargando proveedores:', error);
-    }
-  };
-
-  const cargarFiltrosGuardados = async () => {
-    try {
-      const data = await inventoryServiceEnhanced.obtenerFiltrosPersonalizados();
-      setFiltrosGuardados(data);
-    } catch (error) {
-      console.error('Error cargando filtros guardados:', error);
-    }
-  };
-
-  const cargarMovimientos = async () => {
-    try {
-      setLoadingMovimientos(true);
-      const data = await movimientoService.obtenerMovimientos(filtrosMovimientos);
-      setMovimientos(data);
-    } catch (error) {
-      console.error('Error cargando movimientos:', error);
-      setError('Error cargando movimientos de stock');
-    } finally {
-      setLoadingMovimientos(false);
-    }
-  };
+  }, [tabValue, cargarMovimientos]);
 
   // Handlers para productos
   const handleCrearProducto = () => {
@@ -319,7 +314,7 @@ const InventoryPageEnhanced = () => {
   };
 
   // Handlers para navegación
-  const handleTabChange = (event, newValue) => {
+  const handleTabChange = (_, newValue) => {
     setTabValue(newValue);
   };
 
@@ -867,6 +862,8 @@ const InventoryPageEnhanced = () => {
               <Grid item xs={12} md={6}>
                 <Card sx={{ borderRadius: 3, height: '100%' }}>
                   <CardContent>
+
+
                     <Typography variant="h6" fontWeight={600} gutterBottom>
                       Productos Más Vendidos (30 días)
                     </Typography>
@@ -981,7 +978,7 @@ const InventoryPageEnhanced = () => {
           <SpeedDialAction
             key={action.name}
             icon={action.icon}
-            tooltipTitle={action.name}
+            title={action.name}
             onClick={action.onClick}
           />
         ))}
@@ -1050,8 +1047,6 @@ const InventoryPageEnhanced = () => {
           sx={{ borderRadius: 2 }}
         >
           {success}
-
-
         </Alert>
       </Snackbar>
     </Box>
