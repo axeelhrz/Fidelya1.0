@@ -41,21 +41,18 @@ const ModernInventoryFilters = ({
   const [expanded, setExpanded] = useState(false);
   const [searchValue, setSearchValue] = useState(filtros.busqueda || '');
 
+  // Categorías que coinciden con el backend
   const categorias = [
-    'Frutas',
-    'Verduras',
-    'Lácteos',
-    'Carnes',
-    'Bebidas',
-    'Granos',
-    'Otros'
+    { value: 'frutas', label: 'Frutas' },
+    { value: 'verduras', label: 'Verduras' },
+    { value: 'otros', label: 'Otros' }
   ];
 
   const ordenOptions = [
     { value: 'nombre', label: 'Nombre' },
-    { value: 'precio_venta', label: 'Precio' },
+    { value: 'precio_unitario', label: 'Precio' },
     { value: 'stock_actual', label: 'Stock' },
-    { value: 'fecha_actualizacion', label: 'Fecha' },
+    { value: 'creado', label: 'Fecha' },
   ];
 
   const handleSearchChange = (event) => {
@@ -169,8 +166,8 @@ const ModernInventoryFilters = ({
               >
                 <MenuItem value="todos">Todas</MenuItem>
                 {categorias.map((categoria) => (
-                  <MenuItem key={categoria} value={categoria}>
-                    {categoria}
+                  <MenuItem key={categoria.value} value={categoria.value}>
+                    {categoria.label}
                   </MenuItem>
                 ))}
               </Select>
@@ -274,7 +271,7 @@ const ModernInventoryFilters = ({
             
             {filtros.categoria !== 'todos' && (
               <Chip
-                label={`Categoría: ${filtros.categoria}`}
+                label={`Categoría: ${categorias.find(c => c.value === filtros.categoria)?.label || filtros.categoria}`}
                 size="small"
                 onDelete={() => handleFilterChange('categoria', 'todos')}
                 sx={{ borderRadius: 2 }}

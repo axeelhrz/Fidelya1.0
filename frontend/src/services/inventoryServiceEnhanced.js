@@ -214,20 +214,33 @@ export const busquedaAvanzadaProductos = async (filtros = {}) => {
     
     const params = new URLSearchParams();
     
-    // Agregar parámetros de filtros
-    if (filtros.busqueda) params.append('q', filtros.busqueda);
+    // Agregar parámetros de filtros usando los nombres que espera el backend
+    if (filtros.busqueda) params.append('busqueda', filtros.busqueda);
     if (filtros.categoria && filtros.categoria !== 'todos') params.append('categoria', filtros.categoria);
     if (filtros.proveedor_id) params.append('proveedor_id', filtros.proveedor_id);
     if (filtros.stockBajo) params.append('stock_bajo', 'true');
     if (filtros.sinStock) params.append('sin_stock', 'true');
     if (filtros.orden) params.append('orden', filtros.orden);
     if (filtros.direccion) params.append('direccion', filtros.direccion);
-    if (filtros.pagina) params.append('pagina', filtros.pagina);
     if (filtros.limite) params.append('limite', filtros.limite);
     
-    const response = await api.get(`/productos/busqueda?${params.toString()}`);
-    console.log('✅ Búsqueda completada:', response.data.paginacion);
-    return response.data;
+    // Usar el endpoint correcto del backend
+    const response = await api.get(`/productos?${params.toString()}`);
+    console.log('✅ Búsqueda completada:', response.data.length);
+    
+    // Adaptar la respuesta para que coincida con el formato esperado
+    const productos = Array.isArray(response.data) ? response.data : [];
+    return {
+      productos: productos,
+      paginacion: {
+        pagina_actual: filtros.pagina || 1,
+        limite: filtros.limite || 25,
+        total_registros: productos.length,
+        total_paginas: Math.ceil(productos.length / (filtros.limite || 25)),
+        tiene_siguiente: false,
+        tiene_anterior: false
+  }
+};
   } catch (error) {
     console.error('❌ Error en búsqueda avanzada:', error);
     return {
@@ -239,10 +252,10 @@ export const busquedaAvanzadaProductos = async (filtros = {}) => {
         total_paginas: 0,
         tiene_siguiente: false,
         tiene_anterior: false
-  }
+      }
 };
   }
-    };
+};
 
 /**
  * Obtiene resumen completo del inventario
@@ -278,11 +291,12 @@ export const obtenerHistorialProducto = async (productoId, filtros = {}) => {
     console.log('📋 Obteniendo historial del producto:', productoId);
     
     const params = new URLSearchParams();
-    if (filtros.limite) params.append('limite', filtros.limite);
+    params.append('producto_id', productoId);
+    if (filtros.limite) params.append('limit', filtros.limite);
     if (filtros.fecha_inicio) params.append('fecha_inicio', filtros.fecha_inicio);
     if (filtros.fecha_fin) params.append('fecha_fin', filtros.fecha_fin);
     
-    const response = await api.get(`/productos/${productoId}/historial?${params.toString()}`);
+    const response = await api.get(`/movimientos?${params.toString()}`);
     console.log('✅ Historial obtenido:', response.data.length);
     return response.data;
   } catch (error) {
@@ -302,7 +316,7 @@ export const obtenerProductos = async (filtros = {}) => {
     
     const params = new URLSearchParams();
     
-    if (filtros.busqueda) params.append('q', filtros.busqueda);
+    if (filtros.busqueda) params.append('busqueda', filtros.busqueda);
     if (filtros.categoria && filtros.categoria !== 'todos') params.append('categoria', filtros.categoria);
     if (filtros.stockBajo) params.append('stock_bajo', 'true');
     if (filtros.orden) params.append('orden', filtros.orden);

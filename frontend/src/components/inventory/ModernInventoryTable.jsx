@@ -95,16 +95,16 @@ const ModernInventoryTable = ({
   const isSelected = (id) => selectedProducts.indexOf(id) !== -1;
 
   const getStockStatus = (producto) => {
-    const { stock_actual, stock_minimo } = producto;
-    
-    if (stock_actual === 0) {
+    const stockActual = Number(producto.stock_actual) || 0;
+    const stockMinimo = Number(producto.stock_minimo) || 0;
+    if (stockActual === 0) {
       return { 
         label: 'Sin Stock', 
         color: 'error', 
         icon: <WarningIcon fontSize="small" />,
         severity: 'high'
       };
-    } else if (stock_actual <= stock_minimo) {
+    } else if (stockActual <= stockMinimo) {
       return { 
         label: 'Stock Bajo', 
         color: 'warning', 
@@ -122,15 +122,23 @@ const ModernInventoryTable = ({
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('es-CO', {
+    const amount = Number(value) || 0;
+    return new Intl.NumberFormat('es-UY', {
       style: 'currency',
-      currency: 'COP',
+      currency: 'UYU',
       minimumFractionDigits: 0,
-    }).format(value);
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatNumber = (value) => {
+    const number = Number(value) || 0;
+    return new Intl.NumberFormat('es-UY').format(number);
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('es-CO', {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('es-UY', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -219,8 +227,8 @@ const ModernInventoryTable = ({
               
               <TableCell align="right">
                 <TableSortLabel
-                  active={orderBy === 'precio_venta'}
-                  direction={orderBy === 'precio_venta' ? order : 'asc'}
+                  active={orderBy === 'precio_unitario'}
+                  direction={orderBy === 'precio_unitario' ? order : 'asc'}
                   sx={{ fontWeight: 600, color: 'text.primary' }}
                 >
                   Precio
@@ -312,7 +320,7 @@ const ModernInventoryTable = ({
                           >
                             {producto.nombre}
                           </Typography>
-                          {producto.codigo && (
+                          {producto.codigo_barras && (
                             <Typography 
                               variant="caption" 
                               color="text.secondary"
@@ -324,7 +332,7 @@ const ModernInventoryTable = ({
                                 borderRadius: 1,
                               }}
                             >
-                              {producto.codigo}
+                              {producto.codigo_barras}
                             </Typography>
                           )}
                         </Box>
@@ -338,10 +346,10 @@ const ModernInventoryTable = ({
                           fontWeight={700}
                           color={stockStatus.severity === 'high' ? 'error.main' : 'text.primary'}
                         >
-                          {producto.stock_actual}
+                          {formatNumber(producto.stock_actual)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Min: {producto.stock_minimo}
+                          Min: {formatNumber(producto.stock_minimo)}
                         </Typography>
                       </Box>
                     </TableCell>
@@ -370,7 +378,7 @@ const ModernInventoryTable = ({
                           fontWeight={600}
                           color="text.primary"
                         >
-                          {formatCurrency(producto.precio_venta)}
+                          {formatCurrency(producto.precio_unitario)}
                         </Typography>
                         {producto.precio_compra && (
                           <Typography 
@@ -393,16 +401,14 @@ const ModernInventoryTable = ({
                           color: theme.palette.secondary.main,
                           fontWeight: 500,
                           borderRadius: 2,
+                          textTransform: 'capitalize',
                         }}
                       />
                     </TableCell>
                     
                     <TableCell>
                       <Typography variant="body2" color="text.secondary">
-                        {producto.fecha_actualizacion 
-                          ? formatDate(producto.fecha_actualizacion)
-                          : 'N/A'
-                        }
+                        {formatDate(producto.actualizado || producto.creado)}
                       </Typography>
                     </TableCell>
                     
