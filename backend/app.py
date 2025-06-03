@@ -1562,6 +1562,218 @@ def obtener_estadisticas_inventario(current_user_id):
         if connection and connection.is_connected():
             connection.close()
 
+# ==================== ENDPOINT ESPECÍFICO DE INVENTARIO ====================
+
+@app.route('/api/inventario/resumen', methods=['GET'])
+@jwt_required
+def obtener_resumen_inventario_completo(current_user_id):
+    """Obtener resumen completo del inventario con estadísticas avanzadas"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Estadísticas generales
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total_productos,
+                COUNT(CASE WHEN stock_actual <= stock_minimo THEN 1 END) as productos_stock_bajo,
+                COUNT(CASE WHEN stock_actual = 0 THEN 1 END) as productos_sin_stock,
+                COALESCE(SUM(stock_actual * precio_unitario), 0) as valor_total_inventario,
+                COALESCE(SUM(stock_actual), 0) as stock_total_unidades
+            FROM productos 
+            WHERE activo = TRUE
+        """)
+        
+        estadisticas = cursor.fetchone()
+        
+        # Distribución por categorías
+        cursor.execute("""
+            SELECT 
+                categoria,
+                COUNT(*) as total_productos,
+                SUM(stock_actual) as stock_total,
+                SUM(stock_actual * precio_unitario) as valor_total
+            FROM productos 
+            WHERE activo = TRUE
+            GROUP BY categoria
+        """)
+        
+        distribucion_categorias = []
+        for row in cursor.fetchall():
+            distribucion_categorias.append({
+                'categoria': row[0],
+                'total_productos': row[1],
+                'stock_total': float(row[2]),
+                'valor_total': float(row[3])
+            })
+        
+        # Productos con stock bajo
+        cursor.execute("""
+            SELECT p.id, p.nombre, p.categoria, p.unidad, p.stock_actual, 
+                   p.stock_minimo, p.precio_unitario, pr.nombre as proveedor_nombre
+            FROM productos p
+            LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
+            WHERE p.activo = TRUE AND p.stock_actual <= p.stock_minimo
+            ORDER BY p.stock_actual ASC
+            LIMIT 10
+        """)
+        
+        productos_stock_bajo = []
+        for row in cursor.fetchall():
+            productos_stock_bajo.append({
+                'id': row[0],
+                'nombre': row[1],
+                'categoria': row[2],
+                'unidad': row[3],
+                'stock_actual': float(row[4]),
+                'stock_minimo': float(row[5]),
+                'precio_unitario': float(row[6]),
+                'proveedor_nombre': row[7] or ''
+            })
+        
+        # Productos más vendidos (últimos 30 días)
+        cursor.execute("""
+            SELECT 
+                p.nombre,
+                SUM(dv.cantidad) as cantidad_vendida,
+                SUM(dv.subtotal) as total_vendido
+            FROM detalle_ventas dv
+            INNER JOIN productos p ON dv.producto_id = p.id
+            INNER JOIN ventas v ON dv.venta_id = v.id
+            WHERE v.fecha >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            AND v.estado = 'completada'
+            GROUP BY p.id, p.nombre
+            ORDER BY cantidad_vendida DESC
+            LIMIT 5
+        """)
+        
+        productos_mas_vendidos = []
+        for row in cursor.fetchall():
+            productos_mas_vendidos.append({
+                'nombre': row[0],
+                'cantidad_vendida': float(row[1]),
+                'total_vendido': float(row[2])
+            })
+        
+        # Movimientos recientes
+        cursor.execute("""
+            SELECT 
+                COUNT(CASE WHEN tipo = 'ingreso' THEN 1 END) as total_ingresos,
+                COUNT(CASE WHEN tipo = 'egreso' THEN 1 END) as total_egresos,
+                COUNT(CASE WHEN tipo = 'ajuste' THEN 1 END) as total_ajustes,
+                COUNT(*) as total_movimientos
+            FROM movimientos_stock m
+            WHERE m.fecha >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        """)
+        
+        movimientos_stats = cursor.fetchone()
+        movimientos_recientes = {
+            'total': movimientos_stats[3],
+            'ingresos': movimientos_stats[0],
+            'egresos': movimientos_stats[1],
+            'ajustes': movimientos_stats[2]
+        }
+        
+        # Proveedores principales
+        cursor.execute("""
+            SELECT 
+                pr.nombre,
+                COUNT(p.id) as total_productos,
+                SUM(p.stock_actual * p.precio_unitario) as valor_inventario
+            FROM proveedores pr
+            INNER JOIN productos p ON pr.id = p.proveedor_id
+            WHERE pr.activo = TRUE AND p.activo = TRUE
+            GROUP BY pr.id, pr.nombre
+            ORDER BY valor_inventario DESC
+            LIMIT 5
+        """)
+        
+        proveedores_principales = []
+        for row in cursor.fetchall():
+            proveedores_principales.append({
+                'nombre': row[0],
+                'total_productos': row[1],
+                'valor_inventario': float(row[2])
+            })
+        
+        # Alertas
+        alertas = []
+        if estadisticas[1] > 0:  # productos_stock_bajo
+            alertas.append({
+                'tipo': 'stock_bajo',
+                'mensaje': f'{estadisticas[1]} productos con stock bajo',
+                'prioridad': 'alta' if estadisticas[1] > 5 else 'media'
+            })
+        
+        if estadisticas[2] > 0:  # productos_sin_stock
+            alertas.append({
+                'tipo': 'sin_stock',
+                'mensaje': f'{estadisticas[2]} productos sin stock',
+                'prioridad': 'critica'
+            })
+        
+        # Tendencias (productos nuevos este mes)
+        cursor.execute("""
+            SELECT COUNT(*) 
+            FROM productos 
+            WHERE activo = TRUE 
+            AND YEAR(creado) = YEAR(CURDATE()) 
+            AND MONTH(creado) = MONTH(CURDATE())
+        """)
+        productos_nuevos_mes = cursor.fetchone()[0]
+        
+        # Calcular tendencia porcentual (comparar con mes anterior)
+        cursor.execute("""
+            SELECT COUNT(*) 
+            FROM productos 
+            WHERE activo = TRUE 
+            AND YEAR(creado) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+            AND MONTH(creado) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+        """)
+        productos_mes_anterior = cursor.fetchone()[0]
+        
+        tendencia_porcentual = 0
+        if productos_mes_anterior > 0:
+            tendencia_porcentual = ((productos_nuevos_mes - productos_mes_anterior) / productos_mes_anterior) * 100
+        
+        # Construir respuesta
+        resumen = {
+            'total_productos': estadisticas[0],
+            'productos_stock_bajo': estadisticas[1],
+            'productos_sin_stock': estadisticas[2],
+            'valor_total_inventario': float(estadisticas[3]),
+            'stock_total_unidades': float(estadisticas[4]),
+            'distribucion_categorias': distribucion_categorias,
+            'productos_stock_bajo': productos_stock_bajo,
+            'productos_mas_vendidos': productos_mas_vendidos,
+            'movimientos_recientes': movimientos_recientes,
+            'proveedores_principales': proveedores_principales,
+            'alertas': alertas,
+            'tendencias': {
+                'productos_nuevos_mes': productos_nuevos_mes,
+                'tendencia_porcentual': round(tendencia_porcentual, 2)
+            }
+        }
+        
+        response = jsonify(resumen)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"Error obteniendo resumen completo del inventario: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
 # ==================== ENDPOINTS DE MOVIMIENTOS DE STOCK ====================
 
 @app.route('/api/stock/movimiento', methods=['POST'])
