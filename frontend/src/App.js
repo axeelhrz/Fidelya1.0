@@ -8,7 +8,7 @@ import theme from './theme/theme';
 // Importar páginas
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
-import Dashboard from './pages/dashboard';
+import Dashboard from './pages/Dashboard';
 import InventoryPage from './pages/inventory';
 import VentasPage from './pages/ventas';
 import ComprasPage from './pages/compras';
