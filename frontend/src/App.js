@@ -54,8 +54,8 @@ function App() {
                     <Route index element={<Navigate to="/dashboard" replace />} />
                     <Route path="dashboard" element={<Dashboard />} />
                     
-                    {/* Inventario */}
-                    <Route path="inventario" element={<InventoryPage />} />
+                    {/* Inventario - Corregir la ruta para que coincida con navigation.js */}
+                    <Route path="inventory" element={<InventoryPage />} />
                     
                     {/* Ventas */}
                     <Route path="ventas" element={<VentasPage />} />
