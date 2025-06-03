@@ -7,18 +7,15 @@ import {
   Box,
   Skeleton,
   useTheme,
-  alpha,
   LinearProgress,
   Chip,
 } from '@mui/material';
 import {
   TrendingUp,
   AttachMoney,
-  ShoppingCart,
   Today,
   CalendarMonth,
   Assessment,
-  Timeline,
   CreditCard,
   LocalOffer,
 } from '@mui/icons-material';

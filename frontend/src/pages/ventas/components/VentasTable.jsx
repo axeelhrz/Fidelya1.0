@@ -23,7 +23,6 @@ import {
   ListItem,
   ListItemText,
   ListItemAvatar,
-  Divider,
 } from '@mui/material';
 import {
   Visibility,
@@ -37,7 +36,6 @@ import {
   Receipt,
   Schedule,
   TrendingUp,
-  Star,
   LocalOffer,
   CreditCard,
   Info,
