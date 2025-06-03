@@ -3,9 +3,13 @@ import {
   Box,
   Grid,
   Alert,
-  Snackbar
+  Snackbar,
+  Container,
+  Fade,
+  useTheme,
+  alpha
 } from '@mui/material';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/authService';
 
@@ -21,6 +25,7 @@ import RecentActivityList from './components/RecentActivityList';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -80,82 +85,159 @@ const Dashboard = () => {
     setError(null);
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.1
+      }
+    }
+};
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    }
+  };
+
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha(theme.palette.secondary.main, 0.02)} 100%)`,
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '300px',
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
+          zIndex: 0,
+        }
+      }}
+    >
+      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1, py: 3 }}>
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
         >
           {/* Banner de saludo */}
-          <UserGreetingBanner user={user} />
+          <motion.div variants={itemVariants}>
+            <UserGreetingBanner user={user} />
+          </motion.div>
 
           {/* Grid principal del dashboard */}
-        <Grid container spacing={3} sx={{ mt: 2 }}>
-            {/* Fila 1: Tarjetas de resumen */}
-            <Grid item xs={12} sm={6} md={3}>
-            <InventorySummaryCard 
-              data={dashboardData.resumen} 
-              loading={loading} 
-              />
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            {/* Fila 1: Tarjetas de resumen con animación escalonada */}
+            <Grid item xs={12} sm={6} lg={3}>
+              <motion.div variants={itemVariants}>
+                <InventorySummaryCard 
+                  data={dashboardData.resumen} 
+                  loading={loading} 
+                />
+              </motion.div>
             </Grid>
             
-            <Grid item xs={12} sm={6} md={3}>
-            <DailySalesCard 
-              data={dashboardData.resumen} 
-              loading={loading} 
-              />
+            <Grid item xs={12} sm={6} lg={3}>
+              <motion.div variants={itemVariants}>
+                <DailySalesCard 
+                  data={dashboardData.resumen} 
+                  loading={loading} 
+                />
+              </motion.div>
             </Grid>
             
-            <Grid item xs={12} sm={6} md={3}>
-            <LowStockAlertCard 
-              data={dashboardData.stockBajo} 
-              loading={loading} 
-              />
+            <Grid item xs={12} sm={6} lg={3}>
+              <motion.div variants={itemVariants}>
+                <LowStockAlertCard 
+                  data={dashboardData.stockBajo} 
+                  loading={loading} 
+                />
+              </motion.div>
             </Grid>
             
-            <Grid item xs={12} sm={6} md={3}>
-            <RecentPurchasesCard 
-              data={dashboardData.comprasRecientes} 
-              loading={loading} 
-              />
+            <Grid item xs={12} sm={6} lg={3}>
+              <motion.div variants={itemVariants}>
+                <RecentPurchasesCard 
+                  data={dashboardData.comprasRecientes} 
+                  loading={loading} 
+                />
+              </motion.div>
             </Grid>
 
-            {/* Fila 2: Gráficos */}
-            <Grid item xs={12} md={8}>
-            <MonthlySalesChart 
-              data={dashboardData.ventasMensuales} 
-              loading={loading} 
-              />
+            {/* Fila 2: Gráficos principales */}
+            <Grid item xs={12} lg={8}>
+              <motion.div variants={itemVariants}>
+                <MonthlySalesChart 
+                  data={dashboardData.ventasMensuales} 
+                  loading={loading} 
+                />
+              </motion.div>
             </Grid>
             
-            <Grid item xs={12} md={4}>
-            <StockDistributionChart 
-              data={dashboardData.stockDistribucion} 
-              loading={loading} 
-              />
+            <Grid item xs={12} lg={4}>
+              <motion.div variants={itemVariants}>
+                <StockDistributionChart 
+                  data={dashboardData.stockDistribucion} 
+                  loading={loading} 
+                />
+              </motion.div>
             </Grid>
 
-            {/* Fila 3: Lista de actividad */}
+            {/* Fila 3: Lista de actividad reciente */}
             <Grid item xs={12}>
-            <RecentActivityList 
-              data={dashboardData.ultimosMovimientos} 
-              loading={loading} 
-              />
+              <motion.div variants={itemVariants}>
+                <RecentActivityList 
+                  data={dashboardData.ultimosMovimientos} 
+                  loading={loading} 
+                />
+              </motion.div>
             </Grid>
           </Grid>
         </motion.div>
-      {/* Snackbar para errores */}
-      <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        onClose={handleCloseError}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
-          {error}
-        </Alert>
-      </Snackbar>
+      </Container>
+
+      {/* Snackbar para errores con mejor diseño */}
+      <AnimatePresence>
+        {error && (
+          <Snackbar
+            open={!!error}
+            autoHideDuration={6000}
+            onClose={handleCloseError}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.9 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <Alert 
+                onClose={handleCloseError} 
+                severity="error" 
+                sx={{ 
+                  width: '100%',
+                  borderRadius: 2,
+                  boxShadow: theme.shadows[4]
+                }}
+              >
+                {error}
+              </Alert>
+            </motion.div>
+          </Snackbar>
+        )}
+      </AnimatePresence>
     </Box>
   );
 };

@@ -1,18 +1,53 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box, CircularProgress, Chip } from '@mui/material';
+import { 
+  Card, 
+  CardContent, 
+  Typography, 
+  Box, 
+  CircularProgress,
+  useTheme,
+  alpha,
+  Skeleton
+} from '@mui/material';
 import { motion } from 'framer-motion';
-import { PointOfSale, TrendingUp } from '@mui/icons-material';
+import { PointOfSale, TrendingUp, AttachMoney } from '@mui/icons-material';
 
 const DailySalesCard = ({ data, loading }) => {
+  const theme = useTheme();
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-UY', {
       style: 'currency',
-      currency: 'UYU'
+      currency: 'UYU',
+      minimumFractionDigits: 0
     }).format(amount);
+  };
+
+  const cardVariants = {
+    hover: {
+      y: -8,
+      transition: {
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    }
+  };
+
+  const iconVariants = {
+    hover: {
+      scale: 1.1,
+      rotate: 5,
+      transition: {
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    }
   };
 
   return (
     <motion.div
+      variants={cardVariants}
+      whileHover="hover"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.2 }}
@@ -20,56 +55,117 @@ const DailySalesCard = ({ data, loading }) => {
       <Card
         sx={{
           height: '100%',
-          background: 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)',
-          color: 'white',
+          background: `linear-gradient(135deg, 
+            ${alpha(theme.palette.success.main, 0.1)} 0%, 
+            ${alpha(theme.palette.success.light, 0.05)} 100%)`,
+          backdropFilter: 'blur(20px)',
+          border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          cursor: 'pointer',
         }}
       >
-        <CardContent sx={{ p: 3 }}>
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -10,
-              right: -10,
-              opacity: 0.2
-            }}
-          >
-            <PointOfSale sx={{ fontSize: 80 }} />
-          </Box>
-          
-          <Box sx={{ position: 'relative', zIndex: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <PointOfSale sx={{ mr: 1, fontSize: 24 }} />
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        {/* Elemento decorativo de fondo */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: -20,
+            right: -20,
+            width: 100,
+            height: 100,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${alpha(theme.palette.success.main, 0.1)} 0%, transparent 70%)`,
+            zIndex: 0,
+          }}
+        />
+
+        <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
+            <Box>
+              <Typography 
+                variant="subtitle2" 
+                sx={{ 
+                  color: theme.palette.text.secondary,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  fontSize: '0.75rem',
+                  mb: 1
+                }}
+              >
                 Ventas de Hoy
               </Typography>
-            </Box>
-            
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-                <CircularProgress color="inherit" size={40} />
-              </Box>
-            ) : (
-              <>
-                <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
+              
+              {loading ? (
+                <Skeleton variant="text" width={120} height={40} />
+              ) : (
+                <Typography 
+                  variant="h3" 
+                  sx={{ 
+                    fontWeight: 700,
+                    color: theme.palette.text.primary,
+                    lineHeight: 1.2,
+                    fontSize: { xs: '1.5rem', md: '2rem' }
+                  }}
+                >
                   {formatCurrency(data?.ventasDelDia || 0)}
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Chip
-                    icon={<TrendingUp />}
-                    label={`${data?.cantidadVentas || 0} ventas`}
-                    size="small"
-                    sx={{
-                      backgroundColor: 'rgba(255,255,255,0.2)',
-                      color: 'white',
-                      '& .MuiChip-icon': { color: 'white' }
-                    }}
-                  />
-                </Box>
-              </>
-            )}
+              )}
+            </Box>
+
+            <motion.div variants={iconVariants}>
+              <Box
+                sx={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 2,
+                  background: `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.light})`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: `0 8px 20px ${alpha(theme.palette.success.main, 0.3)}`,
+                }}
+              >
+                <AttachMoney sx={{ fontSize: 24, color: 'white' }} />
+              </Box>
+            </motion.div>
           </Box>
+          
+          {!loading && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 1,
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                }}
+              >
+                <TrendingUp sx={{ fontSize: 14, color: theme.palette.primary.main }} />
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    color: theme.palette.primary.main,
+                    fontWeight: 600
+                  }}
+                >
+                  {data?.cantidadVentas || 0} ventas
+                </Typography>
+              </Box>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: theme.palette.text.secondary,
+                  fontSize: '0.75rem'
+                }}
+              >
+                realizadas
+              </Typography>
+            </Box>
+          )}
         </CardContent>
       </Card>
     </motion.div>

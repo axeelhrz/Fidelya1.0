@@ -9,76 +9,249 @@ import {
   ListItem, 
   ListItemText,
   Chip,
-  Alert
+  Alert,
+  useTheme,
+  alpha,
+  Skeleton,
+  Badge
 } from '@mui/material';
-import { motion } from 'framer-motion';
-import { WarningAmber, Inventory2 } from '@mui/icons-material';
-
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  WarningAmber, 
+  Inventory2, 
+  CheckCircle, 
+  NotificationsActive,
+  TrendingDown
+} from '@mui/icons-material';
 const LowStockAlertCard = ({ data, loading }) => {
+  const theme = useTheme();
+
+  const cardVariants = {
+    hover: {
+      y: -8,
+      transition: {
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    }
+  };
+
+  const iconVariants = {
+    hover: {
+      scale: 1.1,
+      rotate: 5,
+      transition: {
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    }
+  };
+
+  const hasLowStock = data && data.length > 0;
+
   return (
     <motion.div
+      variants={cardVariants}
+      whileHover="hover"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.3 }}
     >
-      <Card sx={{ height: '100%' }}>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <WarningAmber sx={{ mr: 1, fontSize: 24, color: '#FF9800' }} />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Stock Bajo
-            </Typography>
+      <Card
+        sx={{
+          height: '100%',
+          background: hasLowStock 
+            ? `linear-gradient(135deg, 
+                ${alpha(theme.palette.error.main, 0.1)} 0%, 
+                ${alpha(theme.palette.warning.main, 0.05)} 100%)`
+            : `linear-gradient(135deg, 
+                ${alpha(theme.palette.success.main, 0.1)} 0%, 
+                ${alpha(theme.palette.success.light, 0.05)} 100%)`,
+          backdropFilter: 'blur(20px)',
+          border: `1px solid ${alpha(hasLowStock ? theme.palette.error.main : theme.palette.success.main, 0.2)}`,
+          position: 'relative',
+          overflow: 'hidden',
+          cursor: 'pointer',
+        }}
+      >
+        {/* Elemento decorativo de fondo */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: -20,
+            right: -20,
+            width: 100,
+            height: 100,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${alpha(hasLowStock ? theme.palette.error.main : theme.palette.success.main, 0.1)} 0%, transparent 70%)`,
+            zIndex: 0,
+          }}
+        />
+
+        <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
+            <Box>
+              <Typography 
+                variant="subtitle2" 
+                sx={{ 
+                  color: theme.palette.text.secondary,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  fontSize: '0.75rem',
+                  mb: 1
+                }}
+              >
+                Stock Bajo
+              </Typography>
+              
+              {loading ? (
+                <Skeleton variant="text" width={60} height={40} />
+              ) : (
+                <Typography 
+                  variant="h3" 
+                  sx={{ 
+                    fontWeight: 700,
+                    color: hasLowStock ? theme.palette.error.main : theme.palette.success.main,
+                    lineHeight: 1.2
+                  }}
+                >
+                  {hasLowStock ? data.length : 0}
+                </Typography>
+              )}
+            </Box>
+
+            <motion.div variants={iconVariants}>
+              <Badge
+                badgeContent={hasLowStock ? data.length : 0}
+                color="error"
+                invisible={!hasLowStock}
+                sx={{
+                  '& .MuiBadge-badge': {
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                  }
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 2,
+                    background: hasLowStock 
+                      ? `linear-gradient(135deg, ${theme.palette.error.main}, ${theme.palette.error.light})`
+                      : `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.light})`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: `0 8px 20px ${alpha(hasLowStock ? theme.palette.error.main : theme.palette.success.main, 0.3)}`,
+                  }}
+                >
+                  {hasLowStock ? (
+                    <WarningAmber sx={{ fontSize: 24, color: 'white' }} />
+                  ) : (
+                    <CheckCircle sx={{ fontSize: 24, color: 'white' }} />
+                  )}
+                </Box>
+              </Badge>
+            </motion.div>
           </Box>
           
           {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress size={40} />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Skeleton variant="rectangular" height={20} />
+              <Skeleton variant="rectangular" height={20} width="80%" />
             </Box>
           ) : (
-            <>
-              {data && data.length > 0 ? (
-                <>
-                  <Alert severity="warning" sx={{ mb: 2 }}>
-                    {data.length} producto{data.length > 1 ? 's' : ''} con stock bajo
-                  </Alert>
-                  <List dense>
-                    {data.slice(0, 3).map((producto, index) => (
-                      <ListItem key={index} sx={{ px: 0 }}>
-                        <ListItemText
-                          primary={producto.nombre}
-                          secondary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                              <Chip
-                                icon={<Inventory2 />}
-                                label={`${producto.stock} unidades`}
-                                size="small"
-                                color="warning"
-                                variant="outlined"
-                              />
-                              <Typography variant="caption" color="text.secondary">
-                                Mín: {producto.stockMinimo}
-                              </Typography>
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                  {data.length > 3 && (
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      +{data.length - 3} productos más
-                    </Typography>
-                  )}
-                </>
+            <AnimatePresence mode="wait">
+              {hasLowStock ? (
+                <motion.div
+                  key="low-stock"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                        backgroundColor: alpha(theme.palette.error.main, 0.1),
+                      }}
+                    >
+                      <NotificationsActive sx={{ fontSize: 14, color: theme.palette.error.main }} />
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          color: theme.palette.error.main,
+                          fontWeight: 600
+                        }}
+                      >
+                        Requiere atención
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: theme.palette.text.secondary,
+                      fontSize: '0.75rem'
+                    }}
+                  >
+                    {data.length} producto{data.length > 1 ? 's' : ''} con stock insuficiente
+                  </Typography>
+                </motion.div>
               ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Inventory2 sx={{ fontSize: 48, color: '#4CAF50', mb: 1 }} />
-                  <Typography variant="body2" color="text.secondary">
+                <motion.div
+                  key="good-stock"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                        backgroundColor: alpha(theme.palette.success.main, 0.1),
+                      }}
+                    >
+                      <CheckCircle sx={{ fontSize: 14, color: theme.palette.success.main }} />
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          color: theme.palette.success.main,
+                          fontWeight: 600
+                        }}
+                      >
+                        Todo en orden
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: theme.palette.text.secondary,
+                      fontSize: '0.75rem'
+                    }}
+                  >
                     Todos los productos tienen stock suficiente
                   </Typography>
-                </Box>
+                </motion.div>
               )}
-            </>
+            </AnimatePresence>
           )}
         </CardContent>
       </Card>
