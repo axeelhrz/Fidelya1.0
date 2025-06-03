@@ -30,6 +30,7 @@ import {
   TrendingUp as TrendingUpIcon,
   Assessment as AssessmentIcon,
   FilterList as FilterIcon,
+  Warning as WarningIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -57,6 +58,7 @@ const ModernInventoryPage = () => {
   const [loadingResumen, setLoadingResumen] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [creatingTestProducts, setCreatingTestProducts] = useState(false);
   
   // Estados para diálogos
   const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -92,11 +94,41 @@ const ModernInventoryPage = () => {
     tiene_anterior: false
   });
 
+  // Función para crear productos de prueba con stock bajo
+  const handleCreateTestProducts = async () => {
+    setCreatingTestProducts(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/test/crear-productos-stock-bajo', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setSuccess(`${result.productos_actualizados.length} productos actualizados con stock bajo`);
+        // Recargar datos
+        await cargarDatosIniciales();
+      } else {
+        setError('Error creando productos de prueba');
+      }
+    } catch (error) {
+      console.error('Error creando productos de prueba:', error);
+      setError('Error creando productos de prueba');
+    } finally {
+      setCreatingTestProducts(false);
+    }
+  };
+
   // Funciones de carga de datos
   const cargarResumenInventario = useCallback(async () => {
     try {
       setLoadingResumen(true);
       const data = await inventoryServiceEnhanced.obtenerResumenInventario();
+      console.log('Resumen inventario cargado:', data);
       setResumenInventario(data);
     } catch (error) {
       console.error('Error cargando resumen:', error);
@@ -163,7 +195,7 @@ const ModernInventoryPage = () => {
     setSelectedProduct(producto);
     setEditMode(true);
     setFormDialogOpen(true);
-  };
+};
 
   const handleEliminarProducto = (id) => {
     const producto = productos.find(p => p.id === id);
@@ -288,6 +320,13 @@ const ModernInventoryPage = () => {
     },
   ];
 
+  // Verificar si hay productos con stock bajo
+  const productosStockBajo = resumenInventario?.productos_stock_bajo || [];
+  const tieneStockBajo = Array.isArray(productosStockBajo) && productosStockBajo.length > 0;
+
+  console.log('Productos stock bajo:', productosStockBajo);
+  console.log('Tiene stock bajo:', tieneStockBajo);
+
   if (loading) {
     return (
       <Container maxWidth="xl" sx={{ py: 3 }}>
@@ -385,7 +424,7 @@ const ModernInventoryPage = () => {
 
         {/* Alertas de Stock Bajo */}
         <AnimatePresence>
-          {resumenInventario?.productos_stock_bajo?.length > 0 && (
+          {tieneStockBajo ? (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -393,10 +432,67 @@ const ModernInventoryPage = () => {
               transition={{ duration: 0.3, delay: 0.1 }}
             >
               <ModernLowStockAlert 
-                productos={resumenInventario.productos_stock_bajo}
+                productos={productosStockBajo}
                 onAjustarStock={handleAjustarStock}
                 sx={{ mb: 3 }}
               />
+            </motion.div>
+          ) : (
+            // Mostrar tarjeta cuando no hay stock bajo
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
+              <Card
+                sx={{
+                  mb: 3,
+                  borderRadius: 3,
+                  border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+                  bgcolor: alpha(theme.palette.success.main, 0.02),
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 2,
+                          bgcolor: alpha(theme.palette.success.main, 0.1),
+                          color: theme.palette.success.main,
+                        }}
+                      >
+                        <InventoryIcon fontSize="large" />
+                      </Box>
+                      <Box>
+                        <Typography variant="h6" fontWeight={700} color="success.main">
+                          ✅ Stock en Buen Estado
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Todos los productos tienen stock suficiente
+                        </Typography>
+                      </Box>
+                    </Box>
+                    
+                    <Button
+                      variant="outlined"
+                      color="warning"
+                      startIcon={creatingTestProducts ? <CircularProgress size={16} /> : <WarningIcon />}
+                      onClick={handleCreateTestProducts}
+                      disabled={creatingTestProducts}
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: 2,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {creatingTestProducts ? 'Creando...' : 'Simular Stock Bajo'}
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
             </motion.div>
           )}
         </AnimatePresence>

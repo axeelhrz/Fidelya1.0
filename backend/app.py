@@ -1613,7 +1613,7 @@ def obtener_resumen_inventario_completo(current_user_id):
                 'valor_total': float(row[3])
             })
         
-        # Productos con stock bajo
+        # Productos con stock bajo - CORREGIDO
         cursor.execute("""
             SELECT p.id, p.nombre, p.categoria, p.unidad, p.stock_actual, 
                    p.stock_minimo, p.precio_unitario, pr.nombre as proveedor_nombre
@@ -1621,7 +1621,6 @@ def obtener_resumen_inventario_completo(current_user_id):
             LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
             WHERE p.activo = TRUE AND p.stock_actual <= p.stock_minimo
             ORDER BY p.stock_actual ASC
-            LIMIT 10
         """)
         
         productos_stock_bajo = []
@@ -1634,7 +1633,8 @@ def obtener_resumen_inventario_completo(current_user_id):
                 'stock_actual': float(row[4]),
                 'stock_minimo': float(row[5]),
                 'precio_unitario': float(row[6]),
-                'proveedor_nombre': row[7] or ''
+                'proveedor_nombre': row[7] or '',
+                'stock_bajo': True
             })
         
         # Productos más vendidos (últimos 30 días)
@@ -1661,45 +1661,28 @@ def obtener_resumen_inventario_completo(current_user_id):
                 'total_vendido': float(row[2])
             })
         
-        # Movimientos recientes
+        # Últimos movimientos de stock
         cursor.execute("""
-            SELECT 
-                COUNT(CASE WHEN tipo = 'ingreso' THEN 1 END) as total_ingresos,
-                COUNT(CASE WHEN tipo = 'egreso' THEN 1 END) as total_egresos,
-                COUNT(CASE WHEN tipo = 'ajuste' THEN 1 END) as total_ajustes,
-                COUNT(*) as total_movimientos
+            SELECT m.id, m.producto_id, p.nombre as producto_nombre, m.tipo,
+                   m.cantidad, m.motivo, m.fecha, u.nombre as usuario_nombre
             FROM movimientos_stock m
-            WHERE m.fecha >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            INNER JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN usuarios u ON m.usuario_id = u.id
+            ORDER BY m.fecha DESC
+            LIMIT 10
         """)
         
-        movimientos_stats = cursor.fetchone()
-        movimientos_recientes = {
-            'total': movimientos_stats[3],
-            'ingresos': movimientos_stats[0],
-            'egresos': movimientos_stats[1],
-            'ajustes': movimientos_stats[2]
-        }
-        
-        # Proveedores principales
-        cursor.execute("""
-            SELECT 
-                pr.nombre,
-                COUNT(p.id) as total_productos,
-                SUM(p.stock_actual * p.precio_unitario) as valor_inventario
-            FROM proveedores pr
-            INNER JOIN productos p ON pr.id = p.proveedor_id
-            WHERE pr.activo = TRUE AND p.activo = TRUE
-            GROUP BY pr.id, pr.nombre
-            ORDER BY valor_inventario DESC
-            LIMIT 5
-        """)
-        
-        proveedores_principales = []
+        ultimos_movimientos = []
         for row in cursor.fetchall():
-            proveedores_principales.append({
-                'nombre': row[0],
-                'total_productos': row[1],
-                'valor_inventario': float(row[2])
+            ultimos_movimientos.append({
+                'id': row[0],
+                'producto_id': row[1],
+                'producto_nombre': row[2],
+                'tipo': row[3],
+                'cantidad': float(row[4]),
+                'motivo': row[5] or '',
+                'fecha': row[6].isoformat() if row[6] else None,
+                'usuario_nombre': row[7] or ''
             })
         
         # Alertas
@@ -1718,47 +1701,17 @@ def obtener_resumen_inventario_completo(current_user_id):
                 'prioridad': 'critica'
             })
         
-        # Tendencias (productos nuevos este mes)
-        cursor.execute("""
-            SELECT COUNT(*) 
-            FROM productos 
-            WHERE activo = TRUE 
-            AND YEAR(creado) = YEAR(CURDATE()) 
-            AND MONTH(creado) = MONTH(CURDATE())
-        """)
-        productos_nuevos_mes = cursor.fetchone()[0]
-        
-        # Calcular tendencia porcentual (comparar con mes anterior)
-        cursor.execute("""
-            SELECT COUNT(*) 
-            FROM productos 
-            WHERE activo = TRUE 
-            AND YEAR(creado) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
-            AND MONTH(creado) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
-        """)
-        productos_mes_anterior = cursor.fetchone()[0]
-        
-        tendencia_porcentual = 0
-        if productos_mes_anterior > 0:
-            tendencia_porcentual = ((productos_nuevos_mes - productos_mes_anterior) / productos_mes_anterior) * 100
-        
         # Construir respuesta
         resumen = {
             'total_productos': estadisticas[0],
-            'productos_stock_bajo': estadisticas[1],
+            'productos_stock_bajo': productos_stock_bajo,  # CORREGIDO: devolver la lista completa
             'productos_sin_stock': estadisticas[2],
             'valor_total_inventario': float(estadisticas[3]),
             'stock_total_unidades': float(estadisticas[4]),
             'distribucion_categorias': distribucion_categorias,
-            'productos_stock_bajo': productos_stock_bajo,
             'productos_mas_vendidos': productos_mas_vendidos,
-            'movimientos_recientes': movimientos_recientes,
-            'proveedores_principales': proveedores_principales,
-            'alertas': alertas,
-            'tendencias': {
-                'productos_nuevos_mes': productos_nuevos_mes,
-                'tendencia_porcentual': round(tendencia_porcentual, 2)
-            }
+            'ultimos_movimientos': ultimos_movimientos,
+            'alertas': alertas
         }
         
         response = jsonify(resumen)
