@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -7,19 +7,45 @@ import {
   CircularProgress,
   useTheme,
   alpha,
-  Skeleton
+  Skeleton,
+  Fade
 } from '@mui/material';
-import { motion } from 'framer-motion';
-import { TrendingUp, Inventory } from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
+import { TrendingUp, Inventory, Update } from '@mui/icons-material';
 
-const InventorySummaryCard = ({ data, loading }) => {
+const InventorySummaryCard = ({ data, loading, updateTrigger }) => {
   const theme = useTheme();
+  const [previousTotal, setPreviousTotal] = useState(null);
+  const [showUpdateIndicator, setShowUpdateIndicator] = useState(false);
+
+  // Detectar cambios en el total de productos
+  useEffect(() => {
+    if (data?.totalProductos !== undefined && previousTotal !== null) {
+      if (data.totalProductos !== previousTotal) {
+        setShowUpdateIndicator(true);
+        const timer = setTimeout(() => {
+          setShowUpdateIndicator(false);
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+    if (data?.totalProductos !== undefined) {
+      setPreviousTotal(data.totalProductos);
+    }
+  }, [data?.totalProductos, previousTotal]);
 
   const cardVariants = {
     hover: {
       y: -8,
       transition: {
         duration: 0.3,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    },
+    updated: {
+      scale: [1, 1.02, 1],
+      transition: {
+        duration: 0.6,
         ease: [0.4, 0, 0.2, 1]
       }
     }
@@ -33,6 +59,28 @@ const InventorySummaryCard = ({ data, loading }) => {
         duration: 0.3,
         ease: [0.4, 0, 0.2, 1]
       }
+    },
+    updated: {
+      rotate: [0, 360],
+      transition: {
+        duration: 0.8,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    }
+  };
+
+  const numberVariants = {
+    updated: {
+      scale: [1, 1.1, 1],
+      color: [
+        theme.palette.text.primary,
+        theme.palette.primary.main,
+        theme.palette.text.primary
+      ],
+      transition: {
+        duration: 0.8,
+        ease: [0.4, 0, 0.2, 1]
+      }
     }
   };
 
@@ -40,15 +88,16 @@ const InventorySummaryCard = ({ data, loading }) => {
     <motion.div
       variants={cardVariants}
       whileHover="hover"
+      animate={showUpdateIndicator ? "updated" : ""}
       initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+      whileInView={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.1 }}
       style={{ height: '100%' }}
     >
       <Card
         sx={{
           height: '100%',
-                  display: 'flex',
+          display: 'flex',
           flexDirection: 'column',
           background: `linear-gradient(135deg, 
             ${alpha(theme.palette.warning.main, 0.1)} 0%, 
@@ -58,8 +107,8 @@ const InventorySummaryCard = ({ data, loading }) => {
           position: 'relative',
           overflow: 'hidden',
           cursor: 'pointer',
-                }}
-              >
+        }}
+      >
         {/* Elemento decorativo de fondo */}
         <Box
           sx={{
@@ -71,8 +120,41 @@ const InventorySummaryCard = ({ data, loading }) => {
             borderRadius: '50%',
             background: `radial-gradient(circle, ${alpha(theme.palette.warning.main, 0.1)} 0%, transparent 70%)`,
             zIndex: 0,
-                }}
+          }}
         />
+
+        {/* Indicador de actualización */}
+        <AnimatePresence>
+          {showUpdateIndicator && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                zIndex: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: '50%',
+                  bgcolor: theme.palette.success.main,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: `0 2px 8px ${alpha(theme.palette.success.main, 0.4)}`,
+                }}
+              >
+                <Update sx={{ fontSize: 14, color: 'white' }} />
+              </Box>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <CardContent 
           sx={{ 
@@ -83,8 +165,8 @@ const InventorySummaryCard = ({ data, loading }) => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between'
-                }}
-              >
+          }}
+        >
           {/* Sección superior: Título e ícono */}
           <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
             <Box sx={{ flex: 1 }}>
@@ -105,21 +187,29 @@ const InventorySummaryCard = ({ data, loading }) => {
               {loading ? (
                 <Skeleton variant="text" width={80} height={40} />
               ) : (
-                <Typography 
-                  variant="h3" 
-                  sx={{ 
-                    fontWeight: 700,
-                    color: theme.palette.text.primary,
-                    lineHeight: 1.2,
-                    fontSize: { xs: '1.75rem', sm: '2rem' }
-                  }}
+                <motion.div
+                  variants={numberVariants}
+                  animate={showUpdateIndicator ? "updated" : ""}
                 >
-                  {data?.totalProductos || 0}
-                </Typography>
+                  <Typography 
+                    variant="h3" 
+                    sx={{ 
+                      fontWeight: 700,
+                      color: theme.palette.text.primary,
+                      lineHeight: 1.2,
+                      fontSize: { xs: '1.75rem', sm: '2rem' }
+                    }}
+                  >
+                    {data?.totalProductos || 0}
+                  </Typography>
+                </motion.div>
               )}
             </Box>
 
-            <motion.div variants={iconVariants}>
+            <motion.div 
+              variants={iconVariants}
+              animate={showUpdateIndicator ? "updated" : ""}
+            >
               <Box
                 sx={{
                   width: 48,
@@ -135,44 +225,46 @@ const InventorySummaryCard = ({ data, loading }) => {
               >
                 <Inventory sx={{ fontSize: 24, color: 'white' }} />
               </Box>
-    </motion.div>
+            </motion.div>
           </Box>
           
           {/* Sección inferior: Estado */}
           {!loading && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 'auto' }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: 1,
-                  backgroundColor: alpha(theme.palette.success.main, 0.1),
-                }}
-              >
-                <TrendingUp sx={{ fontSize: 14, color: theme.palette.success.main }} />
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    color: theme.palette.success.main,
-                    fontWeight: 600
+            <Fade in={!loading} timeout={500}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 'auto' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: 1,
+                    backgroundColor: alpha(theme.palette.success.main, 0.1),
                   }}
                 >
-                  Activos
+                  <TrendingUp sx={{ fontSize: 14, color: theme.palette.success.main }} />
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: theme.palette.success.main,
+                      fontWeight: 600
+                    }}
+                  >
+                    Activos
+                  </Typography>
+                </Box>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: theme.palette.text.secondary,
+                    fontSize: '0.75rem'
+                  }}
+                >
+                  en inventario
                 </Typography>
               </Box>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  color: theme.palette.text.secondary,
-                  fontSize: '0.75rem'
-                }}
-              >
-                en inventario
-              </Typography>
-            </Box>
+            </Fade>
           )}
         </CardContent>
       </Card>

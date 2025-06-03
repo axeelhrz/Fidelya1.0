@@ -1,11 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, Box, CircularProgress } from '@mui/material';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import createCustomTheme from './theme/theme';
+import { CssBaseline, Box } from '@mui/material';
+import { AnimatePresence } from 'framer-motion';
 
-// Importar páginas
+// Contextos
+import { AuthProvider } from './context/AuthContext';
+import { InventoryProvider } from './context/InventoryContext';
+
+// Componentes
+import ProtectedRoute from './components/ProtectedRoute';
+import MainLayout from './components/layout/MainLayout';
+
+// Páginas
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import Dashboard from './pages/Dashboard';
@@ -13,232 +20,75 @@ import InventoryPage from './pages/inventory';
 import VentasPage from './pages/ventas';
 import ComprasPage from './pages/compras';
 import ClientesPage from './pages/clientes';
+import ReportesPage from './pages/reportes/components/ReporteInventario';
 import ReportesFinancierosPage from './pages/ReportesFinancieros';
-import CierreCajaPage from './pages/CierreCaja';
 import FacturacionPage from './pages/Facturacion';
+import CierreCajaPage from './pages/CierreCaja';
 import ConfiguracionPage from './pages/Configuracion';
 import NotificacionesPage from './pages/Notificaciones';
 
-// Componente de ruta protegida
-import ProtectedRoute from './components/ProtectedRoute';
-import MainLayout from './components/layout/MainLayout';
-
-// Crear el tema
-const theme = createCustomTheme('light');
-
-// Componente de carga
-const LoadingScreen = () => (
-  <Box 
-    sx={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '100vh',
-      backgroundColor: '#f5f5f5'
-    }}
-  >
-    <CircularProgress size={60} />
-  </Box>
-);
-
-// Configuración de títulos para cada página
-const pageConfig = {
-  '/dashboard': 'Dashboard',
-  '/inventory': 'Gestión de Inventario',
-  '/ventas': 'Gestión de Ventas',
-  '/compras': 'Gestión de Compras',
-  '/clientes': 'Gestión de Clientes',
-  '/reportes': 'Reportes Financieros',
-  '/cierre-caja': 'Cierre de Caja',
-  '/facturacion': 'Facturación',
-  '/configuracion': 'Configuración del Sistema',
-  '/notificaciones': 'Centro de Notificaciones'
-};
-
-// Componente wrapper para páginas protegidas
-const ProtectedPageWrapper = ({ children, title }) => {
-  return (
-    <MainLayout title={title}>
-      {children}
-    </MainLayout>
-  );
-};
-
-// Componente principal de rutas
-const AppRoutes = () => {
-  const { isAuthenticated, loading, user } = useAuth();
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  return (
-    <Routes>
-      {/* Rutas públicas */}
-      <Route 
-        path="/login" 
-        element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" replace />} 
-      />
-      <Route 
-        path="/register" 
-        element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" replace />} 
-      />
-
-      {/* Rutas protegidas con layout */}
-      <Route 
-        path="/dashboard" 
-        element={
-          <ProtectedRoute>
-            <ProtectedPageWrapper title={pageConfig['/dashboard']}>
-              <Dashboard />
-            </ProtectedPageWrapper>
-          </ProtectedRoute>
-        } 
-      />
-      
-      <Route 
-        path="/inventory" 
-        element={
-          <ProtectedRoute>
-            <ProtectedPageWrapper title={pageConfig['/inventory']}>
-              <InventoryPage />
-            </ProtectedPageWrapper>
-          </ProtectedRoute>
-        } 
-      />
-      
-      <Route 
-        path="/ventas" 
-        element={
-          <ProtectedRoute>
-            <ProtectedPageWrapper title={pageConfig['/ventas']}>
-              <VentasPage />
-            </ProtectedPageWrapper>
-          </ProtectedRoute>
-        } 
-      />
-      
-      <Route 
-        path="/compras" 
-        element={
-          <ProtectedRoute>
-            <ProtectedPageWrapper title={pageConfig['/compras']}>
-              <ComprasPage />
-            </ProtectedPageWrapper>
-          </ProtectedRoute>
-        } 
-      />
-      
-      <Route 
-        path="/clientes" 
-        element={
-          <ProtectedRoute>
-            <ProtectedPageWrapper title={pageConfig['/clientes']}>
-              <ClientesPage />
-            </ProtectedPageWrapper>
-          </ProtectedRoute>
-        } 
-      />
-      
-      <Route 
-        path="/reportes" 
-        element={
-          <ProtectedRoute>
-            <ProtectedPageWrapper title={pageConfig['/reportes']}>
-              <ReportesFinancierosPage />
-            </ProtectedPageWrapper>
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/cierre-caja" 
-        element={
-          <ProtectedRoute requiredRoles={['admin', 'cajero']}>
-            <ProtectedPageWrapper title={pageConfig['/cierre-caja']}>
-              <CierreCajaPage />
-            </ProtectedPageWrapper>
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/facturacion" 
-        element={
-          <ProtectedRoute requiredRoles={['admin', 'cajero', 'operador']}>
-            <ProtectedPageWrapper title={pageConfig['/facturacion']}>
-              <FacturacionPage />
-            </ProtectedPageWrapper>
-          </ProtectedRoute>
-        } 
-      />
-      
-      <Route 
-        path="/configuracion" 
-        element={
-          <ProtectedRoute requiredRoles={['admin']}>
-            <ProtectedPageWrapper title={pageConfig['/configuracion']}>
-              <ConfiguracionPage />
-            </ProtectedPageWrapper>
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/notificaciones" 
-        element={
-          <ProtectedRoute>
-            <ProtectedPageWrapper title={pageConfig['/notificaciones']}>
-              <NotificacionesPage />
-            </ProtectedPageWrapper>
-          </ProtectedRoute>
-        } 
-      />
-      
-      {/* Redirecciones */}
-      <Route 
-        path="/" 
-        element={
-          isAuthenticated ? 
-            <Navigate to="/dashboard" replace /> : 
-            <Navigate to="/login" replace />
-        } 
-      />
-      
-      {/* Ruta 404 */}
-      <Route 
-        path="*" 
-        element={
-          isAuthenticated ? 
-            <Navigate to="/dashboard" replace /> : 
-            <Navigate to="/login" replace />
-        } 
-      />
-    </Routes>
-  );
-};
-
-// Componente principal de la aplicación
+// Tema
+import theme from './theme/theme';
 function App() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return <LoadingScreen />;
-  }
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <Router>
-          <Box sx={{ minHeight: '100vh' }}>
-            <AppRoutes />
-          </Box>
-        </Router>
+        <InventoryProvider>
+          <Router>
+            <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+              <AnimatePresence mode="wait">
+                <Routes>
+                  {/* Rutas públicas */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  
+                  {/* Rutas protegidas con layout */}
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <MainLayout />
+                    </ProtectedRoute>
+                  }>
+                    {/* Dashboard */}
+                    <Route index element={<Navigate to="/dashboard" replace />} />
+                    <Route path="dashboard" element={<Dashboard />} />
+                    
+                    {/* Inventario */}
+                    <Route path="inventario" element={<InventoryPage />} />
+                    
+                    {/* Ventas */}
+                    <Route path="ventas" element={<VentasPage />} />
+                    
+                    {/* Compras */}
+                    <Route path="compras" element={<ComprasPage />} />
+                    
+                    {/* Clientes */}
+                    <Route path="clientes" element={<ClientesPage />} />
+                    
+                    {/* Reportes */}
+                    <Route path="reportes" element={<ReportesPage />} />
+                    <Route path="reportes-financieros" element={<ReportesFinancierosPage />} />
+                    
+                    {/* Facturación */}
+                    <Route path="facturacion" element={<FacturacionPage />} />
+                    
+                    {/* Cierre de Caja */}
+                    <Route path="cierre-caja" element={<CierreCajaPage />} />
+                    
+                    {/* Configuración */}
+                    <Route path="configuracion" element={<ConfiguracionPage />} />
+                    
+                    {/* Notificaciones */}
+                    <Route path="notificaciones" element={<NotificacionesPage />} />
+                  </Route>
+                  
+                  {/* Ruta por defecto */}
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+              </AnimatePresence>
+            </Box>
+          </Router>
+        </InventoryProvider>
       </AuthProvider>
     </ThemeProvider>
   );

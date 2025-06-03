@@ -7,12 +7,20 @@ import {
   Container,
   Fade,
   useTheme,
-  alpha
+  alpha,
+  Chip,
+  Typography,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Refresh as RefreshIcon,
+  Update as UpdateIcon,
+  CheckCircle as CheckCircleIcon 
+} from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
-import { authService } from '../../services/authService';
-
+import { useInventory } from '../../context/InventoryContext';
 // Importar componentes del dashboard
 import UserGreetingBanner from './components/UserGreetingBanner';
 import InventorySummaryCard from './components/InventorySummaryCard';
@@ -25,64 +33,67 @@ import RecentActivityList from './components/RecentActivityList';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { 
+    dashboardData, 
+    isUpdating, 
+    lastUpdate, 
+    updateTrigger,
+    refreshDashboardData 
+  } = useInventory();
+  
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showUpdateNotification, setShowUpdateNotification] = useState(false);
   
-  // Estados para los datos del dashboard
-  const [dashboardData, setDashboardData] = useState({
-    resumen: null,
-    stockBajo: null,
-    comprasRecientes: null,
-    ventasMensuales: null,
-    stockDistribucion: null,
-    ultimosMovimientos: null
-  });
-
+  // Cargar datos iniciales
   useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Cargar todos los datos del dashboard en paralelo
-      const [
-        resumen,
-        stockBajo,
-        comprasRecientes,
-        ventasMensuales,
-        stockDistribucion,
-        ultimosMovimientos
-      ] = await Promise.all([
-        authService.getDashboardResumen(),
-        authService.getStockBajo(),
-        authService.getComprasRecientes(),
-        authService.getVentasMensuales(),
-        authService.getStockDistribucion(),
-        authService.getUltimosMovimientos()
-      ]);
-
-      setDashboardData({
-        resumen,
-        stockBajo,
-        comprasRecientes,
-        ventasMensuales,
-        stockDistribucion,
-        ultimosMovimientos
-      });
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
+        await refreshDashboardData();
     } catch (error) {
-      console.error('Error cargando datos del dashboard:', error);
+        console.error('Error cargando datos iniciales:', error);
       setError('Error al cargar los datos del dashboard. Por favor, intenta nuevamente.');
     } finally {
       setLoading(false);
     }
   };
 
+    loadInitialData();
+  }, [refreshDashboardData]);
+
+  // Mostrar notificación cuando se actualicen los datos
+  useEffect(() => {
+    if (updateTrigger > 0 && !loading) {
+      setShowUpdateNotification(true);
+      const timer = setTimeout(() => {
+        setShowUpdateNotification(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [updateTrigger, loading]);
+  const handleManualRefresh = async () => {
+    try {
+      await refreshDashboardData(true);
+    } catch (error) {
+      setError('Error al actualizar los datos');
+    }
+  };
+
   const handleCloseError = () => {
     setError(null);
+};
+
+  const formatLastUpdate = (date) => {
+    if (!date) return '';
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    
+    if (diff < 60) return 'Hace unos segundos';
+    if (diff < 3600) return `Hace ${Math.floor(diff / 60)} minutos`;
+    if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} horas`;
+    return date.toLocaleDateString();
   };
 
   const containerVariants = {
@@ -132,21 +143,64 @@ const Dashboard = () => {
           initial="hidden"
           animate="visible"
         >
-          {/* Banner de saludo */}
+          {/* Header con indicador de actualización */}
           <motion.div variants={itemVariants}>
-            <UserGreetingBanner user={user} />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <UserGreetingBanner user={user} />
+              
+              {/* Panel de control de actualización */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                {lastUpdate && (
+                  <Chip
+                    icon={<CheckCircleIcon />}
+                    label={`Actualizado: ${formatLastUpdate(lastUpdate)}`}
+                    size="small"
+                    color="success"
+                    variant="outlined"
+                    sx={{ 
+                      bgcolor: alpha(theme.palette.success.main, 0.1),
+                      borderColor: alpha(theme.palette.success.main, 0.3)
+                    }}
+                  />
+                )}
+                
+                <Tooltip title="Actualizar datos">
+                  <IconButton
+                    onClick={handleManualRefresh}
+                    disabled={isUpdating}
+                    sx={{
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      '&:hover': {
+                        bgcolor: alpha(theme.palette.primary.main, 0.2),
+                      }
+                    }}
+                  >
+                    <RefreshIcon 
+                      sx={{ 
+                        animation: isUpdating ? 'spin 1s linear infinite' : 'none',
+                        '@keyframes spin': {
+                          '0%': { transform: 'rotate(0deg)' },
+                          '100%': { transform: 'rotate(360deg)' }
+                        }
+                      }} 
+                    />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
           </motion.div>
 
           {/* Grid principal del dashboard */}
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            {/* Fila 1: Tarjetas de resumen principales - Altura fija y uniforme */}
+            {/* Fila 1: Tarjetas de resumen principales */}
             <Grid item xs={12} sm={6} lg={3}>
               <motion.div variants={itemVariants}>
                 <Box sx={{ height: 180 }}>
                   <InventorySummaryCard 
                     data={dashboardData.resumen} 
-                    loading={loading} 
-                />
+                    loading={loading || isUpdating} 
+                    updateTrigger={updateTrigger}
+                  />
                 </Box>
               </motion.div>
             </Grid>
@@ -156,8 +210,8 @@ const Dashboard = () => {
                 <Box sx={{ height: 180 }}>
                   <DailySalesCard 
                     data={dashboardData.resumen} 
-                    loading={loading} 
-                />
+                    loading={loading || isUpdating} 
+                  />
                 </Box>
               </motion.div>
             </Grid>
@@ -167,8 +221,9 @@ const Dashboard = () => {
                 <Box sx={{ height: 180 }}>
                   <LowStockAlertCard 
                     data={dashboardData.stockBajo} 
-                    loading={loading} 
-                />
+                    loading={loading || isUpdating}
+                    updateTrigger={updateTrigger}
+                  />
                 </Box>
               </motion.div>
             </Grid>
@@ -178,21 +233,21 @@ const Dashboard = () => {
                 <Box sx={{ height: 180 }}>
                   <RecentPurchasesCard 
                     data={dashboardData.comprasRecientes} 
-                    loading={loading} 
-                />
+                    loading={loading || isUpdating} 
+                  />
                 </Box>
               </motion.div>
-          </Grid>
+            </Grid>
 
-            {/* Fila 2: Gráficos principales - Altura uniforme y misma proporción */}
+            {/* Fila 2: Gráficos principales */}
             <Grid item xs={12} md={6}>
               <motion.div variants={itemVariants}>
                 <Box sx={{ height: 450 }}>
                   <MonthlySalesChart 
                     data={dashboardData.ventasMensuales} 
-                    loading={loading} 
+                    loading={loading || isUpdating} 
                   />
-    </Box>
+                </Box>
               </motion.div>
             </Grid>
             
@@ -201,28 +256,64 @@ const Dashboard = () => {
                 <Box sx={{ height: 450 }}>
                   <StockDistributionChart 
                     data={dashboardData.stockDistribucion} 
-                    loading={loading} 
+                    loading={loading || isUpdating} 
                   />
                 </Box>
               </motion.div>
             </Grid>
 
-            {/* Fila 3: Actividad reciente - Extensión horizontal completa */}
+            {/* Fila 3: Actividad reciente */}
             <Grid item xs={12}>
               <motion.div variants={itemVariants}>
                 <Box sx={{ height: 320 }}>
                   <RecentActivityList 
                     data={dashboardData.ultimosMovimientos} 
-                    loading={loading} 
-                />
+                    loading={loading || isUpdating} 
+                  />
                 </Box>
               </motion.div>
-          </Grid>
+            </Grid>
           </Grid>
         </motion.div>
       </Container>
 
-      {/* Snackbar para errores con mejor diseño */}
+      {/* Notificación de actualización automática */}
+      <AnimatePresence>
+        {showUpdateNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'fixed',
+              bottom: 24,
+              right: 24,
+              zIndex: 1300
+            }}
+          >
+            <Alert 
+              severity="info" 
+              icon={<UpdateIcon />}
+              sx={{ 
+                borderRadius: 2,
+                boxShadow: theme.shadows[8],
+                bgcolor: alpha(theme.palette.info.main, 0.95),
+                color: 'white',
+                '& .MuiAlert-icon': {
+                  color: 'white'
+                }
+              }}
+            >
+              <Typography variant="body2" fontWeight={600}>
+                Dashboard actualizado automáticamente
+              </Typography>
+            </Alert>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Snackbar para errores */}
       <AnimatePresence>
         {error && (
           <Snackbar

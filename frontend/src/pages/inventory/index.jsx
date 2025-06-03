@@ -176,6 +176,7 @@ const ModernInventoryPage = () => {
       await inventoryServiceEnhanced.eliminarProducto(id);
       setSuccess('Producto eliminado exitosamente');
       setDeleteDialogOpen(false);
+      
       await Promise.all([cargarProductos(), cargarResumenInventario()]);
     } catch (error) {
       console.error('Error eliminando producto:', error);
@@ -200,11 +201,12 @@ const ModernInventoryPage = () => {
 
   const handleFormSubmit = async (datosProducto) => {
     try {
+      let resultado;
       if (editMode && selectedProduct) {
-        await inventoryServiceEnhanced.actualizarProducto(selectedProduct.id, datosProducto);
+        resultado = await inventoryServiceEnhanced.actualizarProducto(selectedProduct.id, datosProducto);
         setSuccess('Producto actualizado exitosamente');
       } else {
-        await inventoryServiceEnhanced.crearProducto(datosProducto);
+        resultado = await inventoryServiceEnhanced.crearProducto(datosProducto);
         setSuccess('Producto creado exitosamente');
       }
       
@@ -218,9 +220,10 @@ const ModernInventoryPage = () => {
 
   const handleStockSubmit = async (movimiento) => {
     try {
-      await inventoryServiceEnhanced.registrarMovimientoStock(movimiento);
+      const resultado = await inventoryServiceEnhanced.registrarMovimientoStock(movimiento);
       setSuccess('Stock ajustado exitosamente');
       setStockDialogOpen(false);
+      
       await Promise.all([cargarProductos(), cargarResumenInventario()]);
     } catch (error) {
       console.error('Error ajustando stock:', error);
@@ -228,20 +231,19 @@ const ModernInventoryPage = () => {
     }
   };
 
-  // Handlers para filtros
-  const handleFiltrosChange = (nuevosFiltros) => {
+  const handlePaginaChange = (nuevaPagina) => {
     setFiltros(prev => ({ 
       ...prev, 
+      pagina: nuevaPagina
+        }));
+  };
+
+  const handleFiltrosChange = (nuevosFiltros) => {
+    setFiltros(prev => ({
+      ...prev,
       ...nuevosFiltros,
       pagina: 1 // Reset página al cambiar filtros
     }));
-  };
-
-  const handlePaginaChange = (nuevaPagina) => {
-        setFiltros(prev => ({ 
-          ...prev, 
-      pagina: nuevaPagina
-        }));
   };
 
   // Handlers para selección múltiple
@@ -339,7 +341,7 @@ const ModernInventoryPage = () => {
                 </Typography>
               </Box>
             </Box>
-        <Button 
+            <Button 
           variant="contained"
               startIcon={<AddIcon />}
               onClick={handleCrearProducto}
