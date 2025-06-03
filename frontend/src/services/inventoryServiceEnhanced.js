@@ -58,6 +58,89 @@ api.interceptors.response.use(
 );
 
 /**
+ * Obtiene un producto específico por ID
+ * @param {number} id - ID del producto
+ * @returns {object} - Datos del producto
+ */
+export const obtenerProducto = async (id) => {
+  try {
+    console.log('📦 Obteniendo producto:', id);
+    const response = await api.get(`/productos/${id}`);
+    console.log('✅ Producto obtenido:', response.data.nombre);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error obteniendo producto:', error);
+    throw error.response?.data || { message: 'Error obteniendo producto' };
+  }
+    };
+/**
+ * Crea un nuevo producto
+ * @param {object} producto - Datos del producto
+ * @returns {object} - Respuesta del servidor
+ */
+export const crearProducto = async (producto) => {
+  try {
+    console.log('📦 Creando producto:', producto.nombre);
+    const response = await api.post('/productos', producto);
+    console.log('✅ Producto creado:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error creando producto:', error);
+    throw error.response?.data || { message: 'Error creando producto' };
+  }
+    };
+/**
+ * Actualiza un producto existente
+ * @param {number} id - ID del producto
+ * @param {object} producto - Datos actualizados del producto
+ * @returns {object} - Respuesta del servidor
+ */
+export const actualizarProducto = async (id, producto) => {
+  try {
+    console.log('📦 Actualizando producto:', id);
+    const response = await api.put(`/productos/${id}`, producto);
+    console.log('✅ Producto actualizado:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error actualizando producto:', error);
+    throw error.response?.data || { message: 'Error actualizando producto' };
+  }
+};
+
+/**
+ * Elimina un producto
+ * @param {number} id - ID del producto
+ * @returns {object} - Respuesta del servidor
+ */
+export const eliminarProducto = async (id) => {
+  try {
+    console.log('📦 Eliminando producto:', id);
+    const response = await api.delete(`/productos/${id}`);
+    console.log('✅ Producto eliminado:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error eliminando producto:', error);
+    throw error.response?.data || { message: 'Error eliminando producto' };
+  }
+    };
+/**
+ * Registra un movimiento de stock
+ * @param {object} movimiento - Datos del movimiento
+ * @returns {object} - Respuesta del servidor
+ */
+export const registrarMovimientoStock = async (movimiento) => {
+  try {
+    console.log('📝 Registrando movimiento de stock:', movimiento);
+    const response = await api.post('/stock/movimiento', movimiento);
+    console.log('✅ Movimiento registrado:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error registrando movimiento:', error);
+    throw error.response?.data || { message: 'Error registrando movimiento' };
+  }
+};
+
+/**
  * Obtiene resumen completo del inventario con estadísticas avanzadas
  * @returns {object} - Resumen completo del inventario
  */
@@ -90,11 +173,10 @@ export const obtenerResumenInventario = async () => {
       tendencias: {
         productos_nuevos_mes: 0,
         tendencia_porcentual: 0
-      }
-    };
   }
 };
-
+  }
+    };
 /**
  * Búsqueda avanzada de productos con múltiples filtros y paginación
  * @param {object} filtros - Filtros de búsqueda avanzada
@@ -103,7 +185,6 @@ export const obtenerResumenInventario = async () => {
 export const busquedaAvanzadaProductos = async (filtros = {}) => {
   try {
     console.log('🔍 Realizando búsqueda avanzada de productos:', filtros);
-    
     const params = new URLSearchParams();
     
     // Filtros básicos
@@ -114,8 +195,8 @@ export const busquedaAvanzadaProductos = async (filtros = {}) => {
     // Filtros de stock
     if (filtros.stock_minimo !== undefined) params.append('stock_minimo', filtros.stock_minimo);
     if (filtros.stock_maximo !== undefined) params.append('stock_maximo', filtros.stock_maximo);
-    if (filtros.solo_stock_bajo) params.append('solo_stock_bajo', 'true');
-    if (filtros.solo_sin_stock) params.append('solo_sin_stock', 'true');
+    if (filtros.stockBajo) params.append('stock_bajo', 'true');
+    if (filtros.sinStock) params.append('sin_stock', 'true');
     
     // Filtros de precio
     if (filtros.precio_minimo !== undefined) params.append('precio_minimo', filtros.precio_minimo);
@@ -126,10 +207,22 @@ export const busquedaAvanzadaProductos = async (filtros = {}) => {
     if (filtros.direccion) params.append('direccion', filtros.direccion);
     if (filtros.limite) params.append('limite', filtros.limite);
     if (filtros.pagina) params.append('pagina', filtros.pagina);
+    const response = await api.get(`/productos?${params.toString()}`);
+    console.log('✅ Búsqueda avanzada completada:', response.data.length, 'productos encontrados');
     
-    const response = await api.get(`/inventario/productos/busqueda-avanzada?${params.toString()}`);
-    console.log('✅ Búsqueda avanzada completada:', response.data.productos.length, 'productos encontrados');
-    return response.data;
+    // Adaptar respuesta para compatibilidad con el componente
+    return {
+      productos: response.data,
+      paginacion: {
+        pagina_actual: filtros.pagina || 1,
+        limite: filtros.limite || 50,
+        total_registros: response.data.length,
+        total_paginas: Math.ceil(response.data.length / (filtros.limite || 50)),
+        tiene_siguiente: false,
+        tiene_anterior: false
+      },
+      filtros_aplicados: filtros
+};
   } catch (error) {
     console.error('❌ Error en búsqueda avanzada:', error);
     return {
@@ -162,8 +255,8 @@ export const operacionesMasivasProductos = async (operacion, productosIds, param
       operacion,
       productos_ids: productosIds,
       parametros
-    };
-    
+};
+
     const response = await api.post('/inventario/productos/operaciones-masivas', data);
     console.log('✅ Operación masiva completada:', response.data);
     return response.data;
@@ -188,7 +281,6 @@ export const generarReporteMovimientos = async (filtros = {}) => {
     if (filtros.producto_id) params.append('producto_id', filtros.producto_id);
     if (filtros.tipo) params.append('tipo', filtros.tipo);
     if (filtros.usuario_id) params.append('usuario_id', filtros.usuario_id);
-    
     const response = await api.get(`/inventario/reportes/movimientos-detallado?${params.toString()}`);
     console.log('✅ Reporte de movimientos generado:', response.data.movimientos.length, 'registros');
     return response.data;
@@ -204,7 +296,7 @@ export const generarReporteMovimientos = async (filtros = {}) => {
         valor_total_movimientos: 0
       },
       resumen_por_categorias: {}
-    };
+};
   }
 };
 
@@ -442,6 +534,13 @@ export const buscarPorCodigoBarras = async (codigoBarras) => {
 
 // Objeto principal del servicio mejorado
 const inventoryServiceEnhanced = {
+  // Funciones básicas CRUD
+  obtenerProducto,
+  crearProducto,
+  actualizarProducto,
+  eliminarProducto,
+  registrarMovimientoStock,
+  
   // Funciones básicas existentes
   obtenerProductos: busquedaAvanzadaProductos, // Reemplaza la función básica
   obtenerResumenInventario,

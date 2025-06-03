@@ -57,7 +57,6 @@ import MovimientosTable from '../../components/inventory/MovimientosTable';
 
 // Importar servicios mejorados
 import inventoryServiceEnhanced from '../../services/inventoryServiceEnhanced';
-import inventoryService from '../../services/inventoryService';
 import movimientoService from '../../services/movimientoService';
 import proveedorService from '../../services/proveedorService';
 
@@ -183,6 +182,9 @@ const InventoryPageEnhanced = () => {
   const cargarProveedores = async () => {
     try {
       const data = await proveedorService.obtenerProveedores();
+
+
+
       setProveedores(data);
     } catch (error) {
       console.error('Error cargando proveedores:', error);
@@ -232,7 +234,7 @@ const InventoryPageEnhanced = () => {
 
   const handleConfirmarEliminacion = async (id) => {
     try {
-      await inventoryService.eliminarProducto(id);
+      await inventoryServiceEnhanced.eliminarProducto(id);
       setSuccess('Producto eliminado exitosamente');
       setDeleteDialogOpen(false);
       await Promise.all([cargarProductos(), cargarResumenInventario()]);
@@ -261,10 +263,10 @@ const InventoryPageEnhanced = () => {
   const handleFormSubmit = async (datosProducto) => {
     try {
       if (editMode && selectedProduct) {
-        await inventoryService.actualizarProducto(selectedProduct.id, datosProducto);
+        await inventoryServiceEnhanced.actualizarProducto(selectedProduct.id, datosProducto);
         setSuccess('Producto actualizado exitosamente');
       } else {
-        await inventoryService.crearProducto(datosProducto);
+        await inventoryServiceEnhanced.crearProducto(datosProducto);
         setSuccess('Producto creado exitosamente');
       }
       
@@ -278,7 +280,7 @@ const InventoryPageEnhanced = () => {
 
   const handleStockSubmit = async (movimiento) => {
     try {
-      await inventoryService.registrarMovimientoStock(movimiento);
+      await inventoryServiceEnhanced.registrarMovimientoStock(movimiento);
       setSuccess('Stock ajustado exitosamente');
       setStockDialogOpen(false);
       await Promise.all([cargarProductos(), cargarResumenInventario()]);
@@ -864,8 +866,6 @@ const InventoryPageEnhanced = () => {
               {/* Productos más vendidos */}
               <Grid item xs={12} md={6}>
                 <Card sx={{ borderRadius: 3, height: '100%' }}>
-                  
-
                   <CardContent>
                     <Typography variant="h6" fontWeight={600} gutterBottom>
                       Productos Más Vendidos (30 días)
@@ -1050,6 +1050,8 @@ const InventoryPageEnhanced = () => {
           sx={{ borderRadius: 2 }}
         >
           {success}
+
+
         </Alert>
       </Snackbar>
     </Box>
