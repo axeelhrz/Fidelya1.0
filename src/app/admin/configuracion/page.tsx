@@ -1,3 +1,147 @@
+"use client"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { useToast } from '@/components/ui/use-toast'
+import { Settings, Clock, Mail, DollarSign, Save } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
+import { useUser } from '@/context/UserContext'
+import { redirect } from 'next/navigation'
+
+interface SystemSettings {
+  order_cutoff_time: string
+  system_name: string
+  contact_email: string
+  precio_estudiante_default: string
+  precio_funcionario_default: string
+  email_notifications_enabled: string
+  maintenance_mode: string
+  welcome_message: string
+}
+
+export default function ConfiguracionPage() {
+  const { guardian, loading } = useUser()
+  const [settings, setSettings] = useState<SystemSettings>({
+    order_cutoff_time: '10:00:00',
+    system_name: 'Casino Escolar',
+    contact_email: 'casino@colegio.cl',
+    precio_estudiante_default: '4500',
+    precio_funcionario_default: '5500',
+    email_notifications_enabled: 'true',
+    maintenance_mode: 'false',
+    welcome_message: 'Bienvenido al sistema de pedidos del casino escolar'
+  })
+  const [saving, setSaving] = useState(false)
+  const [loadingSettings, setLoadingSettings] = useState(true)
+  const { toast } = useToast()
+
+  // Verificar permisos de admin
+  useEffect(() => {
+    if (!loading && (!guardian || !guardian.is_staff)) {
+      redirect('/dashboard')
+    }
+  }, [guardian, loading])
+
+  useEffect(() => {
+    if (guardian?.is_staff) {
+      loadSettings()
+    }
+  }, [guardian])
+
+  const loadSettings = async () => {
+    try {
+      setLoadingSettings(true)
+
+      const { data: settingsData, error } = await supabase
+        .from('settings')
+        .select('key, value')
+
+      if (error) {
+        console.error('Error loading settings:', error)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'No se pudieron cargar las configuraciones'
+        })
+        return
+      }
+
+      // Convertir array a objeto
+      const settingsObject = settingsData?.reduce((acc, setting) => {
+        acc[setting.key as keyof SystemSettings] = setting.value
+        return acc
+      }, {} as SystemSettings)
+
+      setSettings(prev => ({ ...prev, ...settingsObject }))
+
+    } catch (error) {
+      console.error('Error loading settings:', error)
+    } finally {
+      setLoadingSettings(false)
+    }
+  }
+
+  const saveSettings = async () => {
+    try {
+      setSaving(true)
+
+      // Convertir objeto a array para upsert
+      const settingsArray = Object.entries(settings).map(([key, value]) => ({
+        key,
+        value: String(value),
+        description: getSettingDescription(key)
+      }))
+
+      const { error } = await supabase
+        .from('settings')
+        .upsert(settingsArray, { onConflict: 'key' })
+
+      if (error) {
+        console.error('Error saving settings:', error)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'No se pudieron guardar las configuraciones'
+        })
+        return
+      }
+
+      toast({
+        title: 'Configuraciones guardadas',
+        description: 'Los cambios se han aplicado correctamente'
+      })
+
+    } catch (error) {
+      console.error('Error saving settings:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Error interno guardando configuraciones'
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const getSettingDescription = (key: string): string => {
+    const descriptions: { [key: string]: string } = {
+      order_cutoff_time: 'Hora límite para realizar pedidos',
+      system_name: 'Nombre del sistema',
+      contact_email: 'Email de contacto',
+      precio_estudiante_default: 'Precio por defecto para estudiantes (en centavos)',
+      precio_funcionario_default: 'Precio por defecto para funcionarios (en centavos)',
+      email_notifications_enabled: 'Habilitar notificaciones por email',
+      maintenance_mode: 'Modo mantenimiento',
+      welcome_message: 'Mensaje de bienvenida'
+    }
+    return descriptions[key] || ''
+  }
+
+  const updateSetting = (key: keyof SystemSettings, value: string) => {
     setSettings(prev => ({ ...prev, [key]: value }))
   }
 
@@ -128,7 +272,7 @@
               <Textarea
                 id="welcome-message"
                 value={settings.welcome_message}
-                onChange={(e) => updateSetting('welcome_message', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateSetting('welcome_message', e.target.value)}
                 placeholder="Bienvenido al sistema de pedidos del casino escolar"
                 rows={3}
               />
