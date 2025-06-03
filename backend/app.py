@@ -4,6 +4,7 @@ import mysql.connector
 import bcrypt
 import jwt
 from datetime import datetime, timedelta, date
+from controllers.notificaciones_controller import NotificacionesController
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from functools import wraps
@@ -121,6 +122,21 @@ def create_tables():
                     actualizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     INDEX idx_nombre (nombre),
                     INDEX idx_activo (activo)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """,
+
+            'preferencias_notificaciones': """
+                CREATE TABLE IF NOT EXISTS preferencias_notificaciones (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    usuario_id INT NOT NULL,
+                    recibir_email BOOLEAN DEFAULT TRUE,
+                    recibir_sms BOOLEAN DEFAULT FALSE,
+                    telefono VARCHAR(20),
+                    frecuencia ENUM('inmediata', 'diaria', 'semanal') DEFAULT 'inmediata',
+                    creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    actualizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                    UNIQUE KEY unique_user_preferences (usuario_id)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """,
             
@@ -374,6 +390,21 @@ def create_tables():
                     INDEX idx_tipo (tipo),
                     INDEX idx_activo (activo),
                     INDEX idx_nombre (nombre)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """,
+            
+            'preferencias_notificaciones': """
+                CREATE TABLE IF NOT EXISTS preferencias_notificaciones (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    usuario_id INT NOT NULL,
+                    recibir_email BOOLEAN DEFAULT TRUE,
+                    recibir_sms BOOLEAN DEFAULT FALSE,
+                    telefono VARCHAR(20),
+                    frecuencia ENUM('inmediata', 'diaria', 'semanal') DEFAULT 'inmediata',
+                    creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    actualizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                    UNIQUE KEY unique_user_preferences (usuario_id)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """
         }
@@ -1833,6 +1864,142 @@ def eliminar_proveedor(current_user_id, proveedor_id):
         if connection and connection.is_connected():
             connection.close()
 
+# ==================== ENDPOINTS DE NOTIFICACIONES ====================
+
+@app.route('/api/notificaciones', methods=['GET'])
+@jwt_required
+def obtener_notificaciones(current_user_id):
+    """Obtener notificaciones del usuario"""
+    try:
+        # Obtener filtros de la query string
+        filtros = {}
+        if request.args.get('tipo'):
+            filtros['tipo'] = request.args.get('tipo')
+        if request.args.get('leida') is not None:
+            filtros['leida'] = request.args.get('leida').lower() == 'true'
+        if request.args.get('fecha_desde'):
+            filtros['fecha_desde'] = request.args.get('fecha_desde')
+        if request.args.get('fecha_hasta'):
+            filtros['fecha_hasta'] = request.args.get('fecha_hasta')
+        if request.args.get('limite'):
+            filtros['limite'] = int(request.args.get('limite'))
+        
+        notificaciones = NotificacionesController.obtener_notificaciones(current_user_id, filtros)
+        
+        response = jsonify(notificaciones)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo notificaciones: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
+@app.route('/api/notificaciones/no-leidas', methods=['GET'])
+@jwt_required
+def contar_notificaciones_no_leidas(current_user_id):
+    """Contar notificaciones no leídas"""
+    try:
+        count = NotificacionesController.contar_no_leidas(current_user_id)
+        
+        response = jsonify({'count': count})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        logger.error(f"Error contando notificaciones no leídas: {e}")
+        return jsonify({'count': 0}), 200
+
+@app.route('/api/notificaciones/marcar-leidas', methods=['POST'])
+@jwt_required
+def marcar_notificaciones_leidas(current_user_id):
+    """Marcar notificaciones como leídas"""
+    try:
+        data = request.get_json() or {}
+        notificacion_ids = data.get('notificacion_ids')
+        
+        success = NotificacionesController.marcar_como_leidas(current_user_id, notificacion_ids)
+        
+        if success:
+            response = jsonify({'message': 'Notificaciones marcadas como leídas'})
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
+        else:
+            return jsonify({'message': 'Error marcando notificaciones'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error marcando notificaciones como leídas: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
+@app.route('/api/notificaciones/configuracion', methods=['GET'])
+@jwt_required
+def obtener_configuracion_notificaciones(current_user_id):
+    """Obtener configuración de notificaciones del usuario"""
+    try:
+        configuracion = NotificacionesController.obtener_configuracion(current_user_id)
+        
+        if configuracion:
+            response = jsonify(configuracion)
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
+        else:
+            return jsonify({'message': 'Error obteniendo configuración'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error obteniendo configuración de notificaciones: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
+@app.route('/api/notificaciones/configuracion', methods=['PUT'])
+@jwt_required
+def actualizar_configuracion_notificaciones(current_user_id):
+    """Actualizar configuración de notificaciones"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'message': 'Datos de configuración requeridos'}), 400
+        
+        success = NotificacionesController.actualizar_configuracion(current_user_id, data)
+        
+        if success:
+            response = jsonify({'message': 'Configuración actualizada exitosamente'})
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 200
+        else:
+            return jsonify({'message': 'Error actualizando configuración'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error actualizando configuración de notificaciones: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
+@app.route('/api/notificaciones/verificar-alertas', methods=['POST'])
+@jwt_required
+def verificar_alertas_sistema(current_user_id):
+    """Verificar y crear alertas automáticas del sistema"""
+    try:
+        # Verificar alertas de stock bajo
+        productos_stock_bajo = NotificacionesController.verificar_alertas_stock()
+        
+        # Verificar pagos pendientes
+        pagos_pendientes = NotificacionesController.verificar_pagos_pendientes()
+        
+        # Verificar cobros pendientes
+        cobros_pendientes = NotificacionesController.verificar_cobros_pendientes()
+        
+        resultado = {
+            'productos_stock_bajo': len(productos_stock_bajo),
+            'pagos_pendientes': len(pagos_pendientes),
+            'cobros_pendientes': len(cobros_pendientes),
+            'alertas_creadas': True
+        }
+        
+        response = jsonify(resultado)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+        
+    except Exception as e:
+        logger.error(f"Error verificando alertas del sistema: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
 # ==================== ENDPOINTS DE VENTAS ====================
 
 @app.route('/api/ventas', methods=['GET'])
@@ -2300,7 +2467,6 @@ def obtener_resumen_ventas_hoy(current_user_id):
                 COUNT(*) as numero_ventas,
                 COALESCE(SUM(CASE WHEN forma_pago = 'efectivo' THEN total ELSE 0 END), 0) as total_efectivo,
                 COALESCE(SUM(CASE WHEN forma_pago = 'tarjeta' THEN total ELSE 0 END), 0) as total_tarjeta,
-                COALESCE(SUM(CASE WHEN forma_pago = 'transferencia' THEN total ELSE 0 END), 0) as total_transferencia,
                 COALESCE(SUM(total), 0) as total_ventas
             FROM ventas 
             WHERE DATE(fecha) = CURDATE() AND estado = 'completada'
@@ -2356,8 +2522,7 @@ def obtener_resumen_ventas_hoy(current_user_id):
                 'numero_ventas': resumen[0],
                 'total_efectivo': float(resumen[1]),
                 'total_tarjeta': float(resumen[2]),
-                'total_transferencia': float(resumen[3]),
-                'total_ventas': float(resumen[4])
+                'total_ventas': float(resumen[3])
             },
             'ventas_por_hora': ventas_por_hora,
             'productos_vendidos': productos_vendidos,
@@ -3111,6 +3276,10 @@ def reporte_ventas(current_user_id):
                 'total': float(row[2])
             })
         
+        total_ingresos = float(resumen[0] or 0)
+        total_gastos = float(resumen[1] or 0)
+        utilidad = total_ingresos - total_gastos
+        
         reporte = {
             'periodo': {
                 'fecha_inicio': fecha_inicio,
@@ -3118,7 +3287,7 @@ def reporte_ventas(current_user_id):
             },
             'resumen': {
                 'total_ventas': resumen[0] or 0,
-                'total_ingresos': float(resumen[1] or 0),
+                'total_ingresos': total_ingresos,
                 'promedio_venta': float(resumen[2] or 0),
                 'total_efectivo': float(resumen[3] or 0),
                 'total_tarjeta': float(resumen[4] or 0)
@@ -3152,7 +3321,6 @@ def reporte_inventario(current_user_id):
         connection = get_db_connection()
         if not connection:
             return jsonify({'message': 'Error de conexión a la base de datos'}), 500
-            
         cursor = connection.cursor()
         
         # Resumen general
@@ -3190,7 +3358,7 @@ def reporte_inventario(current_user_id):
             })
         
         # Productos con stock bajo
-        cursor.execute("""
+            cursor.execute("""
             SELECT 
                 nombre, categoria, stock_actual, stock_minimo, precio_unitario
             FROM productos 
@@ -3209,7 +3377,7 @@ def reporte_inventario(current_user_id):
             })
         
         # Movimientos recientes
-        cursor.execute("""
+            cursor.execute("""
             SELECT 
                 p.nombre as producto_nombre,
                 m.tipo,
@@ -3250,7 +3418,6 @@ def reporte_inventario(current_user_id):
         response = jsonify(reporte)
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
-
     except Exception as e:
         logger.error(f"Error generando reporte de inventario: {e}")
         return jsonify({'message': 'Error interno del servidor'}), 500
