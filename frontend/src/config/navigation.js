@@ -9,18 +9,13 @@ import {
   Notifications as NotificationsIcon,
   Settings as SettingsIcon,
   People as ClientsIcon,
-  Security as SecurityIcon,
   Person as ProfileIcon,
-  Store as StoreIcon,
-  TrendingUp as TrendingUpIcon,
-  Warning as WarningIcon,
-  LocalShipping as SupplierIcon,
-  Print as PrintIcon,
-  Backup as BackupIcon,
-  AdminPanelSettings as AdminIcon,
-  ExitToApp as LogoutIcon
+  ExitToApp as LogoutIcon,
+  Brightness4 as DarkModeIcon,
+  AdminPanelSettings as AdminIcon
 } from '@mui/icons-material';
 
+// Configuración principal de navegación - Solo módulos principales
 export const navigationConfig = [
   {
     id: 'dashboard',
@@ -28,85 +23,44 @@ export const navigationConfig = [
     type: 'item',
     icon: DashboardIcon,
     url: '/dashboard',
-    roles: ['admin', 'cajero', 'operador', 'vendedor']
+    roles: ['admin', 'cajero', 'operador', 'vendedor'],
+    description: 'Panel principal con resumen del negocio'
   },
   {
-    id: 'inventory-section',
+    id: 'inventory',
     title: 'Inventario',
-    type: 'group',
-    children: [
-      {
-        id: 'inventory',
-        title: 'Productos',
-        type: 'item',
+    type: 'item',
         icon: InventoryIcon,
         url: '/inventory',
-        roles: ['admin', 'cajero', 'operador']
+    roles: ['admin', 'cajero', 'operador'],
+    description: 'Gestión de productos y stock'
       },
       {
-        id: 'stock-alerts',
-        title: 'Alertas de Stock',
-        type: 'item',
-        icon: WarningIcon,
-        url: '/inventory?tab=alerts',
-        roles: ['admin', 'cajero', 'operador'],
-        badge: 'stockAlerts'
-      }
-    ]
-  },
-  {
-    id: 'sales-section',
+    id: 'sales',
     title: 'Ventas',
-    type: 'group',
-    children: [
-      {
-        id: 'sales',
-        title: 'Gestión de Ventas',
         type: 'item',
-        icon: SalesIcon,
+    icon: SalesIcon,
         url: '/ventas',
-        roles: ['admin', 'cajero', 'vendedor']
+    roles: ['admin', 'cajero', 'vendedor'],
+    description: 'Registro y gestión de ventas'
       },
-      {
-        id: 'sales-reports',
-        title: 'Reportes de Ingresos',
-        type: 'item',
-        icon: TrendingUpIcon,
-        url: '/ventas?tab=reports',
-        roles: ['admin', 'cajero']
-      }
-    ]
-  },
-  {
-    id: 'purchases-section',
-    title: 'Compras',
-    type: 'group',
-    children: [
       {
         id: 'purchases',
-        title: 'Gestión de Compras',
+    title: 'Compras',
         type: 'item',
         icon: PurchasesIcon,
         url: '/compras',
-        roles: ['admin', 'operador']
+    roles: ['admin', 'operador'],
+    description: 'Gestión de compras y proveedores'
       },
       {
-        id: 'suppliers',
-        title: 'Proveedores',
-        type: 'item',
-        icon: SupplierIcon,
-        url: '/compras?tab=suppliers',
-        roles: ['admin', 'operador']
-      }
-    ]
-  },
-  {
     id: 'clients',
     title: 'Clientes',
-    type: 'item',
+        type: 'item',
     icon: ClientsIcon,
     url: '/clientes',
-    roles: ['admin', 'cajero', 'vendedor']
+    roles: ['admin', 'cajero', 'vendedor'],
+    description: 'Base de datos de clientes'
   },
   {
     id: 'invoicing',
@@ -114,38 +68,26 @@ export const navigationConfig = [
     type: 'item',
     icon: InvoiceIcon,
     url: '/facturacion',
-    roles: ['admin', 'cajero', 'operador']
+    roles: ['admin', 'cajero', 'operador'],
+    description: 'Generación y gestión de facturas'
   },
   {
-    id: 'reports-section',
+    id: 'reports',
     title: 'Reportes',
-    type: 'group',
-    children: [
-      {
-        id: 'financial-reports',
-        title: 'Reportes Financieros',
-        type: 'item',
+    type: 'item',
         icon: ReportsIcon,
         url: '/reportes',
-        roles: ['admin', 'cajero']
+    roles: ['admin', 'cajero'],
+    description: 'Reportes financieros y estadísticas'
       },
       {
-        id: 'export-reports',
-        title: 'Exportar Reportes',
-        type: 'item',
-        icon: PrintIcon,
-        url: '/reportes?tab=export',
-        roles: ['admin']
-      }
-    ]
-  },
-  {
     id: 'cash-register',
     title: 'Cierre de Caja',
     type: 'item',
     icon: CashRegisterIcon,
     url: '/cierre-caja',
-    roles: ['admin', 'cajero']
+    roles: ['admin', 'cajero'],
+    description: 'Control de caja diario'
   },
   {
     id: 'notifications',
@@ -154,53 +96,67 @@ export const navigationConfig = [
     icon: NotificationsIcon,
     url: '/notificaciones',
     roles: ['admin', 'cajero', 'operador', 'vendedor'],
+    description: 'Centro de notificaciones del sistema',
     badge: 'notifications'
-  },
-  {
-    id: 'admin-section',
-    title: 'Administración',
-    type: 'group',
-    roles: ['admin'],
-    children: [
-      {
-        id: 'configuration',
-        title: 'Configuración',
-        type: 'item',
-        icon: SettingsIcon,
-        url: '/configuracion',
-        roles: ['admin']
-      },
-      {
-        id: 'security',
-        title: 'Seguridad',
-        type: 'item',
-        icon: SecurityIcon,
-        url: '/seguridad',
-        roles: ['admin']
-      },
-      {
-        id: 'backup',
-        title: 'Respaldos',
-        type: 'item',
-        icon: BackupIcon,
-        url: '/respaldos',
-        roles: ['admin']
-      }
-    ]
   }
 ];
 
+// Configuración del menú de administración (separado para mejor organización)
+export const adminMenuConfig = [
+  {
+    id: 'configuration',
+    title: 'Configuración',
+    type: 'item',
+    icon: SettingsIcon,
+    url: '/configuracion',
+    roles: ['admin'],
+    description: 'Configuración general del sistema'
+  }
+];
+
+// Configuración del menú de usuario
 export const userMenuConfig = [
   {
     id: 'profile',
     title: 'Mi Perfil',
     icon: ProfileIcon,
-    url: '/perfil'
+    url: '/perfil',
+    description: 'Configuración de perfil personal'
   },
   {
     id: 'logout',
     title: 'Cerrar Sesión',
     icon: LogoutIcon,
-    action: 'logout'
+    action: 'logout',
+    description: 'Salir del sistema'
   }
 ];
+
+// Configuración de controles del sistema
+export const systemControlsConfig = [
+  {
+    id: 'dark-mode',
+    title: 'Modo Oscuro',
+    icon: DarkModeIcon,
+    type: 'toggle',
+    description: 'Alternar entre tema claro y oscuro'
+  },
+  {
+    id: 'notifications-bell',
+    title: 'Notificaciones',
+    icon: NotificationsIcon,
+    type: 'component',
+    description: 'Centro de notificaciones'
+  }
+];
+
+// Función para obtener el badge count de notificaciones
+export const getBadgeCount = (badgeType, badges) => {
+  return badges[badgeType] || 0;
+};
+
+// Función para verificar permisos
+export const hasPermission = (userRole, requiredRoles) => {
+  if (!requiredRoles || requiredRoles.length === 0) return true;
+  return requiredRoles.includes(userRole);
+};

@@ -6,7 +6,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Collapse,
   Typography,
   Box,
   Avatar,
@@ -21,18 +20,23 @@ import {
   alpha
 } from '@mui/material';
 import {
-  ExpandLess,
-  ExpandMore,
   ChevronLeft,
   Store as StoreIcon,
   Brightness4,
   Brightness7,
-  Notifications as NotificationsIcon
+  AdminPanelSettings as AdminIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { navigationConfig, userMenuConfig } from '../../config/navigation';
+import { 
+  navigationConfig, 
+  adminMenuConfig, 
+  userMenuConfig, 
+  systemControlsConfig,
+  hasPermission,
+  getBadgeCount
+} from '../../config/navigation';
 import NotificationBell from './NotificationBell';
 
 const DRAWER_WIDTH = 280;
@@ -45,46 +49,27 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse, darkMode, onToggl
   const { user, logout } = useAuth();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
-  const [expandedGroups, setExpandedGroups] = useState({});
   const [badges, setBadges] = useState({
-    notifications: 0,
-    stockAlerts: 0
+    notifications: 0
   });
+
+  const [showAdminSection, setShowAdminSection] = useState(false);
 
   useEffect(() => {
     loadBadges();
+    // Verificar si el usuario es admin para mostrar la sección de administración
+    setShowAdminSection(hasPermission(user?.rol, ['admin']));
+  }, [user]);
     
-    // Auto-expand group containing current route
-    const currentPath = location.pathname;
-    navigationConfig.forEach(item => {
-      if (item.type === 'group' && item.children) {
-        const hasActiveChild = item.children.some(child => 
-          currentPath.startsWith(child.url.split('?')[0])
-        );
-        if (hasActiveChild) {
-          setExpandedGroups(prev => ({ ...prev, [item.id]: true }));
-        }
-      }
-    });
-  }, [location.pathname]);
-
   const loadBadges = async () => {
     try {
+      // Aquí puedes hacer llamadas a la API para obtener los conteos reales
       setBadges({
-        notifications: 3,
-        stockAlerts: 5
+        notifications: 3 // Ejemplo
       });
     } catch (error) {
       console.error('Error cargando badges:', error);
     }
-  };
-
-  const handleGroupToggle = (groupId) => {
-    if (collapsed) return;
-    setExpandedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }));
   };
 
   const handleNavigation = (item) => {
@@ -102,30 +87,25 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse, darkMode, onToggl
   };
 
   const isActiveRoute = (url) => {
+    if (!url) return false;
     const basePath = url.split('?')[0];
     return location.pathname === basePath || location.pathname.startsWith(basePath + '/');
   };
 
-  const hasPermission = (roles) => {
-    if (!roles || roles.length === 0) return true;
-    return roles.includes(user?.rol);
-  };
+  const renderNavItem = (item, isAdmin = false) => {
+    if (!hasPermission(user?.rol, item.roles)) return null;
 
-  const renderNavItem = (item, level = 0) => {
-    if (!hasPermission(item.roles)) return null;
-
-    const isActive = isActiveRoute(item.url || '');
-    const badgeCount = badges[item.badge] || 0;
-
+    const isActive = isActiveRoute(item.url);
+    const badgeCount = item.badge ? getBadgeCount(item.badge, badges) : 0;
     return (
       <motion.div
         key={item.id}
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3, delay: level * 0.1 }}
+        transition={{ duration: 0.3 }}
       >
         <ListItem disablePadding sx={{ px: collapsed ? 1 : 2, mb: 0.5 }}>
-          <Tooltip title={collapsed ? item.title : ''} placement="right">
+          <Tooltip title={collapsed ? item.title : item.description || item.title} placement="right">
           <ListItemButton
             onClick={() => handleNavigation(item)}
             selected={isActive}
@@ -133,20 +113,20 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse, darkMode, onToggl
               minHeight: 48,
                 borderRadius: 3,
                 backgroundColor: isActive 
-                  ? alpha(theme.palette.primary.main, 0.12) 
+                  ? alpha(isAdmin ? theme.palette.warning.main : theme.palette.primary.main, 0.12) 
                   : 'transparent',
                 border: isActive 
-                  ? `1px solid ${alpha(theme.palette.primary.main, 0.2)}` 
+                  ? `1px solid ${alpha(isAdmin ? theme.palette.warning.main : theme.palette.primary.main, 0.2)}` 
                   : '1px solid transparent',
                 '&:hover': {
                   backgroundColor: isActive 
-                    ? alpha(theme.palette.primary.main, 0.16)
-                    : alpha(theme.palette.primary.main, 0.08),
+                    ? alpha(isAdmin ? theme.palette.warning.main : theme.palette.primary.main, 0.16)
+                    : alpha(isAdmin ? theme.palette.warning.main : theme.palette.primary.main, 0.08),
                   transform: 'translateY(-1px)',
-                  boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.15)}`,
+                  boxShadow: `0 4px 12px ${alpha(isAdmin ? theme.palette.warning.main : theme.palette.primary.main, 0.15)}`,
                 },
                 '&.Mui-selected': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                  backgroundColor: alpha(isAdmin ? theme.palette.warning.main : theme.palette.primary.main, 0.12),
               },
                 transition: 'all 0.2s ease-in-out',
                 justifyContent: collapsed ? 'center' : 'flex-start',
@@ -157,7 +137,9 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse, darkMode, onToggl
               sx={{
                 minWidth: collapsed ? 'auto' : 40,
                 justifyContent: 'center',
-                  color: isActive ? theme.palette.primary.main : theme.palette.text.secondary,
+                  color: isActive 
+                    ? (isAdmin ? theme.palette.warning.main : theme.palette.primary.main)
+                    : theme.palette.text.secondary,
                   transition: 'color 0.2s ease-in-out',
               }}
             >
@@ -176,7 +158,9 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse, darkMode, onToggl
                 primaryTypographyProps={{
                   fontSize: '0.875rem',
                     fontWeight: isActive ? 600 : 500,
-                    color: isActive ? theme.palette.primary.main : theme.palette.text.primary,
+                    color: isActive 
+                      ? (isAdmin ? theme.palette.warning.main : theme.palette.primary.main)
+                      : theme.palette.text.primary,
                     transition: 'all 0.2s ease-in-out',
                 }}
               />
@@ -187,67 +171,6 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse, darkMode, onToggl
             </motion.div>
     );
   };
-
-  const renderNavGroup = (group) => {
-    if (!hasPermission(group.roles)) return null;
-
-    const isExpanded = expandedGroups[group.id];
-    const hasActiveChild = group.children?.some(child => isActiveRoute(child.url || ''));
-
-    return (
-      <Box key={group.id} sx={{ mb: 1 }}>
-        {!collapsed && (
-          <ListItem disablePadding sx={{ px: 2, mb: 1 }}>
-            <ListItemButton
-              onClick={() => handleGroupToggle(group.id)}
-        sx={{
-                minHeight: 40,
-                borderRadius: 2,
-                backgroundColor: hasActiveChild ? alpha(theme.palette.primary.main, 0.05) : 'transparent',
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.08),
-          },
-        }}
-      >
-              <ListItemText
-                primary={group.title}
-                primaryTypographyProps={{
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  color: theme.palette.text.secondary,
-                  textTransform: 'uppercase',
-                  letterSpacing: 1,
-      }}
-              />
-              <motion.div
-                animate={{ rotate: isExpanded ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-    >
-                <ExpandMore sx={{ fontSize: 18, color: theme.palette.text.secondary }} />
-              </motion.div>
-            </ListItemButton>
-          </ListItem>
-        )}
-        
-        <AnimatePresence>
-          {(isExpanded || collapsed) && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <Collapse in={isExpanded || collapsed} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  {group.children?.map(child => renderNavItem(child, 1))}
-                </List>
-              </Collapse>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Box>
-  );
-};
 
   const drawerContent = (
     <Box sx={{ 
@@ -388,20 +311,58 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse, darkMode, onToggl
         </Box>
       )}
 
-      {/* Navigation */}
+      {/* Main Navigation */}
       <Box sx={{ flex: 1, overflow: 'auto', py: 2 }}>
         <List sx={{ px: 0 }}>
-          {navigationConfig.map(item => {
-            if (item.type === 'group') {
-              return renderNavGroup(item);
-            } else {
-              return renderNavItem(item);
-            }
-          })}
+          {/* Módulos principales */}
+          {!collapsed && (
+            <Box sx={{ px: 3, mb: 2 }}>
+              <Typography 
+                variant="overline" 
+                sx={{ 
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  color: theme.palette.text.secondary,
+                  letterSpacing: 1.2
+                }}
+              >
+                MÓDULOS PRINCIPALES
+              </Typography>
+              </Box>
+        )}
+          
+          {navigationConfig.map(item => renderNavItem(item))}
+
+          {/* Sección de Administración */}
+          {showAdminSection && (
+            <>
+              <Divider sx={{ my: 3, mx: 2 }} />
+              {!collapsed && (
+                <Box sx={{ px: 3, mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AdminIcon sx={{ fontSize: 16, color: theme.palette.warning.main }} />
+                    <Typography 
+                      variant="overline" 
+                      sx={{ 
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        color: theme.palette.warning.main,
+                        letterSpacing: 1.2
+        }}
+      >
+                      ADMINISTRACIÓN
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+              
+              {adminMenuConfig.map(item => renderNavItem(item, true))}
+            </>
+          )}
         </List>
       </Box>
 
-      {/* Controls */}
+      {/* Controls Footer */}
       <Box sx={{ 
         borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`, 
         p: collapsed ? 1 : 2,
@@ -421,23 +382,22 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse, darkMode, onToggl
                 checked={darkMode}
                 onChange={onToggleDarkMode}
                 size="small"
-                sx={{
+      sx={{
                   '& .MuiSwitch-thumb': {
                     boxShadow: `0 2px 4px ${alpha(theme.palette.common.black, 0.2)}`,
-                  },
-                }}
+        },
+      }}
               />
             </Box>
 
             {/* Notifications */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <NotificationsIcon sx={{ fontSize: 18, color: theme.palette.text.secondary }} />
+                <NotificationBell />
                 <Typography variant="body2" color="text.secondary">
                   Notificaciones
                 </Typography>
               </Box>
-              <NotificationBell />
             </Box>
 
             {/* User Menu */}
@@ -445,35 +405,37 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse, darkMode, onToggl
             <List sx={{ p: 0 }}>
               {userMenuConfig.map(item => (
                 <ListItem key={item.id} disablePadding>
-                  <ListItemButton
-                    onClick={() => handleNavigation(item)}
-                    sx={{
-                      borderRadius: 2,
-                      minHeight: 40,
-                      '&:hover': {
-                        backgroundColor: item.id === 'logout' 
-                          ? alpha(theme.palette.error.main, 0.1)
-                          : alpha(theme.palette.primary.main, 0.05),
-                      },
-                    }}
-                  >
-                    <ListItemIcon
+                  <Tooltip title={item.description || item.title} placement="top">
+                    <ListItemButton
+                      onClick={() => handleNavigation(item)}
                       sx={{
-                        minWidth: 36,
-                        color: item.id === 'logout' ? theme.palette.error.main : theme.palette.text.secondary,
+                        borderRadius: 2,
+                        minHeight: 40,
+                        '&:hover': {
+                          backgroundColor: item.id === 'logout' 
+                            ? alpha(theme.palette.error.main, 0.1)
+                            : alpha(theme.palette.primary.main, 0.05),
+                        },
                       }}
-                    >
-                      <item.icon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={item.title}
-                      primaryTypographyProps={{
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: item.id === 'logout' ? theme.palette.error.main : theme.palette.text.primary,
-                      }}
-                    />
-                  </ListItemButton>
+    >
+                      <ListItemIcon
+                        sx={{
+                          minWidth: 36,
+                          color: item.id === 'logout' ? theme.palette.error.main : theme.palette.text.secondary,
+                        }}
+                      >
+                        <item.icon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={item.title}
+                        primaryTypographyProps={{
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                          color: item.id === 'logout' ? theme.palette.error.main : theme.palette.text.primary,
+                        }}
+                      />
+                    </ListItemButton>
+                  </Tooltip>
                 </ListItem>
               ))}
             </List>
@@ -486,6 +448,19 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse, darkMode, onToggl
               </IconButton>
             </Tooltip>
             <NotificationBell />
+            {userMenuConfig.map(item => (
+              <Tooltip key={item.id} title={item.title} placement="right">
+                <IconButton 
+                  onClick={() => handleNavigation(item)} 
+                  size="small"
+                  sx={{
+                    color: item.id === 'logout' ? theme.palette.error.main : theme.palette.text.secondary,
+                  }}
+                >
+                  <item.icon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            ))}
           </Box>
         )}
       </Box>
