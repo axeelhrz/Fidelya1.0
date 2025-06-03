@@ -317,75 +317,6 @@ export const obtenerProductos = async (filtros = {}) => {
   }
 };
 
-/**
- * Exporta inventario a diferentes formatos
- * @param {string} formato - Formato de exportación (pdf, excel, csv)
- * @param {object} filtros - Filtros aplicados
- * @returns {object} - Información de la exportación
- */
-export const exportarInventario = async (formato = 'excel', filtros = {}) => {
-  try {
-    console.log('📤 Exportando inventario en formato:', formato);
-    
-    const params = new URLSearchParams();
-    Object.keys(filtros).forEach(key => {
-      if (filtros[key] !== null && filtros[key] !== undefined && filtros[key] !== '') {
-        params.append(key, filtros[key]);
-      }
-    });
-    
-    let endpoint = '';
-    switch (formato) {
-      case 'pdf':
-        endpoint = '/productos/export/pdf';
-        break;
-      case 'excel':
-        endpoint = '/productos/export/excel';
-        break;
-      case 'csv':
-        endpoint = '/productos/export/csv';
-        break;
-      default:
-        throw new Error('Formato de exportación no válido');
-    }
-    
-    const response = await api.get(`${endpoint}?${params.toString()}`);
-    console.log('✅ Exportación iniciada:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error exportando inventario:', error);
-    throw error.response?.data || { message: 'Error en exportación' };
-  }
-};
-
-/**
- * Valida stock antes de realizar una operación
- * @param {number} productoId - ID del producto
- * @param {string} tipoOperacion - Tipo de operación (venta, ajuste, etc.)
- * @param {number} cantidad - Cantidad a validar
- * @returns {object} - Resultado de la validación
- */
-export const validarStock = async (productoId, tipoOperacion, cantidad) => {
-  try {
-    console.log('✅ Validando stock para producto:', productoId, 'operación:', tipoOperacion, 'cantidad:', cantidad);
-    
-    const response = await api.post('/inventario/validar-stock', {
-      producto_id: productoId,
-      tipo_operacion: tipoOperacion,
-      cantidad: cantidad
-    });
-    
-    return response.data;
-  } catch (error) {
-    console.error('❌ Error validando stock:', error);
-    return {
-      valido: false,
-      mensaje: 'Error validando stock',
-      stock_disponible: 0
-    };
-  }
-};
-
 // Objeto principal del servicio de inventario mejorado
 const inventoryServiceEnhanced = {
   crearProducto,
@@ -396,8 +327,6 @@ const inventoryServiceEnhanced = {
   obtenerResumenInventario,
   obtenerHistorialProducto,
   obtenerProductos,
-  exportarInventario,
-  validarStock,
   // Exportar también el emisor de eventos
   events: inventoryEvents
 };

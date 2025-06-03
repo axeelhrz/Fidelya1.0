@@ -15,7 +15,7 @@ import MainLayout from './components/layout/MainLayout';
 // Páginas
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/dashboard';
 import InventoryPage from './pages/inventory';
 import VentasPage from './pages/ventas';
 import ComprasPage from './pages/compras';
@@ -29,6 +29,7 @@ import NotificacionesPage from './pages/Notificaciones';
 
 // Tema
 import theme from './theme/theme';
+
 function App() {
   return (
     <ThemeProvider theme={theme}>

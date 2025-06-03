@@ -8,11 +8,13 @@ import {
   CssBaseline
 } from '@mui/material';
 import { motion } from 'framer-motion';
+import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
+
 const DRAWER_WIDTH = 72;
 const DRAWER_WIDTH_COLLAPSED = 72;
 
-const MainLayout = ({ children, title }) => {
+const MainLayout = ({ title }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
@@ -168,13 +170,8 @@ const MainLayout = ({ children, title }) => {
               transition={{ duration: 0.4, ease: "easeOut" }}
               style={{ flex: 1 }}
             >
-              {React.cloneElement(children, { 
-                title, 
-                darkMode, 
-                onToggleDarkMode: handleToggleDarkMode,
-                onSidebarToggle: handleSidebarToggle,
-                isMobile 
-              })}
+              {/* Usar Outlet en lugar de React.cloneElement */}
+              <Outlet />
             </motion.div>
           </Box>
         </Box>
