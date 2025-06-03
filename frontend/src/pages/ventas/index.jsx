@@ -1,52 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
+  Container,
   Typography,
   Button,
   Paper,
   Alert,
   Snackbar,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Menu,
-  MenuItem,
-  Avatar,
-  Chip,
   Fab,
   useTheme,
   alpha,
+  Breadcrumbs,
+  Link,
+  Skeleton,
+  Fade,
+  Slide,
 } from '@mui/material';
 import {
   Add as AddIcon,
-  AttachMoney as AttachMoneyIcon,
-  AccountCircle,
-  ExitToApp,
-  Dashboard as DashboardIcon,
-  Notifications,
+  TrendingUp as TrendingUpIcon,
   Refresh as RefreshIcon,
+  Download as DownloadIcon,
+  FilterList as FilterListIcon,
+  Home as HomeIcon,
 } from '@mui/icons-material';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { ventasService } from '../../services/ventasService';
 
-// Importar componentes específicos de ventas
+// Importar componentes modernizados
+import VentasStats from './components/VentasStats';
 import VentasTable from './components/VentasTable';
+import VentasFilters from './components/VentasFilters';
 import VentaDialog from './components/VentaDialog';
 import VentaViewDialog from './components/VentaViewDialog';
 import DeleteVentaDialog from './components/DeleteVentaDialog';
-import VentasStats from './components/VentasStats';
-import VentasFilters from './components/VentasFilters';
 
 const VentasPage = () => {
   const theme = useTheme();
-  const { user, logout } = useAuth();
-  const [anchorEl, setAnchorEl] = useState(null);
-  
+  const { user } = useAuth();
   // Estados para datos
   const [ventas, setVentas] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   
@@ -58,6 +55,7 @@ const VentasPage = () => {
   const [selectedVenta, setSelectedVenta] = useState(null);
   
   // Estados para filtros
+  const [showFilters, setShowFilters] = useState(false);
   const [filtros, setFiltros] = useState({
     fecha_inicio: '',
     fecha_fin: '',
@@ -71,8 +69,12 @@ const VentasPage = () => {
     cargarDatos();
   }, [filtros]);
 
-  const cargarDatos = async () => {
-    setLoading(true);
+  const cargarDatos = async (showRefreshIndicator = false) => {
+    if (showRefreshIndicator) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
     
     try {
@@ -88,20 +90,12 @@ const VentasPage = () => {
       setError('Error al cargar los datos de ventas. Por favor, intenta nuevamente.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleLogout = () => {
-    logout();
-    handleMenuClose();
+  const handleRefresh = () => {
+    cargarDatos(true);
   };
 
   const handleCreateVenta = () => {
@@ -146,89 +140,143 @@ const VentasPage = () => {
     setFiltros(nuevosFiltros);
   };
 
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
+  };
+
   const handleCloseError = () => {
     setError(null);
   };
 
   const handleCloseSuccess = () => {
     setSuccess(null);
+};
+
+  const pageVariants = {
+    initial: { opacity: 0, y: 20 },
+    in: { opacity: 1, y: 0 },
+    out: { opacity: 0, y: -20 }
+  };
+
+  const pageTransition = {
+    type: 'tween',
+    ease: 'anticipate',
+    duration: 0.5
   };
 
   return (
-    <Box sx={{ flexGrow: 1, minHeight: '100vh', backgroundColor: '#F5F5F5' }}>
-      {/* AppBar */}
-      <AppBar position="static" sx={{ backgroundColor: '#2E7D32', boxShadow: 2 }}>
-        <Toolbar>
-          <AttachMoneyIcon sx={{ mr: 2 }} />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
-            Frutería Nina - Gestión de Ventas
-          </Typography>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton color="inherit" onClick={cargarDatos}>
-              <RefreshIcon />
-            </IconButton>
-            
-            <IconButton color="inherit">
-              <Notifications />
-            </IconButton>
-            
-            <Chip
-              label={user?.rol || 'Usuario'}
-              sx={{
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                fontWeight: 500
-              }}
-              size="small"
-            />
-            
-            <IconButton
-              size="large"
-              onClick={handleMenuOpen}
-              color="inherit"
-            >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: '#FF9800', fontWeight: 600 }}>
-                {user?.nombre?.charAt(0).toUpperCase()}
-              </Avatar>
-            </IconButton>
-          </Box>
-
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-            PaperProps={{
-              sx: { mt: 1, minWidth: 180 }
-            }}
+    <motion.div
+      initial="initial"
+      animate="in"
+      exit="out"
+      variants={pageVariants}
+      transition={pageTransition}
+    >
+      <Box sx={{ 
+        minHeight: '100vh', 
+        backgroundColor: theme.palette.background.default,
+        pb: 4
+      }}>
+        <Container maxWidth="xl" sx={{ pt: 3 }}>
+          {/* Breadcrumbs */}
+          <Breadcrumbs 
+            aria-label="breadcrumb" 
+            sx={{ mb: 2, color: theme.palette.text.secondary }}
           >
-            <MenuItem onClick={handleMenuClose}>
-              <AccountCircle sx={{ mr: 1 }} />
-              Mi Perfil
-            </MenuItem>
-            <MenuItem onClick={handleLogout}>
-              <ExitToApp sx={{ mr: 1 }} />
-              Cerrar Sesión
-            </MenuItem>
-          </Menu>
-        </Toolbar>
-      </AppBar>
+            <Link 
+              underline="hover" 
+              color="inherit" 
+              href="/dashboard"
+              sx={{ display: 'flex', alignItems: 'center' }}
+            >
+              <HomeIcon sx={{ mr: 0.5, fontSize: 20 }} />
+              Dashboard
+            </Link>
+            <Typography color="text.primary" sx={{ fontWeight: 500 }}>
+              Ventas
+            </Typography>
+          </Breadcrumbs>
 
-      {/* Contenido principal */}
-      <Box sx={{ p: 3 }}>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Encabezado */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 600, mb: 1 }}>
-              Gestión de Ventas
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Registra ventas, controla el inventario automáticamente y genera reportes detallados
-            </Typography>
+          {/* Header */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'flex-start',
+            mb: 4,
+            flexWrap: 'wrap',
+            gap: 2
+          }}>
+            <Box>
+              <Typography 
+                variant="h4" 
+                component="h1" 
+                sx={{ 
+                  fontWeight: 800,
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  mb: 1
+                }}
+              >
+                Gestión de Ventas
+              </Typography>
+              <Typography 
+                variant="body1" 
+                color="text.secondary"
+                sx={{ maxWidth: 600 }}
+              >
+                Registra ventas, controla el inventario automáticamente y genera reportes detallados
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Button
+                variant="outlined"
+                startIcon={<FilterListIcon />}
+                onClick={toggleFilters}
+                sx={{ 
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 600
+                }}
+              >
+                {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+              </Button>
+              
+              <Button
+                variant="outlined"
+                startIcon={refreshing ? <RefreshIcon sx={{ animation: 'spin 1s linear infinite' }} /> : <RefreshIcon />}
+                onClick={handleRefresh}
+                disabled={refreshing}
+                sx={{ 
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 600
+                }}
+              >
+                Actualizar
+              </Button>
+
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleCreateVenta}
+                sx={{ 
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  boxShadow: theme.shadows[4],
+                  '&:hover': {
+                    boxShadow: theme.shadows[8],
+                    transform: 'translateY(-2px)'
+                  },
+                  transition: 'all 0.2s ease-in-out'
+                }}
+              >
+                Nueva Venta
+              </Button>
+            </Box>
           </Box>
 
           {/* Estadísticas */}
@@ -238,15 +286,36 @@ const VentasPage = () => {
           />
 
           {/* Filtros */}
-          <Paper sx={{ p: 3, mb: 3, borderRadius: 3 }}>
-            <VentasFilters 
-              filtros={filtros}
-              onFiltrosChange={handleFiltrosChange}
-            />
-          </Paper>
+          <AnimatePresence>
+            {showFilters && (
+              <Slide direction="down" in={showFilters} mountOnEnter unmountOnExit>
+                <Paper 
+                  sx={{ 
+                    p: 3, 
+                    mb: 3, 
+                    borderRadius: 4,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                    backgroundColor: alpha(theme.palette.primary.main, 0.02)
+                  }}
+                >
+                  <VentasFilters 
+                    filtros={filtros}
+                    onFiltrosChange={handleFiltrosChange}
+                  />
+                </Paper>
+              </Slide>
+            )}
+          </AnimatePresence>
 
           {/* Tabla de ventas */}
-          <Paper sx={{ borderRadius: 3, overflow: 'hidden' }}>
+          <Paper 
+            sx={{ 
+              borderRadius: 4, 
+              overflow: 'hidden',
+              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              boxShadow: theme.shadows[2]
+            }}
+          >
             <VentasTable
               ventas={ventas}
               loading={loading}
@@ -255,81 +324,108 @@ const VentasPage = () => {
               onDelete={handleDeleteVenta}
             />
           </Paper>
-        </motion.div>
+        </Container>
+
+        {/* Botón flotante para agregar venta */}
+        <Fab
+          color="primary"
+          aria-label="agregar venta"
+          onClick={handleCreateVenta}
+          sx={{
+            position: 'fixed',
+            bottom: 32,
+            right: 32,
+            width: 64,
+            height: 64,
+            boxShadow: theme.shadows[8],
+            '&:hover': {
+              transform: 'scale(1.1)',
+              boxShadow: theme.shadows[12],
+            },
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+          }}
+        >
+          <AddIcon sx={{ fontSize: 28 }} />
+        </Fab>
+
+        {/* Diálogos */}
+        <VentaDialog
+          open={openCreateDialog}
+          onClose={() => setOpenCreateDialog(false)}
+          onSuccess={handleVentaCreated}
+          mode="create"
+        />
+
+        <VentaDialog
+          open={openEditDialog}
+          onClose={() => setOpenEditDialog(false)}
+          onSuccess={handleVentaUpdated}
+          mode="edit"
+          venta={selectedVenta}
+        />
+
+        <VentaViewDialog
+          open={openViewDialog}
+          onClose={() => setOpenViewDialog(false)}
+          venta={selectedVenta}
+        />
+
+        <DeleteVentaDialog
+          open={openDeleteDialog}
+          onClose={() => setOpenDeleteDialog(false)}
+          onSuccess={handleVentaDeleted}
+          venta={selectedVenta}
+        />
+
+        {/* Snackbars para notificaciones */}
+        <Snackbar
+          open={!!error}
+          autoHideDuration={6000}
+          onClose={handleCloseError}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleCloseError} 
+            severity="error" 
+            sx={{ 
+              width: '100%',
+              borderRadius: 3,
+              fontWeight: 500
+            }}
+          >
+            {error}
+          </Alert>
+        </Snackbar>
+
+        <Snackbar
+          open={!!success}
+          autoHideDuration={4000}
+          onClose={handleCloseSuccess}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleCloseSuccess} 
+            severity="success" 
+            sx={{ 
+              width: '100%',
+              borderRadius: 3,
+              fontWeight: 500
+            }}
+          >
+            {success}
+          </Alert>
+        </Snackbar>
       </Box>
 
-      {/* Botón flotante para agregar venta */}
-      <Fab
-        color="primary"
-        aria-label="agregar venta"
-        onClick={handleCreateVenta}
-        sx={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          boxShadow: theme.shadows[8],
-          '&:hover': {
-            transform: 'scale(1.1)',
-            boxShadow: theme.shadows[12],
-          },
-          transition: 'all 0.3s ease',
-        }}
-      >
-        <AddIcon />
-      </Fab>
-
-      {/* Diálogos */}
-      <VentaDialog
-        open={openCreateDialog}
-        onClose={() => setOpenCreateDialog(false)}
-        onSuccess={handleVentaCreated}
-        mode="create"
-      />
-
-      <VentaDialog
-        open={openEditDialog}
-        onClose={() => setOpenEditDialog(false)}
-        onSuccess={handleVentaUpdated}
-        mode="edit"
-        venta={selectedVenta}
-      />
-
-      <VentaViewDialog
-        open={openViewDialog}
-        onClose={() => setOpenViewDialog(false)}
-        venta={selectedVenta}
-      />
-
-      <DeleteVentaDialog
-        open={openDeleteDialog}
-        onClose={() => setOpenDeleteDialog(false)}
-        onSuccess={handleVentaDeleted}
-        venta={selectedVenta}
-      />
-
-      {/* Snackbars para notificaciones */}
-      <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        onClose={handleCloseError}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
-          {error}
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={!!success}
-        autoHideDuration={4000}
-        onClose={handleCloseSuccess}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseSuccess} severity="success" sx={{ width: '100%' }}>
-          {success}
-        </Alert>
-      </Snackbar>
-    </Box>
+      {/* Estilos para animaciones */}
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </motion.div>
   );
 };
 
