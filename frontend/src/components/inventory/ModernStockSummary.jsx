@@ -82,7 +82,8 @@ const ModernStockSummary = ({ resumen, loading = false, sx = {} }) => {
 
   // Extraer valores de forma segura
   const totalProductos = Number(resumen.total_productos) || 0;
-  const productosStockBajo = Number(resumen.productos_stock_bajo) || 0;
+  const productosStockBajoLista = Array.isArray(resumen.productos_stock_bajo) ? resumen.productos_stock_bajo : [];
+  const productosStockBajo = productosStockBajoLista.length;
   const productosSinStock = Number(resumen.productos_sin_stock) || 0;
   const valorTotalInventario = Number(resumen.valor_total_inventario) || 0;
 

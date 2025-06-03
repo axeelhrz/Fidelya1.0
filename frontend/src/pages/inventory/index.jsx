@@ -320,9 +320,11 @@ const ModernInventoryPage = () => {
     },
   ];
 
-  // Verificar si hay productos con stock bajo
-  const productosStockBajo = resumenInventario?.productos_stock_bajo || [];
-  const tieneStockBajo = Array.isArray(productosStockBajo) && productosStockBajo.length > 0;
+  // CORREGIDO: Verificar si hay productos con stock bajo
+  const productosStockBajo = Array.isArray(resumenInventario?.productos_stock_bajo) 
+    ? resumenInventario.productos_stock_bajo 
+    : [];
+  const tieneStockBajo = productosStockBajo.length > 0;
 
   console.log('Productos stock bajo:', productosStockBajo);
   console.log('Tiene stock bajo:', tieneStockBajo);
