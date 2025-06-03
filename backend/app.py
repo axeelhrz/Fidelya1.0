@@ -1380,7 +1380,7 @@ if __name__ == '__main__':
             logger.info("   👥 Clientes: /api/clientes")
             logger.info("=" * 100)
             
-            app.run(debug=True, host='0.0.0.0', port=5000)
+            app.run(debug=True, host='0.0.0.0', port=5001)
         else:
             logger.error("❌ Error inicializando datos base")
     else:
