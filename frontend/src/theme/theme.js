@@ -1,6 +1,7 @@
 import { createTheme } from '@mui/material/styles';
 
-const getDesignTokens = (mode) => ({
+const createCustomTheme = (mode = 'light') => {
+  return createTheme({
   palette: {
     mode,
     primary: {
@@ -55,170 +56,202 @@ const getDesignTokens = (mode) => ({
       light: '#60A5FA',
       dark: '#2563EB',
     },
-    divider: mode === 'dark' ? 'rgba(148, 163, 184, 0.12)' : 'rgba(30, 41, 59, 0.08)',
+      divider: mode === 'dark' ? '#334155' : '#E2E8F0',
   },
-});
-
-const createAppTheme = (mode = 'light') => createTheme({
-  ...getDesignTokens(mode),
   typography: {
-    fontFamily: '"Inter", "SF Pro Display", "Segoe UI", "Roboto", sans-serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
-      fontWeight: 700,
+        fontWeight: 800,
       fontSize: '2.5rem',
-      letterSpacing: '-0.025em',
+        lineHeight: 1.2,
     },
     h2: {
       fontWeight: 700,
       fontSize: '2rem',
-      letterSpacing: '-0.025em',
+        lineHeight: 1.3,
     },
     h3: {
-      fontWeight: 600,
+        fontWeight: 700,
       fontSize: '1.75rem',
-      letterSpacing: '-0.02em',
+        lineHeight: 1.3,
     },
     h4: {
       fontWeight: 600,
       fontSize: '1.5rem',
-      letterSpacing: '-0.02em',
+        lineHeight: 1.4,
     },
     h5: {
       fontWeight: 600,
       fontSize: '1.25rem',
-      letterSpacing: '-0.01em',
+        lineHeight: 1.4,
     },
     h6: {
       fontWeight: 600,
       fontSize: '1.125rem',
-      letterSpacing: '-0.01em',
+        lineHeight: 1.4,
     },
     subtitle1: {
       fontWeight: 500,
           fontSize: '1rem',
-      letterSpacing: '-0.01em',
-        },
-    subtitle2: {
-      fontWeight: 500,
-      fontSize: '0.875rem',
-      letterSpacing: '-0.01em',
-      },
-    body1: {
-      fontWeight: 400,
-      fontSize: '1rem',
-      lineHeight: 1.6,
-    },
-    body2: {
-      fontWeight: 400,
-      fontSize: '0.875rem',
       lineHeight: 1.5,
   },
-    button: {
+      subtitle2: {
       fontWeight: 500,
-      textTransform: 'none',
-      letterSpacing: '-0.01em',
-    },
-            },
-  shape: {
-    borderRadius: 16,
-            },
-  shadows: [
-    'none',
-    '0px 1px 3px rgba(0, 0, 0, 0.05), 0px 1px 2px rgba(0, 0, 0, 0.1)',
-    '0px 4px 6px -1px rgba(0, 0, 0, 0.05), 0px 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    '0px 10px 15px -3px rgba(0, 0, 0, 0.05), 0px 4px 6px -2px rgba(0, 0, 0, 0.05)',
-    '0px 20px 25px -5px rgba(0, 0, 0, 0.05), 0px 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    '0px 25px 50px -12px rgba(0, 0, 0, 0.15)',
-    ...Array(19).fill('0px 25px 50px -12px rgba(0, 0, 0, 0.15)'),
-  ],
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          padding: '12px 24px',
           fontSize: '0.875rem',
-          fontWeight: 500,
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          textTransform: 'none',
+        lineHeight: 1.5,
         },
-        contained: {
-          boxShadow: '0px 4px 12px rgba(16, 185, 129, 0.15)',
-          '&:hover': {
-            boxShadow: '0px 8px 20px rgba(16, 185, 129, 0.25)',
-            transform: 'translateY(-1px)',
+      body1: {
+        fontSize: '1rem',
+        lineHeight: 1.6,
+          },
+      body2: {
+        fontSize: '0.875rem',
+        lineHeight: 1.6,
+        },
+      button: {
+        fontWeight: 600,
+        textTransform: 'none',
+        fontSize: '0.875rem',
+      },
+      caption: {
+        fontSize: '0.75rem',
+        lineHeight: 1.4,
+    },
+      overline: {
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        },
+      },
+    shape: {
+      borderRadius: 12,
+        },
+    shadows: [
+      'none',
+      '0px 1px 2px rgba(0, 0, 0, 0.05)',
+      '0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.06)',
+      '0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      '0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      '0px 20px 25px -5px rgba(0, 0, 0, 0.1), 0px 10px 10px -5px rgba(0, 0, 0, 0.04)',
+      '0px 25px 50px -12px rgba(0, 0, 0, 0.25)',
+      '0px 35px 60px -12px rgba(0, 0, 0, 0.3)',
+      '0px 45px 70px -12px rgba(0, 0, 0, 0.35)',
+      // ... más sombras según necesidad
+    ],
+    components: {
+      MuiButton: {
+      styleOverrides: {
+        root: {
+            borderRadius: 12,
+            textTransform: 'none',
+            fontWeight: 600,
+            padding: '10px 24px',
+            boxShadow: 'none',
+            '&:hover': {
+              boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+              transform: 'translateY(-1px)',
+  },
+            transition: 'all 0.2s ease-in-out',
+            },
+          contained: {
+            '&:hover': {
+              boxShadow: '0px 6px 16px rgba(0, 0, 0, 0.2)',
           },
         },
       },
     },
-    MuiCard: {
+      MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 20,
-          border: mode === 'dark' ? '1px solid rgba(148, 163, 184, 0.1)' : '1px solid rgba(30, 41, 59, 0.05)',
-          boxShadow: mode === 'dark'
-            ? '0px 4px 20px rgba(0, 0, 0, 0.3)'
-            : '0px 4px 20px rgba(30, 41, 59, 0.04)',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          backdropFilter: 'blur(10px)',
-          '&:hover': {
-            boxShadow: mode === 'dark'
-              ? '0px 8px 30px rgba(0, 0, 0, 0.4)'
-              : '0px 8px 30px rgba(30, 41, 59, 0.08)',
-            transform: 'translateY(-2px)',
+            borderRadius: 16,
+            boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.06)',
+            '&:hover': {
+              boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
         },
+            transition: 'all 0.2s ease-in-out',
       },
     },
         },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          borderRadius: 20,
-          border: mode === 'dark' ? '1px solid rgba(148, 163, 184, 0.1)' : '1px solid rgba(30, 41, 59, 0.05)',
-          boxShadow: mode === 'dark'
-            ? '0px 4px 20px rgba(0, 0, 0, 0.3)'
-            : '0px 4px 20px rgba(30, 41, 59, 0.04)',
-          backdropFilter: 'blur(10px)',
-        },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            borderRadius: 16,
       },
     },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 12,
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-            '&:hover fieldset': {
-              borderColor: '#10B981',
   },
-            '&.Mui-focused fieldset': {
-              borderColor: '#10B981',
-              borderWidth: 2,
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 12,
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: mode === 'dark' ? '#64748B' : '#CBD5E1',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderWidth: 2,
+              },
+            },
+          },
+        },
+      },
+      MuiSelect: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12,
+          },
+        },
+      },
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+            fontWeight: 500,
+          },
+        },
+      },
+      MuiTableCell: {
+        styleOverrides: {
+          head: {
+            fontWeight: 600,
+            backgroundColor: mode === 'dark' ? '#1E293B' : '#F8FAFC',
+            borderBottom: `1px solid ${mode === 'dark' ? '#334155' : '#E2E8F0'}`,
+          },
+          body: {
+            borderBottom: `1px solid ${mode === 'dark' ? '#334155' : '#F1F5F9'}`,
+          },
+        },
+      },
+      MuiLinearProgress: {
+        styleOverrides: {
+          root: {
+            borderRadius: 4,
+            backgroundColor: mode === 'dark' ? '#334155' : '#E2E8F0',
+          },
+          bar: {
+            borderRadius: 4,
+          },
+        },
+      },
+      MuiAlert: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12,
+            fontWeight: 500,
+          },
+        },
+      },
+      MuiSnackbar: {
+        styleOverrides: {
+          root: {
+            '& .MuiAlert-root': {
+              borderRadius: 12,
             },
           },
         },
       },
     },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          fontWeight: 500,
-        },
-      },
-    },
-    MuiAlert: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-        },
-      },
-    },
-  },
 });
+};
 
-// Exportar tema por defecto (modo claro)
-const theme = createAppTheme('light');
-
-export default theme;
-export { createAppTheme };
+export default createCustomTheme;
