@@ -10,14 +10,12 @@ import {
   Grid,
   Card,
   CardContent,
-  Divider,
   SpeedDial,
   SpeedDialAction,
   SpeedDialIcon,
   useTheme,
   alpha,
   Container,
-  Fade,
   Skeleton,
 } from '@mui/material';
 import {
@@ -26,10 +24,6 @@ import {
   QrCodeScanner as ScannerIcon,
   Refresh as RefreshIcon,
   Edit as BulkEditIcon,
-  Analytics as AnalyticsIcon,
-  TrendingUp as TrendingUpIcon,
-  Assessment as AssessmentIcon,
-  FilterList as FilterIcon,
   Warning as WarningIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';

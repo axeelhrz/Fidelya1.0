@@ -21,7 +21,6 @@ import {
   Home as HomeIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
 import { ventasService } from '../../services/ventasService';
 
 // Importar componentes modernizados
@@ -34,7 +33,6 @@ import DeleteVentaDialog from './components/DeleteVentaDialog';
 
 const VentasPage = () => {
   const theme = useTheme();
-  const { user } = useAuth();
   // Estados para datos
   const [ventas, setVentas] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);

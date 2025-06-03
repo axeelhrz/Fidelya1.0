@@ -37,28 +37,20 @@ import {
 } from '@mui/material';
 import {
   Close,
-  Person,
-  ShoppingCart,
   AttachMoney,
   Receipt,
-  Schedule,
-  CreditCard,
   LocalOffer,
   TrendingUp,
   Assessment,
   Star,
-  Info,
   ExpandMore,
   Print,
   Share,
   Download,
-  Visibility,
   Analytics,
   Timeline,
-  Category,
   Inventory,
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
 import { ventasService } from '../../../services/ventasService';
 
 const VentaViewDialog = ({ open, onClose, venta, datosRelacionados }) => {
