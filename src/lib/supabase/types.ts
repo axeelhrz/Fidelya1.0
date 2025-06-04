@@ -242,22 +242,18 @@ export interface Database {
 // Tipos auxiliares para facilitar el uso
 export type Guardian = Database['public']['Tables']['guardians']['Row']
 export type Student = Database['public']['Tables']['students']['Row']
-export type Product = Database['public']['Tables']['products']['Row']
-export type Order = Database['public']['Tables']['orders']['Row']
-export type OrderItem = Database['public']['Tables']['order_items']['Row']
-export type Payment = Database['public']['Tables']['payments']['Row']
-export type Setting = Database['public']['Tables']['settings']['Row']
-
-export type PedidoDetalle = Database['public']['Views']['pedidos_detalle']['Row']
-export type PedidoAgrupado = Database['public']['Views']['pedidos_agrupados']['Row']
+export type Almuerzo = Database['public']['Tables']['almuerzos']['Row']
+export type Colacion = Database['public']['Tables']['colaciones']['Row']
+export type Pedido = Database['public']['Tables']['pedidos']['Row']
+export type Cliente = Database['public']['Tables']['clientes']['Row']
 
 // Tipos para inserts
 export type GuardianInsert = Database['public']['Tables']['guardians']['Insert']
 export type StudentInsert = Database['public']['Tables']['students']['Insert']
-export type ProductInsert = Database['public']['Tables']['products']['Insert']
-export type OrderInsert = Database['public']['Tables']['orders']['Insert']
-export type OrderItemInsert = Database['public']['Tables']['order_items']['Insert']
-export type PaymentInsert = Database['public']['Tables']['payments']['Insert']
+export type AlmuerzoInsert = Database['public']['Tables']['almuerzos']['Insert']
+export type ColacionInsert = Database['public']['Tables']['colaciones']['Insert']
+export type PedidoInsert = Database['public']['Tables']['pedidos']['Insert']
+export type ClienteInsert = Database['public']['Tables']['clientes']['Insert']
 
 // Enums útiles
 export type OrderStatus = 'PENDIENTE' | 'PAGADO' | 'CANCELADO' | 'ENTREGADO'
