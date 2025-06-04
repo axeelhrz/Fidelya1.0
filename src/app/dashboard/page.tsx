@@ -37,6 +37,7 @@ interface Hijo {
 export default function DashboardPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [pedidos, setPedidos] = useState<Pedido[]>([])
   const [hijos, setHijos] = useState<Hijo[]>([])
   
@@ -47,36 +48,71 @@ export default function DashboardPage() {
   const [semanasExpandidas, setSemanasExpandidas] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    const fetchData = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push("/auth/login")
-        return
-      }
+    let isMounted = true
+
+    async function loadDashboardData() {
       try {
-        // Buscar el cliente por correo
-        const { data: cliente, error: clienteError } = await supabase
-          .from("clientes")
-          .select("id, hijos")
-          .eq("correo_apoderado", session.user.email)
-          .single()
-        if (clienteError || !cliente) throw clienteError || new Error("Cliente no encontrado")
-        setHijos(cliente.hijos || [])
+        setLoading(true)
+        setError(null)
+
+        // Check session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError)
+          setError('Error de sesión')
+          return
+        }
+
+        if (!session) {
+          router.push('/auth/login')
+          return
+        }
+
+        // Load client data with better error handling
+        const { data: clienteData, error: clienteError } = await supabase
+          .from('clientes')
+          .select('id, hijos')
+          .eq('correo_apoderado', session.user.email)
+          .maybeSingle()
+
+        if (clienteError) {
+          console.error('Error loading dashboard data:', clienteError)
+          setError('Error al cargar datos del cliente')
+          return
+        }
+
+        if (!clienteData) {
+          setError('Cliente no encontrado')
+          return
+        }
+
+        if (!isMounted) return
+
+        setHijos(clienteData.hijos || [])
         // Buscar pedidos por cliente_id
         const { data: pedidosData, error: pedidosError } = await supabase
           .from("pedidos")
           .select("*")
-          .eq("cliente_id", cliente.id)
+          .eq("cliente_id", clienteData.id)
           .order("dia_entrega", { ascending: true })
         if (pedidosError) throw pedidosError
         setPedidos(pedidosData || [])
-      } catch (error) {
-        console.error("Error loading dashboard data:", error)
+      } catch (error: any) {
+        console.error('Error loading dashboard data:', error)
+        setError('Error inesperado al cargar el dashboard')
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
-    fetchData()
+
+    loadDashboardData()
+
+    return () => {
+      isMounted = false
+    }
   }, [router])
 
   // Filtramos los pedidos según los criterios seleccionados
@@ -280,11 +316,27 @@ export default function DashboardPage() {
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-2 text-gray-600">Cargando...</p>
-        </div>
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p>Cargando dashboard...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-red-600">{error}</p>
+            <Button onClick={() => window.location.reload()} className="mt-4">
+              Reintentar
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
