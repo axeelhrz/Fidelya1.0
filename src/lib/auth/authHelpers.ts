@@ -81,44 +81,45 @@ export class AuthService {
 /**
    * Registrar nuevo usuario
  */
-  static async signUp(email: string, password: string, fullName: string) {
+  static async signUp(email: string, password: string, fullName: string, additionalData?: any) {
   try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: fullName
+            full_name: fullName,
+      ...additionalData
     }
         }
       })
-
-      if (error) {
-        throw error
-  }
+    if (error) {
+      throw error
+    }
 
       return { user: data.user, session: data.session, error: null }
-    } catch (error) {
+  } catch (error) {
       console.error('Error signing up:', error)
       return { user: null, session: null, error }
-}
   }
+}
 
 /**
    * Cerrar sesión
  */
   static async signOut() {
-    try {
+  try {
       const { error } = await supabase.auth.signOut()
-      if (error) {
-        throw error
-      }
+    if (error) {
+      throw error
+}
       return { error: null }
-    } catch (error) {
+  } catch (error) {
       console.error('Error signing out:', error)
       return { error }
-    }
-  }
+}
+}
+
 /**
    * Recuperar contraseña
  */
@@ -126,10 +127,11 @@ export class AuthService {
   try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectTo || `${window.location.origin}/auth/reset-password`
-      })
+    })
+
     if (error) {
       throw error
-    }
+}
 
       return { error: null }
   } catch (error) {
@@ -142,22 +144,22 @@ export class AuthService {
    * Actualizar contraseña
  */
   static async updatePassword(newPassword: string) {
-  try {
+    try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       })
-    if (error) {
-      throw error
-}
+
+      if (error) {
+        throw error
+      }
 
       return { error: null }
-  } catch (error) {
+    } catch (error) {
       console.error('Error updating password:', error)
       return { error }
+    }
   }
 }
-}
-
 /**
  * Crear perfil de usuario después del registro
  */
@@ -170,12 +172,14 @@ export async function createUserProfile(user: User, additionalData: Partial<User
       phone: additionalData.phone || '',
       is_staff: additionalData.is_staff || false,
       ...additionalData
-    }
+}
+
     const { data, error } = await supabase
       .from('guardians')
       .insert([profileData])
       .select()
       .single()
+
     if (error) {
       console.error('Error creating user profile:', error)
       throw error
@@ -224,14 +228,14 @@ export async function checkEmailConfirmation(userId: string) {
       throw error
 }
 
-  return {
+    return {
       isConfirmed: !!user?.email_confirmed_at,
       user
-}
+    }
   } catch (error) {
     console.error('Error checking email confirmation:', error)
     return { isConfirmed: false, user: null }
-}
+  }
 }
 
 /**
@@ -246,7 +250,7 @@ export async function resendConfirmationEmail(email: string) {
 
     if (error) {
       throw error
-}
+    }
 
     return { success: true }
   } catch (error) {

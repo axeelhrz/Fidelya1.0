@@ -53,7 +53,7 @@ export default function RegistroPage() {
     phone: authValidationRules.phone
   })
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     
     // Clear form errors when user starts typing
@@ -62,7 +62,7 @@ export default function RegistroPage() {
     }
     
     // Validate field on change if it was previously touched
-    if (formData[field as keyof typeof formData] !== "") {
+    if (typeof value === 'string' && formData[field as keyof typeof formData] !== "") {
       validateSingleField(field, value)
     }
   }
@@ -104,14 +104,14 @@ export default function RegistroPage() {
     
     if (!isValid || hasErrors) return
 
-    const userData = {
-      fullName: formData.fullName,
+    // Preparar datos adicionales para el registro
+    const additionalData = {
       phone: formData.phone,
       studentName: formData.studentName,
       studentGrade: formData.studentGrade
     }
 
-    await signUp(formData.email, formData.password, userData)
+    await signUp(formData.email, formData.password, formData.fullName, additionalData)
   }
   return (
     <AuthLayout 
@@ -119,19 +119,20 @@ export default function RegistroPage() {
       subtitle="Regístrate para gestionar los pedidos de tu hijo/a"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Información del responsable */}
+        {/* Información del apoderado */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
-            Información del Responsable
+            Información del Apoderado
           </h3>
           
         <FormInput
             id="fullName"
-            label="Nombre completo del responsable"
+            label="Nombre completo"
             type="text"
             placeholder="Juan Pérez González"
             value={formData.fullName}
             onChange={(value) => handleInputChange("fullName", value)}
+            onBlur={() => handleInputBlur("fullName")}
             error={errors.fullName}
             success={!errors.fullName && formData.fullName !== ""}
             required
@@ -145,6 +146,7 @@ export default function RegistroPage() {
             placeholder="tu@email.com"
             value={formData.email}
             onChange={(value) => handleInputChange("email", value)}
+            onBlur={() => handleInputBlur("email")}
             error={errors.email}
             success={!errors.email && formData.email !== ""}
             required
@@ -158,6 +160,7 @@ export default function RegistroPage() {
             placeholder="Mínimo 6 caracteres"
             value={formData.password}
             onChange={(value) => handleInputChange("password", value)}
+            onBlur={() => handleInputBlur("password")}
             error={errors.password}
             required
             icon={<Lock size={18} />}
@@ -170,6 +173,7 @@ export default function RegistroPage() {
             placeholder="+56 9 1234 5678 (opcional)"
             value={formData.phone}
             onChange={(value) => handleInputChange("phone", value)}
+            onBlur={() => handleInputBlur("phone")}
             error={errors.phone}
             success={!errors.phone && formData.phone !== ""}
             icon={<Phone size={18} />}
@@ -189,6 +193,7 @@ export default function RegistroPage() {
             placeholder="María Pérez López"
             value={formData.studentName}
             onChange={(value) => handleInputChange("studentName", value)}
+            onBlur={() => handleInputBlur("studentName")}
             error={errors.studentName}
             success={!errors.studentName && formData.studentName !== ""}
             required
@@ -237,7 +242,7 @@ export default function RegistroPage() {
               id="acceptTerms"
               checked={formData.acceptTerms}
               onCheckedChange={(checked) => 
-                handleInputChange("acceptTerms", checked ? "true" : "false")
+                handleInputChange("acceptTerms", checked === true)
 }
               className={`mt-1 ${
                 formErrors.acceptTerms ? "border-red-500" : ""
