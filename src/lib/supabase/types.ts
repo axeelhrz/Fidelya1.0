@@ -12,7 +12,7 @@ export interface Database {
       guardians: {
         Row: {
           id: string
-          user_id: string | null
+          user_id: string
           full_name: string
           email: string
           phone: string | null
@@ -22,7 +22,7 @@ export interface Database {
         }
         Insert: {
           id?: string
-          user_id?: string | null
+          user_id: string
           full_name: string
           email: string
           phone?: string | null
@@ -32,7 +32,7 @@ export interface Database {
         }
         Update: {
           id?: string
-          user_id?: string | null
+          user_id?: string
           full_name?: string
           email?: string
           phone?: string | null
@@ -44,52 +44,48 @@ export interface Database {
       students: {
         Row: {
           id: string
-          guardian_id: string | null
+          guardian_id: string
           name: string
           grade: string
           section: string
           level: string
-          tipo: string | null
           is_active: boolean
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
-          guardian_id?: string | null
+          guardian_id: string
           name: string
           grade: string
           section: string
           level: string
-          tipo?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          guardian_id?: string | null
+          guardian_id?: string
           name?: string
           grade?: string
           section?: string
           level?: string
-          tipo?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string
         }
       }
-      products: {
+      almuerzos: {
         Row: {
           id: string
           codigo: string
           descripcion: string
-          dia: string
           fecha: string
+          dia: string
           precio_estudiante: number
           precio_funcionario: number
-          tipo_dia: string | null
-          is_active: boolean
+          tipo_dia: string
           created_at: string
           updated_at: string
         }
@@ -97,12 +93,11 @@ export interface Database {
           id?: string
           codigo: string
           descripcion: string
-          dia: string
           fecha: string
+          dia: string
           precio_estudiante: number
           precio_funcionario: number
-          tipo_dia?: string | null
-          is_active?: boolean
+          tipo_dia?: string
           created_at?: string
           updated_at?: string
         }
@@ -110,198 +105,135 @@ export interface Database {
           id?: string
           codigo?: string
           descripcion?: string
-          dia?: string
           fecha?: string
+          dia?: string
           precio_estudiante?: number
           precio_funcionario?: number
-          tipo_dia?: string | null
-          is_active?: boolean
+          tipo_dia?: string
           created_at?: string
           updated_at?: string
         }
       }
-      orders: {
+      colaciones: {
         Row: {
           id: string
-          guardian_id: string | null
-          student_id: string | null
-          fecha_pedido: string
+          codigo: string
+          descripcion: string
+          fecha: string
+          dia: string
+          precio_estudiante: number
+          precio_funcionario: number
+          tipo_dia: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          codigo: string
+          descripcion: string
+          fecha: string
+          dia: string
+          precio_estudiante: number
+          precio_funcionario: number
+          tipo_dia?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          codigo?: string
+          descripcion?: string
+          fecha?: string
+          dia?: string
+          precio_estudiante?: number
+          precio_funcionario?: number
+          tipo_dia?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      pedidos: {
+        Row: {
+          id: string
+          guardian_id: string
+          student_id: string
+          almuerzo_id: string | null
+          colacion_id: string | null
+          fecha_entrega: string
           dia_entrega: string
+          estado_pago: string
           total_amount: number
-          status: string
           payment_id: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
-          guardian_id?: string | null
-          student_id?: string | null
-          fecha_pedido: string
+          guardian_id: string
+          student_id: string
+          almuerzo_id?: string | null
+          colacion_id?: string | null
+          fecha_entrega: string
           dia_entrega: string
+          estado_pago?: string
           total_amount: number
-          status?: string
           payment_id?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          guardian_id?: string | null
-          student_id?: string | null
-          fecha_pedido?: string
+          guardian_id?: string
+          student_id?: string
+          almuerzo_id?: string | null
+          colacion_id?: string | null
+          fecha_entrega?: string
           dia_entrega?: string
+          estado_pago?: string
           total_amount?: number
-          status?: string
           payment_id?: string | null
           created_at?: string
           updated_at?: string
         }
       }
-      order_items: {
+      // Tabla legacy para compatibilidad (si existe)
+      clientes: {
         Row: {
           id: string
-          order_id: string | null
-          product_id: string | null
-          quantity: number | null
-          unit_price: number
-          total_price: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          order_id?: string | null
-          product_id?: string | null
-          quantity?: number | null
-          unit_price: number
-          total_price: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          order_id?: string | null
-          product_id?: string | null
-          quantity?: number | null
-          unit_price?: number
-          total_price?: number
-          created_at?: string
-        }
-      }
-      payments: {
-        Row: {
-          id: string
-          order_id: string | null
-          getnet_transaction_id: string | null
-          amount: number
-          status: string
-          payment_method: string | null
-          processed_at: string | null
-          getnet_response: Json | null
+          correo_apoderado: string
+          nombre_apoderado: string
+          hijos: Json
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
-          order_id?: string | null
-          getnet_transaction_id?: string | null
-          amount: number
-          status?: string
-          payment_method?: string | null
-          processed_at?: string | null
-          getnet_response?: Json | null
+          correo_apoderado: string
+          nombre_apoderado: string
+          hijos: Json
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          order_id?: string | null
-          getnet_transaction_id?: string | null
-          amount?: number
-          status?: string
-          payment_method?: string | null
-          processed_at?: string | null
-          getnet_response?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      settings: {
-        Row: {
-          id: string
-          key: string
-          value: string
-          description: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          key: string
-          value: string
-          description?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          key?: string
-          value?: string
-          description?: string | null
+          correo_apoderado?: string
+          nombre_apoderado?: string
+          hijos?: Json
           created_at?: string
           updated_at?: string
         }
       }
     }
     Views: {
-      pedidos_detalle: {
-        Row: {
-          id: string | null
-          nombre_estudiante: string | null
-          nivel: string | null
-          letra: string | null
-          opcion_elegida: string | null
-          tipo_pedido: string | null
-          dia_entrega: string | null
-          estado_pago: string | null
-          fecha_pedido: string | null
-          total_amount: number | null
-          nombre_guardian: string | null
-          email_guardian: string | null
-        }
-      }
-      pedidos_agrupados: {
-        Row: {
-          dia: string | null
-          fecha: string | null
-          opcion: string | null
-          cantidad: number | null
-          nivel: string | null
-        }
-      }
+      [_ in never]: never
     }
     Functions: {
-      get_pedidos_agrupados: {
-        Args: {
-          fecha_inicio: string
-          fecha_fin: string
-          nivel_filtro?: string
-        }
-        Returns: {
-          dia: string
-          fecha: string
-          opcion: string
-          cantidad: number
-          nivel: string
-        }[]
-      }
-      can_make_order: {
-        Args: {
-          delivery_date: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
       [_ in never]: never
     }
   }

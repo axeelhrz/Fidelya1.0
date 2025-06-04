@@ -11,8 +11,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Usar valores por defecto si no están configuradas (solo para desarrollo)
-const defaultUrl = supabaseUrl || "https://koesipeybsasrknvgntg.supabase.co"
-const defaultKey = supabaseAnonKey || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtvZXNpcGV5YnNhc3JrbnZnbnRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI5Mzg2MzEsImV4cCI6MjA1ODUxNDYzMX0.zLUMG6PRVJK1pEaAdO4pssFKGp8XMx9VAvwii4Xw1iU"
+const defaultUrl = supabaseUrl || "https://gyucjmjbdwishgqikeos.supabase.co"
+const defaultKey = supabaseAnonKey || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5dWNqbWpiZHdpc2hncWlrZW9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5OTAxODAsImV4cCI6MjA2NDU2NjE4MH0.GRd-o4kVcPxcEvMFybON1s0LNETJQWgvpXWqyiYWA5E"
+
 export const supabase = createClient<Database>(defaultUrl, defaultKey, {
   auth: {
     autoRefreshToken: true,
@@ -23,7 +24,11 @@ export const supabase = createClient<Database>(defaultUrl, defaultKey, {
 
 // Cliente con privilegios de servicio para operaciones administrativas
 export const createServiceClient = () => {
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtvZXNpcGV5YnNhc3JrbnZnbnRnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MjkzODYzMSwiZXhwIjoyMDU4NTE0NjMxfQ.yH6Jj0nvLU4R6zP2yawDq7XCgo1rI-MU6pdDY16E7U4"
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey) {
+    console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY no configurada')
+    return supabase // Retornar cliente normal si no hay service key
+  }
   return createClient<Database>(defaultUrl, serviceKey, {
     auth: {
       autoRefreshToken: false,
