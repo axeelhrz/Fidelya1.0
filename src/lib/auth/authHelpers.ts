@@ -119,7 +119,45 @@ export class AuthService {
       return { error }
     }
   }
+/**
+   * Recuperar contraseña
+ */
+  static async resetPassword(email: string, redirectTo?: string) {
+  try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectTo || `${window.location.origin}/auth/reset-password`
+      })
+    if (error) {
+      throw error
+    }
+
+      return { error: null }
+  } catch (error) {
+      console.error('Error resetting password:', error)
+      return { error }
+  }
 }
+
+/**
+   * Actualizar contraseña
+ */
+  static async updatePassword(newPassword: string) {
+  try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+    if (error) {
+      throw error
+}
+
+      return { error: null }
+  } catch (error) {
+      console.error('Error updating password:', error)
+      return { error }
+  }
+}
+}
+
 /**
  * Crear perfil de usuario después del registro
  */
@@ -132,14 +170,12 @@ export async function createUserProfile(user: User, additionalData: Partial<User
       phone: additionalData.phone || '',
       is_staff: additionalData.is_staff || false,
       ...additionalData
-}
-
+    }
     const { data, error } = await supabase
       .from('guardians')
       .insert([profileData])
       .select()
       .single()
-
     if (error) {
       console.error('Error creating user profile:', error)
       throw error
@@ -188,14 +224,14 @@ export async function checkEmailConfirmation(userId: string) {
       throw error
 }
 
-    return {
+  return {
       isConfirmed: !!user?.email_confirmed_at,
       user
-    }
+}
   } catch (error) {
     console.error('Error checking email confirmation:', error)
     return { isConfirmed: false, user: null }
-  }
+}
 }
 
 /**
@@ -210,7 +246,7 @@ export async function resendConfirmationEmail(email: string) {
 
     if (error) {
       throw error
-    }
+}
 
     return { success: true }
   } catch (error) {

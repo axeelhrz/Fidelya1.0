@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AuthService } from '@/lib/auth/authHelpers'
 import { useUser } from '@/context/UserContext'
+import { supabase } from '@/lib/supabase/client'
+
 export function useAuth() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -91,10 +93,59 @@ export function useAuth() {
     }
   }
 
+  const resetPassword = async (email: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      })
+      
+      if (resetError) {
+        setError(resetError.message)
+        return { success: false, error: resetError.message }
+      }
+
+      return { success: true, error: null }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Error al enviar el email de recuperación'
+      setError(errorMessage)
+      return { success: false, error: errorMessage }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const updatePassword = async (newPassword: string) => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+      
+      if (updateError) {
+        setError(updateError.message)
+        return { success: false, error: updateError.message }
+      }
+
+      return { success: true, error: null }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Error al actualizar la contraseña'
+      setError(errorMessage)
+      return { success: false, error: errorMessage }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return {
     signIn,
     signUp,
     signOut,
+    resetPassword,
+    updatePassword,
     loading,
     error,
     clearError: () => setError(null)
