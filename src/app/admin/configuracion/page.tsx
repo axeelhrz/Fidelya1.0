@@ -24,7 +24,7 @@ interface SystemSettings {
 }
 
 export default function ConfiguracionPage() {
-  const { guardian, loading } = useUser()
+  const { guardian } = useUser()
   const [settings, setSettings] = useState<SystemSettings>({
     order_cutoff_time: '10:00:00',
     system_name: 'Casino Escolar',
@@ -41,13 +41,13 @@ export default function ConfiguracionPage() {
 
   // Verificar permisos de admin
   useEffect(() => {
-    if (!loading && (!guardian || !guardian.is_staff)) {
+    if (!guardian || (guardian.role !== 'admin' && guardian.role !== 'staff')) {
       redirect('/dashboard')
     }
-  }, [guardian, loading])
+  }, [guardian])
 
   useEffect(() => {
-    if (guardian?.is_staff) {
+    if (guardian && (guardian.role === 'admin' || guardian.role === 'staff')) {
       loadSettings()
     }
   }, [guardian])
@@ -145,7 +145,7 @@ export default function ConfiguracionPage() {
     setSettings(prev => ({ ...prev, [key]: value }))
   }
 
-  if (loading || loadingSettings) {
+  if (loadingSettings) {
     return (
       <div className="p-6">
         <div className="space-y-6">
@@ -164,7 +164,7 @@ export default function ConfiguracionPage() {
     )
   }
 
-  if (!guardian?.is_staff) {
+  if (!guardian || (guardian.role !== 'admin' && guardian.role !== 'staff')) {
     return null
   }
 

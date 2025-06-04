@@ -62,9 +62,9 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
-  html {
-    @apply scroll-smooth;
-  }
+    html {
+      @apply scroll-smooth;
+    }
   }
   
 @layer components {
@@ -269,5 +269,4 @@
 
 .status-delivered {
   @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200;
-}
 }
