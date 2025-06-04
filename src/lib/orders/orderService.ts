@@ -136,6 +136,7 @@ export class OrderService {
       .select(`
         *,
         student:students(*),
+        guardian:guardians(*),
         order_items(
           *,
           product:products(*)
@@ -166,7 +167,7 @@ export class OrderService {
       throw new Error(`Error obteniendo pedidos: ${error.message}`)
     }
 
-    return data as OrderWithDetails[]
+    return data as unknown as OrderWithDetails[]
   }
 
   // Get order by ID
@@ -190,7 +191,7 @@ export class OrderService {
       throw new Error(`Error obteniendo pedido: ${error.message}`)
     }
 
-    return data as OrderWithDetails
+    return data as unknown as OrderWithDetails
   }
 
   // Update order status
@@ -296,7 +297,7 @@ export class OrderService {
       throw new Error(`Error obteniendo todos los pedidos: ${error.message}`)
     }
 
-    return data as OrderWithDetails[]
+    return data as unknown as OrderWithDetails[]
   }
 
   // Get dashboard statistics

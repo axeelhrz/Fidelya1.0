@@ -1,53 +1,89 @@
 /**
  * Configuración centralizada de variables de entorno
  */
+import { z } from 'zod'
 
 // Función para obtener variable de entorno con validación
 function getEnvVar(name: string, defaultValue?: string): string {
   const value = process.env[name] || defaultValue
   if (!value) {
-    throw new Error(`❌ Variable de entorno requerida no encontrada: ${name}`)
+    throw new Error(`Environment variable ${name} is required`)
   }
   return value
 }
 
-// Función para obtener variable opcional
-function getOptionalEnvVar(name: string, defaultValue?: string): string | undefined {
-  return process.env[name] || defaultValue
-}
-
-export const config = {
+// Schema de validación para variables de entorno
+const envSchema = z.object({
   // Supabase
-  supabase: {
-    url: getEnvVar('NEXT_PUBLIC_SUPABASE_URL'),
-    anonKey: getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
-    serviceRoleKey: getOptionalEnvVar('SUPABASE_SERVICE_ROLE_KEY'),
-  },
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 
   // GetNet
-  getnet: {
-    login: getEnvVar('GETNET_LOGIN'),
-    secret: getEnvVar('GETNET_SECRET'),
-    baseUrl: getEnvVar('GETNET_BASE_URL'),
-  },
+  GETNET_LOGIN: z.string().min(1),
+  GETNET_SECRET: z.string().min(1),
+  GETNET_BASE_URL: z.string().url(),
+  
+  // App
+  NEXT_PUBLIC_APP_URL: z.string().url(),
+  NODE_ENV: z.enum(['development', 'production', 'test']),
+  
+  // Email
+  RESEND_API_KEY: z.string().min(1).optional(),
+  
+  // Security
+  NEXTAUTH_SECRET: z.string().min(1),
+  NEXTAUTH_URL: z.string().url(),
+  
+  // Casino specific
+  CASINO_NAME: z.string().default('Casino Escolar'),
+  CASINO_EMAIL: z.string().email().default('contacto@casinoescolar.cl'),
+  CASINO_PHONE: z.string().default('+56912345678'),
+  ORDER_CUTOFF_HOUR: z.string().default('10'),
+})
 
-  // Application
-  app: {
-    url: getEnvVar('NEXT_PUBLIC_APP_URL'),
-    environment: process.env.NODE_ENV || 'development',
-  },
-
-  // Email (opcional)
-  email: {
-    resendApiKey: getOptionalEnvVar('RESEND_API_KEY'),
-  },
-
-  // Security (opcional)
-  auth: {
-    secret: getOptionalEnvVar('NEXTAUTH_SECRET'),
-    url: getOptionalEnvVar('NEXTAUTH_URL'),
+function validateEnv() {
+  try {
+    return envSchema.parse(process.env)
+  } catch (error) {
+    console.error('❌ Invalid environment variables:', error)
+    throw new Error('Invalid environment variables')
   }
 }
+  
+export const env = validateEnv()
+
+export const config = {
+  supabase: {
+    url: env.NEXT_PUBLIC_SUPABASE_URL,
+    anonKey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+  },
+  getnet: {
+    login: env.GETNET_LOGIN,
+    secret: env.GETNET_SECRET,
+    baseUrl: env.GETNET_BASE_URL,
+  },
+  app: {
+    url: env.NEXT_PUBLIC_APP_URL,
+    environment: env.NODE_ENV,
+  },
+  email: {
+    resendApiKey: env.RESEND_API_KEY,
+  },
+  auth: {
+    secret: env.NEXTAUTH_SECRET,
+    url: env.NEXTAUTH_URL,
+  },
+  casino: {
+    name: env.CASINO_NAME,
+    email: env.CASINO_EMAIL,
+    phone: env.CASINO_PHONE,
+    orderCutoffHour: parseInt(env.ORDER_CUTOFF_HOUR),
+  },
+} as const
+
+export type Config = typeof config
 
 /**
  * Validar que todas las variables requeridas estén configuradas
@@ -70,8 +106,8 @@ export function validateEnvironment() {
   }
 
   console.log('✅ Variables de entorno validadas correctamente')
-    return true
-  }
+  return true
+}
 
 /**
  * Verificar configuración y mostrar información
@@ -90,7 +126,7 @@ export function checkConfiguration() {
   } catch (error) {
     console.error('❌ Error en la configuración:', error)
     return false
-}
+  }
 }
 
 // Verificar configuración al importar (solo en desarrollo)
