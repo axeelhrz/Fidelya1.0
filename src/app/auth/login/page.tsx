@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  User, 
   Mail, 
   Lock, 
   CheckCircle, 
@@ -14,22 +13,16 @@ import {
   Eye,
   EyeOff,
   Loader2,
-  ArrowRight,
   Utensils,
-  School
+  School,
+  LogIn
 } from 'lucide-react';
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-// Schema de validación simplificado
-const registerSchema = z.object({
-  nombreCompleto: z
-    .string()
-    .min(2, 'El nombre debe tener al menos 2 caracteres')
-    .max(100, 'El nombre no puede exceder 100 caracteres')
-    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'Solo se permiten letras y espacios'),
-  
+// Schema de validación para login
+const loginSchema = z.object({
   email: z
     .string()
     .email('Ingresa un email válido')
@@ -38,23 +31,15 @@ const registerSchema = z.object({
   
   password: z
     .string()
-    .min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  
-  confirmPassword: z
-    .string()
-    .min(1, 'Confirma tu contraseña')
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Las contraseñas no coinciden",
-  path: ["confirmPassword"],
+    .min(1, 'La contraseña es requerida')
 });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function RegisterPage() {
+export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -63,69 +48,59 @@ export default function RegisterPage() {
     handleSubmit,
     formState: { errors, isValid, touchedFields },
     watch
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
     mode: 'onChange'
   });
 
   const watchedFields = watch();
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     setErrorMessage('');
     setSubmitStatus('idle');
 
     try {
-      const { email, password, nombreCompleto } = data;
+      const { email, password } = data;
       const supabase = supabaseBrowser();
 
-      // Registro en Supabase Auth
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      // Iniciar sesión con Supabase Auth
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          data: {
-            full_name: nombreCompleto
-          }
-        }
+        password
       });
 
-      if (signUpError) {
-        throw new Error(signUpError.message);
+      if (signInError) {
+        throw new Error(signInError.message);
       }
 
-      const user = signUpData.user;
-      if (user) {
-        // Insertar en tabla users
-        const { error: insertError } = await supabase.from('users').insert({
-          id: user.id,
-          nombre: nombreCompleto,
-          email,
-          rol: 'user',
-          estado: 'pendiente_verificacion',
-          created_at: new Date().toISOString()
-        });
-
-        if (insertError) {
-          throw new Error(insertError.message);
-        }
-
+      if (signInData.user) {
         setSubmitStatus('success');
         
-        // Redirigir después de mostrar el éxito
+        // Redirigir al dashboard después de mostrar el éxito
         setTimeout(() => {
-          router.push('/auth/check-email');
-        }, 2500);
+          router.push('/dashboard');
+        }, 1500);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setSubmitStatus('error');
-      setErrorMessage(error.message || 'Ocurrió un error inesperado');
+      
+      // Personalizar mensajes de error
+      const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error inesperado';
+      
+      if (errorMessage.includes('Invalid login credentials')) {
+        setErrorMessage('Email o contraseña incorrectos');
+      } else if (errorMessage.includes('Email not confirmed')) {
+        setErrorMessage('Por favor verifica tu email antes de iniciar sesión');
+      } else {
+        setErrorMessage(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getFieldStatus = (fieldName: keyof RegisterFormData) => {
+  const getFieldStatus = (fieldName: keyof LoginFormData) => {
     if (errors[fieldName]) return 'error';
     if (touchedFields[fieldName] && watchedFields[fieldName] && !errors[fieldName]) return 'success';
     return 'default';
@@ -172,7 +147,7 @@ export default function RegisterPage() {
             transition={{ delay: 0.4 }}
             className="text-lg text-gray-600 dark:text-gray-300 mb-2"
           >
-            Crear Nueva Cuenta
+            Iniciar Sesión
           </motion.p>
 
           <motion.p
@@ -181,7 +156,7 @@ export default function RegisterPage() {
             transition={{ delay: 0.5 }}
             className="text-sm text-gray-500 dark:text-gray-400"
           >
-            Gestiona los pedidos de comida de forma fácil y segura
+            Accede a tu cuenta para gestionar pedidos
           </motion.p>
         </div>
 
@@ -193,45 +168,10 @@ export default function RegisterPage() {
           className="modern-card p-8"
         >
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Campo Nombre Completo */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Nombre Completo *
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  {...register('nombreCompleto')}
-                  type="text"
-                  placeholder="Ej: Juan Carlos Pérez"
-                  className={`input-field pl-11 ${
-                    getFieldStatus('nombreCompleto') === 'error' ? 'input-error' : 
-                    getFieldStatus('nombreCompleto') === 'success' ? 'input-success' : ''
-                  }`}
-                />
-                {getFieldStatus('nombreCompleto') === 'success' && (
-                  <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-success" />
-                )}
-              </div>
-              <AnimatePresence>
-                {errors.nombreCompleto && (
-                  <motion.p
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="text-sm text-destructive flex items-center gap-1"
-                  >
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.nombreCompleto.message}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            </div>
-
             {/* Campo Email */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Correo Electrónico *
+                Correo Electrónico
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -248,9 +188,6 @@ export default function RegisterPage() {
                   <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-success" />
                 )}
               </div>
-              <p className="text-xs text-gray-500">
-                Usaremos este email para notificaciones y acceso al sistema
-              </p>
               <AnimatePresence>
                 {errors.email && (
                   <motion.p
@@ -269,14 +206,14 @@ export default function RegisterPage() {
             {/* Campo Contraseña */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Contraseña *
+                Contraseña
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Ingresa tu contraseña"
                   className={`input-field pl-11 pr-11 ${
                     getFieldStatus('password') === 'error' ? 'input-error' : 
                     getFieldStatus('password') === 'success' ? 'input-success' : ''
@@ -305,43 +242,14 @@ export default function RegisterPage() {
               </AnimatePresence>
             </div>
 
-            {/* Campo Confirmar Contraseña */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Confirmar Contraseña *
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  {...register('confirmPassword')}
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Repite tu contraseña"
-                  className={`input-field pl-11 pr-11 ${
-                    getFieldStatus('confirmPassword') === 'error' ? 'input-error' : 
-                    getFieldStatus('confirmPassword') === 'success' ? 'input-success' : ''
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-              <AnimatePresence>
-                {errors.confirmPassword && (
-                  <motion.p
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="text-sm text-destructive flex items-center gap-1"
-                  >
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.confirmPassword.message}
-                  </motion.p>
-                )}
-              </AnimatePresence>
+            {/* Enlace de recuperación de contraseña */}
+            <div className="text-right">
+              <Link 
+                href="/auth/forgot-password" 
+                className="text-sm text-primary hover:text-primary/80 transition-colors"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
             </div>
 
             {/* Mensaje de Error Global */}
@@ -374,10 +282,10 @@ export default function RegisterPage() {
                     <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 animate-pulse-success" />
                     <div>
                       <p className="text-sm font-medium text-green-700 dark:text-green-300">
-                        ¡Cuenta creada exitosamente!
+                        ¡Inicio de sesión exitoso!
                       </p>
                       <p className="text-xs text-green-600 dark:text-green-400">
-                        Revisa tu email para verificar tu cuenta
+                        Redirigiendo al dashboard...
                       </p>
                     </div>
                   </div>
@@ -403,7 +311,7 @@ export default function RegisterPage() {
                     className="flex items-center gap-2"
                   >
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Creando cuenta...
+                    Iniciando sesión...
                   </motion.div>
                 ) : submitStatus === 'success' ? (
                   <motion.div
@@ -414,7 +322,7 @@ export default function RegisterPage() {
                     className="flex items-center gap-2"
                   >
                     <CheckCircle className="w-5 h-5" />
-                    ¡Cuenta creada!
+                    ¡Bienvenido!
                   </motion.div>
                 ) : (
                   <motion.div
@@ -424,8 +332,8 @@ export default function RegisterPage() {
                     exit={{ opacity: 0 }}
                     className="flex items-center gap-2"
                   >
-                    Crear Cuenta
-                    <ArrowRight className="w-5 h-5" />
+                    <LogIn className="w-5 h-5" />
+                    Iniciar Sesión
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -435,12 +343,12 @@ export default function RegisterPage() {
           {/* Footer */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              ¿Ya tienes una cuenta?{' '}
+              ¿No tienes una cuenta?{' '}
               <Link 
-                href="/auth/login" 
+                href="/auth/register" 
                 className="font-medium text-primary hover:text-primary/80 transition-colors"
               >
-                Inicia sesión aquí
+                Regístrate aquí
               </Link>
             </p>
           </div>

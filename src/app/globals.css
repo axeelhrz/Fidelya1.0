@@ -2,25 +2,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
 :root {
-  --background: #fafafa;
+  /* Casino Escolar Color Palette */
+  --background: #fefefe;
   --foreground: #1a1a1a;
   --card: #ffffff;
   --card-foreground: #1a1a1a;
-  --primary: #2563eb;
+  
+  /* Colores principales del Casino Escolar */
+  --primary: #dc2626; /* Rojo vibrante del casino */
   --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #475569;
-  --muted: #f8fafc;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #475569;
+  --secondary: #fef2f2; /* Rojo muy suave */
+  --secondary-foreground: #7f1d1d;
+  
+  /* Colores de acento */
+  --accent: #fbbf24; /* Amarillo dorado */
+  --accent-foreground: #92400e;
+  --muted: #f9fafb;
+  --muted-foreground: #6b7280;
+  
+  /* Estados */
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
+  --success: #059669; /* Verde esmeralda */
+  --warning: #d97706; /* Naranja cálido */
+  
+  /* Bordes y inputs */
+  --border: #e5e7eb;
   --input: #ffffff;
-  --ring: #2563eb;
-  --success: #10b981;
-  --warning: #f59e0b;
+  --ring: #dc2626;
+  
+  /* Fuentes */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Poppins', system-ui, sans-serif;
 }
 
 @theme inline {
@@ -43,29 +56,27 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-warning: var(--warning);
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-heading: 'Poppins', system-ui, sans-serif;
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-heading);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #0f0f0f;
     --foreground: #fafafa;
     --card: #1a1a1a;
     --card-foreground: #fafafa;
-    --primary: #3b82f6;
+    --primary: #ef4444;
     --primary-foreground: #ffffff;
-    --secondary: #1e293b;
-    --secondary-foreground: #cbd5e1;
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-    --accent: #1e293b;
-    --accent-foreground: #cbd5e1;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-    --border: #334155;
+    --secondary: #1f1f1f;
+    --secondary-foreground: #fca5a5;
+    --muted: #1f1f1f;
+    --muted-foreground: #a3a3a3;
+    --accent: #fbbf24;
+    --accent-foreground: #451a03;
+    --border: #2a2a2a;
     --input: #1a1a1a;
-    --ring: #3b82f6;
+    --ring: #ef4444;
   }
 }
 
@@ -98,10 +109,19 @@ body {
 
 @keyframes pulse-success {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 8px rgba(5, 150, 105, 0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
   }
 }
 
@@ -113,9 +133,15 @@ body {
   animation: pulse-success 2s infinite;
 }
 
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
 /* Estilos para inputs personalizados */
 .input-field {
-  @apply w-full px-4 py-3 border border-border rounded-xl bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200;
+  @apply w-full px-4 py-3.5 border border-border rounded-xl bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200 text-sm;
 }
 
 .input-field:focus {
@@ -132,7 +158,7 @@ body {
 
 /* Botón principal */
 .btn-primary {
-  @apply w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3.5 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -143,6 +169,11 @@ body {
   @apply transform translate-y-0;
 }
 
+/* Botón secundario */
+.btn-secondary {
+  @apply w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium py-3.5 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm border border-border;
+}
+
 /* Card moderna */
 .modern-card {
   @apply bg-card border border-border rounded-2xl shadow-xl shadow-black/5 backdrop-blur-sm;
@@ -150,11 +181,50 @@ body {
 
 /* Efectos de glassmorphism */
 .glass-effect {
-  @apply bg-white/80 backdrop-blur-md border border-white/20;
+  @apply bg-white/90 backdrop-blur-md border border-white/20;
 }
 
 @media (prefers-color-scheme: dark) {
   .glass-effect {
     @apply bg-black/20 backdrop-blur-md border border-white/10;
   }
+}
+
+/* Gradientes del Casino Escolar */
+.casino-gradient {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+}
+
+.casino-gradient-soft {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 50%, #fecaca 100%);
+}
+
+.accent-gradient {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+}
+
+/* Efectos hover especiales */
+.hover-lift {
+  @apply transition-all duration-200;
+}
+
+.hover-lift:hover {
+  @apply transform translate-y-[-2px] shadow-lg;
+}
+
+/* Indicadores de estado */
+.status-indicator {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.status-success {
+  @apply bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400;
+}
+
+.status-warning {
+  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400;
+}
+
+.status-error {
+  @apply bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400;
 }
