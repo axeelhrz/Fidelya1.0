@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useUser } from '@/context/UserContext'
 
 export default function DebugPage() {
-  const { user, guardian, loading, refreshUserData } = useUser()
+  const { user, guardian, refreshUserData } = useUser()
   const [debugInfo, setDebugInfo] = useState<any>({})
   const [testEmail, setTestEmail] = useState('')
   const [testPassword, setTestPassword] = useState('')
@@ -167,9 +167,6 @@ export default function DebugPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <strong>Loading:</strong> {loading ? 'Sí' : 'No'}
-              </div>
               <div>
                 <strong>User ID:</strong> {user?.id || 'No autenticado'}
               </div>

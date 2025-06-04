@@ -145,24 +145,42 @@ export default function MenuPage() {
       
       // Obtener almuerzos
       const { data: almuerzosData, error: almuerzosError } = await supabase
-        .from("almuerzos")
+        .from("products")
         .select("*");
       
       if (almuerzosError) {
         console.error("Error al obtener almuerzos:", almuerzosError);
       } else if (almuerzosData) {
-        setAlmuerzos(almuerzosData);
+        const transformedAlmuerzos = almuerzosData
+          .filter(item => item.type === 'almuerzo')
+          .map(item => ({
+            id: item.id,
+            descripcion: item.description || item.name,
+            fecha: item.available_date,
+            dia: item.day_of_week,
+            codigo: item.code,
+            precio: item.price_student
+          }));
+        setAlmuerzos(transformedAlmuerzos);
       }
       
       // Obtener colaciones
       const { data: colacionesData, error: colacionesError } = await supabase
-        .from("colaciones")
+        .from("products")
         .select("*");
       
       if (colacionesError) {
         console.error("Error al obtener colaciones:", colacionesError);
       } else if (colacionesData) {
-        setColaciones(colacionesData);
+        const transformedColaciones = colacionesData
+          .filter(item => item.type === 'colacion')
+          .map(item => ({
+            id: item.id,
+            codigo: item.code,
+            descripcion: item.description || item.name,
+            precio: item.price_student
+          }));
+        setColaciones(transformedColaciones);
       }
       
       setLoading(false);

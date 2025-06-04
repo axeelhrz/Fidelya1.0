@@ -4,8 +4,25 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/lib/supabase/types"
 
-type Product = Database["public"]["Tables"]["products"]["Row"]
-type Order = Database["public"]["Tables"]["orders"]["Row"]
+type Product = {
+  id: string
+  name: string
+  code: string
+  type: string
+  description: string | null
+  price_student: number
+  available_date: string
+  day_of_week: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+type Order = {
+  id: string
+  status: string
+  created_at: string
+  updated_at: string
+}
 
 interface Stats {
   totalPedidos: number
@@ -134,7 +151,7 @@ export default function DashboardOverview() {
                       {menu.day_of_week}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {menu.description}
+                      {menu.description || 'Sin descripción'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       ${menu.price_student}

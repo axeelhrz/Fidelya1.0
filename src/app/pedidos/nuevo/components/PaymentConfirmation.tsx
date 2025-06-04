@@ -43,9 +43,9 @@ export function PaymentConfirmation({
     try {
       // Actualizar el estado de los pedidos asociados a esta transacción
       const { error } = await supabase
-        .from('pedidos')
+        .from('orders')
         .update({ 
-          estado_pago: 'pagado',
+          status: 'paid',
           // Si hay código de confirmación, guardarlo
           ...(paymentCode ? { codigo_confirmacion: paymentCode } : {})
         })
