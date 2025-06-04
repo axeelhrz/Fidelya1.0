@@ -148,10 +148,10 @@
   /* Enhanced animations for the login page */
   @keyframes shimmer {
     0% {
-      background-position: -200% 0;
+      transform: translateX(-100%);
     }
     100% {
-      background-position: 200% 0;
+      transform: translateX(100%);
     }
   }
 
@@ -182,7 +182,22 @@
     }
   }
 
+  @keyframes breathe {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 1;
+    }
+  }
+
   /* Animation utilities */
+  .animate-shimmer {
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
   .animate-gradient {
     background-size: 200% 200%;
     animation: gradient-shift 3s ease infinite;
@@ -194,6 +209,10 @@
 
   .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-breathe {
+    animation: breathe 4s ease-in-out infinite;
   }
 
   /* Custom input focus effects */
@@ -264,4 +283,22 @@
 /* Smooth transitions for all interactive elements */
 * {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Premium focus styles */
+input:focus,
+button:focus {
+  outline: none;
+}
+
+/* Custom selection colors */
+::selection {
+  background: rgba(59, 130, 246, 0.2);
+  color: #1e40af;
+}
+
+/* Smooth font rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
