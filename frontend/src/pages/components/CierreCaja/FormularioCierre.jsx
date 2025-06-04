@@ -8,7 +8,6 @@ import {
   CircularProgress,
   InputAdornment,
   Paper,
-  Divider,
   Grid,
   Card,
   CardContent,
@@ -24,7 +23,6 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Tooltip,
   Stepper,
   Step,
   StepLabel,
@@ -36,9 +34,6 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Badge,
-  motion,
-  AnimatePresence,
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -46,17 +41,15 @@ import {
   Lock as LockIcon,
   Calculate as CalculateIcon,
   Security as SecurityIcon,
-  Visibility as VisibilityIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   CheckCircle as CheckCircleIcon,
   Warning as WarningIcon,
   Info as InfoIcon,
-  MonetizationOn as MonetizationOnIcon,
-  AccountBalance as AccountBalanceIcon,
   Timer as TimerIcon,
   Verified as VerifiedIcon,
 } from '@mui/icons-material';
+import { motion } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
