@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import { Box } from '@mui/material';
 
 const ParticleBackground = () => {
   const canvasRef = useRef(null);
@@ -18,32 +17,48 @@ const ParticleBackground = () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Partículas
+    // Partículas más sutiles y elegantes
     const particles = [];
-    const particleCount = 50;
+    const particleCount = 30; // Reducido para mejor rendimiento
 
     class Particle {
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.vx = (Math.random() - 0.5) * 0.5;
-        this.vy = (Math.random() - 0.5) * 0.5;
-        this.radius = Math.random() * 2 + 1;
-        this.opacity = Math.random() * 0.5 + 0.2;
+        this.vx = (Math.random() - 0.5) * 0.3; // Movimiento más lento
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.radius = Math.random() * 1.5 + 0.5; // Partículas más pequeñas
+        this.opacity = Math.random() * 0.3 + 0.1; // Más sutiles
+        this.pulseSpeed = Math.random() * 0.02 + 0.01;
+        this.pulsePhase = Math.random() * Math.PI * 2;
       }
 
       update() {
         this.x += this.vx;
         this.y += this.vy;
 
+        // Rebote suave en los bordes
         if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
         if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+        // Efecto de pulsación sutil
+        this.pulsePhase += this.pulseSpeed;
       }
 
       draw() {
+        const pulseOpacity = this.opacity + Math.sin(this.pulsePhase) * 0.1;
+        const gradient = ctx.createRadialGradient(
+          this.x, this.y, 0,
+          this.x, this.y, this.radius * 2
+        );
+        
+        gradient.addColorStop(0, `rgba(99, 102, 241, ${pulseOpacity})`);
+        gradient.addColorStop(0.5, `rgba(16, 185, 129, ${pulseOpacity * 0.5})`);
+        gradient.addColorStop(1, `rgba(16, 185, 129, 0)`);
+
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(16, 185, 129, ${this.opacity})`;
+        ctx.fillStyle = gradient;
         ctx.fill();
       }
     }
@@ -53,7 +68,7 @@ const ParticleBackground = () => {
       particles.push(new Particle());
     }
 
-    // Función de animación
+    // Función de animación optimizada
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -62,19 +77,28 @@ const ParticleBackground = () => {
         particle.draw();
       });
 
-      // Conectar partículas cercanas
+      // Conectar partículas cercanas con líneas más sutiles
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          if (distance < 100) {
+          if (distance < 120) {
+            const opacity = 0.05 * (1 - distance / 120);
+            const gradient = ctx.createLinearGradient(
+              particles[i].x, particles[i].y,
+              particles[j].x, particles[j].y
+            );
+            
+            gradient.addColorStop(0, `rgba(99, 102, 241, ${opacity})`);
+            gradient.addColorStop(1, `rgba(16, 185, 129, ${opacity})`);
+
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(16, 185, 129, ${0.1 * (1 - distance / 100)})`;
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 0.5;
             ctx.stroke();
           }
         }
@@ -102,6 +126,7 @@ const ParticleBackground = () => {
         height: '100%',
         zIndex: -1,
         pointerEvents: 'none',
+        opacity: 0.6,
       }}
     />
   );

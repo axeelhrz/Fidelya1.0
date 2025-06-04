@@ -11,7 +11,7 @@ import {
   Link,
   FormControlLabel,
   Checkbox,
-  LinearProgress,
+  Divider,
   Chip,
 } from '@mui/material';
 import {
@@ -23,6 +23,7 @@ import {
   SecurityRounded,
   CheckCircleRounded,
   ErrorRounded,
+  ArrowForwardRounded,
 } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -30,7 +31,7 @@ import * as yup from 'yup';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 
-// Esquema de validación mejorado
+// Esquema de validación
 const schema = yup.object({
   correo: yup
     .string()
@@ -47,15 +48,13 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [fieldFocus, setFieldFocus] = useState({});
-  const [validationStatus, setValidationStatus] = useState({});
   
   const { login } = useAuth();
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     reset,
     setValue,
     watch,
@@ -66,7 +65,7 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
 
   const watchedFields = watch();
 
-  // Cargar email recordado al montar el componente
+  // Cargar email recordado
   React.useEffect(() => {
     const rememberedEmail = localStorage.getItem('rememberUser');
     if (rememberedEmail) {
@@ -74,25 +73,6 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
       setValue('correo', rememberedEmail);
     }
   }, [setValue]);
-
-  // Validación en tiempo real
-  React.useEffect(() => {
-    const validateField = async (field, value) => {
-      try {
-        await schema.validateAt(field, { [field]: value });
-        setValidationStatus(prev => ({ ...prev, [field]: 'valid' }));
-      } catch (err) {
-        setValidationStatus(prev => ({ ...prev, [field]: 'invalid' }));
-      }
-    };
-
-    if (watchedFields.correo) {
-      validateField('correo', watchedFields.correo);
-    }
-    if (watchedFields.contraseña) {
-      validateField('contraseña', watchedFields.contraseña);
-    }
-  }, [watchedFields]);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -112,7 +92,6 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
           localStorage.removeItem('rememberUser');
         }
         
-        // Llamar callback de éxito
         if (onLoginSuccess) {
           onLoginSuccess(result.user);
         }
@@ -149,17 +128,6 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
     }
   };
 
-  const getFieldIcon = (field) => {
-    if (!watchedFields[field]) return null;
-    
-    if (validationStatus[field] === 'valid') {
-      return <CheckCircleRounded sx={{ color: 'success.main' }} />;
-    } else if (validationStatus[field] === 'invalid') {
-      return <ErrorRounded sx={{ color: 'error.main' }} />;
-    }
-    return null;
-  };
-
   return (
     <motion.div
       variants={formVariants}
@@ -170,9 +138,9 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
         <AnimatePresence>
           {error && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: -10 }}
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: -10 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
               transition={{ duration: 0.3 }}
             >
               <Alert 
@@ -180,9 +148,11 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
                 sx={{ 
                   mb: 3,
                   borderRadius: '12px',
-                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05))',
+                  background: 'rgba(239, 68, 68, 0.05)',
                   border: '1px solid rgba(239, 68, 68, 0.2)',
-                  backdropFilter: 'blur(10px)',
+                  '& .MuiAlert-icon': {
+                    color: 'error.main',
+                  },
                 }}
                 icon={<ErrorRounded />}
               >
@@ -193,188 +163,120 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
         </AnimatePresence>
 
         <motion.div variants={itemVariants}>
-          <Box sx={{ position: 'relative', mb: 3 }}>
-            <TextField
-              {...register('correo')}
-              fullWidth
-              label="Correo electrónico"
-              type="email"
-              error={!!errors.correo}
-              helperText={errors.correo?.message}
-              onFocus={() => setFieldFocus(prev => ({ ...prev, correo: true }))}
-              onBlur={() => setFieldFocus(prev => ({ ...prev, correo: false }))}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '16px',
-                  background: 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    background: 'rgba(255, 255, 255, 0.9)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 25px rgba(16, 185, 129, 0.15)',
-                  },
-                  '&.Mui-focused': {
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 25px rgba(16, 185, 129, 0.25)',
+          <TextField
+            {...register('correo')}
+            fullWidth
+            label="Correo electrónico"
+            type="email"
+            error={!!errors.correo}
+            helperText={errors.correo?.message}
+            sx={{
+              mb: 3,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+                background: 'rgba(248, 250, 252, 0.8)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'rgba(248, 250, 252, 1)',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main',
                   },
                 },
-                '& .MuiInputLabel-root': {
-                  fontWeight: 500,
+                '&.Mui-focused': {
+                  background: 'rgba(255, 255, 255, 1)',
+                  boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
                 },
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <motion.div
-                      animate={{
-                        scale: fieldFocus.correo ? 1.1 : 1,
-                        rotate: fieldFocus.correo ? 5 : 0,
-                      }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Email color="primary" />
-                    </motion.div>
-                  </InputAdornment>
-                ),
-                endAdornment: watchedFields.correo && (
-                  <InputAdornment position="end">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      {getFieldIcon('correo')}
-                    </motion.div>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            {validationStatus.correo === 'valid' && (
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: '100%' }}
-                transition={{ duration: 0.5 }}
-              >
-                <LinearProgress
-                  variant="determinate"
-                  value={100}
-                  sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 2,
-                    borderRadius: '0 0 16px 16px',
-                    backgroundColor: 'transparent',
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: 'success.main',
-                    },
-                  }}
-                />
-              </motion.div>
-            )}
-          </Box>
+              },
+              '& .MuiInputLabel-root': {
+                fontWeight: 500,
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Email sx={{ color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+              endAdornment: watchedFields.correo && !errors.correo && (
+                <InputAdornment position="end">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <CheckCircleRounded sx={{ color: 'success.main' }} />
+                  </motion.div>
+                </InputAdornment>
+              ),
+            }}
+          />
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Box sx={{ position: 'relative', mb: 2 }}>
-            <TextField
-              {...register('contraseña')}
-              fullWidth
-              label="Contraseña"
-              type={showPassword ? 'text' : 'password'}
-              error={!!errors.contraseña}
-              helperText={errors.contraseña?.message}
-              onFocus={() => setFieldFocus(prev => ({ ...prev, contraseña: true }))}
-              onBlur={() => setFieldFocus(prev => ({ ...prev, contraseña: false }))}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '16px',
-                  background: 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    background: 'rgba(255, 255, 255, 0.9)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 25px rgba(16, 185, 129, 0.15)',
-                  },
-                  '&.Mui-focused': {
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 25px rgba(16, 185, 129, 0.25)',
+          <TextField
+            {...register('contraseña')}
+            fullWidth
+            label="Contraseña"
+            type={showPassword ? 'text' : 'password'}
+            error={!!errors.contraseña}
+            helperText={errors.contraseña?.message}
+            sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+                background: 'rgba(248, 250, 252, 0.8)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'rgba(248, 250, 252, 1)',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main',
                   },
                 },
-                '& .MuiInputLabel-root': {
-                  fontWeight: 500,
+                '&.Mui-focused': {
+                  background: 'rgba(255, 255, 255, 1)',
+                  boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
                 },
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <motion.div
-                      animate={{
-                        scale: fieldFocus.contraseña ? 1.1 : 1,
-                        rotate: fieldFocus.contraseña ? 5 : 0,
-                      }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Lock color="primary" />
-                    </motion.div>
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {watchedFields.contraseña && getFieldIcon('contraseña')}
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                        sx={{
-                          transition: 'all 0.2s ease',
-                          '&:hover': {
-                            transform: 'scale(1.1)',
-                          },
-                        }}
+              },
+              '& .MuiInputLabel-root': {
+                fontWeight: 500,
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Lock sx={{ color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {watchedFields.contraseña && !errors.contraseña && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.3 }}
                       >
-                        <motion.div
-                          animate={{ rotate: showPassword ? 180 : 0 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </motion.div>
-                      </IconButton>
-                    </Box>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            {validationStatus.contraseña === 'valid' && (
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: '100%' }}
-                transition={{ duration: 0.5 }}
-              >
-                <LinearProgress
-                  variant="determinate"
-                  value={100}
-                  sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 2,
-                    borderRadius: '0 0 16px 16px',
-                    backgroundColor: 'transparent',
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: 'success.main',
-                    },
-                  }}
-                />
-              </motion.div>
-            )}
-          </Box>
+                        <CheckCircleRounded sx={{ color: 'success.main' }} />
+                      </motion.div>
+                    )}
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                      size="small"
+                      sx={{
+                        color: 'text.secondary',
+                        '&:hover': {
+                          color: 'primary.main',
+                        },
+                      }}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </Box>
+                </InputAdornment>
+              ),
+            }}
+          />
         </motion.div>
 
         <motion.div variants={itemVariants}>
@@ -385,20 +287,11 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                   color="primary"
-                  sx={{
-                    '&.Mui-checked': {
-                      animation: 'pulse 0.5s ease-in-out',
-                    },
-                    '@keyframes pulse': {
-                      '0%': { transform: 'scale(1)' },
-                      '50%': { transform: 'scale(1.1)' },
-                      '100%': { transform: 'scale(1)' },
-                    },
-                  }}
+                  size="small"
                 />
               }
               label={
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
                   Recordarme
                 </Typography>
               }
@@ -411,9 +304,8 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
               sx={{ 
                 textDecoration: 'none',
                 fontWeight: 500,
-                transition: 'all 0.2s ease',
                 '&:hover': {
-                  transform: 'translateY(-1px)',
+                  textDecoration: 'underline',
                 },
               }}
               onClick={() => {
@@ -431,25 +323,27 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
             fullWidth
             variant="contained"
             size="large"
-            disabled={loading}
+            disabled={loading || !isValid}
             sx={{ 
-              mb: 3, 
-              py: 2,
-              borderRadius: '16px',
-              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-              boxShadow: '0 8px 25px rgba(16, 185, 129, 0.3)',
-              fontSize: '1.1rem',
+              mb: 4, 
+              py: 1.5,
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              boxShadow: '0 4px 15px rgba(99, 102, 241, 0.3)',
+              fontSize: '1rem',
               fontWeight: 600,
               textTransform: 'none',
               position: 'relative',
               overflow: 'hidden',
               '&:hover': {
-                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                boxShadow: '0 12px 35px rgba(16, 185, 129, 0.4)',
-                transform: 'translateY(-2px)',
+                background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                boxShadow: '0 6px 20px rgba(99, 102, 241, 0.4)',
+                transform: 'translateY(-1px)',
               },
-              '&:active': {
-                transform: 'translateY(0)',
+              '&:disabled': {
+                background: 'rgba(0, 0, 0, 0.12)',
+                color: 'rgba(0, 0, 0, 0.26)',
+                boxShadow: 'none',
               },
               '&::before': {
                 content: '""',
@@ -468,13 +362,14 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
           >
             {loading ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CircularProgress size={24} color="inherit" />
+                <CircularProgress size={20} color="inherit" />
                 <Typography variant="button">Iniciando sesión...</Typography>
               </Box>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <LoginRounded />
                 <Typography variant="button">Iniciar Sesión</Typography>
+                <ArrowForwardRounded />
               </Box>
             )}
           </Button>
@@ -482,26 +377,31 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
 
         <motion.div variants={itemVariants}>
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              ¿No tienes una cuenta?
-            </Typography>
-            <Chip
-              label="Regístrate aquí"
-              onClick={onSwitchToRegister}
+            <Divider sx={{ mb: 3 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
+                ¿No tienes una cuenta?
+              </Typography>
+            </Divider>
+            
+            <Button
               variant="outlined"
-              color="primary"
+              onClick={onSwitchToRegister}
               sx={{
-                borderRadius: '20px',
+                borderRadius: '12px',
+                borderColor: 'rgba(99, 102, 241, 0.3)',
+                color: 'primary.main',
                 fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
+                textTransform: 'none',
+                px: 4,
+                py: 1,
                 '&:hover': {
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(139, 92, 246, 0.1))',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 8px 25px rgba(16, 185, 129, 0.2)',
+                  borderColor: 'primary.main',
+                  background: 'rgba(99, 102, 241, 0.05)',
                 },
               }}
-            />
+            >
+              Crear cuenta nueva
+            </Button>
           </Box>
         </motion.div>
 
@@ -510,23 +410,23 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
           variants={itemVariants}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
+          transition={{ delay: 1.2 }}
         >
           <Box sx={{ 
             mt: 4, 
-            p: 2, 
+            p: 3, 
             borderRadius: '12px',
-            background: 'rgba(16, 185, 129, 0.05)',
-            border: '1px solid rgba(16, 185, 129, 0.1)',
+            background: 'rgba(99, 102, 241, 0.05)',
+            border: '1px solid rgba(99, 102, 241, 0.1)',
             textAlign: 'center',
           }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
-              <SecurityRounded color="primary" fontSize="small" />
+              <SecurityRounded sx={{ color: 'primary.main', fontSize: 18 }} />
               <Typography variant="caption" color="primary" sx={{ fontWeight: 600 }}>
                 CONEXIÓN SEGURA
               </Typography>
             </Box>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4 }}>
               Tus datos están protegidos con encriptación de nivel bancario
             </Typography>
           </Box>
