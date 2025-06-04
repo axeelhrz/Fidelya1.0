@@ -6,7 +6,8 @@ import "@/styles/login-animations.css"
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider"
 import { UserProvider } from "@/context/UserContext"
-import { Navbar } from "@/components/navbar"
+import { ConditionalNavbar } from "@/components/conditional-navbar"
+import { ConditionalMain } from "@/components/conditional-main"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -41,10 +42,10 @@ export default function RootLayout({
         >
           <UserProvider>
             <div className="min-h-screen bg-gray-50">
-              <Navbar />
-              <main className="container mx-auto px-4 py-8">
+              <ConditionalNavbar />
+              <ConditionalMain>
                 {children}
-              </main>
+              </ConditionalMain>
             </div>
             <Toaster />
           </UserProvider>
