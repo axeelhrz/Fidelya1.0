@@ -1,39 +1,36 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configuración optimizada para Netlify con modo servidor
-  output: 'standalone',  // Modo servidor para soportar API routes
-  poweredByHeader: false,
-  reactStrictMode: true,
-  
-  // Evitar fallos en la compilación por errores de lint o tipos
-  eslint: {
-    ignoreDuringBuilds: true,
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'casino-escolar.vercel.app']
+    }
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  
-  // Configuración de imágenes
   images: {
-    domains: ['localhost'],
-    formats: ['image/avif', 'image/webp'],
+    domains: ['koesipeybsasrknvgntg.supabase.co'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
   },
-  
-  // Mejorar manejo de variables de entorno
-  publicRuntimeConfig: {
-    // Variables disponibles solo en el servidor
-    GETNET_LOGIN: process.env.GETNET_LOGIN,
-    GETNET_SECRET: process.env.GETNET_SECRET,
-    GETNET_BASE_URL: process.env.GETNET_BASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  },
-  
   env: {
-    // Variables disponibles en el cliente
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || '',
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-};
-
-module.exports = nextConfig;
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
+          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
+        ]
+      }
+    ]
+  }
+}
+module.exports = nextConfig

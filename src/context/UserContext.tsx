@@ -1,39 +1,25 @@
-"use client"
+'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase/client'
+import { User } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase/client'
+import { Guardian, Student } from '@/types'
+import { toast } from 'sonner'
 
-export interface Guardian {
-  id: string
-  user_id: string
-  full_name: string
-  email: string
-  phone?: string
-  is_staff: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface Student {
-  id: string
-  guardian_id: string
-  name: string
-  grade: string
-  section: string
-  level: string
-  created_at: string
-  updated_at: string
-}
 interface UserContextType {
   user: User | null
   guardian: Guardian | null
   students: Student[]
-  loading: boolean
+  isLoading: boolean
+  isAdmin: boolean
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  signUp: (data: { email: string; password: string; fullName: string; phone?: string }) => Promise<{ success: boolean; error?: string }>
   signOut: () => Promise<void>
   refreshUserData: () => Promise<void>
-  login: (email: string, password: string) => Promise<void>
+  addStudent: (studentData: Omit<Student, 'id' | 'guardian_id' | 'created_at' | 'updated_at'>) => Promise<{ success: boolean; error?: string }>
+  updateStudent: (studentId: string, studentData: Partial<Student>) => Promise<{ success: boolean; error?: string }>
+  deleteStudent: (studentId: string) => Promise<{ success: boolean; error?: string }>
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
@@ -42,141 +28,232 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [guardian, setGuardian] = useState<Guardian | null>(null)
   const [students, setStudents] = useState<Student[]>([])
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   
-  const fetchUserData = async (currentUser: User) => {
+  const isAdmin = guardian?.role === 'admin' || guardian?.role === 'staff'
+
+  // Initialize user session
+useEffect(() => {
+    const initializeAuth = async () => {
     try {
-      // Buscar guardian por user_id
+        const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        setUser(session.user)
+          await loadUserData(session.user.id)
+      }
+    } catch (error) {
+        console.error('Error initializing auth:', error)
+    } finally {
+        setIsLoading(false)
+    }
+  }
+
+    initializeAuth()
+
+    // Listen for auth changes
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          setUser(session.user)
+          await loadUserData(session.user.id)
+        } else if (event === 'SIGNED_OUT') {
+        setUser(null)
+        setGuardian(null)
+        setStudents([])
+          router.push('/auth/login')
+      }
+        setIsLoading(false)
+    }
+  )
+
+    return () => subscription.unsubscribe()
+  }, [router])
+
+  const loadUserData = async (userId: string) => {
+    try {
+      // Load guardian data
       const { data: guardianData, error: guardianError } = await supabase
         .from('guardians')
         .select('*')
-        .eq('user_id', currentUser.id)
+        .eq('user_id', userId)
         .single()
 
       if (guardianError) {
-        console.error('Error fetching guardian:', guardianError)
+        console.error('Error loading guardian data:', guardianError)
+        return
+  }
+
+      setGuardian(guardianData)
+
+      // Load students data
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('students')
+        .select('*')
+        .eq('guardian_id', guardianData.id)
+        .eq('is_active', true)
+        .order('name')
+
+      if (studentsError) {
+        console.error('Error loading students data:', studentsError)
         return
       }
-        
-        setGuardian(guardianData)
 
-      // Buscar estudiantes del guardian
-      if (guardianData) {
-          const { data: studentsData, error: studentsError } = await supabase
-            .from('students')
-            .select('*')
-            .eq('guardian_id', guardianData.id)
-          if (studentsError) {
-          console.error('Error fetching students:', studentsError)
-          } else {
-            setStudents(studentsData || [])
-          }
-        }
+      setStudents(studentsData || [])
     } catch (error) {
-      console.error('Error in fetchUserData:', error)
+      console.error('Error loading user data:', error)
     }
   }
 
-  const refreshUserData = async () => {
-    if (user) {
-      await fetchUserData(user)
-    }
-  }
-
-  const login = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
-      setLoading(true)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
-      
+
       if (error) {
-        throw error
+        return { success: false, error: error.message }
       }
-      
+
       if (data.user) {
-        setUser(data.user)
-        await fetchUserData(data.user)
+        await loadUserData(data.user.id)
+        toast.success('¡Bienvenido de vuelta!')
+        router.push('/dashboard')
       }
+
+      return { success: true }
     } catch (error) {
-      console.error('Error logging in:', error)
-      throw error
-    } finally {
-      setLoading(false)
+      return { success: false, error: 'Error inesperado al iniciar sesión' }
+    }
+  }
+
+  const signUp = async (data: { email: string; password: string; fullName: string; phone?: string }) => {
+    try {
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.fullName,
+            phone: data.phone,
+          },
+        },
+      })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      if (authData.user) {
+        toast.success('Cuenta creada exitosamente. Por favor verifica tu email.')
+        router.push('/auth/verify-email')
+      }
+
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: 'Error inesperado al crear la cuenta' }
     }
   }
 
   const signOut = async () => {
     try {
-      setLoading(true)
       await supabase.auth.signOut()
-        setUser(null)
-      setGuardian(null)
-        setStudents([])
-      router.push('/auth/login')
+      toast.success('Sesión cerrada exitosamente')
     } catch (error) {
       console.error('Error signing out:', error)
-    } finally {
-        setLoading(false)
-      }
+      toast.error('Error al cerrar sesión')
+    }
   }
 
-useEffect(() => {
-  // Obtener sesión inicial
-  const getInitialSession = async () => {
+  const refreshUserData = async () => {
+    if (user) {
+      await loadUserData(user.id)
+    }
+  }
+
+  const addStudent = async (studentData: Omit<Student, 'id' | 'guardian_id' | 'created_at' | 'updated_at'>) => {
+    if (!guardian) {
+      return { success: false, error: 'No hay guardian autenticado' }
+    }
+
     try {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
+      const { data, error } = await supabase
+        .from('students')
+        .insert({
+          ...studentData,
+          guardian_id: guardian.id,
+        })
+        .select()
+        .single()
+
       if (error) {
-        console.error('Error getting session:', error)
-        setLoading(false)
-        return
+        return { success: false, error: error.message }
       }
 
-      if (session?.user) {
-        setUser(session.user)
-        await fetchUserData(session.user)
-      }
+      setStudents(prev => [...prev, data])
+      toast.success('Estudiante agregado exitosamente')
+      return { success: true }
     } catch (error) {
-      console.error('Error in getInitialSession:', error)
-    } finally {
-      setLoading(false)
+      return { success: false, error: 'Error inesperado al agregar estudiante' }
     }
   }
 
-  getInitialSession()
+  const updateStudent = async (studentId: string, studentData: Partial<Student>) => {
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .update(studentData)
+        .eq('id', studentId)
+        .select()
+        .single()
 
-  // Escuchar cambios de autenticación
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    async (event, session) => {
-      if (session?.user) {
-        setUser(session.user)
-        await fetchUserData(session.user)
-      } else {
-        setUser(null)
-        setGuardian(null)
-        setStudents([])
+      if (error) {
+        return { success: false, error: error.message }
       }
-      
-      setLoading(false)
+
+      setStudents(prev => prev.map(student => 
+        student.id === studentId ? data : student
+      ))
+      toast.success('Estudiante actualizado exitosamente')
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: 'Error inesperado al actualizar estudiante' }
     }
-  )
-
-  return () => {
-    subscription.unsubscribe()
   }
-}, [])
 
-  const value = {
+  const deleteStudent = async (studentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update({ is_active: false })
+        .eq('id', studentId)
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      setStudents(prev => prev.filter(student => student.id !== studentId))
+      toast.success('Estudiante eliminado exitosamente')
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: 'Error inesperado al eliminar estudiante' }
+    }
+  }
+
+  const value: UserContextType = {
     user,
     guardian,
     students,
-    loading,
+    isLoading,
+    isAdmin,
+    signIn,
+    signUp,
     signOut,
     refreshUserData,
-    login,
+    addStudent,
+    updateStudent,
+    deleteStudent,
   }
 
   return (

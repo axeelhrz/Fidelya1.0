@@ -1,393 +1,292 @@
-"use client"
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+'use client'
+import React, { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Users, 
-  ShoppingCart, 
-  DollarSign, 
-  TrendingUp,
-  Calendar,
-  Clock,
-  AlertCircle
-} from 'lucide-react'
-import { supabase } from '@/lib/supabase/client'
-import { useUser } from '@/context/UserContext'
-import { redirect } from 'next/navigation'
+import { Calendar, DollarSign, ShoppingCart, Users, TrendingUp, Download } from 'lucide-react'
+import { useRequireAdmin } from '@/hooks/useAuth'
+import { OrderService } from '@/lib/orders/orderService'
+import { DashboardStats, KitchenReport } from '@/types'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { toast } from 'sonner'
 
-interface DashboardStats {
-  totalStudents: number
-  totalOrders: number
-  totalRevenue: number
-  todayOrders: number
-  pendingOrders: number
-  paidOrders: number
-  recentOrders: any[]
+interface StatsCardProps {
+  title: string
+  value: string | number
+  icon: React.ComponentType<{ className?: string }>
+  color: string
+  isPrice?: boolean
+}
+
+function StatsCard({ title, value, icon: Icon, color, isPrice = false }: StatsCardProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">{title}</p>
+              <p className={`text-2xl font-bold ${isPrice ? 'text-green-600' : ''}`}>
+                {value}
+              </p>
+            </div>
+            <div className={`p-3 rounded-full ${color}`}>
+              <Icon className="h-6 w-6 text-white" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
 }
 
 export default function AdminDashboard() {
-  const { guardian, loading } = useUser()
+  const { isLoading: authLoading } = useRequireAdmin()
   const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [loadingStats, setLoadingStats] = useState(true)
-
-  // Verificar permisos de admin
-  useEffect(() => {
-    if (!loading && (!guardian || !guardian.is_staff)) {
-      redirect('/dashboard')
-    }
-  }, [guardian, loading])
+  const [kitchenReport, setKitchenReport] = useState<KitchenReport[]>([])
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (guardian?.is_staff) {
-      loadDashboardStats()
+    if (!authLoading) {
+      loadDashboardData()
     }
-  }, [guardian])
+  }, [authLoading, selectedDate])
 
-  const loadDashboardStats = async () => {
+  const loadDashboardData = async () => {
     try {
-      setLoadingStats(true)
-
-      // Obtener estadísticas en paralelo
-      const [
-        studentsResult,
-        ordersResult,
-        todayOrdersResult,
-        recentOrdersResult
-      ] = await Promise.all([
-        // Total estudiantes activos
-        supabase
-          .from('students')
-          .select('id', { count: 'exact' })
-          .eq('is_active', true),
-
-        // Total pedidos y revenue
-        supabase
-          .from('orders')
-          .select('id, total_amount, status', { count: 'exact' }),
-
-        // Pedidos de hoy
-        supabase
-          .from('orders')
-          .select('id, status', { count: 'exact' })
-          .eq('fecha_pedido', new Date().toISOString().split('T')[0]),
-
-        // Pedidos recientes
-        supabase
-          .from('orders')
-          .select(`
-            id,
-            total_amount,
-            status,
-            created_at,
-            dia_entrega,
-            students (
-              name,
-              grade,
-              section
-            ),
-            guardians (
-              full_name
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(10)
+      setIsLoading(true)
+      const [statsData, kitchenData] = await Promise.all([
+        OrderService.getDashboardStats(selectedDate),
+        OrderService.getKitchenReport(selectedDate),
       ])
-
-      // Procesar resultados
-      const totalStudents = studentsResult.count || 0
-      const totalOrders = ordersResult.count || 0
-      const orders = ordersResult.data || []
-      
-      const totalRevenue = orders
-        .filter(order => order.status === 'PAGADO')
-        .reduce((sum, order) => sum + order.total_amount, 0)
-
-      const todayOrders = todayOrdersResult.count || 0
-      const pendingOrders = orders.filter(order => order.status === 'PENDIENTE').length
-      const paidOrders = orders.filter(order => order.status === 'PAGADO').length
-
       setStats({
-        totalStudents,
-        totalOrders,
-        totalRevenue,
-        todayOrders,
-        pendingOrders,
-        paidOrders,
-        recentOrders: recentOrdersResult.data || []
+        ...statsData,
+        orders_by_grade: (statsData.orders_by_grade as Record<string, { count: number; amount: number }>) || {}
       })
-
+      setKitchenReport(kitchenData.map(item => ({
+        ...item,
+        orders_by_grade: (item.orders_by_grade as Record<string, { quantity: number; students: string[] }>) || {}
+      })))
     } catch (error) {
-      console.error('Error loading dashboard stats:', error)
+      console.error('Error loading dashboard data:', error)
+      toast.error('Error cargando datos del dashboard')
     } finally {
-      setLoadingStats(false)
+      setIsLoading(false)
     }
   }
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP'
-    }).format(price)
+  const exportKitchenReport = () => {
+    if (!kitchenReport.length) {
+      toast.error('No hay datos para exportar')
+      return
+    }
+
+    const csvContent = [
+      ['Producto', 'Tipo', 'Cantidad Total', 'Detalles por Curso'].join(','),
+      ...kitchenReport.map(item => [
+        item.product_name,
+        item.product_type,
+        item.total_quantity,
+        Object.entries(item.orders_by_grade)
+          .map(([grade, data]) => `${grade}: ${data.quantity}`)
+          .join('; ')
+      ].join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `reporte-cocina-${selectedDate}.csv`
+    a.click()
+    window.URL.revokeObjectURL(url)
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-CL', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  if (loading || loadingStats) {
+  if (authLoading || isLoading) {
     return (
-      <div className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {[1, 2, 3, 4].map(i => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     )
   }
 
-  if (!guardian?.is_staff) {
-    return null
-  }
-
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Panel Administrativo</h1>
-        <p className="text-muted-foreground">
-          Gestión del Casino Escolar
-        </p>
-      </div>
+    <div className="container mx-auto p-6 space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+      >
+        <div>
+          <h1 className="text-3xl font-bold">Panel Administrativo</h1>
+          <p className="text-muted-foreground">
+            Gestión y estadísticas del Casino Escolar
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="px-3 py-2 border rounded-md"
+          />
+          <Button onClick={loadDashboardData} variant="outline">
+            Actualizar
+          </Button>
+        </div>
+      </motion.div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Estudiantes
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalStudents || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Estudiantes activos
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Pedidos
-            </CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalOrders || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Pedidos realizados
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Ingresos Totales
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatPrice(stats?.totalRevenue || 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Pagos confirmados
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pedidos Hoy
-            </CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.todayOrders || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Pedidos del día
-            </p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          title="Total Pedidos"
+          value={stats?.total_orders || 0}
+          icon={ShoppingCart}
+          color="bg-blue-500"
+        />
+        <StatsCard
+          title="Pedidos Pagados"
+          value={stats?.paid_orders || 0}
+          icon={TrendingUp}
+          color="bg-green-500"
+        />
+        <StatsCard
+          title="Pedidos Pendientes"
+          value={stats?.pending_orders || 0}
+          icon={Calendar}
+          color="bg-yellow-500"
+        />
+        <StatsCard
+          title="Total Recaudado"
+          value={OrderService.formatPrice(stats?.total_amount || 0)}
+          icon={DollarSign}
+          color="bg-purple-500"
+          isPrice
+        />
       </div>
 
-      {/* Status Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-yellow-500" />
-              Pedidos Pendientes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-yellow-600">
-              {stats?.pendingOrders || 0}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Esperando pago
-            </p>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="overview">Resumen</TabsTrigger>
+          <TabsTrigger value="kitchen">Reporte Cocina</TabsTrigger>
+          <TabsTrigger value="orders">Pedidos</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-green-500" />
-              Pedidos Pagados
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600">
-              {stats?.paidOrders || 0}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Confirmados
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-blue-500" />
-              Tasa de Conversión
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-600">
-              {stats?.totalOrders ? 
-                Math.round((stats.paidOrders / stats.totalOrders) * 100) : 0}%
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Pedidos pagados
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Orders */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Pedidos Recientes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {stats?.recentOrders.map((order) => (
-              <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium">
-                      {order.students?.name}
-                    </span>
-                    <Badge variant="outline">
-                      {order.students?.grade} {order.students?.section}
-                    </Badge>
+        <TabsContent value="overview" className="space-y-6">
+          {/* Orders by Grade */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Pedidos por Curso</CardTitle>
+              <CardDescription>
+                Distribución de pedidos para {format(new Date(selectedDate), "d 'de' MMMM 'de' yyyy", { locale: es })}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(stats?.orders_by_grade || {}).map(([grade, data]) => (
+                  <div key={grade} className="p-4 border rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-medium">{grade}</h4>
+                      <Badge variant="secondary">{data.count} pedidos</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Total: {OrderService.formatPrice(data.amount)}
+                    </p>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {order.guardians?.full_name} • {order.dia_entrega}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-medium">
-                    {formatPrice(order.total_amount)}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge 
-                      variant={
-                        order.status === 'PAGADO' ? 'default' :
-                        order.status === 'PENDIENTE' ? 'secondary' : 'destructive'
-                      }
-                    >
-                      {order.status}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDate(order.created_at)}
-                    </span>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-            
-            {(!stats?.recentOrders || stats.recentOrders.length === 0) && (
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="kitchen" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Reporte para Cocina</CardTitle>
+                <CardDescription>
+                  Productos a preparar para {format(new Date(selectedDate), "d 'de' MMMM", { locale: es })}
+                </CardDescription>
+              </div>
+              <Button onClick={exportKitchenReport} variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Exportar CSV
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {kitchenReport.map((item, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="p-4 border rounded-lg"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-medium">{item.product_name}</h4>
+                        <Badge variant={item.product_type === 'almuerzo' ? 'default' : 'secondary'}>
+                          {item.product_type}
+                        </Badge>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-primary">
+                          {item.total_quantity}
+                        </p>
+                        <p className="text-sm text-muted-foreground">unidades</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {Object.entries(item.orders_by_grade).map(([grade, gradeData]) => (
+                        <div key={grade} className="text-sm">
+                          <span className="font-medium">{grade}:</span>
+                          <span className="ml-1">{gradeData.quantity}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                ))}
+                
+                {kitchenReport.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No hay pedidos confirmados para esta fecha
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="orders">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gestión de Pedidos</CardTitle>
+              <CardDescription>
+                Ver y gestionar todos los pedidos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <div className="text-center py-8 text-muted-foreground">
-                No hay pedidos recientes
+                <p>Funcionalidad de gestión de pedidos en desarrollo</p>
+                <Button variant="outline" className="mt-4">
+                  Ver Todos los Pedidos
+                </Button>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">Gestionar Pedidos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Ver, filtrar y gestionar todos los pedidos
-            </p>
-            <a href="/admin/pedidos" className="text-primary hover:underline">
-              Ir a pedidos →
-            </a>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">Gestionar Menú</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Subir y gestionar menús semanales
-            </p>
-            <a href="/admin/menu" className="text-primary hover:underline">
-              Ir a menú →
-            </a>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">Estadísticas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Ver reportes detallados y métricas
-            </p>
-            <a href="/admin/estadisticas" className="text-primary hover:underline">
-              Ver estadísticas →
-            </a>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

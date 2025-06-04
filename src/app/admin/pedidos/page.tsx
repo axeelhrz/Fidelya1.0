@@ -52,7 +52,7 @@ interface OrderSummary {
   byLevel: { [key: string]: number };
 }
 export default function AdminPedidosPage() {
-  const { guardian, loading } = useUser();
+  const { guardian } = useUser();
   const [activeTab, setActiveTab] = useState('detalle');
   const [filters, setFilters] = useState<OrderFilters>({
     dateFrom: '',
@@ -66,13 +66,13 @@ export default function AdminPedidosPage() {
 
   // Verificar permisos de admin
   useEffect(() => {
-    if (!loading && (!guardian || !guardian.is_staff)) {
+    if (!guardian || (guardian.role !== 'admin' && guardian.role !== 'staff')) {
       redirect('/dashboard');
     }
-  }, [guardian, loading]);
+  }, [guardian]);
 
   useEffect(() => {
-    if (guardian?.is_staff) {
+    if (guardian && (guardian.role === 'admin' || guardian.role === 'staff')) {
       loadOrderSummary();
     }
   }, [guardian, filters]);
@@ -87,7 +87,7 @@ export default function AdminPedidosPage() {
           id,
           total_amount,
           status,
-          fecha_pedido,
+          created_at,
           students (
             level,
             name,
@@ -101,13 +101,21 @@ export default function AdminPedidosPage() {
 
       // Aplicar filtros
       if (filters.dateFrom) {
-        query = query.gte('fecha_pedido', filters.dateFrom);
+        query = query.gte('created_at', filters.dateFrom);
       }
       if (filters.dateTo) {
-        query = query.lte('fecha_pedido', filters.dateTo);
+        query = query.lte('created_at', filters.dateTo);
       }
       if (filters.status !== 'TODOS') {
-        query = query.eq('status', filters.status);
+        // Map Spanish status values to database enum values
+        const statusMap: { [key: string]: 'pending' | 'paid' | 'cancelled' | 'delivered' } = {
+          'PENDIENTE': 'pending',
+          'PAGADO': 'paid',
+          'CANCELADO': 'cancelled',
+          'ENTREGADO': 'delivered'
+        };
+        const dbStatus = statusMap[filters.status] || filters.status as 'pending' | 'paid' | 'cancelled' | 'delivered';
+        query = query.eq('status', dbStatus);
       }
 
       const { data: orders, error } = await query;
@@ -122,16 +130,16 @@ export default function AdminPedidosPage() {
 
       if (filters.level !== 'TODOS') {
         filteredOrders = filteredOrders.filter(order => 
-          order.students?.[0]?.level === filters.level
+          order.students?.level === filters.level
         );
       }
 
       if (filters.searchTerm) {
         const searchLower = filters.searchTerm.toLowerCase();
         filteredOrders = filteredOrders.filter(order =>
-          order.students?.[0]?.name.toLowerCase().includes(searchLower) ||
-          order.guardians?.[0]?.full_name.toLowerCase().includes(searchLower) ||
-          order.students?.[0]?.grade.toLowerCase().includes(searchLower)
+          order.students?.name.toLowerCase().includes(searchLower) ||
+          order.guardians?.full_name.toLowerCase().includes(searchLower) ||
+          order.students?.grade.toLowerCase().includes(searchLower)
         );
       }
 
@@ -145,7 +153,7 @@ export default function AdminPedidosPage() {
       }, {} as { [key: string]: number });
 
       const byLevel = filteredOrders.reduce((acc, order) => {
-        const level = order.students?.[0]?.level || 'UNKNOWN';
+        const level = order.students?.level || 'UNKNOWN';
         acc[level] = (acc[level] || 0) + 1;
         return acc;
       }, {} as { [key: string]: number });
@@ -173,8 +181,6 @@ export default function AdminPedidosPage() {
           id,
           total_amount,
           status,
-          fecha_pedido,
-          dia_entrega,
           created_at,
           students (
             name,
@@ -189,23 +195,30 @@ export default function AdminPedidosPage() {
           order_items (
             quantity,
             unit_price,
-            total_price,
             products (
-              codigo,
-              descripcion
+              code,
+              name
             )
           )
         `);
 
       // Aplicar mismos filtros
       if (filters.dateFrom) {
-        query = query.gte('fecha_pedido', filters.dateFrom);
+        query = query.gte('created_at', filters.dateFrom);
       }
       if (filters.dateTo) {
-        query = query.lte('fecha_pedido', filters.dateTo);
+        query = query.lte('created_at', filters.dateTo);
       }
       if (filters.status !== 'TODOS') {
-        query = query.eq('status', filters.status);
+        // Map Spanish status values to database enum values
+        const statusMap: { [key: string]: 'pending' | 'paid' | 'cancelled' | 'delivered' } = {
+          'PENDIENTE': 'pending',
+          'PAGADO': 'paid',
+          'CANCELADO': 'cancelled',
+          'ENTREGADO': 'delivered'
+        };
+        const dbStatus = statusMap[filters.status] || filters.status as 'pending' | 'paid' | 'cancelled' | 'delivered';
+        query = query.eq('status', dbStatus);
       }
 
       const { data: orders, error } = await query;
@@ -233,15 +246,15 @@ export default function AdminPedidosPage() {
 
       const csvRows = orders?.map(order => [
         order.id.substring(0, 8),
-        order.fecha_pedido,
-        order.dia_entrega,
-        order.students?.[0]?.name || '',
-        `${order.students?.[0]?.grade || ''} ${order.students?.[0]?.section || ''}`,
-        order.students?.[0]?.level || '',
-        order.guardians?.[0]?.full_name || '',
-        order.guardians?.[0]?.email || '',
+        new Date(order.created_at).toLocaleDateString('es-CL'),
+        '', // Remove dia_entrega since column doesn't exist
+        order.students?.name || '',
+        `${order.students?.grade || ''} ${order.students?.section || ''}`,
+        order.students?.level || '',
+        order.guardians?.full_name || '',
+        order.guardians?.email || '',
         order.order_items?.map(item => 
-          `${item.products?.[0]?.codigo}: ${item.quantity}x`
+          `${item.products?.code}: ${item.quantity}x`
         ).join('; ') || '',
         order.total_amount,
         order.status,
@@ -250,7 +263,7 @@ export default function AdminPedidosPage() {
 
       const csvContent = [
         csvHeaders.join(','),
-        ...csvRows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ...csvRows.map((row: any[]) => row.map((cell: any) => `"${cell}"`).join(','))
       ].join('\n');
 
       // Descargar archivo
@@ -276,11 +289,11 @@ export default function AdminPedidosPage() {
     }).format(price);
   };
 
-  if (loading) {
+  if (!guardian) {
     return <div className="p-6">Cargando...</div>;
   }
 
-  if (!guardian?.is_staff) {
+  if (!guardian || (guardian.role !== 'admin' && guardian.role !== 'staff')) {
     return null;
   }
 

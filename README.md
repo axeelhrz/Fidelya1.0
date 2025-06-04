@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Casino Escolar - Sistema de Pedidos
 
-## Getting Started
+Sistema completo de gestión de pedidos para casino escolar desarrollado con Next.js, Supabase y GetNet.
 
-First, run the development server:
+## 🚀 Características
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Autenticación completa** con Supabase Auth
+- **Gestión de estudiantes** por parte de apoderados
+- **Sistema de pedidos** con selección de menús diarios
+- **Integración de pagos** con GetNet
+- **Panel administrativo** con estadísticas y reportes
+- **Notificaciones por email** automáticas
+- **Interfaz responsive** y moderna
+- **Seguridad robusta** con RLS y validaciones
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Tecnologías
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Pagos**: GetNet Web Checkout
+- **Email**: Resend
+- **UI**: Radix UI, Framer Motion, Lucide Icons
+- **Validación**: Zod, React Hook Form
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📋 Requisitos Previos
 
-## Learn More
+- Node.js 18+
+- Cuenta de Supabase
+- Credenciales de GetNet (ambiente de pruebas)
+- Cuenta de Resend (opcional, para emails)
 
-To learn more about Next.js, take a look at the following resources:
+## 🔧 Instalación
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Clonar el repositorio**

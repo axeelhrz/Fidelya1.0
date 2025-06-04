@@ -1,280 +1,189 @@
-import { supabase } from '@/lib/supabase/client'
-import { Guardian, Order, Student } from '@/lib/supabase/types'
+import { Resend } from 'resend'
+import { config } from '@/lib/config/environment'
+import { OrderConfirmationEmailData } from '@/types'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
-export interface EmailTemplate {
-  subject: string
-  html: string
-  text: string
-}
-
+const resend = new Resend(config.email.resendApiKey)
 export class EmailService {
-  /**
-   * Enviar email de confirmación de pago
-   */
-  static async sendPaymentConfirmation(
-    guardianId: string, 
-    orderId: string
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      // Verificar si las notificaciones están habilitadas
-      const { data: setting } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'email_notifications_enabled')
-        .single()
-
-      if (setting?.value !== 'true') {
-        return { success: true } // No enviar si está deshabilitado
-      }
-
-      // Obtener datos del pedido y guardian
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          students (
-            name,
-            grade,
-            section
-          ),
-          guardians (
-            full_name,
-            email
-          ),
-          order_items (
-            quantity,
-            unit_price,
-            total_price,
-            products (
-              codigo,
-              descripcion
-            )
-          )
-        `)
-        .eq('id', orderId)
-        .single()
-
-      if (orderError || !order) {
-        return { success: false, error: 'Pedido no encontrado' }
-      }
-
-      const guardian = order.guardians
-      const student = order.students
-
-      if (!guardian?.email) {
-        return { success: false, error: 'Email del guardian no encontrado' }
-      }
-
-      // Generar template del email
-      const template = this.generatePaymentConfirmationTemplate(order as any)
-
-      // Aquí integrarías con tu servicio de email preferido
-      // Ejemplo con Resend, SendGrid, etc.
-      
-      console.log('📧 Email de confirmación generado:', {
-        to: guardian.email,
-        subject: template.subject,
-        orderId: orderId.substring(0, 8)
-      })
-
-      // Simular envío exitoso por ahora
-      // En producción, reemplazar con llamada real al servicio de email
-      
-      /*
-      // Ejemplo con Resend:
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: 'casino@colegio.cl',
-          to: guardian.email,
-          subject: template.subject,
-          html: template.html
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error('Error enviando email')
-      }
-      */
-
-      return { success: true }
-
-    } catch (error) {
-      console.error('Error sending payment confirmation email:', error)
-      return { success: false, error: 'Error enviando email' }
+  static async sendOrderConfirmation(
+    orderData: OrderConfirmationEmailData,
+    recipientEmail: string
+  ) {
+    if (!config.email.resendApiKey) {
+      console.warn('Resend API key not configured, skipping email')
+      return
     }
-  }
 
-  /**
-   * Enviar recordatorio de pedido
-   */
-  static async sendOrderReminder(
-    guardianEmail: string,
-    studentName: string,
-    deliveryDate: string
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      const template = this.generateOrderReminderTemplate(studentName, deliveryDate)
-
-      console.log('📧 Recordatorio de pedido generado:', {
-        to: guardianEmail,
-        subject: template.subject,
-        deliveryDate
-      })
-
-      // Implementar envío real aquí
-
-      return { success: true }
-
-    } catch (error) {
-      console.error('Error sending order reminder:', error)
-      return { success: false, error: 'Error enviando recordatorio' }
-    }
-  }
-
-  /**
-   * Generar template de confirmación de pago
-   */
-  private static generatePaymentConfirmationTemplate(order: any): EmailTemplate {
-    const formatPrice = (price: number) => {
-      return new Intl.NumberFormat('es-CL', {
+    const formattedDate = format(new Date(orderData.delivery_date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
+    const formattedAmount = new Intl.NumberFormat('es-CL', {
         style: 'currency',
-        currency: 'CLP'
-      }).format(price)
-    }
-
-    const formatDate = (dateString: string) => {
-      return new Date(dateString).toLocaleDateString('es-CL', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    }
-
-    const subject = `Confirmación de pago - Pedido #${order.id.substring(0, 8)}`
-
+      currency: 'CLP',
+    }).format(orderData.total_amount / 100)
     const html = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
-        <title>${subject}</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Confirmación de Pedido - ${config.casino.name}</title>
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; }
-          .content { padding: 20px; background-color: #f9fafb; }
-          .order-details { background-color: white; padding: 15px; border-radius: 8px; margin: 15px 0; }
-          .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-          .success { color: #059669; font-weight: bold; }
+            .header { background: #0ea5e9; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px; }
+            .order-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+            .total { font-weight: bold; font-size: 1.2em; color: #0ea5e9; }
+            .footer { text-align: center; margin-top: 30px; color: #666; font-size: 0.9em; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1>¡Pago Confirmado!</h1>
+              <h1>${config.casino.name}</h1>
+              <p>Confirmación de Pedido</p>
           </div>
           
           <div class="content">
-            <p>Estimado/a <strong>${order.guardians?.full_name}</strong>,</p>
-            
-            <p class="success">✅ Su pago ha sido procesado exitosamente.</p>
-            
+              <h2>¡Hola ${orderData.guardian_name}!</h2>
+              <p>Tu pedido ha sido confirmado y el pago procesado exitosamente.</p>
             <div class="order-details">
               <h3>Detalles del Pedido</h3>
-              <p><strong>Número de pedido:</strong> #${order.id.substring(0, 8)}</p>
-              <p><strong>Estudiante:</strong> ${order.students?.name}</p>
-              <p><strong>Curso:</strong> ${order.students?.grade} ${order.students?.section}</p>
-              <p><strong>Fecha de entrega:</strong> ${formatDate(order.fecha_pedido)}</p>
-              <p><strong>Día:</strong> ${order.dia_entrega}</p>
-              
+                <p><strong>Número de Pedido:</strong> #${orderData.order_number}</p>
+                <p><strong>Estudiante:</strong> ${orderData.student_name}</p>
+                <p><strong>Fecha de Entrega:</strong> ${formattedDate}</p>
               <h4>Productos:</h4>
-              <ul>
-                ${order.order_items?.map((item: any) => `
-                  <li>${item.products?.descripcion} - ${item.quantity}x ${formatPrice(item.unit_price)} = ${formatPrice(item.total_price)}</li>
-                `).join('') || ''}
-              </ul>
+                ${orderData.items.map(item => `
+                  <div class="item">
+                    <span>${item.name} (x${item.quantity})</span>
+                    <span>${new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(item.price * item.quantity / 100)}</span>
+                  </div>
+                `).join('')}
               
-              <p><strong>Total pagado:</strong> ${formatPrice(order.total_amount)}</p>
+                <div class="item total">
+                  <span>Total Pagado:</span>
+                  <span>${formattedAmount}</span>
             </div>
-            
-            <p>El almuerzo será preparado y estará disponible en la fecha indicada.</p>
-            
-            <p>Si tiene alguna consulta, puede contactarnos respondiendo a este email.</p>
-            
-            <p>Gracias por usar nuestro sistema de casino escolar.</p>
           </div>
           
-          <div class="footer">
-            <p>Este es un email automático, por favor no responder.</p>
-            <p>Casino Escolar - Sistema de Pedidos</p>
+              <p><strong>Importante:</strong></p>
+              <ul>
+                <li>El pedido será entregado el día indicado durante el horario de almuerzo/colación</li>
+                <li>Si tienes alguna consulta, puedes contactarnos a ${config.casino.email}</li>
+                <li>Guarda este email como comprobante de tu pedido</li>
+              </ul>
           </div>
+            
+            <div class="footer">
+              <p>${config.casino.name}</p>
+              <p>Email: ${config.casino.email} | Teléfono: ${config.casino.phone}</p>
         </div>
+          </div>
       </body>
       </html>
     `
 
     const text = `
-      ¡Pago Confirmado!
+      ${config.casino.name} - Confirmación de Pedido
       
-      Estimado/a ${order.guardians?.full_name},
+      Hola ${orderData.guardian_name},
       
-      Su pago ha sido procesado exitosamente.
-      
+      Tu pedido ha sido confirmado y el pago procesado exitosamente.
       Detalles del Pedido:
-      - Número: #${order.id.substring(0, 8)}
-      - Estudiante: ${order.students?.name}
-      - Curso: ${order.students?.grade} ${order.students?.section}
-      - Fecha de entrega: ${formatDate(order.fecha_pedido)}
-      - Total: ${formatPrice(order.total_amount)}
+      - Número de Pedido: #${orderData.order_number}
+      - Estudiante: ${orderData.student_name}
+      - Fecha de Entrega: ${formattedDate}
+      - Total Pagado: ${formattedAmount}
       
-      Gracias por usar nuestro sistema de casino escolar.
+      Productos:
+      ${orderData.items.map(item => 
+        `- ${item.name} (x${item.quantity}): ${new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(item.price * item.quantity / 100)}`
+      ).join('\n')}
+      
+      Contacto: ${config.casino.email} | ${config.casino.phone}
     `
 
-    return { subject, html, text }
+    try {
+      const result = await resend.emails.send({
+        from: `${config.casino.name} <noreply@casinoescolar.cl>`,
+        to: recipientEmail,
+        subject: `Confirmación de Pedido #${orderData.order_number} - ${config.casino.name}`,
+        html,
+        text,
+      })
+
+      console.log('Email sent successfully:', result)
+      return result
+    } catch (error) {
+      console.error('Error sending email:', error)
+      throw error
+  }
   }
 
-  /**
-   * Generar template de recordatorio
-   */
-  private static generateOrderReminderTemplate(
-    studentName: string, 
-    deliveryDate: string
-  ): EmailTemplate {
-    const subject = `Recordatorio: Pedido pendiente para ${studentName}`
+  static async sendOrderReminder(
+    orderData: OrderConfirmationEmailData,
+    recipientEmail: string
+  ) {
+    if (!config.email.resendApiKey) {
+      console.warn('Resend API key not configured, skipping email')
+      return
+    }
 
+    const formattedDate = format(new Date(orderData.delivery_date), "EEEE, d 'de' MMMM", { locale: es })
     const html = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
-        <title>${subject}</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Recordatorio de Pedido - ${config.casino.name}</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #f59e0b; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px; }
+            .reminder-box { background: #fef3c7; border: 1px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          </style>
       </head>
       <body>
-        <h2>Recordatorio de Pedido</h2>
-        <p>Estimado apoderado,</p>
-        <p>Le recordamos que aún no ha realizado el pedido de almuerzo para <strong>${studentName}</strong> para el día <strong>${deliveryDate}</strong>.</p>
-        <p>Recuerde que los pedidos deben realizarse antes de las 10:00 AM del día de entrega.</p>
-        <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/pedidos/nuevo">Realizar pedido ahora</a></p>
+          <div class="container">
+            <div class="header">
+              <h1>${config.casino.name}</h1>
+              <p>Recordatorio de Pedido</p>
+            </div>
+            
+            <div class="content">
+              <h2>¡Hola ${orderData.guardian_name}!</h2>
+              
+              <div class="reminder-box">
+                <h3>🍽️ Recordatorio: Pedido para mañana</h3>
+                <p><strong>Estudiante:</strong> ${orderData.student_name}</p>
+                <p><strong>Fecha de Entrega:</strong> ${formattedDate}</p>
+                <p><strong>Número de Pedido:</strong> #${orderData.order_number}</p>
+              </div>
+              
+              <p>Te recordamos que tienes un pedido confirmado para mañana. El almuerzo/colación será entregado durante el horario correspondiente.</p>
+              
+              <p>Si tienes alguna consulta, puedes contactarnos a ${config.casino.email}</p>
+            </div>
+          </div>
       </body>
       </html>
     `
 
-    const text = `
-      Recordatorio de Pedido
-      
-      Estimado apoderado,
-      
-      Le recordamos que aún no ha realizado el pedido de almuerzo para ${studentName} para el día ${deliveryDate}.
-      
-      Recuerde que los pedidos deben realizarse antes de las 10:00 AM del día de entrega.
-    `
+    try {
+      const result = await resend.emails.send({
+        from: `${config.casino.name} <noreply@casinoescolar.cl>`,
+        to: recipientEmail,
+        subject: `Recordatorio: Pedido para mañana - ${config.casino.name}`,
+        html,
+      })
 
-    return { subject, html, text }
+      return result
+    } catch (error) {
+      console.error('Error sending reminder email:', error)
+      throw error
+    }
   }
 }

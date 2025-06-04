@@ -1,20 +1,11 @@
-"use client"
+'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  User, 
-  LogOut, 
-  Menu, 
-  X, 
-  Home, 
-  ShoppingCart, 
-  UserCircle, 
-  Settings,
-  BarChart3
-} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,85 +14,136 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { 
+  Menu, 
+  X, 
+  Home, 
+  ShoppingCart, 
+  User, 
+  Settings, 
+  LogOut,
+  Sun,
+  Moon,
+  Monitor
+} from 'lucide-react'
 import { useUser } from '@/context/UserContext'
+import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Nuevo Pedido', href: '/pedidos/nuevo', icon: ShoppingCart },
-  { name: 'Mi Perfil', href: '/perfil', icon: UserCircle },
+  { name: 'Mis Pedidos', href: '/pedidos/historial', icon: ShoppingCart },
+  { name: 'Perfil', href: '/perfil', icon: User },
 ]
 
 const adminNavigation = [
-  { name: 'Administración', href: '/admin', icon: Settings },
+  { name: 'Admin Panel', href: '/admin', icon: Settings },
+  { name: 'Gestión Menús', href: '/admin/menu', icon: Settings },
   { name: 'Pedidos', href: '/admin/pedidos', icon: ShoppingCart },
-  { name: 'Estadísticas', href: '/admin/estadisticas', icon: BarChart3 },
+  { name: 'Estadísticas', href: '/admin/estadisticas', icon: Settings },
 ]
 
 export function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { user, guardian, signOut } = useUser()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { user, guardian, isAdmin, signOut } = useUser()
+  const { theme, setTheme } = useTheme()
   const pathname = usePathname()
 
-  if (!user) return null
+  const handleSignOut = async () => {
+    await signOut()
+    setIsMobileMenuOpen(false)
+  }
 
-  const isStaff = guardian?.is_staff || false
-  const userInitials = guardian?.full_name
-    ?.split(' ')
-    .map(name => name[0])
-    .join('')
-    .toUpperCase() || 'U'
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
 
-  const allNavigation = isStaff 
-    ? [...navigation, ...adminNavigation]
-    : navigation
+  const navItems = isAdmin ? [...navigation, ...adminNavigation] : navigation
+
+  if (!user || !guardian) {
+    return null
+  }
 
   return (
-    <nav className="bg-white shadow-sm border-b">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <nav className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Logo y navegación principal */}
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/dashboard" className="text-xl font-bold text-blue-600">
-                Casino Escolar
-              </Link>
-            </div>
+          {/* Logo and Desktop Navigation */}
+          <div className="flex items-center">
+            <Link href="/dashboard" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">CE</span>
+              </div>
+              <span className="font-bold text-xl hidden sm:block">Casino Escolar</span>
+            </Link>
             
-            {/* Navegación desktop */}
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {allNavigation.map((item) => {
-                const Icon = item.icon
-                const isActive = pathname === item.href || 
-                  (item.href !== '/dashboard' && pathname.startsWith(item.href))
+            {/* Desktop Navigation */}
+            <div className="hidden md:ml-8 md:flex md:space-x-1">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href
                 return (
                   <Link
                     key={item.name}
                 href={item.href}
                     className={cn(
-                      'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors',
+                      'px-3 py-2 rounded-md text-sm font-medium transition-colors relative',
                       isActive
-                        ? 'border-blue-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                        ? 'text-primary bg-primary/10'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     )}
               >
-                    <Icon className="w-4 h-4 mr-2" />
+                    <item.icon className="w-4 h-4 inline mr-2" />
                 {item.name}
-              </Link>
-            )
-          })}
-        </div>
+                    {isActive && (
+                      <motion.div
+                        layoutId="navbar-indicator"
+                        className="absolute inset-0 bg-primary/10 rounded-md -z-10"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      />
+                    )}
+                  </Link>
+  )
+            })}
           </div>
+              </div>
 
-          {/* Menú de usuario */}
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+          {/* Right side - User menu and theme toggle */}
+          <div className="flex items-center space-x-4">
+            {/* Theme Toggle */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                  <span className="sr-only">Toggle theme</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setTheme("light")}>
+                  <Sun className="mr-2 h-4 w-4" />
+                  <span>Claro</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("dark")}>
+                  <Moon className="mr-2 h-4 w-4" />
+                  <span>Oscuro</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("system")}>
+                  <Monitor className="mr-2 h-4 w-4" />
+                  <span>Sistema</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-blue-600 text-white">
-                      {userInitials}
+                    <AvatarImage src={user.user_metadata?.avatar_url} alt={guardian.full_name} />
+                    <AvatarFallback>
+                      {guardian.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -109,126 +151,91 @@ export function Navbar() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {guardian?.full_name}
-                    </p>
+                    <p className="text-sm font-medium leading-none">{guardian.full_name}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
+                      {guardian.email}
                     </p>
-                    {isStaff && (
-                      <p className="text-xs leading-none text-blue-600 font-medium">
+                    {isAdmin && (
+                      <Badge variant="secondary" className="w-fit mt-1">
                         Administrador
-                      </p>
+                      </Badge>
                     )}
-        </div>
+            </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/perfil" className="cursor-pointer">
+                  <Link href="/perfil">
                     <User className="mr-2 h-4 w-4" />
-                    <span>Mi Perfil</span>
-                  </Link>
+                    <span>Perfil</span>
+              </Link>
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Administración</span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Cerrar sesión</span>
+                  <span>Cerrar Sesión</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-      </div>
 
-          {/* Botón menú móvil */}
-          <div className="sm:hidden flex items-center">
+            {/* Mobile menu button */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden"
+              onClick={toggleMobileMenu}
             >
-              {mobileMenuOpen ? (
+              {isMobileMenuOpen ? (
                 <X className="h-6 w-6" />
               ) : (
                 <Menu className="h-6 w-6" />
-              )}
+      )}
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Menú móvil */}
-      {mobileMenuOpen && (
-        <div className="sm:hidden">
-          <div className="pt-2 pb-3 space-y-1">
-            {allNavigation.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href || 
-                (item.href !== '/dashboard' && pathname.startsWith(item.href))
-              
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors',
-                    isActive
-                      ? 'bg-blue-50 border-blue-500 text-blue-700'
-                      : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
-                  )}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  {item.name}
-                </Link>
+      {/* Mobile Navigation */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden border-t border-border"
+          >
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-background">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={cn(
+                      'block px-3 py-2 rounded-md text-base font-medium transition-colors',
+                      isActive
+                        ? 'text-primary bg-primary/10'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    )}
+                  >
+                    <item.icon className="w-4 h-4 inline mr-2" />
+                    {item.name}
+                  </Link>
   )
-            })}
-          </div>
-          
-          <div className="pt-4 pb-3 border-t border-gray-200">
-            <div className="flex items-center px-4">
-              <div className="flex-shrink-0">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-blue-600 text-white">
-                    {userInitials}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-              <div className="ml-3">
-                <div className="text-base font-medium text-gray-800">
-                  {guardian?.full_name}
-                </div>
-                <div className="text-sm font-medium text-gray-500">
-                  {user.email}
-                </div>
-                {isStaff && (
-                  <div className="text-xs font-medium text-blue-600">
-                    Administrador
-                  </div>
-                )}
-              </div>
+              })}
             </div>
-            <div className="mt-3 space-y-1">
-              <Link
-                href="/perfil"
-                className="flex items-center px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <User className="mr-3 h-5 w-5" />
-                Mi Perfil
-              </Link>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false)
-                  signOut()
-                }}
-                className="flex items-center w-full px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-              >
-                <LogOut className="mr-3 h-5 w-5" />
-                Cerrar sesión
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   )
 }
