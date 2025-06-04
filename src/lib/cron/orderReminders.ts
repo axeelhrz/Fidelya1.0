@@ -45,6 +45,7 @@ export class OrderReminderService {
 
       // Group orders by guardian
       const ordersByGuardian = orders.reduce((acc, order) => {
+        if (!order.guardian) return acc
         const guardianId = order.guardian.id
         if (!acc[guardianId]) {
           acc[guardianId] = {
