@@ -12,6 +12,7 @@ interface FormInputProps {
   placeholder?: string
   value: string
   onChange: (value: string) => void
+  onBlur?: () => void
   error?: string
   success?: boolean
   required?: boolean
@@ -28,6 +29,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
     placeholder, 
     value, 
     onChange, 
+    onBlur,
     error, 
     success, 
     required, 
@@ -72,6 +74,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
             placeholder={placeholder}
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            onBlur={onBlur}
             disabled={disabled}
             className={cn(
               "transition-all duration-200",
