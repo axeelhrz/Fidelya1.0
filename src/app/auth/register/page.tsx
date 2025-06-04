@@ -75,7 +75,7 @@ export default function RegisterPage() {
 
       console.log('Iniciando registro para:', email);
 
-      // Registro en Supabase Auth
+      // Solo registro en Supabase Auth - el trigger se encargará del resto
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -92,37 +92,8 @@ export default function RegisterPage() {
         throw new Error(signUpError.message);
       }
 
-      const user = signUpData.user;
-      if (user) {
-        console.log('Usuario creado con ID:', user.id);
-        
-        // Esperar un momento para asegurar que el usuario esté en auth.users
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Verificar que el usuario existe en auth.users antes de insertar
-        const { data: authUser, error: authError } = await supabase.auth.getUser();
-        console.log('Verificación de usuario autenticado:', { authUser, authError });
-
-        // Insertar en tabla users usando el service role para evitar RLS
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert({
-            id: user.id,
-            nombre: nombreCompleto,
-            email,
-            rol: 'user',
-            estado: 'pendiente_verificacion',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-
-        console.log('Resultado de inserción en users:', { insertError });
-
-        if (insertError) {
-          console.error('Error al insertar en users:', insertError);
-          throw new Error(`Error al crear perfil: ${insertError.message}`);
-        }
-
+      if (signUpData.user) {
+        console.log('Usuario creado exitosamente con ID:', signUpData.user.id);
         setSubmitStatus('success');
         
         // Redirigir después de mostrar el éxito
@@ -143,8 +114,8 @@ export default function RegisterPage() {
         setErrorMessage('El formato del email no es válido');
       } else if (error.message.includes('Password should be at least 6 characters')) {
         setErrorMessage('La contraseña debe tener al menos 6 caracteres');
-      } else if (error.message.includes('foreign key constraint')) {
-        setErrorMessage('Error de sincronización. Intenta nuevamente en unos segundos.');
+      } else if (error.message.includes('Signup is disabled')) {
+        setErrorMessage('El registro está temporalmente deshabilitado');
       } else {
         setErrorMessage(error.message || 'Ocurrió un error inesperado');
       }
