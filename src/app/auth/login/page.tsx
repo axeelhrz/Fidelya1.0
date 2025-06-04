@@ -9,19 +9,14 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useUser } from '@/context/UserContext'
-import { useRedirectIfAuthenticated } from '@/hooks/useAuth'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  
   const { signIn, user, guardian, loading: userLoading } = useUser()
   const router = useRouter()
-  // Redirigir si ya está autenticado
-  useRedirectIfAuthenticated()
-
   // Efecto para redirigir cuando el usuario esté completamente cargado
   useEffect(() => {
     console.log('🔄 Login page - Estado:', { 
