@@ -1,118 +1,229 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
-import { User } from '@supabase/supabase-js'
-import { supabase } from "@/lib/supabase/client"
-import { AuthService } from "@/lib/auth/authHelpers"
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { User, Session } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase/client'
+import { Guardian, Student } from '@/lib/supabase/types'
+import { useToast } from '@/components/ui/use-toast'
 
-// Definir tipos localmente para evitar problemas de importación
-export interface Guardian {
-  id: string
-  user_id: string
-  full_name: string
-  email: string
-  phone?: string
-  is_staff: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface Student {
-  id: string
-  guardian_id: string
-  name: string
-  grade: string
-  section: string
-  level: string
-  created_at: string
-  updated_at: string
-  is_active?: boolean
-}
-
-export interface UserContextType {
+interface UserContextType {
   user: User | null
+  session: Session | null
   guardian: Guardian | null
   students: Student[]
   loading: boolean
-  refreshUser: () => Promise<void>
-  refreshStudents: () => Promise<void>
-  setGuardian: (g: Guardian | null) => void
-  isStaff: boolean
+  signIn: (email: string, password: string) => Promise<{ error?: string }>
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error?: string }>
+  signOut: () => Promise<void>
+  updateProfile: (data: Partial<Guardian>) => Promise<{ error?: string }>
+  refreshUserData: () => Promise<void>
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
-export function UserProvider({ children }: { children: ReactNode }) {
+export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [guardian, setGuardian] = useState<Guardian | null>(null)
   const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
   
-  const refreshUser = async () => {
+  // Cargar datos del guardian y estudiantes
+  const loadUserData = async (userId: string) => {
     try {
-      const { user: currentUser, guardian: currentGuardian } = await AuthService.getCurrentUser()
-      setUser(currentUser)
-      setGuardian(currentGuardian)
-      
-      if (currentGuardian) {
-        await refreshStudents()
-      }
-    } catch (error) {
-      console.error('Error refreshing user:', error)
-    }
-  }
-
-  const refreshStudents = async () => {
-    if (!guardian?.id) return
-
-    try {
-      const { data: studentsData, error } = await supabase
-        .from('students')
+      // Buscar guardian
+      const { data: guardianData, error: guardianError } = await supabase
+        .from('guardians')
         .select('*')
-        .eq('guardian_id', guardian.id)
-        .eq('is_active', true)
-        .order('name')
+        .eq('user_id', userId)
+        .single()
 
-      if (error) {
-        console.error('Error loading students:', error)
+      if (guardianError && guardianError.code !== 'PGRST116') {
+        console.error('Error cargando guardian:', guardianError)
         return
       }
 
-      setStudents(studentsData || [])
+      if (guardianData) {
+        setGuardian(guardianData)
+
+        // Cargar estudiantes del guardian
+        const { data: studentsData, error: studentsError } = await supabase
+          .from('students')
+          .select('*')
+          .eq('guardian_id', guardianData.id)
+          .order('name')
+
+        if (studentsError) {
+          console.error('Error cargando estudiantes:', studentsError)
+        } else {
+          setStudents(studentsData || [])
+        }
+      }
     } catch (error) {
-      console.error('Error refreshing students:', error)
+      console.error('Error en loadUserData:', error)
     }
   }
 
-  useEffect(() => {
-    // Obtener sesión inicial
-    const getInitialSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        
-        if (session?.user) {
-          setUser(session.user)
-          await refreshUser()
-        }
-      } catch (error) {
-        console.error('Error getting initial session:', error)
-      } finally {
-        setLoading(false)
+  // Función para refrescar datos del usuario
+  const refreshUserData = async () => {
+    if (user?.id) {
+      await loadUserData(user.id)
+    }
+  }
+
+  // Función de login
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (error) {
+        return { error: error.message }
       }
+
+      if (data.user && !data.user.email_confirmed_at) {
+        return { error: 'Por favor verifica tu correo electrónico antes de iniciar sesión.' }
+      }
+
+      toast({
+        title: "¡Bienvenido!",
+        description: "Has iniciado sesión correctamente.",
+      })
+
+      return {}
+    } catch (error) {
+      console.error('Error en signIn:', error)
+      return { error: 'Error inesperado al iniciar sesión' }
+    }
+  }
+
+  // Función de registro
+  const signUp = async (email: string, password: string, fullName: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName
+          }
+        }
+      })
+
+      if (error) {
+        return { error: error.message }
+      }
+
+      if (data.user) {
+        // Crear perfil de guardian
+        const { error: profileError } = await supabase
+          .from('guardians')
+          .insert({
+            user_id: data.user.id,
+            email: email,
+            full_name: fullName,
+            is_staff: false
+          })
+
+        if (profileError) {
+          console.error('Error creando perfil:', profileError)
+          return { error: 'Error al crear el perfil de usuario' }
+        }
+
+        toast({
+          title: "¡Registro exitoso!",
+          description: "Por favor verifica tu correo electrónico para activar tu cuenta.",
+        })
+      }
+
+      return {}
+    } catch (error) {
+      console.error('Error en signUp:', error)
+      return { error: 'Error inesperado al registrarse' }
+    }
+  }
+
+  // Función de logout
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('Error en signOut:', error)
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Error al cerrar sesión",
+        })
+      } else {
+        setUser(null)
+        setSession(null)
+        setGuardian(null)
+        setStudents([])
+        toast({
+          title: "Sesión cerrada",
+          description: "Has cerrado sesión correctamente.",
+        })
+      }
+    } catch (error) {
+      console.error('Error inesperado en signOut:', error)
+    }
+  }
+
+  // Función para actualizar perfil
+  const updateProfile = async (data: Partial<Guardian>) => {
+    if (!guardian) {
+      return { error: 'No hay usuario autenticado' }
     }
 
-    getInitialSession()
+    try {
+      const { error } = await supabase
+        .from('guardians')
+        .update(data)
+        .eq('id', guardian.id)
+
+      if (error) {
+        return { error: error.message }
+      }
+
+      // Actualizar estado local
+      setGuardian({ ...guardian, ...data })
+      
+      toast({
+        title: "Perfil actualizado",
+        description: "Los cambios se han guardado correctamente.",
+      })
+
+      return {}
+    } catch (error) {
+      console.error('Error actualizando perfil:', error)
+      return { error: 'Error inesperado al actualizar perfil' }
+    }
+  }
+
+  // Efecto para manejar cambios de autenticación
+  useEffect(() => {
+    // Obtener sesión inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        loadUserData(session.user.id)
+      }
+      setLoading(false)
+    })
 
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email)
+        setSession(session)
+        setUser(session?.user ?? null)
         
         if (session?.user) {
-          setUser(session.user)
-          await refreshUser()
+          await loadUserData(session.user.id)
         } else {
-          setUser(null)
           setGuardian(null)
           setStudents([])
         }
@@ -124,22 +235,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Refrescar estudiantes cuando cambie el guardian
-  useEffect(() => {
-    if (guardian?.id) {
-      refreshStudents()
-    }
-  }, [guardian?.id])
-
   const value: UserContextType = {
     user,
+    session,
     guardian,
     students,
     loading,
-    refreshUser,
-    refreshStudents,
-    setGuardian,
-    isStaff: guardian?.is_staff || false
+    signIn,
+    signUp,
+    signOut,
+    updateProfile,
+    refreshUserData
   }
 
   return (
@@ -152,7 +258,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 export function useUser() {
   const context = useContext(UserContext)
   if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider')
+    throw new Error('useUser debe ser usado dentro de un UserProvider')
   }
   return context
 }

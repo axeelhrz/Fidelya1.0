@@ -1,144 +1,186 @@
 "use client"
-import { useState, useEffect } from "react"
-import { Mail, RefreshCw, CheckCircle } from "lucide-react"
-import AuthLayout from "@/components/auth/AuthLayout"
-import SubmitButton from "@/components/auth/SubmitButton"
-import { useAuth } from "@/hooks/useAuth"
-import { resendConfirmationEmail } from "@/lib/auth/authHelpers"
-import { useToast } from "@/components/ui/use-toast"
-
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Mail, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { supabase } from '@/lib/supabase/client'
+import { useUser } from '@/context/UserContext'
 export default function VerifyEmailPage() {
-  const [isResending, setIsResending] = useState(false)
-  const [lastSent, setLastSent] = useState<Date | null>(null)
-  const [countdown, setCountdown] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [verified, setVerified] = useState(false)
   
-  const { user, signOut } = useAuth()
-  const { toast } = useToast()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { user, signOut } = useUser()
 
-  // Countdown para reenvío
   useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
-      return () => clearTimeout(timer)
+    // Verificar si hay tokens de confirmación en la URL
+    const token = searchParams.get('token')
+    const type = searchParams.get('type')
+
+    if (token && type === 'email') {
+      verifyEmail(token)
     }
-  }, [countdown])
+  }, [searchParams])
 
-  const handleResendEmail = async () => {
-    if (!user?.email || countdown > 0) return
-
-    setIsResending(true)
-    
+  const verifyEmail = async (token: string) => {
+    setLoading(true)
     try {
-      const result = await resendConfirmationEmail(user.email)
-      
-      if (result.success) {
-        setLastSent(new Date())
-        setCountdown(60) // 60 segundos de espera
-        toast({
-          title: "Email reenviado",
-          description: "Hemos enviado un nuevo email de verificación.",
-        })
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: 'email'
+      })
+
+      if (error) {
+        setError('Error al verificar el correo electrónico. El enlace puede haber expirado.')
       } else {
-        toast({
-          title: "Error",
-          description: "No se pudo reenviar el email. Intenta nuevamente.",
-          variant: "destructive"
-        })
+        setVerified(true)
+        setMessage('¡Correo verificado exitosamente! Redirigiendo...')
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 2000)
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Ocurrió un error inesperado.",
-        variant: "destructive"
-      })
-    } finally {
-      setIsResending(false)
+      setError('Error inesperado al verificar el correo electrónico.')
     }
+    setLoading(false)
   }
 
-  const handleSignOut = async () => {
-    await signOut()
+  const resendVerification = async () => {
+    if (!user?.email) return
+
+    setResendLoading(true)
+    setError('')
+    setMessage('')
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: user.email
+      })
+
+      if (error) {
+        setError('Error al reenviar el correo de verificación.')
+      } else {
+        setMessage('Correo de verificación reenviado exitosamente.')
+    }
+    } catch (error) {
+      setError('Error inesperado al reenviar el correo.')
+  }
+
+    setResendLoading(false)
+  }
+
+  if (loading) {
+  return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <Card className="w-full max-w-md shadow-xl border-0">
+          <CardContent className="flex flex-col items-center justify-center p-8">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-gray-600">Verificando correo electrónico...</p>
+          </CardContent>
+        </Card>
+        </div>
+  )
+}
+
+  if (verified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 p-4">
+        <Card className="w-full max-w-md shadow-xl border-0">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle className="w-6 h-6 text-white" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              ¡Verificación exitosa!
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Tu correo electrónico ha sido verificado correctamente
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert>
+              <AlertDescription>
+                Redirigiendo al dashboard en unos segundos...
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
-    <AuthLayout
-      title="Verifica tu Email"
-      subtitle="Revisa tu correo para activar tu cuenta"
-      showIllustration={false}
-    >
-      <div className="text-center space-y-6">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-          <Mail className="w-8 h-8 text-blue-600" />
-        </div>
-        
-        <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-gray-900">
-            ¡Ya casi terminamos! 🎉
-          </h3>
-          
-          <div className="space-y-2">
-            <p className="text-gray-700">
-              Te hemos enviado un correo de verificación a:
-            </p>
-            <p className="font-semibold text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-              {user?.email}
-            </p>
-          </div>
-          
-          <p className="text-sm text-gray-600 leading-relaxed">
-            Haz clic en el enlace del correo para activar tu cuenta y comenzar a usar la plataforma.
-          </p>
-        </div>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start space-x-3">
-            <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div className="text-left">
-              <p className="text-sm font-medium text-blue-900">
-                ¿No encuentras el correo?
-              </p>
-              <ul className="text-sm text-blue-700 mt-1 space-y-1">
-                <li>• Revisa tu carpeta de spam o correo no deseado</li>
-                <li>• Verifica que el email sea correcto</li>
-                <li>• El correo puede tardar unos minutos en llegar</li>
-              </ul>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 to-orange-100 p-4">
+      <div className="w-full max-w-md">
+        <Card className="shadow-xl border-0">
+          <CardHeader className="space-y-1 text-center">
+            <div className="mx-auto w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center mb-4">
+              <Mail className="w-6 h-6 text-white" />
             </div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <SubmitButton
-            onClick={handleResendEmail}
-            disabled={countdown > 0 || isResending}
-            loading={isResending}
-            variant="outline"
-          >
-            {countdown > 0 ? (
-              `Reenviar en ${countdown}s`
-            ) : (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Reenviar correo de verificación
-              </>
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              Verifica tu correo electrónico
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Hemos enviado un enlace de verificación a tu correo
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
-          </SubmitButton>
-
-          {lastSent && (
-            <p className="text-xs text-gray-500">
-              Último envío: {lastSent.toLocaleTimeString()}
-            </p>
-          )}
-        </div>
-
-        <div className="pt-4 border-t">
-          <button
-            onClick={handleSignOut}
-            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            ¿Quieres usar otro email? Cerrar sesión
-          </button>
-        </div>
+            
+            {message && (
+              <Alert>
+                <CheckCircle className="h-4 w-4" />
+                <AlertDescription>{message}</AlertDescription>
+              </Alert>
+            )}
+            
+            <div className="text-center space-y-4">
+              <p className="text-sm text-gray-600">
+                Revisa tu bandeja de entrada y haz clic en el enlace de verificación.
+              </p>
+              
+              <div className="space-y-2">
+                <Button
+                  onClick={resendVerification}
+                  variant="outline"
+                  className="w-full"
+                  disabled={resendLoading}
+                >
+                  {resendLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Reenviando...</span>
+                    </div>
+                  ) : (
+                    'Reenviar correo de verificación'
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={signOut}
+                  variant="ghost"
+                  className="w-full"
+                >
+                  Cerrar sesión
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </AuthLayout>
+    </div>
   )
 }

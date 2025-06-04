@@ -1,293 +1,281 @@
 "use client"
 
-import React, { useState } from 'react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, Lock, User, GraduationCap, Phone } from "lucide-react"
-import AuthLayout from '@/components/auth/AuthLayout'
-import FormInput from '@/components/auth/FormInput'
-import SubmitButton from '@/components/auth/SubmitButton'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Eye, EyeOff, Mail, Lock, User, UserPlus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
-import { useAuth } from '@/hooks/useAuth'
-import { useFormValidation, authValidationRules } from '@/hooks/useFormValidation'
+import { useUser } from '@/context/UserContext'
+import { useRedirectIfAuthenticated } from '@/hooks/useAuth'
 
-// Cursos disponibles
-const GRADES = [
-  { value: "PRE_KINDER", label: "Pre Kinder", level: "PREESCOLAR" },
-  { value: "KINDER", label: "Kinder", level: "PREESCOLAR" },
-  { value: "PRIMERO_BASICO", label: "1° Básico", level: "BASICA" },
-  { value: "SEGUNDO_BASICO", label: "2° Básico", level: "BASICA" },
-  { value: "TERCERO_BASICO", label: "3° Básico", level: "BASICA" },
-  { value: "CUARTO_BASICO", label: "4° Básico", level: "BASICA" },
-  { value: "QUINTO_BASICO", label: "5° Básico", level: "BASICA" },
-  { value: "SEXTO_BASICO", label: "6° Básico", level: "BASICA" },
-  { value: "SEPTIMO_BASICO", label: "7° Básico", level: "BASICA" },
-  { value: "OCTAVO_BASICO", label: "8° Básico", level: "BASICA" },
-  { value: "PRIMERO_MEDIO", label: "1° Medio", level: "MEDIA" },
-  { value: "SEGUNDO_MEDIO", label: "2° Medio", level: "MEDIA" },
-  { value: "TERCERO_MEDIO", label: "3° Medio", level: "MEDIA" },
-  { value: "CUARTO_MEDIO", label: "4° Medio", level: "MEDIA" }
-]
-export default function RegistroPage() {
+export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    studentName: "",
-    studentGrade: "",
-    phone: "",
-    acceptTerms: false
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
   })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+  
+  const { signUp } = useUser()
+  const router = useRouter()
+  
+  // Redirigir si ya está autenticado
+  useRedirectIfAuthenticated()
 
-  const [formErrors, setFormErrors] = useState({
-    studentGrade: "",
-    acceptTerms: ""
-  })
-  const { signUp, loading } = useAuth()
-  const { errors, validateForm, validateSingleField, markFieldAsTouched } = useFormValidation({
-    fullName: authValidationRules.fullName,
-    email: authValidationRules.email,
-    password: authValidationRules.password,
-    studentName: authValidationRules.studentName,
-    phone: authValidationRules.phone
-  })
-
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    
-    // Clear form errors when user starts typing
-    if (formErrors[field as keyof typeof formErrors]) {
-      setFormErrors(prev => ({ ...prev, [field]: "" }))
-    }
-    
-    // Validate field on change if it was previously touched
-    if (typeof value === 'string' && formData[field as keyof typeof formData] !== "") {
-      validateSingleField(field, value)
-    }
+    setError('')
   }
 
-  const handleInputBlur = (field: string) => {
-    markFieldAsTouched(field)
-    const value = formData[field as keyof typeof formData]
-    if (typeof value === 'string') {
-      validateSingleField(field, value)
+  const validateForm = () => {
+    if (!formData.fullName.trim()) {
+      return 'El nombre completo es requerido'
     }
+    
+    if (!formData.email.trim()) {
+      return 'El correo electrónico es requerido'
+    }
+    
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      return 'Por favor ingresa un correo electrónico válido'
+    }
+    
+    if (formData.password.length < 6) {
+      return 'La contraseña debe tener al menos 6 caracteres'
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      return 'Las contraseñas no coinciden'
+    }
+    
+    if (!acceptTerms) {
+      return 'Debes aceptar los términos y condiciones'
+    }
+    
+    return null
   }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Validate form fields
-    const { isValid } = validateForm({
-      fullName: formData.fullName,
-      email: formData.email,
-      password: formData.password,
-      studentName: formData.studentName,
-      phone: formData.phone
-    })
-    
-    // Additional validations
-    let hasErrors = false
-    const newFormErrors = { studentGrade: "", acceptTerms: "" }
-    
-    if (!formData.studentGrade) {
-      newFormErrors.studentGrade = "Selecciona el curso del estudiante"
-      hasErrors = true
+    setLoading(true)
+    setError('')
+
+    const validationError = validateForm()
+    if (validationError) {
+      setError(validationError)
+      setLoading(false)
+      return
     }
 
-    if (!formData.acceptTerms) {
-      newFormErrors.acceptTerms = "Debes aceptar los términos y condiciones"
-      hasErrors = true
-    }
-
-    setFormErrors(newFormErrors)
+    const result = await signUp(formData.email, formData.password, formData.fullName)
     
-    if (!isValid || hasErrors) return
-
-    // Preparar datos adicionales para el registro
-    const additionalData = {
-      phone: formData.phone,
-      studentName: formData.studentName,
-      studentGrade: formData.studentGrade
+    if (result.error) {
+      setError(result.error)
+      setLoading(false)
+    } else {
+      setSuccess(true)
+      setLoading(false)
     }
-
-    await signUp(formData.email, formData.password, formData.fullName, additionalData)
   }
-  return (
-    <AuthLayout 
-      title="Crear Cuenta"
-      subtitle="Regístrate para gestionar los pedidos de tu hijo/a"
-    >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Información del apoderado */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
-            Información del Apoderado
-          </h3>
-          
-        <FormInput
-            id="fullName"
-            label="Nombre completo"
-            type="text"
-            placeholder="Juan Pérez González"
-            value={formData.fullName}
-            onChange={(value) => handleInputChange("fullName", value)}
-            onBlur={() => handleInputBlur("fullName")}
-            error={errors.fullName}
-            success={!errors.fullName && formData.fullName !== ""}
-            required
-            icon={<User size={18} />}
-        />
 
-        <FormInput
-            id="email"
-            label="Correo electrónico"
-            type="email"
-            placeholder="tu@email.com"
-            value={formData.email}
-            onChange={(value) => handleInputChange("email", value)}
-            onBlur={() => handleInputBlur("email")}
-            error={errors.email}
-            success={!errors.email && formData.email !== ""}
-            required
-            icon={<Mail size={18} />}
-        />
-
-        <FormInput
-            id="password"
-            label="Contraseña"
-            type="password"
-            placeholder="Mínimo 6 caracteres"
-            value={formData.password}
-            onChange={(value) => handleInputChange("password", value)}
-            onBlur={() => handleInputBlur("password")}
-            error={errors.password}
-            required
-            icon={<Lock size={18} />}
-        />
-
-        <FormInput
-            id="phone"
-            label="Teléfono de contacto"
-            type="tel"
-            placeholder="+56 9 1234 5678 (opcional)"
-            value={formData.phone}
-            onChange={(value) => handleInputChange("phone", value)}
-            onBlur={() => handleInputBlur("phone")}
-            error={errors.phone}
-            success={!errors.phone && formData.phone !== ""}
-            icon={<Phone size={18} />}
-        />
-        </div>
-
-        {/* Información del estudiante */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
-            Información del Estudiante
-          </h3>
-          
-          <FormInput
-            id="studentName"
-            label="Nombre completo del estudiante"
-            type="text"
-            placeholder="María Pérez López"
-            value={formData.studentName}
-            onChange={(value) => handleInputChange("studentName", value)}
-            onBlur={() => handleInputBlur("studentName")}
-            error={errors.studentName}
-            success={!errors.studentName && formData.studentName !== ""}
-            required
-            icon={<GraduationCap size={18} />}
-          />
-
-          <div className="space-y-2">
-        <Label htmlFor="studentGrade" className="text-sm font-medium text-gray-700">
-          Curso del estudiante
-          <span className="text-red-500">*</span>
-        </Label>
-        <Select 
-          value={formData.studentGrade} 
-          onValueChange={(value) => handleInputChange("studentGrade", value)}
-        >
-          <SelectTrigger className={`transition-all duration-200 ${
-                formErrors.studentGrade 
-                  ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" 
-                  : formData.studentGrade 
-                    ? "border-green-500 focus:border-green-500 focus:ring-green-500/20"
-                    : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/20"
-              }`}>
-                <SelectValue placeholder="Selecciona el curso" />
-              </SelectTrigger>
-              <SelectContent>
-                {GRADES.map((grade) => (
-                  <SelectItem key={grade.value} value={grade.value}>
-                    {grade.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {formErrors.studentGrade && (
-              <p className="text-sm text-red-600 flex items-center gap-1">
-                <GraduationCap size={14} />
-                {formErrors.studentGrade}
-          </p>
-            )}
-          </div>
-        </div>
-
-        {/* Términos y condiciones */}
-        <div className="space-y-4">
-          <div className="flex items-start space-x-3">
-            <Checkbox
-              id="acceptTerms"
-              checked={formData.acceptTerms}
-              onCheckedChange={(checked) => 
-                handleInputChange("acceptTerms", checked === true)
-}
-              className={`mt-1 ${
-                formErrors.acceptTerms ? "border-red-500" : ""
-              }`}
-            />
-            <div className="space-y-1">
-              <Label 
-                htmlFor="acceptTerms" 
-                className="text-sm text-gray-700 cursor-pointer leading-relaxed"
-              >
-                Acepto los{" "}
-                <Link 
-                  href="/terminos" 
-                  className="text-blue-600 hover:text-blue-800 underline"
-                  target="_blank"
-                >
-                  términos y condiciones
-                </Link>{" "}
-                del servicio de casino escolar
-              </Label>
-              {formErrors.acceptTerms && (
-                <p className="text-sm text-red-600">
-                  {formErrors.acceptTerms}
-                </p>
-              )}
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 p-4">
+        <Card className="w-full max-w-md shadow-xl border-0">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mb-4">
+              <Mail className="w-6 h-6 text-white" />
             </div>
-          </div>
-        </div>
-
-        <SubmitButton loading={loading}>
-          Registrarme
-        </SubmitButton>
-
-        <div className="text-center">
-          <p className="text-sm text-gray-600">
-            ¿Ya tienes cuenta?{' '}
-            <Link 
-              href="/auth/login"
-              className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              ¡Registro exitoso!
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Hemos enviado un correo de verificación a {formData.email}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Por favor revisa tu correo electrónico y haz clic en el enlace de verificación para activar tu cuenta.
+              </AlertDescription>
+            </Alert>
+            <Button
+              onClick={() => router.push('/auth/login')}
+              className="w-full"
             >
-              Inicia sesión aquí
-            </Link>
-          </p>
-        </div>
-      </form>
-    </AuthLayout>
+              Ir al inicio de sesión
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="w-full max-w-md">
+        <Card className="shadow-xl border-0">
+          <CardHeader className="space-y-1 text-center">
+            <div className="mx-auto w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mb-4">
+              <UserPlus className="w-6 h-6 text-white" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              Crear cuenta
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Regístrate en el Casino Escolar
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Nombre completo</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="Tu nombre completo"
+                    value={formData.fullName}
+                    onChange={(e) => handleInputChange('fullName', e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Correo electrónico</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="tu@correo.com"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Mínimo 6 caracteres"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className="pl-10 pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirma tu contraseña"
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    className="pl-10 pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="terms"
+                  checked={acceptTerms}
+                  onCheckedChange={(checked) => setAcceptTerms(checked === true)}
+                />
+                <Label htmlFor="terms" className="text-sm text-gray-600">
+                  Acepto los{' '}
+                  <Link href="/terms" className="text-blue-600 hover:underline">
+                    términos y condiciones
+                  </Link>
+                </Label>
+              </div>
+              
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Creando cuenta...</span>
+                  </div>
+                ) : (
+                  'Crear cuenta'
+                )}
+              </Button>
+            </form>
+            
+            <div className="text-center pt-4 border-t">
+              <p className="text-sm text-gray-600">
+                ¿Ya tienes cuenta?{' '}
+                <Link
+                  href="/auth/login"
+                  className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                >
+                  Inicia sesión
+                </Link>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }

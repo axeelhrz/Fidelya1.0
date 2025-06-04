@@ -1,114 +1,145 @@
 "use client"
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { Mail, ArrowLeft } from 'lucide-react'
-import AuthLayout from '@/components/auth/AuthLayout'
-import FormInput from '@/components/auth/FormInput'
-import SubmitButton from '@/components/auth/SubmitButton'
-import { useAuth } from '@/hooks/useAuth'
-import { useFormValidation, authValidationRules } from '@/hooks/useFormValidation'
+import { ArrowLeft, Mail, Send } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { supabase } from '@/lib/supabase/client'
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("")
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const { resetPassword, loading } = useAuth()
-  const { errors, validateSingleField } = useFormValidation({
-    email: authValidationRules.email
-  })
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState('')
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLoading(true)
+    setError('')
     
-    const error = validateSingleField("email", email)
-    if (error) return
-
-    const result = await resetPassword(email)
-    if (result.success) {
-      setIsSubmitted(true)
-    }
+    if (!email) {
+      setError('Por favor ingresa tu correo electrónico')
+      setLoading(false)
+      return
     }
 
-  if (isSubmitted) {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      })
+      if (error) {
+        setError(error.message)
+      } else {
+        setSuccess(true)
+      }
+    } catch (error) {
+      setError('Error inesperado. Por favor intenta nuevamente.')
+    }
+
+    setLoading(false)
+  }
+  if (success) {
     return (
-      <AuthLayout 
-        title="Email Enviado"
-        subtitle="Revisa tu correo para continuar"
-        showIllustration={false}
-      >
-        <div className="text-center space-y-6">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-            <Mail className="w-8 h-8 text-green-600" />
-          </div>
-          
-          <div className="space-y-2">
-            <p className="text-gray-700">
-              Te hemos enviado un enlace de recuperación a:
-            </p>
-            <p className="font-semibold text-gray-900">{email}</p>
-          </div>
-
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Revisa tu bandeja de entrada y sigue las instrucciones para restablecer tu contraseña.
-            </p>
-            
-            <div className="space-y-2">
-              <Link 
-                href="/auth/login"
-                className="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 p-4">
+        <Card className="w-full max-w-md shadow-xl border-0">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mb-4">
+              <Send className="w-6 h-6 text-white" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              Correo enviado
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Hemos enviado las instrucciones a {email}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Revisa tu correo electrónico y sigue las instrucciones para restablecer tu contraseña.
+              </AlertDescription>
+            </Alert>
+            <Button asChild className="w-full">
+              <Link href="/auth/login">
                 Volver al inicio de sesión
               </Link>
-              <button
-                onClick={() => setIsSubmitted(false)}
-                className="w-full text-sm text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                ¿No recibiste el email? Intentar nuevamente
-              </button>
-        </div>
-          </div>
-        </div>
-    </AuthLayout>
-  )
-}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
-    <AuthLayout
-      title="Recuperar Contraseña"
-      subtitle="Ingresa tu email para recibir un enlace de recuperación"
-      showIllustration={false}
-    >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <FormInput
-          id="email"
-          label="Correo electrónico"
-          type="email"
-          placeholder="tu@email.com"
-          value={email}
-          onChange={(value) => {
-            setEmail(value)
-            if (value) validateSingleField("email", value)
-          }}
-          error={errors.email}
-          success={!errors.email && email !== ""}
-          required
-          icon={<Mail size={18} />}
-        />
-
-        <SubmitButton loading={loading}>
-          Enviar enlace de recuperación
-        </SubmitButton>
-
-        <div className="text-center">
-          <Link 
-            href="/auth/login"
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Volver al inicio de sesión
-          </Link>
-        </div>
-      </form>
-    </AuthLayout>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="w-full max-w-md">
+        <Card className="shadow-xl border-0">
+          <CardHeader className="space-y-1 text-center">
+            <div className="mx-auto w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mb-4">
+              <Mail className="w-6 h-6 text-white" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              ¿Olvidaste tu contraseña?
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Ingresa tu correo y te enviaremos instrucciones para restablecerla
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Correo electrónico</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="tu@correo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Enviando...</span>
+                  </div>
+                ) : (
+                  'Enviar instrucciones'
+                )}
+              </Button>
+            </form>
+            
+            <div className="text-center pt-4 border-t">
+              <Link
+                href="/auth/login"
+                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Volver al inicio de sesión
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }

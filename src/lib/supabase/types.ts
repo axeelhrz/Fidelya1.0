@@ -1,5 +1,13 @@
 // Database type definitions for the casino pedidos system
-export type Database = {
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export interface Database {
   public: {
     Tables: {
       guardians: {
@@ -8,7 +16,7 @@ export type Database = {
           user_id: string
           full_name: string
           email: string
-          phone: string
+          phone: string | null
           is_staff: boolean
           created_at: string
           updated_at: string
@@ -18,7 +26,7 @@ export type Database = {
           user_id: string
           full_name: string
           email: string
-          phone: string
+          phone?: string | null
           is_staff?: boolean
           created_at?: string
           updated_at?: string
@@ -28,7 +36,7 @@ export type Database = {
           user_id?: string
           full_name?: string
           email?: string
-          phone?: string
+          phone?: string | null
           is_staff?: boolean
           created_at?: string
           updated_at?: string
@@ -42,6 +50,8 @@ export type Database = {
           grade: string
           section: string
           level: string
+          dietary_restrictions: string | null
+          allergies: string | null
           created_at: string
           updated_at: string
         }
@@ -52,6 +62,8 @@ export type Database = {
           grade: string
           section: string
           level: string
+          dietary_restrictions?: string | null
+          allergies?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -62,6 +74,8 @@ export type Database = {
           grade?: string
           section?: string
           level?: string
+          dietary_restrictions?: string | null
+          allergies?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -69,33 +83,39 @@ export type Database = {
       almuerzos: {
         Row: {
           id: string
+          codigo: string
+          descripcion: string
+          dia: string
           fecha: string
-          opcion_1: string
-          opcion_2: string
-          opcion_3?: string
-          precio: number
+          precio_estudiante: number
+          precio_funcionario: number
+          tipo_dia: string
           disponible: boolean
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
+          codigo: string
+          descripcion: string
+          dia: string
           fecha: string
-          opcion_1: string
-          opcion_2: string
-          opcion_3?: string
-          precio: number
+          precio_estudiante: number
+          precio_funcionario: number
+          tipo_dia?: string
           disponible?: boolean
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
+          codigo?: string
+          descripcion?: string
+          dia?: string
           fecha?: string
-          opcion_1?: string
-          opcion_2?: string
-          opcion_3?: string
-          precio?: number
+          precio_estudiante?: number
+          precio_funcionario?: number
+          tipo_dia?: string
           disponible?: boolean
           created_at?: string
           updated_at?: string
@@ -104,30 +124,39 @@ export type Database = {
       colaciones: {
         Row: {
           id: string
+          codigo: string
+          descripcion: string
+          dia: string
           fecha: string
-          opcion_1: string
-          opcion_2: string
-          precio: number
+          precio_estudiante: number
+          precio_funcionario: number
+          tipo_dia: string
           disponible: boolean
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
+          codigo: string
+          descripcion: string
+          dia: string
           fecha: string
-          opcion_1: string
-          opcion_2: string
-          precio: number
+          precio_estudiante: number
+          precio_funcionario: number
+          tipo_dia?: string
           disponible?: boolean
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
+          codigo?: string
+          descripcion?: string
+          dia?: string
           fecha?: string
-          opcion_1?: string
-          opcion_2?: string
-          precio?: number
+          precio_estudiante?: number
+          precio_funcionario?: number
+          tipo_dia?: string
           disponible?: boolean
           created_at?: string
           updated_at?: string
@@ -138,12 +167,13 @@ export type Database = {
           id: string
           guardian_id: string
           student_id: string
+          almuerzo_id: string | null
+          colacion_id: string | null
           fecha_entrega: string
-          tipo_pedido: 'ALMUERZO' | 'COLACION'
-          opcion_elegida: string
-          precio: number
+          dia_entrega: string
+          total_amount: number
           estado_pago: 'PENDIENTE' | 'PAGADO' | 'CANCELADO'
-          transaction_id?: string
+          transaction_id: string | null
           created_at: string
           updated_at: string
         }
@@ -151,12 +181,13 @@ export type Database = {
           id?: string
           guardian_id: string
           student_id: string
+          almuerzo_id?: string | null
+          colacion_id?: string | null
           fecha_entrega: string
-          tipo_pedido: 'ALMUERZO' | 'COLACION'
-          opcion_elegida: string
-          precio: number
+          dia_entrega: string
+          total_amount: number
           estado_pago?: 'PENDIENTE' | 'PAGADO' | 'CANCELADO'
-          transaction_id?: string
+          transaction_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -164,12 +195,77 @@ export type Database = {
           id?: string
           guardian_id?: string
           student_id?: string
+          almuerzo_id?: string | null
+          colacion_id?: string | null
           fecha_entrega?: string
-          tipo_pedido?: 'ALMUERZO' | 'COLACION'
-          opcion_elegida?: string
-          precio?: number
+          dia_entrega?: string
+          total_amount?: number
           estado_pago?: 'PENDIENTE' | 'PAGADO' | 'CANCELADO'
+          transaction_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      payments: {
+        Row: {
+          id: string
+          order_id: string
+          transaction_id: string
+          amount: number
+          status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+          payment_method: string | null
+          gateway_response: Json | null
+          processed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          transaction_id: string
+          amount: number
+          status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+          payment_method?: string | null
+          gateway_response?: Json | null
+          processed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
           transaction_id?: string
+          amount?: number
+          status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+          payment_method?: string | null
+          gateway_response?: Json | null
+          processed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      settings: {
+        Row: {
+          id: string
+          key: string
+          value: string
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          value: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          value?: string
+          description?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -184,47 +280,26 @@ export type Database = {
     Enums: {
       [_ in never]: never
     }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 
-// Convenience type aliases
-export type Student = Database['public']['Tables']['students']['Row']
-export type StudentInsert = Database['public']['Tables']['students']['Insert']
-export type StudentUpdate = Database['public']['Tables']['students']['Update']
+// Tipos de conveniencia
 export type Guardian = Database['public']['Tables']['guardians']['Row']
+export type Student = Database['public']['Tables']['students']['Row']
+export type Almuerzo = Database['public']['Tables']['almuerzos']['Row']
+export type Colacion = Database['public']['Tables']['colaciones']['Row']
+export type Pedido = Database['public']['Tables']['pedidos']['Row']
+export type Payment = Database['public']['Tables']['payments']['Row']
+export type Setting = Database['public']['Tables']['settings']['Row']
 export type GuardianInsert = Database['public']['Tables']['guardians']['Insert']
+export type StudentInsert = Database['public']['Tables']['students']['Insert']
+export type PedidoInsert = Database['public']['Tables']['pedidos']['Insert']
+export type PaymentInsert = Database['public']['Tables']['payments']['Insert']
+
 export type GuardianUpdate = Database['public']['Tables']['guardians']['Update']
-
-// Product types (representing menu items)
-export type Product = Database['public']['Tables']['almuerzos']['Row'] | Database['public']['Tables']['colaciones']['Row']
-export type AlmuerzoMenu = Database['public']['Tables']['almuerzos']['Row']
-export type ColacionMenu = Database['public']['Tables']['colaciones']['Row']
-
-// Order types
-export type Order = Database['public']['Tables']['pedidos']['Row']
-export type OrderInsert = Database['public']['Tables']['pedidos']['Insert']
-export type OrderUpdate = Database['public']['Tables']['pedidos']['Update']
-
-// For compatibility with your import
-export type OrderItemInsert = OrderInsert
-
-// Additional utility types
-export type OrderStatus = 'PENDIENTE' | 'PAGADO' | 'CANCELADO'
-export type OrderType = 'ALMUERZO' | 'COLACION'
-
-export type Grade = 
-  | 'PRE_KINDER'
-  | 'KINDER'
-  | 'PRIMERO_BASICO'
-  | 'SEGUNDO_BASICO'
-  | 'TERCERO_BASICO'
-  | 'CUARTO_BASICO'
-  | 'QUINTO_BASICO'
-  | 'SEXTO_BASICO'
-  | 'SEPTIMO_BASICO'
-  | 'OCTAVO_BASICO'
-  | 'PRIMERO_MEDIO'
-  | 'SEGUNDO_MEDIO'
-  | 'TERCERO_MEDIO'
-  | 'CUARTO_MEDIO'
-export type Level = 'PREESCOLAR' | 'BASICA' | 'MEDIA'
+export type StudentUpdate = Database['public']['Tables']['students']['Update']
+export type PedidoUpdate = Database['public']['Tables']['pedidos']['Update']
+export type PaymentUpdate = Database['public']['Tables']['payments']['Update']
