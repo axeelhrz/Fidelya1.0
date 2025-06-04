@@ -4,29 +4,13 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { 
-  Box, 
-  Card, 
-  CardContent, 
-  TextField, 
-  Button, 
-  Typography, 
-  Container,
-  InputAdornment,
-  IconButton,
-  Fade,
-  Backdrop,
-  CircularProgress
-} from "@mui/material"
-import { 
-  Email as EmailIcon, 
-  Lock as LockIcon, 
-  Visibility, 
-  VisibilityOff,
-  Login as LoginIcon
-} from "@mui/icons-material"
 import { supabase } from "@/lib/supabase/client"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Eye, EyeOff, Mail, Lock, LogIn, Loader2 } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -90,6 +74,17 @@ export default function LoginPage() {
     }
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.1
+      }
+    }
+  }
+
   const cardVariants = {
     hidden: { 
       opacity: 0, 
@@ -107,18 +102,6 @@ export default function LoginPage() {
     }
   }
 
-  const formVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        delay: 0.3,
-        duration: 0.5,
-        staggerChildren: 0.1
-      }
-    }
-  }
-
   const itemVariants = {
     hidden: { opacity: 0, x: -20 },
     visible: { 
@@ -128,320 +111,179 @@ export default function LoginPage() {
     }
   }
 
+  const logoVariants = {
+    hidden: { opacity: 0, scale: 0.5 },
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      transition: { 
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    }
+  }
+
   return (
-    <>
-      <Box
-        sx={{
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 2,
-          position: 'relative',
-          overflow: 'hidden',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
-            pointerEvents: 'none'
-          }
-        }}
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(120,119,198,0.3)_0%,transparent_50%),radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.1)_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%2523ffffff%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] animate-pulse" />
+      </div>
+
+      <motion.div
+        className="relative z-10 w-full max-w-md"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
       >
-        <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
-          <motion.div
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <Card
-              elevation={24}
-              sx={{
-                borderRadius: 4,
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                overflow: 'hidden',
-                position: 'relative',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '4px',
-                  background: 'linear-gradient(90deg, #667eea, #764ba2, #667eea)',
-                  backgroundSize: '200% 100%',
-                  animation: 'shimmer 3s ease-in-out infinite',
-                },
-                '@keyframes shimmer': {
-                  '0%': { backgroundPosition: '-200% 0' },
-                  '100%': { backgroundPosition: '200% 0' }
-                }
-              }}
-            >
-              <CardContent sx={{ p: 6 }}>
-                {/* Logo/Brand Section */}
+        <motion.div variants={cardVariants}>
+          <Card className="backdrop-blur-xl bg-white/95 border-white/20 shadow-2xl">
+            <CardHeader className="space-y-6 pb-8">
+              {/* Logo Section */}
+              <motion.div 
+                className="flex justify-center"
+                variants={logoVariants}
+              >
                 <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
+                  className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg"
+                  animate={{ 
+                    rotate: [0, 5, -5, 0],
+                    scale: [1, 1.05, 1]
+                  }}
+                  transition={{ 
+                    duration: 3,
+                    repeat: Infinity,
+                    repeatType: "reverse"
+                  }}
                 >
-                  <Box textAlign="center" mb={4}>
-                    <motion.div
-                      animate={{ 
-                        rotate: [0, 5, -5, 0],
-                        scale: [1, 1.05, 1]
-                      }}
-                      transition={{ 
-                        duration: 2,
-                        repeat: Infinity,
-                        repeatType: "reverse"
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          margin: '0 auto 24px',
-                          boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
-                        }}
-                      >
-                        <LoginIcon sx={{ fontSize: 40, color: 'white' }} />
-                      </Box>
-                    </motion.div>
-                    
-                    <Typography
-                      variant="h4"
-                      component="h1"
-                      sx={{
-                        fontWeight: 700,
-                        background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        mb: 1,
-                        fontFamily: '"Inter", sans-serif'
-                      }}
-                    >
-                      Bienvenido
-                    </Typography>
-                    
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: 'text.secondary',
-                        fontWeight: 500,
-                        fontFamily: '"Inter", sans-serif'
-                      }}
-                    >
-                      Sistema Casino Escolar
-                    </Typography>
-                  </Box>
+                  <LogIn className="w-10 h-10 text-white" />
+                </motion.div>
+              </motion.div>
+
+              {/* Title Section */}
+              <div className="text-center space-y-2">
+                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Bienvenido
+                </CardTitle>
+                <CardDescription className="text-lg font-medium text-gray-600">
+                  Sistema Casino Escolar
+                </CardDescription>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-6">
+              <motion.form 
+                onSubmit={handleSubmit} 
+                className="space-y-6"
+                variants={containerVariants}
+              >
+                {/* Email Field */}
+                <motion.div variants={itemVariants} className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-semibold text-gray-700">
+                    Correo Electrónico
+                  </Label>
+                  <div className="relative group">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-blue-600" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange('email')}
+                      placeholder="nombre@ejemplo.com"
+                      className="pl-10 h-12 border-2 border-gray-200 rounded-xl transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 hover:border-gray-300 hover:shadow-md"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
                 </motion.div>
 
-                {/* Form Section */}
-                <motion.form
-                  onSubmit={handleSubmit}
-                  variants={formVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <motion.div variants={itemVariants}>
-                      <TextField
-                        fullWidth
-                        label="Correo Electrónico"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange('email')}
-                        required
-                        disabled={loading}
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <EmailIcon sx={{ color: 'action.active' }} />
-                            </InputAdornment>
-                          ),
-                        }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 4px 20px rgba(102, 126, 234, 0.15)'
-                            },
-                            '&.Mui-focused': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 4px 20px rgba(102, 126, 234, 0.25)'
-                            }
-                          }
-                        }}
-                      />
-                    </motion.div>
+                {/* Password Field */}
+                <motion.div variants={itemVariants} className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-semibold text-gray-700">
+                    Contraseña
+                  </Label>
+                  <div className="relative group">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-blue-600" />
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={handleInputChange('password')}
+                      placeholder="••••••••"
+                      className="pl-10 pr-12 h-12 border-2 border-gray-200 rounded-xl transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 hover:border-gray-300 hover:shadow-md"
+                      required
+                      disabled={loading}
+                    />
+                    <button
+                      type="button"
+                      onClick={togglePasswordVisibility}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      disabled={loading}
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </motion.div>
 
-                    <motion.div variants={itemVariants}>
-                      <TextField
-                        fullWidth
-                        label="Contraseña"
-                        type={showPassword ? 'text' : 'password'}
-                        value={formData.password}
-                        onChange={handleInputChange('password')}
-                        required
-                        disabled={loading}
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <LockIcon sx={{ color: 'action.active' }} />
-                            </InputAdornment>
-                          ),
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={togglePasswordVisibility}
-                                edge="end"
-                                disabled={loading}
-                              >
-                                {showPassword ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 4px 20px rgba(102, 126, 234, 0.15)'
-                            },
-                            '&.Mui-focused': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 4px 20px rgba(102, 126, 234, 0.25)'
-                            }
-                          }
-                        }}
-                      />
-                    </motion.div>
+                {/* Submit Button */}
+                <motion.div variants={itemVariants}>
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <div className="flex items-center space-x-2">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Iniciando sesión...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <LogIn className="w-5 h-5" />
+                        <span>Iniciar Sesión</span>
+                      </div>
+                    )}
+                  </Button>
+                </motion.div>
 
-                    <motion.div variants={itemVariants}>
-                      <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        disabled={loading}
-                        sx={{
-                          py: 1.5,
-                          borderRadius: 2,
-                          background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                          fontWeight: 600,
-                          fontSize: '1rem',
-                          textTransform: 'none',
-                          fontFamily: '"Inter", sans-serif',
-                          position: 'relative',
-                          overflow: 'hidden',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'translateY(-2px)',
-                            boxShadow: '0 8px 32px rgba(102, 126, 234, 0.4)',
-                            background: 'linear-gradient(135deg, #5a67d8, #6b46c1)',
-                          },
-                          '&:disabled': {
-                            background: 'linear-gradient(135deg, #a0aec0, #718096)',
-                            transform: 'none',
-                            boxShadow: 'none'
-                          },
-                          '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: '-100%',
-                            width: '100%',
-                            height: '100%',
-                            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-                            transition: 'left 0.5s',
-                          },
-                          '&:hover::before': {
-                            left: '100%',
-                          }
-                        }}
-                      >
-                        {loading ? (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CircularProgress size={20} sx={{ color: 'white' }} />
-                            Iniciando sesión...
-                          </Box>
-                        ) : (
-                          'Iniciar Sesión'
-                        )}
-                      </Button>
-                    </motion.div>
+                {/* Register Link */}
+                <motion.div variants={itemVariants} className="text-center">
+                  <p className="text-sm text-gray-600">
+                    ¿No tienes una cuenta?{" "}
+                    <Link
+                      href="/auth/registro"
+                      className="font-semibold text-blue-600 hover:text-purple-600 transition-colors duration-300 hover:underline"
+                    >
+                      Regístrate aquí
+                    </Link>
+                  </p>
+                </motion.div>
+              </motion.form>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
 
-                    <motion.div variants={itemVariants}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          textAlign: 'center',
-                          color: 'text.secondary',
-                          fontFamily: '"Inter", sans-serif'
-                        }}
-                      >
-                        ¿No tienes una cuenta?{' '}
-                        <Link
-                          href="/auth/registro"
-                          style={{
-                            color: '#667eea',
-                            textDecoration: 'none',
-                            fontWeight: 600,
-                            transition: 'all 0.3s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.color = '#764ba2'
-                            e.currentTarget.style.textDecoration = 'underline'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = '#667eea'
-                            e.currentTarget.style.textDecoration = 'none'
-                          }}
-                        >
-                          Regístrate aquí
-                        </Link>
-                      </Typography>
-                    </motion.div>
-                  </Box>
-                </motion.form>
-              </CardContent>
-            </Card>
+      {/* Loading Overlay */}
+      {loading && (
+        <motion.div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="bg-white rounded-2xl p-8 flex flex-col items-center space-y-4 shadow-2xl"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+            <p className="text-lg font-semibold text-gray-700">Verificando credenciales...</p>
           </motion.div>
-        </Container>
-      </Box>
-
-      {/* Loading Backdrop */}
-      <Backdrop
-        sx={{ 
-          color: '#fff', 
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          backdropFilter: 'blur(10px)'
-        }}
-        open={loading}
-      >
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <CircularProgress color="inherit" size={60} />
-          <Typography variant="h6" sx={{ fontFamily: '"Inter", sans-serif' }}>
-            Verificando credenciales...
-          </Typography>
-        </Box>
-      </Backdrop>
-    </>
+        </motion.div>
+      )}
+    </div>
   )
 }

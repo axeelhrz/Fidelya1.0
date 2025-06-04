@@ -2,11 +2,11 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import "@/styles/responsive-fixes.css"
+import "@/styles/login-animations.css"
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider"
 import { UserProvider } from "@/context/UserContext"
 import { Navbar } from "@/components/navbar"
-import { MuiThemeProvider } from "@/components/mui-theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -33,24 +33,22 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <MuiThemeProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem={false}
-            disableTransitionOnChange
-          >
-            <UserProvider>
-              <div className="min-h-screen bg-background">
-                <Navbar />
-                <main className="container mx-auto px-4 py-8">
-                  {children}
-                </main>
-              </div>
-              <Toaster />
-            </UserProvider>
-          </ThemeProvider>
-        </MuiThemeProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          <UserProvider>
+            <div className="min-h-screen bg-background">
+              <Navbar />
+              <main className="container mx-auto px-4 py-8">
+                {children}
+              </main>
+            </div>
+            <Toaster />
+          </UserProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
