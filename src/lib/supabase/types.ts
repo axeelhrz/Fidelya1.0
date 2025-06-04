@@ -9,123 +9,135 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      almuerzos: {
+      clientes: {
         Row: {
-          id: number
-          fecha: string
-          dia: string
-          codigo: string
-          descripcion: string
-          precio_estudiante: number
-          precio_funcionario: number
-          tipo_dia: string
+          id: string
+          correo_apoderado: string
+          nombre_apoderado: string
+          hijos: Json
+          created_at?: string
+          updated_at?: string
         }
         Insert: {
-          id?: number
+          id?: string
+          correo_apoderado: string
+          nombre_apoderado: string
+          hijos: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          correo_apoderado?: string
+          nombre_apoderado?: string
+          hijos?: Json
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      almuerzos: {
+        Row: {
+          id: string
+          descripcion: string
           fecha: string
           dia: string
           codigo: string
-          descripcion: string
           precio_estudiante: number
           precio_funcionario: number
           tipo_dia: string
+          created_at?: string
+        }
+        Insert: {
+          id?: string
+          descripcion: string
+          fecha: string
+          dia: string
+          codigo: string
+          precio_estudiante: number
+          precio_funcionario: number
+          tipo_dia: string
+          created_at?: string
         }
         Update: {
-          id?: number
+          id?: string
+          descripcion?: string
           fecha?: string
           dia?: string
           codigo?: string
-          descripcion?: string
           precio_estudiante?: number
           precio_funcionario?: number
           tipo_dia?: string
-        }
-      }
-      clientes: {
-        Row: {
-          id: number
-          uuid: string
-          tipo_usuario: string
-          nombre_apoderado: string
-          correo_apoderado: string
-          telefono_apoderado: string
-          hijos: Json
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: number
-          uuid: string
-          tipo_usuario: string
-          nombre_apoderado: string
-          correo_apoderado: string
-          telefono_apoderado?: string
-          hijos?: Json
           created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: number
-          uuid?: string
-          tipo_usuario?: string
-          nombre_apoderado?: string
-          correo_apoderado?: string
-          telefono_apoderado?: string
-          hijos?: Json
-          created_at?: string
-          updated_at?: string
         }
       }
       colaciones: {
         Row: {
-          id: number
+          id: string
           codigo: string
           descripcion: string
           precio: number
+          created_at?: string
         }
         Insert: {
-          id?: number
+          id?: string
           codigo: string
           descripcion: string
           precio: number
+          created_at?: string
         }
         Update: {
-          id?: number
+          id?: string
           codigo?: string
           descripcion?: string
           precio?: number
+          created_at?: string
         }
       }
       pedidos: {
         Row: {
-          id: number
-          id_cliente: number
+          id: string
+          cliente_id: string
           nombre_estudiante: string
-          fecha_creacion: string
-          dia_entrega: string
+          curso: string
+          letra: string
+          nivel: string
+          tipo_pedido: string
           opcion_elegida: string
-          tipo_pedido: 'almuerzo' | 'colacion'
-          estado: string
+          dia_entrega: string
+          estado_pago: string
+          transaction_id?: string
+          created_at?: string
+          updated_at?: string
         }
         Insert: {
-          id?: number
-          id_cliente: number
+          id?: string
+          cliente_id: string
           nombre_estudiante: string
-          fecha_creacion: string
-          dia_entrega: string
+          curso: string
+          letra: string
+          nivel: string
+          tipo_pedido: string
           opcion_elegida: string
-          tipo_pedido: 'almuerzo' | 'colacion'
-          estado: string
+          dia_entrega: string
+          estado_pago: string
+          transaction_id?: string
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          id?: number
-          id_cliente?: number
+          id?: string
+          cliente_id?: string
           nombre_estudiante?: string
-          fecha_creacion?: string
-          dia_entrega?: string
+          curso?: string
+          letra?: string
+          nivel?: string
+          tipo_pedido?: string
           opcion_elegida?: string
-          tipo_pedido?: 'almuerzo' | 'colacion'
-          estado?: string
+          dia_entrega?: string
+          estado_pago?: string
+          transaction_id?: string
+          created_at?: string
+          updated_at?: string
         }
       }
     }
@@ -136,6 +148,9 @@ export interface Database {
       [_ in never]: never
     }
     Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
       [_ in never]: never
     }
   }
