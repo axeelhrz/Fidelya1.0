@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
+
 export interface UserProfile {
   id: string
   user_id: string
@@ -21,56 +22,135 @@ export interface StudentProfile {
   created_at: string
   updated_at: string
 }
+
+/**
+ * Servicio de autenticación principal
+ */
+export class AuthService {
+  /**
+   * Obtener usuario actual y su perfil de guardian
+   */
+  static async getCurrentUser() {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        return { user: null, guardian: null }
+      }
+
+      // Buscar el perfil de guardian asociado
+      const { data: guardian, error: guardianError } = await supabase
+      .from('guardians')
+        .select('*')
+        .eq('user_id', user.id)
+      .single()
+
+    if (guardianError) {
+        console.error('Error fetching guardian profile:', guardianError)
+        return { user, guardian: null }
+}
+
+      return { user, guardian }
+  } catch (error) {
+      console.error('Error in getCurrentUser:', error)
+      return { user: null, guardian: null }
+  }
+}
+
+/**
+   * Iniciar sesión
+ */
+  static async signIn(email: string, password: string) {
+  try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+    
+    if (error) {
+      throw error
+    }
+
+      return { user: data.user, session: data.session, error: null }
+  } catch (error) {
+      console.error('Error signing in:', error)
+      return { user: null, session: null, error }
+  }
+}
+
+/**
+   * Registrar nuevo usuario
+ */
+  static async signUp(email: string, password: string, fullName: string) {
+  try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName
+    }
+        }
+      })
+
+      if (error) {
+        throw error
+  }
+
+      return { user: data.user, session: data.session, error: null }
+    } catch (error) {
+      console.error('Error signing up:', error)
+      return { user: null, session: null, error }
+}
+  }
+
+/**
+   * Cerrar sesión
+ */
+  static async signOut() {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        throw error
+      }
+      return { error: null }
+    } catch (error) {
+      console.error('Error signing out:', error)
+      return { error }
+    }
+  }
+}
 /**
  * Crear perfil de usuario después del registro
  */
-export async function createUserProfile(user: User, userData: any) {
+export async function createUserProfile(user: User, additionalData: Partial<UserProfile> = {}) {
   try {
-    // Crear perfil del guardian
-    const { data: guardian, error: guardianError } = await supabase
-        .from('guardians')
-      .insert({
-        user_id: user.id,
-        full_name: userData.fullName,
-        email: user.email!,
-        phone: userData.phone || null,
-        is_staff: false
-      })
+    const profileData = {
+      user_id: user.id,
+      full_name: user.user_metadata?.full_name || additionalData.full_name || '',
+      email: user.email || '',
+      phone: additionalData.phone || '',
+      is_staff: additionalData.is_staff || false,
+      ...additionalData
+}
+
+    const { data, error } = await supabase
+      .from('guardians')
+      .insert([profileData])
       .select()
-        .single()
+      .single()
 
-      if (guardianError) {
-      console.error('Error creating guardian profile:', guardianError)
-      throw guardianError
-      }
-
-    // Crear perfil del estudiante
-    const selectedGrade = userData.studentGrade
-    const gradeInfo = getGradeInfo(selectedGrade)
-    
-    const { data: student, error: studentError } = await supabase
-      .from('students')
-      .insert({
-        guardian_id: guardian.id,
-        name: userData.studentName,
-        grade: selectedGrade,
-        section: 'A', // Por defecto, se puede cambiar después
-        level: gradeInfo.level
-      })
-      .select()
-        .single()
-
-    if (studentError) {
-      console.error('Error creating student profile:', studentError)
-      throw studentError
+    if (error) {
+      console.error('Error creating user profile:', error)
+      throw error
     }
 
-    return { guardian, student }
-    } catch (error) {
+    return data
+  } catch (error) {
     console.error('Error in createUserProfile:', error)
     throw error
-    }
   }
+}
 
 /**
  * Obtener perfil completo del usuario
@@ -89,7 +169,7 @@ export async function getUserProfile(userId: string) {
     if (guardianError) {
       console.error('Error fetching user profile:', guardianError)
       throw guardianError
-}
+    }
 
     return guardian
   } catch (error) {
@@ -97,7 +177,6 @@ export async function getUserProfile(userId: string) {
     throw error
   }
 }
-
 /**
  * Verificar si el usuario tiene email confirmado
  */
@@ -107,7 +186,7 @@ export async function checkEmailConfirmation(userId: string) {
     
     if (error) {
       throw error
-    }
+}
 
     return {
       isConfirmed: !!user?.email_confirmed_at,
@@ -193,13 +272,12 @@ export function validatePasswordStrength(password: string) {
   let strength = 'weak'
   if (score >= 4) strength = 'strong'
   else if (score >= 3) strength = 'medium'
-
   return {
     score,
     strength,
     checks,
     isValid: checks.minLength && checks.hasLowercase && checks.hasUppercase && checks.hasNumber
-  }
+}
 }
 
 /**

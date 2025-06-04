@@ -3,8 +3,31 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { User } from '@supabase/supabase-js'
 import { supabase } from "@/lib/supabase/client"
-import { Guardian, Student } from "@/lib/supabase/types"
 import { AuthService } from "@/lib/auth/authHelpers"
+
+// Definir tipos localmente para evitar problemas de importación
+export interface Guardian {
+  id: string
+  user_id: string
+  full_name: string
+  email: string
+  phone?: string
+  is_staff: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Student {
+  id: string
+  guardian_id: string
+  name: string
+  grade: string
+  section: string
+  level: string
+  created_at: string
+  updated_at: string
+  is_active?: boolean
+}
 
 export interface UserContextType {
   user: User | null
@@ -60,6 +83,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       console.error('Error refreshing students:', error)
     }
   }
+
   useEffect(() => {
     // Obtener sesión inicial
     const getInitialSession = async () => {
