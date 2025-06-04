@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { config } from '../config/config';
+import config from '../config/config';
 
 class CierreCajaService {
   constructor() {
@@ -11,26 +11,26 @@ class CierreCajaService {
   // Configurar interceptores de axios
   setupInterceptors() {
     axios.interceptors.request.use(
-  (config) => {
+      (requestConfig) => {
         const token = localStorage.getItem(config.JWT_STORAGE_KEY || 'token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
+        if (token) {
+          requestConfig.headers.Authorization = `Bearer ${token}`;
+        }
+        return requestConfig;
+      },
       (error) => Promise.reject(error)
-);
+    );
 
     axios.interceptors.response.use(
       (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+      (error) => {
+        if (error.response?.status === 401) {
           localStorage.removeItem(config.JWT_STORAGE_KEY || 'token');
           window.location.href = '/login';
-      }
+        }
         return Promise.reject(error);
-    }
-);
+      }
+    );
   }
 
   // Gestión de caché
@@ -70,7 +70,7 @@ class CierreCajaService {
     const cacheKey = this.getCacheKey('resumen_ventas_hoy');
     const cached = this.getCache(cacheKey);
     if (cached) return cached;
-  try {
+    try {
       const response = await axios.get(`${this.baseURL}/resumen-ventas-hoy`);
       const data = {
         resumen_ventas: {
@@ -87,17 +87,17 @@ class CierreCajaService {
         },
         cierre_existente: response.data.cierre_existente || null,
         puede_cerrar: response.data.puede_cerrar || false
-};
+      };
 
       this.setCache(cacheKey, data);
       return data;
-  } catch (error) {
+    } catch (error) {
       console.error('Error obteniendo resumen de ventas:', error);
       throw new Error(
         error.response?.data?.message || 
         'Error al obtener el resumen de ventas del día'
       );
-  }
+    }
   }
 
   // Registrar cierre de caja
@@ -125,7 +125,7 @@ class CierreCajaService {
       return {
         cierre: response.data.cierre,
         mensaje: response.data.mensaje || 'Cierre registrado exitosamente'
-};
+      };
     } catch (error) {
       console.error('Error registrando cierre:', error);
       throw new Error(
@@ -205,7 +205,7 @@ class CierreCajaService {
         diferencia_promedio: response.data.diferencia_promedio || 0,
         tiempo_promedio_conteo: response.data.tiempo_promedio_conteo || 0,
         tendencia_precision: response.data.tendencia_precision || []
-};
+      };
 
       this.setCache(cacheKey, metricas);
       return metricas;
@@ -470,8 +470,8 @@ class CierreCajaService {
   }
 
   obtenerConfiguracionExportacion() {
-    const config = localStorage.getItem('cierre_caja_export_config');
-    return config ? JSON.parse(config) : {
+    const configData = localStorage.getItem('cierre_caja_export_config');
+    return configData ? JSON.parse(configData) : {
       plantilla: 'completa',
       incluirGraficos: true,
       incluirFirmaDigital: true,
