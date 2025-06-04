@@ -15,8 +15,7 @@ import {
   EyeOff,
   Loader2,
   ArrowRight,
-  Utensils,
-  School
+  Utensils
 } from 'lucide-react';
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
@@ -28,24 +27,20 @@ const registerSchema = z.object({
     .string()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
     .max(100, 'El nombre no puede exceder 100 caracteres')
-    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'Solo se permiten letras y espacios'),
+    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'Solo se permiten letras y espacios')
+    .trim(),
   
   email: z
     .string()
     .email('Ingresa un email válido')
     .min(1, 'El email es requerido')
-    .toLowerCase(),
+    .toLowerCase()
+    .trim(),
   
   password: z
     .string()
-    .min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  
-  confirmPassword: z
-    .string()
-    .min(1, 'Confirma tu contraseña')
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Las contraseñas no coinciden",
-  path: ["confirmPassword"],
+    .min(6, 'La contraseña debe tener al menos 6 caracteres')
+    .max(100, 'La contraseña no puede exceder 100 caracteres')
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -54,7 +49,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -117,9 +111,21 @@ export default function RegisterPage() {
           router.push('/auth/check-email');
         }, 2500);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setSubmitStatus('error');
-      setErrorMessage(error.message || 'Ocurrió un error inesperado');
+      
+      // Personalizar mensajes de error
+      const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error inesperado';
+      
+      if (errorMessage.includes('User already registered')) {
+        setErrorMessage('Este email ya está registrado');
+      } else if (errorMessage.includes('Invalid email')) {
+        setErrorMessage('El formato del email no es válido');
+      } else if (errorMessage.includes('Password should be at least 6 characters')) {
+        setErrorMessage('La contraseña debe tener al menos 6 caracteres');
+      } else {
+        setErrorMessage(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -152,16 +158,16 @@ export default function RegisterPage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="inline-flex items-center justify-center w-20 h-20 casino-gradient rounded-3xl mb-6 shadow-xl"
+            className="inline-flex items-center justify-center w-16 h-16 casino-gradient rounded-2xl mb-6 shadow-lg"
           >
-            <Utensils className="w-10 h-10 text-white" />
+            <Utensils className="w-8 h-8 text-white" />
           </motion.div>
           
           <motion.h1
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="font-heading text-4xl font-bold text-gray-900 dark:text-white mb-3"
+            className="font-heading text-3xl font-bold text-gray-900 dark:text-white mb-2"
           >
             Casino Escolar
           </motion.h1>
@@ -170,18 +176,9 @@ export default function RegisterPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-lg text-gray-600 dark:text-gray-300 mb-2"
+            className="text-gray-600 dark:text-gray-300"
           >
-            Crear Nueva Cuenta
-          </motion.p>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-sm text-gray-500 dark:text-gray-400"
-          >
-            Gestiona los pedidos de comida de forma fácil y segura
+            Crear nueva cuenta
           </motion.p>
         </div>
 
@@ -192,18 +189,18 @@ export default function RegisterPage() {
           transition={{ delay: 0.3 }}
           className="modern-card p-8"
         >
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Campo Nombre Completo */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Nombre Completo *
+                Nombre completo
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   {...register('nombreCompleto')}
                   type="text"
-                  placeholder="Ej: Juan Carlos Pérez"
+                  placeholder="Juan Carlos Pérez"
                   className={`input-field pl-11 ${
                     getFieldStatus('nombreCompleto') === 'error' ? 'input-error' : 
                     getFieldStatus('nombreCompleto') === 'success' ? 'input-success' : ''
@@ -231,7 +228,7 @@ export default function RegisterPage() {
             {/* Campo Email */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Correo Electrónico *
+                Correo electrónico
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -248,9 +245,6 @@ export default function RegisterPage() {
                   <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-success" />
                 )}
               </div>
-              <p className="text-xs text-gray-500">
-                Usaremos este email para notificaciones y acceso al sistema
-              </p>
               <AnimatePresence>
                 {errors.email && (
                   <motion.p
@@ -269,7 +263,7 @@ export default function RegisterPage() {
             {/* Campo Contraseña */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Contraseña *
+                Contraseña
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -305,45 +299,6 @@ export default function RegisterPage() {
               </AnimatePresence>
             </div>
 
-            {/* Campo Confirmar Contraseña */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Confirmar Contraseña *
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  {...register('confirmPassword')}
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Repite tu contraseña"
-                  className={`input-field pl-11 pr-11 ${
-                    getFieldStatus('confirmPassword') === 'error' ? 'input-error' : 
-                    getFieldStatus('confirmPassword') === 'success' ? 'input-success' : ''
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-              <AnimatePresence>
-                {errors.confirmPassword && (
-                  <motion.p
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="text-sm text-destructive flex items-center gap-1"
-                  >
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.confirmPassword.message}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            </div>
-
             {/* Mensaje de Error Global */}
             <AnimatePresence>
               {submitStatus === 'error' && errorMessage && (
@@ -374,7 +329,7 @@ export default function RegisterPage() {
                     <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 animate-pulse-success" />
                     <div>
                       <p className="text-sm font-medium text-green-700 dark:text-green-300">
-                        ¡Cuenta creada exitosamente!
+                        Cuenta creada exitosamente
                       </p>
                       <p className="text-xs text-green-600 dark:text-green-400">
                         Revisa tu email para verificar tu cuenta
@@ -391,7 +346,7 @@ export default function RegisterPage() {
               disabled={isLoading || !isValid || submitStatus === 'success'}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="btn-primary flex items-center justify-center gap-2 relative overflow-hidden"
+              className="btn-primary flex items-center justify-center gap-2 relative overflow-hidden mt-6"
             >
               <AnimatePresence mode="wait">
                 {isLoading ? (
@@ -414,7 +369,7 @@ export default function RegisterPage() {
                     className="flex items-center gap-2"
                   >
                     <CheckCircle className="w-5 h-5" />
-                    ¡Cuenta creada!
+                    Cuenta creada
                   </motion.div>
                 ) : (
                   <motion.div
@@ -424,7 +379,7 @@ export default function RegisterPage() {
                     exit={{ opacity: 0 }}
                     className="flex items-center gap-2"
                   >
-                    Crear Cuenta
+                    Crear cuenta
                     <ArrowRight className="w-5 h-5" />
                   </motion.div>
                 )}
@@ -440,7 +395,7 @@ export default function RegisterPage() {
                 href="/auth/login" 
                 className="font-medium text-primary hover:text-primary/80 transition-colors"
               >
-                Inicia sesión aquí
+                Inicia sesión
               </Link>
             </p>
           </div>
@@ -453,8 +408,7 @@ export default function RegisterPage() {
           transition={{ delay: 0.8 }}
           className="mt-6 text-center"
         >
-          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1">
-            <School className="w-3 h-3" />
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Plataforma segura para la gestión escolar
           </p>
         </motion.div>
