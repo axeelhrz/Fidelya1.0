@@ -3,6 +3,7 @@
 import { useUser } from '@/context/UserContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+
 interface UseAuthOptions {
   redirectTo?: string
   redirectIfFound?: boolean
@@ -14,15 +15,28 @@ export function useAuth(options: UseAuthOptions = {}) {
   const { redirectTo = '/auth/login', redirectIfFound = false } = options
 
   useEffect(() => {
-    if (loading) return
+    console.log('🔒 useAuth - Estado:', { 
+      user: !!user, 
+      guardian: !!guardian, 
+      loading, 
+      redirectTo, 
+      redirectIfFound 
+    })
+
+    if (loading) {
+      console.log('⏳ useAuth - Esperando carga...')
+      return
+    }
 
     if (!user && !redirectIfFound) {
-      router.push(redirectTo)
+      console.log('🚫 useAuth - No autenticado, redirigiendo a:', redirectTo)
+      router.replace(redirectTo)
     }
 
     if (user && redirectIfFound) {
-        router.push('/dashboard')
-      }
+      console.log('✅ useAuth - Ya autenticado, redirigiendo al dashboard')
+      router.replace('/dashboard')
+    }
   }, [user, loading, redirectTo, redirectIfFound, router])
 
   return {

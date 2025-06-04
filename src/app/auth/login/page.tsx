@@ -1,5 +1,5 @@
 "use client"
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, LogIn, AlertCircle } from 'lucide-react'
@@ -17,10 +17,26 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   
-  const { signIn } = useUser()
+  const { signIn, user, guardian, loading: userLoading } = useUser()
   const router = useRouter()
   // Redirigir si ya está autenticado
   useRedirectIfAuthenticated()
+
+  // Efecto para redirigir cuando el usuario esté completamente cargado
+  useEffect(() => {
+    console.log('🔄 Login page - Estado:', { 
+      user: !!user, 
+      guardian: !!guardian, 
+      userLoading,
+      userId: user?.id 
+    })
+
+    if (!userLoading && user) {
+      console.log('✅ Usuario autenticado, redirigiendo al dashboard...')
+      // Usar replace para evitar que el usuario pueda volver atrás
+      router.replace('/dashboard')
+    }
+  }, [user, guardian, userLoading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,9 +57,30 @@ export default function LoginPage() {
       setError(result.error)
       setLoading(false)
     } else {
-      console.log('✅ Login exitoso, redirigiendo...')
-      router.push('/dashboard')
+      console.log('✅ Login exitoso, esperando carga de datos...')
+      // No redirigimos aquí, dejamos que el useEffect lo haga
+      // cuando los datos estén completamente cargados
     }
+  }
+
+  // Si ya está autenticado y cargando, mostrar loading
+  if (user && userLoading) {
+  return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Card className="w-full max-w-md shadow-xl border-0">
+          <CardContent className="flex flex-col items-center justify-center p-8">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-gray-600">Cargando tu perfil...</p>
+          </CardContent>
+        </Card>
+      </div>
+  )
+}
+
+  // Si ya está autenticado pero no está cargando, redirigir inmediatamente
+  if (user && !userLoading) {
+    router.replace('/dashboard')
+    return null
   }
 
   return (
@@ -61,7 +98,7 @@ export default function LoginPage() {
               Ingresa a tu cuenta del Casino Escolar
             </CardDescription>
           </CardHeader>
-
+          
           <CardContent className="space-y-4">
             {error && (
               <Alert variant="destructive">
@@ -83,10 +120,10 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
                     required
-                disabled={loading}
+                    disabled={loading}
                   />
                 </div>
-                  </div>
+              </div>
               
               <div className="space-y-2">
                 <Label htmlFor="password">Contraseña</Label>
@@ -107,15 +144,15 @@ export default function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
                     disabled={loading}
-                >
+                  >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
                     ) : (
                       <Eye className="h-4 w-4" />
                     )}
                   </button>
-            </div>
-      </div>
+                </div>
+              </div>
               
               <div className="flex items-center justify-between">
                 <Link
@@ -124,7 +161,7 @@ export default function LoginPage() {
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>
-    </div>
+              </div>
               
               <Button
                 type="submit"
@@ -156,13 +193,19 @@ export default function LoginPage() {
 
             {/* Debug info en desarrollo */}
             {process.env.NODE_ENV === 'development' && (
-              <div className="text-center pt-4 border-t">
+              <div className="text-center pt-4 border-t space-y-2">
                 <Link
                   href="/debug"
-                  className="text-xs text-gray-400 hover:text-gray-600"
+                  className="block text-xs text-gray-400 hover:text-gray-600"
                 >
                   Debug de Autenticación
                 </Link>
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="block w-full text-xs text-gray-400 hover:text-gray-600"
+                >
+                  Forzar ir al Dashboard
+                </button>
               </div>
             )}
           </CardContent>
