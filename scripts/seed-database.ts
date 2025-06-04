@@ -91,7 +91,7 @@ async function seedDatabase() {
 
       if (authError) {
         console.error('Error creating admin auth user:', authError)
-      } else {
+      } else if (authUser.user) {
         // Create guardian profile
         const { error: guardianError } = await supabase
           .from('guardians')
@@ -119,7 +119,7 @@ async function seedDatabase() {
 
 // Run if called directly
 if (require.main === module) {
-  seedDatabase()
+  seedDatabase().catch(console.error)
 }
 
 export { seedDatabase }

@@ -1,16 +1,20 @@
 import { createClient } from '@supabase/supabase-js'
 import { config } from '../src/lib/config/environment'
-import { getNetClient } from '../src/lib/getnet/client'
-
 const supabase = createClient(
   config.supabase.url,
-  config.supabase.serviceRoleKey
+  config.supabase.serviceRoleKey!
 )
+
+interface Check {
+  name: string
+  status: '✅' | '❌' | '⚠️'
+  details: string
+}
 
 async function verifySystem() {
   console.log('🔍 Verifying Casino Escolar system...')
   
-  const checks = []
+  const checks: Check[] = []
 
   // 1. Verify Supabase connection
   try {
@@ -18,7 +22,8 @@ async function verifySystem() {
     if (error) throw error
     checks.push({ name: 'Supabase Connection', status: '✅', details: 'Connected successfully' })
   } catch (error) {
-    checks.push({ name: 'Supabase Connection', status: '❌', details: error.message })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    checks.push({ name: 'Supabase Connection', status: '❌', details: errorMessage })
   }
 
   // 2. Verify database schema
@@ -30,7 +35,8 @@ async function verifySystem() {
     }
     checks.push({ name: 'Database Schema', status: '✅', details: 'All tables exist' })
   } catch (error) {
-    checks.push({ name: 'Database Schema', status: '❌', details: error.message })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    checks.push({ name: 'Database Schema', status: '❌', details: errorMessage })
   }
 
   // 3. Verify RLS policies
@@ -38,7 +44,8 @@ async function verifySystem() {
     const { data, error } = await supabase.rpc('get_orders_summary')
     checks.push({ name: 'Database Functions', status: '✅', details: 'Functions working' })
   } catch (error) {
-    checks.push({ name: 'Database Functions', status: '❌', details: error.message })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    checks.push({ name: 'Database Functions', status: '❌', details: errorMessage })
   }
 
   // 4. Verify GetNet configuration
@@ -49,7 +56,8 @@ async function verifySystem() {
     }
     checks.push({ name: 'GetNet Configuration', status: '✅', details: 'Credentials configured' })
   } catch (error) {
-    checks.push({ name: 'GetNet Configuration', status: '❌', details: error.message })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    checks.push({ name: 'GetNet Configuration', status: '❌', details: errorMessage })
   }
 
   // 5. Verify email service
@@ -73,7 +81,8 @@ async function verifySystem() {
       checks.push({ name: 'Sample Data', status: '✅', details: 'Sample data exists' })
     }
   } catch (error) {
-    checks.push({ name: 'Sample Data', status: '❌', details: error.message })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    checks.push({ name: 'Sample Data', status: '❌', details: errorMessage })
   }
 
   // Print results
@@ -100,7 +109,7 @@ async function verifySystem() {
 
 // Run if called directly
 if (require.main === module) {
-  verifySystem()
+  verifySystem().catch(console.error)
 }
 
 export { verifySystem }
