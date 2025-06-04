@@ -1,132 +1,84 @@
 "use client"
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import React, { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Minus, Plus, Clock, AlertCircle } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase/client'
-import { Product, Student } from '@/lib/supabase/types'
-import { OrderService } from '@/lib/orders/orderHelpers'
+import { Almuerzo, Colacion } from '@/lib/supabase/types'
 import { useToast } from '@/components/ui/use-toast'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-
 interface MenuSelectorProps {
-  student: Student
   selectedDate: string
-  dayOfWeek: string
-  onSelectionChange: (products: { productId: string; quantity: number }[]) => void
-  onTotalChange: (total: number) => void
+  onMenuSelect: (menu: Almuerzo | Colacion) => void
+  selectedMenus: (Almuerzo | Colacion)[]
 }
 
-export default function MenuSelector({
-  student,
-  selectedDate,
-  dayOfWeek,
-  onSelectionChange,
-  onTotalChange
-}: MenuSelectorProps) {
-  const [products, setProducts] = useState<Product[]>([])
-  const [selectedProducts, setSelectedProducts] = useState<{ [key: string]: number }>({})
+export default function MenuSelector({ selectedDate, onMenuSelect, selectedMenus }: MenuSelectorProps) {
+  const [almuerzos, setAlmuerzos] = useState<Almuerzo[]>([])
+  const [colaciones, setColaciones] = useState<Colacion[]>([])
   const [loading, setLoading] = useState(true)
-  const [canOrder, setCanOrder] = useState(true)
-  const [cutoffTime, setCutoffTime] = useState<string>('10:00')
   const { toast } = useToast()
 
-  // Cargar productos disponibles para la fecha
   useEffect(() => {
-    loadProducts()
-    checkOrderAvailability()
-  }, [selectedDate, dayOfWeek])
+    if (selectedDate) {
+      loadMenuOptions()
+    }
+  }, [selectedDate])
 
-  // Actualizar selección cuando cambien los productos seleccionados
-  useEffect(() => {
-    const selection = Object.entries(selectedProducts)
-      .filter(([_, quantity]) => quantity > 0)
-      .map(([productId, quantity]) => ({ productId, quantity }))
-    
-    onSelectionChange(selection)
-    
-    // Calcular total
-    const total = Object.entries(selectedProducts).reduce((sum, [productId, quantity]) => {
-      const product = products.find(p => p.id === productId)
-      if (!product || quantity <= 0) return sum
-      
-      const price = student.tipo === 'Funcionario' 
-        ? product.precio_funcionario 
-        : product.precio_estudiante
-      
-      return sum + (price * quantity)
-    }, 0)
-    
-    onTotalChange(total)
-  }, [selectedProducts, products, student.tipo])
-
-  const loadProducts = async () => {
+  const loadMenuOptions = async () => {
     try {
       setLoading(true)
       
-      const { data, error } = await supabase
-        .from('products')
+      // Cargar almuerzos
+      const { data: almuerzoData, error: almuerzoError } = await supabase
+        .from('almuerzos')
         .select('*')
         .eq('fecha', selectedDate)
-        .eq('dia', dayOfWeek)
-        .eq('is_active', true)
         .order('codigo')
 
-      if (error) {
-        console.error('Error loading products:', error)
+      if (almuerzoError) {
+        console.error('Error cargando almuerzos:', almuerzoError)
         toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'No se pudieron cargar los productos disponibles'
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudieron cargar las opciones de almuerzo"
         })
-        return
+      } else {
+        setAlmuerzos(almuerzoData || [])
       }
 
-      setProducts(data || [])
-      setSelectedProducts({}) // Limpiar selección al cambiar fecha
+      // Cargar colaciones
+      const { data: colacionData, error: colacionError } = await supabase
+        .from('colaciones')
+        .select('*')
+        .eq('fecha', selectedDate)
+        .order('codigo')
+
+      if (colacionError) {
+        console.error('Error cargando colaciones:', colacionError)
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudieron cargar las opciones de colación"
+        })
+      } else {
+        setColaciones(colacionData || [])
+      }
     } catch (error) {
-      console.error('Error loading products:', error)
+      console.error('Error inesperado:', error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Error inesperado al cargar el menú"
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const checkOrderAvailability = async () => {
-    try {
-      // Verificar si se puede hacer pedido
-      const { data: canMakeOrder } = await supabase
-        .rpc('can_make_order', { delivery_date: selectedDate })
-
-      setCanOrder(canMakeOrder || false)
-
-      // Obtener hora de corte
-      const { data: settings } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'order_cutoff_time')
-        .single()
-
-      if (settings?.value) {
-        setCutoffTime(settings.value.substring(0, 5)) // HH:MM
-      }
-    } catch (error) {
-      console.error('Error checking order availability:', error)
-    }
+  const isMenuSelected = (menu: Almuerzo | Colacion) => {
+    return selectedMenus.some(selected => selected.id === menu.id)
   }
-
-  const updateQuantity = (productId: string, change: number) => {
-    setSelectedProducts(prev => {
-      const currentQuantity = prev[productId] || 0
-      const newQuantity = Math.max(0, currentQuantity + change)
-      
-      return {
-        ...prev,
-        [productId]: newQuantity
-      }
-    })
-  }
-
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
@@ -136,138 +88,121 @@ export default function MenuSelector({
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Cargando menú...</CardTitle>
-        </CardHeader>
-        <CardContent>
           <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-20 bg-gray-200 rounded animate-pulse" />
+        <Skeleton className="h-8 w-48" />
+        <div className="grid gap-4 md:grid-cols-2">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32" />
             ))}
           </div>
-        </CardContent>
-      </Card>
+      </div>
     )
   }
 
-  if (!canOrder) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Pedidos cerrados
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Ya pasó la hora límite para hacer pedidos para este día (hasta las {cutoffTime}).
-              Los pedidos deben realizarse antes de las {cutoffTime} del día de entrega.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (products.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>No hay menú disponible</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              No hay opciones de menú disponibles para {dayOfWeek.toLowerCase()} {selectedDate}.
-              Por favor selecciona otra fecha.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          Menú para {dayOfWeek.toLowerCase()} {selectedDate}
-        </CardTitle>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
-          Pedidos hasta las {cutoffTime}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {products.map(product => {
-            const quantity = selectedProducts[product.id] || 0
-            const price = student.tipo === 'Funcionario' 
-              ? product.precio_funcionario 
-              : product.precio_estudiante
-
-            return (
-              <div
-                key={product.id}
-                className={`border rounded-lg p-4 transition-colors ${
-                  quantity > 0 ? 'border-primary bg-primary/5' : 'border-gray-200'
+    <div className="space-y-6">
+      {/* Sección de Almuerzos */}
+      {almuerzos.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Opciones de Almuerzo</h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            {almuerzos.map((almuerzo) => (
+              <Card 
+                key={almuerzo.id} 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  isMenuSelected(almuerzo) ? 'ring-2 ring-blue-500 bg-blue-50' : ''
                 }`}
+                onClick={() => onMenuSelect(almuerzo)}
               >
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline">{product.codigo}</Badge>
-                      <span className="font-medium">{formatPrice(price)}</span>
-                    </div>
-                    <p className="text-sm text-gray-600">{product.descripcion}</p>
-                  </div>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-sm font-medium">
+                      {almuerzo.codigo}
+                    </CardTitle>
+                    <Badge variant={almuerzo.tipo_dia === 'ESPECIAL' ? 'secondary' : 'default'}>
+                      {almuerzo.tipo_dia}
+                    </Badge>
                 </div>
-
-                <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateQuantity(product.id, -1)}
-                      disabled={quantity === 0}
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-sm mb-3">
+                    {almuerzo.descripcion}
+                  </CardDescription>
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-gray-600">
+                      <div>Estudiante: {formatPrice(almuerzo.precio_estudiante)}</div>
+                      <div>Funcionario: {formatPrice(almuerzo.precio_funcionario)}</div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant={isMenuSelected(almuerzo) ? "default" : "outline"}
                     >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    
-                    <span className="w-8 text-center font-medium">
-                      {quantity}
-                    </span>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateQuantity(product.id, 1)}
-                    >
-                      <Plus className="h-4 w-4" />
+                      {isMenuSelected(almuerzo) ? 'Seleccionado' : 'Seleccionar'}
                     </Button>
                   </div>
-
-                  {quantity > 0 && (
-                    <div className="text-right">
-                      <div className="font-medium">
-                        {formatPrice(price * quantity)}
+                </CardContent>
+              </Card>
+            ))}
+                  </div>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {quantity} × {formatPrice(price)}
-                      </div>
-                    </div>
                   )}
-                </div>
-              </div>
-            )
-          })}
+
+      {/* Sección de Colaciones */}
+      {colaciones.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Opciones de Colación</h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            {colaciones.map((colacion) => (
+              <Card 
+                key={colacion.id} 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  isMenuSelected(colacion) ? 'ring-2 ring-green-500 bg-green-50' : ''
+                }`}
+                onClick={() => onMenuSelect(colacion)}
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-sm font-medium">
+                      {colacion.codigo}
+                    </CardTitle>
+                    <Badge variant="outline" className="bg-green-100">
+                      Colación
+                    </Badge>
         </div>
-      </CardContent>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-sm mb-3">
+                    {colacion.descripcion}
+                  </CardDescription>
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-gray-600">
+                      <div>Estudiante: {formatPrice(colacion.precio_estudiante)}</div>
+                      <div>Funcionario: {formatPrice(colacion.precio_funcionario)}</div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant={isMenuSelected(colacion) ? "default" : "outline"}
+                    >
+                      {isMenuSelected(colacion) ? 'Seleccionado' : 'Seleccionar'}
+                    </Button>
+                  </div>
+                </CardContent>
     </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Mensaje cuando no hay opciones */}
+      {almuerzos.length === 0 && colaciones.length === 0 && (
+        <Card>
+          <CardContent className="text-center py-8">
+            <p className="text-gray-500">
+              No hay opciones de menú disponibles para la fecha seleccionada.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   )
 }
