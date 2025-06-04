@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
-import { Order, OrderInsert, OrderItem, OrderItemInsert, Product, Student } from '@/lib/supabase/types'
+import { Student, Product, Order, OrderItemInsert } from '@/lib/supabase/types'
 
 export interface OrderData {
   studentId: string
@@ -149,10 +149,12 @@ export class OrderService {
         const totalPrice = unitPrice * orderProduct.quantity
 
         orderItems.push({
-          product_id: orderProduct.productId,
-          quantity: orderProduct.quantity,
-          unit_price: unitPrice,
-          total_price: totalPrice
+          guardian_id: guardianId,
+          student_id: orderData.studentId,
+          fecha_entrega: orderData.deliveryDate,
+          tipo_pedido: "ALMUERZO",
+          opcion_elegida: product.codigo,
+          precio: totalPrice
         })
 
         totalAmount += totalPrice
