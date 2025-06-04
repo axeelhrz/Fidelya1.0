@@ -4,50 +4,58 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/lib/supabase/types"
 
-type AlmuerzoMenu = Database["public"]["Tables"]["almuerzos"]["Row"]
-type Colacion = Database["public"]["Tables"]["colaciones"]["Row"]
-type Pedido = Database["public"]["Tables"]["pedidos"]["Row"]
+type Product = Database["public"]["Tables"]["products"]["Row"]
+type Order = Database["public"]["Tables"]["orders"]["Row"]
 
-export default function OverviewPage() {
-  const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({
+interface Stats {
+  totalPedidos: number
+  pedidosPendientes: number
+  menuSemana: Product[]
+  productosDisponibles: Product[]
+}
+
+export default function DashboardOverview() {
+  const [stats, setStats] = useState<Stats>({
     totalPedidos: 0,
     pedidosPendientes: 0,
-    menuSemana: [] as AlmuerzoMenu[],
-    colaciones: [] as Colacion[],
+    menuSemana: [],
+    productosDisponibles: [],
   })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadStats = async () => {
       try {
-        // Cargar menú de la semana
+        // Cargar productos de la semana (menú)
         const { data: menuData } = await supabase
-          .from("almuerzos")
+          .from("products")
           .select("*")
-          .gte("fecha", new Date().toISOString().split("T")[0])
-          .order("fecha")
+          .gte("available_date", new Date().toISOString().split("T")[0])
+          .eq("is_active", true)
+          .order("available_date")
           .limit(5)
 
-        // Cargar colaciones disponibles
-        const { data: colacionesData } = await supabase
-          .from("colaciones")
+        // Cargar todos los productos disponibles
+        const { data: productosData } = await supabase
+          .from("products")
           .select("*")
+          .eq("is_active", true)
 
         // Cargar estadísticas de pedidos
         const { count: totalPedidos } = await supabase
-          .from("pedidos")
+          .from("orders")
           .select("*", { count: "exact" })
 
         const { count: pedidosPendientes } = await supabase
-          .from("pedidos")
+          .from("orders")
           .select("*", { count: "exact" })
-          .eq("estado_pago", "pendiente")
+          .eq("status", "pending")
 
         setStats({
           totalPedidos: totalPedidos || 0,
           pedidosPendientes: pedidosPendientes || 0,
           menuSemana: menuData || [],
-          colaciones: colacionesData || [],
+          productosDisponibles: productosData || [],
         })
       } catch (error) {
         console.error("Error loading stats:", error)
@@ -90,8 +98,8 @@ export default function OverviewPage() {
             <p className="text-3xl font-bold text-blue-600">{stats.menuSemana.length}</p>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-sm">
-            <h3 className="text-lg font-medium text-gray-900">Colaciones</h3>
-            <p className="text-3xl font-bold text-purple-600">{stats.colaciones.length}</p>
+            <h3 className="text-lg font-medium text-gray-900">Productos</h3>
+            <p className="text-3xl font-bold text-purple-600">{stats.productosDisponibles.length}</p>
           </div>
         </div>
 
@@ -120,16 +128,16 @@ export default function OverviewPage() {
                 {stats.menuSemana.map((menu) => (
                   <tr key={menu.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(menu.fecha).toLocaleDateString()}
+                      {new Date(menu.available_date).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {menu.dia}
+                      {menu.day_of_week}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {menu.descripcion}
+                      {menu.description}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${menu.precio_estudiante}
+                      ${menu.price_student}
                     </td>
                   </tr>
                 ))}
@@ -138,15 +146,16 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        {/* Colaciones Disponibles */}
+        {/* Productos Disponibles */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Colaciones Disponibles</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Productos Disponibles</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {stats.colaciones.map((colacion) => (
-              <div key={colacion.id} className="p-4 border rounded-lg">
-                <h3 className="font-medium text-gray-900">{colacion.descripcion}</h3>
-                <p className="text-sm text-gray-600 mt-1">Código: {colacion.codigo}</p>
-                <p className="text-lg font-semibold text-green-600 mt-2">${colacion.precio}</p>
+            {stats.productosDisponibles.slice(0, 6).map((producto) => (
+              <div key={producto.id} className="p-4 border rounded-lg">
+                <h3 className="font-medium text-gray-900">{producto.name}</h3>
+                <p className="text-sm text-gray-600 mt-1">Código: {producto.code}</p>
+                <p className="text-sm text-gray-600">Tipo: {producto.type}</p>
+                <p className="text-lg font-semibold text-green-600 mt-2">${producto.price_student}</p>
               </div>
             ))}
           </div>

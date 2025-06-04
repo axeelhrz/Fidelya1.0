@@ -6,47 +6,22 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Formatear moneda en pesos chilenos
+ * Formatear moneda chilena
  */
-export function formatPrice(price: number): string {
+export function formatoMoneda(amount: number): string {
   return new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
     minimumFractionDigits: 0,
-  }).format(price)
+    maximumFractionDigits: 0,
+  }).format(amount)
 }
 
 /**
- * Formatear fecha en español
+ * Formatear precio simple
  */
-export function formatDate(date: string | Date): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date
-  return new Intl.DateTimeFormat('es-CL', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(dateObj)
-}
-
-/**
- * Formatear fecha corta
- */
-export function formatDateTime(date: string | Date): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date
-  return new Intl.DateTimeFormat('es-CL', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(dateObj)
-}
-
-/**
- * Capitalizar primera letra
- */
-export function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+export function formatPrice(price: number): string {
+  return new Intl.NumberFormat('es-CL').format(price)
 }
 
 /**

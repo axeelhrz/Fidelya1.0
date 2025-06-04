@@ -15,6 +15,14 @@ export function createSupabaseServerClient() {
   )
 }
 
+// Service client with elevated permissions
+export function createSupabaseServiceClient() {
+  return createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
+
 // Client component client (for use in client components with auth)
 export function createSupabaseClientComponentClient() {
   return createClient<Database>(supabaseUrl, supabaseAnonKey)
