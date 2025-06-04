@@ -31,10 +31,13 @@ export default function LoginPage() {
       userId: user?.id 
     })
 
+    // Solo redirigir si no está cargando y hay usuario
     if (!userLoading && user) {
       console.log('✅ Usuario autenticado, redirigiendo al dashboard...')
-      // Usar replace para evitar que el usuario pueda volver atrás
+      // Usar setTimeout para evitar el error de React
+      setTimeout(() => {
       router.replace('/dashboard')
+      }, 100)
     }
   }, [user, guardian, userLoading, router])
 
@@ -58,30 +61,23 @@ export default function LoginPage() {
       setLoading(false)
     } else {
       console.log('✅ Login exitoso, esperando carga de datos...')
-      // No redirigimos aquí, dejamos que el useEffect lo haga
-      // cuando los datos estén completamente cargados
+      // El useEffect se encargará de la redirección
     }
   }
 
-  // Si ya está autenticado y cargando, mostrar loading
-  if (user && userLoading) {
+  // Si ya está autenticado, mostrar loading mientras redirige
+  if (user) {
   return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <Card className="w-full max-w-md shadow-xl border-0">
           <CardContent className="flex flex-col items-center justify-center p-8">
             <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-gray-600">Cargando tu perfil...</p>
+            <p className="text-gray-600">Redirigiendo al dashboard...</p>
           </CardContent>
         </Card>
       </div>
   )
 }
-
-  // Si ya está autenticado pero no está cargando, redirigir inmediatamente
-  if (user && !userLoading) {
-    router.replace('/dashboard')
-    return null
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -201,7 +197,9 @@ export default function LoginPage() {
                   Debug de Autenticación
                 </Link>
                 <button
-                  onClick={() => router.push('/dashboard')}
+                  onClick={() => {
+                    setTimeout(() => router.push('/dashboard'), 100)
+                  }}
                   className="block w-full text-xs text-gray-400 hover:text-gray-600"
                 >
                   Forzar ir al Dashboard
