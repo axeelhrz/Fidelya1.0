@@ -4,16 +4,16 @@ import "./globals.css"
 import "@/styles/responsive-fixes.css"
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider"
+import { UserProvider } from "@/context/UserContext"
 import { Navbar } from "@/components/navbar"
+import { MuiThemeProvider } from "@/components/mui-theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Sistema de Pedidos - Casino Escolar",
-  description: "Sistema de gestión de pedidos para el casino escolar",
+  description: "Sistema para gestionar pedidos de almuerzos y colaciones escolares",
 }
-
-import { UserProvider } from "@/context/UserContext"
 
 export default function RootLayout({
   children,
@@ -23,26 +23,34 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
-        <script src="https://checkout.getnet.cl/lightbox.min.js"></script>
-        <meta httpEquiv="Permissions-Policy" content="accelerometer=*, gyroscope=*" />
+        <script src="https://checkout.getnet.cl/lightbox.min.js" async />
+        <meta name="Permissions-Policy" content="accelerometer=(), gyroscope=()" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
       </head>
-      <body className={inter.className} suppressHydrationWarning>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <UserProvider>
-            <div className="min-h-screen bg-background">
-              <Navbar />
-              <main className="container mx-auto px-4 py-8">
-                {children}
-              </main>
-            </div>
-          </UserProvider>
-          <Toaster />
-        </ThemeProvider>
+      <body className={inter.className}>
+        <MuiThemeProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <UserProvider>
+              <div className="min-h-screen bg-background">
+                <Navbar />
+                <main className="container mx-auto px-4 py-8">
+                  {children}
+                </main>
+              </div>
+              <Toaster />
+            </UserProvider>
+          </ThemeProvider>
+        </MuiThemeProvider>
       </body>
     </html>
   )
