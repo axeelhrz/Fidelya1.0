@@ -71,7 +71,7 @@ export default function AdminDashboard() {
         ...statsData,
         orders_by_grade: (statsData.orders_by_grade as Record<string, { count: number; amount: number }>) || {}
       })
-      setKitchenReport(kitchenData.map(item => ({
+      setKitchenReport(kitchenData.map((item: any) => ({
         ...item,
         orders_by_grade: (item.orders_by_grade as Record<string, { quantity: number; students: string[] }>) || {}
       })))

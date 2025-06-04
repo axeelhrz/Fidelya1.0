@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServiceClient } from '@/lib/supabase/client'
+import { createSupabaseServerClient } from '@/lib/supabase/client'
 import { getNetClient } from '@/lib/getnet/client'
 import { EmailService } from '@/lib/notifications/emailService'
 
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     const payload = JSON.parse(body)
     const webhookData = getNetClient.processWebhookPayload(payload)
-    const supabase = createSupabaseServiceClient()
+    const supabase = createSupabaseServerClient()
 
     // Find payment by transaction ID
     const { data: payment, error: paymentError } = await supabase
