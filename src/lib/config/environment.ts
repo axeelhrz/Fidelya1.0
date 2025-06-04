@@ -2,36 +2,50 @@
  * Configuración centralizada de variables de entorno
  */
 
+// Función para obtener variable de entorno con validación
+function getEnvVar(name: string, defaultValue?: string): string {
+  const value = process.env[name] || defaultValue
+  if (!value) {
+    throw new Error(`❌ Variable de entorno requerida no encontrada: ${name}`)
+  }
+  return value
+}
+
+// Función para obtener variable opcional
+function getOptionalEnvVar(name: string, defaultValue?: string): string | undefined {
+  return process.env[name] || defaultValue
+}
+
 export const config = {
   // Supabase
   supabase: {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    url: getEnvVar('NEXT_PUBLIC_SUPABASE_URL'),
+    anonKey: getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+    serviceRoleKey: getOptionalEnvVar('SUPABASE_SERVICE_ROLE_KEY'),
   },
 
   // GetNet
   getnet: {
-    login: process.env.GETNET_LOGIN!,
-    secret: process.env.GETNET_SECRET!,
-    baseUrl: process.env.GETNET_BASE_URL!,
+    login: getEnvVar('GETNET_LOGIN'),
+    secret: getEnvVar('GETNET_SECRET'),
+    baseUrl: getEnvVar('GETNET_BASE_URL'),
   },
 
   // Application
   app: {
-    url: process.env.NEXT_PUBLIC_APP_URL!,
+    url: getEnvVar('NEXT_PUBLIC_APP_URL'),
     environment: process.env.NODE_ENV || 'development',
   },
 
-  // Email
+  // Email (opcional)
   email: {
-    resendApiKey: process.env.RESEND_API_KEY,
+    resendApiKey: getOptionalEnvVar('RESEND_API_KEY'),
   },
 
-  // Security
+  // Security (opcional)
   auth: {
-    secret: process.env.NEXTAUTH_SECRET,
-    url: process.env.NEXTAUTH_URL,
+    secret: getOptionalEnvVar('NEXTAUTH_SECRET'),
+    url: getOptionalEnvVar('NEXTAUTH_URL'),
   }
 }
 
@@ -51,28 +65,35 @@ export function validateEnvironment() {
   const missingVars = requiredVars.filter(varName => !process.env[varName])
 
   if (missingVars.length > 0) {
+    console.error('❌ Variables de entorno faltantes:', missingVars)
     throw new Error(`Variables de entorno faltantes: ${missingVars.join(', ')}`)
   }
 
   console.log('✅ Variables de entorno validadas correctamente')
-}
+    return true
+  }
 
 /**
- * Verificar configuración en tiempo de ejecución
+ * Verificar configuración y mostrar información
  */
 export function checkConfiguration() {
   try {
     validateEnvironment()
     
-    console.log('🔧 Configuración del sistema:')
-    console.log(`- Entorno: ${config.app.environment}`)
-    console.log(`- URL de la app: ${config.app.url}`)
-    console.log(`- Supabase URL: ${config.supabase.url}`)
-    console.log(`- GetNet URL: ${config.getnet.baseUrl}`)
+    console.log('🚀 Configuración de la aplicación:')
+    console.log(`   • Entorno: ${config.app.environment}`)
+    console.log(`   • URL de la app: ${config.app.url}`)
+    console.log(`   • Supabase URL: ${config.supabase.url}`)
+    console.log(`   • GetNet URL: ${config.getnet.baseUrl}`)
     
     return true
   } catch (error) {
-    console.error('❌ Error en configuración:', error)
+    console.error('❌ Error en la configuración:', error)
     return false
-  }
+}
+}
+
+// Verificar configuración al importar (solo en desarrollo)
+if (config.app.environment === 'development') {
+  checkConfiguration()
 }

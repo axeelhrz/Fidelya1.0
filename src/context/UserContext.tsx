@@ -81,28 +81,30 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (error) {
+      console.error('Error en signIn:', error)
         return { error: error.message }
       }
 
       if (data.user && !data.user.email_confirmed_at) {
         return { error: 'Por favor verifica tu correo electrónico antes de iniciar sesión.' }
       }
-
-      toast({
+        toast({
         title: "¡Bienvenido!",
         description: "Has iniciado sesión correctamente.",
-      })
-
+        })
       return {}
     } catch (error) {
-      console.error('Error en signIn:', error)
+      console.error('Error inesperado en signIn:', error)
       return { error: 'Error inesperado al iniciar sesión' }
     }
   }
 
-  // Función de registro
+  // Función de registro optimizada
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
+      console.log('Iniciando registro para:', email)
+      
+      // Paso 1: Registrar usuario en Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -111,14 +113,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             full_name: fullName
           }
         }
-      })
-
+        })
       if (error) {
+        console.error('Error en auth.signUp:', error)
         return { error: error.message }
       }
 
-      if (data.user) {
-        // Crear perfil de guardian
+      if (!data.user) {
+        console.error('No se recibió usuario después del registro')
+        return { error: 'Error al crear la cuenta' }
+      }
+
+      console.log('Usuario registrado en Auth:', data.user.id)
+
+      // Paso 2: Crear perfil de guardian solo si el usuario fue creado exitosamente
+      try {
         const { error: profileError } = await supabase
           .from('guardians')
           .insert({
@@ -129,20 +138,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           })
 
         if (profileError) {
-          console.error('Error creando perfil:', profileError)
-          return { error: 'Error al crear el perfil de usuario' }
+          console.error('Error creando perfil de guardian:', profileError)
+          // No retornamos error aquí porque el usuario ya fue creado en Auth
+          // El perfil se puede crear después
+        } else {
+          console.log('Perfil de guardian creado exitosamente')
         }
-
-        toast({
-          title: "¡Registro exitoso!",
-          description: "Por favor verifica tu correo electrónico para activar tu cuenta.",
-        })
+      } catch (profileError) {
+        console.error('Error inesperado creando perfil:', profileError)
+        // Continuamos porque el usuario ya fue registrado
       }
+
+      toast({
+        title: "¡Registro exitoso!",
+        description: "Por favor verifica tu correo electrónico para activar tu cuenta.",
+      })
 
       return {}
     } catch (error) {
-      console.error('Error en signUp:', error)
-      return { error: 'Error inesperado al registrarse' }
+      console.error('Error inesperado en signUp:', error)
+      return { error: 'Error inesperado al registrarse. Por favor intenta nuevamente.' }
     }
   }
 
@@ -207,6 +222,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Obtener sesión inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Sesión inicial:', session?.user?.id)
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
@@ -218,6 +234,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id)
         setSession(session)
         setUser(session?.user ?? null)
         
