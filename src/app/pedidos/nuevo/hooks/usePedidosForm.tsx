@@ -192,11 +192,22 @@ export function usePedidosForm() {
           .single()
           
         if (clienteError) {
-          console.error('Error al buscar cliente:', clienteError)
+          // Improved error logging to show all error details
+          console.error('Error al buscar cliente:', {
+            message: clienteError.message,
+            details: clienteError.details,
+            hint: clienteError.hint,
+            code: clienteError.code,
+            fullError: clienteError
+          })
+          
+          // Also log the raw error object with JSON.stringify to see all properties
+          console.error('Error completo:', JSON.stringify(clienteError, null, 2))
+          
           toast({
             variant: "destructive",
             title: "Error al cargar cliente",
-            description: "No se pudo obtener la información del cliente.",
+            description: clienteError.message || "No se pudo obtener la información del cliente.",
           })
           return
         }
@@ -474,11 +485,22 @@ useEffect(() => {
         .single()
         
       if (clienteError) {
-        console.error('Error al buscar cliente:', clienteError)
+        // Improved error logging to show all error details
+        console.error('Error al buscar cliente:', {
+          message: clienteError.message,
+          details: clienteError.details,
+          hint: clienteError.hint,
+          code: clienteError.code,
+          fullError: clienteError
+        })
+        
+        // Also log the raw error object with JSON.stringify to see all properties
+        console.error('Error completo:', JSON.stringify(clienteError, null, 2))
+        
         toast({
           variant: "destructive",
           title: "Error al cargar cliente",
-          description: "No se pudo obtener la información del cliente.",
+          description: clienteError.message || "No se pudo obtener la información del cliente.",
         })
         return
       }
