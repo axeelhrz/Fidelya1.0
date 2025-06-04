@@ -9,10 +9,11 @@ import { supabase } from '@/lib/supabase/client'
 import { useUser } from '@/context/UserContext'
 
 export default function DebugPage() {
-  const { user, session, guardian, loading } = useUser()
+  const { user, session, guardian, loading, refreshUserData } = useUser()
   const [debugInfo, setDebugInfo] = useState<any>({})
   const [testEmail, setTestEmail] = useState('')
   const [testPassword, setTestPassword] = useState('')
+  const [guardianInfo, setGuardianInfo] = useState<any>(null)
 
   useEffect(() => {
     loadDebugInfo()
@@ -71,6 +72,8 @@ export default function DebugPage() {
     if (!user?.id) return
 
     try {
+      console.log('🔍 Buscando usuario en DB:', user.id)
+      
       const { data: guardianData, error } = await supabase
         .from('guardians')
         .select('*')
@@ -79,8 +82,76 @@ export default function DebugPage() {
 
       console.log('👤 Guardian en DB:', guardianData)
       console.log('❌ Error:', error)
+      
+      setGuardianInfo({ data: guardianData, error: error })
     } catch (error) {
       console.error('Error verificando usuario en DB:', error)
+      setGuardianInfo({ error: error })
+    }
+  }
+
+  const createGuardianProfile = async () => {
+    if (!user) return
+
+    try {
+      console.log('👤 Creando perfil de guardian para:', user.id)
+      
+      const { data, error } = await supabase
+        .from('guardians')
+        .insert({
+          user_id: user.id,
+          email: user.email!,
+          full_name: user.user_metadata?.full_name || 'Usuario',
+          is_staff: false
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('❌ Error creando guardian:', error)
+        alert(`Error: ${error.message}`)
+      } else {
+        console.log('✅ Guardian creado:', data)
+        alert('Guardian creado exitosamente!')
+        
+        // Refrescar datos del usuario
+        await refreshUserData()
+        await checkUserInDB()
+      }
+    } catch (error) {
+      console.error('Error inesperado:', error)
+      alert(`Error inesperado: ${error}`)
+    }
+  }
+
+  const fixGuardianProfile = async () => {
+    if (!user) return
+
+    try {
+      console.log('🔧 Intentando reparar perfil de guardian...')
+      
+      // Primero verificar si existe
+      const { data: existingGuardian, error: checkError } = await supabase
+        .from('guardians')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (checkError && checkError.code === 'PGRST116') {
+        // No existe, crear uno nuevo
+        console.log('📝 Guardian no existe, creando...')
+        await createGuardianProfile()
+      } else if (existingGuardian) {
+        console.log('✅ Guardian ya existe:', existingGuardian)
+        alert('El guardian ya existe. Refrescando datos...')
+        await refreshUserData()
+      } else {
+        console.error('❌ Error verificando guardian:', checkError)
+        alert(`Error verificando guardian: ${checkError?.message}`)
+      }
+    } catch (error) {
+      console.error('Error en fixGuardianProfile:', error)
+      alert(`Error: ${error}`)
     }
   }
 
@@ -116,17 +187,48 @@ export default function DebugPage() {
               </div>
             </div>
             
-            <Button onClick={loadDebugInfo} className="w-full">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <Button onClick={loadDebugInfo} variant="outline">
               Actualizar Info
             </Button>
             
             {user && (
-              <Button onClick={checkUserInDB} variant="outline" className="w-full">
+                <Button onClick={checkUserInDB} variant="outline">
                 Verificar Usuario en DB
               </Button>
             )}
+              
+              {user && (
+                <Button onClick={fixGuardianProfile} className="bg-green-600 hover:bg-green-700">
+                  Reparar Perfil
+            </Button>
+              )}
+              </div>
           </CardContent>
         </Card>
+
+        {/* Información del Guardian en DB */}
+        {guardianInfo && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Guardian en Base de Datos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <pre className="bg-gray-100 p-4 rounded-md text-xs overflow-auto">
+                {JSON.stringify(guardianInfo, null, 2)}
+              </pre>
+              
+              {guardianInfo.error && guardianInfo.error.code === 'PGRST116' && (
+                <div className="mt-4">
+                  <p className="text-red-600 mb-2">❌ El guardian no existe en la base de datos</p>
+                  <Button onClick={createGuardianProfile} className="bg-blue-600 hover:bg-blue-700">
+                    Crear Perfil de Guardian
+                  </Button>
+      </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Test de Login */}
         <Card>
@@ -143,7 +245,7 @@ export default function DebugPage() {
                 onChange={(e) => setTestEmail(e.target.value)}
                 placeholder="email@ejemplo.com"
               />
-            </div>
+    </div>
             
             <div className="space-y-2">
               <Label htmlFor="testPassword">Contraseña</Label>
@@ -191,6 +293,28 @@ export default function DebugPage() {
                 <strong>NODE_ENV:</strong> {process.env.NODE_ENV}
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Acciones rápidas */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Acciones Rápidas</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button 
+              onClick={() => window.location.href = '/dashboard'} 
+              className="w-full"
+            >
+              Ir al Dashboard
+            </Button>
+            <Button 
+              onClick={() => window.location.href = '/auth/login'} 
+              variant="outline" 
+              className="w-full"
+            >
+              Ir al Login
+            </Button>
           </CardContent>
         </Card>
       </div>
