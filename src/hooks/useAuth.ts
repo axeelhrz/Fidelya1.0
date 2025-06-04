@@ -1,58 +1,139 @@
 "use client"
 
-import { useUser } from '@/context/UserContext'
+import { useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useToast } from '@/components/ui/use-toast'
 
-interface UseAuthOptions {
-  redirectTo?: string
-  redirectIfFound?: boolean
-}
-
-export function useAuth(options: UseAuthOptions = {}) {
-  const { user, loading, guardian } = useUser()
+export function useAuth() {
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const { redirectTo = '/auth/login', redirectIfFound = false } = options
+  const { toast } = useToast()
 
-  useEffect(() => {
-    console.log('🔒 useAuth - Estado:', { 
-      user: !!user, 
-      guardian: !!guardian, 
-      loading, 
-      redirectTo, 
-      redirectIfFound 
-    })
+  const signIn = async (email: string, password: string) => {
+    try {
+      setLoading(true)
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (loading) {
-      console.log('⏳ useAuth - Esperando carga...')
-      return
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error de autenticación',
+          description: error.message,
+        })
+        return { success: false, error }
+      }
+
+      if (data.user) {
+        toast({
+          title: 'Inicio de sesión exitoso',
+          description: 'Bienvenido de vuelta',
+        })
+        router.push('/dashboard')
+        return { success: true, user: data.user }
+      }
+
+      return { success: false, error: new Error('No user returned') }
+    } catch (error) {
+      console.error('Error in signIn:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Ocurrió un error inesperado',
+      })
+      return { success: false, error }
+    } finally {
+      setLoading(false)
     }
-
-    if (!user && !redirectIfFound) {
-      console.log('🚫 useAuth - No autenticado, redirigiendo a:', redirectTo)
-      router.replace(redirectTo)
-    }
-
-    if (user && redirectIfFound) {
-      console.log('✅ useAuth - Ya autenticado, redirigiendo al dashboard')
-      router.replace('/dashboard')
-    }
-  }, [user, loading, redirectTo, redirectIfFound, router])
-
-  return {
-    user,
-    guardian,
-    loading,
-    isAuthenticated: !!user,
-    isEmailVerified: !!user?.email_confirmed_at,
-    isStaff: guardian?.is_staff || false
   }
-}
 
-export function useRequireAuth() {
-  return useAuth({ redirectTo: '/auth/login' })
-}
+  const signUp = async (email: string, password: string, fullName: string) => {
+    try {
+      setLoading(true)
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
+      })
 
-export function useRedirectIfAuthenticated() {
-  return useAuth({ redirectIfFound: true })
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error de registro',
+          description: error.message,
+        })
+        return { success: false, error }
+      }
+
+      if (data.user) {
+        toast({
+          title: 'Registro exitoso',
+          description: 'Por favor verifica tu email para continuar',
+        })
+        return { success: true, user: data.user }
+      }
+
+      return { success: false, error: new Error('No user returned') }
+    } catch (error) {
+      console.error('Error in signUp:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Ocurrió un error inesperado',
+      })
+      return { success: false, error }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const signOut = async () => {
+    try {
+      setLoading(true)
+      
+      const { error } = await supabase.auth.signOut()
+      
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.message,
+        })
+        return { success: false, error }
+      }
+
+      toast({
+        title: 'Sesión cerrada',
+        description: 'Has cerrado sesión exitosamente',
+      })
+      
+      router.push('/auth/login')
+      return { success: true }
+    } catch (error) {
+      console.error('Error in signOut:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Ocurrió un error inesperado',
+      })
+      return { success: false, error }
+    } finally {
+      setLoading(false)
+    }
+  }
+  return {
+    signIn,
+    signUp,
+    signOut,
+    loading,
+  }
 }

@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { signIn, user, guardian, loading: userLoading } = useUser()
+  const { login, user, guardian, loading: userLoading } = useUser()
   const router = useRouter()
   // Efecto para redirigir cuando el usuario esté completamente cargado
   useEffect(() => {
@@ -48,15 +48,14 @@ export default function LoginPage() {
     }
 
     console.log('🔐 Intentando login desde formulario...')
-    const result = await signIn(email, password)
-    
-    if (result.error) {
-      console.error('❌ Error en login:', result.error)
-      setError(result.error)
-      setLoading(false)
-    } else {
+    try {
+      await login(email, password)
       console.log('✅ Login exitoso, esperando carga de datos...')
       // El useEffect se encargará de la redirección
+    } catch (error) {
+      console.error('❌ Error en login:', error)
+      setError(error instanceof Error ? error.message : 'Error al iniciar sesión')
+      setLoading(false)
     }
   }
 

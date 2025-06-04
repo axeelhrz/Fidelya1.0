@@ -4,14 +4,12 @@ import './globals.css'
 import { UserProvider } from '@/context/UserContext'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Casino Escolar - Sistema de Pedidos',
-  description: 'Sistema de gestión de pedidos para el casino escolar',
-  keywords: ['casino escolar', 'pedidos', 'comida', 'colegio'],
-  authors: [{ name: 'Casino Escolar' }],
-  viewport: 'width=device-width, initial-scale=1',
+  description: 'Sistema de gestión de pedidos para casino escolar',
 }
 
 export default function RootLayout({
@@ -24,7 +22,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
