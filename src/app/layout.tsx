@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { UserProvider } from "@/context/UserContext"
 import { ConditionalNavbar } from "@/components/conditional-navbar"
 import { ConditionalMain } from "@/components/conditional-main"
+import { MuiThemeProvider } from "@/components/mui-theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -34,22 +35,24 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <UserProvider>
-            <div className="min-h-screen bg-gray-50">
-              <ConditionalNavbar />
-              <ConditionalMain>
-                {children}
-              </ConditionalMain>
-            </div>
-            <Toaster />
-          </UserProvider>
-        </ThemeProvider>
+        <MuiThemeProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <UserProvider>
+              <div className="min-h-screen bg-gray-50">
+                <ConditionalNavbar />
+                <ConditionalMain>
+                  {children}
+                </ConditionalMain>
+              </div>
+              <Toaster />
+            </UserProvider>
+          </ThemeProvider>
+        </MuiThemeProvider>
       </body>
     </html>
   )
