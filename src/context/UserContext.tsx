@@ -33,6 +33,7 @@ interface UserContextType {
   loading: boolean
   signOut: () => Promise<void>
   refreshUserData: () => Promise<void>
+  login: (email: string, password: string) => Promise<void>
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
@@ -83,6 +84,30 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const login = async (email: string, password: string) => {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      
+      if (error) {
+        throw error
+      }
+      
+      if (data.user) {
+        setUser(data.user)
+        await fetchUserData(data.user)
+      }
+    } catch (error) {
+      console.error('Error logging in:', error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const signOut = async () => {
     try {
       setLoading(true)
@@ -98,53 +123,51 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
   }
 
-  useEffect(() => {
-    // Obtener sesión inicial
-    const getInitialSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        
-        if (error) {
-          console.error('Error getting session:', error)
-          setLoading(false)
-          return
-        }
-
-        if (session?.user) {
-          setUser(session.user)
-          await fetchUserData(session.user)
-      }
-      } catch (error) {
-        console.error('Error in getInitialSession:', error)
-      } finally {
+useEffect(() => {
+  // Obtener sesión inicial
+  const getInitialSession = async () => {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession()
+      
+      if (error) {
+        console.error('Error getting session:', error)
         setLoading(false)
+        return
       }
+
+      if (session?.user) {
+        setUser(session.user)
+        await fetchUserData(session.user)
+      }
+    } catch (error) {
+      console.error('Error in getInitialSession:', error)
+    } finally {
+      setLoading(false)
     }
+  }
 
-    getInitialSession()
+  getInitialSession()
 
-    // Escuchar cambios de autenticación
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email)
-        
-        if (session?.user) {
-          setUser(session.user)
-          await fetchUserData(session.user)
-        } else {
-          setUser(null)
-          setGuardian(null)
-          setStudents([])
-        }
-        
-        setLoading(false)
+  // Escuchar cambios de autenticación
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      if (session?.user) {
+        setUser(session.user)
+        await fetchUserData(session.user)
+      } else {
+        setUser(null)
+        setGuardian(null)
+        setStudents([])
       }
+      
+      setLoading(false)
+    }
   )
 
-    return () => {
-      subscription.unsubscribe()
-}
-  }, [])
+  return () => {
+    subscription.unsubscribe()
+  }
+}, [])
 
   const value = {
     user,
@@ -153,6 +176,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     loading,
     signOut,
     refreshUserData,
+    login,
   }
 
   return (

@@ -1,8 +1,11 @@
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
+  
+  try {
   const supabase = createMiddlewareClient({ req, res })
 
   // Verificar la sesión del usuario
@@ -12,13 +15,13 @@ export async function middleware(req: NextRequest) {
 
   // Rutas que requieren autenticación
   const protectedRoutes = ['/dashboard', '/perfil', '/pedidos', '/admin']
-  const isProtectedRoute = protectedRoutes.some(route => 
+    const isProtectedRoute = protectedRoutes.some(route => 
     req.nextUrl.pathname.startsWith(route)
   )
   
   // Rutas de autenticación
   const authRoutes = ['/auth/login', '/auth/registro']
-  const isAuthRoute = authRoutes.some(route => 
+    const isAuthRoute = authRoutes.some(route => 
     req.nextUrl.pathname.startsWith(route)
   )
   
@@ -35,6 +38,10 @@ export async function middleware(req: NextRequest) {
   }
 
   return res
+  } catch (error) {
+    console.error('Middleware error:', error)
+    return res
+}
 }
 
 export const config = {

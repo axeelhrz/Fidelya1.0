@@ -130,10 +130,15 @@ export function useAuth() {
       setLoading(false)
     }
   }
+
+  // Función de login que es un alias de signIn para compatibilidad
+  const login = signIn
+
   return {
     signIn,
     signUp,
     signOut,
+    login, // Agregamos esta función para evitar el error "login is not a function"
     loading,
   }
 }

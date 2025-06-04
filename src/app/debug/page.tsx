@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useUser } from '@/context/UserContext'
 
 export default function DebugPage() {
-  const { user, session, guardian, loading, refreshUserData } = useUser()
+  const { user, guardian, loading, refreshUserData } = useUser()
   const [debugInfo, setDebugInfo] = useState<any>({})
   const [testEmail, setTestEmail] = useState('')
   const [testPassword, setTestPassword] = useState('')
@@ -183,7 +183,7 @@ export default function DebugPage() {
                 <strong>Guardian:</strong> {guardian?.full_name || 'No cargado'}
               </div>
               <div>
-                <strong>Session:</strong> {session ? 'Activa' : 'No activa'}
+                <strong>Session:</strong> {debugInfo.session ? 'Activa' : 'No activa'}
               </div>
             </div>
             

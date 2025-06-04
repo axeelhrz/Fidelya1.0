@@ -1,138 +1,116 @@
 "use client"
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, Mail, Lock, LogIn, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { useUser } from '@/context/UserContext'
+import { useToast } from '@/components/ui/use-toast'
+import { supabase } from '@/lib/supabase/client'
+import { Eye, EyeOff, LogIn } from 'lucide-react'
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { login, user, guardian, loading: userLoading } = useUser()
   const router = useRouter()
-  // Efecto para redirigir cuando el usuario esté completamente cargado
-  useEffect(() => {
-    console.log('🔄 Login page - Estado:', { 
-      user: !!user, 
-      guardian: !!guardian, 
-      userLoading,
-      userId: user?.id 
-    })
-
-    // Solo redirigir si no está cargando y hay usuario
-    if (!userLoading && user) {
-      console.log('✅ Usuario autenticado, redirigiendo al dashboard...')
-      // Usar setTimeout para evitar el error de React
-      setTimeout(() => {
-      router.replace('/dashboard')
-      }, 100)
-    }
-  }, [user, guardian, userLoading, router])
-
+  const searchParams = useSearchParams()
+  const { toast } = useToast()
+  
+  const redirectTo = searchParams.get('redirectTo') || '/dashboard'
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     
-    if (!email || !password) {
-      setError('Por favor completa todos los campos')
-      setLoading(false)
-      return
-    }
-
-    console.log('🔐 Intentando login desde formulario...')
     try {
-      await login(email, password)
-      console.log('✅ Login exitoso, esperando carga de datos...')
-      // El useEffect se encargará de la redirección
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (error) {
+        setError(error.message)
+        toast({
+          variant: 'destructive',
+          title: 'Error de autenticación',
+          description: error.message,
+        })
+        return
+      }
+
+      if (data.user) {
+        toast({
+          title: 'Inicio de sesión exitoso',
+          description: 'Bienvenido de vuelta',
+        })
+        router.push(redirectTo)
+      }
     } catch (error) {
-      console.error('❌ Error en login:', error)
-      setError(error instanceof Error ? error.message : 'Error al iniciar sesión')
+      console.error('Error in login:', error)
+      setError('Ocurrió un error inesperado')
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Ocurrió un error inesperado',
+      })
+    } finally {
       setLoading(false)
     }
   }
 
-  // Si ya está autenticado, mostrar loading mientras redirige
-  if (user) {
   return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Card className="w-full max-w-md shadow-xl border-0">
-          <CardContent className="flex flex-col items-center justify-center p-8">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-gray-600">Redirigiendo al dashboard...</p>
-          </CardContent>
-        </Card>
-      </div>
-  )
-}
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-xl border-0">
-          <CardHeader className="space-y-1 text-center">
-            <div className="mx-auto w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mb-4">
-              <LogIn className="w-6 h-6 text-white" />
-            </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">
-              Bienvenido de vuelta
-            </CardTitle>
-            <CardDescription className="text-gray-600">
-              Ingresa a tu cuenta del Casino Escolar
-            </CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">
+            Iniciar Sesión
+          </CardTitle>
+          <CardDescription className="text-center">
+            Ingresa tus credenciales para acceder al sistema
+          </CardDescription>
           </CardHeader>
-          
-          <CardContent className="space-y-4">
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="tu@correo.com"
+                placeholder="tu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
                     required
                     disabled={loading}
                   />
                 </div>
-              </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="password">Contraseña</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Tu contraseña"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
                     required
                     disabled={loading}
                   />
-                  <button
+                <Button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
                     disabled={loading}
                   >
                     {showPassword ? (
@@ -140,69 +118,48 @@ export default function LoginPage() {
                     ) : (
                       <Eye className="h-4 w-4" />
                     )}
-                  </button>
+                </Button>
                 </div>
               </div>
               
-              <div className="flex items-center justify-between">
-                <Link
-                  href="/auth/forgot-password"
-                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                >
-                  ¿Olvidaste tu contraseña?
-                </Link>
-              </div>
-              
-              <Button
+            <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full"
                 disabled={loading}
               >
                 {loading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Iniciando sesión...</span>
-                  </div>
-                ) : (
-                  'Iniciar sesión'
-                )}
-              </Button>
-            </form>
-            
-            <div className="text-center pt-4 border-t">
-              <p className="text-sm text-gray-600">
-                ¿No tienes cuenta?{' '}
-                <Link
-                  href="/auth/registro"
-                  className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Iniciando sesión...
+                </>
+              ) : (
+                <>
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Iniciar Sesión
+                </>
+              )}
+            </Button>
+          </form>
+          
+          <div className="mt-6 text-center space-y-2">
+            <Link
+              href="/auth/forgot-password"
+              className="text-sm text-blue-600 hover:text-blue-500"
                 >
-                  Regístrate aquí
+              ¿Olvidaste tu contraseña?
                 </Link>
-              </p>
+            <div className="text-sm text-gray-600">
+              ¿No tienes cuenta?{' '}
+              <Link
+                href="/auth/registro"
+                className="text-blue-600 hover:text-blue-500 font-medium"
+              >
+                Regístrate aquí
+              </Link>
             </div>
-
-            {/* Debug info en desarrollo */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="text-center pt-4 border-t space-y-2">
-                <Link
-                  href="/debug"
-                  className="block text-xs text-gray-400 hover:text-gray-600"
-                >
-                  Debug de Autenticación
-                </Link>
-                <button
-                  onClick={() => {
-                    setTimeout(() => router.push('/dashboard'), 100)
-                  }}
-                  className="block w-full text-xs text-gray-400 hover:text-gray-600"
-                >
-                  Forzar ir al Dashboard
-                </button>
               </div>
-            )}
           </CardContent>
         </Card>
       </div>
-    </div>
   )
 }
