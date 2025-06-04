@@ -29,13 +29,48 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
   
-  // Cargar datos del guardian y estudiantes - SIMPLIFICADO
+  // Crear perfil de guardian
+  const createGuardianProfile = async (userId: string): Promise<boolean> => {
+    try {
+      console.log('👤 Creando perfil de guardian para:', userId)
+      
+      const { data: userData } = await supabase.auth.getUser()
+      if (!userData.user) {
+        return false
+      }
+
+      const { data, error } = await supabase
+        .from('guardians')
+        .insert({
+          user_id: userId,
+          email: userData.user.email!,
+          full_name: userData.user.user_metadata?.full_name || 'Usuario',
+          is_staff: false
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('❌ Error creando guardian:', error)
+        return false
+      } else {
+        console.log('✅ Perfil de guardian creado:', data)
+        setGuardian(data)
+        return true
+      }
+    } catch (error) {
+      console.error('❌ Error inesperado creando guardian:', error)
+      return false
+    }
+  }
+
+  // Cargar datos del guardian y estudiantes
   const loadUserData = async (userId: string) => {
     try {
       console.log('🔍 Cargando datos del usuario:', userId)
       setLoading(true)
       
-      // Buscar guardian - SIN timeout, dejamos que Supabase maneje sus timeouts
+      // Buscar guardian
       const { data: guardianData, error: guardianError } = await supabase
         .from('guardians')
         .select('*')
@@ -48,10 +83,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         // Si no existe el guardian, intentar crearlo
         if (guardianError.code === 'PGRST116') {
           console.log('👤 Guardian no existe, intentando crear...')
-          await createGuardianProfile(userId)
-          return // createGuardianProfile ya maneja setLoading(false)
-    }
-        // Para otros errores, continuar sin guardian pero terminar loading
+          const created = await createGuardianProfile(userId)
+          if (!created) {
+          setGuardian(null)
+          setStudents([])
+        }
+          setLoading(false)
+          return
+      }
+        
         // Para otros errores, continuar sin guardian
         console.warn('⚠️ Continuando sin guardian debido a error:', guardianError.message)
         setGuardian(null)
@@ -93,51 +133,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const createGuardianProfile = async (userId: string): Promise<void> => {
-  const createGuardianProfile = async (userId: string): Promise<boolean> => {
-    try {
-      console.log('👤 Creando perfil de guardian para:', userId)
-      
-      const { data: userData } = await supabase.auth.getUser()
-      if (!userData.user) {
-        setLoading(false)
-        return
-        return false
-      }
-
-      const { data, error } = await supabase
-        .from('guardians')
-        .insert({
-          user_id: userId,
-          email: userData.user.email!,
-          full_name: userData.user.user_metadata?.full_name || 'Usuario',
-          is_staff: false
-        })
-        .select()
-        .single()
-
-      if (error) {
-        return false
-      } else {
-        console.log('✅ Perfil de guardian creado:', data)
-        setGuardian(data)
-        return true
-      }
-    } catch (error) {
-    } finally {
-      setLoading(false)
-      return false
-    }
-  }
-
   // Función para refrescar datos del usuario
   const refreshUserData = async () => {
     if (user?.id) {
       await loadUserData(user.id)
     }
   }
-  // Función de login
-  // Función de login mejorada
+
   // Función de login
   const signIn = async (email: string, password: string) => {
     try {
@@ -149,7 +151,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (error) {
-        
         // Mensajes de error más específicos
         if (error.message.includes('Invalid login credentials')) {
           return { error: 'Credenciales incorrectas. Verifica tu email y contraseña.' }
@@ -187,9 +188,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       console.error('❌ Error inesperado en signIn:', error)
       return { error: 'Error inesperado al iniciar sesión' }
     }
-  // Función de registro
+  }
 
-  // Función de registro optimizada
   // Función de registro
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
@@ -270,6 +270,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         .eq('id', guardian.id)
 
       if (error) {
+        console.error('❌ Error actualizando perfil:', error)
+        return { error: 'Error al actualizar perfil' }
       }
 
       // Actualizar estado local
@@ -288,8 +290,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Efecto para manejar cambios de autenticación
+  useEffect(() => {
     console.log('🚀 Inicializando UserContext...')
     
+    // Obtener sesión inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('📋 Sesión inicial:', session?.user?.id || 'No hay sesión')
       console.log('📧 Email verificado:', !!session?.user?.email_confirmed_at)
 
@@ -300,6 +305,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         loadUserData(session.user.id)
       } else {
         setLoading(false)
+      }
     })
 
     // Escuchar cambios de autenticación
@@ -340,6 +346,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     updateProfile,
     refreshUserData
   }
+
   return (
     <UserContext.Provider value={value}>
       {children}
@@ -354,3 +361,6 @@ export function useUser() {
   }
   return context
 }
+
+// Exportar tipos para uso en otros componentes
+export type { Guardian, Student }
