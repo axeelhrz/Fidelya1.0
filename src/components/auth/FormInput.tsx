@@ -1,177 +1,117 @@
 "use client"
+import { forwardRef, useState } from "react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-import React, { useState, forwardRef } from 'react'
-import { Eye, EyeOff, Mail, Lock, User, Phone, Check, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
-
-export interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface FormInputProps {
+  id: string
   label: string
+  type?: string
+  placeholder?: string
+  value: string
+  onChange: (value: string) => void
   error?: string
-  success?: string
-  loading?: boolean
-  icon?: 'email' | 'password' | 'user' | 'phone'
-  showPasswordToggle?: boolean
-  strengthMeter?: boolean
+  success?: boolean
+  required?: boolean
+  icon?: React.ReactNode
+  disabled?: boolean
+  className?: string
 }
 
-export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
+const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
   ({ 
-    className, 
-    type, 
+    id, 
     label, 
+    type = "text", 
+    placeholder, 
+    value, 
+    onChange, 
     error, 
     success, 
-    loading, 
+    required, 
     icon, 
-    showPasswordToggle = false,
-    strengthMeter = false,
-    ...props 
+    disabled,
+    className 
   }, ref) => {
     const [showPassword, setShowPassword] = useState(false)
-    const [passwordStrength, setPasswordStrength] = useState(0)
+    const isPassword = type === "password"
+    const inputType = isPassword && showPassword ? "text" : type
 
-    const getIcon = () => {
-      switch (icon) {
-        case 'email':
-          return <Mail className="h-5 w-5 text-gray-400" />
-        case 'password':
-          return <Lock className="h-5 w-5 text-gray-400" />
-        case 'user':
-          return <User className="h-5 w-5 text-gray-400" />
-        case 'phone':
-          return <Phone className="h-5 w-5 text-gray-400" />
-        default:
-          return null
-      }
+    const getInputState = () => {
+      if (error) return "error"
+      if (success && value) return "success"
+      return "default"
     }
 
-    const getValidationIcon = () => {
-      if (loading) {
-        return <div className="animate-pulse w-5 h-5 bg-blue-200 rounded-full" />
-      }
-      if (success) {
-        return <Check className="h-5 w-5 text-green-500" />
-      }
-      if (error) {
-        return <X className="h-5 w-5 text-red-500" />
-      }
-      return null
-    }
-
-    const calculatePasswordStrength = (password: string) => {
-      let strength = 0
-      if (password.length >= 8) strength += 25
-      if (/[A-Z]/.test(password)) strength += 25
-      if (/[0-9]/.test(password)) strength += 25
-      if (/[^A-Za-z0-9]/.test(password)) strength += 25
-      return strength
-    }
-
-    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value
-      if (strengthMeter) {
-        setPasswordStrength(calculatePasswordStrength(value))
-      }
-      props.onChange?.(e)
-    }
-
-    const getStrengthColor = () => {
-      if (passwordStrength < 25) return 'bg-red-500'
-      if (passwordStrength < 50) return 'bg-orange-500'
-      if (passwordStrength < 75) return 'bg-yellow-500'
-      return 'bg-green-500'
-    }
-
-    const getStrengthText = () => {
-      if (passwordStrength < 25) return 'Débil'
-      if (passwordStrength < 50) return 'Regular'
-      if (passwordStrength < 75) return 'Buena'
-      return 'Fuerte'
-    }
+    const inputState = getInputState()
 
     return (
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700 block">
+      <div className={cn("space-y-2", className)}>
+        <Label 
+          htmlFor={id} 
+          className="text-sm font-medium text-gray-700 flex items-center gap-1"
+        >
           {label}
-        </label>
-        <div className="relative">
-          {icon && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              {getIcon()}
-            </div>
-          )}
-          <input
-            type={showPasswordToggle && showPassword ? 'text' : type}
-            className={cn(
-              "flex h-12 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm",
-              "placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-              "disabled:cursor-not-allowed disabled:opacity-50 smooth-transition",
-              icon && "pl-10",
-              (showPasswordToggle || success || error || loading) && "pr-10",
-              error && "border-red-300 bg-red-50",
-              success && "border-green-300 bg-green-50",
-              loading && "border-blue-300 bg-blue-50",
-              className
-            )}
-            ref={ref}
-            onChange={strengthMeter && type === 'password' ? handlePasswordChange : props.onChange}
-            {...props}
-          />
+          {required && <span className="text-red-500">*</span>}
+        </Label>
           
-          {/* Password toggle or validation icon */}
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-            {showPasswordToggle ? (
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 smooth-transition"
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-              >
-                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
-            ) : (
-              getValidationIcon()
-            )}
+        <div className="relative">
+          {/* Ícono izquierdo */}
+          {icon && (
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              {icon}
           </div>
-        </div>
+          )}
 
-        {/* Password strength meter */}
-        {strengthMeter && type === 'password' && props.value && (
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-600">Fortaleza de contraseña</span>
-              <span className={cn(
-                "text-xs font-medium",
-                passwordStrength < 25 && "text-red-600",
-                passwordStrength >= 25 && passwordStrength < 50 && "text-orange-600",
-                passwordStrength >= 50 && passwordStrength < 75 && "text-yellow-600",
-                passwordStrength >= 75 && "text-green-600"
-              )}>
-                {getStrengthText()}
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className={cn("h-2 rounded-full smooth-transition", getStrengthColor())}
-                style={{ width: `${passwordStrength}%` }}
-              />
-            </div>
-          </div>
+          <Input
+            ref={ref}
+            id={id}
+            type={inputType}
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={disabled}
+            className={cn(
+              "transition-all duration-200",
+              icon && "pl-10",
+              isPassword && "pr-10",
+              inputState === "error" && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+              inputState === "success" && "border-green-500 focus:border-green-500 focus:ring-green-500/20",
+              inputState === "default" && "border-gray-300 focus:border-blue-500 focus:ring-blue-500/20"
+        )}
+          />
+
+          {/* Botón mostrar/ocultar contraseña */}
+          {isPassword && (
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
         )}
 
-        {/* Error message */}
+          {/* Ícono de estado */}
+          {!isPassword && (
+            <>
+              {inputState === "error" && (
+                <AlertCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500" size={18} />
+        )}
+              {inputState === "success" && (
+                <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500" size={18} />
+              )}
+            </>
+          )}
+      </div>
+        
+        {/* Mensaje de error */}
         {error && (
-          <p className="text-sm text-red-600 flex items-center gap-1 animate-slideUp">
-            <X className="h-4 w-4" />
+          <p className="text-sm text-red-600 flex items-center gap-1">
+            <AlertCircle size={14} />
             {error}
-          </p>
-        )}
-
-        {/* Success message */}
-        {success && (
-          <p className="text-sm text-green-600 flex items-center gap-1 animate-slideUp">
-            <Check className="h-4 w-4" />
-            {success}
           </p>
         )}
       </div>
@@ -180,3 +120,5 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
 )
 
 FormInput.displayName = "FormInput"
+
+export default FormInput

@@ -9,62 +9,40 @@ import type { User, AuthError } from '@supabase/supabase-js'
 interface AuthState {
   user: User | null
   loading: boolean
-  error: string | null
-  isAuthenticated: boolean
-  loginAttempts: number
-  lastLoginAttempt: Date | null
-}
-
-interface LoginCredentials {
-  email: string
-  password: string
-  rememberMe?: boolean
-}
-
-interface RegisterCredentials {
-  email: string
-  password: string
-  fullName: string
-  phone: string
+  initialized: boolean
 }
 
 export function useAuth() {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     loading: true,
-    error: null,
-    isAuthenticated: false,
-    loginAttempts: 0,
-    lastLoginAttempt: null
+    initialized: false
   })
 
   const router = useRouter()
   const { toast } = useToast()
-
-  // Rate limiting
-  const MAX_LOGIN_ATTEMPTS = 5
-  const LOCKOUT_DURATION = 5 * 60 * 1000 // 5 minutos
 
   useEffect(() => {
     // Obtener sesión inicial
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
-        if (error) throw error
+        if (error) {
+          console.error("Error getting session:", error)
+        }
 
-        setAuthState(prev => ({
-          ...prev,
-          user: session?.user || null,
-          isAuthenticated: !!session?.user,
-          loading: false
-        }))
-      } catch (error) {
-        console.error('Error getting initial session:', error)
-        setAuthState(prev => ({
-          ...prev,
+        setAuthState({
+          user: session?.user ?? null,
           loading: false,
-          error: 'Error al verificar la sesión'
-        }))
+          initialized: true
+        })
+      } catch (error) {
+        console.error("Error in getInitialSession:", error)
+        setAuthState({
+          user: null,
+          loading: false,
+          initialized: true
+        })
       }
     }
 
@@ -73,199 +51,158 @@ export function useAuth() {
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setAuthState(prev => ({
-          ...prev,
-          user: session?.user || null,
-          isAuthenticated: !!session?.user,
-          loading: false
-        }))
+        console.log("Auth state changed:", event, session?.user?.email)
+        setAuthState({
+          user: session?.user ?? null,
+          loading: false,
+          initialized: true
+        })
 
+        // Redireccionar según el evento
         if (event === 'SIGNED_IN') {
-          toast({
-            title: "¡Bienvenido!",
-            description: "Has iniciado sesión correctamente.",
-            variant: "default"
-          })
-        }
-
-        if (event === 'SIGNED_OUT') {
-          toast({
-            title: "Sesión cerrada",
-            description: "Has cerrado sesión correctamente.",
-            variant: "default"
-          })
+          // Verificar si el email está confirmado
+          if (session?.user?.email_confirmed_at) {
+        router.push('/dashboard')
+          } else {
+      toast({
+              title: "Verifica tu email",
+              description: "Por favor, revisa tu correo y confirma tu cuenta antes de continuar.",
+          variant: "default"
+        })
+      }
+        } else if (event === 'SIGNED_OUT') {
+      router.push('/auth/login')
         }
       }
     )
 
     return () => subscription.unsubscribe()
-  }, [toast])
+  }, [router, toast])
 
-  const checkRateLimit = (): boolean => {
-    const { loginAttempts, lastLoginAttempt } = authState
-    
-    if (loginAttempts >= MAX_LOGIN_ATTEMPTS && lastLoginAttempt) {
-      const timeSinceLastAttempt = Date.now() - lastLoginAttempt.getTime()
-      if (timeSinceLastAttempt < LOCKOUT_DURATION) {
-        const remainingTime = Math.ceil((LOCKOUT_DURATION - timeSinceLastAttempt) / 60000)
-        setAuthState(prev => ({
-          ...prev,
-          error: `Demasiados intentos fallidos. Intenta nuevamente en ${remainingTime} minutos.`
-        }))
-        return false
-      } else {
-        // Reset attempts after lockout period
-        setAuthState(prev => ({
-          ...prev,
-          loginAttempts: 0,
-          lastLoginAttempt: null
-        }))
-      }
-    }
-    
-    return true
-  }
-
-  const login = async ({ email, password, rememberMe }: LoginCredentials) => {
-    if (!checkRateLimit()) return false
-
-    setAuthState(prev => ({ ...prev, loading: true, error: null }))
-
+  const signIn = async (email: string, password: string) => {
     try {
+      setAuthState(prev => ({ ...prev, loading: true }))
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password
       })
 
-      if (error) throw error
-
-      // Reset login attempts on successful login
-      setAuthState(prev => ({
-        ...prev,
-        loginAttempts: 0,
-        lastLoginAttempt: null,
-        loading: false
-      }))
-
-      // Handle remember me functionality
-      if (rememberMe) {
-        localStorage.setItem('rememberMe', 'true')
-      } else {
-        localStorage.removeItem('rememberMe')
+      if (error) {
+        throw error
       }
 
-      // Redirect based on user role
-      const { data: guardian } = await supabase
-        .from('guardians')
-        .select('is_staff')
-        .eq('user_id', data.user.id)
-        .single()
-
-      if (guardian?.is_staff) {
-        router.push('/admin')
-      } else {
-        router.push('/dashboard')
+      // Verificar si el email está confirmado
+      if (!data.user?.email_confirmed_at) {
+      toast({
+          title: "Email no verificado",
+          description: "Por favor, verifica tu email antes de continuar. Revisa tu bandeja de entrada.",
+          variant: "destructive"
+      })
+        await supabase.auth.signOut()
+        return { success: false, error: "Email no verificado" }
       }
 
-      return true
+      toast({
+        title: "¡Bienvenido!",
+        description: "Has iniciado sesión correctamente.",
+      })
+
+      return { success: true, user: data.user }
     } catch (error: any) {
-      console.error('Login error:', error)
+      console.error("Error signing in:", error)
       
-      // Increment login attempts
-      setAuthState(prev => ({
-        ...prev,
-        loginAttempts: prev.loginAttempts + 1,
-        lastLoginAttempt: new Date(),
-        loading: false,
-        error: getAuthErrorMessage(error)
-      }))
+      let errorMessage = "Error al iniciar sesión"
+      
+      if (error.message?.includes("Invalid login credentials")) {
+        errorMessage = "Email o contraseña incorrectos"
+      } else if (error.message?.includes("Email not confirmed")) {
+        errorMessage = "Por favor, verifica tu email antes de continuar"
+      } else if (error.message?.includes("Too many requests")) {
+        errorMessage = "Demasiados intentos. Intenta nuevamente en unos minutos"
+    }
 
       toast({
         title: "Error de autenticación",
-        description: getAuthErrorMessage(error),
+        description: errorMessage,
         variant: "destructive"
       })
 
-      return false
-    }
+      return { success: false, error: errorMessage }
+    } finally {
+      setAuthState(prev => ({ ...prev, loading: false }))
+  }
   }
 
-  const register = async ({ email, password, fullName, phone }: RegisterCredentials) => {
-    setAuthState(prev => ({ ...prev, loading: true, error: null }))
-
+  const signUp = async (email: string, password: string, userData: any) => {
     try {
-      // Registrar usuario en Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      setAuthState(prev => ({ ...prev, loading: true }))
+      
+      const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
         options: {
           data: {
-            full_name: fullName.trim(),
-            phone: phone.trim()
+            full_name: userData.fullName,
+            phone: userData.phone,
+            student_name: userData.studentName,
+            student_grade: userData.studentGrade
           }
         }
       })
 
-      if (authError) throw authError
-
-      if (authData.user) {
-        // Crear perfil de guardian
-        const { error: profileError } = await supabase
-          .from('guardians')
-          .insert({
-            user_id: authData.user.id,
-            full_name: fullName.trim(),
-            email: email.trim().toLowerCase(),
-            phone: phone.trim(),
-            is_staff: false
-          })
-
-        if (profileError) throw profileError
-
-        toast({
-          title: "¡Registro exitoso!",
-          description: "Tu cuenta ha sido creada. Por favor verifica tu email.",
-          variant: "default"
-        })
-
-        router.push('/auth/login?message=Verifica tu email para continuar')
-        return true
+      if (error) {
+        throw error
       }
 
-      return false
+      if (data.user) {
+        toast({
+          title: "¡Registro exitoso! 🎉",
+          description: "Te hemos enviado un correo de verificación. Por favor, revísalo para activar tu cuenta.",
+        })
+
+        return { success: true, user: data.user }
+      }
+
+      return { success: false, error: "Error desconocido" }
     } catch (error: any) {
-      console.error('Registration error:', error)
+      console.error("Error signing up:", error)
       
-      setAuthState(prev => ({
-        ...prev,
-        loading: false,
-        error: getAuthErrorMessage(error)
-      }))
+      let errorMessage = "Error al crear la cuenta"
+      
+      if (error.message?.includes("User already registered")) {
+        errorMessage = "Este email ya está registrado. ¿Quieres iniciar sesión?"
+      } else if (error.message?.includes("Password should be at least")) {
+        errorMessage = "La contraseña debe tener al menos 6 caracteres"
+      } else if (error.message?.includes("Invalid email")) {
+        errorMessage = "El formato del email no es válido"
+      }
 
       toast({
-        title: "Error en el registro",
-        description: getAuthErrorMessage(error),
+        title: "Error de registro",
+        description: errorMessage,
         variant: "destructive"
       })
 
-      return false
+      return { success: false, error: errorMessage }
+    } finally {
+      setAuthState(prev => ({ ...prev, loading: false }))
     }
   }
 
-  const logout = async () => {
-    setAuthState(prev => ({ ...prev, loading: true }))
-
+  const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-
-      localStorage.removeItem('rememberMe')
-      router.push('/auth/login')
-    } catch (error: any) {
-      console.error('Logout error:', error)
+      setAuthState(prev => ({ ...prev, loading: true }))
+      await supabase.auth.signOut()
+      
       toast({
-        title: "Error al cerrar sesión",
-        description: "Hubo un problema al cerrar la sesión.",
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente.",
+      })
+    } catch (error) {
+      console.error("Error signing out:", error)
+      toast({
+        title: "Error",
+        description: "Error al cerrar sesión",
         variant: "destructive"
       })
     } finally {
@@ -274,65 +211,41 @@ export function useAuth() {
   }
 
   const resetPassword = async (email: string) => {
-    setAuthState(prev => ({ ...prev, loading: true, error: null }))
-
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`
       })
 
-      if (error) throw error
+      if (error) {
+        throw error
+      }
 
       toast({
         title: "Email enviado",
-        description: "Revisa tu correo para restablecer tu contraseña.",
-        variant: "default"
+        description: "Te hemos enviado un enlace para restablecer tu contraseña.",
       })
 
-      return true
+      return { success: true }
     } catch (error: any) {
-      console.error('Reset password error:', error)
+      console.error("Error resetting password:", error)
       
-      setAuthState(prev => ({
-        ...prev,
-        loading: false,
-        error: getAuthErrorMessage(error)
-      }))
-
       toast({
         title: "Error",
-        description: getAuthErrorMessage(error),
+        description: "Error al enviar el email de recuperación",
         variant: "destructive"
       })
 
-      return false
+      return { success: false, error: error.message }
     }
   }
 
   return {
-    ...authState,
-    login,
-    register,
-    logout,
+    user: authState.user,
+    loading: authState.loading,
+    initialized: authState.initialized,
+    signIn,
+    signUp,
+    signOut,
     resetPassword
-  }
-}
-
-function getAuthErrorMessage(error: AuthError | any): string {
-  switch (error?.message || error?.code) {
-    case 'Invalid login credentials':
-      return 'Credenciales incorrectas. Verifica tu email y contraseña.'
-    case 'Email not confirmed':
-      return 'Por favor confirma tu email antes de iniciar sesión.'
-    case 'User already registered':
-      return 'Este email ya está registrado. Intenta iniciar sesión.'
-    case 'Password should be at least 6 characters':
-      return 'La contraseña debe tener al menos 6 caracteres.'
-    case 'Unable to validate email address: invalid format':
-      return 'El formato del email no es válido.'
-    case 'signup_disabled':
-      return 'El registro está temporalmente deshabilitado.'
-    default:
-      return error?.message || 'Ha ocurrido un error inesperado.'
   }
 }

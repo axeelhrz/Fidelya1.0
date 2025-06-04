@@ -1,6 +1,5 @@
 "use client"
-
-import { useState, useCallback } from 'react'
+import { useState, useCallback } from "react"
 
 interface ValidationRule {
   required?: boolean
@@ -14,164 +13,148 @@ interface ValidationRules {
   [key: string]: ValidationRule
 }
 
-interface ValidationState {
-  [key: string]: {
-    error: string | null
-    success: string | null
-    isValid: boolean
-  }
+interface ValidationErrors {
+  [key: string]: string
 }
 
 export function useFormValidation(rules: ValidationRules) {
-  const [validationState, setValidationState] = useState<ValidationState>({})
-  const [isFormValid, setIsFormValid] = useState(false)
-
-
-const validateField = useCallback((name: string, value: string): boolean => {
+  const [errors, setErrors] = useState<ValidationErrors>({})
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
+  const validateField = useCallback((name: string, value: string): string | null => {
     const rule = rules[name]
-    if (!rule) return true
-
-    let error: string | null = null
-    let success: string | null = null
+    if (!rule) return null
 
     // Required validation
-    if (rule.required && (!value || value.trim() === '')) {
-      error = 'Este campo es obligatorio'
+    if (rule.required && (!value || value.trim() === "")) {
+      return "Este campo es obligatorio"
     }
+
+    // Skip other validations if field is empty and not required
+    if (!value || value.trim() === "") {
+      return null
+    }
+
     // Min length validation
-    else if (rule.minLength && value.length < rule.minLength) {
-      error = `Debe tener al menos ${rule.minLength} caracteres`
+    if (rule.minLength && value.length < rule.minLength) {
+      return `Debe tener al menos ${rule.minLength} caracteres`
     }
+
     // Max length validation
-    else if (rule.maxLength && value.length > rule.maxLength) {
-      error = `No puede exceder ${rule.maxLength} caracteres`
+    if (rule.maxLength && value.length > rule.maxLength) {
+      return `No puede tener más de ${rule.maxLength} caracteres`
     }
+
     // Pattern validation
-    else if (rule.pattern && !rule.pattern.test(value)) {
-      error = getPatternErrorMessage(name, rule.pattern)
+    if (rule.pattern && !rule.pattern.test(value)) {
+      if (name === "email") {
+        return "Ingresa un email válido"
+      }
+      if (name === "phone") {
+        return "Ingresa un teléfono válido"
+      }
+      return "Formato inválido"
     }
+
     // Custom validation
-    else if (rule.custom) {
-      error = rule.custom(value)
-    }
-    // Success state
-    else if (value && value.trim() !== '') {
-      success = getSuccessMessage(name)
+    if (rule.custom) {
+      return rule.custom(value)
     }
 
-    const isValid = !error
-    
-    setValidationState(prev => ({
-      ...prev,
-      [name]: { error, success, isValid }
-    }))
-
-    return isValid
+    return null
   }, [rules])
 
-  const validateForm = useCallback((formData: { [key: string]: string }): boolean => {
-    let allValid = true
-    
+  const validateForm = useCallback((formData: { [key: string]: string }) => {
+    const newErrors: ValidationErrors = {}
+    let isValid = true
+
     Object.keys(rules).forEach(fieldName => {
-      const isFieldValid = validateField(fieldName, formData[fieldName] || '')
-      if (!isFieldValid) allValid = false
+      const error = validateField(fieldName, formData[fieldName] || "")
+      if (error) {
+        newErrors[fieldName] = error
+        isValid = false
+      }
     })
 
-    setIsFormValid(allValid)
-    return allValid
+    setErrors(newErrors)
+    return { isValid, errors: newErrors }
   }, [rules, validateField])
 
-  const clearValidation = useCallback((fieldName?: string) => {
-    if (fieldName) {
-      setValidationState(prev => ({
-        ...prev,
-        [fieldName]: { error: null, success: null, isValid: false }
-      }))
-    } else {
-      setValidationState({})
-      setIsFormValid(false)
-    }
+  const validateSingleField = useCallback((name: string, value: string) => {
+    const error = validateField(name, value)
+    
+    setErrors(prev => ({
+      ...prev,
+      [name]: error || ""
+    }))
+
+    return error
+  }, [validateField])
+
+  const markFieldAsTouched = useCallback((name: string) => {
+    setTouched(prev => ({
+      ...prev,
+      [name]: true
+    }))
   }, [])
 
-  const getFieldValidation = useCallback((fieldName: string) => {
-    return validationState[fieldName] || { error: null, success: null, isValid: false }
-  }, [validationState])
+  const clearErrors = useCallback(() => {
+    setErrors({})
+    setTouched({})
+  }, [])
+
+  const clearFieldError = useCallback((name: string) => {
+    setErrors(prev => {
+      const newErrors = { ...prev }
+      delete newErrors[name]
+      return newErrors
+    })
+  }, [])
 
   return {
-    validateField,
+    errors,
+    touched,
     validateForm,
-    clearValidation,
-    getFieldValidation,
-    isFormValid,
-    validationState
+    validateSingleField,
+    markFieldAsTouched,
+    clearErrors,
+    clearFieldError
   }
 }
 
-function getPatternErrorMessage(fieldName: string, pattern: RegExp): string {
-  switch (fieldName) {
-    case 'email':
-      return 'Ingresa un email válido'
-    case 'phone':
-      return 'Ingresa un número de teléfono válido (ej: +56912345678)'
-    case 'password':
-      return 'La contraseña debe contener al menos una mayúscula, un número y un carácter especial'
-    default:
-      return 'El formato no es válido'
-  }
-}
-
-function getSuccessMessage(fieldName: string): string {
-  switch (fieldName) {
-    case 'email':
-      return 'Email válido'
-    case 'phone':
-      return 'Teléfono válido'
-    case 'password':
-      return 'Contraseña segura'
-    case 'fullName':
-      return 'Nombre válido'
-    default:
-      return 'Campo válido'
-  }
-}
-
-// Validation patterns
-export const validationPatterns = {
-  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  phone: /^(\+56)?[0-9]{8,9}$/,
-  password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-  name: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/
-}
-
-// Common validation rules
-export const commonValidationRules = {
+// Reglas de validación predefinidas
+export const authValidationRules: ValidationRules = {
   email: {
     required: true,
-    pattern: validationPatterns.email,
-    maxLength: 255
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   },
   password: {
     required: true,
-    minLength: 8,
-    pattern: validationPatterns.password
+    minLength: 6,
+    custom: (value: string) => {
+      if (!/(?=.*[a-z])/.test(value)) {
+        return "Debe contener al menos una letra minúscula"
+      }
+      if (!/(?=.*[A-Z])/.test(value)) {
+        return "Debe contener al menos una letra mayúscula"
+      }
+      if (!/(?=.*\d)/.test(value)) {
+        return "Debe contener al menos un número"
+      }
+      return null
+    }
   },
   fullName: {
     required: true,
     minLength: 2,
-    maxLength: 100,
-    pattern: validationPatterns.name
+    maxLength: 100
+  },
+  studentName: {
+    required: true,
+    minLength: 2,
+    maxLength: 100
   },
   phone: {
-    required: true,
-    pattern: validationPatterns.phone
-  },
-  confirmPassword: {
-    required: true,
-    custom: (value: string, formData?: { password: string }) => {
-      if (formData && value !== formData.password) {
-        return 'Las contraseñas no coinciden'
-      }
-      return null
-    }
+    required: false,
+    pattern: /^(\+?56)?[0-9]{8,9}$/
   }
 }

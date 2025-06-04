@@ -2,64 +2,48 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { AuthLayout } from '@/components/auth/AuthLayout'
-import { FormInput } from '@/components/auth/FormInput'
-import { SubmitButton } from '@/components/auth/SubmitButton'
+import { Mail, ArrowLeft } from 'lucide-react'
+import AuthLayout from '@/components/auth/AuthLayout'
+import FormInput from '@/components/auth/FormInput'
+import SubmitButton from '@/components/auth/SubmitButton'
 import { useAuth } from '@/hooks/useAuth'
-import { useFormValidation, commonValidationRules } from '@/hooks/useFormValidation'
-import { ArrowLeft, Mail } from 'lucide-react'
-
+import { useFormValidation, authValidationRules } from '@/hooks/useFormValidation'
 export default function ForgotPasswordPage() {
-  const [formData, setFormData] = useState({
-    email: ''
+  const [email, setEmail] = useState("")
+  const [isSubmitted, setIsSubmitted] = useState(false)
+  const { resetPassword, loading } = useAuth()
+  const { errors, validateSingleField } = useFormValidation({
+    email: authValidationRules.email
   })
-  const [emailSent, setEmailSent] = useState(false)
-
-  const { resetPassword, loading, error } = useAuth()
-
-  const validationRules = {
-    email: commonValidationRules.email
-  }
-
-  const { validateField, validateForm, getFieldValidation, isFormValid } = useFormValidation(validationRules)
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    validateField(name, value)
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!validateForm(formData)) {
-      return
+    const error = validateSingleField("email", email)
+    if (error) return
+
+    const result = await resetPassword(email)
+    if (result.success) {
+      setIsSubmitted(true)
+    }
     }
 
-    const success = await resetPassword(formData.email)
-    if (success) {
-      setEmailSent(true)
-    }
-  }
-
-  const emailValidation = getFieldValidation('email')
-
-  if (emailSent) {
+  if (isSubmitted) {
     return (
       <AuthLayout 
         title="Email Enviado"
-        subtitle="Revisa tu correo electrónico"
+        subtitle="Revisa tu correo para continuar"
+        showIllustration={false}
       >
         <div className="text-center space-y-6">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-            <Mail className="h-8 w-8 text-green-600" />
+            <Mail className="w-8 h-8 text-green-600" />
           </div>
           
           <div className="space-y-2">
             <p className="text-gray-700">
-              Hemos enviado un enlace de recuperación a:
+              Te hemos enviado un enlace de recuperación a:
             </p>
-            <p className="font-medium text-gray-900">{formData.email}</p>
+            <p className="font-semibold text-gray-900">{email}</p>
           </div>
 
           <div className="space-y-4">
@@ -67,71 +51,60 @@ export default function ForgotPasswordPage() {
               Revisa tu bandeja de entrada y sigue las instrucciones para restablecer tu contraseña.
             </p>
             
-            <div className="flex flex-col space-y-3">
-              <SubmitButton
-                onClick={() => setEmailSent(false)}
-                variant="outline"
-                className="w-full"
-              >
-                Enviar otro email
-              </SubmitButton>
-              
+            <div className="space-y-2">
               <Link 
                 href="/auth/login"
-                className="inline-flex items-center justify-center text-sm font-medium text-blue-600 hover:text-blue-500 smooth-transition"
+                className="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
               >
-                <ArrowLeft className="h-4 w-4 mr-1" />
+                <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver al inicio de sesión
               </Link>
-            </div>
+              <button
+                onClick={() => setIsSubmitted(false)}
+                className="w-full text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                ¿No recibiste el email? Intentar nuevamente
+              </button>
+        </div>
           </div>
         </div>
-      </AuthLayout>
-    )
-  }
+    </AuthLayout>
+  )
+}
 
   return (
-    <AuthLayout 
+    <AuthLayout
       title="Recuperar Contraseña"
       subtitle="Ingresa tu email para recibir un enlace de recuperación"
+      showIllustration={false}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <FormInput
-          name="email"
+          id="email"
+          label="Correo electrónico"
           type="email"
-          label="Correo Electrónico"
           placeholder="tu@email.com"
-          value={formData.email}
-          onChange={handleInputChange}
-          icon="email"
-          error={emailValidation.error || undefined}
-          success={emailValidation.success || undefined}
-          autoComplete="email"
+          value={email}
+          onChange={(value) => {
+            setEmail(value)
+            if (value) validateSingleField("email", value)
+          }}
+          error={errors.email}
+          success={!errors.email && email !== ""}
           required
+          icon={<Mail size={18} />}
         />
 
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg animate-slideUp">
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        )}
-
-        <SubmitButton
-          type="submit"
-          loading={loading}
-          loadingText="Enviando email..."
-          disabled={!isFormValid}
-          className="w-full"
-        >
-          Enviar Enlace de Recuperación
+        <SubmitButton loading={loading}>
+          Enviar enlace de recuperación
         </SubmitButton>
 
         <div className="text-center">
           <Link 
             href="/auth/login"
-            className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500 smooth-transition"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-800 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="w-4 h-4 mr-1" />
             Volver al inicio de sesión
           </Link>
         </div>

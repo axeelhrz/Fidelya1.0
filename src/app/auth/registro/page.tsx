@@ -2,225 +2,273 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { AuthLayout } from '@/components/auth/AuthLayout'
-import { FormInput } from '@/components/auth/FormInput'
-import { SubmitButton } from '@/components/auth/SubmitButton'
-import { useAuth } from '@/hooks/useAuth'
-import { useFormValidation, commonValidationRules } from '@/hooks/useFormValidation'
+import { Mail, Lock, User, GraduationCap, Phone } from "lucide-react"
+import AuthLayout from '@/components/auth/AuthLayout'
+import FormInput from '@/components/auth/FormInput'
+import SubmitButton from '@/components/auth/SubmitButton'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-export default function RegisterPage() {
+import { useAuth } from '@/hooks/useAuth'
+import { useFormValidation, authValidationRules } from '@/hooks/useFormValidation'
+
+// Cursos disponibles
+const GRADES = [
+  { value: "PRE_KINDER", label: "Pre Kinder", level: "PREESCOLAR" },
+  { value: "KINDER", label: "Kinder", level: "PREESCOLAR" },
+  { value: "PRIMERO_BASICO", label: "1° Básico", level: "BASICA" },
+  { value: "SEGUNDO_BASICO", label: "2° Básico", level: "BASICA" },
+  { value: "TERCERO_BASICO", label: "3° Básico", level: "BASICA" },
+  { value: "CUARTO_BASICO", label: "4° Básico", level: "BASICA" },
+  { value: "QUINTO_BASICO", label: "5° Básico", level: "BASICA" },
+  { value: "SEXTO_BASICO", label: "6° Básico", level: "BASICA" },
+  { value: "SEPTIMO_BASICO", label: "7° Básico", level: "BASICA" },
+  { value: "OCTAVO_BASICO", label: "8° Básico", level: "BASICA" },
+  { value: "PRIMERO_MEDIO", label: "1° Medio", level: "MEDIA" },
+  { value: "SEGUNDO_MEDIO", label: "2° Medio", level: "MEDIA" },
+  { value: "TERCERO_MEDIO", label: "3° Medio", level: "MEDIA" },
+  { value: "CUARTO_MEDIO", label: "4° Medio", level: "MEDIA" }
+]
+export default function RegistroPage() {
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
+    fullName: "",
+    email: "",
+    password: "",
+    studentName: "",
+    studentGrade: "",
+    phone: "",
     acceptTerms: false
   })
 
-  const { register, loading, error } = useAuth()
+  const [formErrors, setFormErrors] = useState({
+    studentGrade: "",
+    acceptTerms: ""
+  })
+  const { signUp, loading } = useAuth()
+  const { errors, validateForm, validateSingleField, markFieldAsTouched } = useFormValidation({
+    fullName: authValidationRules.fullName,
+    email: authValidationRules.email,
+    password: authValidationRules.password,
+    studentName: authValidationRules.studentName,
+    phone: authValidationRules.phone
+  })
 
-  const validationRules = {
-    fullName: commonValidationRules.fullName,
-    email: commonValidationRules.email,
-    phone: commonValidationRules.phone,
-    password: commonValidationRules.password,
-    confirmPassword: {
-      required: true,
-      custom: (value: string) => {
-        if (value !== formData.password) {
-          return 'Las contraseñas no coinciden'
-        }
-        return null
-      }
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    
+    // Clear form errors when user starts typing
+    if (formErrors[field as keyof typeof formErrors]) {
+      setFormErrors(prev => ({ ...prev, [field]: "" }))
+    }
+    
+    // Validate field on change if it was previously touched
+    if (formData[field as keyof typeof formData] !== "") {
+      validateSingleField(field, value)
     }
   }
 
-  const { validateField, validateForm, getFieldValidation, isFormValid } = useFormValidation(validationRules)
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    const newValue = type === 'checkbox' ? checked : value
-
-    setFormData(prev => ({ ...prev, [name]: newValue }))
-
-    // Validate field on change (except checkbox)
-    if (type !== 'checkbox') {
-      validateField(name, value)
-      
-      // Re-validate confirm password when password changes
-      if (name === 'password' && formData.confirmPassword) {
-        validateField('confirmPassword', formData.confirmPassword)
-      }
+  const handleInputBlur = (field: string) => {
+    markFieldAsTouched(field)
+    const value = formData[field as keyof typeof formData]
+    if (typeof value === 'string') {
+      validateSingleField(field, value)
     }
   }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    const { acceptTerms, ...validationData } = formData
-    if (!validateForm(validationData)) {
-      return
+    // Validate form fields
+    const { isValid } = validateForm({
+      fullName: formData.fullName,
+      email: formData.email,
+      password: formData.password,
+      studentName: formData.studentName,
+      phone: formData.phone
+    })
+    
+    // Additional validations
+    let hasErrors = false
+    const newFormErrors = { studentGrade: "", acceptTerms: "" }
+    
+    if (!formData.studentGrade) {
+      newFormErrors.studentGrade = "Selecciona el curso del estudiante"
+      hasErrors = true
     }
 
     if (!formData.acceptTerms) {
-      alert('Debes aceptar los términos y condiciones')
-      return
+      newFormErrors.acceptTerms = "Debes aceptar los términos y condiciones"
+      hasErrors = true
     }
 
-    const success = await register({
-      email: formData.email,
-      password: formData.password,
+    setFormErrors(newFormErrors)
+    
+    if (!isValid || hasErrors) return
+
+    const userData = {
       fullName: formData.fullName,
-      phone: formData.phone
-    })
-
-    if (success) {
-      // Reset form on successful registration
-      setFormData({
-        fullName: '',
-        email: '',
-        phone: '',
-        password: '',
-        confirmPassword: '',
-        acceptTerms: false
-      })
+      phone: formData.phone,
+      studentName: formData.studentName,
+      studentGrade: formData.studentGrade
     }
+
+    await signUp(formData.email, formData.password, userData)
   }
-
-  const fullNameValidation = getFieldValidation('fullName')
-  const emailValidation = getFieldValidation('email')
-  const phoneValidation = getFieldValidation('phone')
-  const passwordValidation = getFieldValidation('password')
-  const confirmPasswordValidation = getFieldValidation('confirmPassword')
-
-  const isFormCompleteAndValid = isFormValid && formData.acceptTerms
   return (
     <AuthLayout 
       title="Crear Cuenta"
-      subtitle="Casino Escolar"
+      subtitle="Regístrate para gestionar los pedidos de tu hijo/a"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Información del responsable */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+            Información del Responsable
+          </h3>
+          
         <FormInput
-          name="fullName"
-          type="text"
-          label="Nombre Completo"
-          placeholder="Ingresa tu nombre completo"
-          value={formData.fullName}
-          onChange={handleInputChange}
-          icon="user"
-          error={fullNameValidation.error || undefined}
-          success={fullNameValidation.success || undefined}
-          autoComplete="name"
-          required
+            id="fullName"
+            label="Nombre completo del responsable"
+            type="text"
+            placeholder="Juan Pérez González"
+            value={formData.fullName}
+            onChange={(value) => handleInputChange("fullName", value)}
+            error={errors.fullName}
+            success={!errors.fullName && formData.fullName !== ""}
+            required
+            icon={<User size={18} />}
         />
 
         <FormInput
-          name="email"
-          type="email"
-          label="Correo Electrónico"
-          placeholder="tu@email.com"
-          value={formData.email}
-          onChange={handleInputChange}
-          icon="email"
-          error={emailValidation.error || undefined}
-          success={emailValidation.success || undefined}
-          autoComplete="email"
-          required
+            id="email"
+            label="Correo electrónico"
+            type="email"
+            placeholder="tu@email.com"
+            value={formData.email}
+            onChange={(value) => handleInputChange("email", value)}
+            error={errors.email}
+            success={!errors.email && formData.email !== ""}
+            required
+            icon={<Mail size={18} />}
         />
 
         <FormInput
-          name="phone"
-          type="tel"
-          label="Teléfono"
-          placeholder="+56912345678"
-          value={formData.phone}
-          onChange={handleInputChange}
-          icon="phone"
-          error={phoneValidation.error || undefined}
-          success={phoneValidation.success || undefined}
-          autoComplete="tel"
-          required
+            id="password"
+            label="Contraseña"
+            type="password"
+            placeholder="Mínimo 6 caracteres"
+            value={formData.password}
+            onChange={(value) => handleInputChange("password", value)}
+            error={errors.password}
+            required
+            icon={<Lock size={18} />}
         />
 
         <FormInput
-          name="password"
-          type="password"
-          label="Contraseña"
-          placeholder="Crea una contraseña segura"
-          value={formData.password}
-          onChange={handleInputChange}
-          icon="password"
-          showPasswordToggle
-          strengthMeter
-          error={passwordValidation.error || undefined}
-          success={passwordValidation.success || undefined}
-          autoComplete="new-password"
-          required
+            id="phone"
+            label="Teléfono de contacto"
+            type="tel"
+            placeholder="+56 9 1234 5678 (opcional)"
+            value={formData.phone}
+            onChange={(value) => handleInputChange("phone", value)}
+            error={errors.phone}
+            success={!errors.phone && formData.phone !== ""}
+            icon={<Phone size={18} />}
         />
-
-        <FormInput
-          name="confirmPassword"
-          type="password"
-          label="Confirmar Contraseña"
-          placeholder="Repite tu contraseña"
-          value={formData.confirmPassword}
-          onChange={handleInputChange}
-          icon="password"
-          showPasswordToggle
-          error={confirmPasswordValidation.error || undefined}
-          success={confirmPasswordValidation.success || undefined}
-          autoComplete="new-password"
-          required
-        />
-
-        <div className="flex items-start space-x-2">
-          <Checkbox
-            id="acceptTerms"
-            name="acceptTerms"
-            checked={formData.acceptTerms}
-            onCheckedChange={(checked) => 
-              setFormData(prev => ({ ...prev, acceptTerms: checked as boolean }))
-            }
-            className="mt-1"
-          />
-          <label 
-            htmlFor="acceptTerms" 
-            className="text-sm text-gray-700 cursor-pointer leading-relaxed"
-          >
-            Acepto los{' '}
-            <Link 
-              href="/terms" 
-              className="font-medium text-blue-600 hover:text-blue-500 smooth-transition"
-              target="_blank"
-            >
-              términos y condiciones
-            </Link>
-            {' '}y la{' '}
-            <Link 
-              href="/privacy" 
-              className="font-medium text-blue-600 hover:text-blue-500 smooth-transition"
-              target="_blank"
-            >
-              política de privacidad
-            </Link>
-          </label>
         </div>
 
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg animate-slideUp">
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        )}
+        {/* Información del estudiante */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+            Información del Estudiante
+          </h3>
+          
+          <FormInput
+            id="studentName"
+            label="Nombre completo del estudiante"
+            type="text"
+            placeholder="María Pérez López"
+            value={formData.studentName}
+            onChange={(value) => handleInputChange("studentName", value)}
+            error={errors.studentName}
+            success={!errors.studentName && formData.studentName !== ""}
+            required
+            icon={<GraduationCap size={18} />}
+          />
 
-        <SubmitButton
-          type="submit"
-          loading={loading}
-          loadingText="Creando cuenta..."
-          disabled={!isFormCompleteAndValid}
-          className="w-full"
+          <div className="space-y-2">
+        <Label htmlFor="studentGrade" className="text-sm font-medium text-gray-700">
+          Curso del estudiante
+          <span className="text-red-500">*</span>
+        </Label>
+        <Select 
+          value={formData.studentGrade} 
+          onValueChange={(value) => handleInputChange("studentGrade", value)}
         >
-          Crear Cuenta
+          <SelectTrigger className={`transition-all duration-200 ${
+                formErrors.studentGrade 
+                  ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" 
+                  : formData.studentGrade 
+                    ? "border-green-500 focus:border-green-500 focus:ring-green-500/20"
+                    : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/20"
+              }`}>
+                <SelectValue placeholder="Selecciona el curso" />
+              </SelectTrigger>
+              <SelectContent>
+                {GRADES.map((grade) => (
+                  <SelectItem key={grade.value} value={grade.value}>
+                    {grade.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {formErrors.studentGrade && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <GraduationCap size={14} />
+                {formErrors.studentGrade}
+          </p>
+            )}
+          </div>
+        </div>
+
+        {/* Términos y condiciones */}
+        <div className="space-y-4">
+          <div className="flex items-start space-x-3">
+            <Checkbox
+              id="acceptTerms"
+              checked={formData.acceptTerms}
+              onCheckedChange={(checked) => 
+                handleInputChange("acceptTerms", checked ? "true" : "false")
+}
+              className={`mt-1 ${
+                formErrors.acceptTerms ? "border-red-500" : ""
+              }`}
+            />
+            <div className="space-y-1">
+              <Label 
+                htmlFor="acceptTerms" 
+                className="text-sm text-gray-700 cursor-pointer leading-relaxed"
+              >
+                Acepto los{" "}
+                <Link 
+                  href="/terminos" 
+                  className="text-blue-600 hover:text-blue-800 underline"
+                  target="_blank"
+                >
+                  términos y condiciones
+                </Link>{" "}
+                del servicio de casino escolar
+              </Label>
+              {formErrors.acceptTerms && (
+                <p className="text-sm text-red-600">
+                  {formErrors.acceptTerms}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <SubmitButton loading={loading}>
+          Registrarme
         </SubmitButton>
 
         <div className="text-center">
@@ -228,9 +276,9 @@ export default function RegisterPage() {
             ¿Ya tienes cuenta?{' '}
             <Link 
               href="/auth/login"
-              className="font-medium text-blue-600 hover:text-blue-500 smooth-transition"
+              className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
             >
-              Inicia sesión
+              Inicia sesión aquí
             </Link>
           </p>
         </div>
