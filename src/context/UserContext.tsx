@@ -29,17 +29,28 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
   
-  // Cargar datos del guardian y estudiantes
+  // Cargar datos del guardian y estudiantes con mejor manejo de errores
   const loadUserData = async (userId: string) => {
     try {
       console.log('🔍 Cargando datos del usuario:', userId)
+      setLoading(true)
       
-      // Buscar guardian
-      const { data: guardianData, error: guardianError } = await supabase
+      // Buscar guardian con timeout
+      const guardianPromise = supabase
         .from('guardians')
         .select('*')
         .eq('user_id', userId)
         .single()
+
+      // Agregar timeout de 10 segundos
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 10000)
+    )
+
+      const { data: guardianData, error: guardianError } = await Promise.race([
+        guardianPromise,
+        timeoutPromise
+      ]) as any
 
       if (guardianError) {
         console.error('❌ Error cargando guardian:', guardianError)
@@ -47,9 +58,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         // Si no existe el guardian, intentar crearlo
         if (guardianError.code === 'PGRST116') {
           console.log('👤 Guardian no existe, intentando crear...')
-          await createGuardianProfile(userId)
-          return
+          const created = await createGuardianProfile(userId)
+          if (created) {
+            setLoading(false)
+            return
+    }
         }
+        
+        // Si hay otros errores, continuar sin guardian pero no quedarse cargando
+        console.warn('⚠️ Continuando sin guardian debido a error:', guardianError.message)
+        setGuardian(null)
+        setStudents([])
+        setLoading(false)
         return
       }
 
@@ -58,30 +78,46 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setGuardian(guardianData)
 
         // Cargar estudiantes del guardian
-        const { data: studentsData, error: studentsError } = await supabase
-          .from('students')
-          .select('*')
-          .eq('guardian_id', guardianData.id)
-          .order('name')
+        try {
+          const { data: studentsData, error: studentsError } = await supabase
+            .from('students')
+            .select('*')
+            .eq('guardian_id', guardianData.id)
+            .order('name')
 
-        if (studentsError) {
-          console.error('❌ Error cargando estudiantes:', studentsError)
-        } else {
-          console.log('📚 Estudiantes cargados:', studentsData?.length || 0)
-          setStudents(studentsData || [])
+          if (studentsError) {
+            console.error('❌ Error cargando estudiantes:', studentsError)
+            setStudents([])
+          } else {
+            console.log('📚 Estudiantes cargados:', studentsData?.length || 0)
+            setStudents(studentsData || [])
+          }
+        } catch (studentsError) {
+          console.error('❌ Error inesperado cargando estudiantes:', studentsError)
+          setStudents([])
         }
       }
     } catch (error) {
-      console.error('❌ Error en loadUserData:', error)
+      console.error('❌ Error inesperado en loadUserData:', error)
+      setGuardian(null)
+      setStudents([])
+    } finally {
+      setLoading(false)
     }
   }
 
   // Crear perfil de guardian si no existe
-  const createGuardianProfile = async (userId: string) => {
+  const createGuardianProfile = async (userId: string): Promise<boolean> => {
     try {
+      console.log('👤 Creando perfil de guardian para:', userId)
+      
       const { data: userData } = await supabase.auth.getUser()
-      if (!userData.user) return
-      const { error } = await supabase
+      if (!userData.user) {
+        console.error('❌ No se pudo obtener datos del usuario')
+        return false
+      }
+
+      const { data, error } = await supabase
         .from('guardians')
         .insert({
           user_id: userId,
@@ -89,15 +125,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           full_name: userData.user.user_metadata?.full_name || 'Usuario',
           is_staff: false
         })
+        .select()
+        .single()
+
       if (error) {
         console.error('❌ Error creando perfil de guardian:', error)
+        return false
       } else {
-        console.log('✅ Perfil de guardian creado')
-        // Recargar datos
-        await loadUserData(userId)
+        console.log('✅ Perfil de guardian creado:', data)
+        setGuardian(data)
+        setStudents([])
+        return true
       }
     } catch (error) {
       console.error('❌ Error inesperado creando perfil:', error)
+      return false
     }
   }
 
@@ -273,8 +315,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         loadUserData(session.user.id)
+      } else {
+        setLoading(false)
       }
-      setLoading(false)
     })
 
     // Escuchar cambios de autenticación
@@ -292,16 +335,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           console.log('👋 Usuario desautenticado, limpiando datos...')
           setGuardian(null)
           setStudents([])
+          setLoading(false)
         }
-        
-        setLoading(false)
       }
-    )
+  )
 
     return () => {
       console.log('🧹 Limpiando suscripción de auth')
       subscription.unsubscribe()
-    }
+}
   }, [])
 
   const value: UserContextType = {
@@ -316,7 +358,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     updateProfile,
     refreshUserData
   }
-
   return (
     <UserContext.Provider value={value}>
       {children}
