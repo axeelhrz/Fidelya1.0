@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, LogIn, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useUser } from '@/context/UserContext'
 import { useRedirectIfAuthenticated } from '@/hooks/useAuth'
-import { useToast } from '@/components/ui/use-toast'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,10 +19,9 @@ export default function LoginPage() {
   
   const { signIn } = useUser()
   const router = useRouter()
-  const { toast } = useToast()
-  
   // Redirigir si ya está autenticado
   useRedirectIfAuthenticated()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -35,12 +33,15 @@ export default function LoginPage() {
       return
     }
 
+    console.log('🔐 Intentando login desde formulario...')
     const result = await signIn(email, password)
     
     if (result.error) {
+      console.error('❌ Error en login:', result.error)
       setError(result.error)
       setLoading(false)
     } else {
+      console.log('✅ Login exitoso, redirigiendo...')
       router.push('/dashboard')
     }
   }
@@ -64,6 +65,7 @@ export default function LoginPage() {
           <CardContent className="space-y-4">
             {error && (
               <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -81,9 +83,10 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
                     required
+                disabled={loading}
                   />
-        </div>
-              </div>
+                </div>
+                  </div>
               
               <div className="space-y-2">
                 <Label htmlFor="password">Contraseña</Label>
@@ -97,20 +100,22 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10"
                     required
+                    disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                  >
+                    disabled={loading}
+                >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
                     ) : (
                       <Eye className="h-4 w-4" />
                     )}
                   </button>
-                </div>
-              </div>
+            </div>
+      </div>
               
               <div className="flex items-center justify-between">
                 <Link
@@ -119,7 +124,7 @@ export default function LoginPage() {
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>
-              </div>
+    </div>
               
               <Button
                 type="submit"
@@ -135,7 +140,7 @@ export default function LoginPage() {
                   'Iniciar sesión'
                 )}
               </Button>
-      </form>
+            </form>
             
             <div className="text-center pt-4 border-t">
               <p className="text-sm text-gray-600">
@@ -148,6 +153,18 @@ export default function LoginPage() {
                 </Link>
               </p>
             </div>
+
+            {/* Debug info en desarrollo */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-center pt-4 border-t">
+                <Link
+                  href="/debug"
+                  className="text-xs text-gray-400 hover:text-gray-600"
+                >
+                  Debug de Autenticación
+                </Link>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

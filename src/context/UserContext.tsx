@@ -32,6 +32,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Cargar datos del guardian y estudiantes
   const loadUserData = async (userId: string) => {
     try {
+      console.log('🔍 Cargando datos del usuario:', userId)
+      
       // Buscar guardian
       const { data: guardianData, error: guardianError } = await supabase
         .from('guardians')
@@ -39,12 +41,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         .eq('user_id', userId)
         .single()
 
-      if (guardianError && guardianError.code !== 'PGRST116') {
-        console.error('Error cargando guardian:', guardianError)
+      if (guardianError) {
+        console.error('❌ Error cargando guardian:', guardianError)
+        
+        // Si no existe el guardian, intentar crearlo
+        if (guardianError.code === 'PGRST116') {
+          console.log('👤 Guardian no existe, intentando crear...')
+          await createGuardianProfile(userId)
+          return
+        }
         return
       }
 
       if (guardianData) {
+        console.log('✅ Guardian encontrado:', guardianData.full_name)
         setGuardian(guardianData)
 
         // Cargar estudiantes del guardian
@@ -55,13 +65,39 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           .order('name')
 
         if (studentsError) {
-          console.error('Error cargando estudiantes:', studentsError)
+          console.error('❌ Error cargando estudiantes:', studentsError)
         } else {
+          console.log('📚 Estudiantes cargados:', studentsData?.length || 0)
           setStudents(studentsData || [])
         }
       }
     } catch (error) {
-      console.error('Error en loadUserData:', error)
+      console.error('❌ Error en loadUserData:', error)
+    }
+  }
+
+  // Crear perfil de guardian si no existe
+  const createGuardianProfile = async (userId: string) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser()
+      if (!userData.user) return
+      const { error } = await supabase
+        .from('guardians')
+        .insert({
+          user_id: userId,
+          email: userData.user.email!,
+          full_name: userData.user.user_metadata?.full_name || 'Usuario',
+          is_staff: false
+        })
+      if (error) {
+        console.error('❌ Error creando perfil de guardian:', error)
+      } else {
+        console.log('✅ Perfil de guardian creado')
+        // Recargar datos
+        await loadUserData(userId)
+      }
+    } catch (error) {
+      console.error('❌ Error inesperado creando perfil:', error)
     }
   }
 
@@ -72,29 +108,55 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Función de login
+  // Función de login mejorada
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('🔐 Intentando iniciar sesión para:', email)
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       })
 
       if (error) {
-      console.error('Error en signIn:', error)
+        console.error('❌ Error en signIn:', error)
+        
+        // Mensajes de error más específicos
+        if (error.message.includes('Invalid login credentials')) {
+          return { error: 'Credenciales incorrectas. Verifica tu email y contraseña.' }
+        }
+        if (error.message.includes('Email not confirmed')) {
+          return { error: 'Por favor verifica tu correo electrónico antes de iniciar sesión.' }
+        }
+        if (error.message.includes('Too many requests')) {
+          return { error: 'Demasiados intentos. Espera unos minutos antes de intentar nuevamente.' }
+        }
+        
         return { error: error.message }
       }
 
-      if (data.user && !data.user.email_confirmed_at) {
+      if (!data.user) {
+        console.error('❌ No se recibió usuario después del login')
+        return { error: 'Error al iniciar sesión' }
+      }
+
+      console.log('✅ Login exitoso para usuario:', data.user.id)
+      console.log('📧 Email verificado:', !!data.user.email_confirmed_at)
+
+      // Verificar si el email está confirmado
+      if (!data.user.email_confirmed_at) {
+        console.log('⚠️ Email no verificado')
         return { error: 'Por favor verifica tu correo electrónico antes de iniciar sesión.' }
       }
-        toast({
+
+      toast({
         title: "¡Bienvenido!",
         description: "Has iniciado sesión correctamente.",
-        })
+      })
+
       return {}
-    } catch (error) {
-      console.error('Error inesperado en signIn:', error)
+    } catch (error: any) {
+      console.error('❌ Error inesperado en signIn:', error)
       return { error: 'Error inesperado al iniciar sesión' }
     }
   }
@@ -102,9 +164,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Función de registro optimizada
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      console.log('Iniciando registro para:', email)
+      console.log('📝 Iniciando registro para:', email)
       
-      // Paso 1: Registrar usuario en Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -113,41 +174,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             full_name: fullName
           }
         }
-        })
+      })
+
       if (error) {
-        console.error('Error en auth.signUp:', error)
+        console.error('❌ Error en auth.signUp:', error)
         return { error: error.message }
       }
 
       if (!data.user) {
-        console.error('No se recibió usuario después del registro')
+        console.error('❌ No se recibió usuario después del registro')
         return { error: 'Error al crear la cuenta' }
       }
 
-      console.log('Usuario registrado en Auth:', data.user.id)
-
-      // Paso 2: Crear perfil de guardian solo si el usuario fue creado exitosamente
-      try {
-        const { error: profileError } = await supabase
-          .from('guardians')
-          .insert({
-            user_id: data.user.id,
-            email: email,
-            full_name: fullName,
-            is_staff: false
-          })
-
-        if (profileError) {
-          console.error('Error creando perfil de guardian:', profileError)
-          // No retornamos error aquí porque el usuario ya fue creado en Auth
-          // El perfil se puede crear después
-        } else {
-          console.log('Perfil de guardian creado exitosamente')
-        }
-      } catch (profileError) {
-        console.error('Error inesperado creando perfil:', profileError)
-        // Continuamos porque el usuario ya fue registrado
-      }
+      console.log('✅ Usuario registrado en Auth:', data.user.id)
 
       toast({
         title: "¡Registro exitoso!",
@@ -155,8 +194,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       })
 
       return {}
-    } catch (error) {
-      console.error('Error inesperado en signUp:', error)
+    } catch (error: any) {
+      console.error('❌ Error inesperado en signUp:', error)
       return { error: 'Error inesperado al registrarse. Por favor intenta nuevamente.' }
     }
   }
@@ -164,15 +203,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Función de logout
   const signOut = async () => {
     try {
+      console.log('🚪 Cerrando sesión...')
       const { error } = await supabase.auth.signOut()
       if (error) {
-        console.error('Error en signOut:', error)
+        console.error('❌ Error en signOut:', error)
         toast({
           variant: "destructive",
           title: "Error",
           description: "Error al cerrar sesión",
         })
       } else {
+        console.log('✅ Sesión cerrada exitosamente')
         setUser(null)
         setSession(null)
         setGuardian(null)
@@ -183,7 +224,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         })
       }
     } catch (error) {
-      console.error('Error inesperado en signOut:', error)
+      console.error('❌ Error inesperado en signOut:', error)
     }
   }
 
@@ -212,19 +253,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       })
 
       return {}
-    } catch (error) {
-      console.error('Error actualizando perfil:', error)
+    } catch (error: any) {
+      console.error('❌ Error actualizando perfil:', error)
       return { error: 'Error inesperado al actualizar perfil' }
     }
   }
 
   // Efecto para manejar cambios de autenticación
   useEffect(() => {
+    console.log('🚀 Inicializando UserContext...')
+    
     // Obtener sesión inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Sesión inicial:', session?.user?.id)
+      console.log('📋 Sesión inicial:', session?.user?.id || 'No hay sesión')
+      console.log('📧 Email verificado:', !!session?.user?.email_confirmed_at)
+      
       setSession(session)
       setUser(session?.user ?? null)
+      
       if (session?.user) {
         loadUserData(session.user.id)
       }
@@ -234,13 +280,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.id)
+        console.log('🔄 Auth state change:', event, session?.user?.id || 'No user')
+        
         setSession(session)
         setUser(session?.user ?? null)
         
         if (session?.user) {
+          console.log('👤 Usuario autenticado, cargando datos...')
           await loadUserData(session.user.id)
         } else {
+          console.log('👋 Usuario desautenticado, limpiando datos...')
           setGuardian(null)
           setStudents([])
         }
@@ -249,7 +298,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      console.log('🧹 Limpiando suscripción de auth')
+      subscription.unsubscribe()
+    }
   }, [])
 
   const value: UserContextType = {
