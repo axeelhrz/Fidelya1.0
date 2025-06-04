@@ -111,20 +111,18 @@ export default function RegisterPage() {
           router.push('/auth/check-email');
         }, 2500);
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       setSubmitStatus('error');
       
       // Personalizar mensajes de error
-      const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error inesperado';
-      
-      if (errorMessage.includes('User already registered')) {
+      if (error.message.includes('User already registered')) {
         setErrorMessage('Este email ya está registrado');
-      } else if (errorMessage.includes('Invalid email')) {
+      } else if (error.message.includes('Invalid email')) {
         setErrorMessage('El formato del email no es válido');
-      } else if (errorMessage.includes('Password should be at least 6 characters')) {
+      } else if (error.message.includes('Password should be at least 6 characters')) {
         setErrorMessage('La contraseña debe tener al menos 6 caracteres');
       } else {
-        setErrorMessage(errorMessage);
+        setErrorMessage(error.message || 'Ocurrió un error inesperado');
       }
     } finally {
       setIsLoading(false);
@@ -138,36 +136,98 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-red-900 flex items-center justify-center p-4">
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #fef2f2 0%, #ffffff 50%, #fefce8 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '16px',
+      position: 'relative'
+    }}>
       {/* Elementos decorativos de fondo */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-400/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-yellow-400/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange-400/10 rounded-full blur-3xl"></div>
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: '-160px',
+          right: '-160px',
+          width: '320px',
+          height: '320px',
+          background: 'rgba(220, 38, 38, 0.2)',
+          borderRadius: '50%',
+          filter: 'blur(60px)'
+        }}></div>
+        <div style={{
+          position: 'absolute',
+          bottom: '-160px',
+          left: '-160px',
+          width: '320px',
+          height: '320px',
+          background: 'rgba(251, 191, 36, 0.2)',
+          borderRadius: '50%',
+          filter: 'blur(60px)'
+        }}></div>
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '384px',
+          height: '384px',
+          background: 'rgba(251, 146, 60, 0.1)',
+          borderRadius: '50%',
+          filter: 'blur(60px)'
+        }}></div>
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-md relative z-10"
+        style={{
+          width: '100%',
+          maxWidth: '448px',
+          position: 'relative',
+          zIndex: 10
+        }}
       >
         {/* Header */}
-        <div className="text-center mb-8">
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="inline-flex items-center justify-center w-16 h-16 casino-gradient rounded-2xl mb-6 shadow-lg"
+            className="casino-gradient"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '64px',
+              height: '64px',
+              borderRadius: '16px',
+              marginBottom: '24px',
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+            }}
           >
-            <Utensils className="w-8 h-8 text-white" />
+            <Utensils style={{ width: '32px', height: '32px', color: 'white' }} />
           </motion.div>
           
           <motion.h1
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="font-heading text-3xl font-bold text-gray-900 dark:text-white mb-2"
+            className="font-heading"
+            style={{
+              fontSize: '30px',
+              fontWeight: 'bold',
+              color: 'var(--foreground)',
+              marginBottom: '8px'
+            }}
           >
             Casino Escolar
           </motion.h1>
@@ -176,7 +236,9 @@ export default function RegisterPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-gray-600 dark:text-gray-300"
+            style={{
+              color: 'var(--muted-foreground)'
+            }}
           >
             Crear nueva cuenta
           </motion.p>
@@ -187,27 +249,50 @@ export default function RegisterPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="modern-card p-8"
+          className="modern-card"
+          style={{ padding: '32px' }}
         >
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Campo Nombre Completo */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: 'var(--foreground)'
+              }}>
                 Nombre completo
               </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div style={{ position: 'relative' }}>
+                <User style={{
+                  position: 'absolute',
+                  left: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '20px',
+                  height: '20px',
+                  color: 'var(--muted-foreground)'
+                }} />
                 <input
                   {...register('nombreCompleto')}
                   type="text"
                   placeholder="Juan Carlos Pérez"
-                  className={`input-field pl-11 ${
+                  className={`input-field ${
                     getFieldStatus('nombreCompleto') === 'error' ? 'input-error' : 
                     getFieldStatus('nombreCompleto') === 'success' ? 'input-success' : ''
                   }`}
+                  style={{ paddingLeft: '44px' }}
                 />
                 {getFieldStatus('nombreCompleto') === 'success' && (
-                  <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-success" />
+                  <CheckCircle style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '20px',
+                    height: '20px',
+                    color: 'var(--success)'
+                  }} />
                 )}
               </div>
               <AnimatePresence>
@@ -216,9 +301,15 @@ export default function RegisterPage() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="text-sm text-destructive flex items-center gap-1"
+                    className="text-destructive"
+                    style={{
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
                   >
-                    <AlertCircle className="w-4 h-4" />
+                    <AlertCircle style={{ width: '16px', height: '16px' }} />
                     {errors.nombreCompleto.message}
                   </motion.p>
                 )}
@@ -226,23 +317,45 @@ export default function RegisterPage() {
             </div>
 
             {/* Campo Email */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: 'var(--foreground)'
+              }}>
                 Correo electrónico
               </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div style={{ position: 'relative' }}>
+                <Mail style={{
+                  position: 'absolute',
+                  left: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '20px',
+                  height: '20px',
+                  color: 'var(--muted-foreground)'
+                }} />
                 <input
                   {...register('email')}
                   type="email"
                   placeholder="ejemplo@correo.com"
-                  className={`input-field pl-11 ${
+                  className={`input-field ${
                     getFieldStatus('email') === 'error' ? 'input-error' : 
                     getFieldStatus('email') === 'success' ? 'input-success' : ''
                   }`}
+                  style={{ paddingLeft: '44px' }}
                 />
                 {getFieldStatus('email') === 'success' && (
-                  <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-success" />
+                  <CheckCircle style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '20px',
+                    height: '20px',
+                    color: 'var(--success)'
+                  }} />
                 )}
               </div>
               <AnimatePresence>
@@ -251,9 +364,15 @@ export default function RegisterPage() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="text-sm text-destructive flex items-center gap-1"
+                    className="text-destructive"
+                    style={{
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
                   >
-                    <AlertCircle className="w-4 h-4" />
+                    <AlertCircle style={{ width: '16px', height: '16px' }} />
                     {errors.email.message}
                   </motion.p>
                 )}
@@ -261,27 +380,51 @@ export default function RegisterPage() {
             </div>
 
             {/* Campo Contraseña */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: 'var(--foreground)'
+              }}>
                 Contraseña
               </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div style={{ position: 'relative' }}>
+                <Lock style={{
+                  position: 'absolute',
+                  left: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '20px',
+                  height: '20px',
+                  color: 'var(--muted-foreground)'
+                }} />
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Mínimo 6 caracteres"
-                  className={`input-field pl-11 pr-11 ${
+                  className={`input-field ${
                     getFieldStatus('password') === 'error' ? 'input-error' : 
                     getFieldStatus('password') === 'success' ? 'input-success' : ''
                   }`}
+                  style={{ paddingLeft: '44px', paddingRight: '44px' }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--muted-foreground)',
+                    cursor: 'pointer',
+                    transition: 'color 0.2s ease'
+                  }}
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff style={{ width: '20px', height: '20px' }} /> : <Eye style={{ width: '20px', height: '20px' }} />}
                 </button>
               </div>
               <AnimatePresence>
@@ -290,9 +433,15 @@ export default function RegisterPage() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="text-sm text-destructive flex items-center gap-1"
+                    className="text-destructive"
+                    style={{
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
                   >
-                    <AlertCircle className="w-4 h-4" />
+                    <AlertCircle style={{ width: '16px', height: '16px' }} />
                     {errors.password.message}
                   </motion.p>
                 )}
@@ -306,11 +455,16 @@ export default function RegisterPage() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4"
+                  className="bg-red-50 border-red-200"
+                  style={{
+                    border: '1px solid',
+                    borderRadius: '12px',
+                    padding: '16px'
+                  }}
                 >
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                    <p className="text-sm text-red-700 dark:text-red-300">{errorMessage}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <AlertCircle className="text-red-500" style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+                    <p className="text-red-700" style={{ fontSize: '14px' }}>{errorMessage}</p>
                   </div>
                 </motion.div>
               )}
@@ -323,15 +477,20 @@ export default function RegisterPage() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4"
+                  className="bg-green-50 border-green-200"
+                  style={{
+                    border: '1px solid',
+                    borderRadius: '12px',
+                    padding: '16px'
+                  }}
                 >
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 animate-pulse-success" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <CheckCircle className="text-green-500 animate-pulse-success" style={{ width: '20px', height: '20px', flexShrink: 0 }} />
                     <div>
-                      <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                      <p className="text-green-700" style={{ fontSize: '14px', fontWeight: '500' }}>
                         Cuenta creada exitosamente
                       </p>
-                      <p className="text-xs text-green-600 dark:text-green-400">
+                      <p className="text-green-600" style={{ fontSize: '12px' }}>
                         Revisa tu email para verificar tu cuenta
                       </p>
                     </div>
@@ -346,7 +505,14 @@ export default function RegisterPage() {
               disabled={isLoading || !isValid || submitStatus === 'success'}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="btn-primary flex items-center justify-center gap-2 relative overflow-hidden mt-6"
+              className="btn-primary"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                marginTop: '8px'
+              }}
             >
               <AnimatePresence mode="wait">
                 {isLoading ? (
@@ -355,9 +521,9 @@ export default function RegisterPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="flex items-center gap-2"
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                   >
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 style={{ width: '20px', height: '20px', animation: 'spin 1s linear infinite' }} />
                     Creando cuenta...
                   </motion.div>
                 ) : submitStatus === 'success' ? (
@@ -366,9 +532,9 @@ export default function RegisterPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="flex items-center gap-2"
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                   >
-                    <CheckCircle className="w-5 h-5" />
+                    <CheckCircle style={{ width: '20px', height: '20px' }} />
                     Cuenta creada
                   </motion.div>
                 ) : (
@@ -377,10 +543,10 @@ export default function RegisterPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="flex items-center gap-2"
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                   >
                     Crear cuenta
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight style={{ width: '20px', height: '20px' }} />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -388,12 +554,17 @@ export default function RegisterPage() {
           </form>
 
           {/* Footer */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+          <div style={{ marginTop: '24px', textAlign: 'center' }}>
+            <p style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>
               ¿Ya tienes una cuenta?{' '}
               <Link 
                 href="/auth/login" 
-                className="font-medium text-primary hover:text-primary/80 transition-colors"
+                className="text-primary"
+                style={{
+                  fontWeight: '500',
+                  textDecoration: 'none',
+                  transition: 'opacity 0.2s ease'
+                }}
               >
                 Inicia sesión
               </Link>
@@ -406,9 +577,9 @@ export default function RegisterPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-6 text-center"
+          style={{ marginTop: '24px', textAlign: 'center' }}
         >
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>
             Plataforma segura para la gestión escolar
           </p>
         </motion.div>
