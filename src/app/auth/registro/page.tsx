@@ -27,15 +27,9 @@ import {
   User,
   GraduationCap
 } from "lucide-react"
+import type { StudentFormData, StudentLevel, UserType } from "@/lib/supabase/types"
 
-interface Hijo {
-  id: string
-  nombre: string
-  curso: string
-  letra: string
-  nivel: string
-  tipo: string
-}
+
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -47,16 +41,16 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    nombreApoderado: "",
-    telefono: ""
+    fullName: "",
+    phone: ""
   })
-  const [hijos, setHijos] = useState<Hijo[]>([])
-  const [currentHijo, setCurrentHijo] = useState({
-    nombre: "",
-    curso: "",
-    letra: "",
-    nivel: "Básica",
-    tipo: "Estudiante"
+  const [students, setStudents] = useState<StudentFormData[]>([])
+  const [currentStudent, setCurrentStudent] = useState<StudentFormData>({
+    name: "",
+    grade: "",
+    section: "",
+    level: "basica" as StudentLevel,
+    userType: "estudiante" as UserType
   })
 
   const handleInputChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,45 +60,44 @@ export default function RegisterPage() {
     }))
   }
 
-  const handleHijoChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setCurrentHijo(prev => ({
+  const handleStudentChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setCurrentStudent(prev => ({
       ...prev,
       [field]: event.target.value
     }))
   }
 
-  const addHijo = () => {
-    if (!currentHijo.nombre || !currentHijo.curso || !currentHijo.letra) {
+  const addStudent = () => {
+    if (!currentStudent.name || !currentStudent.grade || !currentStudent.section) {
       toast({
         variant: "destructive",
         title: "Datos incompletos",
-        description: "Por favor complete todos los campos del hijo.",
+        description: "Por favor complete todos los campos del estudiante.",
       })
       return
     }
 
-    const newHijo: Hijo = {
-      id: Date.now().toString(),
-      ...currentHijo
+    const newStudent: StudentFormData = {
+      ...currentStudent
     }
 
-    setHijos(prev => [...prev, newHijo])
-    setCurrentHijo({
-      nombre: "",
-      curso: "",
-      letra: "",
-      nivel: "Básica",
-      tipo: "Estudiante"
+    setStudents(prev => [...prev, newStudent])
+    setCurrentStudent({
+      name: "",
+      grade: "",
+      section: "",
+      level: "basica" as StudentLevel,
+      userType: "estudiante" as UserType
     })
 
     toast({
-      title: "Hijo agregado",
-      description: `${newHijo.nombre} ha sido agregado exitosamente.`,
+      title: "Estudiante agregado",
+      description: `${newStudent.name} ha sido agregado exitosamente.`,
     })
   }
 
-  const removeHijo = (id: string) => {
-    setHijos(prev => prev.filter(hijo => hijo.id !== id))
+  const removeStudent = (index: number) => {
+    setStudents(prev => prev.filter((_, i) => i !== index))
   }
 
   const togglePasswordVisibility = () => {
@@ -127,9 +120,9 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      const { email, password, confirmPassword, nombreApoderado, telefono } = formData
+      const { email, password, confirmPassword, fullName, phone } = formData
 
-      if (!email || !password || !confirmPassword || !nombreApoderado || !telefono) {
+      if (!email || !password || !confirmPassword || !fullName || !phone) {
         throw new Error("Por favor complete todos los campos")
       }
 
@@ -141,8 +134,8 @@ export default function RegisterPage() {
         throw new Error("La contraseña debe tener al menos 6 caracteres")
       }
 
-      if (hijos.length === 0) {
-        throw new Error("Debe agregar al menos un hijo")
+      if (students.length === 0) {
+        throw new Error("Debe agregar al menos un estudiante")
       }
 
       // 1. Crear usuario en Supabase Auth
@@ -156,31 +149,48 @@ export default function RegisterPage() {
 
       if (authError) throw authError
 
-      // 2. Crear registro en la tabla clientes
-      const hijosData = hijos.map(hijo => ({
-        nombre: hijo.nombre,
-        curso: hijo.curso,
-        letra: hijo.letra,
-        nivel: hijo.nivel,
-        tipo: hijo.tipo
-      }))
+      if (!authData.user) {
+        throw new Error("No se pudo crear el usuario")
+      }
 
-      const { error: clienteError } = await supabase
-        .from('clientes')
-        .insert({
-          correo_apoderado: email,
-          nombre_apoderado: nombreApoderado,
-          telefono: telefono,
-          hijos: hijosData
+      // 2. Crear perfil de usuario usando la función RPC
+      const { error: profileError } = await supabase
+        .rpc('create_user_profile', {
+          p_user_id: authData.user.id,
+          p_email: email,
+          p_full_name: fullName,
+          p_phone: phone,
+          p_role: 'user'
         })
 
-      if (clienteError) {
-        console.error('Error creating client:', clienteError)
-        // Si falla la creación del cliente, eliminar el usuario de auth
-        if (authData.user) {
-          await supabase.auth.admin.deleteUser(authData.user.id)
-        }
-        throw new Error("Error al crear el perfil del cliente")
+      if (profileError) {
+        console.error('Error creating user profile:', profileError)
+        // Si falla la creación del perfil, eliminar el usuario de auth
+        await supabase.auth.admin.deleteUser(authData.user.id)
+        throw new Error("Error al crear el perfil del usuario")
+      }
+
+      // 3. Crear estudiantes
+      const studentsToInsert = students.map(student => ({
+        guardian_id: authData.user!.id,
+        name: student.name,
+        grade: student.grade,
+        section: student.section,
+        level: student.level,
+        user_type: student.userType,
+        rut: student.rut,
+        dietary_restrictions: student.dietaryRestrictions,
+      }))
+
+      const { error: studentsError } = await supabase
+        .from('students')
+        .insert(studentsToInsert)
+
+      if (studentsError) {
+        console.error('Error creating students:', studentsError)
+        // Si falla la creación de estudiantes, eliminar el usuario
+        await supabase.auth.admin.deleteUser(authData.user.id)
+        throw new Error("Error al registrar los estudiantes")
       }
 
       toast({
@@ -189,12 +199,12 @@ export default function RegisterPage() {
       })
 
       router.push("/auth/login")
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error signing up:", error)
       toast({
         variant: "destructive",
         title: "Error en el registro",
-        description: error?.message || "No se pudo completar el registro. Inténtelo nuevamente.",
+        description: error instanceof Error ? error.message : "No se pudo completar el registro. Inténtelo nuevamente.",
       })
     } finally {
       setLoading(false)
@@ -257,7 +267,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden fixed inset-0">
+    <div className="min-h-screen bg-white fixed inset-0 overflow-hidden">
       {/* Subtle Background Pattern */}
       <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
@@ -346,18 +356,18 @@ export default function RegisterPage() {
                   >
                     {/* Datos del Apoderado */}
                     <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Nombre Apoderado */}
+                      {/* Nombre Completo */}
                       <div className="space-y-2">
-                        <Label htmlFor="nombreApoderado" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                        <Label htmlFor="fullName" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                           <User className="w-3 h-3 text-emerald-600" />
                           Nombre Completo
                         </Label>
                         <Input
-                          id="nombreApoderado"
+                          id="fullName"
                           type="text"
-                          value={formData.nombreApoderado}
-                          onChange={handleInputChange('nombreApoderado')}
-                          placeholder="Juan Pérez"
+                          value={formData.fullName}
+                          onChange={handleInputChange('fullName')}
+                          placeholder="Juan Pérez González"
                           className="h-10 text-sm border-2 border-gray-200 rounded-xl transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 hover:border-gray-300 bg-gray-50/50 focus:bg-white"
                           required
                           disabled={loading}
@@ -366,15 +376,15 @@ export default function RegisterPage() {
 
                       {/* Teléfono */}
                       <div className="space-y-2">
-                        <Label htmlFor="telefono" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                        <Label htmlFor="phone" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                           <Phone className="w-3 h-3 text-emerald-600" />
                           Teléfono
                         </Label>
                         <Input
-                          id="telefono"
+                          id="phone"
                           type="tel"
-                          value={formData.telefono}
-                          onChange={handleInputChange('telefono')}
+                          value={formData.phone}
+                          onChange={handleInputChange('phone')}
                           placeholder="+56 9 1234 5678"
                           className="h-10 text-sm border-2 border-gray-200 rounded-xl transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 hover:border-gray-300 bg-gray-50/50 focus:bg-white"
                           required
@@ -494,71 +504,71 @@ export default function RegisterPage() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         <Input
                           placeholder="Nombre"
-                          value={currentHijo.nombre}
-                          onChange={handleHijoChange('nombre')}
+                          value={currentStudent.name}
+                          onChange={handleStudentChange('name')}
                           className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                           disabled={loading}
                         />
                         <Input
                           placeholder="Curso"
-                          value={currentHijo.curso}
-                          onChange={handleHijoChange('curso')}
+                          value={currentStudent.grade}
+                          onChange={handleStudentChange('grade')}
                           className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                           disabled={loading}
                         />
                         <Input
                           placeholder="Letra"
-                          value={currentHijo.letra}
-                          onChange={handleHijoChange('letra')}
+                          value={currentStudent.section}
+                          onChange={handleStudentChange('section')}
                           className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                           disabled={loading}
                         />
                         <select
-                          value={currentHijo.nivel}
-                          onChange={handleHijoChange('nivel')}
+                          value={currentStudent.level}
+                          onChange={handleStudentChange('level')}
                           className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 bg-white"
                           disabled={loading}
                         >
-                          <option value="Básica">Básica</option>
-                          <option value="Media">Media</option>
+                          <option value="basica">Básica</option>
+                          <option value="media">Media</option>
                         </select>
                       </div>
 
                       <Button
                         type="button"
-                        onClick={addHijo}
+                        onClick={addStudent}
                         variant="outline"
                         size="sm"
                         className="w-full h-8 text-xs border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300"
                         disabled={loading}
                       >
                         <Plus className="w-3 h-3 mr-1" />
-                        Agregar Hijo
+                        Agregar Estudiante
                       </Button>
 
                       {/* Lista de Hijos */}
                       <AnimatePresence>
-                        {hijos.length > 0 && (
+                        {students.length > 0 && (
                           <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             className="space-y-2 max-h-32 overflow-y-auto"
                           >
-                            {hijos.map((hijo) => (
+                            {students.map((student, index) => (
                               <motion.div
-                                key={hijo.id}
+                                key={index}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
                                 className="flex items-center justify-between p-2 bg-emerald-50 rounded-lg border border-emerald-200"
                               >
                                 <span className="text-xs font-medium text-emerald-800">
-                                  {hijo.nombre} - {hijo.curso}{hijo.letra} ({hijo.nivel})
+                                  {student.name} - {student.grade}{student.section} ({student.level})
                                 </span>
                                 <button
                                   type="button"
-                                  onClick={() => removeHijo(hijo.id)}
+                                  onClick={() => removeStudent(index)}
                                   className="text-red-500 hover:text-red-700 transition-colors"
                                   disabled={loading}
                                 >
@@ -576,7 +586,7 @@ export default function RegisterPage() {
                       <Button
                         type="submit"
                         className="w-full h-10 bg-gradient-to-r from-emerald-600 via-emerald-700 to-blue-700 hover:from-emerald-700 hover:via-emerald-800 hover:to-blue-800 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                        disabled={loading || !passwordValidation.length || !passwordValidation.match || hijos.length === 0}
+                        disabled={loading || !passwordValidation.length || !passwordValidation.match || students.length === 0}
                       >
                         {loading ? (
                           <div className="flex items-center space-x-2">

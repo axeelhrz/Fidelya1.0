@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { supabase } from "@/lib/supabase/client"
+import type { Student, UserProfile } from "@/lib/supabase/types"
 
 export interface Student {
   id: string
@@ -23,111 +24,199 @@ export interface Guardian {
 }
 
 interface UserContextType {
-  guardian: Guardian | null
+  user: UserProfile | null
+  students: Student[]
   loading: boolean
   refreshUser: () => Promise<void>
-  setGuardian: (g: Guardian | null) => void
+  setUser: (user: UserProfile | null) => void
+  addStudent: (student: Student) => void
+  updateStudent: (studentId: string, updates: Partial<Student>) => void
+  removeStudent: (studentId: string) => void
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [guardian, setGuardian] = useState<Guardian | null>(null)
+  const [user, setUser] = useState<UserProfile | null>(null)
+  const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
   
   const refreshUser = async () => {
     setLoading(true)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      setGuardian(null)
+    try {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser()
+      
+      if (!authUser) {
+        setUser(null)
+        setStudents([])
+        setLoading(false)
+        return
+      }
+
+      // Obtener perfil del usuario
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", authUser.email)
+        .single()
+
+      if (userError) {
+        console.error("Error al obtener usuario:", userError)
+        setUser(null)
+        setStudents([])
+        setLoading(false)
+        return
+      }
+
+      if (!userData) {
+        console.warn("No se encontró un usuario para el email:", authUser.email)
+        setUser(null)
+        setStudents([])
+        setLoading(false)
+        return
+      }
+
+      // Obtener estudiantes del usuario
+      const { data: studentsData, error: studentsError } = await supabase
+        .from("students")
+        .select("*")
+        .eq("guardian_id", userData.id)
+        .eq("is_active", true)
+        .order("name")
+
+      if (studentsError) {
+        console.error("Error al obtener estudiantes:", studentsError)
+      }
+
+      // Obtener información del rol y permisos
+      const { data: roleData, error: roleError } = await supabase
+        .rpc('get_user_role_info', { user_email: authUser.email })
+
+      const { data: permissionsData, error: permissionsError } = await supabase
+        .rpc('get_user_permissions', { user_email: authUser.email })
+
+      if (roleError) {
+        console.error("Error al obtener información del rol:", roleError)
+      }
+
+      if (permissionsError) {
+        console.error("Error al obtener permisos:", permissionsError)
+      }
+
+      const roleInfo = roleData?.[0]
+      const permissions = permissionsData || []
+
+      // Mapear datos del usuario
+      const userProfile: UserProfile = {
+        id: userData.id,
+        email: userData.email,
+        fullName: userData.full_name,
+        phone: userData.phone,
+        role: userData.role,
+        isActive: userData.is_active,
+        lastLogin: userData.last_login,
+        loginCount: userData.login_count || 0,
+        students: studentsData || [],
+        permissions: permissions.map((p: any) => p.permission_name),
+        roleInfo: roleInfo ? {
+          displayName: roleInfo.display_name,
+          description: roleInfo.description,
+          color: roleInfo.color,
+        } : undefined,
+      }
+
+      setUser(userProfile)
+      setStudents(studentsData || [])
+    } catch (error) {
+      console.error("Error en refreshUser:", error)
+      setUser(null)
+      setStudents([])
+    } finally {
       setLoading(false)
-      return
     }
-    // Fetch apoderado (cliente) usando el correo electrónico del usuario
-    const { data: clienteData, error } = await supabase
-      .from("clientes")
-      .select("*, hijos")
-      .eq("correo_apoderado", user.email)
-      .maybeSingle();
-    if (error && (error.code || error.message)) {
-      console.error("Error al obtener cliente:", error)
-    } else if (!clienteData) {
-      console.warn("No se encontró un cliente para el usuario autenticado.");
-      setGuardian(null);
-      setLoading(false);
-      return;
-    }
-    let hijos: any[] = [];
-    if (clienteData) {
-      // Si hijos viene como JSON string
-      if (typeof clienteData.hijos === "string") {
-        try {
-          const hijosRaw = JSON.parse(clienteData.hijos);
-          hijos = Array.isArray(hijosRaw)
-            ? hijosRaw.map((hijo: any, idx: number) => ({
-                id: `${clienteData.id}-${idx}`,
-                name: hijo?.nombre ?? "",
-                grade: hijo?.curso ?? "",
-                section: hijo?.letra ?? "",
-                level: hijo?.nivel ?? "",
-                tipo: hijo?.tipo ?? "Estudiante",
-              }))
-            : [];
-        } catch (e) {
-          hijos = [];
-        }
-      } else if (Array.isArray(clienteData.hijos)) {
-        hijos = clienteData.hijos.map((hijo: any, idx: number) => ({
-          id: `${clienteData.id}-${idx}`,
-          name: hijo?.nombre ?? "",
-          grade: hijo?.curso ?? "",
-          section: hijo?.letra ?? "",
-          level: hijo?.nivel ?? "",
-          tipo: hijo?.tipo ?? "Estudiante",
-        }));
-      } else if (clienteData.hijos && typeof clienteData.hijos === "object") {
-        hijos = Object.values(clienteData.hijos).map((hijo: any, idx: number) => ({
-          id: `${clienteData.id}-${idx}`,
-          name: hijo?.nombre ?? "",
-          grade: hijo?.curso ?? "",
-          section: hijo?.letra ?? "",
-          level: hijo?.nivel ?? "",
-          tipo: hijo?.tipo ?? "Estudiante",
-        }));
-      }  
-      console.log("Cliente hijos parseado:", hijos)
-      // Mapear correctamente los campos de la base de datos a la interfaz
-      setGuardian({
-        id: clienteData.id,
-        user_id: clienteData.user_id || "",
-        full_name: clienteData.nombre_apoderado || "",
-        email: clienteData.correo_apoderado || "",
-        phone: clienteData.telefono_apoderado || "",
-        is_staff: clienteData.tipo_usuario === "funcionario",
-        students: hijos || [],
+  }
+
+  const addStudent = (student: Student) => {
+    setStudents(prev => [...prev, student])
+    if (user) {
+      setUser({
+        ...user,
+        students: [...user.students, student]
       })
-    } else {
-      setGuardian(null)
     }
-    setLoading(false)
+  }
+
+  const updateStudent = (studentId: string, updates: Partial<Student>) => {
+    setStudents(prev => 
+      prev.map(student => 
+        student.id === studentId ? { ...student, ...updates } : student
+      )
+    )
+    if (user) {
+      setUser({
+        ...user,
+        students: user.students.map(student => 
+          student.id === studentId ? { ...student, ...updates } : student
+        )
+      })
+    }
+  }
+
+  const removeStudent = (studentId: string) => {
+    setStudents(prev => prev.filter(student => student.id !== studentId))
+    if (user) {
+      setUser({
+        ...user,
+        students: user.students.filter(student => student.id !== studentId)
+      })
+    }
   }
 
   useEffect(() => {
     refreshUser()
-    // eslint-disable-next-line
+
+    // Escuchar cambios de autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          setUser(null)
+          setStudents([])
+        } else if (event === 'SIGNED_IN' && session?.user) {
+          await refreshUser()
+        }
+      }
+    )
+
+    return () => subscription.unsubscribe()
   }, [])
 
   return (
-    <UserContext.Provider value={{ guardian, loading, refreshUser, setGuardian }}>
+    <UserContext.Provider value={{ 
+      user, 
+      students, 
+      loading, 
+      refreshUser, 
+      setUser,
+      addStudent,
+      updateStudent,
+      removeStudent
+    }}>
       {children}
     </UserContext.Provider>
   )
 }
 
 export function useUser() {
-  const ctx = useContext(UserContext)
-  if (!ctx) throw new Error("useUser must be used within UserProvider")
-  return ctx
+  const context = useContext(UserContext)
+  if (!context) {
+    throw new Error("useUser must be used within UserProvider")
+  }
+  return context
+}
+
+// Alias para compatibilidad con código existente
+export function useUserContext() {
+  return useUser()
 }

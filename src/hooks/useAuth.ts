@@ -5,14 +5,12 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
-
-export type UserRole = 'user' | 'viewer' | 'moderator' | 'admin' | 'super_admin';
-
-export interface Permission {
-  name: string;
-  module: string;
-  action: string;
-}
+import type { 
+  UserRole, 
+  UserProfile, 
+  Student,
+  Permission 
+} from '@/lib/supabase/types';
 
 export interface RoleInfo {
   role_name: UserRole;
@@ -20,19 +18,6 @@ export interface RoleInfo {
   description: string;
   color: string;
   permissions: string[];
-}
-
-export interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-  roleInfo?: RoleInfo;
-  permissions: Permission[];
-  isActive: boolean;
-  lastLogin?: string;
-  loginCount: number;
-  avatar?: string;
 }
 
 export function useAuth() {
@@ -90,24 +75,35 @@ export function useAuth() {
 
   const loadUserProfile = async (email: string) => {
     try {
-      // Obtener datos del cliente
-      const { data: clienteData, error: profileError } = await supabase
-        .from('clientes')
-        .select('id, correo_apoderado, nombre_apoderado, role, is_active, last_login, login_count')
-        .eq('correo_apoderado', email)
+      // Obtener datos del usuario
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
         .single();
 
-      if (profileError) {
-        console.error('Error getting profile:', profileError);
+      if (userError) {
+        console.error('Error getting user profile:', userError);
         return;
       }
 
-      if (!clienteData) {
-        console.error('No profile found for user:', email);
+      if (!userData) {
+        console.error('No user profile found for:', email);
         return;
       }
 
-      // Obtener información del rol y permisos
+      // Obtener estudiantes del usuario
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('students')
+        .select('*')
+        .eq('guardian_id', userData.id)
+        .eq('is_active', true);
+
+      if (studentsError) {
+        console.error('Error getting students:', studentsError);
+      }
+
+      // Obtener información del rol y permisos usando las funciones RPC
       const { data: roleData, error: roleError } = await supabase
         .rpc('get_user_role_info', { user_email: email });
 
@@ -126,25 +122,21 @@ export function useAuth() {
       const permissions = permissionsData || [];
 
       setProfile({
-        id: clienteData.id,
-        email: clienteData.correo_apoderado,
-        name: clienteData.nombre_apoderado,
-        role: clienteData.role || 'user',
+        id: userData.id,
+        email: userData.email,
+        fullName: userData.full_name,
+        phone: userData.phone,
+        role: userData.role,
+        isActive: userData.is_active,
+        lastLogin: userData.last_login,
+        loginCount: userData.login_count || 0,
+        students: studentsData || [],
+        permissions: permissions.map((p: any) => p.permission_name),
         roleInfo: roleInfo ? {
-          role_name: roleInfo.role_name,
-          display_name: roleInfo.display_name,
+          displayName: roleInfo.display_name,
           description: roleInfo.description,
           color: roleInfo.color,
-          permissions: roleInfo.permissions || []
         } : undefined,
-        permissions: permissions.map((p: any) => ({
-          name: p.permission_name,
-          module: p.module,
-          action: p.action
-        })),
-        isActive: clienteData.is_active,
-        lastLogin: clienteData.last_login,
-        loginCount: clienteData.login_count || 0,
       });
     } catch (error) {
       console.error('Error loading user profile:', error);
@@ -153,13 +145,7 @@ export function useAuth() {
 
   const updateLastLogin = async (email: string) => {
     try {
-      await supabase
-        .from('clientes')
-        .update({ 
-          last_login: new Date().toISOString(),
-          login_count: supabase.sql`login_count + 1`
-        })
-        .eq('correo_apoderado', email);
+      await supabase.rpc('update_last_login', { user_email: email });
     } catch (error) {
       console.error('Error updating last login:', error);
     }
@@ -188,7 +174,7 @@ export function useAuth() {
   // Funciones de verificación de permisos
   const hasPermission = (permission: string): boolean => {
     if (!profile) return false;
-    return profile.permissions.some(p => p.name === permission);
+    return profile.permissions.includes(permission);
   };
 
   const hasAnyPermission = (permissions: string[]): boolean => {
@@ -198,9 +184,15 @@ export function useAuth() {
 
   const hasModuleAccess = (module: string, action?: string): boolean => {
     if (!profile) return false;
-    return profile.permissions.some(p => 
-      p.module === module && (action ? p.action === action : true)
+    const modulePermissions = profile.permissions.filter(p => 
+      p.startsWith(`${module}.`)
     );
+    
+    if (action) {
+      return modulePermissions.some(p => p === `${module}.${action}`);
+    }
+    
+    return modulePermissions.length > 0;
   };
 
   // Verificaciones de rol
@@ -230,6 +222,18 @@ export function useAuth() {
     return hasAnyPermission(['pedidos.export', 'estadisticas.export']);
   };
 
+  const canManageMenu = () => {
+    return hasAnyPermission(['menu.create', 'menu.update', 'menu.delete']);
+  };
+
+  const canViewReports = () => {
+    return hasPermission('estadisticas.read');
+  };
+
+  const canManageOrders = () => {
+    return hasAnyPermission(['pedidos.update', 'pedidos.delete']);
+  };
+
   return {
     user,
     profile,
@@ -253,6 +257,9 @@ export function useAuth() {
     canManageUsers,
     canManageRoles,
     canExportData,
+    canManageMenu,
+    canViewReports,
+    canManageOrders,
     
     // Funciones de utilidad
     refreshProfile: () => loadUserProfile(user?.email || ''),
