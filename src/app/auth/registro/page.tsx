@@ -143,9 +143,10 @@ export default function RegisterPage() {
         throw new Error("Debe agregar al menos un estudiante")
       }
 
-      console.log("Iniciando registro de usuario...")
+      console.log("🚀 Iniciando registro de usuario...")
 
       // Step 1: Create user in Supabase Auth
+      console.log("📧 Creando usuario en Auth con email:", email)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -159,7 +160,7 @@ export default function RegisterPage() {
       })
 
       if (authError) {
-        console.error("Auth error:", authError)
+        console.error("❌ Auth error:", authError)
         
         if (authError.message.includes("User already registered")) {
           throw new Error("Este correo electrónico ya está registrado. Intente iniciar sesión.")
@@ -177,19 +178,20 @@ export default function RegisterPage() {
       }
 
       authUserId = authData.user.id
-      console.log("Usuario de auth creado:", authUserId)
+      console.log("✅ Usuario de auth creado:", authUserId)
 
       // Step 2: Wait for trigger to execute and create profile
-      console.log("Esperando a que se ejecute el trigger...")
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      console.log("⏳ Esperando a que se ejecute el trigger...")
+      await new Promise(resolve => setTimeout(resolve, 3000)) // Increased wait time
 
       // Step 3: Verify if user profile was created by trigger
       let profileCreated = false
       let retryCount = 0
-      const maxRetries = 3
+      const maxRetries = 5 // Increased retries
 
       while (!profileCreated && retryCount < maxRetries) {
         try {
+          console.log(`🔍 Verificando perfil - Intento ${retryCount + 1}/${maxRetries}`)
           const { data: existingUser, error: checkError } = await supabase
             .from('users')
             .select('id, email, full_name, role')
@@ -198,40 +200,63 @@ export default function RegisterPage() {
 
           if (existingUser && !checkError) {
             profileCreated = true
-            console.log("Perfil encontrado:", existingUser)
+            console.log("✅ Perfil encontrado por trigger:", existingUser)
           } else {
-            console.log(`Intento ${retryCount + 1}: Perfil no encontrado, esperando...`)
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            console.log(`⏳ Intento ${retryCount + 1}: Perfil no encontrado, esperando...`)
+            if (checkError) {
+              console.log("Error en verificación:", checkError)
+            }
+            await new Promise(resolve => setTimeout(resolve, 2000)) // Increased wait between retries
             retryCount++
           }
         } catch (error) {
-          console.log(`Intento ${retryCount + 1}: Error verificando perfil:`, error)
+          console.log(`❌ Intento ${retryCount + 1}: Error verificando perfil:`, error)
           retryCount++
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
         }
       }
 
       // Step 4: Create profile manually if trigger failed
       if (!profileCreated) {
-        console.log("Creando perfil manualmente...")
-        const { error: profileError } = await supabase
-          .rpc('create_user_profile_manual', {
-            p_user_id: authData.user.id,
-            p_email: email,
-            p_full_name: fullName,
-            p_phone: phone,
-            p_role: 'user'
-          })
+        console.log("🔧 Creando perfil manualmente...")
+        try {
+          const { data: manualResult, error: profileError } = await supabase
+            .rpc('create_user_profile_manual', {
+              p_user_id: authData.user.id,
+              p_email: email,
+              p_full_name: fullName,
+              p_phone: phone,
+              p_role: 'user'
+            })
 
-        if (profileError) {
-          console.error('Error al crear perfil manualmente:', profileError)
-          throw new Error(`Error al crear el perfil: ${profileError.message}`)
+          if (profileError) {
+            console.error('❌ Error al crear perfil manualmente:', profileError)
+            throw new Error(`Error al crear el perfil: ${profileError.message}`)
+          }
+          console.log("✅ Perfil creado manualmente:", manualResult)
+        } catch (rpcError) {
+          console.error('❌ RPC Error:', rpcError)
+          throw new Error(`Error en la función de creación de perfil: ${rpcError}`)
         }
-        console.log("Perfil creado manualmente")
       }
 
-      // Step 5: Create students
-      console.log("Creando estudiantes...")
+      // Step 5: Final verification that profile exists
+      console.log("🔍 Verificación final del perfil...")
+      const { data: finalCheck, error: finalCheckError } = await supabase
+        .from('users')
+        .select('id, email, full_name, role')
+        .eq('id', authData.user.id)
+        .single()
+
+      if (finalCheckError || !finalCheck) {
+        console.error('❌ Error en verificación final:', finalCheckError)
+        throw new Error("No se pudo verificar la creación del perfil de usuario")
+      }
+
+      console.log("✅ Perfil verificado exitosamente:", finalCheck)
+
+      // Step 6: Create students
+      console.log("👨‍🎓 Creando estudiantes...")
       const studentsToInsert = students.map(student => ({
         guardian_id: authData.user!.id,
         name: student.name,
@@ -250,13 +275,13 @@ export default function RegisterPage() {
         .select()
 
       if (studentsError) {
-        console.error('Error al crear estudiantes:', studentsError)
+        console.error('❌ Error al crear estudiantes:', studentsError)
         throw new Error(`Error al registrar los estudiantes: ${studentsError.message}`)
       }
 
-      console.log("Estudiantes creados exitosamente:", studentsData)
+      console.log("✅ Estudiantes creados exitosamente:", studentsData)
 
-      // Step 6: Verify everything was created correctly
+      // Step 7: Final verification with students
       const { data: finalUser, error: finalUserError } = await supabase
         .from('users')
         .select(`
@@ -267,9 +292,9 @@ export default function RegisterPage() {
         .single()
 
       if (finalUserError) {
-        console.error('Error verificando usuario final:', finalUserError)
+        console.error('❌ Error verificando usuario final:', finalUserError)
       } else {
-        console.log("Usuario final verificado:", finalUser)
+        console.log("✅ Usuario final verificado con estudiantes:", finalUser)
       }
 
       toast({
@@ -281,16 +306,16 @@ export default function RegisterPage() {
       router.push("/auth/login?message=registration_success")
 
     } catch (error: unknown) {
-      console.error("Error en el registro:", error)
+      console.error("❌ Error en el registro:", error)
       
       // If there was an error and we created an auth user, try to clean up
       if (authUserId) {
         try {
-          console.log("Intentando limpiar usuario de auth...")
+          console.log("🧹 Intentando limpiar usuario de auth...")
           await supabase.auth.admin.deleteUser(authUserId)
-          console.log("Usuario de auth eliminado")
+          console.log("✅ Usuario de auth eliminado")
         } catch (cleanupError) {
-          console.error("Error al limpiar usuario de auth:", cleanupError)
+          console.error("❌ Error al limpiar usuario de auth:", cleanupError)
         }
       }
       
