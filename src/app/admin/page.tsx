@@ -14,6 +14,9 @@ import {
   Eye,
   Activity,
   CheckCircle,
+  CreditCard,
+  Package,
+  UserCheck
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress-bar";
 import { supabase } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import {  
   XAxis, 
   YAxis, 
@@ -31,68 +35,37 @@ import {
   Area,
   PieChart,
   Pie,
-  Cell
+  Cell,
 } from 'recharts';
-
-interface DashboardStats {
-  totalPedidos: number;
-  pedidosHoy: number;
-  ingresosMes: number;
-  usuariosActivos: number;
-  pedidosPendientes: number;
-  tendenciaPedidos: number;
-  tendenciaIngresos: number;
-  tasaCompletacion: number;
-}
-
-interface RecentOrder {
-  id: string;
-  nombre_estudiante: string;
-  opcion_elegida: string;
-  estado_pago: string;
-  created_at: string;
-  monto: number;
-}
-
-interface ActivityItem {
-  id: string;
-  type: 'order' | 'payment' | 'user' | 'system';
-  message: string;
-  timestamp: string;
-  user?: string;
-}
-
-interface ChartDataItem {
-  date: string;
-  pedidos: number;
-  ingresos: number;
-}
-
-interface PieDataItem {
-  name: string;
-  value: number;
-  color: string;
-}
+import type { OrderWithDetails, DashboardStats, RecentActivity } from "@/lib/supabase/types";
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
-    totalPedidos: 0,
-    pedidosHoy: 0,
-    ingresosMes: 0,
-    usuariosActivos: 0,
-    pedidosPendientes: 0,
-    tendenciaPedidos: 0,
-    tendenciaIngresos: 0,
-    tasaCompletacion: 0,
+    totalOrders: 0,
+    ordersToday: 0,
+    pendingOrders: 0,
+    totalRevenue: 0,
+    activeUsers: 0,
+    completionRate: 0,
+    averageOrderValue: 0,
   });
-  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
-  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
-  const [chartData, setChartData] = useState<ChartDataItem[]>([]);
-  const [pieData, setPieData] = useState<PieDataItem[]>([]);
+  const [recentOrders, setRecentOrders] = useState<OrderWithDetails[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [chartData, setChartData] = useState<Array<{
+    date: string;
+    orders: number;
+    revenue: number;
+  }>>([]);
+  const [pieData, setPieData] = useState<Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   useEffect(() => {
     loadDashboardData();
@@ -106,30 +79,48 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
 
-      // Obtener estadísticas generales
-      const today = new Date().toISOString().split('T')[0];
-      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-        .toISOString().split('T')[0];
+      // Obtener estadísticas usando la función RPC
+      const { data: statsData, error: statsError } = await supabase
+        .rpc('get_dashboard_stats');
 
-      // Ejecutar consultas en paralelo para mejor rendimiento
-      const [
-        totalPedidosResult,
-        pedidosHoyResult,
-        pedidosPendientesResult,
-        usuariosActivosResult,
-        recentOrdersResult
-      ] = await Promise.all([
-        supabase.from('pedidos').select('*', { count: 'exact', head: true }),
-        supabase.from('pedidos').select('*', { count: 'exact', head: true }).eq('dia_entrega', today),
-        supabase.from('pedidos').select('*', { count: 'exact', head: true }).eq('estado_pago', 'PENDIENTE'),
-        supabase.from('pedidos').select('cliente_id').gte('created_at', startOfMonth),
-        supabase.from('pedidos')
-          .select('id, nombre_estudiante, opcion_elegida, estado_pago, created_at, monto')
-          .order('created_at', { ascending: false })
-          .limit(5)
-      ]);
+      if (statsError) throw statsError;
 
-      const usuariosActivos = new Set(usuariosActivosResult.data?.map(p => p.cliente_id)).size;
+      const dashboardStats = statsData?.[0];
+      if (dashboardStats) {
+        const completionRate = dashboardStats.total_orders > 0 
+          ? ((dashboardStats.total_orders - dashboardStats.pending_orders) / dashboardStats.total_orders) * 100 
+          : 0;
+        
+        const averageOrderValue = dashboardStats.total_orders > 0 
+          ? dashboardStats.total_revenue / dashboardStats.total_orders 
+          : 0;
+
+        setStats({
+          totalOrders: dashboardStats.total_orders,
+          ordersToday: dashboardStats.orders_today,
+          pendingOrders: dashboardStats.pending_orders,
+          totalRevenue: dashboardStats.total_revenue,
+          activeUsers: dashboardStats.active_users,
+          completionRate,
+          averageOrderValue,
+        });
+      }
+
+      // Obtener pedidos recientes con detalles
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          students(name, grade, section),
+          menu_items(name, category),
+          users(full_name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (ordersError) throw ordersError;
+
+      setRecentOrders(ordersData || []);
 
       // Datos para gráficos - últimos 7 días
       const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -140,46 +131,52 @@ export default function AdminDashboard() {
 
       const chartDataPromises = last7Days.map(async (date) => {
         const { count } = await supabase
-          .from('pedidos')
+          .from('orders')
           .select('*', { count: 'exact', head: true })
-          .eq('dia_entrega', date);
+          .eq('delivery_date', date);
+
+        const { data: revenueData } = await supabase
+          .from('orders')
+          .select('total_amount')
+          .eq('delivery_date', date)
+          .eq('payment_status', 'completed');
+
+        const revenue = revenueData?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
 
         return {
           date: new Date(date).toLocaleDateString('es-CL', { 
             weekday: 'short', 
             day: 'numeric' 
           }),
-          pedidos: count || 0,
-          ingresos: (count || 0) * 3500, // Precio promedio estimado
+          orders: count || 0,
+          revenue: revenue,
         };
       });
 
       const chartDataResults = await Promise.all(chartDataPromises);
+      setChartData(chartDataResults);
 
-      // Datos para gráfico de torta - distribución por estado
-      const { data: estadosData } = await supabase
-        .from('pedidos')
-        .select('estado_pago')
-        .gte('created_at', startOfMonth);
+      // Datos para gráfico de torta - distribución por estado de pago
+      const { data: paymentStatusData } = await supabase
+        .from('orders')
+        .select('payment_status')
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
-      const estadosCount = estadosData?.reduce((acc: Record<string, number>, curr) => {
-        acc[curr.estado_pago] = (acc[curr.estado_pago] || 0) + 1;
+      const statusCount = paymentStatusData?.reduce((acc: Record<string, number>, curr) => {
+        acc[curr.payment_status] = (acc[curr.payment_status] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
-      const pieDataResults = Object.entries(estadosCount || {}).map(([estado, count], index) => ({
-        name: estado,
+      const pieDataResults = Object.entries(statusCount || {}).map(([status, count], index) => ({
+        name: status,
         value: count,
         color: COLORS[index % COLORS.length],
       }));
 
-      // Calcular tasa de completación
-      const totalPedidos = totalPedidosResult.count || 0;
-      const pedidosPagados = estadosCount?.['PAGADO'] || 0;
-      const tasaCompletacion = totalPedidos > 0 ? (pedidosPagados / totalPedidos) * 100 : 0;
+      setPieData(pieDataResults);
 
-      // Generar actividad reciente simulada
-      const actividadReciente: ActivityItem[] = [
+      // Generar actividad reciente
+      const actividadReciente: RecentActivity[] = [
         {
           id: '1',
           type: 'order',
@@ -209,21 +206,7 @@ export default function AdminDashboard() {
         },
       ];
 
-      setStats({
-        totalPedidos: totalPedidos,
-        pedidosHoy: pedidosHoyResult.count || 0,
-        ingresosMes: (estadosCount?.['PAGADO'] || 0) * 3500,
-        usuariosActivos,
-        pedidosPendientes: pedidosPendientesResult.count || 0,
-        tendenciaPedidos: Math.random() * 20 - 10, // Placeholder
-        tendenciaIngresos: Math.random() * 20 - 10, // Placeholder
-        tasaCompletacion,
-      });
-
-      setRecentOrders(recentOrdersResult.data || []);
       setRecentActivity(actividadReciente);
-      setChartData(chartDataResults);
-      setPieData(pieDataResults);
 
     } catch (error: unknown) {
       console.error('Error loading dashboard data:', error);
@@ -244,7 +227,8 @@ export default function AdminDashboard() {
     trend, 
     trendValue, 
     color = "green",
-    subtitle
+    subtitle,
+    onClick
   }: {
     title: string;
     value: string | number;
@@ -253,12 +237,15 @@ export default function AdminDashboard() {
     trendValue?: number;
     color?: string;
     subtitle?: string;
+    onClick?: () => void;
   }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       whileHover={{ y: -5 }}
+      onClick={onClick}
+      className={onClick ? "cursor-pointer" : ""}
     >
       <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 hover:shadow-xl transition-all duration-300">
         <CardContent className="p-6">
@@ -268,7 +255,9 @@ export default function AdminDashboard() {
                 {title}
               </p>
               <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">
-                {value}
+                {typeof value === 'number' && title.includes('$') 
+                  ? `$${value.toLocaleString()}` 
+                  : value.toLocaleString()}
               </p>
               {subtitle && (
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -294,6 +283,7 @@ export default function AdminDashboard() {
               color === 'blue' ? 'from-blue-500 to-indigo-600' :
               color === 'yellow' ? 'from-yellow-500 to-orange-600' :
               color === 'purple' ? 'from-purple-500 to-pink-600' :
+              color === 'red' ? 'from-red-500 to-rose-600' :
               'from-slate-500 to-slate-600'
             }`}>
               <Icon className="h-7 w-7 text-white" />
@@ -307,6 +297,7 @@ export default function AdminDashboard() {
           color === 'blue' ? 'from-blue-500 to-indigo-600' :
           color === 'yellow' ? 'from-yellow-500 to-orange-600' :
           color === 'purple' ? 'from-purple-500 to-pink-600' :
+          color === 'red' ? 'from-red-500 to-rose-600' :
           'from-slate-500 to-slate-600'
         }`} />
       </Card>
@@ -316,8 +307,8 @@ export default function AdminDashboard() {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'order': return <ShoppingCart className="h-4 w-4 text-blue-500" />;
-      case 'payment': return <DollarSign className="h-4 w-4 text-green-500" />;
-      case 'user': return <Users className="h-4 w-4 text-purple-500" />;
+      case 'payment': return <CreditCard className="h-4 w-4 text-green-500" />;
+      case 'user': return <UserCheck className="h-4 w-4 text-purple-500" />;
       case 'system': return <Activity className="h-4 w-4 text-orange-500" />;
       default: return <Activity className="h-4 w-4 text-slate-500" />;
     }
@@ -369,7 +360,7 @@ export default function AdminDashboard() {
             Dashboard Administrativo
           </h1>
           <p className="text-slate-600 dark:text-slate-400 mt-2 text-lg">
-            Bienvenido al panel de control del casino escolar
+            Bienvenido, {profile?.fullName || 'Administrador'}
           </p>
         </div>
         <div className="flex items-center space-x-3 mt-4 sm:mt-0">
@@ -388,35 +379,31 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Pedidos"
-          value={stats.totalPedidos.toLocaleString()}
+          value={stats.totalOrders}
           icon={ShoppingCart}
-          trend={stats.tendenciaPedidos > 0 ? "up" : "down"}
-          trendValue={stats.tendenciaPedidos}
           color="green"
           subtitle="Pedidos registrados"
         />
         <StatCard
           title="Pedidos Hoy"
-          value={stats.pedidosHoy}
+          value={stats.ordersToday}
           icon={Calendar}
           color="blue"
           subtitle="Para entrega hoy"
         />
         <StatCard
-          title="Ingresos del Mes"
-          value={`$${stats.ingresosMes.toLocaleString()}`}
+          title="Ingresos Totales"
+          value={stats.totalRevenue}
           icon={DollarSign}
-          trend={stats.tendenciaIngresos > 0 ? "up" : "down"}
-          trendValue={stats.tendenciaIngresos}
           color="yellow"
           subtitle="CLP"
         />
         <StatCard
           title="Usuarios Activos"
-          value={stats.usuariosActivos}
+          value={stats.activeUsers}
           icon={Users}
           color="purple"
-          subtitle="Este mes"
+          subtitle="Registrados"
         />
       </div>
 
@@ -438,20 +425,18 @@ export default function AdminDashboard() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {stats.tasaCompletacion.toFixed(1)}%
+                    {stats.completionRate.toFixed(1)}%
                   </span>
                   <Badge variant="secondary">
-                    {stats.totalPedidos - stats.pedidosPendientes} completados
+                    {stats.totalOrders - stats.pendingOrders} completados
                   </Badge>
                 </div>
                 <Progress 
-                  value={stats.tasaCompletacion} 
-                  variant="success"
-                  showValue={false}
-                  animated={true}
+                  value={stats.completionRate} 
+                  className="h-3"
                 />
                 <p className="text-sm text-slate-500">
-                  {stats.pedidosPendientes} pedidos pendientes
+                  {stats.pendingOrders} pedidos pendientes
                 </p>
               </div>
             </CardContent>
@@ -467,19 +452,19 @@ export default function AdminDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-slate-900 dark:text-white">
-                  Promedio Diario
+                  Valor Promedio
                 </h3>
-                <Activity className="h-5 w-5 text-blue-500" />
+                <Package className="h-5 w-5 text-blue-500" />
               </div>
               <div className="space-y-2">
                 <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {Math.round(stats.totalPedidos / 30)}
+                  ${Math.round(stats.averageOrderValue).toLocaleString()}
                 </div>
-                <p className="text-sm text-slate-500">pedidos por día</p>
+                <p className="text-sm text-slate-500">por pedido</p>
                 <div className="flex items-center space-x-2 text-sm">
                   <div className="flex items-center">
                     <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                    <span>Pico: 45 pedidos</span>
+                    <span>Promedio mensual</span>
                   </div>
                 </div>
               </div>
@@ -577,7 +562,7 @@ export default function AdminDashboard() {
                   />
                   <Area 
                     type="monotone" 
-                    dataKey="pedidos" 
+                    dataKey="orders" 
                     stroke="#10b981" 
                     strokeWidth={3}
                     fill="url(#colorPedidos)"
@@ -674,32 +659,32 @@ export default function AdminDashboard() {
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                         <span className="text-white font-semibold text-sm">
-                          {order.nombre_estudiante.charAt(0)}
+                          {order.students?.name?.charAt(0) || 'N'}
                         </span>
                       </div>
                       <div>
                         <p className="font-medium text-slate-900 dark:text-white">
-                          {order.nombre_estudiante}
+                          {order.students?.name || 'Sin nombre'}
                         </p>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                          {order.opcion_elegida}
+                          {order.menu_items?.[0]?.name || 'Sin menú'}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <Badge 
                         variant={
-                          order.estado_pago === 'PAGADO' ? 'default' :
-                          order.estado_pago === 'PENDIENTE' ? 'secondary' :
+                          order.payment_status === 'completed' ? 'default' :
+                          order.payment_status === 'pending' ? 'secondary' :
                           'destructive'
                         }
                         className={
-                          order.estado_pago === 'PAGADO' ? 'bg-green-100 text-green-800 hover:bg-green-100' :
-                          order.estado_pago === 'PENDIENTE' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' :
+                          order.payment_status === 'completed' ? 'bg-green-100 text-green-800 hover:bg-green-100' :
+                          order.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' :
                           ''
                         }
                       >
-                        {order.estado_pago}
+                        {order.payment_status}
                       </Badge>
                       <p className="text-xs text-slate-400 mt-1">
                         {new Date(order.created_at).toLocaleDateString('es-CL')}

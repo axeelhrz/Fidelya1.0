@@ -42,9 +42,29 @@ export interface StudentWithGuardian extends Student {
 }
 
 export interface OrderWithDetails extends Order {
-  student?: Student
+  students?: Student
   menu_item?: MenuItem
   guardian?: User
+  estado_items?: {
+    id: string
+    order_id: string
+    menu_item_id: string
+    status: OrderStatus
+    created_at: string
+    updated_at: string
+  }
+  users?: User
+  menu_items?: MenuItem[]
+  estado_pago: {
+    id: string
+    order_id: string
+    status: PaymentStatus
+    transaction_id: string
+    amount: number
+    currency: string
+    created_at: string
+    updated_at: string
+  }
 }
 
 export interface MenuOptionForWeek {
@@ -107,7 +127,7 @@ export interface RecentActivity {
   message: string
   timestamp: string
   user?: string
-  details?: any
+  details?: Record<string, unknown>
 }
 
 export interface ChartDataPoint {
@@ -164,14 +184,14 @@ export interface OrderFormData {
 }
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
   message?: string
 }
 
-export interface PaginatedResponse<T = any> {
+export interface PaginatedResponse<T = unknown> {
   data: T[]
   count: number
   page: number

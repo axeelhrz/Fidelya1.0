@@ -8,8 +8,6 @@ import { useToast } from '@/components/ui/use-toast';
 import type { 
   UserRole, 
   UserProfile, 
-  Student,
-  Permission 
 } from '@/lib/supabase/types';
 
 export interface RoleInfo {
@@ -131,7 +129,7 @@ export function useAuth() {
         lastLogin: userData.last_login,
         loginCount: userData.login_count || 0,
         students: studentsData || [],
-        permissions: permissions.map((p: any) => p.permission_name),
+        permissions: permissions.map((p: { permission_name: string }) => p.permission_name),
         roleInfo: roleInfo ? {
           displayName: roleInfo.display_name,
           description: roleInfo.description,
@@ -162,11 +160,11 @@ export function useAuth() {
       });
       
       router.push('/auth/login');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error al cerrar sesión",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Error desconocido",
       });
     }
   };

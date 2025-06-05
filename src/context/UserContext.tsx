@@ -2,15 +2,21 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { supabase } from "@/lib/supabase/client"
-import type { Student, UserProfile } from "@/lib/supabase/types"
+import type { UserProfile } from "@/lib/supabase/types"
 
 export interface Student {
   id: string
+  guardian_id: string
   name: string
   grade: string
   section: string
-  level: string
-  tipo?: string // 'Estudiante' o 'Funcionario'
+  level: "basica" | "media"
+  user_type: "estudiante" | "funcionario"
+  rut: string | null
+  dietary_restrictions: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
 }
 
 export interface Guardian {
@@ -119,7 +125,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         lastLogin: userData.last_login,
         loginCount: userData.login_count || 0,
         students: studentsData || [],
-        permissions: permissions.map((p: any) => p.permission_name),
+        permissions: permissions.map((p: { permission_name: string }) => p.permission_name),
         roleInfo: roleInfo ? {
           displayName: roleInfo.display_name,
           description: roleInfo.description,
