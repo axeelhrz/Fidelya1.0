@@ -1,36 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   ShoppingCart,
   Search,
@@ -41,38 +15,114 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  AlertTriangle,
-  RefreshCw
 } from 'lucide-react';
 
+interface Order {
+  id: string;
+  studentName: string;
+  guardianName: string;
+  menuItem: string;
+  category: 'almuerzo' | 'colacion';
+  deliveryDate: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+  status: 'pending' | 'confirmed' | 'paid' | 'cancelled' | 'delivered';
+  paymentStatus: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  createdAt: string;
+  transactionId?: string;
+}
+
+interface OrderFilters {
+  status: string;
+  paymentStatus: string;
+  dateFrom: string;
+  dateTo: string;
+  category: string;
+}
+
+
+
+
+
+
 export default function PedidosPage() {
-  // Datos de ejemplo
-  const pedidos = [
-    { id: 1, estudiante: "Pedro Pérez", menu: "Almuerzo Lunes", fecha: "2024-01-15", estado: "confirmado", monto: 3500 },
-    { id: 2, estudiante: "Ana González", menu: "Colación Martes", fecha: "2024-01-16", estado: "pendiente", monto: 2000 },
-    { id: 3, estudiante: "Luis López", menu: "Almuerzo Miércoles", fecha: "2024-01-17", estado: "pagado", monto: 3500 },
-    { id: 4, estudiante: "Carmen Martínez", menu: "Almuerzo Jueves", fecha: "2024-01-18", estado: "cancelado", monto: 3500 },
-  ]
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters] = useState<OrderFilters>({
+    status: 'all',
+    paymentStatus: 'all',
+    dateFrom: '',
+    dateTo: '',
+    category: 'all'
+  });
 
-  const getEstadoColor = (estado: string) => {
-    switch (estado) {
-      case 'confirmado': return 'default'
-      case 'pendiente': return 'secondary'
-      case 'pagado': return 'default'
-      case 'cancelado': return 'destructive'
-      default: return 'secondary'
-    }
-  }
+  // Datos de ejemplo para mostrar el diseño
+  const mockOrders: Order[] = [];
 
-  const getEstadoIcon = (estado: string) => {
-    switch (estado) {
-      case 'confirmado': return <CheckCircle className="w-4 h-4" />
-      case 'pendiente': return <Clock className="w-4 h-4" />
-      case 'pagado': return <CheckCircle className="w-4 h-4" />
-      case 'cancelado': return <XCircle className="w-4 h-4" />
-      default: return <Clock className="w-4 h-4" />
+  const loadOrders = async () => {
+    try {
+      setLoading(true);
+      
+      // Simular carga de datos
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setOrders(mockOrders);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'confirmed': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'paid': return 'bg-green-100 text-green-800 border-green-200';
+      case 'delivered': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'processing': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'failed': return 'bg-red-100 text-red-800 border-red-200';
+      case 'cancelled': return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending': return <Clock className="w-4 h-4" />;
+      case 'confirmed': return <CheckCircle className="w-4 h-4" />;
+      case 'paid': return <CreditCard className="w-4 h-4" />;
+      case 'delivered': return <Package className="w-4 h-4" />;
+      case 'cancelled': return <XCircle className="w-4 h-4" />;
+      default: return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP'
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-CL', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -138,6 +188,8 @@ export default function PedidosPage() {
                 <Input
                   placeholder="Buscar pedidos..."
                   className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
@@ -160,33 +212,39 @@ export default function PedidosPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {pedidos.map((pedido) => (
-              <div key={pedido.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    <ShoppingCart className="w-5 h-5 text-gray-600" />
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="text-gray-500">Cargando pedidos...</div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                      <ShoppingCart className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">{order.studentName}</h3>
+                      <p className="text-sm text-gray-600">{order.menuItem}</p>
+                      <p className="text-xs text-gray-500">{order.deliveryDate}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-medium">{pedido.estudiante}</h3>
-                    <p className="text-sm text-gray-600">{pedido.menu}</p>
-                    <p className="text-xs text-gray-500">{pedido.fecha}</p>
+                  
+                  <div className="flex items-center space-x-4">
+                    <span className="font-medium">${formatCurrency(order.totalAmount)}</span>
+                    <Badge className={`flex items-center space-x-1 ${getStatusColor(order.status)}`}>
+                      {getStatusIcon(order.status)}
+                      <span>{order.status}</span>
+                    </Badge>
+                    <Button size="sm" variant="outline">
+                      <Eye className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
-                
-                <div className="flex items-center space-x-4">
-                  <span className="font-medium">${pedido.monto.toLocaleString()}</span>
-                  <Badge variant={getEstadoColor(pedido.estado)} className="flex items-center space-x-1">
-                    {getEstadoIcon(pedido.estado)}
-                    <span>{pedido.estado}</span>
-                  </Badge>
-                  <Button size="sm" variant="outline">
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
