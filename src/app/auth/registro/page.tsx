@@ -29,6 +29,16 @@ import {
 } from "lucide-react"
 import type { StudentFormData, StudentLevel, UserType } from "@/lib/supabase/types"
 
+interface StudentFormData {
+  name: string
+  grade: string
+  section: string
+  level: StudentLevel
+  userType: UserType
+  rut?: string
+  dietaryRestrictions?: string
+}
+
 export default function RegisterPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -48,7 +58,9 @@ export default function RegisterPage() {
     grade: "",
     section: "",
     level: "basica" as StudentLevel,
-    userType: "estudiante" as UserType
+    userType: "estudiante" as UserType,
+    rut: "",
+    dietaryRestrictions: ""
   })
 
   const handleInputChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,7 +82,7 @@ export default function RegisterPage() {
       toast({
         variant: "destructive",
         title: "Datos incompletos",
-        description: "Por favor complete todos los campos del estudiante.",
+        description: "Por favor complete todos los campos obligatorios del estudiante (nombre, curso y sección).",
       })
       return
     }
@@ -85,7 +97,9 @@ export default function RegisterPage() {
       grade: "",
       section: "",
       level: "basica" as StudentLevel,
-      userType: "estudiante" as UserType
+      userType: "estudiante" as UserType,
+      rut: "",
+      dietaryRestrictions: ""
     })
 
     toast({
@@ -124,7 +138,7 @@ export default function RegisterPage() {
 
       // Validation
       if (!email || !password || !confirmPassword || !fullName || !phone) {
-        throw new Error("Por favor complete todos los campos")
+        throw new Error("Por favor complete todos los campos obligatorios")
       }
 
       if (password !== confirmPassword) {
@@ -156,7 +170,16 @@ export default function RegisterPage() {
 
       if (authError) {
         console.error("Auth error:", authError)
-        throw new Error(`Error de autenticación: ${authError.message}`)
+        
+        if (authError.message.includes("User already registered")) {
+          throw new Error("Este correo electrónico ya está registrado. Intente iniciar sesión.")
+        } else if (authError.message.includes("Invalid email")) {
+          throw new Error("El formato del correo electrónico no es válido.")
+        } else if (authError.message.includes("Password")) {
+          throw new Error("La contraseña no cumple con los requisitos mínimos.")
+        } else {
+          throw new Error(`Error de autenticación: ${authError.message}`)
+        }
       }
 
       if (!authData.user) {
@@ -166,24 +189,36 @@ export default function RegisterPage() {
       authUserId = authData.user.id
       console.log("Usuario de auth creado:", authUserId)
 
-      // Step 2: Wait a moment for trigger to execute
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Step 2: Wait for trigger to execute and create profile
+      console.log("Esperando a que se ejecute el trigger...")
+      await new Promise(resolve => setTimeout(resolve, 2000))
 
-      // Step 3: Verify if user profile was created by trigger, if not create manually
+      // Step 3: Verify if user profile was created by trigger
       let profileCreated = false
-      try {
-        const { data: existingUser, error: checkError } = await supabase
-          .from('users')
-          .select('id')
-          .eq('id', authData.user.id)
-          .single()
+      let retryCount = 0
+      const maxRetries = 3
 
-        if (existingUser) {
-          profileCreated = true
-          console.log("Perfil creado automáticamente por trigger")
+      while (!profileCreated && retryCount < maxRetries) {
+        try {
+          const { data: existingUser, error: checkError } = await supabase
+            .from('users')
+            .select('id, email, full_name, role')
+            .eq('id', authData.user.id)
+            .single()
+
+          if (existingUser && !checkError) {
+            profileCreated = true
+            console.log("Perfil encontrado:", existingUser)
+          } else {
+            console.log(`Intento ${retryCount + 1}: Perfil no encontrado, esperando...`)
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            retryCount++
+          }
+        } catch (error) {
+          console.log(`Intento ${retryCount + 1}: Error verificando perfil:`, error)
+          retryCount++
+          await new Promise(resolve => setTimeout(resolve, 1000))
         }
-      } catch (error) {
-        console.log("Perfil no encontrado, creando manualmente...")
       }
 
       // Step 4: Create profile manually if trigger failed
@@ -216,22 +251,40 @@ export default function RegisterPage() {
         user_type: student.userType,
         rut: student.rut || null,
         dietary_restrictions: student.dietaryRestrictions || null,
+        is_active: true
       }))
 
-      const { error: studentsError } = await supabase
+      const { data: studentsData, error: studentsError } = await supabase
         .from('students')
         .insert(studentsToInsert)
+        .select()
 
       if (studentsError) {
         console.error('Error al crear estudiantes:', studentsError)
         throw new Error(`Error al registrar los estudiantes: ${studentsError.message}`)
       }
 
-      console.log("Estudiantes creados exitosamente")
+      console.log("Estudiantes creados exitosamente:", studentsData)
+
+      // Step 6: Verify everything was created correctly
+      const { data: finalUser, error: finalUserError } = await supabase
+        .from('users')
+        .select(`
+          *,
+          students (*)
+        `)
+        .eq('id', authData.user.id)
+        .single()
+
+      if (finalUserError) {
+        console.error('Error verificando usuario final:', finalUserError)
+      } else {
+        console.log("Usuario final verificado:", finalUser)
+      }
 
       toast({
-        title: "Registro exitoso",
-        description: "Tu cuenta ha sido creada exitosamente. Ahora puedes iniciar sesión.",
+        title: "¡Registro exitoso!",
+        description: `Tu cuenta ha sido creada exitosamente con ${students.length} estudiante(s). Ahora puedes iniciar sesión.`,
       })
 
       // Redirect to login page
@@ -240,18 +293,21 @@ export default function RegisterPage() {
     } catch (error: unknown) {
       console.error("Error en el registro:", error)
       
+      // If there was an error and we created an auth user, try to clean up
+      if (authUserId) {
+        try {
+          console.log("Intentando limpiar usuario de auth...")
+          await supabase.auth.admin.deleteUser(authUserId)
+          console.log("Usuario de auth eliminado")
+        } catch (cleanupError) {
+          console.error("Error al limpiar usuario de auth:", cleanupError)
+        }
+      }
+      
       let errorMessage = "No se pudo completar el registro. Inténtelo nuevamente."
       
       if (error instanceof Error) {
-        if (error.message.includes("User already registered")) {
-          errorMessage = "Este correo electrónico ya está registrado. Intente iniciar sesión."
-        } else if (error.message.includes("Invalid email")) {
-          errorMessage = "El formato del correo electrónico no es válido."
-        } else if (error.message.includes("Password")) {
-          errorMessage = "La contraseña no cumple con los requisitos mínimos."
-        } else {
-          errorMessage = error.message
-        }
+        errorMessage = error.message
       }
 
       toast({
@@ -320,7 +376,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white fixed inset-0 overflow-hidden">
+    <div className="min-h-screen bg-white fixed inset-0 overflow-auto">
       {/* Subtle Background Pattern */}
       <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
@@ -333,7 +389,7 @@ export default function RegisterPage() {
       <div className="absolute top-10 left-10 w-48 h-48 bg-gradient-to-r from-emerald-200/20 to-blue-200/20 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-10 right-10 w-64 h-64 bg-gradient-to-r from-blue-200/15 to-cyan-200/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 py-8">
         <motion.div
           className="w-full max-w-2xl"
           variants={containerVariants}
@@ -413,7 +469,7 @@ export default function RegisterPage() {
                       <div className="space-y-2">
                         <Label htmlFor="fullName" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                           <User className="w-3 h-3 text-emerald-600" />
-                          Nombre Completo
+                          Nombre Completo *
                         </Label>
                         <Input
                           id="fullName"
@@ -431,7 +487,7 @@ export default function RegisterPage() {
                       <div className="space-y-2">
                         <Label htmlFor="phone" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                           <Phone className="w-3 h-3 text-emerald-600" />
-                          Teléfono
+                          Teléfono *
                         </Label>
                         <Input
                           id="phone"
@@ -450,7 +506,7 @@ export default function RegisterPage() {
                     <motion.div variants={itemVariants} className="space-y-2">
                       <Label htmlFor="email" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                         <Mail className="w-3 h-3 text-emerald-600" />
-                        Correo Electrónico
+                        Correo Electrónico *
                       </Label>
                       <Input
                         id="email"
@@ -470,7 +526,7 @@ export default function RegisterPage() {
                       <div className="space-y-2">
                         <Label htmlFor="password" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                           <Lock className="w-3 h-3 text-emerald-600" />
-                          Contraseña
+                          Contraseña *
                         </Label>
                         <div className="relative">
                           <Input
@@ -510,7 +566,7 @@ export default function RegisterPage() {
                       <div className="space-y-2">
                         <Label htmlFor="confirmPassword" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                           <Shield className="w-3 h-3 text-emerald-600" />
-                          Confirmar Contraseña
+                          Confirmar Contraseña *
                         </Label>
                         <div className="relative">
                           <Input
@@ -551,26 +607,26 @@ export default function RegisterPage() {
                     <motion.div variants={itemVariants} className="space-y-3">
                       <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                         <GraduationCap className="w-3 h-3 text-emerald-600" />
-                        Agregar Hijos
+                        Agregar Estudiantes *
                       </Label>
                       
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
                         <Input
-                          placeholder="Nombre"
+                          placeholder="Nombre *"
                           value={currentStudent.name}
                           onChange={handleStudentChange('name')}
                           className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                           disabled={loading}
                         />
                         <Input
-                          placeholder="Curso"
+                          placeholder="Curso *"
                           value={currentStudent.grade}
                           onChange={handleStudentChange('grade')}
                           className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                           disabled={loading}
                         />
                         <Input
-                          placeholder="Letra"
+                          placeholder="Sección *"
                           value={currentStudent.section}
                           onChange={handleStudentChange('section')}
                           className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
@@ -587,6 +643,32 @@ export default function RegisterPage() {
                         </select>
                       </div>
 
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <Input
+                          placeholder="RUT (opcional)"
+                          value={currentStudent.rut}
+                          onChange={handleStudentChange('rut')}
+                          className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                          disabled={loading}
+                        />
+                        <select
+                          value={currentStudent.userType}
+                          onChange={handleStudentChange('userType')}
+                          className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 bg-white"
+                          disabled={loading}
+                        >
+                          <option value="estudiante">Estudiante</option>
+                          <option value="funcionario">Funcionario</option>
+                        </select>
+                        <Input
+                          placeholder="Restricciones alimentarias"
+                          value={currentStudent.dietaryRestrictions}
+                          onChange={handleStudentChange('dietaryRestrictions')}
+                          className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                          disabled={loading}
+                        />
+                      </div>
+
                       <Button
                         type="button"
                         onClick={addStudent}
@@ -599,14 +681,14 @@ export default function RegisterPage() {
                         Agregar Estudiante
                       </Button>
 
-                      {/* Lista de Hijos */}
+                      {/* Lista de Estudiantes */}
                       <AnimatePresence>
                         {students.length > 0 && (
                           <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
-                            className="space-y-2 max-h-32 overflow-y-auto"
+                            className="space-y-2 max-h-40 overflow-y-auto"
                           >
                             {students.map((student, index) => (
                               <motion.div
@@ -614,18 +696,24 @@ export default function RegisterPage() {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
-                                className="flex items-center justify-between p-2 bg-emerald-50 rounded-lg border border-emerald-200"
+                                className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200"
                               >
-                                <span className="text-xs font-medium text-emerald-800">
-                                  {student.name} - {student.grade}{student.section} ({student.level})
-                                </span>
+                                <div className="flex-1">
+                                  <span className="text-sm font-medium text-emerald-800">
+                                    {student.name} - {student.grade}{student.section} ({student.level})
+                                  </span>
+                                  <div className="text-xs text-emerald-600 mt-1">
+                                    {student.userType} {student.rut && `• RUT: ${student.rut}`}
+                                    {student.dietaryRestrictions && ` • ${student.dietaryRestrictions}`}
+                                  </div>
+                                </div>
                                 <button
                                   type="button"
                                   onClick={() => removeStudent(index)}
-                                  className="text-red-500 hover:text-red-700 transition-colors"
+                                  className="text-red-500 hover:text-red-700 transition-colors ml-2"
                                   disabled={loading}
                                 >
-                                  <Trash2 className="w-3 h-3" />
+                                  <Trash2 className="w-4 h-4" />
                                 </button>
                               </motion.div>
                             ))}
@@ -695,7 +783,7 @@ export default function RegisterPage() {
             </div>
             <div className="text-center space-y-1">
               <p className="text-lg font-semibold text-gray-700">Creando tu cuenta</p>
-              <p className="text-sm text-gray-500">Guardando información...</p>
+              <p className="text-sm text-gray-500">Guardando información en la base de datos...</p>
             </div>
           </motion.div>
         </motion.div>
