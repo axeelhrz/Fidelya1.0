@@ -6,16 +6,12 @@ import {
   Users, 
   UserPlus, 
   Search, 
-  Filter, 
   MoreHorizontal, 
   Edit, 
   Trash2, 
   Shield, 
-  Mail, 
-  Phone,
   Calendar,
   Download,
-  Upload
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,7 +57,7 @@ interface Usuario {
   correo_apoderado: string;
   nombre_apoderado: string;
   rol: 'user' | 'admin' | 'super_admin';
-  hijos: any[];
+  hijos: unknown[];
   created_at: string;
   telefono?: string;
   ultimo_acceso?: string;
@@ -97,12 +93,12 @@ export default function UsuariosPage() {
       if (error) throw error;
 
       setUsuarios(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading users:', error);
       toast({
         variant: "destructive",
         title: "Error al cargar usuarios",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     } finally {
       setLoading(false);
@@ -126,30 +122,6 @@ export default function UsuariosPage() {
     setFilteredUsuarios(filtered);
   };
 
-  const updateUserRole = async (userId: string, newRole: string) => {
-    try {
-      const { error } = await supabase
-        .from('clientes')
-        .update({ rol: newRole })
-        .eq('id', userId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Rol actualizado",
-        description: "El rol del usuario ha sido actualizado exitosamente",
-      });
-
-      loadUsuarios();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error al actualizar rol",
-        description: error.message,
-      });
-    }
-  };
-
   const deleteUser = async (userId: string) => {
     try {
       const { error } = await supabase
@@ -165,11 +137,11 @@ export default function UsuariosPage() {
       });
 
       loadUsuarios();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error al eliminar usuario",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     }
   };
@@ -221,11 +193,11 @@ export default function UsuariosPage() {
 
         onSave();
         loadUsuarios();
-      } catch (error: any) {
+      } catch (error: unknown) {
         toast({
           variant: "destructive",
           title: `Error al ${user ? 'actualizar' : 'crear'} usuario`,
-          description: error.message,
+          description: error instanceof Error ? error.message : 'Error desconocido',
         });
       }
     };
@@ -265,7 +237,7 @@ export default function UsuariosPage() {
           </div>
           <div>
             <Label htmlFor="rol">Rol</Label>
-            <Select value={formData.rol} onValueChange={(value) => setFormData({ ...formData, rol: value })}>
+            <Select value={formData.rol} onValueChange={(value) => setFormData({ ...formData, rol: value as 'user' | 'admin' | 'super_admin' })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

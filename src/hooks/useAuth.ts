@@ -92,11 +92,11 @@ export function useAuth() {
       });
       
       router.push('/auth/login');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error al cerrar sesión",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
       });
     }
   };

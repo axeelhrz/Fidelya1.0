@@ -33,7 +33,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase/client";
 
 interface ConfiguracionSistema {
   nombre_sistema: string;
@@ -76,7 +75,6 @@ export default function ConfiguracionPage() {
     zona_horaria: "America/Santiago"
   });
   
-  const [loading, setLoading] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const { toast } = useToast();
 
@@ -86,24 +84,20 @@ export default function ConfiguracionPage() {
 
   const cargarConfiguracion = async () => {
     try {
-      setLoading(true);
       // En un caso real, cargarías esto desde una tabla de configuración
       // Por ahora usamos valores por defecto
       toast({
         title: "Configuración cargada",
         description: "Se han cargado los valores de configuración actuales",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error al cargar configuración",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Error desconocido",
       });
-    } finally {
-      setLoading(false);
     }
   };
-
   const guardarConfiguracion = async () => {
     try {
       setGuardando(true);
@@ -115,11 +109,11 @@ export default function ConfiguracionPage() {
         title: "Configuración guardada",
         description: "Los cambios se han guardado exitosamente",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error al guardar",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Error desconocido",
       });
     } finally {
       setGuardando(false);
@@ -542,15 +536,15 @@ export default function ConfiguracionPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center justify-between">
                           <span>Confirmación de pedido</span>
-                          <Switch defaultChecked size="sm" />
+                          <Switch defaultChecked />
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Recordatorio de pago</span>
-                          <Switch defaultChecked size="sm" />
+                          <Switch defaultChecked />
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Cambios en el menú</span>
-                          <Switch defaultChecked size="sm" />
+                          <Switch defaultChecked />
                         </div>
                       </div>
                     </div>
@@ -562,15 +556,15 @@ export default function ConfiguracionPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center justify-between">
                           <span>Nuevos pedidos</span>
-                          <Switch defaultChecked size="sm" />
+                          <Switch defaultChecked />
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Pagos recibidos</span>
-                          <Switch defaultChecked size="sm" />
+                          <Switch defaultChecked />
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Errores del sistema</span>
-                          <Switch defaultChecked size="sm" />
+                          <Switch defaultChecked />
                         </div>
                       </div>
                     </div>
