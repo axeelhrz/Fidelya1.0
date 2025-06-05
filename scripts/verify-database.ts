@@ -30,7 +30,7 @@ async function verifyDatabase() {
   
   try {
     // 1. Verificar conexión básica
-    const { data: connectionTest, error: connectionError } = await supabase
+    const { error: connectionError } = await supabase
       .from('users')
       .select('count')
       .limit(1)
@@ -47,7 +47,7 @@ async function verifyDatabase() {
     
     for (const table of tables) {
       try {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from(table)
           .select('*')
           .limit(1)
