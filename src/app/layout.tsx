@@ -5,7 +5,7 @@ import "@/styles/responsive-fixes.css"
 import "@/styles/login-animations.css"
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider"
-import { UserProvider } from "@/context/UserContext"
+import { UserProvider } from "@/app/context/UserContext"
 import { ConditionalNavbar } from "@/components/conditional-navbar"
 import { ConditionalMain } from "@/components/conditional-main"
 import { MuiThemeProvider } from "@/components/mui-theme-provider"
@@ -27,12 +27,6 @@ export default function RootLayout({
       <head>
         <script src="https://checkout.getnet.cl/lightbox.min.js" async />
         <meta name="Permissions-Policy" content="accelerometer=(), gyroscope=()" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body className={inter.className}>
         <MuiThemeProvider>
