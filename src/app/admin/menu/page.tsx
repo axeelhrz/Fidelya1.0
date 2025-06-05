@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,21 +43,14 @@ import {
   Edit,
   Trash2,
   Search,
-  Filter,
-  Download,
-  Upload,
   ChefHat,
   Coffee,
-  Clock,
-  DollarSign,
   Users,
   CheckCircle,
   XCircle,
-  AlertTriangle,
-  RefreshCw,
   Copy
 } from 'lucide-react';
-import type { MenuItem, MenuCategory, StudentLevel } from '@/lib/supabase/types';
+import type { MenuItem, MenuCategory } from '@/lib/supabase/types';
 
 interface MenuFormData {
   name: string;
@@ -114,12 +107,12 @@ export default function MenuPage() {
       if (error) throw error;
 
       setMenuItems(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading menu items:', error);
       toast({
         variant: "destructive",
         title: "Error al cargar menús",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     } finally {
       setLoading(false);
@@ -161,12 +154,12 @@ export default function MenuPage() {
       resetForm();
       setIsCreateDialogOpen(false);
       setIsEditDialogOpen(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving menu item:', error);
       toast({
         variant: "destructive",
         title: "Error al guardar",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     }
   };
@@ -186,12 +179,12 @@ export default function MenuPage() {
       });
 
       await loadMenuItems();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting menu item:', error);
       toast({
         variant: "destructive",
         title: "Error al eliminar",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     }
   };
@@ -211,12 +204,12 @@ export default function MenuPage() {
       });
 
       await loadMenuItems();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error toggling availability:', error);
       toast({
         variant: "destructive",
         title: "Error al cambiar estado",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     }
   };
@@ -341,12 +334,12 @@ export default function MenuPage() {
       });
 
       await loadMenuItems();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error generating week menu:', error);
       toast({
         variant: "destructive",
         title: "Error al generar menú",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     }
   };
@@ -605,7 +598,7 @@ export default function MenuPage() {
                               <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                               <AlertDialogDescription>
                                 Esta acción no se puede deshacer. Se eliminará permanentemente
-                                el elemento "{item.name}" del menú.
+                                el elemento &quot;{item.name}&quot; del menú.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

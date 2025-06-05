@@ -7,11 +7,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/context/UserContext';
 import type { 
   MenuItem, 
-  Student, 
-  MenuCategory, 
   WeeklyMenuSelection, 
   OrderSummaryItem,
-  PaymentTransaction 
 } from '@/lib/supabase/types';
 
 interface MenuOptionsByStudent {
@@ -84,12 +81,12 @@ export function usePedidosForm() {
       if (error) throw error;
 
       setMenuOptions(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading menu:', error);
       toast({
         variant: "destructive",
         title: "Error al cargar menú",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     } finally {
       setLoadingMenu(false);
@@ -194,7 +191,18 @@ export function usePedidosForm() {
       const newTransactionId = `TX-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       // Preparar datos de pedidos
-      const ordersToCreate: any[] = [];
+      const ordersToCreate: {
+        guardian_id: string;
+        student_id: string;
+        menu_item_id: string;
+        delivery_date: string;
+        quantity: number;
+        unit_price: number;
+        total_amount: number;
+        status: string;
+        payment_status: string;
+        transaction_id: string;
+      }[] = [];
       const orderSummary: OrderSummaryItem[] = [];
 
       selectedStudents.forEach(studentId => {
@@ -229,7 +237,7 @@ export function usePedidosForm() {
                 studentName: student.name,
                 date,
                 menuType: 'almuerzo',
-                menuItem: menuItem,
+                menuItem: { ...menuItem, code: menuItem.code ?? undefined, max_orders: menuItem.max_orders ?? undefined },
                 quantity: 1,
                 unitPrice,
                 totalPrice: unitPrice,
@@ -262,7 +270,7 @@ export function usePedidosForm() {
                 studentName: student.name,
                 date,
                 menuType: 'colacion',
-                menuItem: menuItem,
+                menuItem: { ...menuItem, code: menuItem.code ?? undefined, max_orders: menuItem.max_orders ?? undefined },
                 quantity: 1,
                 unitPrice,
                 totalPrice: unitPrice,
@@ -355,12 +363,12 @@ export function usePedidosForm() {
         description: "Procede al pago para confirmar tu pedido",
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating order:', error);
       toast({
         variant: "destructive",
         title: "Error al crear pedido",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     } finally {
       setGuardando(false);

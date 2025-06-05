@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,13 +36,8 @@ import {
 import {
   ShoppingCart,
   Search,
-  Filter,
   Download,
   Eye,
-  Edit,
-  Trash2,
-  Calendar,
-  User,
   Package,
   CreditCard,
   CheckCircle,
@@ -125,12 +120,12 @@ export default function PedidosPage() {
 
       setOrders(data || []);
       setTotalPages(Math.ceil((count || 0) / pageSize));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading orders:', error);
       toast({
         variant: "destructive",
         title: "Error al cargar pedidos",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     } finally {
       setLoading(false);
@@ -153,12 +148,12 @@ export default function PedidosPage() {
 
       await loadOrders();
       setIsDetailDialogOpen(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating order status:', error);
       toast({
         variant: "destructive",
         title: "Error al actualizar estado",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     }
   };
@@ -179,12 +174,12 @@ export default function PedidosPage() {
 
       await loadOrders();
       setIsDetailDialogOpen(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating payment status:', error);
       toast({
         variant: "destructive",
         title: "Error al actualizar estado de pago",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     }
   };
@@ -196,7 +191,7 @@ export default function PedidosPage() {
         'ID': order.id,
         'Estudiante': order.students?.name || '',
         'Curso': `${order.students?.grade}${order.students?.section}` || '',
-        'Menú': order.menu_items?.name || '',
+        'Menú': order.menu_items?.[0]?.name || '',
         'Cantidad': order.quantity,
         'Precio': order.total_amount,
         'Fecha Entrega': order.delivery_date,
@@ -227,12 +222,12 @@ export default function PedidosPage() {
         title: "Exportación exitosa",
         description: "Los pedidos han sido exportados correctamente.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error exporting orders:', error);
       toast({
         variant: "destructive",
         title: "Error al exportar",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     }
   };
@@ -428,9 +423,9 @@ export default function PedidosPage() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{order.menu_items?.name || 'N/A'}</p>
+                            <p className="font-medium">{order.menu_items?.[0]?.name || 'N/A'}</p>
                             <Badge variant="outline" className="text-xs">
-                              {order.menu_items?.category}
+                              {order.menu_items?.[0]?.category}
                             </Badge>
                           </div>
                         </TableCell>
@@ -509,11 +504,11 @@ export default function PedidosPage() {
                                       <div className="grid grid-cols-2 gap-2 text-sm">
                                         <div>
                                           <span className="text-gray-600">Menú:</span>
-                                          <p className="font-medium">{selectedOrder.menu_items?.name}</p>
+                                          <p className="font-medium">{selectedOrder.menu_items?.[0]?.name}</p>
                                         </div>
                                         <div>
                                           <span className="text-gray-600">Categoría:</span>
-                                          <p className="font-medium">{selectedOrder.menu_items?.category}</p>
+                                          <p className="font-medium">{selectedOrder.menu_items?.[0]?.category}</p>
                                         </div>
                                         <div>
                                           <span className="text-gray-600">Cantidad:</span>
