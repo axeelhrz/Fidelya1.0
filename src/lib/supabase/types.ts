@@ -1,157 +1,42 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+import { Database } from './database.types'
 
-export interface Database {
-  public: {
-    Tables: {
-      clientes: {
-        Row: {
-          id: string
-          correo_apoderado: string
-          nombre_apoderado: string
-          hijos: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Insert: {
-          id?: string
-          correo_apoderado: string
-          nombre_apoderado: string
-          hijos: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          correo_apoderado?: string
-          nombre_apoderado?: string
-          hijos?: Json
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      almuerzos: {
-        Row: {
-          id: string
-          descripcion: string
-          fecha: string
-          dia: string
-          codigo: string
-          precio_estudiante: number
-          precio_funcionario: number
-          tipo_dia: string
-          created_at?: string
-        }
-        Insert: {
-          id?: string
-          descripcion: string
-          fecha: string
-          dia: string
-          codigo: string
-          precio_estudiante: number
-          precio_funcionario: number
-          tipo_dia: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          descripcion?: string
-          fecha?: string
-          dia?: string
-          codigo?: string
-          precio_estudiante?: number
-          precio_funcionario?: number
-          tipo_dia?: string
-          created_at?: string
-        }
-      }
-      colaciones: {
-        Row: {
-          id: string
-          codigo: string
-          descripcion: string
-          precio: number
-          created_at?: string
-        }
-        Insert: {
-          id?: string
-          codigo: string
-          descripcion: string
-          precio: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          codigo?: string
-          descripcion?: string
-          precio?: number
-          created_at?: string
-        }
-      }
-      pedidos: {
-        Row: {
-          id: string
-          cliente_id: string
-          nombre_estudiante: string
-          curso: string
-          letra: string
-          nivel: string
-          tipo_pedido: string
-          opcion_elegida: string
-          dia_entrega: string
-          estado_pago: string
-          transaction_id?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Insert: {
-          id?: string
-          cliente_id: string
-          nombre_estudiante: string
-          curso: string
-          letra: string
-          nivel: string
-          tipo_pedido: string
-          opcion_elegida: string
-          dia_entrega: string
-          estado_pago: string
-          transaction_id?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          cliente_id?: string
-          nombre_estudiante?: string
-          curso?: string
-          letra?: string
-          nivel?: string
-          tipo_pedido?: string
-          opcion_elegida?: string
-          dia_entrega?: string
-          estado_pago?: string
-          transaction_id?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
+export type { Database }
+
+// Export specific table types for easier use
+export type Cliente = Database['public']['Tables']['clientes']['Row']
+export type ClienteInsert = Database['public']['Tables']['clientes']['Insert']
+export type ClienteUpdate = Database['public']['Tables']['clientes']['Update']
+
+export type Almuerzo = Database['public']['Tables']['almuerzos']['Row']
+export type AlmuerzoInsert = Database['public']['Tables']['almuerzos']['Insert']
+export type AlmuerzoUpdate = Database['public']['Tables']['almuerzos']['Update']
+
+export type Colacion = Database['public']['Tables']['colaciones']['Row']
+export type ColacionInsert = Database['public']['Tables']['colaciones']['Insert']
+export type ColacionUpdate = Database['public']['Tables']['colaciones']['Update']
+
+export type Pedido = Database['public']['Tables']['pedidos']['Row']
+export type PedidoInsert = Database['public']['Tables']['pedidos']['Insert']
+export type PedidoUpdate = Database['public']['Tables']['pedidos']['Update']
+
+// Helper types for the application
+export interface Hijo {
+  id: string
+  nombre: string
+  curso: string
+  letra: string
+  nivel: string
+  tipo: string
+  rut?: string
+}
+
+export interface MenuOption {
+  id: string
+  descripcion: string
+  precio: number
+  codigo?: string
+  tipo: 'almuerzo' | 'colacion'
+  fecha?: string
+  dia?: string
+  tipo_dia?: string
 }

@@ -3,13 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
-import { supabase } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
+import { motion } from "framer-motion"
 import { 
   Eye, 
   EyeOff, 
@@ -18,8 +12,8 @@ import {
   UserPlus, 
   Loader2, 
   Sparkles, 
-  Shield, 
-  CheckCircle, 
+  Shield,
+  CheckCircle,
   AlertCircle,
   Phone,
   Plus,
@@ -28,64 +22,122 @@ import {
   GraduationCap
 } from "lucide-react"
 
-interface Hijo {
-  id: string
-  nombre: string
-  curso: string
-  letra: string
-  nivel: string
-  tipo: string
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/lib/supabase/client"
+import type { Hijo } from "@/lib/supabase/types"
+
+interface FormData {
+  email: string
+  password: string
+  confirmPassword: string
+  nombreApoderado: string
+  telefono: string
+}
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      staggerChildren: 0.1
+    }
+  }
+}
+
+const cardVariants = {
+  hidden: { y: 50, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut"
+    }
+  }
+}
+
+const itemVariants = {
+  hidden: { x: -20, opacity: 0 },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.3
+    }
+  }
+}
+
+const logoVariants = {
+  hidden: { scale: 0.8, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut"
+    }
+  }
 }
 
 export default function RegisterPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [formData, setFormData] = useState({
+  
+  const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
     confirmPassword: "",
     nombreApoderado: "",
     telefono: ""
   })
+  
   const [hijos, setHijos] = useState<Hijo[]>([])
-  const [currentHijo, setCurrentHijo] = useState({
+  const [currentHijo, setCurrentHijo] = useState<Omit<Hijo, 'id'>>({
     nombre: "",
     curso: "",
     letra: "",
-    nivel: "Básica",
+    nivel: "",
     tipo: "Estudiante"
   })
+  
+  const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  const handleInputChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [field]: event.target.value
+      [name]: value
     }))
   }
 
-  const handleHijoChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleHijoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
     setCurrentHijo(prev => ({
       ...prev,
-      [field]: event.target.value
+      [name]: value
     }))
   }
 
   const addHijo = () => {
-    if (!currentHijo.nombre || !currentHijo.curso || !currentHijo.letra) {
+    if (!currentHijo.nombre || !currentHijo.curso || !currentHijo.letra || !currentHijo.nivel) {
       toast({
         variant: "destructive",
-        title: "Datos incompletos",
-        description: "Por favor complete todos los campos del hijo.",
+        title: "Campos incompletos",
+        description: "Por favor completa todos los campos del hijo/a."
       })
       return
     }
 
     const newHijo: Hijo = {
-      id: Date.now().toString(),
-      ...currentHijo
+      ...currentHijo,
+      id: Date.now().toString()
     }
 
     setHijos(prev => [...prev, newHijo])
@@ -93,547 +145,513 @@ export default function RegisterPage() {
       nombre: "",
       curso: "",
       letra: "",
-      nivel: "Básica",
+      nivel: "",
       tipo: "Estudiante"
     })
 
     toast({
-      title: "Hijo agregado",
-      description: `${newHijo.nombre} ha sido agregado exitosamente.`,
+      title: "Hijo/a agregado",
+      description: `${newHijo.nombre} ha sido agregado a la lista.`
     })
   }
 
   const removeHijo = (id: string) => {
     setHijos(prev => prev.filter(hijo => hijo.id !== id))
+    toast({
+      title: "Hijo/a eliminado",
+      description: "El hijo/a ha sido eliminado de la lista."
+    })
   }
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword)
-  }
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword)
-  }
+  const togglePasswordVisibility = () => setShowPassword(!showPassword)
+  const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword)
 
   // Password validation
   const passwordValidation = {
     length: formData.password.length >= 6,
-    match: formData.password === formData.confirmPassword && formData.confirmPassword !== "",
-    hasContent: formData.password.length > 0
+    match: formData.password === formData.confirmPassword && formData.confirmPassword.length > 0
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Validation
+    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.nombreApoderado) {
+      toast({
+        variant: "destructive",
+        title: "Campos requeridos",
+        description: "Por favor completa todos los campos obligatorios."
+      })
+      return
+    }
+
+    if (!passwordValidation.length) {
+      toast({
+        variant: "destructive",
+        title: "Contraseña muy corta",
+        description: "La contraseña debe tener al menos 6 caracteres."
+      })
+      return
+    }
+
+    if (!passwordValidation.match) {
+      toast({
+        variant: "destructive",
+        title: "Contraseñas no coinciden",
+        description: "Las contraseñas ingresadas no coinciden."
+      })
+      return
+    }
+
+    if (hijos.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Debe agregar al menos un hijo/a",
+        description: "Es necesario agregar al menos un hijo/a para continuar."
+      })
+      return
+    }
+
     setLoading(true)
 
     try {
-      const { email, password, confirmPassword, nombreApoderado, telefono } = formData
-
-      if (!email || !password || !confirmPassword || !nombreApoderado || !telefono) {
-        throw new Error("Por favor complete todos los campos")
-      }
-
-      if (password !== confirmPassword) {
-        throw new Error("Las contraseñas no coinciden")
-      }
-
-      if (password.length < 6) {
-        throw new Error("La contraseña debe tener al menos 6 caracteres")
-      }
-
-      if (hijos.length === 0) {
-        throw new Error("Debe agregar al menos un hijo")
-      }
-
-      // 1. Crear usuario en Supabase Auth
+      console.log('Iniciando proceso de registro...')
+      
+      // 1. Create user in Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
+        email: formData.email,
+        password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+          data: {
+            full_name: formData.nombreApoderado,
+            phone: formData.telefono
+          }
+        }
       })
 
-      if (authError) throw authError
+      if (authError) {
+        console.error('Error en autenticación:', authError)
+        throw new Error(`Error de autenticación: ${authError.message}`)
+      }
 
-      // 2. Crear registro en la tabla clientes
-      const hijosData = hijos.map(hijo => ({
-        nombre: hijo.nombre,
-        curso: hijo.curso,
-        letra: hijo.letra,
-        nivel: hijo.nivel,
-        tipo: hijo.tipo
-      }))
+      if (!authData.user) {
+        throw new Error('No se pudo crear el usuario')
+      }
 
-      const { error: clienteError } = await supabase
+      console.log('Usuario creado en Auth:', authData.user.id)
+
+      // 2. Wait a moment for auth to settle
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // 3. Create client profile in database
+      const clientData = {
+        user_id: authData.user.id,
+        correo_apoderado: formData.email,
+        nombre_apoderado: formData.nombreApoderado,
+        telefono: formData.telefono || null,
+        hijos: hijos,
+        rol: 'user' as const,
+        is_active: true
+      }
+
+      console.log('Insertando datos del cliente:', clientData)
+
+      const { data: clienteData, error: clienteError } = await supabase
         .from('clientes')
-        .insert({
-          correo_apoderado: email,
-          nombre_apoderado: nombreApoderado,
-          telefono: telefono,
-          hijos: hijosData
-        })
+        .insert(clientData)
+        .select()
+        .single()
 
       if (clienteError) {
-        console.error('Error creating client:', clienteError)
-        // Si falla la creación del cliente, eliminar el usuario de auth
-        if (authData.user) {
+        console.error('Error al crear perfil del cliente:', clienteError)
+        
+        // If client creation fails, try to clean up the auth user
+        try {
           await supabase.auth.admin.deleteUser(authData.user.id)
+        } catch (cleanupError) {
+          console.error('Error al limpiar usuario de auth:', cleanupError)
         }
-        throw new Error("Error al crear el perfil del cliente")
+        
+        // Provide more specific error messages
+        if (clienteError.code === '23505') {
+          throw new Error('Ya existe una cuenta con este correo electrónico')
+        } else if (clienteError.code === '42501') {
+          throw new Error('Error de permisos. Por favor intenta nuevamente')
+        } else {
+          throw new Error(`Error al crear el perfil del cliente: ${clienteError.message}`)
+        }
       }
 
+      console.log('Cliente creado exitosamente:', clienteData)
+
       toast({
-        title: "Registro exitoso",
-        description: "Se ha enviado un correo de confirmación a tu email.",
+        title: "¡Registro exitoso!",
+        description: "Tu cuenta ha sido creada. Por favor verifica tu correo electrónico."
       })
 
-      router.push("/auth/login")
+      // Redirect to login page
+      router.push('/auth/login?message=Registro exitoso. Por favor inicia sesión.')
+
     } catch (error: any) {
-      console.error("Error signing up:", error)
+      console.error('Error en el registro:', error)
       toast({
         variant: "destructive",
         title: "Error en el registro",
-        description: error?.message || "No se pudo completar el registro. Inténtelo nuevamente.",
+        description: error.message || "Ocurrió un error durante el registro. Por favor intenta nuevamente."
       })
     } finally {
       setLoading(false)
     }
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        staggerChildren: 0.1
-      }
-    }
-  }
-
-  const cardVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 40,
-      scale: 0.95
-    },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        ease: [0.25, 0.46, 0.45, 0.94]
-      }
-    }
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { 
-        duration: 0.4,
-        ease: "easeOut"
-      }
-    }
-  }
-
-  const logoVariants = {
-    hidden: { opacity: 0, scale: 0.5, rotate: -90 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      rotate: 0,
-      transition: { 
-        duration: 0.8,
-        ease: "easeOut",
-        type: "spring",
-        stiffness: 100
-      }
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden fixed inset-0">
-      {/* Subtle Background Pattern */}
-      <div className="absolute inset-0 opacity-[0.02]">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 25px 25px, #10b981 2px, transparent 0)`,
-          backgroundSize: '50px 50px'
-        }} />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background decorations */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
-      {/* Gradient Orbs */}
-      <div className="absolute top-10 left-10 w-48 h-48 bg-gradient-to-r from-emerald-200/20 to-blue-200/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-10 right-10 w-64 h-64 bg-gradient-to-r from-blue-200/15 to-cyan-200/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      {/* Subtle pattern overlay */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
 
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-        <motion.div
-          className="w-full max-w-2xl"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.div variants={cardVariants}>
-            <Card className="relative overflow-hidden border-0 shadow-xl bg-white/90 backdrop-blur-xl">
-              {/* Card Border Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/15 via-blue-500/15 to-emerald-500/15 rounded-xl blur-sm" />
-              <div className="absolute inset-[1px] bg-white rounded-xl" />
-              
-              {/* Shimmer Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-shimmer" />
+      <motion.div
+        className="w-full max-w-2xl relative z-10"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={logoVariants} className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl mb-4 shadow-lg">
+            <Sparkles className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Sistema Casino Escolar</h1>
+          <p className="text-gray-600">Crea tu cuenta para gestionar los pedidos de tus hijos</p>
+        </motion.div>
 
-              <div className="relative z-10">
-                <CardHeader className="space-y-4 pb-6 pt-8">
-                  {/* Logo Section */}
-                  <motion.div 
-                    className="flex justify-center"
-                    variants={logoVariants}
-                  >
-                    <div className="relative">
-                      <motion.div
-                        className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-blue-700 flex items-center justify-center shadow-xl relative overflow-hidden"
-                        whileHover={{ 
-                          scale: 1.05,
-                          rotate: 5,
-                          transition: { duration: 0.3 }
-                        }}
-                      >
-                        <div className="absolute inset-1 bg-gradient-to-br from-emerald-400/50 to-blue-400/50 rounded-lg blur-sm" />
-                        <UserPlus className="w-8 h-8 text-white relative z-10" />
-                        
-                        <motion.div
-                          className="absolute top-1 right-1"
-                          animate={{ 
-                            scale: [1, 1.3, 1],
-                            opacity: [0.5, 1, 0.5]
-                          }}
-                          transition={{ 
-                            duration: 2,
-                            repeat: Infinity,
-                            delay: 0.5
-                          }}
-                        >
-                          <Sparkles className="w-2 h-2 text-white/80" />
-                        </motion.div>
-                      </motion.div>
+        <motion.div variants={cardVariants}>
+          <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
+                <UserPlus className="w-6 h-6 text-blue-600" />
+                Registro de Apoderado
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Personal Information */}
+                <motion.div variants={itemVariants} className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <User className="w-5 h-5 text-blue-600" />
+                    Información Personal
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="nombreApoderado">Nombre Completo *</Label>
+                      <Input
+                        id="nombreApoderado"
+                        name="nombreApoderado"
+                        type="text"
+                        placeholder="Ingresa tu nombre completo"
+                        value={formData.nombreApoderado}
+                        onChange={handleInputChange}
+                        required
+                        className="transition-all duration-200 focus:ring-2 focus:ring-blue-500"
+                      />
                     </div>
-                  </motion.div>
-
-                  {/* Title Section */}
-                  <div className="text-center space-y-2">
-                    <motion.div variants={itemVariants}>
-                      <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-emerald-800 to-blue-800 bg-clip-text text-transparent">
-                        Crear Cuenta
-                      </CardTitle>
-                    </motion.div>
-                    <motion.div variants={itemVariants}>
-                      <CardDescription className="text-sm font-medium text-gray-600">
-                        Únete al Sistema Casino Escolar
-                      </CardDescription>
-                    </motion.div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-6 px-6 pb-8">
-                  <motion.form 
-                    onSubmit={handleSubmit} 
-                    className="space-y-4"
-                    variants={containerVariants}
-                  >
-                    {/* Datos del Apoderado */}
-                    <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Nombre Apoderado */}
-                      <div className="space-y-2">
-                        <Label htmlFor="nombreApoderado" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                          <User className="w-3 h-3 text-emerald-600" />
-                          Nombre Completo
-                        </Label>
-                        <Input
-                          id="nombreApoderado"
-                          type="text"
-                          value={formData.nombreApoderado}
-                          onChange={handleInputChange('nombreApoderado')}
-                          placeholder="Juan Pérez"
-                          className="h-10 text-sm border-2 border-gray-200 rounded-xl transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 hover:border-gray-300 bg-gray-50/50 focus:bg-white"
-                          required
-                          disabled={loading}
-                        />
-                      </div>
-
-                      {/* Teléfono */}
-                      <div className="space-y-2">
-                        <Label htmlFor="telefono" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                          <Phone className="w-3 h-3 text-emerald-600" />
-                          Teléfono
-                        </Label>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="telefono">Teléfono</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <Input
                           id="telefono"
+                          name="telefono"
                           type="tel"
-                          value={formData.telefono}
-                          onChange={handleInputChange('telefono')}
                           placeholder="+56 9 1234 5678"
-                          className="h-10 text-sm border-2 border-gray-200 rounded-xl transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 hover:border-gray-300 bg-gray-50/50 focus:bg-white"
-                          required
-                          disabled={loading}
+                          value={formData.telefono}
+                          onChange={handleInputChange}
+                          className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
-                    </motion.div>
+                    </div>
+                  </div>
+                </motion.div>
 
-                    {/* Email */}
-                    <motion.div variants={itemVariants} className="space-y-2">
-                      <Label htmlFor="email" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                        <Mail className="w-3 h-3 text-emerald-600" />
-                        Correo Electrónico
-                      </Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange('email')}
-                        placeholder="nombre@ejemplo.com"
-                        className="h-10 text-sm border-2 border-gray-200 rounded-xl transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 hover:border-gray-300 bg-gray-50/50 focus:bg-white"
-                        required
-                        disabled={loading}
-                      />
-                    </motion.div>
+                {/* Account Information */}
+                <motion.div variants={itemVariants} className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-blue-600" />
+                    Información de Cuenta
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Correo Electrónico *</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          id="email"
+                          name="email"
+                          type="email"
+                          placeholder="tu@correo.com"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          required
+                          className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
 
-                    {/* Contraseñas */}
-                    <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Password */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="password" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                          <Lock className="w-3 h-3 text-emerald-600" />
-                          Contraseña
-                        </Label>
+                        <Label htmlFor="password">Contraseña *</Label>
                         <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                           <Input
                             id="password"
-                            type={showPassword ? 'text' : 'password'}
-                            value={formData.password}
-                            onChange={handleInputChange('password')}
+                            name="password"
+                            type={showPassword ? "text" : "password"}
                             placeholder="Mínimo 6 caracteres"
-                            className="h-10 pr-10 text-sm border-2 border-gray-200 rounded-xl transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 hover:border-gray-300 bg-gray-50/50 focus:bg-white"
+                            value={formData.password}
+                            onChange={handleInputChange}
                             required
-                            disabled={loading}
+                            className="pl-10 pr-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500"
                           />
                           <button
                             type="button"
                             onClick={togglePasswordVisibility}
                             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                            disabled={loading}
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
                         </div>
-                        {passwordValidation.hasContent && (
-                          <div className="flex items-center gap-1 text-xs">
+                        {formData.password && (
+                          <div className="flex items-center gap-2 text-sm">
                             {passwordValidation.length ? (
-                              <CheckCircle className="w-3 h-3 text-emerald-500" />
+                              <CheckCircle className="w-4 h-4 text-green-500" />
                             ) : (
-                              <AlertCircle className="w-3 h-3 text-amber-500" />
+                              <AlertCircle className="w-4 h-4 text-red-500" />
                             )}
-                            <span className={passwordValidation.length ? "text-emerald-600" : "text-amber-600"}>
+                            <span className={passwordValidation.length ? "text-green-600" : "text-red-600"}>
                               Mínimo 6 caracteres
                             </span>
                           </div>
                         )}
                       </div>
 
-                      {/* Confirm Password */}
                       <div className="space-y-2">
-                        <Label htmlFor="confirmPassword" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                          <Shield className="w-3 h-3 text-emerald-600" />
-                          Confirmar Contraseña
-                        </Label>
+                        <Label htmlFor="confirmPassword">Confirmar Contraseña *</Label>
                         <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                           <Input
                             id="confirmPassword"
-                            type={showConfirmPassword ? 'text' : 'password'}
+                            name="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Repite tu contraseña"
                             value={formData.confirmPassword}
-                            onChange={handleInputChange('confirmPassword')}
-                            placeholder="Repita su contraseña"
-                            className="h-10 pr-10 text-sm border-2 border-gray-200 rounded-xl transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 hover:border-gray-300 bg-gray-50/50 focus:bg-white"
+                            onChange={handleInputChange}
                             required
-                            disabled={loading}
+                            className="pl-10 pr-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500"
                           />
                           <button
                             type="button"
                             onClick={toggleConfirmPasswordVisibility}
                             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                            disabled={loading}
                           >
                             {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
                         </div>
-                        {formData.confirmPassword.length > 0 && (
-                          <div className="flex items-center gap-1 text-xs">
+                        {formData.confirmPassword && (
+                          <div className="flex items-center gap-2 text-sm">
                             {passwordValidation.match ? (
-                              <CheckCircle className="w-3 h-3 text-emerald-500" />
+                              <CheckCircle className="w-4 h-4 text-green-500" />
                             ) : (
-                              <AlertCircle className="w-3 h-3 text-red-500" />
+                              <AlertCircle className="w-4 h-4 text-red-500" />
                             )}
-                            <span className={passwordValidation.match ? "text-emerald-600" : "text-red-600"}>
-                              {passwordValidation.match ? "Las contraseñas coinciden" : "Las contraseñas no coinciden"}
+                            <span className={passwordValidation.match ? "text-green-600" : "text-red-600"}>
+                              Las contraseñas coinciden
                             </span>
                           </div>
                         )}
                       </div>
-                    </motion.div>
+                    </div>
+                  </div>
+                </motion.div>
 
-                    {/* Agregar Hijos */}
-                    <motion.div variants={itemVariants} className="space-y-3">
-                      <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                        <GraduationCap className="w-3 h-3 text-emerald-600" />
-                        Agregar Hijos
-                      </Label>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {/* Children Information */}
+                <motion.div variants={itemVariants} className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5 text-blue-600" />
+                    Información de Hijos/as
+                  </h3>
+                  
+                  {/* Add Child Form */}
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="nombre">Nombre</Label>
                         <Input
-                          placeholder="Nombre"
+                          id="nombre"
+                          name="nombre"
+                          type="text"
+                          placeholder="Nombre del hijo/a"
                           value={currentHijo.nombre}
-                          onChange={handleHijoChange('nombre')}
-                          className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                          disabled={loading}
+                          onChange={handleHijoChange}
+                          className="transition-all duration-200 focus:ring-2 focus:ring-blue-500"
                         />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="curso">Curso</Label>
                         <Input
-                          placeholder="Curso"
+                          id="curso"
+                          name="curso"
+                          type="text"
+                          placeholder="Ej: 1°, 2°, 3°"
                           value={currentHijo.curso}
-                          onChange={handleHijoChange('curso')}
-                          className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                          disabled={loading}
+                          onChange={handleHijoChange}
+                          className="transition-all duration-200 focus:ring-2 focus:ring-blue-500"
                         />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="letra">Letra</Label>
                         <Input
-                          placeholder="Letra"
+                          id="letra"
+                          name="letra"
+                          type="text"
+                          placeholder="Ej: A, B, C"
                           value={currentHijo.letra}
-                          onChange={handleHijoChange('letra')}
-                          className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                          disabled={loading}
+                          onChange={handleHijoChange}
+                          className="transition-all duration-200 focus:ring-2 focus:ring-blue-500"
                         />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="nivel">Nivel</Label>
                         <select
+                          id="nivel"
+                          name="nivel"
                           value={currentHijo.nivel}
-                          onChange={handleHijoChange('nivel')}
-                          className="h-9 text-sm border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 bg-white"
-                          disabled={loading}
+                          onChange={handleHijoChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                         >
+                          <option value="">Seleccionar</option>
                           <option value="Básica">Básica</option>
                           <option value="Media">Media</option>
                         </select>
                       </div>
-
+                    </div>
+                    
+                    <div className="flex justify-end">
                       <Button
                         type="button"
                         onClick={addHijo}
                         variant="outline"
-                        size="sm"
-                        className="w-full h-8 text-xs border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300"
-                        disabled={loading}
+                        className="flex items-center gap-2"
                       >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Agregar Hijo
+                        <Plus className="w-4 h-4" />
+                        Agregar Hijo/a
                       </Button>
+                    </div>
+                  </div>
 
-                      {/* Lista de Hijos */}
-                      <AnimatePresence>
-                        {hijos.length > 0 && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="space-y-2 max-h-32 overflow-y-auto"
+                  {/* Children List */}
+                  {hijos.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-gray-900">Hijos/as agregados:</h4>
+                      <div className="space-y-2">
+                        {hijos.map((hijo) => (
+                          <div
+                            key={hijo.id}
+                            className="flex items-center justify-between bg-white p-3 rounded-lg border"
                           >
-                            {hijos.map((hijo) => (
-                              <motion.div
-                                key={hijo.id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 20 }}
-                                className="flex items-center justify-between p-2 bg-emerald-50 rounded-lg border border-emerald-200"
-                              >
-                                <span className="text-xs font-medium text-emerald-800">
-                                  {hijo.nombre} - {hijo.curso}{hijo.letra} ({hijo.nivel})
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => removeHijo(hijo.id)}
-                                  className="text-red-500 hover:text-red-700 transition-colors"
-                                  disabled={loading}
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
-                              </motion.div>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
-
-                    {/* Submit Button */}
-                    <motion.div variants={itemVariants} className="pt-2">
-                      <Button
-                        type="submit"
-                        className="w-full h-10 bg-gradient-to-r from-emerald-600 via-emerald-700 to-blue-700 hover:from-emerald-700 hover:via-emerald-800 hover:to-blue-800 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                        disabled={loading || !passwordValidation.length || !passwordValidation.match || hijos.length === 0}
-                      >
-                        {loading ? (
-                          <div className="flex items-center space-x-2">
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Registrando...</span>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <User className="w-4 h-4 text-blue-600" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">{hijo.nombre}</p>
+                                <p className="text-sm text-gray-500">
+                                  {hijo.curso}° {hijo.letra} - {hijo.nivel}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              onClick={() => removeHijo(hijo.id)}
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
-                        ) : (
-                          <div className="flex items-center space-x-2">
-                            <UserPlus className="w-4 h-4" />
-                            <span>Crear Cuenta</span>
-                          </div>
-                        )}
-                      </Button>
-                    </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
 
-                    {/* Login Link */}
-                    <motion.div variants={itemVariants} className="text-center pt-2">
-                      <p className="text-xs text-gray-600">
-                        ¿Ya tienes una cuenta?{" "}
-                        <Link
-                          href="/auth/login"
-                          className="font-semibold text-emerald-600 hover:text-blue-600 transition-colors duration-300 hover:underline"
-                        >
-                          Inicia sesión
-                        </Link>
-                      </p>
-                    </motion.div>
-                  </motion.form>
-                </CardContent>
-              </div>
-            </Card>
-          </motion.div>
+                {/* Submit Button */}
+                <motion.div variants={itemVariants} className="pt-6">
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Creando cuenta...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-5 h-5 mr-2" />
+                        Crear Cuenta
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
+
+                {/* Login Link */}
+                <motion.div variants={itemVariants} className="text-center">
+                  <p className="text-gray-600">
+                    ¿Ya tienes una cuenta?{" "}
+                    <Link
+                      href="/auth/login"
+                      className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+                    >
+                      Inicia sesión aquí
+                    </Link>
+                  </p>
+                </motion.div>
+              </form>
+            </CardContent>
+          </Card>
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* Loading Overlay */}
       {loading && (
         <motion.div
-          className="fixed inset-0 bg-white/80 backdrop-blur-md flex items-center justify-center z-50"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
         >
           <motion.div
-            className="bg-white rounded-2xl p-8 flex flex-col items-center space-y-4 shadow-xl border border-gray-100"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1 }}
+            className="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-sm mx-4"
           >
-            <div className="relative">
-              <Loader2 className="w-12 h-12 animate-spin text-emerald-600" />
-              <div className="absolute inset-0 w-12 h-12 border-4 border-emerald-200 rounded-full animate-pulse" />
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Loader2 className="w-8 h-8 text-white animate-spin" />
             </div>
-            <div className="text-center space-y-1">
-              <p className="text-lg font-semibold text-gray-700">Creando tu cuenta</p>
-              <p className="text-sm text-gray-500">Guardando información...</p>
-            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Creando tu cuenta</h3>
+            <p className="text-gray-600">Por favor espera mientras procesamos tu registro...</p>
           </motion.div>
         </motion.div>
       )}
