@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Mail, Lock, LogIn, Loader2, Sparkles, Shield, CheckCircle } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, LogIn, Loader2, Sparkles, Shield } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -105,12 +105,13 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard")
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error signing in:", error)
+      const errorMessage = error instanceof Error ? error.message : "No se pudo iniciar sesión. Verifique sus credenciales."
       toast({
         variant: "destructive",
         title: "Error de autenticación",
-        description: error.message || "No se pudo iniciar sesión. Verifique sus credenciales.",
+        description: errorMessage,
       })
     } finally {
       setLoading(false)
