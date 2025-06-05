@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { 
   Users, 
@@ -74,9 +73,9 @@ const StatCard = ({
   title: string;
   value: string | number;
   description: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   trend?: string;
-  color?: string;
+  color?: "blue" | "green" | "purple" | "orange" | "gray";
   delay?: number;
 }) => {
   const colorClasses = {
@@ -85,7 +84,7 @@ const StatCard = ({
     purple: "from-purple-50 to-purple-100 border-purple-200 text-purple-900",
     orange: "from-orange-50 to-orange-100 border-orange-200 text-orange-900",
     gray: "from-gray-50 to-gray-100 border-gray-200 text-gray-900"
-  };
+  } as const;
 
   return (
     <motion.div
@@ -98,7 +97,7 @@ const StatCard = ({
         transition: { duration: 0.2 }
       }}
     >
-      <Card className={`bg-gradient-to-br ${colorClasses[color]} border-2 hover:shadow-lg transition-all duration-300`}>
+      <Card className={`bg-gradient-to-br ${colorClasses[color as keyof typeof colorClasses]} border-2 hover:shadow-lg transition-all duration-300`}>
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
@@ -134,8 +133,8 @@ const QuickActionCard = ({
   title: string;
   description: string;
   href: string;
-  icon: any;
-  color?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color?: "blue" | "green" | "purple" | "orange" | "gray";
   stats?: string;
   delay?: number;
 }) => {
@@ -145,7 +144,7 @@ const QuickActionCard = ({
     purple: "hover:bg-purple-50 border-purple-100 text-purple-700",
     orange: "hover:bg-orange-50 border-orange-100 text-orange-700",
     gray: "hover:bg-gray-50 border-gray-100 text-gray-700"
-  };
+  } as const;
 
   return (
     <motion.div
@@ -159,7 +158,7 @@ const QuickActionCard = ({
       }}
     >
       <Link href={href}>
-        <Card className={`border-2 ${colorClasses[color]} transition-all duration-300 cursor-pointer group`}>
+        <Card className={`border-2 ${colorClasses[color as keyof typeof colorClasses]} transition-all duration-300 cursor-pointer group`}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <Icon className="w-8 h-8 mb-2" />
@@ -233,28 +232,6 @@ export default function AdminPage() {
       style: 'currency',
       currency: 'CLP'
     }).format(amount);
-  };
-
-  const formatActivityAction = (action: string) => {
-    const actionMap: { [key: string]: string } = {
-      'user_created': 'Usuario registrado',
-      'user_login': 'Inicio de sesión',
-      'order_created': 'Pedido creado',
-      'payment_completed': 'Pago completado',
-      'menu_updated': 'Menú actualizado'
-    };
-    return actionMap[action] || action;
-  };
-
-  const getTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
-    if (diffInMinutes < 1) return 'Ahora mismo';
-    if (diffInMinutes < 60) return `Hace ${diffInMinutes} min`;
-    if (diffInMinutes < 1440) return `Hace ${Math.floor(diffInMinutes / 60)} h`;
-    return `Hace ${Math.floor(diffInMinutes / 1440)} días`;
   };
 
   if (loading) {

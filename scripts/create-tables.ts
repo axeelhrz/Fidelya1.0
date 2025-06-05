@@ -25,7 +25,7 @@ async function createTables() {
   try {
     // 1. Verificar conexión
     console.log('🔍 Verificando conexión...')
-    const { data: testData, error: testError } = await supabase
+    const { error: testError } = await supabase
       .from('auth.users')
       .select('count')
       .limit(1)
@@ -38,18 +38,6 @@ async function createTables() {
     
     // 2. Crear tabla de configuración del sistema primero
     console.log('\n📋 Creando tabla system_config...')
-    
-    const createSystemConfigSQL = `
-      CREATE TABLE IF NOT EXISTS public.system_config (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        key TEXT NOT NULL UNIQUE,
-        value JSONB NOT NULL,
-        description TEXT,
-        is_public BOOLEAN NOT NULL DEFAULT false,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()),
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
-      );
-    `
     
     // Como no podemos ejecutar SQL directamente, vamos a usar una aproximación diferente
     // Vamos a crear las tablas usando el dashboard de Supabase
@@ -353,7 +341,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
     // Verificar que las tablas se crearon
     console.log('\n🔍 Verificando tablas...')
     
-    const { data: verifyData, error: verifyError } = await supabase
+    const { error: verifyError } = await supabase
       .from('users')
       .select('count')
       .limit(1)

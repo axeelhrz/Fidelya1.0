@@ -1,6 +1,7 @@
-"use client"
+'use client'
 
-import { usePathname } from "next/navigation"
+import { usePathname } from 'next/navigation'
+import { ConditionalNavbar } from './conditional-navbar'
 
 interface ConditionalMainProps {
   children: React.ReactNode
@@ -8,20 +9,20 @@ interface ConditionalMainProps {
 
 export function ConditionalMain({ children }: ConditionalMainProps) {
   const pathname = usePathname()
-
-  // Rutas de autenticación que necesitan layout completo sin padding
-  const authRoutes = ['/auth/login', '/auth/registro', '/auth/callback']
-  const isAuthRoute = authRoutes.includes(pathname)
-
-  // Si es una ruta de autenticación, no usar el container con padding
-  if (isAuthRoute) {
+  
+  // Páginas que no necesitan el layout principal
+  const isAuthPage = pathname.startsWith('/auth/')
+  
+  if (isAuthPage) {
     return <>{children}</>
   }
-
-  // Para rutas normales, usar el layout con container y padding
+  
   return (
-    <main className="container mx-auto px-4 py-8">
-      {children}
-    </main>
+    <div className="min-h-screen bg-gray-50">
+      <ConditionalNavbar />
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {children}
+      </main>
+    </div>
   )
 }

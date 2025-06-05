@@ -32,7 +32,7 @@ async function setupDatabase() {
     console.log('📄 Ejecutando script SQL...')
     
     // Ejecutar el script SQL
-    const { data, error } = await supabase.rpc('exec_sql', {
+    const { error } = await supabase.rpc('exec_sql', {
       sql: sqlContent
     })
     
@@ -75,7 +75,7 @@ async function setupDatabase() {
     
     for (const table of tables) {
       try {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from(table)
           .select('*')
           .limit(1)
