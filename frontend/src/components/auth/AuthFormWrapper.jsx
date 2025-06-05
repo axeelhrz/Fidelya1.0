@@ -53,6 +53,7 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
     <Box
       sx={{
         minHeight: '100vh',
+        width: '100vw',
         background: `
           linear-gradient(135deg, 
             #0f172a 0%, 
@@ -65,8 +66,11 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 3,
-        position: 'relative',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         overflow: 'hidden',
         '&::before': {
           content: '""',
@@ -118,11 +122,55 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
         }}
       />
 
-      <Container maxWidth="sm" sx={{ zIndex: 1, position: 'relative' }}>
+      {/* Más elementos decorativos para llenar el espacio */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '60%',
+          left: '5%',
+          width: '60px',
+          height: '60px',
+          background: `linear-gradient(135deg, ${alpha('#f59e0b', 0.08)}, ${alpha('#ef4444', 0.08)})`,
+          borderRadius: '15px',
+          transform: 'rotate(15deg)',
+          filter: 'blur(0.5px)',
+          animation: 'float 10s ease-in-out infinite',
+        }}
+      />
+
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '30%',
+          right: '8%',
+          width: '100px',
+          height: '100px',
+          background: `linear-gradient(135deg, ${alpha('#8b5cf6', 0.08)}, ${alpha('#06b6d4', 0.08)})`,
+          borderRadius: '25px',
+          transform: 'rotate(-45deg)',
+          filter: 'blur(1px)',
+          animation: 'float 12s ease-in-out infinite reverse',
+        }}
+      />
+
+      <Container 
+        maxWidth={false}
+        sx={{ 
+          zIndex: 1, 
+          position: 'relative',
+          width: '100%',
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          px: { xs: 2, sm: 3, md: 4 }
+        }}
+      >
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
+          style={{ width: '100%', maxWidth: '480px' }}
         >
           <Paper
             elevation={0}
@@ -138,8 +186,7 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
                 inset 0 1px 0 ${alpha('#ffffff', 0.1)}
               `,
               position: 'relative',
-              maxWidth: 480,
-              mx: 'auto',
+              width: '100%',
             }}
           >
             {/* Header minimalista */}
