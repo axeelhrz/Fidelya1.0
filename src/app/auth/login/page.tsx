@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { supabase } from "@/lib/supabase/client"
@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Mail, Lock, LogIn, Loader2, Sparkles, Shield } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, LogIn, Loader2, Sparkles, Shield, CheckCircle } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -21,6 +22,18 @@ export default function LoginPage() {
     email: "",
     password: ""
   })
+
+  // Show success message if coming from registration
+  useEffect(() => {
+    const message = searchParams.get('message')
+    if (message === 'registration_success') {
+      toast({
+        title: "Registro exitoso",
+        description: "Tu cuenta ha sido creada. Ahora puedes iniciar sesión.",
+        variant: "default",
+      })
+    }
+  }, [searchParams, toast])
 
   const handleInputChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -44,19 +57,49 @@ export default function LoginPage() {
         throw new Error("Por favor complete todos los campos")
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Attempting login for:", email)
+
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) throw error
+      if (error) {
+        console.error("Login error:", error)
+        
+        // Provide more specific error messages
+        let errorMessage = "Error de autenticación"
+        if (error.message.includes("Invalid login credentials")) {
+          errorMessage = "Credenciales inválidas. Verifique su email y contraseña."
+        } else if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Por favor confirme su email antes de iniciar sesión."
+        } else if (error.message.includes("Too many requests")) {
+          errorMessage = "Demasiados intentos. Espere unos minutos antes de intentar nuevamente."
+        }
+        
+        throw new Error(errorMessage)
+      }
+
+      if (!data.user) {
+        throw new Error("No se pudo autenticar el usuario")
+      }
+
+      console.log("Login successful for user:", data.user.id)
+
+      // Update last login
+      try {
+        await supabase.rpc('update_last_login', { user_email: email })
+      } catch (updateError) {
+        console.warn("Could not update last login:", updateError)
+        // Don't fail the login for this
+      }
 
       toast({
         title: "Inicio de sesión exitoso",
         description: "Bienvenido de vuelta al Sistema Casino Escolar.",
       })
 
-      // Redirigir a /admin si es c.wevarh@gmail.com
+      // Redirect based on user role/email
       if (email.toLowerCase() === "c.wevarh@gmail.com") {
         router.push("/admin")
       } else {

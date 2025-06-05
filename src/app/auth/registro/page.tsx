@@ -29,8 +29,6 @@ import {
 } from "lucide-react"
 import type { StudentFormData, StudentLevel, UserType } from "@/lib/supabase/types"
 
-
-
 export default function RegisterPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -119,9 +117,12 @@ export default function RegisterPage() {
     event.preventDefault()
     setLoading(true)
 
+    let authUserId: string | null = null
+
     try {
       const { email, password, confirmPassword, fullName, phone } = formData
 
+      // Validation
       if (!email || !password || !confirmPassword || !fullName || !phone) {
         throw new Error("Por favor complete todos los campos")
       }
@@ -138,7 +139,8 @@ export default function RegisterPage() {
         throw new Error("Debe agregar al menos un estudiante")
       }
 
-      // 1. Crear usuario en Supabase Auth
+      // Step 1: Create user in Supabase Auth
+      console.log("Creating auth user...")
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -147,13 +149,20 @@ export default function RegisterPage() {
         },
       })
 
-      if (authError) throw authError
-
-      if (!authData.user) {
-        throw new Error("No se pudo crear el usuario")
+      if (authError) {
+        console.error("Auth error:", authError)
+        throw new Error(`Error de autenticación: ${authError.message}`)
       }
 
-      // 2. Crear perfil de usuario usando la función RPC
+      if (!authData.user) {
+        throw new Error("No se pudo crear el usuario en el sistema de autenticación")
+      }
+
+      authUserId = authData.user.id
+      console.log("Auth user created:", authUserId)
+
+      // Step 2: Create user profile using RPC function
+      console.log("Creating user profile...")
       const { error: profileError } = await supabase
         .rpc('create_user_profile', {
           p_user_id: authData.user.id,
@@ -164,13 +173,14 @@ export default function RegisterPage() {
         })
 
       if (profileError) {
-        console.error('Error creating user profile:', profileError)
-        // Si falla la creación del perfil, eliminar el usuario de auth
-        await supabase.auth.admin.deleteUser(authData.user.id)
-        throw new Error("Error al crear el perfil del usuario")
+        console.error('Profile creation error:', profileError)
+        throw new Error(`Error al crear el perfil: ${profileError.message}`)
       }
 
-      // 3. Crear estudiantes
+      console.log("User profile created successfully")
+
+      // Step 3: Create students
+      console.log("Creating students...")
       const studentsToInsert = students.map(student => ({
         guardian_id: authData.user!.id,
         name: student.name,
@@ -178,8 +188,8 @@ export default function RegisterPage() {
         section: student.section,
         level: student.level,
         user_type: student.userType,
-        rut: student.rut,
-        dietary_restrictions: student.dietaryRestrictions,
+        rut: student.rut || null,
+        dietary_restrictions: student.dietaryRestrictions || null,
       }))
 
       const { error: studentsError } = await supabase
@@ -187,24 +197,52 @@ export default function RegisterPage() {
         .insert(studentsToInsert)
 
       if (studentsError) {
-        console.error('Error creating students:', studentsError)
-        // Si falla la creación de estudiantes, eliminar el usuario
-        await supabase.auth.admin.deleteUser(authData.user.id)
-        throw new Error("Error al registrar los estudiantes")
+        console.error('Students creation error:', studentsError)
+        throw new Error(`Error al registrar los estudiantes: ${studentsError.message}`)
       }
+
+      console.log("Students created successfully")
 
       toast({
         title: "Registro exitoso",
-        description: "Se ha enviado un correo de confirmación a tu email.",
+        description: "Se ha enviado un correo de confirmación a tu email. Por favor revisa tu bandeja de entrada.",
       })
 
-      router.push("/auth/login")
+      // Redirect to login page
+      router.push("/auth/login?message=registration_success")
+
     } catch (error: unknown) {
-      console.error("Error signing up:", error)
+      console.error("Registration error:", error)
+      
+      // Cleanup: If profile creation failed but auth user was created, try to delete the auth user
+      if (authUserId && error instanceof Error && error.message.includes("perfil")) {
+        try {
+          console.log("Attempting to cleanup auth user...")
+          // Note: We can't delete auth users from client side, so we'll just log this
+          // In a production environment, you'd want to handle this server-side
+        } catch (cleanupError) {
+          console.error("Cleanup error:", cleanupError)
+        }
+      }
+
+      let errorMessage = "No se pudo completar el registro. Inténtelo nuevamente."
+      
+      if (error instanceof Error) {
+        if (error.message.includes("User already registered")) {
+          errorMessage = "Este correo electrónico ya está registrado. Intente iniciar sesión."
+        } else if (error.message.includes("Invalid email")) {
+          errorMessage = "El formato del correo electrónico no es válido."
+        } else if (error.message.includes("Password")) {
+          errorMessage = "La contraseña no cumple con los requisitos mínimos."
+        } else {
+          errorMessage = error.message
+        }
+      }
+
       toast({
         variant: "destructive",
         title: "Error en el registro",
-        description: error instanceof Error ? error.message : "No se pudo completar el registro. Inténtelo nuevamente.",
+        description: errorMessage,
       })
     } finally {
       setLoading(false)
