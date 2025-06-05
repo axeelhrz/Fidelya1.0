@@ -151,17 +151,21 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION public.create_user_profile(UUID, TEXT, TEXT, TEXT, user_role) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.create_user_profile(UUID, TEXT, TEXT, TEXT, user_role) TO anon;
 
--- Ensure RLS policies are correctly set for users table
--- Drop existing policies that might conflict
+-- Drop ALL existing policies for users table to avoid conflicts
+DROP POLICY IF EXISTS "users_insert_during_registration" ON public.users;
 DROP POLICY IF EXISTS "users_insert_self_or_admin" ON public.users;
 DROP POLICY IF EXISTS "users_select_own_or_admin" ON public.users;
 DROP POLICY IF EXISTS "users_update_own_or_admin" ON public.users;
+DROP POLICY IF EXISTS "users_select_own" ON public.users;
+DROP POLICY IF EXISTS "users_update_own" ON public.users;
+DROP POLICY IF EXISTS "users_insert_admin" ON public.users;
+DROP POLICY IF EXISTS "users_delete_super_admin" ON public.users;
 
--- Create simplified policies for registration
-CREATE POLICY "users_insert_during_registration" ON public.users
+-- Create new simplified policies for registration
+CREATE POLICY "users_insert_registration" ON public.users
     FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "users_select_own" ON public.users
+CREATE POLICY "users_select_profile" ON public.users
     FOR SELECT USING (
         auth.uid() = id OR
         EXISTS (
@@ -172,7 +176,7 @@ CREATE POLICY "users_select_own" ON public.users
         )
     );
 
-CREATE POLICY "users_update_own" ON public.users
+CREATE POLICY "users_update_profile" ON public.users
     FOR UPDATE USING (
         auth.uid() = id OR
         EXISTS (
@@ -183,17 +187,19 @@ CREATE POLICY "users_update_own" ON public.users
         )
     );
 
--- Ensure students table policies work with users table
+-- Drop ALL existing policies for students table to avoid conflicts
 DROP POLICY IF EXISTS "students_insert_own_or_admin" ON public.students;
 DROP POLICY IF EXISTS "students_select_own" ON public.students;
 DROP POLICY IF EXISTS "students_update_own" ON public.students;
+DROP POLICY IF EXISTS "students_delete_admin" ON public.students;
 
-CREATE POLICY "students_insert_own" ON public.students
+-- Create new policies for students table
+CREATE POLICY "students_insert_guardian" ON public.students
     FOR INSERT WITH CHECK (
         auth.uid() = guardian_id
     );
 
-CREATE POLICY "students_select_own" ON public.students
+CREATE POLICY "students_select_guardian" ON public.students
     FOR SELECT USING (
         auth.uid() = guardian_id OR
         EXISTS (
@@ -204,7 +210,7 @@ CREATE POLICY "students_select_own" ON public.students
         )
     );
 
-CREATE POLICY "students_update_own" ON public.students
+CREATE POLICY "students_update_guardian" ON public.students
     FOR UPDATE USING (
         auth.uid() = guardian_id OR
         EXISTS (
@@ -215,17 +221,35 @@ CREATE POLICY "students_update_own" ON public.students
         )
     );
 
--- Ensure system_config is accessible for super admin check
+-- Drop ALL existing policies for system_config table to avoid conflicts
 DROP POLICY IF EXISTS "system_config_select_public_or_registration" ON public.system_config;
+DROP POLICY IF EXISTS "system_config_select_public" ON public.system_config;
+DROP POLICY IF EXISTS "system_config_modify_admin" ON public.system_config;
 
-CREATE POLICY "system_config_select_public" ON public.system_config
+-- Create new policy for system_config
+CREATE POLICY "system_config_public_access" ON public.system_config
     FOR SELECT USING (
         is_public = true OR
         key = 'super_admin_emails'
     );
 
--- Ensure activity_logs can be inserted
+-- Drop ALL existing policies for activity_logs table to avoid conflicts
 DROP POLICY IF EXISTS "activity_logs_insert_system_or_registration" ON public.activity_logs;
+DROP POLICY IF EXISTS "activity_logs_insert_all" ON public.activity_logs;
+DROP POLICY IF EXISTS "activity_logs_insert_system" ON public.activity_logs;
+DROP POLICY IF EXISTS "activity_logs_select_own" ON public.activity_logs;
 
-CREATE POLICY "activity_logs_insert_all" ON public.activity_logs
+-- Create new policies for activity_logs
+CREATE POLICY "activity_logs_insert_any" ON public.activity_logs
     FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "activity_logs_select_own_or_admin" ON public.activity_logs
+    FOR SELECT USING (
+        auth.uid() = user_id OR
+        EXISTS (
+            SELECT 1 FROM public.users u 
+            WHERE u.id = auth.uid() 
+            AND u.role IN ('admin', 'super_admin')
+            AND u.is_active = true
+        )
+    );
