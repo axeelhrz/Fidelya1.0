@@ -40,7 +40,7 @@ export function useAuth() {
         setUser(user);
 
         if (user) {
-          await loadUserProfile(user.email!);
+          await loadUserProfile(user.email!, user);
         }
       } catch (error) {
         console.error('Error in getUser:', error);
@@ -54,16 +54,22 @@ export function useAuth() {
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
+        
         if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
           router.push('/auth/login');
         } else if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user);
-          await loadUserProfile(session.user.email!);
+          await loadUserProfile(session.user.email!, session.user);
           
           // Actualizar último login
-          await updateLastLogin(session.user.email!);
+          try {
+            await updateLastLogin(session.user.email!);
+          } catch (error) {
+            console.warn('Could not update last login:', error);
+          }
         }
       }
     );
@@ -71,8 +77,10 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, [router]);
 
-  const loadUserProfile = async (email: string) => {
+  const loadUserProfile = async (email: string, authUser?: User) => {
     try {
+      console.log('Loading profile for:', email);
+      
       // Obtener datos del usuario
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -80,16 +88,71 @@ export function useAuth() {
         .eq('email', email)
         .single();
 
+      // Si no existe el usuario en la tabla users, intentar crearlo
+      if (userError && userError.code === 'PGRST116' && authUser) {
+        console.log('User profile not found, creating...');
+        
+        try {
+          const { error: createError } = await supabase
+            .rpc('create_user_profile_manual', {
+              p_user_id: authUser.id,
+              p_email: email,
+              p_full_name: authUser.user_metadata?.full_name || email.split('@')[0],
+              p_phone: authUser.user_metadata?.phone || null,
+              p_role: 'user'
+            });
+
+          if (createError) {
+            console.error('Error creating user profile:', createError);
+            // Continuar sin perfil
+            setProfile(null);
+            return;
+          }
+
+          // Intentar cargar el perfil nuevamente
+          const { data: newUserData, error: newUserError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+          if (newUserError || !newUserData) {
+            console.error('Error loading newly created profile:', newUserError);
+            setProfile(null);
+            return;
+          }
+
+          // Usar los datos del nuevo usuario
+          await buildUserProfile(newUserData, email);
+          return;
+        } catch (createError) {
+          console.error('Error in profile creation process:', createError);
+          setProfile(null);
+          return;
+        }
+      }
+
       if (userError) {
         console.error('Error getting user profile:', userError);
+        setProfile(null);
         return;
       }
 
       if (!userData) {
         console.error('No user profile found for:', email);
+        setProfile(null);
         return;
       }
 
+      await buildUserProfile(userData, email);
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      setProfile(null);
+    }
+  };
+
+  const buildUserProfile = async (userData: any, email: string) => {
+    try {
       // Obtener estudiantes del usuario
       const { data: studentsData, error: studentsError } = await supabase
         .from('students')
@@ -102,24 +165,32 @@ export function useAuth() {
       }
 
       // Obtener información del rol y permisos usando las funciones RPC
-      const { data: roleData, error: roleError } = await supabase
-        .rpc('get_user_role_info', { user_email: email });
+      let roleInfo = null;
+      let permissions: string[] = [];
 
-      const { data: permissionsData, error: permissionsError } = await supabase
-        .rpc('get_user_permissions', { user_email: email });
+      try {
+        const { data: roleData, error: roleError } = await supabase
+          .rpc('get_user_role_info', { user_email: email });
 
-      if (roleError) {
-        console.error('Error getting role info:', roleError);
+        if (!roleError && roleData?.[0]) {
+          roleInfo = roleData[0];
+        }
+      } catch (error) {
+        console.warn('Could not load role info:', error);
       }
 
-      if (permissionsError) {
-        console.error('Error getting permissions:', permissionsError);
+      try {
+        const { data: permissionsData, error: permissionsError } = await supabase
+          .rpc('get_user_permissions', { user_email: email });
+
+        if (!permissionsError && permissionsData) {
+          permissions = permissionsData.map((p: { permission_name: string }) => p.permission_name);
+        }
+      } catch (error) {
+        console.warn('Could not load permissions:', error);
       }
 
-      const roleInfo = roleData?.[0];
-      const permissions = permissionsData || [];
-
-      setProfile({
+      const userProfile: UserProfile = {
         id: userData.id,
         email: userData.email,
         fullName: userData.full_name,
@@ -129,15 +200,19 @@ export function useAuth() {
         lastLogin: userData.last_login,
         loginCount: userData.login_count || 0,
         students: studentsData || [],
-        permissions: permissions.map((p: { permission_name: string }) => p.permission_name),
+        permissions: permissions,
         roleInfo: roleInfo ? {
           displayName: roleInfo.display_name,
           description: roleInfo.description,
           color: roleInfo.color,
         } : undefined,
-      });
+      };
+
+      console.log('User profile loaded successfully:', userProfile.email, userProfile.role);
+      setProfile(userProfile);
     } catch (error) {
-      console.error('Error loading user profile:', error);
+      console.error('Error building user profile:', error);
+      setProfile(null);
     }
   };
 
@@ -260,6 +335,6 @@ export function useAuth() {
     canManageOrders,
     
     // Funciones de utilidad
-    refreshProfile: () => loadUserProfile(user?.email || ''),
+    refreshProfile: () => user?.email ? loadUserProfile(user.email, user) : Promise.resolve(),
   };
 }
