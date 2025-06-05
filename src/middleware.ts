@@ -1,4 +1,6 @@
-
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 // Middleware deshabilitado - sin autenticación
 export function middleware() {
