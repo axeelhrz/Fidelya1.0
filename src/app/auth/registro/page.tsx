@@ -29,16 +29,6 @@ import {
 } from "lucide-react"
 import type { StudentFormData, StudentLevel, UserType } from "@/lib/supabase/types"
 
-interface StudentFormData {
-  name: string
-  grade: string
-  section: string
-  level: StudentLevel
-  userType: UserType
-  rut?: string
-  dietaryRestrictions?: string
-}
-
 export default function RegisterPage() {
   const router = useRouter()
   const { toast } = useToast()
