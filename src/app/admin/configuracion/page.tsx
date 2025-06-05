@@ -5,18 +5,19 @@ import { motion } from "framer-motion";
 import { 
   Settings, 
   Save, 
-  RefreshCw, 
-  Bell, 
-  Mail, 
-  Shield, 
-  Database,
-  Palette,
+  AlertCircle,
+  Bell,
+  Mail,
+  Shield,
   Globe,
-  Clock,
   DollarSign,
-  AlertTriangle
+  Clock,
+  AlertTriangle,
+  Palette,
+  Database,
+  RefreshCw
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -148,41 +149,154 @@ export default function ConfiguracionPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-            Configuración del Sistema
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">
-            Administra la configuración general del casino escolar
-          </p>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Configuración del Sistema</h1>
+        <p className="text-gray-600">Ajusta la configuración general del casino escolar</p>
+      </div>
+
+      {/* General Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Settings className="w-5 h-5" />
+            <span>Configuración General</span>
+          </CardTitle>
+          <CardDescription>
+            Ajustes básicos del sistema
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="nombre-sistema">Nombre del Sistema</Label>
+              <Input id="nombre-sistema" defaultValue="Casino Escolar" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email-contacto">Email de Contacto</Label>
+              <Input id="email-contacto" defaultValue="admin@casino.escolar" />
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Permitir registro de usuarios</Label>
+                <p className="text-sm text-gray-600">Los usuarios pueden registrarse automáticamente</p>
+              </div>
+              <Switch defaultChecked />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Modo mantenimiento</Label>
+                <p className="text-sm text-gray-600">Deshabilita el acceso al sistema</p>
+              </div>
+              <Switch />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Notifications */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Bell className="w-5 h-5" />
+            <span>Notificaciones</span>
+          </CardTitle>
+          <CardDescription>
+            Configurar alertas y notificaciones
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Notificaciones por email</Label>
+              <p className="text-sm text-gray-600">Enviar notificaciones importantes por correo</p>
+            </div>
+            <Switch defaultChecked />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Alertas de pedidos</Label>
+              <p className="text-sm text-gray-600">Notificar cuando hay nuevos pedidos</p>
+            </div>
+            <Switch defaultChecked />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Recordatorios de pago</Label>
+              <p className="text-sm text-gray-600">Enviar recordatorios de pagos pendientes</p>
+            </div>
+            <Switch />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Security */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Shield className="w-5 h-5" />
+            <span>Seguridad</span>
+          </CardTitle>
+          <CardDescription>
+            Configuración de seguridad del sistema
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="session-timeout">Tiempo de sesión (minutos)</Label>
+              <Input id="session-timeout" type="number" defaultValue="60" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="max-attempts">Máximo intentos de login</Label>
+              <Input id="max-attempts" type="number" defaultValue="5" />
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Autenticación de dos factores</Label>
+              <p className="text-sm text-gray-600">Requerir verificación adicional</p>
+            </div>
+            <Switch />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Warning */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <AlertCircle className="h-5 w-5 text-yellow-400" />
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-yellow-800">
+              Configuración en modo desarrollo
+            </h3>
+            <div className="mt-2 text-sm text-yellow-700">
+              <p>
+                Actualmente el sistema está funcionando sin autenticación. 
+                Estas configuraciones se aplicarán cuando se implemente la autenticación.
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center space-x-3 mt-4 sm:mt-0">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={resetearConfiguracion}
-            disabled={guardando}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Restablecer
-          </Button>
-          <Button 
-            size="sm" 
-            onClick={guardarConfiguracion}
-            disabled={guardando}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {guardando ? 'Guardando...' : 'Guardar Cambios'}
-          </Button>
-        </div>
-      </motion.div>
+      </div>
+
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <Button>
+          <Save className="w-4 h-4 mr-2" />
+          Guardar Configuración
+        </Button>
+      </div>
 
       {/* Configuration Tabs */}
       <motion.div
