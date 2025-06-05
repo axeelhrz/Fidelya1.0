@@ -1,165 +1,236 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
+import { useEffect, useState } from 'react';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
-import { useToast } from '@/components/ui/use-toast';
-import type { UserProfile, Student } from '@/lib/supabase/types';
+import { Database } from '@/lib/supabase/database.types';
+
+type UserProfile = Database['public']['Tables']['users']['Row'];
+
+interface AuthState {
+  user: User | null;
+  profile: UserProfile | null;
+  session: Session | null;
+  loading: boolean;
+  error: string | null;
+}
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const { toast } = useToast();
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    profile: null,
+    session: null,
+    loading: true,
+    error: null
+  });
 
   useEffect(() => {
-    let mounted = true;
-
-    const getUser = async () => {
+    // Obtener sesión inicial
+    const getInitialSession = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (!mounted) return;
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting user:', error);
-          setLoading(false);
+          setState(prev => ({ ...prev, error: error.message, loading: false }));
           return;
         }
 
-        setUser(user);
+        if (session?.user) {
+          // Obtener perfil del usuario
+          const { data: profile, error: profileError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
 
-        if (user) {
-          await loadUserProfile(user.email!);
+          if (profileError) {
+            console.warn('Error obteniendo perfil:', profileError.message);
+          }
+
+          setState({
+            user: session.user,
+            profile: profile || null,
+            session,
+            loading: false,
+            error: null
+          });
+        } else {
+          setState(prev => ({ ...prev, loading: false }));
         }
       } catch (error) {
-        console.error('Error in getUser:', error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        setState(prev => ({ 
+          ...prev, 
+          error: error instanceof Error ? error.message : 'Error desconocido',
+          loading: false 
+        }));
       }
     };
 
-    getUser();
+    getInitialSession();
 
+    // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
-        
-        console.log('Auth state change:', event);
-        
-        if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setProfile(null);
-          router.push('/auth/login');
-        } else if (event === 'SIGNED_IN' && session?.user) {
-          setUser(session.user);
-          await loadUserProfile(session.user.email!);
-          
-          // Actualizar último login
-          try {
-            await supabase.rpc('update_last_login', { user_email: session.user.email! });
-          } catch (error) {
-            console.warn('Could not update last login:', error);
+        console.log('Auth state changed:', event, session?.user?.email);
+
+        if (session?.user) {
+          // Obtener perfil del usuario
+          const { data: profile, error: profileError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileError) {
+            console.warn('Error obteniendo perfil:', profileError.message);
           }
+
+          setState({
+            user: session.user,
+            profile: profile || null,
+            session,
+            loading: false,
+            error: null
+          });
+        } else {
+          setState({
+            user: null,
+            profile: null,
+            session: null,
+            loading: false,
+            error: null
+          });
         }
       }
     );
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [router]);
+    return () => subscription.unsubscribe();
+  }, []);
 
-  const loadUserProfile = async (email: string) => {
+  // Función para hacer login
+  const signIn = async (email: string, password: string) => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
     try {
-      // Obtener datos del usuario
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-      if (userError) {
-        console.error('Error getting user profile:', userError);
-        setProfile(null);
-        return;
+      if (error) {
+        setState(prev => ({ ...prev, error: error.message, loading: false }));
+        return { success: false, error: error.message };
       }
 
-      if (!userData) {
-        console.error('No user profile found for:', email);
-        setProfile(null);
-        return;
-      }
-
-      // Obtener estudiantes del usuario
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('students')
-        .select('*')
-        .eq('guardian_id', userData.id)
-        .eq('is_active', true);
-
-      if (studentsError) {
-        console.error('Error getting students:', studentsError);
-      }
-
-      const userProfile: UserProfile = {
-        id: userData.id,
-        email: userData.email,
-        fullName: userData.full_name,
-        phone: userData.phone,
-        role: userData.role,
-        isActive: userData.is_active,
-        lastLogin: userData.last_login,
-        loginCount: userData.login_count || 0,
-        students: studentsData || [],
-      };
-
-      console.log('User profile loaded successfully:', userProfile.email, userProfile.role);
-      setProfile(userProfile);
+      return { success: true, data };
     } catch (error) {
-      console.error('Error loading user profile:', error);
-      setProfile(null);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
+      return { success: false, error: errorMessage };
     }
   };
 
+  // Función para registrarse
+  const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            phone: phone || null
+          }
+        }
+      });
+
+      if (error) {
+        setState(prev => ({ ...prev, error: error.message, loading: false }));
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  // Función para hacer logout
   const signOut = async () => {
+    setState(prev => ({ ...prev, loading: true }));
+
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
       
-      toast({
-        title: "Sesión cerrada",
-        description: "Has cerrado sesión exitosamente",
+      if (error) {
+        setState(prev => ({ ...prev, error: error.message, loading: false }));
+        return { success: false, error: error.message };
+      }
+
+      setState({
+        user: null,
+        profile: null,
+        session: null,
+        loading: false,
+        error: null
       });
-      
-      router.push('/auth/login');
-    } catch (error: unknown) {
-      toast({
-        variant: "destructive",
-        title: "Error al cerrar sesión",
-        description: error instanceof Error ? error.message : "Error desconocido",
-      });
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
+      return { success: false, error: errorMessage };
     }
   };
 
-  // Verificaciones de rol
-  const isUser = () => profile?.role === 'user';
-  const isAdmin = () => profile?.role === 'admin' || profile?.role === 'super_admin';
-  const isSuperAdmin = () => profile?.role === 'super_admin';
+  // Función para actualizar perfil
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    if (!state.user) return { success: false, error: 'No hay usuario autenticado' };
+
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', state.user.id)
+        .select()
+        .single();
+
+      if (error) {
+        setState(prev => ({ ...prev, error: error.message, loading: false }));
+        return { success: false, error: error.message };
+      }
+
+      setState(prev => ({ 
+        ...prev, 
+        profile: data,
+        loading: false 
+      }));
+
+      return { success: true, data };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
+      return { success: false, error: errorMessage };
+    }
+  };
 
   return {
-    user,
-    profile,
-    loading,
+    ...state,
+    signIn,
+    signUp,
     signOut,
-    isUser,
-    isAdmin,
-    isSuperAdmin,
-    refreshProfile: () => user?.email ? loadUserProfile(user.email) : Promise.resolve(),
+    updateProfile,
+    isAuthenticated: !!state.user,
+    isAdmin: state.profile?.role === 'admin' || state.profile?.role === 'super_admin',
+    isSuperAdmin: state.profile?.role === 'super_admin'
   };
 }

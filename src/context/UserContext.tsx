@@ -1,40 +1,38 @@
-"use client"
+'use client'
 
-import React, { createContext, useContext, ReactNode } from "react"
-import { useAuth } from "@/hooks/useAuth"
-import type { UserProfile, Student } from "@/lib/supabase/types"
+import React, { createContext, useContext, ReactNode } from 'react'
+import { useAuth } from '@/hooks/useAuth'
+import { User, Session } from '@supabase/supabase-js'
+import { Database } from '@/lib/supabase/database.types'
+
+type UserProfile = Database['public']['Tables']['users']['Row']
 
 interface UserContextType {
-  user: UserProfile | null
-  students: Student[]
+  user: User | null
+  profile: UserProfile | null
+  session: Session | null
   loading: boolean
-  refreshUser: () => Promise<void>
-  setUser: (user: UserProfile | null) => void
-  isUser: () => boolean
-  isAdmin: () => boolean
-  isSuperAdmin: () => boolean
-  signOut: () => Promise<void>
+  error: string | null
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string; data?: any }>
+  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ success: boolean; error?: string; data?: any }>
+  signOut: () => Promise<{ success: boolean; error?: string }>
+  updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string; data?: any }>
+  isAuthenticated: boolean
+  isAdmin: boolean
+  isSuperAdmin: boolean
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
-export function UserProvider({ children }: { children: ReactNode }) {
+interface UserProviderProps {
+  children: ReactNode
+}
+
+export function UserProvider({ children }: UserProviderProps) {
   const auth = useAuth()
 
-  const contextValue: UserContextType = {
-    user: auth.profile,
-    students: auth.profile?.students || [],
-    loading: auth.loading,
-    refreshUser: auth.refreshProfile,
-    setUser: () => {}, // No necesario con el nuevo sistema
-    isUser: auth.isUser,
-    isAdmin: auth.isAdmin,
-    isSuperAdmin: auth.isSuperAdmin,
-    signOut: auth.signOut,
-  }
-
   return (
-    <UserContext.Provider value={contextValue}>
+    <UserContext.Provider value={auth}>
       {children}
     </UserContext.Provider>
   )
@@ -42,8 +40,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
 export function useUser() {
   const context = useContext(UserContext)
-  if (!context) {
-    throw new Error("useUser must be used within UserProvider")
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider')
   }
   return context
 }
