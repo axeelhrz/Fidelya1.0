@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AdminGuard } from "@/components/admin/AdminGuard";
-import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,7 +48,25 @@ import {
   XCircle,
   Copy
 } from 'lucide-react';
-import type { MenuItem, MenuCategory } from '@/lib/supabase/types';
+
+// Tipos simplificados para funcionar sin Supabase
+interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  category: 'almuerzo' | 'colacion';
+  price_student: number;
+  price_staff: number;
+  available_date: string;
+  day_name: string;
+  day_type: string;
+  code?: string;
+  is_available: boolean;
+  max_orders?: number;
+  current_orders?: number;
+}
+
+type MenuCategory = 'almuerzo' | 'colacion';
 
 interface MenuFormData {
   name: string;
@@ -67,8 +83,41 @@ interface MenuFormData {
 }
 
 export default function MenuPage() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Datos de ejemplo en lugar de Supabase
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([
+    {
+      id: '1',
+      name: 'Pollo al horno con papas',
+      description: 'Delicioso pollo al horno acompañado de papas doradas',
+      category: 'almuerzo',
+      price_student: 3500,
+      price_staff: 4500,
+      available_date: '2024-01-15',
+      day_name: 'Lunes',
+      day_type: 'normal',
+      code: 'ALM001',
+      is_available: true,
+      max_orders: 50,
+      current_orders: 23
+    },
+    {
+      id: '2',
+      name: 'Sándwich de palta',
+      description: 'Sándwich fresco con palta y tomate',
+      category: 'colacion',
+      price_student: 2000,
+      price_staff: 2500,
+      available_date: '2024-01-15',
+      day_name: 'Lunes',
+      day_type: 'normal',
+      code: 'COL001',
+      is_available: true,
+      max_orders: 30,
+      current_orders: 12
+    }
+  ]);
+  
+  const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -91,58 +140,31 @@ export default function MenuPage() {
   });
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadMenuItems();
-  }, []);
-
-  const loadMenuItems = async () => {
-    try {
-      setLoading(true);
-
-      const { data, error } = await supabase
-        .from('menu_items')
-        .select('*')
-        .order('available_date', { ascending: true });
-
-      if (error) throw error;
-
-      setMenuItems(data || []);
-    } catch (error: unknown) {
-      console.error('Error loading menu items:', error);
-      toast({
-        variant: "destructive",
-        title: "Error al cargar menús",
-        description: error instanceof Error ? error.message : 'Error desconocido',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       if (selectedItem) {
-        // Actualizar item existente
-        const { error } = await supabase
-          .from('menu_items')
-          .update(formData)
-          .eq('id', selectedItem.id);
-
-        if (error) throw error;
-
+        // Simular actualización
+        setMenuItems(prev => prev.map(item => 
+          item.id === selectedItem.id 
+            ? { ...item, ...formData, id: selectedItem.id }
+            : item
+        ));
+        
         toast({
           title: "Menú actualizado",
           description: "El elemento del menú ha sido actualizado exitosamente.",
         });
       } else {
-        // Crear nuevo item
-        const { error } = await supabase
-          .from('menu_items')
-          .insert(formData);
-
-        if (error) throw error;
+        // Simular creación
+        const newItem: MenuItem = {
+          ...formData,
+          id: Date.now().toString(),
+          current_orders: 0
+        };
+        
+        setMenuItems(prev => [...prev, newItem]);
 
         toast({
           title: "Menú creado",
@@ -150,7 +172,6 @@ export default function MenuPage() {
         });
       }
 
-      await loadMenuItems();
       resetForm();
       setIsCreateDialogOpen(false);
       setIsEditDialogOpen(false);
@@ -159,57 +180,47 @@ export default function MenuPage() {
       toast({
         variant: "destructive",
         title: "Error al guardar",
-        description: error instanceof Error ? error.message : 'Error desconocido',
+        description: "Error simulado para demostración",
       });
     }
   };
 
   const handleDelete = async (itemId: string) => {
     try {
-      const { error } = await supabase
-        .from('menu_items')
-        .delete()
-        .eq('id', itemId);
-
-      if (error) throw error;
+      setMenuItems(prev => prev.filter(item => item.id !== itemId));
 
       toast({
         title: "Menú eliminado",
         description: "El elemento del menú ha sido eliminado exitosamente.",
       });
-
-      await loadMenuItems();
     } catch (error: unknown) {
       console.error('Error deleting menu item:', error);
       toast({
         variant: "destructive",
         title: "Error al eliminar",
-        description: error instanceof Error ? error.message : 'Error desconocido',
+        description: "Error simulado para demostración",
       });
     }
   };
 
   const toggleAvailability = async (itemId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('menu_items')
-        .update({ is_available: !currentStatus })
-        .eq('id', itemId);
-
-      if (error) throw error;
+      setMenuItems(prev => prev.map(item => 
+        item.id === itemId 
+          ? { ...item, is_available: !currentStatus }
+          : item
+      ));
 
       toast({
         title: currentStatus ? "Menú desactivado" : "Menú activado",
         description: `El elemento ha sido ${currentStatus ? 'desactivado' : 'activado'} exitosamente.`,
       });
-
-      await loadMenuItems();
     } catch (error: unknown) {
       console.error('Error toggling availability:', error);
       toast({
         variant: "destructive",
         title: "Error al cambiar estado",
-        description: error instanceof Error ? error.message : 'Error desconocido',
+        description: "Error simulado para demostración",
       });
     }
   };
@@ -286,7 +297,7 @@ export default function MenuPage() {
         'Queque casero'
       ];
 
-      const menuItems = [];
+      const newMenuItems: MenuItem[] = [];
 
       for (let i = 0; i < 5; i++) {
         const date = new Date(startDate);
@@ -294,10 +305,11 @@ export default function MenuPage() {
         const dateString = date.toISOString().split('T')[0];
 
         // Almuerzo
-        menuItems.push({
+        newMenuItems.push({
+          id: `alm-${Date.now()}-${i}`,
           name: almuerzoOptions[i],
           description: 'Almuerzo nutritivo y balanceado',
-          category: 'almuerzo' as MenuCategory,
+          category: 'almuerzo',
           price_student: 3500,
           price_staff: 4500,
           available_date: dateString,
@@ -305,13 +317,15 @@ export default function MenuPage() {
           day_type: 'normal',
           is_available: true,
           max_orders: 50,
+          current_orders: 0
         });
 
         // Colación
-        menuItems.push({
+        newMenuItems.push({
+          id: `col-${Date.now()}-${i}`,
           name: colacionOptions[i],
           description: 'Colación saludable para media mañana',
-          category: 'colacion' as MenuCategory,
+          category: 'colacion',
           price_student: 2000,
           price_staff: 2500,
           available_date: dateString,
@@ -319,27 +333,22 @@ export default function MenuPage() {
           day_type: 'normal',
           is_available: true,
           max_orders: 30,
+          current_orders: 0
         });
       }
 
-      const { error } = await supabase
-        .from('menu_items')
-        .insert(menuItems);
-
-      if (error) throw error;
+      setMenuItems(prev => [...prev, ...newMenuItems]);
 
       toast({
         title: "Menú semanal generado",
         description: "Se ha creado el menú para la próxima semana exitosamente.",
       });
-
-      await loadMenuItems();
     } catch (error: unknown) {
       console.error('Error generating week menu:', error);
       toast({
         variant: "destructive",
         title: "Error al generar menú",
-        description: error instanceof Error ? error.message : 'Error desconocido',
+        description: "Error simulado para demostración",
       });
     }
   };
@@ -365,296 +374,294 @@ export default function MenuPage() {
   };
 
   return (
-    <AdminGuard requiredPermission="menu.read">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gestión de Menús</h1>
-            <p className="text-gray-600 mt-1">
-              Administra los menús diarios de almuerzos y colaciones
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-sm">
-              {menuItems.length} elementos
-            </Badge>
-            <Button onClick={generateWeekMenu} variant="outline" size="sm">
-              <Calendar className="w-4 h-4 mr-2" />
-              Generar Semana
-            </Button>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={resetForm}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nuevo Menú
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Crear Nuevo Menú</DialogTitle>
-                  <DialogDescription>
-                    Agrega un nuevo elemento al menú del casino
-                  </DialogDescription>
-                </DialogHeader>
-                <MenuForm 
-                  formData={formData}
-                  setFormData={setFormData}
-                  onSubmit={handleSubmit}
-                  isEditing={false}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Gestión de Menús</h1>
+          <p className="text-gray-600 mt-1">
+            Administra los menús diarios de almuerzos y colaciones
+          </p>
         </div>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="text-sm">
+            {menuItems.length} elementos
+          </Badge>
+          <Button onClick={generateWeekMenu} variant="outline" size="sm">
+            <Calendar className="w-4 h-4 mr-2" />
+            Generar Semana
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nuevo Menú
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Crear Nuevo Menú</DialogTitle>
+                <DialogDescription>
+                  Agrega un nuevo elemento al menú del casino
+                </DialogDescription>
+              </DialogHeader>
+              <MenuForm 
+                formData={formData}
+                setFormData={setFormData}
+                onSubmit={handleSubmit}
+                isEditing={false}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
 
-        {/* Filtros */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="search">Buscar</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="search"
-                    placeholder="Buscar por nombre o descripción..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Categoría</Label>
-                <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as MenuCategory | 'all')}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todas las categorías" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas las categorías</SelectItem>
-                    <SelectItem value="almuerzo">Almuerzo</SelectItem>
-                    <SelectItem value="colacion">Colación</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Fecha</Label>
+      {/* Filtros */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="search">Buscar</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  type="date"
-                  value={filterDate}
-                  onChange={(e) => setFilterDate(e.target.value)}
+                  id="search"
+                  placeholder="Buscar por nombre o descripción..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Disponibilidad</Label>
-                <Select value={filterAvailable.toString()} onValueChange={(value) => setFilterAvailable(value === 'all' ? 'all' : value === 'true')}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="true">Disponibles</SelectItem>
-                    <SelectItem value="false">No disponibles</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Grid de Menús */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence>
-            {loading ? (
-              [...Array(6)].map((_, i) => (
-                <Card key={i} className="animate-pulse">
+            <div className="space-y-2">
+              <Label>Categoría</Label>
+              <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as MenuCategory | 'all')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas las categorías" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las categorías</SelectItem>
+                  <SelectItem value="almuerzo">Almuerzo</SelectItem>
+                  <SelectItem value="colacion">Colación</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Fecha</Label>
+              <Input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Disponibilidad</Label>
+              <Select value={filterAvailable.toString()} onValueChange={(value) => setFilterAvailable(value === 'all' ? 'all' : value === 'true')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="true">Disponibles</SelectItem>
+                  <SelectItem value="false">No disponibles</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Grid de Menús */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <AnimatePresence>
+          {loading ? (
+            [...Array(6)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-full"></div>
+                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                    <div className="flex justify-between">
+                      <div className="h-6 bg-gray-200 rounded w-16"></div>
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            filteredItems.map((item, index) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className={`relative overflow-hidden transition-all duration-200 hover:shadow-lg ${
+                  !item.is_available ? 'opacity-60' : ''
+                }`}>
                   <CardContent className="p-6">
-                    <div className="space-y-4">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-200 rounded w-full"></div>
-                      <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                      <div className="flex justify-between">
-                        <div className="h-6 bg-gray-200 rounded w-16"></div>
-                        <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                          {item.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          {item.description}
+                        </p>
                       </div>
+                      <div className="flex items-center space-x-1 ml-2">
+                        {item.is_available ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : (
+                          <XCircle className="w-5 h-5 text-red-500" />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Badge className={`${getCategoryColor(item.category)} flex items-center gap-1`}>
+                          {getCategoryIcon(item.category)}
+                          {item.category}
+                        </Badge>
+                        <span className="text-sm text-gray-500">
+                          {new Date(item.available_date).toLocaleDateString('es-CL')}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <span className="text-gray-600">Estudiante:</span>
+                          <p className="font-medium">${item.price_student.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Funcionario:</span>
+                          <p className="font-medium">${item.price_staff.toLocaleString()}</p>
+                        </div>
+                      </div>
+
+                      {item.max_orders && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Límite:</span>
+                          <div className="flex items-center gap-1">
+                            <Users className="w-4 h-4 text-gray-400" />
+                            <span>{item.current_orders}/{item.max_orders}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {item.day_name && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Día:</span>
+                          <span className="font-medium">{item.day_name}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-4 pt-4 border-t">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditDialog(item)}
+                        className="flex-1"
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        Editar
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => duplicateItem(item)}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+
+                      <Button
+                        variant={item.is_available ? "destructive" : "default"}
+                        size="sm"
+                        onClick={() => toggleAvailability(item.id, item.is_available)}
+                      >
+                        {item.is_available ? (
+                          <XCircle className="w-4 h-4" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4" />
+                        )}
+                      </Button>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta acción no se puede deshacer. Se eliminará permanentemente
+                              el elemento &quot;{item.name}&quot; del menú.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(item.id)}>
+                              Eliminar
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </CardContent>
                 </Card>
-              ))
-            ) : (
-              filteredItems.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className={`relative overflow-hidden transition-all duration-200 hover:shadow-lg ${
-                    !item.is_available ? 'opacity-60' : ''
-                  }`}>
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                            {item.name}
-                          </h3>
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                            {item.description}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-1 ml-2">
-                          {item.is_available ? (
-                            <CheckCircle className="w-5 h-5 text-green-500" />
-                          ) : (
-                            <XCircle className="w-5 h-5 text-red-500" />
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Badge className={`${getCategoryColor(item.category)} flex items-center gap-1`}>
-                            {getCategoryIcon(item.category)}
-                            {item.category}
-                          </Badge>
-                          <span className="text-sm text-gray-500">
-                            {new Date(item.available_date).toLocaleDateString('es-CL')}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <span className="text-gray-600">Estudiante:</span>
-                            <p className="font-medium">${item.price_student.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Funcionario:</span>
-                            <p className="font-medium">${item.price_staff.toLocaleString()}</p>
-                          </div>
-                        </div>
-
-                        {item.max_orders && (
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Límite:</span>
-                            <div className="flex items-center gap-1">
-                              <Users className="w-4 h-4 text-gray-400" />
-                              <span>{item.current_orders}/{item.max_orders}</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {item.day_name && (
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Día:</span>
-                            <span className="font-medium">{item.day_name}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 mt-4 pt-4 border-t">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(item)}
-                          className="flex-1"
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Editar
-                        </Button>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => duplicateItem(item)}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-
-                        <Button
-                          variant={item.is_available ? "destructive" : "default"}
-                          size="sm"
-                          onClick={() => toggleAvailability(item.id, item.is_available)}
-                        >
-                          {item.is_available ? (
-                            <XCircle className="w-4 h-4" />
-                          ) : (
-                            <CheckCircle className="w-4 h-4" />
-                          )}
-                        </Button>
-
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Esta acción no se puede deshacer. Se eliminará permanentemente
-                                el elemento &quot;{item.name}&quot; del menú.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(item.id)}>
-                                Eliminar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))
-            )}
-          </AnimatePresence>
-        </div>
-
-        {filteredItems.length === 0 && !loading && (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <ChefHat className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No se encontraron elementos del menú
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Intenta ajustar los filtros de búsqueda o crea un nuevo elemento
-              </p>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Crear Primer Menú
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Dialog de Edición */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Editar Menú</DialogTitle>
-              <DialogDescription>
-                Modifica los detalles del elemento del menú
-              </DialogDescription>
-            </DialogHeader>
-            <MenuForm 
-              formData={formData}
-              setFormData={setFormData}
-              onSubmit={handleSubmit}
-              isEditing={true}
-            />
-          </DialogContent>
-        </Dialog>
+              </motion.div>
+            ))
+          )}
+        </AnimatePresence>
       </div>
-    </AdminGuard>
+
+      {filteredItems.length === 0 && !loading && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <ChefHat className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              No se encontraron elementos del menú
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Intenta ajustar los filtros de búsqueda o crea un nuevo elemento
+            </p>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Crear Primer Menú
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Dialog de Edición */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Menú</DialogTitle>
+            <DialogDescription>
+              Modifica los detalles del elemento del menú
+            </DialogDescription>
+          </DialogHeader>
+          <MenuForm 
+            formData={formData}
+            setFormData={setFormData}
+            onSubmit={handleSubmit}
+            isEditing={true}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 
