@@ -1,3 +1,5 @@
+import tailwindcssAnimate from "tailwindcss-animate";
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
@@ -117,7 +119,7 @@ module.exports = {
         "slide-out-to-left-1/2": "slide-out-to-left-1/2 0.2s ease-out",
         "shimmer": "shimmer 2s infinite",
       },
-    },
-  },
+  plugins: [tailwindcssAnimate],
+} },
   plugins: [require("tailwindcss-animate")],
 }
