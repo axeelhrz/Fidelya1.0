@@ -291,10 +291,14 @@ export default function ConfiguracionPage() {
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
-        <Button>
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" onClick={resetearConfiguracion}>
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Restablecer
+        </Button>
+        <Button onClick={guardarConfiguracion} disabled={guardando}>
           <Save className="w-4 h-4 mr-2" />
-          Guardar Configuración
+          {guardando ? "Guardando..." : "Guardar Configuración"}
         </Button>
       </div>
 

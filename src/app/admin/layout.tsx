@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AdminGuard } from "@/components/admin/AdminGuard";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +64,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <AdminGuard>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow-sm border-b">
@@ -151,6 +149,5 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <Toaster />
       </div>
-    </AdminGuard>
   );
 }
