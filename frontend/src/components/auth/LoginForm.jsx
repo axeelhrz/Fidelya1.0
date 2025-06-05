@@ -77,11 +77,11 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
   };
 
   const inputVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 15 },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.4, ease: "easeOut" }
+      transition: { duration: 0.3, ease: "easeOut" }
     }
   };
 
@@ -98,11 +98,12 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
             <Alert 
               severity="error" 
               sx={{ 
-                mb: 3,
+                mb: 2,
                 borderRadius: '12px',
                 border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+                fontSize: '0.875rem',
                 '& .MuiAlert-icon': {
-                  fontSize: '1.25rem'
+                  fontSize: '1.1rem'
                 }
               }}
               onClose={() => setError('')}
@@ -113,7 +114,7 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
         )}
       </AnimatePresence>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <motion.div variants={inputVariants} initial="hidden" animate="visible">
           <TextField
             {...register('correo')}
@@ -124,16 +125,17 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
             error={!!errors.correo}
             helperText={errors.correo?.message}
             disabled={isLoading}
+            size="small"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <EmailRounded sx={{ color: alpha(theme.palette.text.secondary, 0.6) }} />
+                  <EmailRounded sx={{ color: alpha(theme.palette.text.secondary, 0.6), fontSize: '1.1rem' }} />
                 </InputAdornment>
               ),
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: '16px',
+                borderRadius: '12px',
                 backgroundColor: alpha(theme.palette.background.default, 0.4),
                 transition: 'all 0.3s ease',
                 '&:hover': {
@@ -152,6 +154,10 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
               },
               '& .MuiInputLabel-root': {
                 fontWeight: 500,
+                fontSize: '0.875rem',
+              },
+              '& .MuiFormHelperText-root': {
+                fontSize: '0.75rem',
               },
             }}
           />
@@ -172,10 +178,11 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
             error={!!errors.contraseña}
             helperText={errors.contraseña?.message}
             disabled={isLoading}
+            size="small"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <LockRounded sx={{ color: alpha(theme.palette.text.secondary, 0.6) }} />
+                  <LockRounded sx={{ color: alpha(theme.palette.text.secondary, 0.6), fontSize: '1.1rem' }} />
                 </InputAdornment>
               ),
               endAdornment: (
@@ -184,6 +191,7 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
                     onClick={() => setShowPassword(!showPassword)}
                     edge="end"
                     disabled={isLoading}
+                    size="small"
                     sx={{ 
                       color: alpha(theme.palette.text.secondary, 0.6),
                       '&:hover': {
@@ -191,14 +199,14 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
                       }
                     }}
                   >
-                    {showPassword ? <VisibilityOffRounded /> : <VisibilityRounded />}
+                    {showPassword ? <VisibilityOffRounded fontSize="small" /> : <VisibilityRounded fontSize="small" />}
                   </IconButton>
                 </InputAdornment>
               ),
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: '16px',
+                borderRadius: '12px',
                 backgroundColor: alpha(theme.palette.background.default, 0.4),
                 transition: 'all 0.3s ease',
                 '&:hover': {
@@ -217,6 +225,10 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
               },
               '& .MuiInputLabel-root': {
                 fontWeight: 500,
+                fontSize: '0.875rem',
+              },
+              '& .MuiFormHelperText-root': {
+                fontSize: '0.75rem',
               },
             }}
           />
@@ -235,19 +247,19 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
             disabled={isLoading}
             startIcon={
               isLoading ? (
-                <CircularProgress size={20} color="inherit" />
+                <CircularProgress size={18} color="inherit" />
               ) : (
-                <LoginRounded />
+                <LoginRounded fontSize="small" />
               )
             }
             sx={{
-              py: 1.8,
-              borderRadius: '16px',
-              fontSize: '1rem',
+              py: 1.2,
+              borderRadius: '12px',
+              fontSize: '0.9rem',
               fontWeight: 600,
               textTransform: 'none',
               background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-              boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.3)}`,
+              boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.3)}`,
               border: `1px solid ${alpha('#ffffff', 0.1)}`,
               position: 'relative',
               overflow: 'hidden',
@@ -262,8 +274,8 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
                 transition: 'left 0.6s ease',
               },
               '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: `0 12px 35px ${alpha(theme.palette.primary.main, 0.4)}`,
+                transform: 'translateY(-1px)',
+                boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.4)}`,
                 '&::before': {
                   left: '100%',
                 },
@@ -289,10 +301,10 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.5 }}
       >
-        <Box sx={{ mt: 4 }}>
+        <Box sx={{ mt: 3 }}>
           <Divider 
             sx={{ 
-              mb: 3,
+              mb: 2,
               '&::before, &::after': {
                 borderColor: alpha(theme.palette.divider, 0.2),
               }
@@ -303,7 +315,8 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
               sx={{ 
                 color: alpha(theme.palette.text.secondary, 0.7),
                 fontWeight: 500,
-                px: 2,
+                px: 1.5,
+                fontSize: '0.75rem',
               }}
             >
               ¿No tienes cuenta?
@@ -315,11 +328,11 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
             variant="outlined"
             onClick={onSwitchToRegister}
             disabled={isLoading}
-            startIcon={<PersonAddRounded />}
+            startIcon={<PersonAddRounded fontSize="small" />}
             sx={{
-              py: 1.5,
-              borderRadius: '16px',
-              fontSize: '0.95rem',
+              py: 1,
+              borderRadius: '12px',
+              fontSize: '0.85rem',
               fontWeight: 600,
               textTransform: 'none',
               borderColor: alpha(theme.palette.primary.main, 0.3),
@@ -329,7 +342,7 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
                 borderColor: alpha(theme.palette.primary.main, 0.5),
                 backgroundColor: alpha(theme.palette.primary.main, 0.08),
                 transform: 'translateY(-1px)',
-                boxShadow: `0 4px 15px ${alpha(theme.palette.primary.main, 0.2)}`,
+                boxShadow: `0 3px 12px ${alpha(theme.palette.primary.main, 0.2)}`,
               },
               '&:active': {
                 transform: 'translateY(0px)',

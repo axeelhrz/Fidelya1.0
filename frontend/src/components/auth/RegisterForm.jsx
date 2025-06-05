@@ -92,19 +92,19 @@ const RegisterForm = ({ onSwitchToLogin }) => {
   };
 
   const formVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 15 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.5,
-        staggerChildren: 0.1
+        duration: 0.4,
+        staggerChildren: 0.08
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 15 },
     visible: { opacity: 1, y: 0 }
   };
 
@@ -118,7 +118,14 @@ const RegisterForm = ({ onSwitchToLogin }) => {
         <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
           {error && (
             <motion.div variants={itemVariants}>
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: 2, 
+                  borderRadius: '12px',
+                  fontSize: '0.875rem',
+                }}
+              >
                 {error}
               </Alert>
             </motion.div>
@@ -131,13 +138,20 @@ const RegisterForm = ({ onSwitchToLogin }) => {
               label="Nombre completo"
               error={!!errors.nombre}
               helperText={errors.nombre?.message}
-              sx={{ mb: 3 }}
+              sx={{ mb: 2 }}
+              size="small"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Person color="primary" />
+                    <Person color="primary" sx={{ fontSize: '1.1rem' }} />
                   </InputAdornment>
                 ),
+              }}
+              InputLabelProps={{
+                sx: { fontSize: '0.875rem' }
+              }}
+              FormHelperTextProps={{
+                sx: { fontSize: '0.75rem' }
               }}
             />
           </motion.div>
@@ -150,13 +164,20 @@ const RegisterForm = ({ onSwitchToLogin }) => {
               type="email"
               error={!!errors.correo}
               helperText={errors.correo?.message}
-              sx={{ mb: 3 }}
+              sx={{ mb: 2 }}
+              size="small"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Email color="primary" />
+                    <Email color="primary" sx={{ fontSize: '1.1rem' }} />
                   </InputAdornment>
                 ),
+              }}
+              InputLabelProps={{
+                sx: { fontSize: '0.875rem' }
+              }}
+              FormHelperTextProps={{
+                sx: { fontSize: '0.75rem' }
               }}
             />
           </motion.div>
@@ -169,11 +190,12 @@ const RegisterForm = ({ onSwitchToLogin }) => {
               type={showPassword ? 'text' : 'password'}
               error={!!errors.contraseña}
               helperText={errors.contraseña?.message}
-              sx={{ mb: 3 }}
+              sx={{ mb: 2 }}
+              size="small"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Lock color="primary" />
+                    <Lock color="primary" sx={{ fontSize: '1.1rem' }} />
                   </InputAdornment>
                 ),
                 endAdornment: (
@@ -181,11 +203,18 @@ const RegisterForm = ({ onSwitchToLogin }) => {
                     <IconButton
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
+                      size="small"
                     >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                      {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                     </IconButton>
                   </InputAdornment>
                 ),
+              }}
+              InputLabelProps={{
+                sx: { fontSize: '0.875rem' }
+              }}
+              FormHelperTextProps={{
+                sx: { fontSize: '0.75rem' }
               }}
             />
           </motion.div>
@@ -198,11 +227,12 @@ const RegisterForm = ({ onSwitchToLogin }) => {
               type={showConfirmPassword ? 'text' : 'password'}
               error={!!errors.confirmarContraseña}
               helperText={errors.confirmarContraseña?.message}
-              sx={{ mb: 3 }}
+              sx={{ mb: 2 }}
+              size="small"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Lock color="primary" />
+                    <Lock color="primary" sx={{ fontSize: '1.1rem' }} />
                   </InputAdornment>
                 ),
                 endAdornment: (
@@ -210,11 +240,18 @@ const RegisterForm = ({ onSwitchToLogin }) => {
                     <IconButton
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       edge="end"
+                      size="small"
                     >
-                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                      {showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                     </IconButton>
                   </InputAdornment>
                 ),
+              }}
+              InputLabelProps={{
+                sx: { fontSize: '0.875rem' }
+              }}
+              FormHelperTextProps={{
+                sx: { fontSize: '0.75rem' }
               }}
             />
           </motion.div>
@@ -224,12 +261,18 @@ const RegisterForm = ({ onSwitchToLogin }) => {
               type="submit"
               fullWidth
               variant="contained"
-              size="large"
               disabled={loading}
-              sx={{ mb: 3, py: 1.5 }}
+              sx={{ 
+                mb: 2, 
+                py: 1.2,
+                borderRadius: '12px',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                textTransform: 'none',
+              }}
             >
               {loading ? (
-                <CircularProgress size={24} color="inherit" />
+                <CircularProgress size={20} color="inherit" />
               ) : (
                 'Crear Cuenta'
               )}
@@ -238,7 +281,7 @@ const RegisterForm = ({ onSwitchToLogin }) => {
 
           <motion.div variants={itemVariants}>
             <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
                 ¿Ya tienes una cuenta?{' '}
                 <Link
                   component="button"
@@ -246,7 +289,11 @@ const RegisterForm = ({ onSwitchToLogin }) => {
                   variant="body2"
                   color="primary"
                   onClick={onSwitchToLogin}
-                  sx={{ textDecoration: 'none', fontWeight: 500 }}
+                  sx={{ 
+                    textDecoration: 'none', 
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                  }}
                 >
                   Inicia sesión aquí
                 </Link>
@@ -266,7 +313,11 @@ const RegisterForm = ({ onSwitchToLogin }) => {
         <Alert
           onClose={() => setSuccessSnackbar(false)}
           severity="success"
-          sx={{ width: '100%' }}
+          sx={{ 
+            width: '100%',
+            borderRadius: '12px',
+            fontSize: '0.875rem',
+          }}
         >
           ¡Cuenta creada exitosamente! Redirigiendo al login...
         </Alert>
