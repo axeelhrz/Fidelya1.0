@@ -139,13 +139,18 @@ export default function RegisterPage() {
         throw new Error("Debe agregar al menos un estudiante")
       }
 
+      console.log("Iniciando registro de usuario...")
+
       // Step 1: Create user in Supabase Auth
-      console.log("Creating auth user...")
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            full_name: fullName,
+            phone: phone
+          }
         },
       })
 
@@ -159,28 +164,49 @@ export default function RegisterPage() {
       }
 
       authUserId = authData.user.id
-      console.log("Auth user created:", authUserId)
+      console.log("Usuario de auth creado:", authUserId)
 
-      // Step 2: Create user profile using RPC function
-      console.log("Creating user profile...")
-      const { error: profileError } = await supabase
-        .rpc('create_user_profile', {
-          p_user_id: authData.user.id,
-          p_email: email,
-          p_full_name: fullName,
-          p_phone: phone,
-          p_role: 'user'
-        })
+      // Step 2: Wait a moment for trigger to execute
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
-      if (profileError) {
-        console.error('Profile creation error:', profileError)
-        throw new Error(`Error al crear el perfil: ${profileError.message}`)
+      // Step 3: Verify if user profile was created by trigger, if not create manually
+      let profileCreated = false
+      try {
+        const { data: existingUser, error: checkError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('id', authData.user.id)
+          .single()
+
+        if (existingUser) {
+          profileCreated = true
+          console.log("Perfil creado automáticamente por trigger")
+        }
+      } catch (error) {
+        console.log("Perfil no encontrado, creando manualmente...")
       }
 
-      console.log("User profile created successfully")
+      // Step 4: Create profile manually if trigger failed
+      if (!profileCreated) {
+        console.log("Creando perfil manualmente...")
+        const { error: profileError } = await supabase
+          .rpc('create_user_profile_manual', {
+            p_user_id: authData.user.id,
+            p_email: email,
+            p_full_name: fullName,
+            p_phone: phone,
+            p_role: 'user'
+          })
 
-      // Step 3: Create students
-      console.log("Creating students...")
+        if (profileError) {
+          console.error('Error al crear perfil manualmente:', profileError)
+          throw new Error(`Error al crear el perfil: ${profileError.message}`)
+        }
+        console.log("Perfil creado manualmente")
+      }
+
+      // Step 5: Create students
+      console.log("Creando estudiantes...")
       const studentsToInsert = students.map(student => ({
         guardian_id: authData.user!.id,
         name: student.name,
@@ -197,34 +223,23 @@ export default function RegisterPage() {
         .insert(studentsToInsert)
 
       if (studentsError) {
-        console.error('Students creation error:', studentsError)
+        console.error('Error al crear estudiantes:', studentsError)
         throw new Error(`Error al registrar los estudiantes: ${studentsError.message}`)
       }
 
-      console.log("Students created successfully")
+      console.log("Estudiantes creados exitosamente")
 
       toast({
         title: "Registro exitoso",
-        description: "Se ha enviado un correo de confirmación a tu email. Por favor revisa tu bandeja de entrada.",
+        description: "Tu cuenta ha sido creada exitosamente. Ahora puedes iniciar sesión.",
       })
 
       // Redirect to login page
       router.push("/auth/login?message=registration_success")
 
     } catch (error: unknown) {
-      console.error("Registration error:", error)
+      console.error("Error en el registro:", error)
       
-      // Cleanup: If profile creation failed but auth user was created, try to delete the auth user
-      if (authUserId && error instanceof Error && error.message.includes("perfil")) {
-        try {
-          console.log("Attempting to cleanup auth user...")
-          // Note: We can't delete auth users from client side, so we'll just log this
-          // In a production environment, you'd want to handle this server-side
-        } catch (cleanupError) {
-          console.error("Cleanup error:", cleanupError)
-        }
-      }
-
       let errorMessage = "No se pudo completar el registro. Inténtelo nuevamente."
       
       if (error instanceof Error) {
