@@ -19,6 +19,14 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 
+interface Student {
+  id: string;
+  guardian_id: string;
+  full_name: string;
+  grade: string;
+  is_active: boolean;
+}
+
 interface UserProfile {
   id: string;
   email: string;
@@ -26,7 +34,7 @@ interface UserProfile {
   phone: string;
   role: string;
   is_active: boolean;
-  students: any[];
+  students: Student[];
 }
 
 export default function DashboardPage() {
@@ -161,6 +169,9 @@ export default function DashboardPage() {
               <span className="text-sm text-gray-600">
                 Modo sin autenticación
               </span>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                Cerrar Sesión
+              </Button>
             </div>
           </div>
         </div>
@@ -169,6 +180,12 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
+          
+          {/* Page Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-2">Bienvenido al panel principal del Casino Escolar</p>
+          </div>
           
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

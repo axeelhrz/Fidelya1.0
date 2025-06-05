@@ -18,8 +18,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -44,15 +42,12 @@ import {
   CheckCircle,
   XCircle,
   Copy,
-  Filter,
   DollarSign,
   Clock,
   Sparkles,
   Utensils,
   Star,
-  TrendingUp,
   Eye,
-  MoreHorizontal,
   X,
   Check,
   AlertCircle,
@@ -144,8 +139,8 @@ const MetricCard = ({
 }: {
   label: string;
   value: string | number;
-  icon: any;
-  color?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color?: "neutral" | "blue" | "green" | "amber" | "purple";
   delay?: number;
 }) => {
   const colors = {
@@ -353,7 +348,7 @@ const MenuItemCard = ({
                   <AlertDialogHeader>
                     <AlertDialogTitle>Confirmar eliminación</AlertDialogTitle>
                     <AlertDialogDescription>
-                      ¿Estás seguro de que deseas eliminar "{item.name}"? Esta acción no se puede deshacer.
+                      ¿Estás seguro de que deseas eliminar &quot;{item.name}&quot;? Esta acción no se puede deshacer.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -961,14 +956,20 @@ export default function MenuPage() {
       if (selectedItem) {
         setMenuItems(prev => prev.map(item => 
           item.id === selectedItem.id 
-            ? { ...item, ...formData, id: selectedItem.id }
+            ? { 
+                ...item, 
+                ...formData, 
+                id: selectedItem.id,
+                max_orders: formData.max_orders || undefined
+              }
             : item
         ));
       } else {
         const newItem: MenuItem = {
           ...formData,
           id: Date.now().toString(),
-          current_orders: 0
+          current_orders: 0,
+          max_orders: formData.max_orders || undefined
         };
         setMenuItems(prev => [...prev, newItem]);
       }
@@ -1005,7 +1006,7 @@ export default function MenuPage() {
       day_type: item.day_type,
       code: '',
       is_available: true,
-      max_orders: item.max_orders,
+      max_orders: item.max_orders ?? null,
     });
     setSelectedItem(null);
     setIsCreateDialogOpen(true);
@@ -1041,7 +1042,7 @@ export default function MenuPage() {
       day_type: item.day_type,
       code: item.code || '',
       is_available: item.is_available,
-      max_orders: item.max_orders,
+      max_orders: item.max_orders ?? null,
     });
     setIsEditDialogOpen(true);
   };
