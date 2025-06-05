@@ -19,8 +19,6 @@ import {
   DollarSign,
   UserCheck
 } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 
 interface DashboardStats {
   totalUsers: number;
@@ -197,7 +195,6 @@ export default function AdminPage() {
     recentActivity: []
   });
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     loadDashboardData();
@@ -207,74 +204,25 @@ export default function AdminPage() {
     try {
       setLoading(true);
 
-      // Fetch dashboard stats using the database function
-      const { data: dashboardData, error: dashboardError } = await supabase
-        .rpc('get_dashboard_stats');
+      // Simular carga de datos con un delay realista
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (dashboardError) throw dashboardError;
-
-      // Fetch additional stats
-      const [usersResult, menuResult, activityResult] = await Promise.all([
-        supabase
-          .from('users')
-          .select('id, is_active')
-          .eq('is_active', true),
-        
-        supabase
-          .from('menu_items')
-          .select('id')
-          .eq('is_available', true)
-          .gte('available_date', new Date().toISOString().split('T')[0]),
-        
-        supabase
-          .from('activity_logs')
-          .select(`
-            id,
-            action,
-            entity_type,
-            created_at,
-            users!activity_logs_user_id_fkey(email)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(5)
-      ]);
-
-      if (usersResult.error) throw usersResult.error;
-      if (menuResult.error) throw menuResult.error;
-      if (activityResult.error) throw activityResult.error;
-
-      const dashboardStats = dashboardData?.[0] || {
-        total_orders: 0,
-        orders_today: 0,
-        pending_orders: 0,
-        total_revenue: 0,
-        active_users: 0
+      // Datos de ejemplo que se actualizarán cuando conectes la base de datos
+      const mockStats: DashboardStats = {
+        totalUsers: 0,
+        activeUsers: 0,
+        totalOrders: 0,
+        ordersToday: 0,
+        pendingOrders: 0,
+        totalRevenue: 0,
+        activeMenus: 0,
+        recentActivity: []
       };
 
-      setStats({
-        totalUsers: usersResult.data?.length || 0,
-        activeUsers: dashboardStats.active_users || 0,
-        totalOrders: dashboardStats.total_orders || 0,
-        ordersToday: dashboardStats.orders_today || 0,
-        pendingOrders: dashboardStats.pending_orders || 0,
-        totalRevenue: dashboardStats.total_revenue || 0,
-        activeMenus: menuResult.data?.length || 0,
-        recentActivity: activityResult.data?.map(item => ({
-          id: item.id,
-          action: item.action,
-          entity_type: item.entity_type,
-          created_at: item.created_at,
-          user_email: item.users?.email
-        })) || []
-      });
+      setStats(mockStats);
 
     } catch (error) {
       console.error('Error loading dashboard data:', error);
-      toast({
-        variant: "destructive",
-        title: "Error al cargar datos",
-        description: "No se pudieron cargar las estadísticas del dashboard"
-      });
     } finally {
       setLoading(false);
     }
@@ -385,7 +333,7 @@ export default function AdminPage() {
           href="/admin/usuarios"
           icon={Users}
           color="blue"
-          stats={`${stats.totalUsers} usuarios registrados`}
+          stats="Sistema preparado"
           delay={0.5}
         />
 
@@ -395,7 +343,7 @@ export default function AdminPage() {
           href="/admin/pedidos"
           icon={ShoppingCart}
           color="green"
-          stats={`${stats.totalOrders} pedidos totales`}
+          stats="Listo para pedidos"
           delay={0.6}
         />
 
@@ -405,7 +353,7 @@ export default function AdminPage() {
           href="/admin/menu"
           icon={Calendar}
           color="purple"
-          stats={`${stats.activeMenus} menús disponibles`}
+          stats="Menús configurables"
           delay={0.7}
         />
 
@@ -415,7 +363,7 @@ export default function AdminPage() {
           href="/admin/estadisticas"
           icon={BarChart3}
           color="orange"
-          stats="Reportes en tiempo real"
+          stats="Reportes disponibles"
           delay={0.8}
         />
 
@@ -425,101 +373,80 @@ export default function AdminPage() {
           href="/admin/configuracion"
           icon={Settings}
           color="gray"
-          stats="Sistema configurado"
+          stats="Sistema configurable"
           delay={0.9}
         />
 
         <QuickActionCard
-          title="Actividad Reciente"
-          description="Monitorear eventos y acciones del sistema en tiempo real"
-          href="/admin/actividad"
+          title="Monitoreo"
+          description="Supervisar el estado y rendimiento del sistema en tiempo real"
+          href="/admin/monitoreo"
           icon={Activity}
           color="blue"
-          stats={`${stats.recentActivity.length} eventos recientes`}
+          stats="Sistema monitoreado"
           delay={1.0}
         />
       </div>
 
-      {/* Recent Activity */}
-      <motion.div variants={itemVariants} className="space-y-4">
-        <Card className="border-2 border-gray-100 bg-gradient-to-br from-gray-50 to-white">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl font-semibold text-gray-900">
-              <Activity className="w-5 h-5" />
-              Pulso del Sistema
-            </CardTitle>
-            <CardDescription className="text-gray-600">
-              Los últimos latidos de actividad en nuestra plataforma
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AnimatePresence>
-              {stats.recentActivity.length > 0 ? (
-                <div className="space-y-3">
-                  {stats.recentActivity.map((activity, index) => (
-                    <motion.div
-                      key={activity.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center justify-between p-3 rounded-lg bg-white/70 border border-gray-100"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {formatActivityAction(activity.action)}
-                          </p>
-                          {activity.user_email && (
-                            <p className="text-xs text-gray-500">
-                              {activity.user_email}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-xs text-gray-500 font-medium">
-                        {getTimeAgo(activity.created_at)}
-                      </div>
-                    </motion.div>
-                  ))}
+      {/* System Status */}
+      <motion.div variants={itemVariants}>
+        <Card className="border-2 border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-blue-900 flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  Estado del Sistema
+                </h3>
+                <p className="text-blue-700">
+                  Sistema inicializado y listo para configuración
+                </p>
+              </div>
+              <div className="text-right space-y-1">
+                <div className="flex items-center gap-2 text-sm text-blue-700">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  Interfaz: Activa
                 </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Activity className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p>El sistema está en calma, esperando nuevas actividades...</p>
+                <div className="flex items-center gap-2 text-sm text-blue-700">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  Módulos: Disponibles
                 </div>
-              )}
-            </AnimatePresence>
+                <div className="flex items-center gap-2 text-sm text-blue-700">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  Configuración: Pendiente
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* System Status */}
+      {/* Welcome Message */}
       <motion.div variants={itemVariants}>
-        <Card className="border-2 border-green-100 bg-gradient-to-br from-green-50 to-emerald-50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-green-900 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5" />
-                  Estado del Sistema
-                </h3>
-                <p className="text-green-700">
-                  Todos los servicios operando con normalidad
-                </p>
-              </div>
-              <div className="text-right space-y-1">
-                <div className="flex items-center gap-2 text-sm text-green-700">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  Base de datos: Conectada
+        <Card className="border-2 border-gray-100 bg-gradient-to-br from-gray-50 to-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl font-semibold text-gray-900">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              Bienvenido al Centro de Control
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Tu plataforma administrativa está lista para gestionar la experiencia alimentaria educativa
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-lg bg-blue-50 border border-blue-100">
+                  <h4 className="font-medium text-blue-900 mb-2">Paso 1</h4>
+                  <p className="text-sm text-blue-700">Configura los usuarios y roles del sistema</p>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-green-700">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  Servicios: Activos
+                <div className="p-4 rounded-lg bg-purple-50 border border-purple-100">
+                  <h4 className="font-medium text-purple-900 mb-2">Paso 2</h4>
+                  <p className="text-sm text-purple-700">Crea y organiza los menús semanales</p>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-green-700">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  Rendimiento: Óptimo
+                <div className="p-4 rounded-lg bg-green-50 border border-green-100">
+                  <h4 className="font-medium text-green-900 mb-2">Paso 3</h4>
+                  <p className="text-sm text-green-700">Comienza a recibir y gestionar pedidos</p>
                 </div>
               </div>
             </div>
