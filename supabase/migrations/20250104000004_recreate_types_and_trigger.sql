@@ -1,6 +1,43 @@
 -- =====================================================
--- ARREGLAR TRIGGER DE AUTENTICACIÓN
+-- RECREAR TIPOS Y TRIGGER DE AUTENTICACIÓN
 -- =====================================================
+
+-- Crear tipos si no existen
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('user', 'viewer', 'moderator', 'admin', 'super_admin');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE payment_status AS ENUM ('pending', 'processing', 'completed', 'failed', 'cancelled');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'paid', 'cancelled', 'delivered');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE menu_category AS ENUM ('almuerzo', 'colacion');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE student_level AS ENUM ('basica', 'media');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE user_type AS ENUM ('estudiante', 'funcionario');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Eliminar trigger existente
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -11,7 +48,7 @@ RETURNS TRIGGER AS $$
 DECLARE
     super_admin_emails JSONB;
     is_super_admin BOOLEAN := FALSE;
-    user_role_to_assign user_role := 'user';
+    user_role_to_assign TEXT := 'user';
 BEGIN
     -- Verificar si ya existe el usuario en public.users
     IF EXISTS (SELECT 1 FROM public.users WHERE id = NEW.id) THEN
@@ -51,7 +88,7 @@ BEGIN
                 NEW.raw_user_meta_data->>'name',
                 split_part(NEW.email, '@', 1)
             ),
-            user_role_to_assign,
+            user_role_to_assign::user_role,
             true
         );
         
@@ -93,4 +130,4 @@ VALUES ('super_admin_emails', '["admin@casino.cl", "c.wevarh@gmail.com"]', 'Emai
 ON CONFLICT (key) DO NOTHING;
 
 -- Mensaje de confirmación
-SELECT 'Trigger de autenticación arreglado' as status;
+SELECT 'Tipos y trigger de autenticación recreados correctamente' as status;
