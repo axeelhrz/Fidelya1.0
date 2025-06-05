@@ -1,37 +1,34 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { UserProvider } from "@/context/UserContext";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
-import { ConditionalMain } from "@/components/conditional-main";
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Casino Escolar",
-  description: "Sistema de pedidos para casino escolar",
-};
+  description: "Sistema de gestión de casino escolar",
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="font-sans antialiased">
+      <body className={inter.className}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
-          <UserProvider>
-            <ConditionalMain>
-              {children}
-            </ConditionalMain>
-            <Toaster />
-          </UserProvider>
+          {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }
