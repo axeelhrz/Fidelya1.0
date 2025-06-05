@@ -86,18 +86,18 @@ export default function LoginPage() {
 
       console.log("Login successful for user:", data.user.id)
 
-      // Update last login
-      try {
-        await supabase.rpc('update_last_login', { user_email: email })
-      } catch (updateError) {
-        console.warn("Could not update last login:", updateError)
-        // Don't fail the login for this
-      }
+      // Update last login (don't wait for it)
+      supabase.rpc('update_last_login', { user_email: email }).catch(error => {
+        console.warn("Could not update last login:", error)
+      })
 
       toast({
         title: "Inicio de sesión exitoso",
         description: "Bienvenido de vuelta al Sistema Casino Escolar.",
       })
+
+      // Force a small delay to ensure auth state is properly set
+      await new Promise(resolve => setTimeout(resolve, 500))
 
       // Redirect based on user role/email
       if (email.toLowerCase() === "c.wevarh@gmail.com") {
@@ -105,6 +105,12 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard")
       }
+
+      // Force page refresh after redirect to ensure clean state
+      setTimeout(() => {
+        window.location.reload()
+      }, 100)
+
     } catch (error: unknown) {
       console.error("Error signing in:", error)
       const errorMessage = error instanceof Error ? error.message : "No se pudo iniciar sesión. Verifique sus credenciales."
@@ -393,7 +399,7 @@ export default function LoginPage() {
                           {loading ? (
                             <div className="flex items-center space-x-3 relative z-10">
                               <Loader2 className="w-5 h-5 animate-spin" />
-                              <span>Iniciando sesión...</span>
+                              <span>Verificando credenciales...</span>
                             </div>
                           ) : (
                             <div className="flex items-center space-x-3 relative z-10">
