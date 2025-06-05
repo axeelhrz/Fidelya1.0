@@ -1,350 +1,256 @@
 import React, { useState } from 'react';
-import {
-  TextField,
-  Button,
-  Box,
-  Alert,
-  InputAdornment,
+import { 
+  TextField, 
+  Button, 
+  Box, 
+  Typography, 
+  InputAdornment, 
   IconButton,
-  CircularProgress,
-  Typography,
-  Link,
-  FormControlLabel,
-  Checkbox,
   Divider,
-  Chip,
+  Link,
+  Alert,
+  CircularProgress,
+  useTheme,
+  alpha
 } from '@mui/material';
-import {
-  Email,
-  Lock,
-  Visibility,
-  VisibilityOff,
+import { 
+  EmailRounded, 
+  LockRounded, 
+  VisibilityRounded, 
+  VisibilityOffRounded,
   LoginRounded,
-  SecurityRounded,
-  CheckCircleRounded,
-  ErrorRounded,
-  ArrowForwardRounded,
+  PersonAddRounded
 } from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
+import authService from '../../services/authService';
 
 // Esquema de validación
 const schema = yup.object({
   correo: yup
     .string()
-    .email('Correo electrónico inválido')
-    .required('El correo es obligatorio'),
+    .email('Ingresa un correo válido')
+    .required('El correo es requerido'),
   contraseña: yup
     .string()
     .min(6, 'La contraseña debe tener al menos 6 caracteres')
-    .required('La contraseña es obligatoria'),
+    .required('La contraseña es requerida'),
 });
 
 const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
+  const theme = useTheme();
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  
-  const { login } = useAuth();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
-    reset,
-    setValue,
-    watch,
+    formState: { errors },
+    reset
   } = useForm({
     resolver: yupResolver(schema),
-    mode: 'onChange',
+    mode: 'onBlur'
   });
 
-  const watchedFields = watch();
-
-  // Cargar email recordado
-  React.useEffect(() => {
-    const rememberedEmail = localStorage.getItem('rememberUser');
-    if (rememberedEmail) {
-      setRememberMe(true);
-      setValue('correo', rememberedEmail);
-    }
-  }, [setValue]);
-
   const onSubmit = async (data) => {
-    setLoading(true);
+    setIsLoading(true);
     setError('');
 
     try {
-      const result = await login({
-        correo: data.correo,
-        contraseña: data.contraseña
-      });
+      const response = await authService.login(data);
       
-      if (result.success) {
-        // Manejar "recordarme"
-        if (rememberMe) {
-          localStorage.setItem('rememberUser', data.correo);
-        } else {
-          localStorage.removeItem('rememberUser');
-        }
-        
-        if (onLoginSuccess) {
-          onLoginSuccess(result.user);
-        }
-        
+      if (response.success) {
         reset();
+        onLoginSuccess(response.user);
       } else {
-        setError(result.message || 'Error al iniciar sesión');
+        setError(response.message || 'Error al iniciar sesión');
       }
-    } catch (err) {
-      console.error('Error inesperado en login:', err);
-      setError('Error inesperado. Intenta nuevamente.');
+    } catch (error) {
+      console.error('Error en login:', error);
+      setError('Error de conexión. Verifica tu conexión a internet.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const formVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
+  const inputVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.5, ease: "easeOut" }
+      transition: { duration: 0.4, ease: "easeOut" }
     }
   };
 
   return (
-    <motion.div
-      variants={formVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              transition={{ duration: 0.3 }}
+    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mb: 3,
+                borderRadius: '12px',
+                border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+                '& .MuiAlert-icon': {
+                  fontSize: '1.25rem'
+                }
+              }}
+              onClose={() => setError('')}
             >
-              <Alert 
-                severity="error" 
-                sx={{ 
-                  mb: 3,
-                  borderRadius: '12px',
-                  background: 'rgba(239, 68, 68, 0.05)',
-                  border: '1px solid rgba(239, 68, 68, 0.2)',
-                  '& .MuiAlert-icon': {
-                    color: 'error.main',
-                  },
-                }}
-                icon={<ErrorRounded />}
-              >
-                {error}
-              </Alert>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {error}
+            </Alert>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <motion.div variants={itemVariants}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <motion.div variants={inputVariants} initial="hidden" animate="visible">
           <TextField
             {...register('correo')}
             fullWidth
             label="Correo electrónico"
             type="email"
+            autoComplete="email"
             error={!!errors.correo}
             helperText={errors.correo?.message}
+            disabled={isLoading}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailRounded sx={{ color: alpha(theme.palette.text.secondary, 0.6) }} />
+                </InputAdornment>
+              ),
+            }}
             sx={{
-              mb: 3,
               '& .MuiOutlinedInput-root': {
-                borderRadius: '12px',
-                background: 'rgba(248, 250, 252, 0.8)',
+                borderRadius: '16px',
+                backgroundColor: alpha(theme.palette.background.default, 0.4),
                 transition: 'all 0.3s ease',
                 '&:hover': {
-                  background: 'rgba(248, 250, 252, 1)',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
+                  backgroundColor: alpha(theme.palette.background.default, 0.6),
                 },
                 '&.Mui-focused': {
-                  background: 'rgba(255, 255, 255, 1)',
-                  boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
+                  backgroundColor: alpha(theme.palette.background.default, 0.8),
+                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
+                },
+                '& fieldset': {
+                  borderColor: alpha(theme.palette.divider, 0.3),
+                },
+                '&:hover fieldset': {
+                  borderColor: alpha(theme.palette.primary.main, 0.4),
                 },
               },
               '& .MuiInputLabel-root': {
                 fontWeight: 500,
               },
             }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Email sx={{ color: 'text.secondary' }} />
-                </InputAdornment>
-              ),
-              endAdornment: watchedFields.correo && !errors.correo && (
-                <InputAdornment position="end">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <CheckCircleRounded sx={{ color: 'success.main' }} />
-                  </motion.div>
-                </InputAdornment>
-              ),
-            }}
           />
         </motion.div>
 
-        <motion.div variants={itemVariants}>
+        <motion.div 
+          variants={inputVariants} 
+          initial="hidden" 
+          animate="visible"
+          transition={{ delay: 0.1 }}
+        >
           <TextField
             {...register('contraseña')}
             fullWidth
             label="Contraseña"
             type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
             error={!!errors.contraseña}
             helperText={errors.contraseña?.message}
+            disabled={isLoading}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockRounded sx={{ color: alpha(theme.palette.text.secondary, 0.6) }} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                    disabled={isLoading}
+                    sx={{ 
+                      color: alpha(theme.palette.text.secondary, 0.6),
+                      '&:hover': {
+                        backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                      }
+                    }}
+                  >
+                    {showPassword ? <VisibilityOffRounded /> : <VisibilityRounded />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
             sx={{
-              mb: 2,
               '& .MuiOutlinedInput-root': {
-                borderRadius: '12px',
-                background: 'rgba(248, 250, 252, 0.8)',
+                borderRadius: '16px',
+                backgroundColor: alpha(theme.palette.background.default, 0.4),
                 transition: 'all 0.3s ease',
                 '&:hover': {
-                  background: 'rgba(248, 250, 252, 1)',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
+                  backgroundColor: alpha(theme.palette.background.default, 0.6),
                 },
                 '&.Mui-focused': {
-                  background: 'rgba(255, 255, 255, 1)',
-                  boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
+                  backgroundColor: alpha(theme.palette.background.default, 0.8),
+                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
+                },
+                '& fieldset': {
+                  borderColor: alpha(theme.palette.divider, 0.3),
+                },
+                '&:hover fieldset': {
+                  borderColor: alpha(theme.palette.primary.main, 0.4),
                 },
               },
               '& .MuiInputLabel-root': {
                 fontWeight: 500,
               },
             }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Lock sx={{ color: 'text.secondary' }} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {watchedFields.contraseña && !errors.contraseña && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <CheckCircleRounded sx={{ color: 'success.main' }} />
-                      </motion.div>
-                    )}
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                      size="small"
-                      sx={{
-                        color: 'text.secondary',
-                        '&:hover': {
-                          color: 'primary.main',
-                        },
-                      }}
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </Box>
-                </InputAdornment>
-              ),
-            }}
           />
         </motion.div>
 
-        <motion.div variants={itemVariants}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  color="primary"
-                  size="small"
-                />
-              }
-              label={
-                <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
-                  Recordarme
-                </Typography>
-              }
-            />
-            <Link
-              component="button"
-              type="button"
-              variant="body2"
-              color="primary"
-              sx={{ 
-                textDecoration: 'none',
-                fontWeight: 500,
-                '&:hover': {
-                  textDecoration: 'underline',
-                },
-              }}
-              onClick={() => {
-                alert('Funcionalidad de recuperación de contraseña próximamente');
-              }}
-            >
-              ¿Olvidaste tu contraseña?
-            </Link>
-          </Box>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
+        <motion.div 
+          variants={inputVariants} 
+          initial="hidden" 
+          animate="visible"
+          transition={{ delay: 0.2 }}
+        >
           <Button
             type="submit"
             fullWidth
             variant="contained"
-            size="large"
-            disabled={loading || !isValid}
-            sx={{ 
-              mb: 4, 
-              py: 1.5,
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-              boxShadow: '0 4px 15px rgba(99, 102, 241, 0.3)',
+            disabled={isLoading}
+            startIcon={
+              isLoading ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                <LoginRounded />
+              )
+            }
+            sx={{
+              py: 1.8,
+              borderRadius: '16px',
               fontSize: '1rem',
               fontWeight: 600,
               textTransform: 'none',
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+              boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.3)}`,
+              border: `1px solid ${alpha('#ffffff', 0.1)}`,
               position: 'relative',
               overflow: 'hidden',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
-                boxShadow: '0 6px 20px rgba(99, 102, 241, 0.4)',
-                transform: 'translateY(-1px)',
-              },
-              '&:disabled': {
-                background: 'rgba(0, 0, 0, 0.12)',
-                color: 'rgba(0, 0, 0, 0.26)',
-                boxShadow: 'none',
-              },
               '&::before': {
                 content: '""',
                 position: 'absolute',
@@ -352,87 +258,89 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
                 left: '-100%',
                 width: '100%',
                 height: '100%',
-                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-                transition: 'left 0.5s ease',
+                background: `linear-gradient(90deg, transparent, ${alpha('#ffffff', 0.2)}, transparent)`,
+                transition: 'left 0.6s ease',
               },
-              '&:hover::before': {
-                left: '100%',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: `0 12px 35px ${alpha(theme.palette.primary.main, 0.4)}`,
+                '&::before': {
+                  left: '100%',
+                },
+              },
+              '&:active': {
+                transform: 'translateY(0px)',
+              },
+              '&:disabled': {
+                background: alpha(theme.palette.action.disabled, 0.3),
+                color: alpha(theme.palette.text.disabled, 0.7),
+                boxShadow: 'none',
+                transform: 'none',
               },
             }}
           >
-            {loading ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CircularProgress size={20} color="inherit" />
-                <Typography variant="button">Iniciando sesión...</Typography>
-              </Box>
-            ) : (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <LoginRounded />
-                <Typography variant="button">Iniciar Sesión</Typography>
-                <ArrowForwardRounded />
-              </Box>
-            )}
+            {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </Button>
         </motion.div>
+      </Box>
 
-        <motion.div variants={itemVariants}>
-          <Box sx={{ textAlign: 'center' }}>
-            <Divider sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
-                ¿No tienes una cuenta?
-              </Typography>
-            </Divider>
-            
-            <Button
-              variant="outlined"
-              onClick={onSwitchToRegister}
-              sx={{
-                borderRadius: '12px',
-                borderColor: 'rgba(99, 102, 241, 0.3)',
-                color: 'primary.main',
-                fontWeight: 600,
-                textTransform: 'none',
-                px: 4,
-                py: 1,
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  background: 'rgba(99, 102, 241, 0.05)',
-                },
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+      >
+        <Box sx={{ mt: 4 }}>
+          <Divider 
+            sx={{ 
+              mb: 3,
+              '&::before, &::after': {
+                borderColor: alpha(theme.palette.divider, 0.2),
+              }
+            }}
+          >
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: alpha(theme.palette.text.secondary, 0.7),
+                fontWeight: 500,
+                px: 2,
               }}
             >
-              Crear cuenta nueva
-            </Button>
-          </Box>
-        </motion.div>
-
-        {/* Indicador de seguridad */}
-        <motion.div
-          variants={itemVariants}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-        >
-          <Box sx={{ 
-            mt: 4, 
-            p: 3, 
-            borderRadius: '12px',
-            background: 'rgba(99, 102, 241, 0.05)',
-            border: '1px solid rgba(99, 102, 241, 0.1)',
-            textAlign: 'center',
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
-              <SecurityRounded sx={{ color: 'primary.main', fontSize: 18 }} />
-              <Typography variant="caption" color="primary" sx={{ fontWeight: 600 }}>
-                CONEXIÓN SEGURA
-              </Typography>
-            </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4 }}>
-              Tus datos están protegidos con encriptación de nivel bancario
+              ¿No tienes cuenta?
             </Typography>
-          </Box>
-        </motion.div>
-      </Box>
-    </motion.div>
+          </Divider>
+
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={onSwitchToRegister}
+            disabled={isLoading}
+            startIcon={<PersonAddRounded />}
+            sx={{
+              py: 1.5,
+              borderRadius: '16px',
+              fontSize: '0.95rem',
+              fontWeight: 600,
+              textTransform: 'none',
+              borderColor: alpha(theme.palette.primary.main, 0.3),
+              color: theme.palette.primary.main,
+              backgroundColor: alpha(theme.palette.primary.main, 0.02),
+              '&:hover': {
+                borderColor: alpha(theme.palette.primary.main, 0.5),
+                backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                transform: 'translateY(-1px)',
+                boxShadow: `0 4px 15px ${alpha(theme.palette.primary.main, 0.2)}`,
+              },
+              '&:active': {
+                transform: 'translateY(0px)',
+              },
+            }}
+          >
+            Crear cuenta nueva
+          </Button>
+        </Box>
+      </motion.div>
+    </Box>
   );
 };
 

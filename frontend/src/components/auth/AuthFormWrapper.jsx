@@ -1,46 +1,49 @@
 import React from 'react';
-import { Box, Paper, Container, Typography, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Paper, Container, Typography, useTheme, alpha } from '@mui/material';
 import { motion } from 'framer-motion';
-import ParticleBackground from './ParticleBackground';
+import { 
+  StorefrontRounded,
+  TrendingUpRounded,
+  SecurityRounded,
+  CloudRounded 
+} from '@mui/icons-material';
 
 const AuthFormWrapper = ({ children, title, subtitle }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const containerVariants = {
-    hidden: { opacity: 0, y: 50 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.8,
+        duration: 0.6,
         ease: [0.25, 0.46, 0.45, 0.94]
       }
     }
   };
 
   const logoVariants = {
-    hidden: { scale: 0, rotate: -180 },
+    hidden: { scale: 0.8, opacity: 0 },
     visible: {
       scale: 1,
-      rotate: 0,
+      opacity: 1,
       transition: {
-        delay: 0.3,
-        duration: 0.6,
-        type: "spring",
-        stiffness: 200
+        delay: 0.2,
+        duration: 0.5,
+        ease: "easeOut"
       }
     }
   };
 
   const contentVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        delay: 0.5,
-        duration: 0.6,
+        delay: 0.4,
+        duration: 0.5,
         ease: "easeOut"
       }
     }
@@ -52,38 +55,50 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
         minHeight: '100vh',
         background: `
           linear-gradient(135deg, 
-            rgba(15, 23, 42, 0.95) 0%, 
-            rgba(30, 41, 59, 0.95) 50%, 
-            rgba(51, 65, 85, 0.95) 100%
-          ),
-          radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 50%)
+            #0f172a 0%, 
+            #1e293b 25%,
+            #334155 50%,
+            #475569 75%,
+            #64748b 100%
+          )
         `,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 2,
+        padding: 3,
         position: 'relative',
         overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+            radial-gradient(circle at 25% 25%, ${alpha('#6366f1', 0.1)} 0%, transparent 50%),
+            radial-gradient(circle at 75% 75%, ${alpha('#10b981', 0.1)} 0%, transparent 50%)
+          `,
+          zIndex: 0,
+        }
       }}
     >
-      <ParticleBackground />
-      
-      {/* Efectos de luz ambiental */}
+      {/* Elementos decorativos geométricos */}
       <Box
         sx={{
           position: 'absolute',
-          top: '10%',
+          top: '15%',
           left: '10%',
-          width: '200px',
-          height: '200px',
-          background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(40px)',
-          animation: 'float 6s ease-in-out infinite',
+          width: '120px',
+          height: '120px',
+          background: `linear-gradient(135deg, ${alpha('#6366f1', 0.1)}, ${alpha('#8b5cf6', 0.1)})`,
+          borderRadius: '30px',
+          transform: 'rotate(45deg)',
+          filter: 'blur(1px)',
+          animation: 'float 8s ease-in-out infinite',
           '@keyframes float': {
-            '0%, 100%': { transform: 'translateY(0px)' },
-            '50%': { transform: 'translateY(-20px)' }
+            '0%, 100%': { transform: 'rotate(45deg) translateY(0px)' },
+            '50%': { transform: 'rotate(45deg) translateY(-20px)' }
           }
         }}
       />
@@ -91,18 +106,19 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
       <Box
         sx={{
           position: 'absolute',
-          bottom: '10%',
-          right: '10%',
-          width: '150px',
-          height: '150px',
-          background: 'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(40px)',
-          animation: 'float 8s ease-in-out infinite reverse',
+          bottom: '20%',
+          right: '15%',
+          width: '80px',
+          height: '80px',
+          background: `linear-gradient(135deg, ${alpha('#10b981', 0.1)}, ${alpha('#06b6d4', 0.1)})`,
+          borderRadius: '20px',
+          transform: 'rotate(-30deg)',
+          filter: 'blur(1px)',
+          animation: 'float 6s ease-in-out infinite reverse',
         }}
       />
 
-      <Container maxWidth="sm" sx={{ zIndex: 1 }}>
+      <Container maxWidth="sm" sx={{ zIndex: 1, position: 'relative' }}>
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -113,31 +129,37 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
             sx={{
               borderRadius: '24px',
               overflow: 'hidden',
-              background: 'rgba(255, 255, 255, 0.95)',
+              background: 'rgba(255, 255, 255, 0.98)',
               backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              border: `1px solid ${alpha('#ffffff', 0.2)}`,
               boxShadow: `
-                0 20px 40px rgba(0, 0, 0, 0.1),
-                0 0 0 1px rgba(255, 255, 255, 0.05),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1)
+                0 25px 50px ${alpha('#000000', 0.15)},
+                0 0 0 1px ${alpha('#ffffff', 0.05)},
+                inset 0 1px 0 ${alpha('#ffffff', 0.1)}
               `,
               position: 'relative',
+              maxWidth: 480,
+              mx: 'auto',
             }}
           >
-            {/* Header con logo y branding */}
+            {/* Header minimalista */}
             <Box
               sx={{
                 textAlign: 'center',
-                pt: 6,
-                pb: 4,
-                px: 4,
-                background: `
-                  linear-gradient(135deg, 
-                    rgba(99, 102, 241, 0.05) 0%, 
-                    rgba(16, 185, 129, 0.05) 100%
-                  )
-                `,
-                borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+                pt: 8,
+                pb: 6,
+                px: 6,
+                position: 'relative',
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  bottom: 0,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '60px',
+                  height: '1px',
+                  background: `linear-gradient(90deg, transparent, ${alpha(theme.palette.primary.main, 0.3)}, transparent)`,
+                }
               }}
             >
               <motion.div variants={logoVariants}>
@@ -146,75 +168,91 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: 80,
-                    height: 80,
+                    width: 72,
+                    height: 72,
                     borderRadius: '20px',
-                    background: `
-                      linear-gradient(135deg, 
-                        rgba(99, 102, 241, 0.1) 0%, 
-                        rgba(16, 185, 129, 0.1) 100%
-                      )
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                    mb: 4,
+                    boxShadow: `
+                      0 10px 30px ${alpha(theme.palette.primary.main, 0.3)},
+                      0 0 0 1px ${alpha('#ffffff', 0.1)}
                     `,
-                    border: '2px solid rgba(99, 102, 241, 0.2)',
-                    mb: 3,
-                    fontSize: '2.5rem',
-                    boxShadow: '0 8px 25px rgba(99, 102, 241, 0.15)',
+                    position: 'relative',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      inset: '2px',
+                      borderRadius: '18px',
+                      background: `linear-gradient(135deg, ${alpha('#ffffff', 0.2)}, transparent)`,
+                      zIndex: 1,
+                    }
                   }}
                 >
-                  🍎
+                  <StorefrontRounded 
+                    sx={{ 
+                      fontSize: 32, 
+                      color: 'white',
+                      position: 'relative',
+                      zIndex: 2,
+                    }} 
+                  />
                 </Box>
               </motion.div>
               
               <motion.div variants={contentVariants}>
                 <Typography 
-                  variant="h4" 
+                  variant="h3" 
                   sx={{ 
-                    mb: 1, 
-                    fontWeight: 700,
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, #6366f1)`,
+                    mb: 2, 
+                    fontWeight: 800,
+                    background: `linear-gradient(135deg, ${theme.palette.text.primary}, ${alpha(theme.palette.text.primary, 0.7)})`,
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    letterSpacing: '-0.02em',
+                    letterSpacing: '-0.025em',
+                    fontSize: { xs: '2rem', sm: '2.5rem' }
                   }}
                 >
                   Frutería Nina
                 </Typography>
                 <Typography 
                   variant="body1" 
-                  color="text.secondary"
                   sx={{ 
+                    color: alpha(theme.palette.text.secondary, 0.8),
                     fontWeight: 500,
-                    opacity: 0.8,
+                    fontSize: '1.1rem',
+                    letterSpacing: '0.01em',
                   }}
                 >
-                  Sistema de Gestión Inteligente
+                  Sistema de Gestión Empresarial
                 </Typography>
               </motion.div>
             </Box>
 
             {/* Contenido del formulario */}
-            <Box sx={{ p: 4 }}>
+            <Box sx={{ px: 6, pb: 8 }}>
               <motion.div variants={contentVariants}>
-                <Box sx={{ mb: 4, textAlign: 'center' }}>
+                <Box sx={{ mb: 6, textAlign: 'center' }}>
                   <Typography 
-                    variant="h5" 
+                    variant="h4" 
                     sx={{ 
-                      mb: 1, 
-                      fontWeight: 600, 
-                      color: 'text.primary',
-                      letterSpacing: '-0.01em',
+                      mb: 2, 
+                      fontWeight: 700, 
+                      color: theme.palette.text.primary,
+                      letterSpacing: '-0.02em',
+                      fontSize: { xs: '1.75rem', sm: '2rem' }
                     }}
                   >
                     {title}
                   </Typography>
                   {subtitle && (
                     <Typography 
-                      variant="body2" 
-                      color="text.secondary"
+                      variant="body1" 
                       sx={{ 
+                        color: alpha(theme.palette.text.secondary, 0.8),
                         fontWeight: 400,
-                        lineHeight: 1.5,
+                        lineHeight: 1.6,
+                        fontSize: '1rem',
                       }}
                     >
                       {subtitle}
@@ -226,9 +264,60 @@ const AuthFormWrapper = ({ children, title, subtitle }) => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7, duration: 0.6 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
               >
                 {children}
+              </motion.div>
+
+              {/* Features minimalistas */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8, duration: 0.5 }}
+              >
+                <Box
+                  sx={{
+                    mt: 6,
+                    pt: 4,
+                    borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      gap: 4,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    {[
+                      { icon: TrendingUpRounded, label: 'Analytics' },
+                      { icon: SecurityRounded, label: 'Seguro' },
+                      { icon: CloudRounded, label: 'Cloud' },
+                    ].map((feature, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          color: alpha(theme.palette.text.secondary, 0.7),
+                        }}
+                      >
+                        <feature.icon sx={{ fontSize: 18 }} />
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            fontWeight: 500,
+                            fontSize: '0.875rem',
+                          }}
+                        >
+                          {feature.label}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
               </motion.div>
             </Box>
           </Paper>
