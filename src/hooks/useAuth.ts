@@ -5,31 +5,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
-
-export interface UserProfile {
-  id: string;
-  email: string;
-  fullName: string;
-  phone: string;
-  role: 'user' | 'admin' | 'super_admin';
-  isActive: boolean;
-  lastLogin: string | null;
-  loginCount: number;
-  students: Student[];
-}
-
-export interface Student {
-  id: string;
-  guardian_id: string;
-  name: string;
-  grade: string;
-  section: string;
-  level: 'basica' | 'media';
-  user_type: 'estudiante' | 'funcionario';
-  rut: string | null;
-  dietary_restrictions: string | null;
-  is_active: boolean;
-}
+import type { UserProfile, Student } from '@/lib/supabase/types';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
