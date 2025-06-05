@@ -1,48 +1,57 @@
 -- =====================================================
--- CREAR PERFIL PARA USUARIO ADMIN EXISTENTE
+-- CREAR PERFIL DE ADMINISTRADOR INICIAL
 -- =====================================================
 
--- Verificar si el usuario existe en auth.users pero no en public.users
-WITH auth_user AS (
-    SELECT id, email, raw_user_meta_data
-    FROM auth.users 
-    WHERE email = 'admin@casino.cl'
-),
-existing_profile AS (
-    SELECT id 
-    FROM public.users 
-    WHERE email = 'admin@casino.cl'
-)
--- Crear el perfil si el usuario existe en auth pero no en public
-INSERT INTO public.users (
-    id,
-    email,
-    full_name,
-    role,
-    is_active,
-    created_at,
-    updated_at
-)
-SELECT 
-    au.id,
-    au.email,
-    COALESCE(au.raw_user_meta_data->>'full_name', 'Administrador'),
-    'super_admin'::user_role,
-    true,
-    NOW(),
-    NOW()
-FROM auth_user au
-WHERE NOT EXISTS (SELECT 1 FROM existing_profile)
-ON CONFLICT (id) DO UPDATE SET
-    role = 'super_admin',
-    updated_at = NOW();
+-- Verificar si ya existe un usuario con el email admin
+DO $$
+DECLARE
+    admin_user_id UUID;
+    admin_email TEXT := 'c.wevarh@gmail.com';
+BEGIN
+    -- Buscar si existe el usuario en auth.users
+    SELECT id INTO admin_user_id
+    FROM auth.users
+    WHERE email = admin_email;
+    
+    -- Si existe en auth pero no en public.users, crear el perfil
+    IF admin_user_id IS NOT NULL THEN
+        -- Verificar si ya existe en public.users
+        IF NOT EXISTS (SELECT 1 FROM public.users WHERE id = admin_user_id) THEN
+            -- Crear perfil de super admin
+            INSERT INTO public.users (
+                id,
+                email,
+                full_name,
+                role,
+                is_active
+            ) VALUES (
+                admin_user_id,
+                admin_email,
+                'Administrador Sistema',
+                'super_admin',
+                true
+            );
+            
+            RAISE NOTICE 'Perfil de super admin creado para: %', admin_email;
+        ELSE
+            -- Actualizar rol si ya existe
+            UPDATE public.users 
+            SET role = 'super_admin', is_active = true
+            WHERE id = admin_user_id;
+            
+            RAISE NOTICE 'Rol actualizado a super_admin para: %', admin_email;
+        END IF;
+    ELSE
+        RAISE NOTICE 'Usuario % no encontrado en auth.users', admin_email;
+    END IF;
+END $$;
 
 -- Verificar el resultado
 SELECT 
-    u.id,
     u.email,
     u.full_name,
     u.role,
-    u.is_active
+    u.is_active,
+    u.created_at
 FROM public.users u
-WHERE u.email = 'admin@casino.cl';
+WHERE u.email = 'c.wevarh@gmail.com';
