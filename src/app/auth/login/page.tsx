@@ -52,51 +52,83 @@ export default function LoginPage() {
         throw new Error("Por favor complete todos los campos")
       }
 
-      console.log("Attempting login for:", email)
+      console.log("🔐 Intentando login para:", email)
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Paso 1: Autenticar con Supabase
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) {
-        console.error("Login error:", error)
+      if (authError) {
+        console.error("❌ Error de autenticación:", authError)
         
         let errorMessage = "Error de autenticación"
-        if (error.message.includes("Invalid login credentials")) {
+        if (authError.message.includes("Invalid login credentials")) {
           errorMessage = "Credenciales inválidas. Verifique su email y contraseña."
-        } else if (error.message.includes("Email not confirmed")) {
+        } else if (authError.message.includes("Email not confirmed")) {
           errorMessage = "Por favor confirme su email antes de iniciar sesión."
-        } else if (error.message.includes("Too many requests")) {
-          errorMessage = "Demasiados intentos. Espere unos minutos antes de intentar nuevamente."
+        } else if (authError.message.includes("Too many requests")) {
+          errorMessage = "Demasiados intentos. Espere unos minutos."
         }
         
         throw new Error(errorMessage)
       }
 
-      if (!data.user) {
+      if (!authData.user || !authData.session) {
         throw new Error("No se pudo autenticar el usuario")
       }
 
-      console.log("Login successful for user:", data.user.id)
+      console.log("✅ Autenticación exitosa:", authData.user.id)
 
+      // Paso 2: Verificar que el perfil existe
+      const { data: userProfile, error: profileError } = await supabase
+        .from('users')
+        .select('id, email, full_name, role, is_active')
+        .eq('email', email)
+        .eq('is_active', true)
+        .single()
+
+      if (profileError || !userProfile) {
+        console.error("❌ Error obteniendo perfil:", profileError)
+        throw new Error("No se pudo cargar el perfil de usuario")
+      }
+
+      console.log("✅ Perfil cargado:", userProfile)
+
+      // Paso 3: Actualizar último login (opcional, no bloquear si falla)
+      try {
+        await supabase.rpc('update_last_login', { user_email: email })
+        console.log("✅ Último login actualizado")
+      } catch (loginError) {
+        console.warn("⚠️ No se pudo actualizar último login:", loginError)
+        // No fallar por esto
+      }
+
+      // Paso 4: Mostrar éxito
       toast({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido de vuelta al Sistema Casino Escolar.",
+        title: "¡Bienvenido!",
+        description: `Hola ${userProfile.full_name}`,
       })
 
-      // Esperar un momento para que el auth state se actualice
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      // Redirigir según el email
-      if (email.toLowerCase() === "c.wevarh@gmail.com") {
+      // Paso 5: Redirigir según el rol
+      console.log("🚀 Redirigiendo usuario...")
+      
+      if (userProfile.role === 'super_admin' || userProfile.role === 'admin') {
+        console.log("👑 Redirigiendo a admin")
         router.push("/admin")
       } else {
+        console.log("👤 Redirigiendo a dashboard")
         router.push("/dashboard")
       }
 
+      // Forzar recarga después de un momento para asegurar que el estado se actualice
+      setTimeout(() => {
+        window.location.href = userProfile.role === 'super_admin' || userProfile.role === 'admin' ? '/admin' : '/dashboard'
+      }, 1000)
+
     } catch (error: unknown) {
-      console.error("Error signing in:", error)
+      console.error("❌ Error en login:", error)
       const errorMessage = error instanceof Error ? error.message : "No se pudo iniciar sesión."
       toast({
         variant: "destructive",
@@ -198,7 +230,7 @@ export default function LoginPage() {
                     {loading ? (
                       <div className="flex items-center space-x-3">
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Verificando credenciales...</span>
+                        <span>Iniciando sesión...</span>
                       </div>
                     ) : (
                       <div className="flex items-center space-x-3">
