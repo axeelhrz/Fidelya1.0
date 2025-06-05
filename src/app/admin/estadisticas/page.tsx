@@ -7,15 +7,12 @@ import {
   TrendingDown, 
   Calendar, 
   Download, 
-  Filter,
   BarChart3,
   PieChart,
-  LineChart,
   DollarSign
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -26,13 +23,10 @@ import {
 } from "@/components/ui/select";
 import { 
   ResponsiveContainer,
-  LineChart as RechartsLineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   BarChart as RechartsBarChart,
   Bar,
   PieChart as RechartsPieChart,
@@ -46,11 +40,41 @@ import { useToast } from "@/components/ui/use-toast";
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
+interface VentasPorDia {
+  fecha: string;
+  pedidos: number;
+  ingresos: number;
+}
+
+interface PedidosPorOpcion {
+  opcion: string;
+  cantidad: number;
+  porcentaje: string;
+}
+
+interface IngresosPorMes {
+  mes: string;
+  ingresos: number;
+}
+
+interface DistribucionEstados {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface Pedido {
+  dia_entrega: string;
+  estado_pago: string;
+  created_at: string;
+  opcion_elegida?: string;
+}
+
 interface EstadisticasData {
-  ventasPorDia: any[];
-  pedidosPorOpcion: any[];
-  ingresosPorMes: any[];
-  distribucionEstados: any[];
+  ventasPorDia: VentasPorDia[];
+  pedidosPorOpcion: PedidosPorOpcion[];
+  ingresosPorMes: IngresosPorMes[];
+  distribucionEstados: DistribucionEstados[];
   tendencias: {
     pedidosTotal: number;
     crecimientoPedidos: number;
@@ -73,12 +97,32 @@ export default function EstadisticasPage() {
     }
   });
   const [loading, setLoading] = useState(true);
-  const [periodo, setPeriodo] = useState("30"); // días
+  const [periodo, setPeriodo] = useState("30");
   const { toast } = useToast();
 
   useEffect(() => {
     loadEstadisticas();
   }, [periodo]);
+
+  const procesarVentasPorDia = (pedidos: Pedido[]) => {
+    const ventasPorDia: { [key: string]: number } = {};
+    
+    pedidos.forEach(pedido => {
+      const fecha = pedido.dia_entrega;
+      ventasPorDia[fecha] = (ventasPorDia[fecha] || 0) + 1;
+    });
+
+    return Object.entries(ventasPorDia)
+      .map(([fecha, cantidad]) => ({
+        fecha: new Date(fecha).toLocaleDateString('es-CL', { 
+          day: 'numeric', 
+          month: 'short' 
+        }),
+        pedidos: cantidad,
+        ingresos: cantidad * 3500
+      }))
+      .slice(-14); // Últimos 14 días
+  };
 
   const loadEstadisticas = async () => {
     try {
@@ -104,41 +148,20 @@ export default function EstadisticasPage() {
       setData({
         ventasPorDia,
         pedidosPorOpcion,
-        ingresosPorMes: [], // Implementar según necesidades
+        ingresosPorMes: [], // Placeholder
         distribucionEstados,
         tendencias
       });
-
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading statistics:', error);
       toast({
+        title: "Error",
+        description: "No se pudieron cargar las estadísticas",
         variant: "destructive",
-        title: "Error al cargar estadísticas",
-        description: error.message,
       });
     } finally {
       setLoading(false);
     }
-  };
-
-  const procesarVentasPorDia = (pedidos: any[]) => {
-    const ventasPorDia: { [key: string]: number } = {};
-    
-    pedidos.forEach(pedido => {
-      const fecha = pedido.dia_entrega;
-      ventasPorDia[fecha] = (ventasPorDia[fecha] || 0) + 1;
-    });
-
-    return Object.entries(ventasPorDia)
-      .map(([fecha, cantidad]) => ({
-        fecha: new Date(fecha).toLocaleDateString('es-CL', { 
-          day: 'numeric', 
-          month: 'short' 
-        }),
-        pedidos: cantidad,
-        ingresos: cantidad * 3500 // Precio promedio estimado
-      }))
-      .slice(-14); // Últimos 14 días
   };
 
   const procesarPedidosPorOpcion = async () => {
@@ -159,7 +182,7 @@ export default function EstadisticasPage() {
     }));
   };
 
-  const procesarDistribucionEstados = (pedidos: any[]) => {
+  const procesarDistribucionEstados = (pedidos: { dia_entrega: string; estado_pago: string; created_at: string }[]) => {
     const estados: { [key: string]: number } = {};
     
     pedidos.forEach(pedido => {
@@ -173,7 +196,7 @@ export default function EstadisticasPage() {
     }));
   };
 
-  const calcularTendencias = (pedidos: any[]) => {
+  const calcularTendencias = (pedidos: { dia_entrega: string; estado_pago: string; created_at: string }[]) => {
     const ahora = new Date();
     const hace30Dias = new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000);
     const hace60Dias = new Date(ahora.getTime() - 60 * 24 * 60 * 60 * 1000);

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Shield, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface AdminGuardProps {
@@ -13,7 +13,7 @@ interface AdminGuardProps {
 }
 
 export function AdminGuard({ children, requireSuperAdmin = false }: AdminGuardProps) {
-  const { user, profile, loading, isAdmin, isSuperAdmin } = useAuth();
+  const { user, loading, isAdmin, isSuperAdmin } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
