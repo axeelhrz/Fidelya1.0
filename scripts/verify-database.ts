@@ -1,7 +1,32 @@
-import { supabase } from '../src/lib/supabase/client'
+import { config } from 'dotenv'
+import { createClient } from '@supabase/supabase-js'
+import { Database } from '../src/lib/supabase/database.types'
+
+// Cargar variables de entorno
+config({ path: '.env.local' })
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('❌ Variables de entorno de Supabase no encontradas')
+  console.log('Verificar que .env.local contenga:')
+  console.log('- NEXT_PUBLIC_SUPABASE_URL')
+  console.log('- NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  process.exit(1)
+}
+
+const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+})
 
 async function verifyDatabase() {
   console.log('🔍 Verificando conexión a Supabase...')
+  console.log(`📍 URL: ${supabaseUrl}`)
   
   try {
     // 1. Verificar conexión básica
@@ -80,22 +105,37 @@ async function verifyDatabase() {
     // 5. Verificar datos de ejemplo
     console.log('\n📊 Verificando datos existentes...')
     
-    const { data: usersCount } = await supabase
+    const { data: usersData, count: usersCount } = await supabase
       .from('users')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact' })
     
-    const { data: menuCount } = await supabase
+    const { data: menuData, count: menuCount } = await supabase
       .from('menu_items')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact' })
     
-    const { data: ordersCount } = await supabase
+    const { data: ordersData, count: ordersCount } = await supabase
       .from('orders')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact' })
     
     console.log(`📈 Estadísticas:`)
-    console.log(`  - Usuarios: ${usersCount?.length || 0}`)
-    console.log(`  - Items de menú: ${menuCount?.length || 0}`)
-    console.log(`  - Pedidos: ${ordersCount?.length || 0}`)
+    console.log(`  - Usuarios: ${usersCount || 0}`)
+    console.log(`  - Items de menú: ${menuCount || 0}`)
+    console.log(`  - Pedidos: ${ordersCount || 0}`)
+    
+    // 6. Mostrar algunos datos de ejemplo si existen
+    if (usersData && usersData.length > 0) {
+      console.log('\n👥 Usuarios existentes:')
+      usersData.slice(0, 3).forEach((user: any) => {
+        console.log(`  - ${user.full_name} (${user.email}) - Rol: ${user.role}`)
+      })
+    }
+    
+    if (menuData && menuData.length > 0) {
+      console.log('\n🍽️ Menús existentes:')
+      menuData.slice(0, 3).forEach((menu: any) => {
+        console.log(`  - ${menu.name} - ${menu.category} - $${menu.price_student}`)
+      })
+    }
     
     return true
     
