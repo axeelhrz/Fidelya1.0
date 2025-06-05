@@ -62,6 +62,7 @@
     "postcss": "^8.5.4",
     "supabase": "^2.22.12",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.4",
     "typescript": "^5"
   }
 }
