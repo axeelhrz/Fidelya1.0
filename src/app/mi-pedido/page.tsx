@@ -4,14 +4,11 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useOrderStore } from '@/store/orderStore'
-import { useWeeklyMenuData } from '@/hooks/useWeeklyMenuData'
-import { OrderService } from '@/services/orderService'
-import { PaymentService } from '@/services/paymentService'
+import { useOrderManagement } from '@/hooks/useOrderManagement'
 import { Navbar } from '@/components/panel/Navbar'
 import { ChildSelector } from '@/components/mi-pedido/ChildSelector'
 import { DaySelector } from '@/components/mi-pedido/DaySelector'
 import { OrderSummary } from '@/components/mi-pedido/OrderSummary'
-import { OrderHeader } from '@/components/mi-pedido/OrderHeader'
 import { PaymentButton } from '@/components/mi-pedido/PaymentButton'
 import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -24,70 +21,40 @@ import {
   CheckCircle, 
   RefreshCw,
   Calendar,
-  Users,
   User as UserIcon,
   Info,
   CalendarDays,
   Utensils,
   CreditCard,
-  ExternalLink
+  ExternalLink,
+  Wifi,
+  Database
 } from 'lucide-react'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
-
-// Helper function to create local date from YYYY-MM-DD string
-function createLocalDate(dateString: string): Date {
-  const [year, month, day] = dateString.split('-').map(Number)
-  return new Date(year, month - 1, day) // month is 0-indexed
-}
 
 export default function MiPedidoPage() {
   const { user, isLoading: authLoading } = useAuth()
   const { 
-    selectionsByChild, 
     setUserType, 
     setChildren,
-    loadExistingSelections,
     clearSelectionsByChild,
     getOrderSummaryByChild
   } = useOrderStore()
 
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
-  const [existingOrder, setExistingOrder] = useState<any>(null)
-  const [isLoadingOrder, setIsLoadingOrder] = useState(true)
-  const [paymentError, setPaymentError] = useState<string | null>(null)
-
-  // Obtener datos del menú semanal desde admin/menus
-  const { weekMenu, isLoading: menuLoading, error: menuError, weekInfo, refetch } = useWeeklyMenuData({ 
-    user,
-    useAdminData: true // Usar datos de admin/menus
-  })
-
-  // Cargar pedido existente
-  useEffect(() => {
-    const loadExistingOrder = async () => {
-      if (!user || !weekInfo) return
-
-      try {
-        setIsLoadingOrder(true)
-        const order = await OrderService.getUserOrder(user.id, weekInfo.weekStart)
-        
-        if (order) {
-          setExistingOrder(order)
-          loadExistingSelections(order.resumenPedido)
-        } else {
-          setExistingOrder(null)
-          clearSelectionsByChild()
-        }
-      } catch (error) {
-        console.error('Error loading existing order:', error)
-      } finally {
-        setIsLoadingOrder(false)
-      }
-    }
-
-    loadExistingOrder()
-  }, [user, weekInfo, loadExistingSelections, clearSelectionsByChild])
+  // Usar el hook unificado de gestión de pedidos
+  const {
+    weekMenu,
+    isLoadingMenu,
+    menuError,
+    weekInfo,
+    existingOrder,
+    isLoadingOrder,
+    orderError,
+    isProcessingPayment,
+    paymentError,
+    refreshMenu,
+    processPayment,
+    clearErrors
+  } = useOrderManagement()
 
   // Configurar tipo de usuario y hijos
   useEffect(() => {
@@ -98,86 +65,6 @@ export default function MiPedidoPage() {
       }
     }
   }, [user, setUserType, setChildren])
-
-  const handleProceedToPayment = async () => {
-    if (!user || !weekInfo) return
-
-    try {
-      setIsProcessingPayment(true)
-      setPaymentError(null)
-      
-      const summary = getOrderSummaryByChild()
-      
-      // Validar pedido
-      const validation = OrderService.validateOrderByChild(
-        summary.selections,
-        weekMenu.map(day => day.date),
-        true, // Siempre permitir pedidos (sin restricción de horario)
-        user
-      )
-
-      if (!validation.isValid) {
-        throw new Error(validation.errors[0])
-      }
-
-      // Crear o actualizar pedido
-      const orderData = {
-        userId: user.id,
-        tipoUsuario: user.tipoUsuario,
-        weekStart: weekInfo.weekStart,
-        resumenPedido: summary.selections,
-        total: summary.total,
-        status: 'pendiente' as const
-      }
-
-      let orderId: string
-      if (existingOrder) {
-        await OrderService.updateOrder(existingOrder.id, orderData)
-        orderId = existingOrder.id
-      } else {
-        orderId = await OrderService.saveOrder(orderData)
-        setExistingOrder({ ...orderData, id: orderId })
-      }
-
-      // Procesar pago con NetGet
-      console.log('Initiating NetGet payment for order:', orderId)
-      
-      const paymentRequest = {
-        amount: summary.total,
-        orderId: orderId,
-        description: `Pedido Casino Escolar - Semana ${weekInfo.weekLabel}`,
-        customerEmail: user.email || user.correo || '',
-        customerName: user.name || user.nombre || `${user.firstName || ''} ${user.lastName || ''}`.trim()
-      }
-
-      console.log('Payment request:', paymentRequest)
-
-      const paymentResponse = await PaymentService.createPayment(paymentRequest)
-      
-      if (paymentResponse.success && paymentResponse.redirectUrl) {
-        console.log('NetGet payment created, redirecting to:', paymentResponse.redirectUrl)
-        
-        // Actualizar pedido con ID de pago
-        await OrderService.updateOrder(orderId, {
-          paymentId: paymentResponse.paymentId,
-          status: 'procesando_pago'
-        })
-
-        // Redirigir a NetGet para completar el pago
-        window.location.href = paymentResponse.redirectUrl
-      } else {
-        throw new Error(paymentResponse.error || 'Error al inicializar el pago')
-      }
-
-    } catch (error) {
-      console.error('Error processing payment:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Error al procesar el pago'
-      setPaymentError(errorMessage)
-      alert(errorMessage)
-    } finally {
-      setIsProcessingPayment(false)
-    }
-  }
 
   const handleLogout = () => {
     clearSelectionsByChild()
@@ -197,10 +84,7 @@ export default function MiPedidoPage() {
     return index >= 5
   })
 
-  console.log('Week days (should be Mon-Fri):', weekDays.map(d => `${d.dayLabel} ${d.date}`))
-  console.log('Weekend days (should be Sat-Sun):', weekendDays.map(d => `${d.dayLabel} ${d.date}`))
-
-  if (authLoading || menuLoading || isLoadingOrder) {
+  if (authLoading || isLoadingMenu || isLoadingOrder) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
         <div className="container mx-auto px-4 py-8 space-y-6">
@@ -252,10 +136,15 @@ export default function MiPedidoPage() {
               <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2">Error al cargar el menú</h2>
               <p className="text-slate-600 dark:text-slate-400 mb-4">{menuError}</p>
-              <Button onClick={refetch} className="gap-2">
-                <RefreshCw className="w-4 h-4" />
-                Reintentar
-              </Button>
+              <div className="flex gap-3 justify-center">
+                <Button onClick={refreshMenu} className="gap-2">
+                  <RefreshCw className="w-4 h-4" />
+                  Reintentar
+                </Button>
+                <Button onClick={clearErrors} variant="outline">
+                  Limpiar Errores
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -283,7 +172,7 @@ export default function MiPedidoPage() {
                 Mi Pedido Semanal
               </h1>
               <p className="text-slate-600 dark:text-slate-400 mt-1">
-                Planifica tus comidas de la semana con menús actualizados
+                Planifica tus comidas con menús actualizados desde Firebase
               </p>
             </div>
           </div>
@@ -296,8 +185,8 @@ export default function MiPedidoPage() {
               </Badge>
               
               <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 px-3 py-1">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                Menús desde Admin
+                <Database className="w-3 h-3 mr-1" />
+                Conectado a Firebase
               </Badge>
 
               {existingOrder?.status === 'pagado' && (
@@ -317,23 +206,23 @@ export default function MiPedidoPage() {
           )}
         </motion.div>
 
-        {/* Información sobre integración */}
+        {/* Información sobre integración con Firebase */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
           <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
-            <Info className="h-4 w-4 text-blue-600" />
+            <Wifi className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-blue-800 dark:text-blue-200">
-              <strong>Menús actualizados:</strong> Los menús se obtienen directamente desde la administración. 
-              Los pagos se procesan de forma segura con NetGet. Puedes hacer pedidos para hoy y días futuros.
+              <strong>Sistema integrado:</strong> Los menús se obtienen en tiempo real desde Firebase. 
+              Los pagos se procesan de forma segura con NetGet. Todos los datos se sincronizan automáticamente.
             </AlertDescription>
           </Alert>
         </motion.div>
 
-        {/* Error de pago */}
-        {paymentError && (
+        {/* Errores de pedido o pago */}
+        {(orderError || paymentError) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -341,11 +230,11 @@ export default function MiPedidoPage() {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="flex items-center justify-between">
-                <span>{paymentError}</span>
+                <span>{orderError || paymentError}</span>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setPaymentError(null)}
+                  onClick={clearErrors}
                   className="ml-4"
                 >
                   Cerrar
@@ -425,16 +314,25 @@ export default function MiPedidoPage() {
                         No hay menús disponibles
                       </h3>
                       <p className="text-slate-600 dark:text-slate-400 mb-4">
-                        El menú para esta semana aún no ha sido publicado por el administrador.
+                        El menú para esta semana aún no ha sido publicado desde Firebase.
                       </p>
-                      <Button
-                        variant="outline"
-                        onClick={() => window.open('/admin/menus', '_blank')}
-                        className="gap-2"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        Ver Panel Admin
-                      </Button>
+                      <div className="flex gap-3 justify-center">
+                        <Button
+                          onClick={refreshMenu}
+                          className="gap-2"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          Actualizar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => window.open('/admin/menus', '_blank')}
+                          className="gap-2"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          Panel Admin
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ) : (
@@ -458,7 +356,7 @@ export default function MiPedidoPage() {
               </div>
 
               {/* Fines de semana */}
-              {weekendDays.length > 0 && (
+              {weekendDays.length > 0 && weekendDays.some(day => day.hasItems) && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-full bg-purple-100 dark:bg-purple-900/30">
@@ -473,7 +371,7 @@ export default function MiPedidoPage() {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {weekendDays.map((dayMenu, index) => (
+                    {weekendDays.filter(day => day.hasItems).map((dayMenu, index) => (
                       <motion.div
                         key={dayMenu.date}
                         initial={{ opacity: 0, y: 20 }}
@@ -502,7 +400,7 @@ export default function MiPedidoPage() {
           >
             <OrderSummary
               user={user}
-              onProceedToPayment={handleProceedToPayment}
+              onProceedToPayment={processPayment}
               isProcessingPayment={isProcessingPayment}
             />
 
@@ -520,7 +418,7 @@ export default function MiPedidoPage() {
                           Pago Seguro con NetGet
                         </h3>
                         <p className="text-sm text-slate-600 dark:text-slate-400">
-                          Procesamiento seguro de pagos
+                          Integrado con Firebase
                         </p>
                       </div>
                     </div>
@@ -529,7 +427,7 @@ export default function MiPedidoPage() {
                       summary={summary}
                       weekDays={weekMenu.map(day => day.date)}
                       isOrderingAllowed={true} // Siempre permitir pedidos
-                      onProceedToPayment={handleProceedToPayment}
+                      onProceedToPayment={processPayment}
                       isProcessingPayment={isProcessingPayment}
                       isReadOnly={isReadOnly}
                       user={user}
@@ -537,8 +435,9 @@ export default function MiPedidoPage() {
 
                     {/* Información adicional sobre el pago */}
                     <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1">
+                      <p>• Datos sincronizados con Firebase en tiempo real</p>
                       <p>• Pago procesado de forma segura con NetGet</p>
-                      <p>• Recibirás confirmación por email</p>
+                      <p>• Confirmación automática por webhook</p>
                       <p>• Soporte para tarjetas de crédito y débito</p>
                     </div>
 
@@ -576,6 +475,12 @@ export default function MiPedidoPage() {
                             ID de pago: {existingOrder.paymentId}
                           </p>
                         )}
+
+                        {existingOrder.id && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            ID de pedido: {existingOrder.id}
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -587,22 +492,34 @@ export default function MiPedidoPage() {
             <Card className="border-slate-200 bg-slate-50/50 dark:bg-slate-800/50 dark:border-slate-700">
               <CardContent className="p-4">
                 <h4 className="font-medium text-slate-900 dark:text-slate-100 mb-2">
-                  ¿Necesitas ayuda?
+                  Sistema Integrado
                 </h4>
                 <div className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                  <p>• Contacta al administrador del casino</p>
-                  <p>• Revisa el estado de tu pedido en tiempo real</p>
-                  <p>• Los menús se actualizan automáticamente</p>
+                  <p>• Menús sincronizados desde Firebase</p>
+                  <p>• Pedidos guardados en tiempo real</p>
+                  <p>• Pagos procesados con NetGet</p>
+                  <p>• Confirmaciones automáticas por webhook</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open('/admin', '_blank')}
-                  className="mt-3 gap-2"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  Panel Administrativo
-                </Button>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open('/admin', '_blank')}
+                    className="gap-2 flex-1"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    Admin
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={refreshMenu}
+                    className="gap-2 flex-1"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    Sync
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -615,18 +532,22 @@ export default function MiPedidoPage() {
           transition={{ delay: 0.7 }}
           className="text-center pt-8 border-t border-slate-200 dark:border-slate-700"
         >
-          <div className="flex items-center justify-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-center gap-6 text-sm text-slate-500 dark:text-slate-400 flex-wrap">
             <div className="flex items-center gap-1">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span>Menús actualizados desde administración</span>
+              <Database className="w-4 h-4 text-blue-500" />
+              <span>Firebase Real-time</span>
             </div>
             <div className="flex items-center gap-1">
-              <CreditCard className="w-4 h-4 text-blue-500" />
-              <span>Pagos seguros con NetGet</span>
+              <CreditCard className="w-4 h-4 text-green-500" />
+              <span>NetGet Payments</span>
             </div>
             <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4 text-orange-500" />
-              <span>Disponible 24/7</span>
+              <Wifi className="w-4 h-4 text-purple-500" />
+              <span>Webhooks Automáticos</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <CheckCircle className="w-4 h-4 text-emerald-500" />
+              <span>Sincronización Completa</span>
             </div>
           </div>
         </motion.div>
@@ -634,4 +555,3 @@ export default function MiPedidoPage() {
     </div>
   )
 }
-
