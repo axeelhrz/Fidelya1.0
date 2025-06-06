@@ -5,8 +5,12 @@ const NETGET_CONFIG = {
   apiUrl: process.env.NEXT_PUBLIC_NETGET_API_URL || 'https://api.netget.cl',
   merchantId: process.env.NEXT_PUBLIC_NETGET_MERCHANT_ID || '',
   secretKey: process.env.NETGET_SECRET_KEY || '',
-  returnUrl: process.env.NEXT_PUBLIC_NETGET_RETURN_URL || `${window.location.origin}/payment/return`,
-  notifyUrl: process.env.NEXT_PUBLIC_NETGET_NOTIFY_URL || `${window.location.origin}/api/payment/notify`
+  returnUrl: typeof window !== 'undefined' 
+    ? `${window.location.origin}/payment/return` 
+    : `${process.env.NEXT_PUBLIC_APP_URL}/payment/return`,
+  notifyUrl: typeof window !== 'undefined' 
+    ? `${window.location.origin}/api/payment/notify` 
+    : `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/notify`
 }
 
 export interface NetGetPaymentRequest {
@@ -53,7 +57,12 @@ export class PaymentService {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || 'Error al crear el pago')
+        console.error('Payment API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData
+        })
+        throw new Error(errorData.message || `Error del servidor: ${response.status}`)
       }
       
       const data: NetGetPaymentResponse = await response.json()
