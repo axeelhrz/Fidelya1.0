@@ -200,7 +200,10 @@ export class AdminMenuService {
         const targetDate = this.getTargetDate(day.date, sourceWeek, targetWeek)
         const targetDayName = format(new Date(targetDate), 'EEEE', { locale: es })
 
-        [...day.almuerzos, ...day.colaciones].forEach(item => {
+        // Combinar almuerzos y colaciones
+        const allItems = [...day.almuerzos, ...day.colaciones]
+        
+        allItems.forEach(item => {
           const newItemRef = doc(menusRef)
           const newItemData = {
             code: item.code,
