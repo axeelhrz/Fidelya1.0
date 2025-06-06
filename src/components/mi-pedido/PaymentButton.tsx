@@ -12,7 +12,8 @@ import {
   Clock,
   Shield,
   Users,
-  User as UserIcon
+  User as UserIcon,
+  Info
 } from 'lucide-react'
 
 interface PaymentButtonProps {
@@ -35,7 +36,7 @@ export function PaymentButton({
   user
 }: PaymentButtonProps) {
   
-  // Validar pedido
+  // Validar pedido con nueva lógica flexible
   const validation = OrderService.validateOrderByChild(
     summary.selections,
     weekDays,
@@ -76,7 +77,16 @@ export function PaymentButton({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Validaciones y errores */}
+        {/* Información sobre pedidos flexibles */}
+        <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800 dark:text-blue-200">
+            <strong>Nuevo:</strong> Ahora puedes pagar con solo 1 almuerzo seleccionado. 
+            No necesitas completar toda la semana.
+          </AlertDescription>
+        </Alert>
+
+        {/* Errores críticos */}
         {validation.errors.length > 0 && (
           <div className="space-y-2">
             {validation.errors.map((error, index) => (
@@ -88,12 +98,12 @@ export function PaymentButton({
           </div>
         )}
 
-        {/* Advertencias */}
+        {/* Advertencias informativas (no bloquean el pago) */}
         {validation.warnings.length > 0 && (
           <div className="space-y-2">
             {validation.warnings.map((warning, index) => (
               <Alert key={index} variant="default" className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
-                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <Info className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 <AlertDescription className="text-amber-800 dark:text-amber-200">
                   {warning}
                 </AlertDescription>
@@ -147,6 +157,17 @@ export function PaymentButton({
           </div>
         )}
 
+        {/* Estado del pedido */}
+        {summary.totalAlmuerzos > 0 && (
+          <Alert className="border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800 dark:text-green-200">
+              ¡Perfecto! Tienes {summary.totalAlmuerzos} almuerzo(s) seleccionado(s). 
+              Puedes proceder con el pago.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Información de seguridad */}
         <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-2 mb-2">
@@ -177,7 +198,7 @@ export function PaymentButton({
               <CreditCard className="w-4 h-4 mr-2" />
               {summary.total > 0 
                 ? `Pagar $${summary.total.toLocaleString('es-CL')}`
-                : 'Selecciona menús para continuar'
+                : 'Selecciona al menos un almuerzo'
               }
             </>
           )}
@@ -190,6 +211,17 @@ export function PaymentButton({
             : 'Al confirmar, estarás realizando tu pedido personal para la semana'
           }
         </p>
+
+        {/* Información sobre flexibilidad */}
+        <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+          <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
+            <p className="font-medium">💡 Pedidos flexibles:</p>
+            <p>• Solo necesitas 1 almuerzo para pagar</p>
+            <p>• Puedes agregar más días después del pago</p>
+            <p>• Las colaciones son opcionales</p>
+            <p>• No necesitas completar toda la semana</p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

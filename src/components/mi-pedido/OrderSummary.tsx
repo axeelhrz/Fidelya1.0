@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useOrderStore } from '@/store/orderStore'
 import { User } from '@/types/panel'
 import { MenuService } from '@/services/menuService'
@@ -15,7 +16,9 @@ import {
   Utensils, 
   Coffee,
   User as UserIcon,
-  Users
+  Users,
+  CheckCircle,
+  Info
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format } from 'date-fns'
@@ -36,6 +39,7 @@ export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: 
 
   const summary = getOrderSummaryByChild()
   const hasSelections = summary.selections.length > 0
+  const hasAlmuerzos = summary.totalAlmuerzos > 0
 
   const handleRemoveSelection = (date: string, childId?: string) => {
     removeSelectionByChild(date, childId)
@@ -86,6 +90,15 @@ export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: 
           </div>
         ) : (
           <>
+            {/* Información sobre pedidos flexibles */}
+            <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+              <Info className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800 dark:text-blue-200">
+                <strong>Pedidos flexibles:</strong> Puedes pagar con solo un almuerzo seleccionado. 
+                Después del pago podrás agregar más días si lo deseas.
+              </AlertDescription>
+            </Alert>
+
             {/* Selecciones agrupadas por hijo */}
             <div className="space-y-4">
               {Object.entries(selectionsByChildGroup).map(([childKey, selections]) => {
@@ -237,18 +250,27 @@ export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: 
 
             {/* Validación y botón de pago */}
             <div className="space-y-3">
-              {summary.totalAlmuerzos === 0 && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                  <p className="text-sm text-amber-800 dark:text-amber-200">
-                    Debes seleccionar al menos un almuerzo para proceder
-                  </p>
-                </div>
+              {/* Mensaje de validación */}
+              {!hasAlmuerzos ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="w-4 h-4" />
+                  <AlertDescription>
+                    Debes seleccionar al menos un almuerzo para proceder con el pago.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert className="border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <AlertDescription className="text-green-800 dark:text-green-200">
+                    ¡Perfecto! Tienes {summary.totalAlmuerzos} almuerzo(s) seleccionado(s). 
+                    Puedes proceder con el pago.
+                  </AlertDescription>
+                </Alert>
               )}
 
               <Button
                 onClick={onProceedToPayment}
-                disabled={summary.totalAlmuerzos === 0 || isProcessingPayment}
+                disabled={!hasAlmuerzos || isProcessingPayment}
                 className="w-full"
                 size="lg"
               >
@@ -260,14 +282,31 @@ export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: 
                 ) : (
                   <>
                     <CreditCard className="w-4 h-4 mr-2" />
-                    Pagar {formatPrice(summary.total)}
+                    {hasAlmuerzos 
+                      ? `Pagar ${formatPrice(summary.total)}`
+                      : 'Selecciona menús para continuar'
+                    }
                   </>
                 )}
               </Button>
 
               <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
-                Al proceder al pago confirmas tu pedido semanal
+                {user.tipoUsuario === 'apoderado' 
+                  ? 'Al confirmar, estarás realizando el pedido para todos los hijos seleccionados'
+                  : 'Al confirmar, estarás realizando tu pedido personal para la semana'
+                }
               </p>
+
+              {/* Información adicional sobre flexibilidad */}
+              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
+                  <p className="font-medium">💡 Pedidos flexibles:</p>
+                  <p>• Puedes pagar con solo 1 almuerzo seleccionado</p>
+                  <p>• Después del pago podrás agregar más días</p>
+                  <p>• Las colaciones son completamente opcionales</p>
+                  <p>• No necesitas completar toda la semana</p>
+                </div>
+              </div>
             </div>
           </>
         )}
