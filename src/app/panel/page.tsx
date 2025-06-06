@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore'
 import { auth, db } from '@/app/lib/firebase'
-import { Header } from '@/components/panel/Header'
+import { Navbar } from '@/components/panel/Navbar'
 import { WeeklyMenu } from '@/components/panel/WeeklyMenu'
 import { OrderSummary } from '@/components/panel/OrderSummary'
 import { useOrderStore } from '@/store/orderStore'
@@ -208,8 +208,8 @@ export default function PanelPage() {
 
   return (
     <div className="panel-container">
-      {/* Header */}
-      <Header user={user} onLogout={handleLogout} />
+      {/* Navbar */}
+      <Navbar onLogout={handleLogout} />
 
       {/* Contenido principal */}
       <div className="panel-content">
