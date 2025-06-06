@@ -2,7 +2,7 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { MenuItem, PRICES, UserType } from '@/types/panel'
 import { DayMenuDisplay, WeekMenuDisplay } from '@/types/menu'
-import { format, startOfWeek, endOfWeek, addDays, isBefore, isToday, isAfter } from 'date-fns'
+import { format, startOfWeek, endOfWeek, addDays, isBefore, isToday, isAfter, isSameDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export class MenuService {
@@ -105,20 +105,27 @@ export class MenuService {
       const daysWithPrices = weekMenu.days.map(day => {
         const dayDate = new Date(day.date)
         const isPastDay = isBefore(dayDate, today) && !isToday(dayDate)
+        const isCurrentDay = isToday(dayDate)
+        const isFutureDay = isAfter(dayDate, today)
+        const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6 // Domingo o Sábado
         
         return {
           ...day,
-          isAvailable: day.hasItems && !isPastDay, // Disponible si tiene items y no es día pasado
+          isAvailable: day.hasItems && !isPastDay && !isWeekend, // Disponible si tiene items, no es día pasado y no es fin de semana
           isPastDay,
+          isCurrentDay,
+          isFutureDay,
+          isWeekend,
+          canOrder: !isPastDay && !isWeekend, // Se puede pedir si no es día pasado y no es fin de semana
           almuerzos: day.almuerzos.map(item => ({
             ...item,
             price: prices.almuerzo,
-            available: item.available && !isPastDay // Item disponible si no es día pasado
+            available: item.available && !isPastDay && !isWeekend
           })),
           colaciones: day.colaciones.map(item => ({
             ...item,
             price: prices.colacion,
-            available: item.available && !isPastDay // Item disponible si no es día pasado
+            available: item.available && !isPastDay && !isWeekend
           }))
         }
       })
@@ -178,9 +185,10 @@ export class MenuService {
   static isDayOrderingAllowed(date: string): boolean {
     const dayDate = new Date(date)
     const today = new Date()
+    const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
     
-    // Permitir pedidos para hoy y días futuros
-    return isToday(dayDate) || isAfter(dayDate, today)
+    // Permitir pedidos para hoy y días futuros, pero no fines de semana
+    return (isToday(dayDate) || isAfter(dayDate, today)) && !isWeekend
   }
 
   private static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
@@ -190,11 +198,12 @@ export class MenuService {
     
     const days: DayMenuDisplay[] = []
     
-    // Crear estructura para cada día de la semana (lunes a viernes)
-    for (let i = 0; i < 5; i++) {
+    // Crear estructura para todos los días de la semana (lunes a domingo)
+    for (let i = 0; i < 7; i++) {
       const currentDate = addDays(startDate, i)
       const dateStr = format(currentDate, 'yyyy-MM-dd')
       const dayName = format(currentDate, 'EEEE', { locale: es })
+      const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6
       
       // Filtrar items por fecha específica
       const dayItems = items.filter(item => item.date === dateStr)
@@ -210,7 +219,8 @@ export class MenuService {
         almuerzos,
         colaciones,
         hasItems: almuerzos.length > 0 || colaciones.length > 0,
-        isAvailable: almuerzos.length > 0 // Disponible si hay al menos un almuerzo
+        isAvailable: (almuerzos.length > 0) && !isWeekend, // Disponible si hay almuerzo y no es fin de semana
+        isWeekend
       })
     }
     

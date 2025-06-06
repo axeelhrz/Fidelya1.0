@@ -9,7 +9,19 @@ import { Button } from '@/components/ui/button'
 import { DayMenuDisplay, MenuItem } from '@/types/menu'
 import { Child, User } from '@/types/panel'
 import { useOrderStore } from '@/store/orderStore'
-import { Utensils, Coffee, Clock, CheckCircle2, Circle, User as UserIcon, AlertCircle } from 'lucide-react'
+import { 
+  Utensils, 
+  Coffee, 
+  Clock, 
+  CheckCircle2, 
+  Circle, 
+  User as UserIcon, 
+  AlertCircle,
+  Calendar,
+  Moon,
+  Sun,
+  Sunset
+} from 'lucide-react'
 import { format, isToday, isBefore, isAfter } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
@@ -25,10 +37,11 @@ interface MenuItemOptionProps {
   isSelected: boolean
   isReadOnly: boolean
   isPastDay: boolean
+  isWeekend: boolean
 }
 
-function MenuItemOption({ item, isSelected, isReadOnly, isPastDay }: MenuItemOptionProps) {
-  const isDisabled = isReadOnly || !item.available || isPastDay
+function MenuItemOption({ item, isSelected, isReadOnly, isPastDay, isWeekend }: MenuItemOptionProps) {
+  const isDisabled = isReadOnly || !item.available || isPastDay || isWeekend
 
   return (
     <div className="flex items-center space-x-3">
@@ -57,11 +70,6 @@ function MenuItemOption({ item, isSelected, isReadOnly, isPastDay }: MenuItemOpt
               {isSelected && (
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               )}
-              {isPastDay && (
-                <Badge variant="secondary" className="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
-                  Día pasado
-                </Badge>
-              )}
             </div>
             <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
               ${item.price.toLocaleString('es-CL')}
@@ -72,11 +80,8 @@ function MenuItemOption({ item, isSelected, isReadOnly, isPastDay }: MenuItemOpt
               {item.description}
             </p>
           )}
-          {!item.available && !isPastDay && (
+          {!item.available && !isPastDay && !isWeekend && (
             <p className="text-xs text-red-500">No disponible</p>
-          )}
-          {isPastDay && (
-            <p className="text-xs text-red-500">No se pueden hacer pedidos para días pasados</p>
           )}
         </div>
       </Label>
@@ -92,12 +97,13 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
     children 
   } = useOrderStore()
 
-  // Verificar si es día pasado
+  // Verificar el estado del día
   const dayDate = new Date(dayMenu.date)
   const today = new Date()
-  const isTodayCheck = isToday(dayDate)
-  const isPastDay = isBefore(dayDate, today) && !isTodayCheck
+  const isPastDay = isBefore(dayDate, today) && !isToday(dayDate)
+  const isCurrentDay = isToday(dayDate)
   const isFutureDay = isAfter(dayDate, today)
+  const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
 
   // Obtener selecciones actuales para este día y hijo
   const getCurrentSelection = () => {
@@ -115,7 +121,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
   const selectedColacion = currentSelection?.colacion?.id || ''
 
   const handleAlmuerzoChange = (itemId: string) => {
-    if (isReadOnly || isPastDay) return
+    if (isReadOnly || isPastDay || isWeekend) return
     
     const selectedItem = dayMenu.almuerzos.find(item => item.id === itemId)
     const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
@@ -129,7 +135,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
   }
 
   const handleColacionChange = (itemId: string) => {
-    if (isReadOnly || isPastDay) return
+    if (isReadOnly || isPastDay || isWeekend) return
     
     const selectedItem = dayMenu.colaciones.find(item => item.id === itemId)
     const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
@@ -143,31 +149,82 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
   }
 
   const removeAlmuerzo = () => {
-    if (isReadOnly || isPastDay) return
+    if (isReadOnly || isPastDay || isWeekend) return
     
     const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
     updateSelectionByChild(dayMenu.date, 'almuerzo', undefined, targetChild)
   }
 
   const removeColacion = () => {
-    if (isReadOnly || isPastDay) return
+    if (isReadOnly || isPastDay || isWeekend) return
     
     const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
     updateSelectionByChild(dayMenu.date, 'colacion', undefined, targetChild)
   }
 
   // Para apoderados, verificar que haya un hijo seleccionado
-  const canMakeSelection = (user.tipoUsuario === 'funcionario' || currentChild) && !isPastDay
+  const canMakeSelection = (user.tipoUsuario === 'funcionario' || currentChild) && !isPastDay && !isWeekend
 
-  // Determinar el color del card según el estado del día
+  // Determinar el color y estilo del card según el estado del día
   const getCardClassName = () => {
     if (isPastDay) {
-      return "h-full opacity-60 bg-slate-50 dark:bg-slate-900/50"
+      return "h-full opacity-60 bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700"
     }
-    if (isTodayCheck) {
-      return "h-full border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-900/10"
+    if (isWeekend) {
+      return "h-full bg-purple-50/50 dark:bg-purple-900/10 border-purple-200 dark:border-purple-800"
     }
-    return "h-full"
+    if (isCurrentDay) {
+      return "h-full border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 shadow-lg ring-2 ring-blue-200 dark:ring-blue-800"
+    }
+    if (currentSelection) {
+      return "h-full border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20"
+    }
+    return "h-full hover:shadow-md transition-shadow duration-200"
+  }
+
+  // Obtener icono según el día
+  const getDayIcon = () => {
+    if (isPastDay) return <Clock className="w-4 h-4" />
+    if (isCurrentDay) return <Sun className="w-4 h-4" />
+    if (isWeekend) return <Moon className="w-4 h-4" />
+    return <Calendar className="w-4 h-4" />
+  }
+
+  // Obtener badge del estado
+  const getDayStatusBadge = () => {
+    if (isPastDay) {
+      return (
+        <Badge variant="secondary" className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          <Clock className="w-3 h-3 mr-1" />
+          Pasado
+        </Badge>
+      )
+    }
+    if (isWeekend) {
+      return (
+        <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+          <Moon className="w-3 h-3 mr-1" />
+          Fin de semana
+        </Badge>
+      )
+    }
+    if (isCurrentDay) {
+      return (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+          <Sun className="w-3 h-3 mr-1" />
+          Hoy
+        </Badge>
+      )
+    }
+    if (isFutureDay && dayMenu.hasItems) {
+      return (
+        <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800">
+          <CheckCircle2 className="w-3 h-3 mr-1" />
+          Disponible
+        </Badge>
+      )
+    }
+    return null
   }
 
   return (
@@ -175,43 +232,32 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="capitalize">{dayMenu.dayLabel}</span>
-            <Badge variant="outline" className="text-xs">
+            {getDayIcon()}
+            <span className="capitalize font-bold">{dayMenu.dayLabel}</span>
+            <Badge variant="outline" className="text-xs font-medium">
               {format(new Date(dayMenu.date), 'd MMM', { locale: es })}
             </Badge>
-            {isPastDay && (
-              <Badge variant="secondary" className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
-                <Clock className="w-3 h-3 mr-1" />
-                Pasado
-              </Badge>
-            )}
-            {isTodayCheck && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                Hoy
-              </Badge>
-            )}
-            {isFutureDay && (
-              <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                Disponible
+          </div>
+          <div className="flex items-center gap-2">
+            {getDayStatusBadge()}
+            {currentSelection && (
+              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                Seleccionado
               </Badge>
             )}
           </div>
-          {currentSelection && (
-            <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-              Seleccionado
-            </Badge>
-          )}
         </CardTitle>
         
         {/* Mostrar para qué hijo es la selección */}
-        {user.tipoUsuario === 'apoderado' && currentChild && (
+        {user.tipoUsuario === 'apoderado' && currentChild && !isWeekend && (
           <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
             <UserIcon className="w-4 h-4" />
             <span>Pedido para: <strong>{currentChild.name}</strong></span>
           </div>
         )}
         
-        {user.tipoUsuario === 'funcionario' && (
+        {user.tipoUsuario === 'funcionario' && !isWeekend && (
           <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
             <UserIcon className="w-4 h-4" />
             <span>Pedido personal</span>
@@ -220,7 +266,15 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {!canMakeSelection && !isPastDay ? (
+        {isWeekend ? (
+          <div className="text-center py-8 text-purple-600 dark:text-purple-400">
+            <Moon className="w-12 h-12 mx-auto mb-3 opacity-60" />
+            <h3 className="font-medium text-lg mb-2">Fin de Semana</h3>
+            <p className="text-sm opacity-80">
+              No hay servicio de casino los fines de semana
+            </p>
+          </div>
+        ) : !canMakeSelection && !isPastDay ? (
           <div className="text-center py-8 text-slate-500 dark:text-slate-400">
             <UserIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>Selecciona un hijo para hacer el pedido</p>
@@ -230,9 +284,15 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
             <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>No se pueden hacer pedidos para días pasados</p>
             {currentSelection && (
-              <p className="text-xs mt-2">
-                Tienes un pedido existente para este día
-              </p>
+              <div className="mt-4 p-3 rounded-lg bg-slate-100 dark:bg-slate-800">
+                <p className="text-xs font-medium mb-2">Pedido existente:</p>
+                {currentSelection.almuerzo && (
+                  <p className="text-xs">• {currentSelection.almuerzo.name}</p>
+                )}
+                {currentSelection.colacion && (
+                  <p className="text-xs">• {currentSelection.colacion.name}</p>
+                )}
+              </div>
             )}
           </div>
         ) : !dayMenu.isAvailable ? (
@@ -251,7 +311,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
                     Almuerzo <span className="text-red-500">*</span>
                   </h4>
                 </div>
-                {selectedAlmuerzo && !isReadOnly && !isPastDay && (
+                {selectedAlmuerzo && !isReadOnly && !isPastDay && !isWeekend && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -267,7 +327,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
                 <RadioGroup
                   value={selectedAlmuerzo || ''}
                   onValueChange={handleAlmuerzoChange}
-                  disabled={isReadOnly || isPastDay}
+                  disabled={isReadOnly || isPastDay || isWeekend}
                   className="space-y-2"
                 >
                   {dayMenu.almuerzos.map((item) => (
@@ -277,6 +337,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
                       isSelected={selectedAlmuerzo === item.id}
                       isReadOnly={isReadOnly}
                       isPastDay={isPastDay}
+                      isWeekend={isWeekend}
                     />
                   ))}
                 </RadioGroup>
@@ -296,7 +357,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
                     Colación
                   </h4>
                 </div>
-                {selectedColacion && !isReadOnly && !isPastDay && (
+                {selectedColacion && !isReadOnly && !isPastDay && !isWeekend && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -312,7 +373,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
                 <RadioGroup
                   value={selectedColacion || ''}
                   onValueChange={handleColacionChange}
-                  disabled={isReadOnly || isPastDay}
+                  disabled={isReadOnly || isPastDay || isWeekend}
                   className="space-y-2"
                 >
                   {dayMenu.colaciones.map((item) => (
@@ -322,6 +383,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
                       isSelected={selectedColacion === item.id}
                       isReadOnly={isReadOnly}
                       isPastDay={isPastDay}
+                      isWeekend={isWeekend}
                     />
                   ))}
                 </RadioGroup>
@@ -335,53 +397,76 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
             {/* Resumen del día */}
             {(selectedAlmuerzo || selectedColacion) && (
               <div className={cn(
-                "mt-4 p-3 rounded-lg border",
+                "mt-4 p-4 rounded-lg border",
                 isPastDay 
                   ? "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
-                  : "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+                  : isCurrentDay
+                  ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+                  : "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
               )}>
                 <h5 className={cn(
-                  "text-sm font-medium mb-2",
+                  "text-sm font-medium mb-3 flex items-center gap-2",
                   isPastDay 
                     ? "text-slate-700 dark:text-slate-300"
-                    : "text-blue-900 dark:text-blue-100"
+                    : isCurrentDay
+                    ? "text-blue-900 dark:text-blue-100"
+                    : "text-emerald-900 dark:text-emerald-100"
                 )}>
+                  <CheckCircle2 className="w-4 h-4" />
                   Resumen del día
                 </h5>
-                <div className="space-y-1 text-sm">
+                <div className="space-y-2 text-sm">
                   {selectedAlmuerzo && (
                     <div className={cn(
-                      "flex justify-between",
+                      "flex justify-between items-center",
                       isPastDay 
                         ? "text-slate-600 dark:text-slate-400"
-                        : "text-blue-800 dark:text-blue-200"
+                        : isCurrentDay
+                        ? "text-blue-800 dark:text-blue-200"
+                        : "text-emerald-800 dark:text-emerald-200"
                     )}>
-                      <span>Almuerzo</span>
-                      <span>${dayMenu.almuerzos.find(a => a.id === selectedAlmuerzo)?.price.toLocaleString('es-CL')}</span>
+                      <div className="flex items-center gap-2">
+                        <Utensils className="w-3 h-3" />
+                        <span>Almuerzo</span>
+                      </div>
+                      <span className="font-medium">
+                        ${dayMenu.almuerzos.find(a => a.id === selectedAlmuerzo)?.price.toLocaleString('es-CL')}
+                      </span>
                     </div>
                   )}
                   {selectedColacion && (
                     <div className={cn(
-                      "flex justify-between",
+                      "flex justify-between items-center",
                       isPastDay 
                         ? "text-slate-600 dark:text-slate-400"
-                        : "text-blue-800 dark:text-blue-200"
+                        : isCurrentDay
+                        ? "text-blue-800 dark:text-blue-200"
+                        : "text-emerald-800 dark:text-emerald-200"
                     )}>
-                      <span>Colación</span>
-                      <span>${dayMenu.colaciones.find(c => c.id === selectedColacion)?.price.toLocaleString('es-CL')}</span>
+                      <div className="flex items-center gap-2">
+                        <Coffee className="w-3 h-3" />
+                        <span>Colación</span>
+                      </div>
+                      <span className="font-medium">
+                        ${dayMenu.colaciones.find(c => c.id === selectedColacion)?.price.toLocaleString('es-CL')}
+                      </span>
                     </div>
                   )}
                   <div className={cn(
-                    "border-t pt-1 mt-2",
+                    "border-t pt-2 mt-3",
                     isPastDay 
                       ? "border-slate-200 dark:border-slate-700"
-                      : "border-blue-200 dark:border-blue-700"
+                      : isCurrentDay
+                      ? "border-blue-200 dark:border-blue-700"
+                      : "border-emerald-200 dark:border-emerald-700"
                   )}>
                     <div className={cn(
-                      "flex justify-between font-medium",
+                      "flex justify-between font-semibold",
                       isPastDay 
                         ? "text-slate-700 dark:text-slate-300"
-                        : "text-blue-900 dark:text-blue-100"
+                        : isCurrentDay
+                        ? "text-blue-900 dark:text-blue-100"
+                        : "text-emerald-900 dark:text-emerald-100"
                     )}>
                       <span>Total día</span>
                       <span>
