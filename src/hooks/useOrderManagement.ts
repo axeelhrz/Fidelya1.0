@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useOrderStore } from '@/store/orderStore'
 import { OrderService } from '@/services/orderService'
 import { OrderState, OrderValidation } from '@/types/order'
-import { OrderSelection, User } from '@/types/panel'
+import { User } from '@/types/panel'
 
 interface UseOrderManagementProps {
   user: User | null
@@ -30,10 +30,8 @@ export function useOrderManagement({
 
   const { 
     selections, 
-    userType, 
     setUserType, 
     updateSelection, 
-    clearSelections, 
     getOrderSummary 
   } = useOrderStore()
 

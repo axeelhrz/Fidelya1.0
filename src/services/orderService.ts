@@ -2,17 +2,15 @@ import {
   collection, 
   doc, 
   getDocs, 
-  getDoc, 
   addDoc, 
   updateDoc, 
   query, 
   where, 
-  orderBy,
   Timestamp 
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { OrderState, OrderValidation } from '@/types/order'
-import { OrderSelection, User } from '@/types/panel'
+import { OrderSelection } from '@/types/panel'
 
 export class OrderService {
   static async getUserOrder(userId: string, weekStart: string): Promise<OrderState | null> {
@@ -73,13 +71,14 @@ export class OrderService {
     try {
       const orderRef = doc(db, 'orders', orderId)
       
-      const updateData = {
-        ...updates,
+      const { paidAt, ...restUpdates } = updates
+      const updateData: any = {
+        ...restUpdates,
         updatedAt: Timestamp.now()
       }
       
-      if (updates.paidAt) {
-        updateData.paidAt = Timestamp.fromDate(updates.paidAt)
+      if (paidAt) {
+        updateData.paidAt = Timestamp.fromDate(paidAt)
       }
       
       await updateDoc(orderRef, updateData)

@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Calendar, Clock, CheckCircle2, Circle } from 'lucide-react'
 import { DayMenu, MenuItem } from '@/types/panel'
 import { useOrderStore } from '@/store/orderStore'
@@ -124,7 +123,6 @@ export function WeeklyMenu({ weekMenu, isLoading }: WeeklyMenuProps) {
                           item={item}
                           isSelected={selection?.almuerzo?.id === item.id}
                           onSelect={() => handleMenuSelection(dayMenu.date, 'almuerzo', item)}
-                          type="almuerzo"
                         />
                       ))}
                     </div>
@@ -142,7 +140,6 @@ export function WeeklyMenu({ weekMenu, isLoading }: WeeklyMenuProps) {
                           item={item}
                           isSelected={selection?.colacion?.id === item.id}
                           onSelect={() => handleMenuSelection(dayMenu.date, 'colacion', item)}
-                          type="colacion"
                         />
                       ))}
                     </div>
@@ -161,13 +158,11 @@ interface MenuItemCardProps {
   item: MenuItem
   isSelected: boolean
   onSelect: () => void
-  type: 'almuerzo' | 'colacion'
 }
 
-function MenuItemCard({ item, isSelected, onSelect, type }: MenuItemCardProps) {
+function MenuItemCard({ item, isSelected, onSelect }: MenuItemCardProps) {
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onSelect}
       className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${

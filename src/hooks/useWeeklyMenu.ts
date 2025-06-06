@@ -5,7 +5,7 @@ import { collection, query, where, orderBy, getDocs } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { DayMenuDisplay, MenuLoadingState, MenuError } from '@/types/menu'
 import { MenuItem } from '@/types/panel'
-import { startOfWeek, endOfWeek, format, addDays, parseISO } from 'date-fns'
+import { startOfWeek, endOfWeek, format, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 interface UseWeeklyMenuReturn {

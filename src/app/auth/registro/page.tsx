@@ -182,11 +182,12 @@ export default function RegistroPage() {
       // Registro exitoso, redirigir al panel
       router.push('/panel')
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al registrar usuario:', error)
       
       // Manejar diferentes tipos de errores de Firebase
-      switch (error.code) {
+      const firebaseError = error as { code?: string }
+      switch (firebaseError.code) {
         case 'auth/email-already-in-use':
           setError('Ya existe una cuenta con este correo electrónico.')
           break

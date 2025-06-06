@@ -72,7 +72,7 @@ export function MenuHeader({ weekRange, isLoading, onRefresh }: MenuHeaderProps)
       <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
         <p className="text-sm text-blue-800 dark:text-blue-300 text-clean">
           Consulta el menú disponible para esta semana. Los precios pueden variar según tu tipo de usuario.
-          Para realizar pedidos, dirígete a la sección "Mi Pedido" desde el panel principal.
+          Para realizar pedidos, dirígete a la sección &ldquo;Mi Pedido&rdquo; desde el panel principal.
         </p>
       </div>
     </motion.div>

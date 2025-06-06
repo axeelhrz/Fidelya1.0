@@ -15,7 +15,7 @@ import { OrderSummary } from '@/components/panel/OrderSummary'
 import { useDashboardData } from '@/hooks/useDashboardData'
 import { useOrderStore } from '@/store/orderStore'
 import { DayMenu } from '@/types/panel'
-import { startOfWeek, endOfWeek, format, addDays } from 'date-fns'
+import { startOfWeek, format, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { collection, addDoc } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
@@ -136,7 +136,7 @@ export default function PanelPage() {
         createdAt: new Date()
       }
 
-      const orderRef = await addDoc(collection(db, 'orders'), orderData)
+      await addDoc(collection(db, 'orders'), orderData)
       
       // Simular proceso de pago
       await new Promise(resolve => setTimeout(resolve, 2000))

@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import { Clock, DollarSign, AlertCircle, CheckCircle } from 'lucide-react'
+import { DollarSign, AlertCircle, CheckCircle } from 'lucide-react'
 import { MenuItemDisplay } from '@/types/menu'
 
 interface MenuItemCardProps {

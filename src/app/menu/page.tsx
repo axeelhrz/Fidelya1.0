@@ -247,7 +247,7 @@ export default function MenuPage() {
                   </div>
                   <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                     <p className="text-xs text-amber-800 dark:text-amber-300 text-clean">
-                      Para realizar pedidos, dirígete a "Mi Pedido"
+                      Para realizar pedidos, dirígete a &quot;Mi Pedido&quot;
                     </p>
                   </div>
                 </div>
