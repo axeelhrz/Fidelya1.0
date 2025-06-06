@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
@@ -16,67 +15,189 @@ export default function HomePage() {
     return null;
   }
 
+  const buttonBaseStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '16px 32px',
+    fontSize: '16px',
+    fontWeight: '500',
+    borderRadius: '12px',
+    textDecoration: 'none',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+    border: 'none',
+    minWidth: '160px',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  };
+
+  const primaryButtonStyle = {
+    ...buttonBaseStyle,
+    backgroundColor: '#1e293b',
+    color: 'white',
+    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+  };
+
+  const secondaryButtonStyle = {
+    ...buttonBaseStyle,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    color: '#374151',
+    border: '2px solid #e5e7eb',
+    backdropFilter: 'blur(8px)',
+  };
+
+  const containerStyle = {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #f1f5f9 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative' as const,
+    overflow: 'hidden',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    WebkitFontSmoothing: 'antialiased',
+    MozOsxFontSmoothing: 'grayscale',
+  };
+
+  const contentStyle = {
+    position: 'relative' as const,
+    zIndex: 10,
+    textAlign: 'center' as const,
+    padding: '0 24px',
+    maxWidth: '512px',
+    margin: '0 auto',
+  };
+
+  const titleStyle = {
+    fontSize: 'clamp(3rem, 8vw, 5rem)',
+    fontWeight: '300',
+    color: '#1e293b',
+    marginBottom: '8px',
+    letterSpacing: '-0.02em',
+    lineHeight: '1',
+  };
+
+  const subtitleStyle = {
+    fontSize: 'clamp(2rem, 6vw, 3.5rem)',
+    fontWeight: '300',
+    color: '#059669',
+    letterSpacing: '-0.02em',
+    lineHeight: '1',
+    marginBottom: '32px',
+  };
+
+  const descriptionStyle = {
+    fontSize: 'clamp(1rem, 2vw, 1.25rem)',
+    color: '#64748b',
+    fontWeight: '300',
+    lineHeight: '1.6',
+    maxWidth: '400px',
+    margin: '0 auto 48px auto',
+  };
+
+  const buttonsContainerStyle = {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '16px',
+    alignItems: 'center',
+    marginBottom: '64px',
+  };
+
+  const separatorStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '32px 0',
+  };
+
+  const lineStyle = {
+    width: '64px',
+    height: '1px',
+    background: 'linear-gradient(to right, transparent, #cbd5e1, transparent)',
+  };
+
+  const dotStyle = {
+    width: '8px',
+    height: '8px',
+    backgroundColor: '#10b981',
+    borderRadius: '50%',
+    margin: '0 16px',
+    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+  };
+
+  const footerStyle = {
+    fontSize: '14px',
+    color: '#94a3b8',
+    fontWeight: '300',
+    letterSpacing: '0.5px',
+  };
+
+  const footerDotsStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '12px',
+  };
+
+  const footerDotStyle = {
+    width: '4px',
+    height: '4px',
+    backgroundColor: '#cbd5e1',
+    borderRadius: '50%',
+  };
+
+  const backgroundElementStyle = {
+    position: 'absolute' as const,
+    top: '25%',
+    right: '25%',
+    width: '384px',
+    height: '384px',
+    background: 'linear-gradient(135deg, rgba(236, 253, 245, 0.3), rgba(219, 234, 254, 0.3))',
+    borderRadius: '50%',
+    filter: 'blur(48px)',
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center relative overflow-hidden font-sans antialiased">
-      {/* Elementos de fondo sutiles */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Acento geométrico minimalista */}
-        <motion.div
-          className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-emerald-50/30 to-blue-50/30 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        
-        {/* Patrón de puntos sutil */}
-        <div 
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23334155' fill-opacity='1'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        />
-      </div>
+    <div style={containerStyle}>
+      {/* Elemento de fondo */}
+      <motion.div
+        style={backgroundElementStyle}
+        animate={{
+          scale: [1, 1.1, 1],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
 
       {/* Contenido principal */}
-      <div className="relative z-10 text-center px-6 max-w-2xl mx-auto">
-        {/* Logo/Título */}
+      <div style={contentStyle}>
+        {/* Título */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-16"
         >
-          {/* Título principal */}
-          <div className="mb-8">
-            <h1 className="text-6xl md:text-7xl lg:text-8xl font-light text-slate-800 mb-2 tracking-tight leading-none">
-              Casino
-            </h1>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-emerald-600 tracking-tight leading-none">
-              Escolar
-            </h2>
-          </div>
+          <h1 style={titleStyle}>Casino</h1>
+          <h2 style={subtitleStyle}>Escolar</h2>
           
-          {/* Separador elegante */}
+          {/* Separador */}
           <motion.div
-            className="flex items-center justify-center mb-8"
+            style={separatorStyle}
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
-            <div className="mx-4 w-2 h-2 bg-emerald-500 rounded-full shadow-sm" />
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+            <div style={lineStyle} />
+            <div style={dotStyle} />
+            <div style={lineStyle} />
           </motion.div>
 
-          {/* Subtítulo */}
           <motion.p
-            className="text-lg md:text-xl text-slate-600 font-light leading-relaxed max-w-lg mx-auto"
+            style={descriptionStyle}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
@@ -85,82 +206,62 @@ export default function HomePage() {
           </motion.p>
         </motion.div>
 
-        {/* Botones de acción */}
+        {/* Botones */}
         <motion.div
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
+          style={buttonsContainerStyle}
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
         >
-          {/* Botón Iniciar Sesión */}
-          <Link href="/auth/sign-in">
+          <Link href="/auth/sign-in" style={{ textDecoration: 'none' }}>
             <motion.button
-              whileHover={{ y: -2, scale: 1.02 }}
+              style={primaryButtonStyle}
+              whileHover={{ 
+                y: -2, 
+                scale: 1.02,
+                backgroundColor: '#334155',
+                boxShadow: '0 15px 35px rgba(0, 0, 0, 0.15)'
+              }}
               whileTap={{ scale: 0.98 }}
-              className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-xl
-                         bg-slate-800 text-white hover:bg-slate-700
-                         shadow-lg hover:shadow-xl
-                         transition-all duration-300 ease-out
-                         focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2
-                         transform hover:-translate-y-0.5
-                         min-w-[160px]"
             >
               Iniciar Sesión
             </motion.button>
           </Link>
 
-          {/* Botón Crear Cuenta */}
-          <Link href="/auth/sign-up">
+          <Link href="/auth/sign-up" style={{ textDecoration: 'none' }}>
             <motion.button
-              whileHover={{ y: -2, scale: 1.02 }}
+              style={secondaryButtonStyle}
+              whileHover={{ 
+                y: -2, 
+                scale: 1.02,
+                borderColor: '#10b981',
+                color: '#059669',
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                boxShadow: '0 15px 35px rgba(0, 0, 0, 0.1)'
+              }}
               whileTap={{ scale: 0.98 }}
-              className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-xl
-                         bg-white/80 backdrop-blur-sm text-slate-700 
-                         border-2 border-slate-200 hover:border-emerald-300 
-                         hover:text-emerald-600 hover:bg-white
-                         shadow-md hover:shadow-lg
-                         transition-all duration-300 ease-out
-                         focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
-                         transform hover:-translate-y-0.5
-                         min-w-[160px]"
             >
               Crear Cuenta
             </motion.button>
           </Link>
         </motion.div>
 
-        {/* Footer minimalista */}
+        {/* Footer */}
         <motion.div
-          className="text-sm text-slate-400 font-light tracking-wide"
+          style={footerStyle}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.2 }}
         >
-          <div className="flex items-center justify-center space-x-3">
+          <div style={footerDotsStyle}>
             <span>Nutrición</span>
-            <div className="w-1 h-1 bg-slate-300 rounded-full" />
+            <div style={footerDotStyle} />
             <span>Organización</span>
-            <div className="w-1 h-1 bg-slate-300 rounded-full" />
+            <div style={footerDotStyle} />
             <span>Bienestar</span>
           </div>
         </motion.div>
       </div>
-
-      {/* Elemento decorativo adicional */}
-      <motion.div
-        className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, delay: 1.5 }}
-      >
-        <motion.div
-          className="w-6 h-6 border-2 border-slate-300 rounded-full flex items-center justify-center"
-          animate={{ y: [0, -8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <div className="w-1 h-1 bg-slate-400 rounded-full" />
-        </motion.div>
-      </motion.div>
     </div>
   );
 }
