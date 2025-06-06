@@ -1,16 +1,9 @@
 "use client"
 import { motion } from 'framer-motion'
-import { Plus, Calendar, Eye, MoreVertical, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Plus, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu'
 import { AdminDayMenu, AdminMenuItem } from '@/types/adminMenu'
 import { MenuItemCard } from './MenuItemCard'
 import { getEmptyDayMessage } from '@/lib/adminMenuUtils'
@@ -20,9 +13,7 @@ interface DayMenuContainerProps {
   onAddItem: (type: 'almuerzo' | 'colacion') => void
   onEditItem: (item: AdminMenuItem) => void
   onDeleteItem: (item: AdminMenuItem) => void
-  onBulkToggleActive?: (dayDate: string, type: 'almuerzo' | 'colacion', active: boolean) => void
   isLoading?: boolean
-  showUserPreview?: boolean
 }
 
 export function DayMenuContainer({ 
@@ -30,19 +21,10 @@ export function DayMenuContainer({
   onAddItem, 
   onEditItem, 
   onDeleteItem,
-  onBulkToggleActive,
-  isLoading = false,
-  showUserPreview = false
+  isLoading = false 
 }: DayMenuContainerProps) {
   const totalItems = dayMenu.almuerzos.length + dayMenu.colaciones.length
   const activeItems = [...dayMenu.almuerzos, ...dayMenu.colaciones].filter(item => item.active).length
-  const completionPercentage = totalItems > 0 ? Math.round((activeItems / totalItems) * 100) : 0
-
-  const handleBulkToggle = (type: 'almuerzo' | 'colacion', active: boolean) => {
-    if (onBulkToggleActive) {
-      onBulkToggleActive(dayMenu.date, type, active)
-    }
-  }
 
   return (
     <motion.div
@@ -50,125 +32,51 @@ export function DayMenuContainer({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className={`bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full transition-all duration-300 hover:shadow-lg ${showUserPreview ? 'ring-2 ring-blue-200 dark:ring-blue-800' : ''}`}>
-        <CardHeader className="pb-4">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full">
+        <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                <Calendar className="w-4 h-4 text-white" />
+            <div className="flex items-center space-x-2">
+              <div className="p-1.5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+                <Calendar className="w-3 h-3 text-white" />
               </div>
               <div>
-                <CardTitle className="text-lg font-semibold text-slate-900 dark:text-white capitalize">
+                <CardTitle className="text-sm font-semibold text-slate-900 dark:text-white capitalize">
                   {dayMenu.dayName}
                 </CardTitle>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   {dayMenu.date}
                 </p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
-              {showUserPreview && (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300">
-                  <Eye className="w-3 h-3 mr-1" />
-                  Vista Usuario
-                </Badge>
-              )}
-              
-              {totalItems > 0 && (
-                <>
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
-                  >
-                    {totalItems} items
-                  </Badge>
-                  <Badge 
-                    variant="secondary" 
-                    className={`${completionPercentage === 100 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'}`}
-                  >
-                    {completionPercentage}% activo
-                  </Badge>
-                </>
-              )}
-
-              {/* Dropdown Menu for Bulk Actions */}
-              {totalItems > 0 && onBulkToggleActive && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleBulkToggle('almuerzo', true)}>
-                      <ToggleRight className="mr-2 h-4 w-4" />
-                      Activar todos los almuerzos
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleBulkToggle('almuerzo', false)}>
-                      <ToggleLeft className="mr-2 h-4 w-4" />
-                      Desactivar todos los almuerzos
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleBulkToggle('colacion', true)}>
-                      <ToggleRight className="mr-2 h-4 w-4" />
-                      Activar todas las colaciones
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleBulkToggle('colacion', false)}>
-                      <ToggleLeft className="mr-2 h-4 w-4" />
-                      Desactivar todas las colaciones
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
+            {totalItems > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {activeItems}/{totalItems}
+              </Badge>
+            )}
           </div>
-
-          {/* Progress Bar */}
-          {totalItems > 0 && (
-            <div className="mt-3">
-              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
-                <span>Completado</span>
-                <span>{activeItems}/{totalItems}</span>
-              </div>
-              <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    completionPercentage === 100 
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
-                      : 'bg-gradient-to-r from-blue-500 to-purple-500'
-                  }`}
-                  style={{ width: `${completionPercentage}%` }}
-                />
-              </div>
-            </div>
-          )}
         </CardHeader>
-                  <CardContent className="space-y-6">
+
+        <CardContent className="space-y-4">
           {/* Sección de Almuerzos */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide flex items-center space-x-2">
-                <span>Almuerzos ({dayMenu.almuerzos.length})</span>
-                {dayMenu.almuerzos.length > 0 && (
-                  <Badge variant="outline" className="text-xs">
-                    {dayMenu.almuerzos.filter(item => item.active).length} activos
-                  </Badge>
-                )}
+              <h3 className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase">
+                Almuerzos ({dayMenu.almuerzos.length})
               </h3>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onAddItem('almuerzo')}
                 disabled={isLoading || !dayMenu.isEditable}
-                className="flex items-center space-x-1 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                className="h-6 px-2 text-xs"
               >
-                <Plus className="w-3 h-3" />
-                <span>Agregar</span>
+                <Plus className="w-3 h-3 mr-1" />
+                Agregar
               </Button>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               {dayMenu.almuerzos.length > 0 ? (
                 dayMenu.almuerzos.map((item, index) => (
                   <MenuItemCard
@@ -177,56 +85,47 @@ export function DayMenuContainer({
                     onEdit={onEditItem}
                     onDelete={onDeleteItem}
                     isLoading={isLoading}
-                    showUserPreview={showUserPreview}
                   />
                 ))
               ) : (
-                <div className="p-4 border-2 border-dashed border-blue-200 dark:border-blue-800 rounded-lg text-center bg-blue-50/50 dark:bg-blue-900/10">
-                  <p className="text-sm text-blue-600 dark:text-blue-400">
-                    {getEmptyDayMessage('almuerzo')}
+                <div className="p-2 border border-dashed border-blue-200 dark:border-blue-800 rounded text-center">
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">
+                    Sin almuerzos
                   </p>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => onAddItem('almuerzo')}
                     disabled={isLoading || !dayMenu.isEditable}
-                    className="mt-2 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                    className="h-6 px-2 text-xs"
                   >
                     <Plus className="w-3 h-3 mr-1" />
-                    Agregar primer almuerzo
+                    Agregar
                   </Button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Separador */}
-          <div className="border-t border-slate-200 dark:border-slate-700"></div>
-
           {/* Sección de Colaciones */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide flex items-center space-x-2">
-                <span>Colaciones ({dayMenu.colaciones.length})</span>
-                {dayMenu.colaciones.length > 0 && (
-                  <Badge variant="outline" className="text-xs">
-                    {dayMenu.colaciones.filter(item => item.active).length} activos
-                  </Badge>
-                )}
+              <h3 className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase">
+                Colaciones ({dayMenu.colaciones.length})
               </h3>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onAddItem('colacion')}
                 disabled={isLoading || !dayMenu.isEditable}
-                className="flex items-center space-x-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 dark:hover:bg-emerald-900/20"
+                className="h-6 px-2 text-xs"
               >
-                <Plus className="w-3 h-3" />
-                <span>Agregar</span>
+                <Plus className="w-3 h-3 mr-1" />
+                Agregar
               </Button>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               {dayMenu.colaciones.length > 0 ? (
                 dayMenu.colaciones.map((item, index) => (
                   <MenuItemCard
@@ -235,40 +134,27 @@ export function DayMenuContainer({
                     onEdit={onEditItem}
                     onDelete={onDeleteItem}
                     isLoading={isLoading}
-                    showUserPreview={showUserPreview}
                   />
                 ))
               ) : (
-                <div className="p-4 border-2 border-dashed border-emerald-200 dark:border-emerald-800 rounded-lg text-center bg-emerald-50/50 dark:bg-emerald-900/10">
-                  <p className="text-sm text-emerald-600 dark:text-emerald-400">
-                    {getEmptyDayMessage('colacion')}
+                <div className="p-2 border border-dashed border-emerald-200 dark:border-emerald-800 rounded text-center">
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1">
+                    Sin colaciones
                   </p>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => onAddItem('colacion')}
                     disabled={isLoading || !dayMenu.isEditable}
-                    className="mt-2 text-emerald-600 hover:bg-emerald-100 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                    className="h-6 px-2 text-xs"
                   >
                     <Plus className="w-3 h-3 mr-1" />
-                    Agregar primera colación
+                    Agregar
                   </Button>
                 </div>
               )}
             </div>
           </div>
-
-          {/* User Impact Indicator */}
-          {showUserPreview && totalItems > 0 && (
-            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="flex items-center space-x-2 text-sm">
-                <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-blue-700 dark:text-blue-300 font-medium">
-                  Vista del usuario: {activeItems} opciones disponibles
-                </span>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
     </motion.div>
