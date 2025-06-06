@@ -28,11 +28,15 @@ export class MenuService {
         menuItems.push({
           id: doc.id,
           code: data.code,
-          name: data.name || data.description, // Compatibilidad
+          name: data.name || data.description,
           description: data.description,
           type: data.type,
-          price: 0, // Se calculará dinámicamente
-          available: data.available !== false && data.active !== false
+          price: 0, // Se calculará dinámicamente según tipo de usuario
+          available: data.available !== false && data.active !== false,
+          image: data.image,
+          date: data.date,
+          dia: data.dia,
+          active: data.active
         })
       })
       
@@ -43,7 +47,7 @@ export class MenuService {
     }
   }
 
-  static async getWeeklyMenuForUser(userType: 'funcionario' | 'estudiante', weekStart?: string): Promise<DayMenuDisplay[]> {
+  static async getWeeklyMenuForUser(userType: 'funcionario' | 'apoderado', weekStart?: string): Promise<DayMenuDisplay[]> {
     try {
       const weekMenu = await this.getWeeklyMenu(weekStart)
       
@@ -107,6 +111,14 @@ export class MenuService {
     return format(new Date(date), 'EEEE d', { locale: es })
   }
 
+  static getFormattedDate(date: string): string {
+    return format(new Date(date), 'yyyy-MM-dd')
+  }
+
+  static getDayName(date: string): string {
+    return format(new Date(date), 'EEEE', { locale: es })
+  }
+
   private static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
     const startDate = new Date(weekStart)
     const endDate = endOfWeek(startDate, { weekStartsOn: 1 })
@@ -120,10 +132,8 @@ export class MenuService {
       const dateStr = format(currentDate, 'yyyy-MM-dd')
       const dayName = format(currentDate, 'EEEE', { locale: es })
       
-      const dayItems = items.filter(item => {
-        // Necesitamos filtrar por fecha desde los datos de Firebase
-        return true // Por ahora retornamos todos, luego filtraremos por fecha en la consulta
-      })
+      // Filtrar items por fecha específica
+      const dayItems = items.filter(item => item.date === dateStr)
       
       const almuerzos = dayItems.filter(item => item.type === 'almuerzo')
       const colaciones = dayItems.filter(item => item.type === 'colacion')
@@ -136,7 +146,7 @@ export class MenuService {
         almuerzos,
         colaciones,
         hasItems: almuerzos.length > 0 || colaciones.length > 0,
-        isAvailable: true
+        isAvailable: almuerzos.length > 0 // Disponible si hay al menos un almuerzo
       })
     }
     

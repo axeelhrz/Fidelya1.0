@@ -10,17 +10,31 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { OrderState, OrderValidation } from '@/types/order'
-import { OrderSelection } from '@/types/panel'
+import { OrderSelectionByChild, Child, User } from '@/types/panel'
+
+export interface OrderStateByChild {
+  id?: string
+  userId: string
+  tipoUsuario: 'apoderado' | 'funcionario'
+  weekStart: string
+  fechaCreacion: Date
+  resumenPedido: OrderSelectionByChild[]
+  total: number
+  status: 'pendiente' | 'pagado' | 'cancelado'
+  createdAt: Date
+  paidAt?: Date
+  paymentId?: string
+}
 
 export class OrderService {
-  static async getUserOrder(userId: string, weekStart: string): Promise<OrderState | null> {
+  static async getUserOrder(userId: string, weekStart: string): Promise<OrderStateByChild | null> {
     try {
       const ordersRef = collection(db, 'orders')
       const q = query(
         ordersRef,
         where('userId', '==', userId),
         where('weekStart', '==', weekStart),
-        where('status', 'in', ['draft', 'pending', 'paid'])
+        where('status', 'in', ['pendiente', 'pagado'])
       )
       
       const snapshot = await getDocs(q)
@@ -35,10 +49,12 @@ export class OrderService {
       return {
         id: doc.id,
         userId: data.userId,
+        tipoUsuario: data.tipoUsuario,
         weekStart: data.weekStart,
-        selections: data.selections || [],
+        fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
+        resumenPedido: data.resumenPedido || [],
         total: data.total || 0,
-        status: data.status || 'draft',
+        status: data.status || 'pendiente',
         createdAt: data.createdAt?.toDate() || new Date(),
         paidAt: data.paidAt?.toDate(),
         paymentId: data.paymentId
@@ -49,12 +65,13 @@ export class OrderService {
     }
   }
 
-  static async saveOrder(order: Omit<OrderState, 'id' | 'createdAt'>): Promise<string> {
+  static async saveOrder(order: Omit<OrderStateByChild, 'id' | 'createdAt' | 'fechaCreacion'>): Promise<string> {
     try {
       const ordersRef = collection(db, 'orders')
       
       const orderData = {
         ...order,
+        fechaCreacion: Timestamp.now(),
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       }
@@ -67,11 +84,11 @@ export class OrderService {
     }
   }
 
-  static async updateOrder(orderId: string, updates: Partial<OrderState>): Promise<void> {
+  static async updateOrder(orderId: string, updates: Partial<OrderStateByChild>): Promise<void> {
     try {
       const orderRef = doc(db, 'orders', orderId)
       
-      const { paidAt, ...restUpdates } = updates
+      const { paidAt, fechaCreacion, ...restUpdates } = updates
       const updateData: any = {
         ...restUpdates,
         updatedAt: Timestamp.now()
@@ -81,6 +98,10 @@ export class OrderService {
         updateData.paidAt = Timestamp.fromDate(paidAt)
       }
       
+      if (fechaCreacion) {
+        updateData.fechaCreacion = Timestamp.fromDate(fechaCreacion)
+      }
+      
       await updateDoc(orderRef, updateData)
     } catch (error) {
       console.error('Error updating order:', error)
@@ -88,10 +109,11 @@ export class OrderService {
     }
   }
 
-  static validateOrder(
-    selections: OrderSelection[], 
+  static validateOrderByChild(
+    selections: OrderSelectionByChild[], 
     weekDays: string[], 
-    isOrderingAllowed: boolean
+    isOrderingAllowed: boolean,
+    user: User
   ): OrderValidation {
     const errors: string[] = []
     const warnings: string[] = []
@@ -102,7 +124,71 @@ export class OrderService {
       errors.push('El tiempo para realizar pedidos ha expirado (miércoles 13:00)')
     }
     
-    // Verificar que todos los días tengan almuerzo
+    if (user.tipoUsuario === 'apoderado') {
+      // Para apoderados: verificar que todos los días tengan almuerzo para al menos un hijo
+      weekDays.forEach(day => {
+        const daySelections = selections.filter(s => s.date === day && s.almuerzo)
+        if (daySelections.length === 0) {
+          missingDays.push(day)
+        }
+      })
+      
+      if (missingDays.length > 0) {
+        errors.push(`Faltan seleccionar almuerzos para ${missingDays.length} día(s)`)
+      }
+      
+      // Verificar que haya hijos registrados
+      if (!user.children || user.children.length === 0) {
+        errors.push('Debe registrar al menos un hijo para realizar pedidos')
+      }
+    } else {
+      // Para funcionarios: verificar que todos los días tengan almuerzo
+      weekDays.forEach(day => {
+        const selection = selections.find(s => s.date === day && s.almuerzo)
+        if (!selection) {
+          missingDays.push(day)
+        }
+      })
+      
+      if (missingDays.length > 0) {
+        errors.push(`Faltan seleccionar almuerzos para ${missingDays.length} día(s)`)
+      }
+    }
+    
+    // Verificar que haya al menos una selección
+    if (selections.length === 0) {
+      errors.push('Debe seleccionar al menos un almuerzo')
+    }
+    
+    // Advertencias
+    const selectionsWithoutColacion = selections.filter(s => s.almuerzo && !s.colacion)
+    if (selectionsWithoutColacion.length > 0) {
+      warnings.push(`${selectionsWithoutColacion.length} selección(es) sin colación`)
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      missingDays,
+      canProceedToPayment: errors.length === 0 && isOrderingAllowed
+    }
+  }
+
+  // Método de compatibilidad con la estructura anterior
+  static validateOrder(
+    selections: any[], 
+    weekDays: string[], 
+    isOrderingAllowed: boolean
+  ): OrderValidation {
+    const errors: string[] = []
+    const warnings: string[] = []
+    const missingDays: string[] = []
+    
+    if (!isOrderingAllowed) {
+      errors.push('El tiempo para realizar pedidos ha expirado (miércoles 13:00)')
+    }
+    
     weekDays.forEach(day => {
       const selection = selections.find(s => s.date === day)
       if (!selection || !selection.almuerzo) {
@@ -114,12 +200,10 @@ export class OrderService {
       errors.push(`Faltan seleccionar almuerzos para ${missingDays.length} día(s)`)
     }
     
-    // Verificar que haya al menos una selección
     if (selections.length === 0) {
       errors.push('Debe seleccionar al menos un almuerzo')
     }
     
-    // Advertencias
     const selectionsWithoutColacion = selections.filter(s => s.almuerzo && !s.colacion)
     if (selectionsWithoutColacion.length > 0) {
       warnings.push(`${selectionsWithoutColacion.length} día(s) sin colación seleccionada`)

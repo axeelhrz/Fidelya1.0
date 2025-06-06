@@ -1,13 +1,25 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { OrderSelection, OrderSummary, UserType, PRICES } from '@/types/panel'
+import { 
+  OrderSelection, 
+  OrderSummary, 
+  OrderSelectionByChild,
+  OrderSummaryByChild,
+  UserType, 
+  PRICES,
+  Child,
+  MenuItem
+} from '@/types/panel'
 
 interface OrderState {
   selections: OrderSelection[]
   userType: UserType
   isLoading: boolean
   
-  // Actions
+  selectionsByChild: OrderSelectionByChild[]
+  currentChild: Child | null
+  children: Child[]
+  
   setUserType: (type: UserType) => void
   addSelection: (selection: OrderSelection) => void
   removeSelection: (date: string) => void
@@ -15,14 +27,32 @@ interface OrderState {
   clearSelections: () => void
   getOrderSummary: () => OrderSummary
   setLoading: (loading: boolean) => void
+  
+  setChildren: (children: Child[]) => void
+  setCurrentChild: (child: Child | null) => void
+  addSelectionByChild: (selection: OrderSelectionByChild) => void
+  removeSelectionByChild: (date: string, childId?: string) => void
+  updateSelectionByChild: (
+    date: string, 
+    field: 'almuerzo' | 'colacion', 
+    item: MenuItem | undefined, 
+    child: Child | null
+  ) => void
+  clearSelectionsByChild: () => void
+  getOrderSummaryByChild: () => OrderSummaryByChild
+  loadExistingSelections: (selections: OrderSelectionByChild[]) => void
 }
 
 export const useOrderStore = create<OrderState>()(
   persist(
     (set, get) => ({
       selections: [],
-      userType: 'estudiante',
+      userType: 'apoderado',
       isLoading: false,
+      
+      selectionsByChild: [],
+      currentChild: null,
+      children: [],
 
       setUserType: (type: UserType) => set({ userType: type }),
 
@@ -85,13 +115,134 @@ export const useOrderStore = create<OrderState>()(
         }
       },
 
-      setLoading: (loading: boolean) => set({ isLoading: loading })
+      setLoading: (loading: boolean) => set({ isLoading: loading }),
+
+      setChildren: (children: Child[]) => set({ children }),
+
+      setCurrentChild: (child: Child | null) => set({ currentChild: child }),
+
+      addSelectionByChild: (selection: OrderSelectionByChild) => {
+        const { selectionsByChild } = get()
+        const existingIndex = selectionsByChild.findIndex(
+          s => s.date === selection.date && 
+               (s.hijo?.id === selection.hijo?.id || (!s.hijo && !selection.hijo))
+        )
+        
+        if (existingIndex >= 0) {
+          const updated = [...selectionsByChild]
+          updated[existingIndex] = { ...updated[existingIndex], ...selection }
+          set({ selectionsByChild: updated })
+        } else {
+          set({ selectionsByChild: [...selectionsByChild, selection] })
+        }
+      },
+
+      removeSelectionByChild: (date: string, childId?: string) => {
+        const { selectionsByChild } = get()
+        set({ 
+          selectionsByChild: selectionsByChild.filter(s => 
+            !(s.date === date && (childId ? s.hijo?.id === childId : !s.hijo))
+          ) 
+        })
+      },
+
+      updateSelectionByChild: (
+        date: string, 
+        field: 'almuerzo' | 'colacion', 
+        item: MenuItem | undefined, 
+        child: Child | null
+      ) => {
+        const { selectionsByChild } = get()
+        const existingIndex = selectionsByChild.findIndex(
+          s => s.date === date && 
+               (s.hijo?.id === child?.id || (!s.hijo && !child))
+        )
+        
+        if (existingIndex >= 0) {
+          const updated = [...selectionsByChild]
+          if (item) {
+            updated[existingIndex] = { ...updated[existingIndex], [field]: item }
+          } else {
+            // Remover el campo si item es undefined
+            const { [field]: removed, ...rest } = updated[existingIndex]
+            updated[existingIndex] = rest as OrderSelectionByChild
+          }
+          set({ selectionsByChild: updated })
+        } else if (item) {
+          // Solo crear nueva selección si hay un item
+          const newSelection: OrderSelectionByChild = {
+            date,
+            dia: '', // Se llenará desde el componente
+            fecha: date,
+            hijo: child,
+            [field]: item
+          }
+          set({ selectionsByChild: [...selectionsByChild, newSelection] })
+        }
+      },
+
+      clearSelectionsByChild: () => set({ selectionsByChild: [] }),
+
+      getOrderSummaryByChild: (): OrderSummaryByChild => {
+        const { selectionsByChild, userType } = get()
+        const prices = PRICES[userType]
+        
+        let totalAlmuerzos = 0
+        let totalColaciones = 0
+        const resumenPorHijo: OrderSummaryByChild['resumenPorHijo'] = {}
+        
+        selectionsByChild.forEach(selection => {
+          const hijoId = selection.hijo?.id || 'funcionario'
+          
+          if (!resumenPorHijo[hijoId]) {
+            resumenPorHijo[hijoId] = {
+              hijo: selection.hijo || { id: 'funcionario', name: 'Funcionario', curso: '', active: true },
+              almuerzos: 0,
+              colaciones: 0,
+              subtotal: 0
+            }
+          }
+          
+          if (selection.almuerzo) {
+            totalAlmuerzos++
+            resumenPorHijo[hijoId].almuerzos++
+            resumenPorHijo[hijoId].subtotal += prices.almuerzo
+          }
+          
+          if (selection.colacion) {
+            totalColaciones++
+            resumenPorHijo[hijoId].colaciones++
+            resumenPorHijo[hijoId].subtotal += prices.colacion
+          }
+        })
+        
+        const subtotalAlmuerzos = totalAlmuerzos * prices.almuerzo
+        const subtotalColaciones = totalColaciones * prices.colacion
+        const total = subtotalAlmuerzos + subtotalColaciones
+        
+        return {
+          selections: selectionsByChild,
+          totalAlmuerzos,
+          totalColaciones,
+          subtotalAlmuerzos,
+          subtotalColaciones,
+          total,
+          resumenPorHijo
+        }
+      },
+
+      loadExistingSelections: (selections: OrderSelectionByChild[]) => {
+        set({ selectionsByChild: selections })
+      }
     }),
     {
       name: 'casino-escolar-order',
       partialize: (state) => ({ 
         selections: state.selections, 
-        userType: state.userType 
+        selectionsByChild: state.selectionsByChild,
+        userType: state.userType,
+        currentChild: state.currentChild,
+        children: state.children
       })
     }
   )
