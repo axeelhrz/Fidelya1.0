@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   keywords: "casino escolar, alimentación escolar, gestión educativa, nutrición, menús escolares, bienestar estudiantil",
   authors: [{ name: "Casino Escolar" }],
   viewport: "width=device-width, initial-scale=1",
-  themeColor: "#f8fafc",
+  themeColor: "#059669",
   openGraph: {
     title: "Casino Escolar - Gestión Inteligente de Alimentación Escolar",
     description: "Plataforma digital para la gestión de alimentación escolar. Nutrición, organización y bienestar para la comunidad educativa.",
@@ -41,17 +41,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="scroll-smooth">
+    <html lang="es" className={`${inter.variable} ${playfairDisplay.variable}`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body
-        className={`${inter.variable} ${playfairDisplay.variable} antialiased font-inter bg-education-gradient text-education-primary`}
-      >
-        <div className="min-h-screen">
-          {children}
-        </div>
+      <body className="font-sans antialiased">
+        {children}
       </body>
     </html>
   );
