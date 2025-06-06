@@ -91,7 +91,32 @@ export const useOrderStore = create<OrderState>()(
 
       getOrderSummary: (): OrderSummary => {
         const { selections, userType } = get()
+        
+        // Verificar que PRICES esté definido
+        if (!PRICES || !PRICES[userType]) {
+          console.error('PRICES not defined or missing userType:', userType)
+          return {
+            selections,
+            totalAlmuerzos: 0,
+            totalColaciones: 0,
+            subtotalAlmuerzos: 0,
+            subtotalColaciones: 0,
+            total: 0
+          }
+        }
+
         const prices = PRICES[userType]
+        if (!prices || typeof prices.almuerzo !== 'number' || typeof prices.colacion !== 'number') {
+          console.error('Invalid price structure for userType:', userType, prices)
+          return {
+            selections,
+            totalAlmuerzos: 0,
+            totalColaciones: 0,
+            subtotalAlmuerzos: 0,
+            subtotalColaciones: 0,
+            total: 0
+          }
+        }
         
         let totalAlmuerzos = 0
         let totalColaciones = 0
@@ -185,7 +210,34 @@ export const useOrderStore = create<OrderState>()(
 
       getOrderSummaryByChild: (): OrderSummaryByChild => {
         const { selectionsByChild, userType } = get()
+        
+        // Verificar que PRICES esté definido
+        if (!PRICES || !PRICES[userType]) {
+          console.error('PRICES not defined or missing userType:', userType)
+          return {
+            selections: selectionsByChild,
+            totalAlmuerzos: 0,
+            totalColaciones: 0,
+            subtotalAlmuerzos: 0,
+            subtotalColaciones: 0,
+            total: 0,
+            resumenPorHijo: {}
+          }
+        }
+
         const prices = PRICES[userType]
+        if (!prices || typeof prices.almuerzo !== 'number' || typeof prices.colacion !== 'number') {
+          console.error('Invalid price structure for userType:', userType, prices)
+          return {
+            selections: selectionsByChild,
+            totalAlmuerzos: 0,
+            totalColaciones: 0,
+            subtotalAlmuerzos: 0,
+            subtotalColaciones: 0,
+            total: 0,
+            resumenPorHijo: {}
+          }
+        }
         
         let totalAlmuerzos = 0
         let totalColaciones = 0
