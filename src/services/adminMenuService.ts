@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { AdminMenuItem, AdminWeekMenu, AdminDayMenu, MenuOperationResult } from '@/types/adminMenu'
+import { MenuItem } from '@/types/menu'
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isValid, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -27,7 +28,8 @@ export class AdminMenuService {
       const q = query(
         menusRef,
         where('weekStart', '==', weekStart),
-        orderBy('date', 'asc')
+        orderBy('date', 'asc'),
+        orderBy('type', 'asc')
       )
       
       const snapshot = await getDocs(q)
@@ -69,11 +71,24 @@ export class AdminMenuService {
       }
 
       const menusRef = collection(db, this.COLLECTION_NAME)
-      const docRef = await addDoc(menusRef, {
-        ...item,
+      
+      // Crear el documento con estructura unificada
+      const menuData = {
+        code: item.code,
+        name: item.description, // Usar description como name para compatibilidad
+        description: item.description,
+        type: item.type,
+        date: item.date,
+        day: item.day,
+        weekStart: item.weekStart,
+        active: item.active !== false,
+        available: item.active !== false, // Alias para compatibilidad
+        price: 0, // Se calculará dinámicamente según tipo de usuario
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
-      })
+      }
+
+      const docRef = await addDoc(menusRef, menuData)
 
       return {
         success: true,
@@ -92,10 +107,27 @@ export class AdminMenuService {
   static async updateMenuItem(id: string, updates: Partial<AdminMenuItem>): Promise<MenuOperationResult> {
     try {
       const menuRef = doc(db, this.COLLECTION_NAME, id)
-      await updateDoc(menuRef, {
-        ...updates,
+      
+      // Preparar actualizaciones con estructura unificada
+      const updateData: any = {
         updatedAt: Timestamp.now()
-      })
+      }
+
+      if (updates.code) updateData.code = updates.code
+      if (updates.description) {
+        updateData.description = updates.description
+        updateData.name = updates.description // Mantener sincronizado
+      }
+      if (updates.type) updateData.type = updates.type
+      if (updates.date) updateData.date = updates.date
+      if (updates.day) updateData.day = updates.day
+      if (updates.weekStart) updateData.weekStart = updates.weekStart
+      if (updates.active !== undefined) {
+        updateData.active = updates.active
+        updateData.available = updates.active // Mantener sincronizado
+      }
+
+      await updateDoc(menuRef, updateData)
 
       return {
         success: true,
@@ -162,12 +194,15 @@ export class AdminMenuService {
           const newDocRef = doc(menusRef)
           batch.set(newDocRef, {
             code: almuerzo.code,
+            name: almuerzo.description,
             description: almuerzo.description,
             type: 'almuerzo',
             date: newDate,
             day: newDay,
             weekStart: targetWeek,
             active: almuerzo.active,
+            available: almuerzo.active,
+            price: 0,
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now()
           })
@@ -179,12 +214,15 @@ export class AdminMenuService {
           const newDocRef = doc(menusRef)
           batch.set(newDocRef, {
             code: colacion.code,
+            name: colacion.description,
             description: colacion.description,
             type: 'colacion',
             date: newDate,
             day: newDay,
             weekStart: targetWeek,
             active: colacion.active,
+            available: colacion.active,
+            price: 0,
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now()
           })
@@ -235,7 +273,6 @@ export class AdminMenuService {
       }
     } catch (error) {
       console.error('Error in getWeekNavigation:', error)
-      // Fallback a la semana actual si hay error
       const fallbackWeek = this.getCurrentWeekStart()
       const fallbackDate = this.parseWeekDate(fallbackWeek)!
       const fallbackEnd = endOfWeek(fallbackDate, { weekStartsOn: 1 })
@@ -275,15 +312,12 @@ export class AdminMenuService {
 
   private static parseWeekDate(dateString: string): Date | null {
     try {
-      // Intentar parsear como ISO string primero
       let date = parseISO(dateString)
       
-      // Si no es válida, intentar crear directamente
       if (!isValid(date)) {
         date = new Date(dateString)
       }
       
-      // Verificar que la fecha sea válida
       if (!isValid(date)) {
         console.error('Invalid date string:', dateString)
         return null
@@ -341,7 +375,6 @@ export class AdminMenuService {
     
     const days: AdminDayMenu[] = []
     
-    // Crear estructura para cada día de la semana (lunes a viernes)
     for (let i = 0; i < 5; i++) {
       const currentDate = addDays(startDate, i)
       const dateStr = format(currentDate, 'yyyy-MM-dd')
@@ -367,7 +400,7 @@ export class AdminMenuService {
       weekEnd: format(endDate, 'yyyy-MM-dd'),
       weekLabel,
       days,
-      isPublished: false, // TODO: Implementar lógica de publicación
+      isPublished: items.length > 0,
       totalItems: items.length
     }
   }

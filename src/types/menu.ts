@@ -36,7 +36,19 @@ export interface DayMenuDisplay extends Omit<DayMenu, 'almuerzos' | 'colaciones'
 export type MenuLoadingState = 'idle' | 'loading' | 'success' | 'error'
 
 export interface MenuError {
-  type: 'network' | 'auth' | 'data' | 'unknown'
+  type: 'network' | 'validation' | 'permission'
   message: string
-  code?: string
+  code: string
 }
+
+// Precios por tipo de usuario
+export const MENU_PRICES = {
+  funcionario: {
+    almuerzo: 4875,
+    colacion: 1800
+  },
+  estudiante: {
+    almuerzo: 5500,
+    colacion: 2000
+  }
+} as const

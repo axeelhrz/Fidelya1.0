@@ -1,46 +1,80 @@
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
-import { DayMenuOptions, WeekInfo } from '@/types/order'
-import { MenuItem } from '@/types/panel'
-import { format, startOfWeek, endOfWeek, addDays, isAfter, isBefore } from 'date-fns'
+import { MenuItem, DayMenuDisplay, WeekMenuDisplay, MENU_PRICES } from '@/types/menu'
+import { format, startOfWeek, endOfWeek, addDays, isBefore } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export class MenuService {
-  static async getWeeklyMenu(weekStart: string): Promise<DayMenuOptions[]> {
+  static async getWeeklyMenu(weekStart?: string): Promise<WeekMenuDisplay> {
     try {
+      // Si no se proporciona weekStart, usar la semana actual
+      const actualWeekStart = weekStart || this.getCurrentWeekStart()
+      
       const menusRef = collection(db, 'menus')
       const q = query(
         menusRef,
-        where('weekStart', '==', weekStart),
-        orderBy('date', 'asc')
+        where('weekStart', '==', actualWeekStart),
+        where('active', '==', true), // Solo items activos
+        orderBy('date', 'asc'),
+        orderBy('type', 'asc')
       )
       
       const snapshot = await getDocs(q)
-      const menuData: DayMenuOptions[] = []
+      const menuItems: MenuItem[] = []
       
       snapshot.forEach((doc) => {
         const data = doc.data()
-        menuData.push({
+        menuItems.push({
+          id: doc.id,
+          code: data.code,
+          name: data.name || data.description, // Compatibilidad
+          description: data.description,
+          type: data.type,
+          price: 0, // Se calculará dinámicamente
+          available: data.available !== false && data.active !== false,
           date: data.date,
           day: data.day,
-          dayName: data.dayName || format(new Date(data.date), 'EEEE', { locale: es }),
-          almuerzos: data.almuerzos || [],
-          colaciones: data.colaciones || [],
-          isAvailable: data.isAvailable !== false
+          weekStart: data.weekStart,
+          createdAt: data.createdAt?.toDate(),
+          updatedAt: data.updatedAt?.toDate()
         })
       })
       
-      return menuData
+      return this.buildWeekMenuStructure(actualWeekStart, menuItems)
     } catch (error) {
       console.error('Error fetching weekly menu:', error)
       throw new Error('No se pudo cargar el menú de la semana')
     }
   }
 
-  static getCurrentWeekInfo(): WeekInfo {
+  static async getWeeklyMenuForUser(userType: 'funcionario' | 'estudiante', weekStart?: string): Promise<DayMenuDisplay[]> {
+    try {
+      const weekMenu = await this.getWeeklyMenu(weekStart)
+      
+      // Aplicar precios según tipo de usuario
+      const daysWithPrices = weekMenu.days.map(day => ({
+        ...day,
+        almuerzos: day.almuerzos.map(item => ({
+          ...item,
+          price: MENU_PRICES[userType].almuerzo
+        })),
+        colaciones: day.colaciones.map(item => ({
+          ...item,
+          price: MENU_PRICES[userType].colacion
+        }))
+      }))
+      
+      return daysWithPrices
+    } catch (error) {
+      console.error('Error fetching weekly menu for user:', error)
+      throw error
+    }
+  }
+
+  static getCurrentWeekInfo() {
     const now = new Date()
-    const weekStart = startOfWeek(now, { weekStartsOn: 1 }) // Lunes
-    const weekEnd = endOfWeek(now, { weekStartsOn: 1 }) // Domingo
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 })
+    const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
     
     // Deadline: miércoles a las 13:00
     const wednesday = addDays(weekStart, 2)
@@ -60,6 +94,12 @@ export class MenuService {
     }
   }
 
+  static getCurrentWeekStart(): string {
+    const now = new Date()
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 })
+    return format(weekStart, 'yyyy-MM-dd')
+  }
+
   static getWeekDisplayText(weekStart: string, weekEnd: string): string {
     const start = new Date(weekStart)
     const end = new Date(weekEnd)
@@ -69,5 +109,43 @@ export class MenuService {
 
   static getDayDisplayName(date: string): string {
     return format(new Date(date), 'EEEE d', { locale: es })
+  }
+
+  private static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
+    const startDate = new Date(weekStart)
+    const endDate = endOfWeek(startDate, { weekStartsOn: 1 })
+    const weekLabel = `Del ${format(startDate, 'd')} al ${format(endDate, 'd')} de ${format(endDate, 'MMMM yyyy', { locale: es })}`
+    
+    const days: DayMenuDisplay[] = []
+    
+    // Crear estructura para cada día de la semana (lunes a viernes)
+    for (let i = 0; i < 5; i++) {
+      const currentDate = addDays(startDate, i)
+      const dateStr = format(currentDate, 'yyyy-MM-dd')
+      const dayName = format(currentDate, 'EEEE', { locale: es })
+      
+      const dayItems = items.filter(item => item.date === dateStr)
+      const almuerzos = dayItems.filter(item => item.type === 'almuerzo')
+      const colaciones = dayItems.filter(item => item.type === 'colacion')
+      
+      days.push({
+        date: dateStr,
+        day: dayName,
+        dayLabel: dayName.charAt(0).toUpperCase() + dayName.slice(1),
+        dateFormatted: format(currentDate, 'd \'de\' MMMM', { locale: es }),
+        almuerzos,
+        colaciones,
+        hasItems: almuerzos.length > 0 || colaciones.length > 0,
+        isAvailable: true
+      })
+    }
+    
+    return {
+      weekStart,
+      weekEnd: format(endDate, 'yyyy-MM-dd'),
+      weekLabel,
+      days,
+      totalItems: items.length
+    }
   }
 }
