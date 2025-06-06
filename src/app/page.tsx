@@ -4,16 +4,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
-import { 
-  BookOpen, 
-  Heart, 
-  Users, 
-  ChefHat, 
-  Calendar, 
-  Shield,
-  ArrowRight,
-  Sparkles
-} from "lucide-react"
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false)
@@ -51,43 +41,51 @@ export default function HomePage() {
 
   const features = [
     {
-      icon: ChefHat,
       title: "Gestión de Menús",
-      description: "Planifica y administra menús nutritivos de forma intuitiva"
+      description: "Planifica y administra menús nutritivos de forma intuitiva",
+      icon: "🍽️"
     },
     {
-      icon: Heart,
-      title: "Alimentación Saludable",
-      description: "Promovemos hábitos nutricionales balanceados y saludables"
+      title: "Alimentación Saludable", 
+      description: "Promovemos hábitos nutricionales balanceados y saludables",
+      icon: "❤️"
     },
     {
-      icon: Users,
       title: "Comunidad Educativa",
-      description: "Conecta familias, estudiantes y personal administrativo"
+      description: "Conecta familias, estudiantes y personal administrativo", 
+      icon: "👥"
     },
     {
-      icon: Calendar,
       title: "Planificación Inteligente",
-      description: "Organiza horarios y recursos de manera eficiente"
+      description: "Organiza horarios y recursos de manera eficiente",
+      icon: "📅"
     },
     {
-      icon: Shield,
       title: "Seguridad Alimentaria",
-      description: "Garantiza estándares de calidad y seguridad"
+      description: "Garantiza estándares de calidad y seguridad",
+      icon: "🛡️"
     },
     {
-      icon: BookOpen,
       title: "Educación Nutricional",
-      description: "Fomenta el aprendizaje sobre alimentación saludable"
+      description: "Fomenta el aprendizaje sobre alimentación saludable",
+      icon: "📚"
     }
   ]
 
   return (
-    <div className="min-h-screen gradient-bg relative overflow-hidden">
+    <div 
+      className="min-h-screen relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 25%, #f0f9ff 50%, #ecfdf5 75%, #f8fafc 100%)',
+      }}
+    >
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
-          className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl"
+          className="absolute top-20 right-20 w-72 h-72 rounded-full blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(5, 150, 105, 0.15) 0%, rgba(16, 185, 129, 0.1) 50%, transparent 100%)',
+          }}
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3],
@@ -100,7 +98,10 @@ export default function HomePage() {
         />
         
         <motion.div
-          className="absolute bottom-20 left-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"
+          className="absolute bottom-20 left-20 w-96 h-96 rounded-full blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 50%, transparent 100%)',
+          }}
           animate={{
             scale: [1, 1.1, 1],
             opacity: [0.2, 0.4, 0.2],
@@ -114,50 +115,79 @@ export default function HomePage() {
         />
 
         {/* Decorative dots */}
-        <div className="absolute inset-0 opacity-30">
-          <div 
-            className="w-full h-full"
-            style={{
-              backgroundImage: `radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)`,
-              backgroundSize: '50px 50px',
-            }}
-          />
-        </div>
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `radial-gradient(circle, #059669 1px, transparent 1px)`,
+            backgroundSize: '50px 50px',
+          }}
+        />
       </div>
 
       {/* Main Content */}
       <motion.div
-        className="relative z-10 container mx-auto px-4 py-16"
+        className="relative z-10 px-4 py-16"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
+        style={{ maxWidth: '1200px', margin: '0 auto' }}
       >
         {/* Hero Section */}
-        <div className="text-center max-w-4xl mx-auto mb-20">
+        <div className="text-center mb-20" style={{ maxWidth: '800px', margin: '0 auto 5rem auto' }}>
           <motion.div
             variants={itemVariants}
             className="mb-6"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary font-medium text-sm mb-6">
-              <Sparkles className="w-4 h-4" />
+            <div 
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6"
+              style={{
+                backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                color: '#059669',
+              }}
+            >
+              <span style={{ fontSize: '16px' }}>✨</span>
               Plataforma Educativa Digital
             </div>
           </motion.div>
 
           <motion.h1
             variants={itemVariants}
-            className="text-5xl md:text-7xl font-display font-bold text-foreground mb-6 leading-tight"
+            className="mb-6 leading-tight"
+            style={{
+              fontSize: 'clamp(3rem, 8vw, 5rem)',
+              fontFamily: "'Playfair Display', serif",
+              fontWeight: 700,
+              color: '#1e293b',
+              lineHeight: 1.1,
+            }}
           >
             Casino
-            <span className="text-gradient block">Escolar</span>
+            <span 
+              className="block"
+              style={{
+                background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              Escolar
+            </span>
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
-            className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed max-w-3xl mx-auto"
+            className="mb-8 leading-relaxed"
+            style={{
+              fontSize: 'clamp(1.125rem, 3vw, 1.5rem)',
+              color: '#64748b',
+              fontFamily: "'Inter', sans-serif",
+              maxWidth: '600px',
+              margin: '0 auto 2rem auto',
+            }}
           >
             Gestión inteligente de alimentación escolar para una 
-            <span className="text-primary font-semibold"> comunidad educativa saludable</span>
+            <span style={{ color: '#059669', fontWeight: 600 }}> comunidad educativa saludable</span>
           </motion.p>
 
           <motion.div
@@ -165,16 +195,44 @@ export default function HomePage() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             <Link href="/auth/login">
-              <Button size="lg" className="w-full sm:w-auto group">
+              <motion.button
+                whileHover={{ y: -2, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full sm:w-auto px-8 py-4 rounded-xl font-medium text-white transition-all duration-300 group flex items-center justify-center gap-2"
+                style={{
+                  background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                  boxShadow: '0 4px 15px rgba(5, 150, 105, 0.3)',
+                  fontSize: '1.1rem',
+                  minWidth: '200px',
+                }}
+              >
                 Iniciar Sesión
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
+                <motion.span
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  →
+                </motion.span>
+              </motion.button>
             </Link>
             
             <Link href="/auth/sign-up">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
+              <motion.button
+                whileHover={{ y: -2, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full sm:w-auto px-8 py-4 rounded-xl font-medium transition-all duration-300"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(10px)',
+                  border: '2px solid rgba(5, 150, 105, 0.2)',
+                  color: '#059669',
+                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+                  fontSize: '1.1rem',
+                  minWidth: '200px',
+                }}
+              >
                 Crear Cuenta
-              </Button>
+              </motion.button>
             </Link>
           </motion.div>
         </div>
@@ -182,25 +240,54 @@ export default function HomePage() {
         {/* Features Grid */}
         <motion.div
           variants={itemVariants}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20"
         >
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
               variants={itemVariants}
               whileHover={{ y: -5 }}
-              className="group"
+              className="group h-full"
             >
-              <div className="glass-effect rounded-2xl p-6 h-full shadow-elegant hover:shadow-elegant-lg transition-all duration-300">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <feature.icon className="w-6 h-6 text-primary" />
+              <div 
+                className="h-full p-6 rounded-2xl transition-all duration-300"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                }}
+              >
+                <div 
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300"
+                  style={{
+                    background: 'rgba(5, 150, 105, 0.1)',
+                    fontSize: '1.5rem',
+                  }}
+                >
+                  {feature.icon}
                 </div>
                 
-                <h3 className="text-lg font-semibold text-foreground mb-2">
+                <h3 
+                  className="mb-2"
+                  style={{
+                    fontSize: '1.125rem',
+                    fontWeight: 600,
+                    color: '#1e293b',
+                    fontFamily: "'Inter', sans-serif",
+                  }}
+                >
                   {feature.title}
                 </h3>
                 
-                <p className="text-muted-foreground leading-relaxed">
+                <p 
+                  className="leading-relaxed"
+                  style={{
+                    color: '#64748b',
+                    fontSize: '0.95rem',
+                    lineHeight: 1.6,
+                  }}
+                >
                   {feature.description}
                 </p>
               </div>
@@ -211,22 +298,79 @@ export default function HomePage() {
         {/* Stats Section */}
         <motion.div
           variants={itemVariants}
-          className="mt-20 text-center"
+          className="mb-20"
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="glass-effect rounded-2xl p-6 shadow-elegant">
-              <div className="text-3xl font-bold text-primary mb-2">100%</div>
-              <div className="text-muted-foreground">Seguridad Alimentaria</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <div 
+              className="p-6 rounded-2xl text-center"
+              style={{
+                background: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+              }}
+            >
+              <div 
+                className="mb-2"
+                style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 700,
+                  color: '#059669',
+                }}
+              >
+                100%
+              </div>
+              <div style={{ color: '#64748b', fontSize: '0.95rem' }}>
+                Seguridad Alimentaria
+              </div>
             </div>
             
-            <div className="glass-effect rounded-2xl p-6 shadow-elegant">
-              <div className="text-3xl font-bold text-primary mb-2">24/7</div>
-              <div className="text-muted-foreground">Disponibilidad</div>
+            <div 
+              className="p-6 rounded-2xl text-center"
+              style={{
+                background: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+              }}
+            >
+              <div 
+                className="mb-2"
+                style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 700,
+                  color: '#059669',
+                }}
+              >
+                24/7
+              </div>
+              <div style={{ color: '#64748b', fontSize: '0.95rem' }}>
+                Disponibilidad
+              </div>
             </div>
             
-            <div className="glass-effect rounded-2xl p-6 shadow-elegant">
-              <div className="text-3xl font-bold text-primary mb-2">∞</div>
-              <div className="text-muted-foreground">Posibilidades</div>
+            <div 
+              className="p-6 rounded-2xl text-center"
+              style={{
+                background: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+              }}
+            >
+              <div 
+                className="mb-2"
+                style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 700,
+                  color: '#059669',
+                }}
+              >
+                ∞
+              </div>
+              <div style={{ color: '#64748b', fontSize: '0.95rem' }}>
+                Posibilidades
+              </div>
             </div>
           </div>
         </motion.div>
@@ -234,20 +378,61 @@ export default function HomePage() {
         {/* Call to Action */}
         <motion.div
           variants={itemVariants}
-          className="mt-20 text-center"
+          className="text-center"
         >
-          <div className="glass-effect rounded-3xl p-8 max-w-2xl mx-auto shadow-elegant">
-            <h2 className="text-2xl font-display font-semibold text-foreground mb-4">
+          <div 
+            className="p-8 rounded-3xl"
+            style={{
+              background: 'rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+              maxWidth: '600px',
+              margin: '0 auto',
+            }}
+          >
+            <h2 
+              className="mb-4"
+              style={{
+                fontSize: '1.75rem',
+                fontFamily: "'Playfair Display', serif",
+                fontWeight: 600,
+                color: '#1e293b',
+              }}
+            >
               ¿Listo para transformar tu gestión educativa?
             </h2>
-            <p className="text-muted-foreground mb-6">
+            <p 
+              className="mb-6"
+              style={{
+                color: '#64748b',
+                fontSize: '1.1rem',
+                lineHeight: 1.6,
+              }}
+            >
               Únete a la revolución digital en alimentación escolar
             </p>
             <Link href="/auth/sign-up">
-              <Button size="lg" className="group">
+              <motion.button
+                whileHover={{ y: -2, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-8 py-4 rounded-xl font-medium text-white transition-all duration-300 group flex items-center justify-center gap-2 mx-auto"
+                style={{
+                  background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                  boxShadow: '0 4px 15px rgba(5, 150, 105, 0.3)',
+                  fontSize: '1.1rem',
+                  minWidth: '200px',
+                }}
+              >
                 Comenzar Ahora
-                <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-              </Button>
+                <motion.span
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  style={{ fontSize: '1.2rem' }}
+                >
+                  ✨
+                </motion.span>
+              </motion.button>
             </Link>
           </div>
         </motion.div>
