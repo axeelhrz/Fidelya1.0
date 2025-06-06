@@ -1,132 +1,185 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from './useAuth'
 import { useOrderStore } from '@/store/orderStore'
+import { MenuIntegrationService } from '@/services/menuIntegrationService'
 import { OrderService } from '@/services/orderService'
-import { OrderState, OrderValidation } from '@/types/order'
-import { User } from '@/types/panel'
+import { MenuService } from '@/services/menuService'
+import { DayMenuDisplay } from '@/types/menu'
+import { OrderStateByChild } from '@/services/orderService'
 
-interface UseOrderManagementProps {
-  user: User | null
-  weekStart: string
-  weekDays: string[]
-  isOrderingAllowed: boolean
+interface UseOrderManagementReturn {
+  // Estado del menú
+  weekMenu: DayMenuDisplay[]
+  isLoadingMenu: boolean
+  menuError: string | null
+  weekInfo: any
+  
+  // Estado del pedido
+  existingOrder: OrderStateByChild | null
+  isLoadingOrder: boolean
+  orderError: string | null
+  
+  // Estado del pago
+  isProcessingPayment: boolean
+  paymentError: string | null
+  
+  // Acciones
+  refreshMenu: () => Promise<void>
+  processPayment: () => Promise<void>
+  clearErrors: () => void
 }
 
-export function useOrderManagement({ 
-  user, 
-  weekStart, 
-  weekDays, 
-  isOrderingAllowed 
-}: UseOrderManagementProps) {
-  const [existingOrder, setExistingOrder] = useState<OrderState | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [validation, setValidation] = useState<OrderValidation>({
-    isValid: false,
-    errors: [],
-    warnings: [],
-    missingDays: [],
-    canProceedToPayment: false
-  })
+export function useOrderManagement(): UseOrderManagementReturn {
+  const { user } = useAuth()
+  const { getOrderSummaryByChild } = useOrderStore()
+  
+  // Estados del menú
+  const [weekMenu, setWeekMenu] = useState<DayMenuDisplay[]>([])
+  const [isLoadingMenu, setIsLoadingMenu] = useState(true)
+  const [menuError, setMenuError] = useState<string | null>(null)
+  const [weekInfo, setWeekInfo] = useState<any>(null)
+  
+  // Estados del pedido
+  const [existingOrder, setExistingOrder] = useState<OrderStateByChild | null>(null)
+  const [isLoadingOrder, setIsLoadingOrder] = useState(true)
+  const [orderError, setOrderError] = useState<string | null>(null)
+  
+  // Estados del pago
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
 
-  const { 
-    selections, 
-    setUserType, 
-    updateSelection, 
-    getOrderSummary 
-  } = useOrderStore()
+  // Cargar datos del menú
+  const loadMenuData = useCallback(async () => {
+    if (!user) return
+
+    try {
+      setIsLoadingMenu(true)
+      setMenuError(null)
+
+      // Obtener información de la semana actual
+      const currentWeekInfo = MenuService.getCurrentWeekInfo()
+      setWeekInfo(currentWeekInfo)
+
+      // Cargar menú con precios según tipo de usuario
+      const menuData = await MenuIntegrationService.getPublicWeeklyMenu(
+        user.tipoUsuario,
+        currentWeekInfo.weekStart
+      )
+      
+      setWeekMenu(menuData)
+
+    } catch (error) {
+      console.error('Error loading menu data:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Error al cargar el menú'
+      setMenuError(errorMessage)
+    } finally {
+      setIsLoadingMenu(false)
+    }
+  }, [user])
 
   // Cargar pedido existente
-  useEffect(() => {
-    async function loadExistingOrder() {
-      if (!user) return
+  const loadExistingOrder = useCallback(async () => {
+    if (!user || !weekInfo) return
 
-      setIsLoading(true)
-      try {
-        const order = await OrderService.getUserOrder(user.id, weekStart)
-        setExistingOrder(order)
-        
-        if (order && order.status === 'draft') {
-          // Cargar selecciones del pedido existente
-          order.selections.forEach(selection => {
-            if (selection.almuerzo) {
-              updateSelection(selection.date, 'almuerzo', selection.almuerzo)
-            }
-            if (selection.colacion) {
-              updateSelection(selection.date, 'colacion', selection.colacion)
-            }
-          })
-        }
-      } catch (error) {
-        console.error('Error loading existing order:', error)
-      } finally {
-        setIsLoading(false)
-      }
+    try {
+      setIsLoadingOrder(true)
+      setOrderError(null)
+
+      const order = await OrderService.getUserOrder(user.id, weekInfo.weekStart)
+      setExistingOrder(order)
+
+    } catch (error) {
+      console.error('Error loading existing order:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Error al cargar el pedido'
+      setOrderError(errorMessage)
+    } finally {
+      setIsLoadingOrder(false)
     }
+  }, [user, weekInfo])
 
-    loadExistingOrder()
-  }, [user, weekStart])
+  // Procesar pago
+  const processPayment = useCallback(async () => {
+    if (!user || !weekInfo) return
 
-  // Establecer tipo de usuario
+    try {
+      setIsProcessingPayment(true)
+      setPaymentError(null)
+
+      const summary = getOrderSummaryByChild()
+      
+      // Usar el servicio de integración para procesar el pedido completo
+      const result = await MenuIntegrationService.processCompleteOrder(
+        user,
+        summary.selections,
+        weekInfo.weekStart
+      )
+
+      if (result.success && result.paymentUrl) {
+        // Actualizar el pedido existente
+        if (result.orderId) {
+          const updatedOrder = await OrderService.getOrderById(result.orderId)
+          setExistingOrder(updatedOrder)
+        }
+
+        // Redirigir a la página de pago
+        window.location.href = result.paymentUrl
+      } else {
+        throw new Error(result.error || 'Error al procesar el pago')
+      }
+
+    } catch (error) {
+      console.error('Error processing payment:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Error al procesar el pago'
+      setPaymentError(errorMessage)
+    } finally {
+      setIsProcessingPayment(false)
+    }
+  }, [user, weekInfo, getOrderSummaryByChild])
+
+  // Refrescar menú
+  const refreshMenu = useCallback(async () => {
+    await loadMenuData()
+  }, [loadMenuData])
+
+  // Limpiar errores
+  const clearErrors = useCallback(() => {
+    setMenuError(null)
+    setOrderError(null)
+    setPaymentError(null)
+  }, [])
+
+  // Efectos
   useEffect(() => {
     if (user) {
-      setUserType(user.userType === 'funcionario' ? 'funcionario' : 'estudiante')
+      loadMenuData()
     }
-  }, [user, setUserType])
+  }, [user, loadMenuData])
 
-  // Validar pedido cuando cambian las selecciones
   useEffect(() => {
-    const newValidation = OrderService.validateOrder(
-      selections, 
-      weekDays, 
-      isOrderingAllowed
-    )
-    setValidation(newValidation)
-  }, [selections, weekDays, isOrderingAllowed])
-
-  const saveOrder = async (): Promise<string | null> => {
-    if (!user || !validation.canProceedToPayment) {
-      return null
+    if (user && weekInfo) {
+      loadExistingOrder()
     }
-
-    setIsSaving(true)
-    try {
-      const summary = getOrderSummary()
-      
-      const orderData: Omit<OrderState, 'id' | 'createdAt'> = {
-        userId: user.id,
-        weekStart,
-        selections: summary.selections,
-        total: summary.total,
-        status: 'pending'
-      }
-
-      let orderId: string
-
-      if (existingOrder?.id) {
-        await OrderService.updateOrder(existingOrder.id, orderData)
-        orderId = existingOrder.id
-      } else {
-        orderId = await OrderService.saveOrder(orderData)
-      }
-
-      return orderId
-    } catch (error) {
-      console.error('Error saving order:', error)
-      throw error
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const isReadOnly = existingOrder?.status === 'paid' || !isOrderingAllowed
+  }, [user, weekInfo, loadExistingOrder])
 
   return {
+    // Estado del menú
+    weekMenu,
+    isLoadingMenu,
+    menuError,
+    weekInfo,
+    
+    // Estado del pedido
     existingOrder,
-    isLoading,
-    isSaving,
-    validation,
-    isReadOnly,
-    saveOrder,
-    orderSummary: getOrderSummary()
+    isLoadingOrder,
+    orderError,
+    
+    // Estado del pago
+    isProcessingPayment,
+    paymentError,
+    
+    // Acciones
+    refreshMenu,
+    processPayment,
+    clearErrors
   }
 }

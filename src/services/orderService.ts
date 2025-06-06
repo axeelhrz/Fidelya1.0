@@ -6,10 +6,11 @@ import {
   updateDoc, 
   query, 
   where, 
-  Timestamp 
+  Timestamp,
+  getDoc
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
-import { OrderState, OrderValidation } from '@/types/order'
+import { OrderValidation } from '@/types/order'
 import { OrderSelectionByChild, Child, User } from '@/types/panel'
 
 export interface OrderStateByChild {
@@ -20,21 +21,23 @@ export interface OrderStateByChild {
   fechaCreacion: Date
   resumenPedido: OrderSelectionByChild[]
   total: number
-  status: 'pendiente' | 'pagado' | 'cancelado'
+  status: 'pendiente' | 'pagado' | 'cancelado' | 'procesando_pago'
   createdAt: Date
   paidAt?: Date
   paymentId?: string
 }
 
 export class OrderService {
+  private static readonly COLLECTION_NAME = 'orders'
+
   static async getUserOrder(userId: string, weekStart: string): Promise<OrderStateByChild | null> {
     try {
-      const ordersRef = collection(db, 'orders')
+      const ordersRef = collection(db, this.COLLECTION_NAME)
       const q = query(
         ordersRef,
         where('userId', '==', userId),
         where('weekStart', '==', weekStart),
-        where('status', 'in', ['pendiente', 'pagado'])
+        where('status', 'in', ['pendiente', 'pagado', 'procesando_pago'])
       )
       
       const snapshot = await getDocs(q)
@@ -43,11 +46,11 @@ export class OrderService {
         return null
       }
       
-      const doc = snapshot.docs[0]
-      const data = doc.data()
+      const docData = snapshot.docs[0]
+      const data = docData.data()
       
       return {
-        id: doc.id,
+        id: docData.id,
         userId: data.userId,
         tipoUsuario: data.tipoUsuario,
         weekStart: data.weekStart,
@@ -67,7 +70,7 @@ export class OrderService {
 
   static async saveOrder(order: Omit<OrderStateByChild, 'id' | 'createdAt' | 'fechaCreacion'>): Promise<string> {
     try {
-      const ordersRef = collection(db, 'orders')
+      const ordersRef = collection(db, this.COLLECTION_NAME)
       
       const orderData = {
         ...order,
@@ -86,9 +89,15 @@ export class OrderService {
 
   static async updateOrder(orderId: string, updates: Partial<OrderStateByChild>): Promise<void> {
     try {
-      const orderRef = doc(db, 'orders', orderId)
+      const orderRef = doc(db, this.COLLECTION_NAME, orderId)
       
-      const { paidAt, fechaCreacion, ...restUpdates } = updates
+      // Verificar que el documento existe
+      const docSnap = await getDoc(orderRef)
+      if (!docSnap.exists()) {
+        throw new Error('El pedido no existe')
+      }
+      
+      const { paidAt, fechaCreacion, createdAt, ...restUpdates } = updates
       const updateData: any = {
         ...restUpdates,
         updatedAt: Timestamp.now()
@@ -101,11 +110,79 @@ export class OrderService {
       if (fechaCreacion) {
         updateData.fechaCreacion = Timestamp.fromDate(fechaCreacion)
       }
+
+      if (createdAt) {
+        updateData.createdAt = Timestamp.fromDate(createdAt)
+      }
       
       await updateDoc(orderRef, updateData)
     } catch (error) {
       console.error('Error updating order:', error)
       throw new Error('No se pudo actualizar el pedido')
+    }
+  }
+
+  static async getOrderById(orderId: string): Promise<OrderStateByChild | null> {
+    try {
+      const orderRef = doc(db, this.COLLECTION_NAME, orderId)
+      const docSnap = await getDoc(orderRef)
+      
+      if (!docSnap.exists()) {
+        return null
+      }
+      
+      const data = docSnap.data()
+      return {
+        id: docSnap.id,
+        userId: data.userId,
+        tipoUsuario: data.tipoUsuario,
+        weekStart: data.weekStart,
+        fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
+        resumenPedido: data.resumenPedido || [],
+        total: data.total || 0,
+        status: data.status || 'pendiente',
+        createdAt: data.createdAt?.toDate() || new Date(),
+        paidAt: data.paidAt?.toDate(),
+        paymentId: data.paymentId
+      }
+    } catch (error) {
+      console.error('Error fetching order by ID:', error)
+      return null
+    }
+  }
+
+  static async getAllOrdersForWeek(weekStart: string): Promise<OrderStateByChild[]> {
+    try {
+      const ordersRef = collection(db, this.COLLECTION_NAME)
+      const q = query(
+        ordersRef,
+        where('weekStart', '==', weekStart)
+      )
+      
+      const snapshot = await getDocs(q)
+      const orders: OrderStateByChild[] = []
+      
+      snapshot.forEach((doc) => {
+        const data = doc.data()
+        orders.push({
+          id: doc.id,
+          userId: data.userId,
+          tipoUsuario: data.tipoUsuario,
+          weekStart: data.weekStart,
+          fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
+          resumenPedido: data.resumenPedido || [],
+          total: data.total || 0,
+          status: data.status || 'pendiente',
+          createdAt: data.createdAt?.toDate() || new Date(),
+          paidAt: data.paidAt?.toDate(),
+          paymentId: data.paymentId
+        })
+      })
+      
+      return orders
+    } catch (error) {
+      console.error('Error fetching orders for week:', error)
+      throw new Error('No se pudieron cargar los pedidos de la semana')
     }
   }
 
@@ -121,12 +198,14 @@ export class OrderService {
     
     // Verificar si se permite hacer pedidos
     if (!isOrderingAllowed) {
-      errors.push('El tiempo para realizar pedidos ha expirado (miércoles 13:00)')
+      errors.push('El tiempo para realizar pedidos ha expirado')
     }
     
     if (user.tipoUsuario === 'apoderado') {
-      // Para apoderados: verificar que todos los días tengan almuerzo para al menos un hijo
-      weekDays.forEach(day => {
+      // Para apoderados: verificar que todos los días laborales tengan almuerzo para al menos un hijo
+      const weekDaysLaboral = weekDays.filter((_, index) => index < 5) // Solo lunes a viernes
+      
+      weekDaysLaboral.forEach(day => {
         const daySelections = selections.filter(s => s.date === day && s.almuerzo)
         if (daySelections.length === 0) {
           missingDays.push(day)
@@ -134,7 +213,7 @@ export class OrderService {
       })
       
       if (missingDays.length > 0) {
-        errors.push(`Faltan seleccionar almuerzos para ${missingDays.length} día(s)`)
+        errors.push(`Faltan seleccionar almuerzos para ${missingDays.length} día(s) laboral(es)`)
       }
       
       // Verificar que haya hijos registrados
@@ -142,8 +221,10 @@ export class OrderService {
         errors.push('Debe registrar al menos un hijo para realizar pedidos')
       }
     } else {
-      // Para funcionarios: verificar que todos los días tengan almuerzo
-      weekDays.forEach(day => {
+      // Para funcionarios: verificar que todos los días laborales tengan almuerzo
+      const weekDaysLaboral = weekDays.filter((_, index) => index < 5) // Solo lunes a viernes
+      
+      weekDaysLaboral.forEach(day => {
         const selection = selections.find(s => s.date === day && s.almuerzo)
         if (!selection) {
           missingDays.push(day)
@@ -151,7 +232,7 @@ export class OrderService {
       })
       
       if (missingDays.length > 0) {
-        errors.push(`Faltan seleccionar almuerzos para ${missingDays.length} día(s)`)
+        errors.push(`Faltan seleccionar almuerzos para ${missingDays.length} día(s) laboral(es)`)
       }
     }
     
@@ -186,10 +267,12 @@ export class OrderService {
     const missingDays: string[] = []
     
     if (!isOrderingAllowed) {
-      errors.push('El tiempo para realizar pedidos ha expirado (miércoles 13:00)')
+      errors.push('El tiempo para realizar pedidos ha expirado')
     }
     
-    weekDays.forEach(day => {
+    const weekDaysLaboral = weekDays.filter((_, index) => index < 5) // Solo lunes a viernes
+    
+    weekDaysLaboral.forEach(day => {
       const selection = selections.find(s => s.date === day)
       if (!selection || !selection.almuerzo) {
         missingDays.push(day)
@@ -197,7 +280,7 @@ export class OrderService {
     })
     
     if (missingDays.length > 0) {
-      errors.push(`Faltan seleccionar almuerzos para ${missingDays.length} día(s)`)
+      errors.push(`Faltan seleccionar almuerzos para ${missingDays.length} día(s) laboral(es)`)
     }
     
     if (selections.length === 0) {
@@ -215,6 +298,49 @@ export class OrderService {
       warnings,
       missingDays,
       canProceedToPayment: errors.length === 0 && isOrderingAllowed
+    }
+  }
+
+  // Calcular total del pedido
+  static calculateOrderTotal(selections: OrderSelectionByChild[], userType: 'apoderado' | 'funcionario'): number {
+    const prices = userType === 'funcionario' 
+      ? { almuerzo: 4875, colacion: 4875 }
+      : { almuerzo: 5500, colacion: 5500 }
+
+    let total = 0
+    
+    selections.forEach(selection => {
+      if (selection.almuerzo) {
+        total += prices.almuerzo
+      }
+      if (selection.colacion) {
+        total += prices.colacion
+      }
+    })
+    
+    return total
+  }
+
+  // Obtener resumen del pedido
+  static getOrderSummary(selections: OrderSelectionByChild[], userType: 'apoderado' | 'funcionario') {
+    const totalAlmuerzos = selections.filter(s => s.almuerzo).length
+    const totalColaciones = selections.filter(s => s.colacion).length
+    
+    const prices = userType === 'funcionario' 
+      ? { almuerzo: 4875, colacion: 4875 }
+      : { almuerzo: 5500, colacion: 5500 }
+    
+    const subtotalAlmuerzos = totalAlmuerzos * prices.almuerzo
+    const subtotalColaciones = totalColaciones * prices.colacion
+    const total = subtotalAlmuerzos + subtotalColaciones
+    
+    return {
+      totalAlmuerzos,
+      totalColaciones,
+      subtotalAlmuerzos,
+      subtotalColaciones,
+      total,
+      selections
     }
   }
 }

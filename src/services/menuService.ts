@@ -2,7 +2,7 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { MenuItem, PRICES, UserType } from '@/types/panel'
 import { DayMenuDisplay, WeekMenuDisplay } from '@/types/menu'
-import { format, startOfWeek, endOfWeek, addDays, isBefore, isToday, isAfter, isSameDay, parseISO } from 'date-fns'
+import { format, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export class MenuService {
@@ -43,6 +43,7 @@ export class MenuService {
         menusRef,
         where('weekStart', '==', actualWeekStart),
         where('active', '==', true), // Solo items activos
+        where('published', '==', true), // Solo items publicados
         orderBy('date', 'asc'),
         orderBy('type', 'asc')
       )
@@ -55,14 +56,14 @@ export class MenuService {
         menuItems.push({
           id: doc.id,
           code: data.code,
-          name: data.name || data.description,
+          name: data.description, // Usar description como name
           description: data.description,
           type: data.type,
           price: 0, // Se calculará dinámicamente según tipo de usuario
-          available: data.available !== false && data.active !== false,
+          available: data.active && data.published,
           image: data.image,
           date: data.date,
-          dia: data.dia,
+          dia: data.day,
           active: data.active
         })
       })

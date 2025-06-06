@@ -1,38 +1,35 @@
-"use client"
-
 import { useState, useEffect } from 'react'
 import { MenuService } from '@/services/menuService'
+import { AdminMenuService } from '@/services/adminMenuService'
 import { DayMenuDisplay } from '@/types/menu'
 import { User } from '@/types/panel'
 
 interface UseWeeklyMenuDataProps {
   user: User | null
   weekStart?: string
+  useAdminData?: boolean // Si true, usa datos de admin (incluye no publicados)
 }
 
 interface UseWeeklyMenuDataReturn {
   weekMenu: DayMenuDisplay[]
   isLoading: boolean
   error: string | null
-  weekInfo: {
-    weekStart: string
-    weekEnd: string
-    weekLabel: string
-    isOrderingAllowed: boolean
-    orderDeadline: Date
-  } | null
+  weekInfo: any
   refetch: () => Promise<void>
 }
 
-export function useWeeklyMenuData({ user, weekStart }: UseWeeklyMenuDataProps): UseWeeklyMenuDataReturn {
+export function useWeeklyMenuData({ 
+  user, 
+  weekStart, 
+  useAdminData = false 
+}: UseWeeklyMenuDataProps): UseWeeklyMenuDataReturn {
   const [weekMenu, setWeekMenu] = useState<DayMenuDisplay[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [weekInfo, setWeekInfo] = useState<UseWeeklyMenuDataReturn['weekInfo']>(null)
+  const [weekInfo, setWeekInfo] = useState<any>(null)
 
-  const fetchWeeklyMenu = async () => {
+  const loadMenuData = async () => {
     if (!user) {
-      console.log('User not available')
       setIsLoading(false)
       return
     }
@@ -41,39 +38,86 @@ export function useWeeklyMenuData({ user, weekStart }: UseWeeklyMenuDataProps): 
       setIsLoading(true)
       setError(null)
 
-      console.log('Fetching menu for user:', user)
-
-      // Obtener información de la semana actual
+      // Obtener información de la semana
       const currentWeekInfo = MenuService.getCurrentWeekInfo()
+      const targetWeekStart = weekStart || currentWeekInfo.weekStart
       
-      // Usar el método mejorado que puede manejar diferentes formatos de usuario
-      const menuData = await MenuService.getWeeklyMenuForUser(user, weekStart)
-      
-      setWeekMenu(menuData)
       setWeekInfo({
-        weekStart: currentWeekInfo.weekStart,
-        weekEnd: currentWeekInfo.weekEnd,
-        weekLabel: MenuService.getWeekDisplayText(currentWeekInfo.weekStart, currentWeekInfo.weekEnd),
-        isOrderingAllowed: currentWeekInfo.isOrderingAllowed,
-        orderDeadline: currentWeekInfo.orderDeadline
+        ...currentWeekInfo,
+        weekStart: targetWeekStart,
+        weekLabel: MenuService.getWeekDisplayText(
+          targetWeekStart, 
+          MenuService.getFormattedDate(
+            new Date(new Date(targetWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          )
+        )
       })
+
+      let menuData: DayMenuDisplay[]
+
+      if (useAdminData) {
+        // Para admin: obtener todos los menús (publicados y no publicados)
+        const adminMenu = await AdminMenuService.getWeeklyMenu(targetWeekStart)
+        if (adminMenu) {
+          // Convertir formato de admin a formato de usuario
+          menuData = adminMenu.days.map(day => ({
+            date: day.date,
+            day: day.day,
+            dayLabel: day.dayName,
+            dateFormatted: MenuService.getDayDisplayName(day.date),
+            almuerzos: day.almuerzos.map(item => ({
+              id: item.id || '',
+              code: item.code,
+              name: item.description,
+              description: item.description,
+              type: item.type,
+              price: user.tipoUsuario === 'funcionario' ? 4875 : 5500,
+              available: item.active,
+              date: item.date,
+              dia: item.day,
+              active: item.active
+            })),
+            colaciones: day.colaciones.map(item => ({
+              id: item.id || '',
+              code: item.code,
+              name: item.description,
+              description: item.description,
+              type: item.type,
+              price: user.tipoUsuario === 'funcionario' ? 4875 : 5500,
+              available: item.active,
+              date: item.date,
+              dia: item.day,
+              active: item.active
+            })),
+            hasItems: day.almuerzos.length > 0 || day.colaciones.length > 0,
+            isAvailable: day.almuerzos.length > 0 && MenuService.isDayOrderingAllowed(day.date)
+          }))
+        } else {
+          menuData = []
+        }
+      } else {
+        // Para usuarios: solo menús publicados
+        menuData = await MenuService.getWeeklyMenuForUser(user, targetWeekStart)
+      }
+
+      setWeekMenu(menuData)
+
     } catch (err) {
-      console.error('Error fetching weekly menu:', err)
-      setError(err instanceof Error ? err.message : 'Error al cargar el menú')
-      setWeekMenu([])
-      setWeekInfo(null)
+      console.error('Error loading menu data:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar el menú'
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchWeeklyMenu()
-  }, [user?.id, weekStart]) // Simplified dependency array
-
   const refetch = async () => {
-    await fetchWeeklyMenu()
+    await loadMenuData()
   }
+
+  useEffect(() => {
+    loadMenuData()
+  }, [user, weekStart, useAdminData])
 
   return {
     weekMenu,
