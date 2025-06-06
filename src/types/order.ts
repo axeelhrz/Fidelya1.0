@@ -55,11 +55,12 @@ export interface OrderValidation {
 export interface PaymentRequest {
   orderId: string
   amount: number
-  currency: 'CLP'
+  currency?: 'CLP'
   description: string
   userEmail: string
-  returnUrl: string
-  cancelUrl: string
+  customerName?: string
+  returnUrl?: string
+  cancelUrl?: string
 }
 
 export interface PaymentResponse {

@@ -45,15 +45,20 @@ export class PaymentService {
     try {
       console.log('Creating GetNet payment with request:', request)
 
+      // Extraer nombre del cliente de manera más robusta
+      const customerName = this.extractCustomerName(request)
+
       const getNetRequest: GetNetPaymentRequest = {
-        amount: request.amount, // GetNet espera el monto en pesos chilenos
+        amount: request.amount,
         orderId: request.orderId,
         description: request.description || `Pedido Casino Escolar #${request.orderId}`,
         customerEmail: request.userEmail,
-        customerName: request.userEmail, // Using userEmail as customerName since customerName doesn't exist on PaymentRequest
+        customerName: customerName,
         returnUrl: GETNET_CONFIG.returnUrl,
         notifyUrl: GETNET_CONFIG.notifyUrl
       }
+
+      console.log('GetNet request prepared:', getNetRequest)
 
       const response = await fetch('/api/payment/create', {
         method: 'POST',
@@ -70,7 +75,7 @@ export class PaymentService {
           statusText: response.statusText,
           errorData
         })
-        throw new Error(errorData.message || `Error del servidor: ${response.status}`)
+        throw new Error(errorData.error || errorData.message || `Error del servidor: ${response.status}`)
       }
       
       const data: GetNetPaymentResponse = await response.json()
@@ -93,6 +98,30 @@ export class PaymentService {
         error: error instanceof Error ? error.message : 'Error desconocido al procesar el pago'
       }
     }
+  }
+
+  // Método auxiliar para extraer nombre del cliente
+  private static extractCustomerName(request: PaymentRequest): string {
+    // Si hay un customerName en el request, usarlo
+    if ((request as any).customerName) {
+      return (request as any).customerName
+    }
+
+    // Intentar extraer nombre del email
+    if (request.userEmail) {
+      const emailParts = request.userEmail.split('@')
+      if (emailParts.length > 0) {
+        // Capitalizar primera letra y reemplazar puntos/guiones con espacios
+        const name = emailParts[0]
+          .replace(/[._-]/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ')
+        return name || 'Cliente'
+      }
+    }
+
+    return 'Cliente'
   }
 
   // Verificar estado del pago

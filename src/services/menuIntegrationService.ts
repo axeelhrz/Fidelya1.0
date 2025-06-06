@@ -122,14 +122,19 @@ export class MenuIntegrationService {
 
       const orderId = await OrderService.saveOrder(orderData)
 
-      // 5. Crear pago
+      // 5. Crear pago - MEJORADO con mejor manejo del nombre del cliente
+      const customerName = this.extractCustomerName(user)
+      const customerEmail = user.email || user.correo || ''
+
       const paymentRequest = {
         amount: total,
         orderId,
         description: `Pedido Casino Escolar - ${availability.weekLabel}`,
-        customerEmail: user.email || user.correo || '',
-        customerName: user.name || user.nombre || `${user.firstName || ''} ${user.lastName || ''}`.trim()
+        userEmail: customerEmail,
+        customerName: customerName
       }
+
+      console.log('Creating payment with request:', paymentRequest)
 
       const paymentResponse = await PaymentService.createPayment(paymentRequest)
 
@@ -159,6 +164,36 @@ export class MenuIntegrationService {
         error: error instanceof Error ? error.message : 'Error interno del servidor'
       }
     }
+  }
+
+  // Método auxiliar para extraer nombre del cliente
+  private static extractCustomerName(user: User): string {
+    // Intentar diferentes campos de nombre
+    if (user.name) return user.name
+    if (user.nombre) return user.nombre
+    
+    // Combinar firstName y lastName
+    const firstName = user.firstName || user.nombre || ''
+    const lastName = user.lastName || user.apellido || ''
+    
+    if (firstName || lastName) {
+      return `${firstName} ${lastName}`.trim()
+    }
+
+    // Extraer del email como último recurso
+    const email = user.email || user.correo || ''
+    if (email) {
+      const emailParts = email.split('@')
+      if (emailParts.length > 0) {
+        return emailParts[0]
+          .replace(/[._-]/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ')
+      }
+    }
+
+    return 'Cliente'
   }
 
   // Obtener estadísticas de pedidos para una semana

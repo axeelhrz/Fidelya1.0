@@ -42,14 +42,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Preparar datos para GetNet según su API
+    // Preparar datos para GetNet según su API - CORREGIDO
     const getNetPayload = {
       login: GETNET_CONFIG.login,
       amount: body.amount,
       order_id: body.orderId,
       description: body.description || `Pedido Casino Escolar #${body.orderId}`,
       customer_email: body.customerEmail,
-      customer_name: body.customerName || 'Cliente',
+      customer_name: body.customerName || body.customerEmail.split('@')[0], // Extraer nombre del email si no se proporciona
       return_url: body.returnUrl || `${request.nextUrl.origin}/payment/return`,
       notify_url: body.notifyUrl || `${request.nextUrl.origin}/api/payment/notify`,
       currency: 'CLP'
@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
 
     console.log('GetNet payload prepared:', { ...getNetPayload, signature: '[HIDDEN]' })
 
-    // Llamar a la API de GetNet
-    const getNetResponse = await fetch(`${GETNET_CONFIG.apiUrl}/api/payment/create`, {
+    // Llamar a la API de GetNet - ENDPOINT CORREGIDO
+    const getNetResponse = await fetch(`${GETNET_CONFIG.apiUrl}/checkout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -80,19 +80,19 @@ export async function POST(request: NextRequest) {
       throw new Error(getNetData.message || `GetNet API error: ${getNetResponse.status}`)
     }
 
-    // Procesar respuesta exitosa de GetNet
-    if (getNetData.success && getNetData.payment_url) {
+    // Procesar respuesta exitosa de GetNet - MEJORADO
+    if (getNetData.success || getNetData.status === 'success') {
       const response: GetNetPaymentResponse = {
         success: true,
-        paymentId: getNetData.payment_id || getNetData.transaction_id,
-        redirectUrl: getNetData.payment_url,
-        transactionId: getNetData.transaction_id
+        paymentId: getNetData.payment_id || getNetData.transaction_id || getNetData.id,
+        redirectUrl: getNetData.payment_url || getNetData.redirect_url || getNetData.url,
+        transactionId: getNetData.transaction_id || getNetData.id
       }
 
       console.log('GetNet payment created successfully:', response)
       return NextResponse.json(response)
     } else {
-      throw new Error(getNetData.error || 'Error en la respuesta de GetNet')
+      throw new Error(getNetData.error || getNetData.message || 'Error en la respuesta de GetNet')
     }
 
   } catch (error) {
