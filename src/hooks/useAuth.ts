@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/app/lib/firebase'
+import { User, Child } from '@/types/panel'
 
 interface AuthUser {
   id: string
@@ -23,14 +24,14 @@ interface AuthUser {
 }
 
 interface UseAuthReturn {
-  user: AuthUser | null
+  user: User | null
   isLoading: boolean
   isAuthenticated: boolean
 }
 
 export function useAuth(): UseAuthReturn {
   const router = useRouter()
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -39,11 +40,21 @@ export function useAuth(): UseAuthReturn {
         try {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
           if (userDoc.exists()) {
-            const userData = userDoc.data() as Omit<AuthUser, 'id'>
-            setUser({
-              ...userData,
-              id: firebaseUser.uid
-            })
+            const userData = userDoc.data()
+            
+            // Mapear los datos del usuario al formato esperado
+            const mappedUser: User = {
+              id: firebaseUser.uid,
+              email: userData.email || firebaseUser.email || '',
+              firstName: userData.firstName || userData.nombre || '',
+              lastName: userData.lastName || userData.apellido || '',
+              tipoUsuario: userData.tipoUsuario || userData.userType || 'apoderado',
+              children: userData.children || userData.hijos || [],
+              active: userData.active !== false,
+              createdAt: userData.createdAt?.toDate() || new Date()
+            }
+            
+            setUser(mappedUser)
           } else {
             // Usuario no encontrado en Firestore
             setUser(null)

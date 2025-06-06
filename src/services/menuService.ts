@@ -1,6 +1,6 @@
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
-import { MenuItem, PRICES } from '@/types/panel'
+import { MenuItem, PRICES, UserType } from '@/types/panel'
 import { DayMenuDisplay, WeekMenuDisplay } from '@/types/menu'
 import { format, startOfWeek, endOfWeek, addDays, isBefore } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -47,20 +47,41 @@ export class MenuService {
     }
   }
 
-  static async getWeeklyMenuForUser(userType: 'funcionario' | 'apoderado', weekStart?: string): Promise<DayMenuDisplay[]> {
+  static async getWeeklyMenuForUser(userType: UserType, weekStart?: string): Promise<DayMenuDisplay[]> {
     try {
+      // Validar userType antes de proceder
+      if (!userType) {
+        console.error('UserType is undefined or null')
+        throw new Error('Tipo de usuario no definido')
+      }
+
+      // Normalizar userType para asegurar que sea válido
+      const normalizedUserType: UserType = userType === 'funcionario' ? 'funcionario' : 'apoderado'
+      
       const weekMenu = await this.getWeeklyMenu(weekStart)
+      
+      // Verificar que PRICES esté definido y tenga la estructura correcta
+      if (!PRICES || !PRICES[normalizedUserType]) {
+        console.error('PRICES not defined or missing userType:', normalizedUserType)
+        throw new Error('Configuración de precios no encontrada')
+      }
+
+      const prices = PRICES[normalizedUserType]
+      if (!prices || typeof prices.almuerzo !== 'number' || typeof prices.colacion !== 'number') {
+        console.error('Price structure invalid for userType:', normalizedUserType, prices)
+        throw new Error('Estructura de precios inválida')
+      }
       
       // Aplicar precios según tipo de usuario
       const daysWithPrices = weekMenu.days.map(day => ({
         ...day,
         almuerzos: day.almuerzos.map(item => ({
           ...item,
-          price: PRICES[userType].almuerzo
+          price: prices.almuerzo
         })),
         colaciones: day.colaciones.map(item => ({
           ...item,
-          price: PRICES[userType].colacion
+          price: prices.colacion
         }))
       }))
       
