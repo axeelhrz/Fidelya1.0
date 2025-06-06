@@ -39,18 +39,32 @@ export function UsersStats({ stats, isLoading }: UsersStatsProps) {
     )
   }
 
+  // Helper function to safely format numbers
+  const formatNumber = (value: number | undefined | null): string => {
+    if (value === undefined || value === null || isNaN(value)) {
+      return '0'
+    }
+    return value.toLocaleString()
+  }
+
+  // Helper function to safely calculate percentage
+  const calculatePercentage = (part: number | undefined | null, total: number | undefined | null): number => {
+    if (!part || !total || total === 0) return 0
+    return Math.round((part / total) * 100)
+  }
+
   const statsCards = [
     {
       title: 'Total Usuarios',
-      value: stats.totalUsers,
+      value: stats.totalUsers || 0,
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100 dark:bg-blue-900/30',
       description: 'Usuarios registrados'
     },
     {
-      title: 'Apoderados',
-      value: stats.estudiantes,
+      title: 'Estudiantes',
+      value: stats.estudiantes || 0,
       icon: UserCheck,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
@@ -58,7 +72,7 @@ export function UsersStats({ stats, isLoading }: UsersStatsProps) {
     },
     {
       title: 'Funcionarios',
-      value: stats.funcionarios,
+      value: stats.funcionarios || 0,
       icon: UserCheck,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100 dark:bg-purple-900/30',
@@ -66,7 +80,7 @@ export function UsersStats({ stats, isLoading }: UsersStatsProps) {
     },
     {
       title: 'Administradores',
-      value: stats.admins,
+      value: stats.admins || 0,
       icon: Shield,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100 dark:bg-orange-900/30',
@@ -74,15 +88,15 @@ export function UsersStats({ stats, isLoading }: UsersStatsProps) {
     },
     {
       title: 'Emails Verificados',
-      value: stats.verifiedEmails,
+      value: stats.verifiedEmails || 0,
       icon: Mail,
       color: 'text-green-600',
       bgColor: 'bg-green-100 dark:bg-green-900/30',
-      description: `${Math.round((stats.verifiedEmails / stats.totalUsers) * 100)}% del total`
+      description: `${calculatePercentage(stats.verifiedEmails, stats.totalUsers)}% del total`
     },
     {
       title: 'Sin Verificar',
-      value: stats.unverifiedEmails,
+      value: stats.unverifiedEmails || 0,
       icon: MailX,
       color: 'text-red-600',
       bgColor: 'bg-red-100 dark:bg-red-900/30',
@@ -90,7 +104,7 @@ export function UsersStats({ stats, isLoading }: UsersStatsProps) {
     },
     {
       title: 'Nuevos (Semana)',
-      value: stats.newUsersThisWeek,
+      value: stats.newUsersThisWeek || 0,
       icon: TrendingUp,
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
@@ -98,7 +112,7 @@ export function UsersStats({ stats, isLoading }: UsersStatsProps) {
     },
     {
       title: 'Nuevos (Mes)',
-      value: stats.newUsersThisMonth,
+      value: stats.newUsersThisMonth || 0,
       icon: Calendar,
       color: 'text-cyan-600',
       bgColor: 'bg-cyan-100 dark:bg-cyan-900/30',
@@ -129,7 +143,7 @@ export function UsersStats({ stats, isLoading }: UsersStatsProps) {
             <CardContent>
               <div className="space-y-2">
                 <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {stat.value.toLocaleString()}
+                  {formatNumber(stat.value)}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {stat.description}

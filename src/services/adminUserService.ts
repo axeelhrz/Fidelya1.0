@@ -40,10 +40,17 @@ export class AdminUserService {
       
       let totalUsers = 0
       let activeUsers = 0
-      let verifiedUsers = 0
+      let verifiedEmails = 0
       let funcionarios = 0
       let estudiantes = 0
       let admins = 0
+      let newUsersThisWeek = 0
+      let newUsersThisMonth = 0
+
+      // Calcular fechas para filtros de tiempo
+      const now = new Date()
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
       usersSnapshot.forEach((doc) => {
         const userData = doc.data()
@@ -56,7 +63,7 @@ export class AdminUserService {
         
         // Contar usuarios verificados
         if (userData.emailVerified === true) {
-          verifiedUsers++
+          verifiedEmails++
         }
         
         // Contar por tipo de usuario
@@ -74,7 +81,19 @@ export class AdminUserService {
             estudiantes++
             break
         }
+
+        // Contar usuarios nuevos
+        const createdAt = userData.createdAt?.toDate() || new Date(0)
+        if (createdAt >= oneWeekAgo) {
+          newUsersThisWeek++
+        }
+        if (createdAt >= oneMonthAgo) {
+          newUsersThisMonth++
+        }
       })
+
+      // Calcular emails no verificados
+      const unverifiedEmails = totalUsers - verifiedEmails
 
       // Obtener estadísticas de pedidos
       const ordersRef = collection(db, this.ORDERS_COLLECTION)
@@ -92,14 +111,14 @@ export class AdminUserService {
 
       return {
         totalUsers,
-        activeUsers,
-        verifiedUsers,
         funcionarios,
         estudiantes,
         admins,
-        totalOrders,
-        usersWithOrders: usersWithOrders.size,
-        averageOrdersPerUser: totalUsers > 0 ? totalOrders / totalUsers : 0
+        verifiedEmails,
+        unverifiedEmails,
+        activeUsers,
+        newUsersThisWeek,
+        newUsersThisMonth
       }
     } catch (error) {
       console.error('Error fetching user stats:', error)
@@ -383,7 +402,8 @@ export class AdminUserService {
           weekStart: data.weekStart || '',
           total: data.total || 0,
           status: data.status || 'pending',
-          createdAt: data.createdAt?.toDate() || new Date()
+          createdAt: data.createdAt?.toDate() || new Date(),
+          itemsCount: data.items?.length || 0
         }
       })
     } catch (error) {
