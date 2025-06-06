@@ -3,59 +3,39 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { onAuthStateChanged, signOut } from 'firebase/auth'
-import { doc, getDoc, collection, addDoc } from 'firebase/firestore'
-import { auth, db } from '@/app/lib/firebase'
 import { Navbar } from '@/components/panel/Navbar'
+import { GreetingCard } from '@/components/panel/dashboard/GreetingCard'
+import { OrderStatusCard } from '@/components/panel/dashboard/OrderStatusCard'
+import { EconomicSummaryCard } from '@/components/panel/dashboard/EconomicSummaryCard'
+import { WeeklyMenuInfoCard } from '@/components/panel/dashboard/WeeklyMenuInfoCard'
+import { QuickActionsCard } from '@/components/panel/dashboard/QuickActionsCard'
+import { AlertsCard } from '@/components/panel/dashboard/AlertsCard'
 import { WeeklyMenu } from '@/components/panel/WeeklyMenu'
 import { OrderSummary } from '@/components/panel/OrderSummary'
+import { useDashboardData } from '@/hooks/useDashboardData'
 import { useOrderStore } from '@/store/orderStore'
-import { DayMenu, User, Order } from '@/types/panel'
+import { DayMenu } from '@/types/panel'
 import { startOfWeek, endOfWeek, format, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { collection, addDoc } from 'firebase/firestore'
+import { db } from '@/app/lib/firebase'
 
 export default function PanelPage() {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
+  const { dashboardData, isLoading, error } = useDashboardData()
   const [weekMenu, setWeekMenu] = useState<DayMenu[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
-  const { setUserType, clearSelections, getOrderSummary } = useOrderStore()
-
-  // Verificar autenticación
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
-          if (userDoc.exists()) {
-            const userData = userDoc.data() as User
-            setUser(userData)
-            setUserType(userData.userType)
-          } else {
-            // Usuario no encontrado en Firestore, redirigir al registro
-            router.push('/auth/registro')
-          }
-        } catch (error) {
-          console.error('Error al obtener datos del usuario:', error)
-          router.push('/auth/login')
-        }
-      } else {
-        router.push('/auth/login')
-      }
-      setIsLoading(false)
-    })
-
-    return () => unsubscribe()
-  }, [router, setUserType])
+  const [showFullMenu, setShowFullMenu] = useState(false)
+  const { clearSelections, getOrderSummary } = useOrderStore()
 
   // Cargar menú de la semana
   useEffect(() => {
     const loadWeekMenu = async () => {
+      if (!dashboardData?.user) return
+
       try {
         const today = new Date()
-        const weekStart = startOfWeek(today, { weekStartsOn: 1 }) // Lunes
-        const weekEnd = endOfWeek(today, { weekStartsOn: 1 }) // Viernes
+        const weekStart = startOfWeek(today, { weekStartsOn: 1 })
 
         // Generar datos de ejemplo (en producción vendría de Firestore)
         const mockWeekMenu: DayMenu[] = []
@@ -72,7 +52,7 @@ export default function PanelPage() {
                 name: 'Pollo al horno con papas',
                 description: 'Pollo al horno con papas doradas, ensalada mixta y postre',
                 type: 'almuerzo',
-                price: user?.userType === 'funcionario' ? 4875 : 5500,
+                price: dashboardData.user.userType === 'funcionario' ? 4875 : 5500,
                 available: true
               },
               {
@@ -81,7 +61,7 @@ export default function PanelPage() {
                 name: 'Pescado a la plancha',
                 description: 'Pescado fresco a la plancha con arroz y verduras al vapor',
                 type: 'almuerzo',
-                price: user?.userType === 'funcionario' ? 4875 : 5500,
+                price: dashboardData.user.userType === 'funcionario' ? 4875 : 5500,
                 available: true
               },
               {
@@ -90,7 +70,7 @@ export default function PanelPage() {
                 name: 'Pasta con salsa boloñesa',
                 description: 'Pasta fresca con salsa boloñesa casera y queso parmesano',
                 type: 'almuerzo',
-                price: user?.userType === 'funcionario' ? 4875 : 5500,
+                price: dashboardData.user.userType === 'funcionario' ? 4875 : 5500,
                 available: true
               }
             ],
@@ -101,7 +81,7 @@ export default function PanelPage() {
                 name: 'Sándwich de pavo',
                 description: 'Sándwich integral con pavo, palta y tomate',
                 type: 'colacion',
-                price: user?.userType === 'funcionario' ? 1800 : 2000,
+                price: dashboardData.user.userType === 'funcionario' ? 1800 : 2000,
                 available: true
               },
               {
@@ -110,7 +90,7 @@ export default function PanelPage() {
                 name: 'Ensalada de frutas',
                 description: 'Mix de frutas frescas de temporada con yogurt',
                 type: 'colacion',
-                price: user?.userType === 'funcionario' ? 1800 : 2000,
+                price: dashboardData.user.userType === 'funcionario' ? 1800 : 2000,
                 available: true
               }
             ]
@@ -124,14 +104,13 @@ export default function PanelPage() {
       }
     }
 
-    if (user) {
+    if (dashboardData?.user) {
       loadWeekMenu()
     }
-  }, [user])
+  }, [dashboardData?.user])
 
   const handleLogout = async () => {
     try {
-      await signOut(auth)
       clearSelections()
       router.push('/')
     } catch (error) {
@@ -140,7 +119,7 @@ export default function PanelPage() {
   }
 
   const handleProceedToPayment = async () => {
-    if (!user) return
+    if (!dashboardData?.user) return
 
     setIsProcessingPayment(true)
     
@@ -148,8 +127,8 @@ export default function PanelPage() {
       const summary = getOrderSummary()
       
       // Crear orden en Firestore
-      const orderData: Omit<Order, 'id'> = {
-        userId: user.id,
+      const orderData = {
+        userId: dashboardData.user.id,
         weekStart: format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'),
         selections: summary.selections,
         total: summary.total,
@@ -159,20 +138,12 @@ export default function PanelPage() {
 
       const orderRef = await addDoc(collection(db, 'orders'), orderData)
       
-      // Aquí se integraría con GetNet
-      // Por ahora simulamos el proceso de pago
+      // Simular proceso de pago
       await new Promise(resolve => setTimeout(resolve, 2000))
       
-      // Simular pago exitoso
       const paymentSuccess = Math.random() > 0.1 // 90% de éxito
       
       if (paymentSuccess) {
-        // Actualizar orden como pagada
-        // await updateDoc(doc(db, 'orders', orderRef.id), {
-        //   status: 'paid',
-        //   paidAt: new Date()
-        // })
-        
         alert('¡Pago realizado con éxito! Tu pedido ha sido confirmado.')
         clearSelections()
       } else {
@@ -187,6 +158,7 @@ export default function PanelPage() {
     }
   }
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="panel-container">
@@ -202,7 +174,35 @@ export default function PanelPage() {
     )
   }
 
-  if (!user) {
+  // Error state
+  if (error) {
+    return (
+      <div className="panel-container">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">❌</span>
+            </div>
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 text-clean mb-2">
+              Error al cargar el panel
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 text-clean mb-4">
+              {error}
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="btn-panel-primary"
+            >
+              Reintentar
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // No data state
+  if (!dashboardData) {
     return null
   }
 
@@ -213,33 +213,81 @@ export default function PanelPage() {
 
       {/* Contenido principal */}
       <div className="panel-content">
+        {/* Dashboard Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="panel-grid"
+          className="space-y-6 mb-8"
         >
-          {/* Área principal - Menú semanal */}
-          <div className="panel-main">
-            <WeeklyMenu 
-              weekMenu={weekMenu} 
-              isLoading={false}
-            />
+          {/* Saludo personalizado */}
+          <GreetingCard user={dashboardData.user} />
+
+          {/* Grid de tarjetas principales */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <OrderStatusCard orderStatus={dashboardData.orderStatus} />
+            <EconomicSummaryCard economicSummary={dashboardData.economicSummary} />
+            <WeeklyMenuInfoCard weeklyMenuInfo={dashboardData.weeklyMenuInfo} />
           </div>
 
-          {/* Sidebar - Resumen del pedido */}
-          <div className="panel-sidebar">
-            <OrderSummary 
-              onProceedToPayment={handleProceedToPayment}
-              isProcessingPayment={isProcessingPayment}
-            />
+          {/* Acciones rápidas y alertas */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <QuickActionsCard />
+            <AlertsCard alerts={dashboardData.alerts} />
           </div>
         </motion.div>
+
+        {/* Toggle para mostrar menú completo */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-6"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 text-clean">
+              Gestión de Pedidos
+            </h2>
+            <button
+              onClick={() => setShowFullMenu(!showFullMenu)}
+              className="btn-panel-secondary text-sm"
+            >
+              {showFullMenu ? 'Ocultar menú' : 'Mostrar menú completo'}
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Menú completo y resumen (condicional) */}
+        {showFullMenu && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="panel-grid"
+          >
+            {/* Área principal - Menú semanal */}
+            <div className="panel-main">
+              <WeeklyMenu 
+                weekMenu={weekMenu} 
+                isLoading={false}
+              />
+            </div>
+
+            {/* Sidebar - Resumen del pedido */}
+            <div className="panel-sidebar">
+              <OrderSummary 
+                onProceedToPayment={handleProceedToPayment}
+                isProcessingPayment={isProcessingPayment}
+              />
+            </div>
+          </motion.div>
+        )}
 
         {/* Información adicional */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.4 }}
           className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6"
         >
           {/* Información de precios */}
@@ -252,13 +300,13 @@ export default function PanelPage() {
                 <div className="flex justify-between">
                   <span className="text-slate-600 dark:text-slate-400 text-clean">Almuerzo:</span>
                   <span className="font-medium text-slate-800 dark:text-slate-100 text-clean">
-                    ${user.userType === 'funcionario' ? '4.875' : '5.500'} CLP
+                    ${dashboardData.user.userType === 'funcionario' ? '4.875' : '5.500'} CLP
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600 dark:text-slate-400 text-clean">Colación:</span>
                   <span className="font-medium text-slate-800 dark:text-slate-100 text-clean">
-                    ${user.userType === 'funcionario' ? '1.800' : '2.000'} CLP
+                    ${dashboardData.user.userType === 'funcionario' ? '1.800' : '2.000'} CLP
                   </span>
                 </div>
               </div>
