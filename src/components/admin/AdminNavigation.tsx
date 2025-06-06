@@ -107,16 +107,12 @@ export function AdminNavigation({ className }: AdminNavigationProps) {
         />
       )}
 
-      {/* Navigation sidebar */}
+      {/* Navigation sidebar - Mobile */}
       <motion.nav
         initial={{ x: -280 }}
         animate={{ x: isMobileMenuOpen ? 0 : -280 }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className={cn(
-          "fixed left-0 top-0 h-full w-70 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 z-50 lg:translate-x-0 lg:static lg:z-auto",
-          "lg:block",
-          className
-        )}
+        className="lg:hidden fixed left-0 top-0 h-full w-70 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 z-50"
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -198,7 +194,7 @@ export function AdminNavigation({ className }: AdminNavigationProps) {
         </div>
       </motion.nav>
 
-      {/* Desktop navigation */}
+      {/* Desktop navigation - Fijo en la izquierda */}
       <nav className="hidden lg:block fixed left-0 top-0 h-full w-70 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 z-30">
         <div className="flex flex-col h-full">
           {/* Header */}

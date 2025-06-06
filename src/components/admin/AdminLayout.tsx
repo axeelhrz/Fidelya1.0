@@ -31,8 +31,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
           
           {/* Main content skeleton */}
-          <div className="flex-1 lg:ml-0">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex-1">
+            <div className="p-8">
               <div className="space-y-6">
                 <Skeleton className="h-20 w-full" />
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -82,7 +82,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {/* Navigation Sidebar */}
         <AdminNavigation />
         
-        {/* Main Content */}
+        {/* Main Content - Sin margen izquierdo en desktop, pegado al sidebar */}
         <div className="flex-1 lg:ml-70">
           <motion.main
             initial={{ opacity: 0, y: 20 }}
