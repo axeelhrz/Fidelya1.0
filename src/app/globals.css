@@ -1,4 +1,7 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   :root {
@@ -21,11 +24,6 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
     --radius: 0.75rem;
   }
 
@@ -49,70 +47,271 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 94.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
   }
-}
 
-@layer base {
   * {
-    @apply border-border;
+    @apply border-gray-200;
   }
+
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', sans-serif;
   }
 }
 
-/* Custom styles inspired by the elegant design */
-.font-playfair {
-  font-family: var(--font-playfair);
-}
-
-.font-inter {
-  font-family: var(--font-inter);
-}
-
-/* Smooth animations */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
+@layer components {
+  /* Elegant glass effect */
+  .glass-elegant {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
   }
-  50% {
-    transform: translateY(-10px);
+
+  /* Soft shadow utilities */
+  .shadow-soft {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .shadow-soft-lg {
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Educational theme colors */
+  .bg-education-primary {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  }
+
+  .bg-education-accent {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  }
+
+  /* Elegant button styles */
+  .btn-elegant {
+    @apply px-6 py-3 rounded-xl font-medium transition-all duration-300;
+    @apply shadow-soft hover:shadow-soft-lg;
+    @apply transform hover:-translate-y-1;
+  }
+
+  .btn-primary-elegant {
+    @apply btn-elegant bg-slate-800 text-white hover:bg-slate-700;
+  }
+
+  .btn-secondary-elegant {
+    @apply btn-elegant bg-white text-slate-700 border border-slate-200;
+    @apply hover:bg-slate-50 hover:border-emerald-300;
   }
 }
 
-@keyframes pulse-soft {
-  0%, 100% {
-    opacity: 0.3;
+@layer utilities {
+  /* Smooth animations for educational interface */
+  @keyframes gentle-float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
   }
-  50% {
-    opacity: 0.5;
+
+  @keyframes soft-pulse {
+    0%, 100% {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.02);
+    }
+  }
+
+  @keyframes elegant-slide {
+    0% {
+      transform: translateX(-20px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes subtle-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
+    }
+  }
+
+  @keyframes content-appear {
+    0% {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Animation utilities */
+  .animate-gentle-float {
+    animation: gentle-float 4s ease-in-out infinite;
+  }
+
+  .animate-soft-pulse {
+    animation: soft-pulse 3s ease-in-out infinite;
+  }
+
+  .animate-elegant-slide {
+    animation: elegant-slide 0.6s ease-out;
+  }
+
+  .animate-subtle-glow {
+    animation: subtle-glow 2s ease-in-out infinite;
+  }
+
+  .animate-content-appear {
+    animation: content-appear 0.8s ease-out;
+  }
+
+  /* Typography utilities */
+  .text-elegant {
+    font-family: 'Playfair Display', serif;
+    letter-spacing: -0.02em;
+  }
+
+  .text-clean {
+    font-family: 'Inter', sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  /* Educational color palette */
+  .text-education-primary {
+    color: #1e293b;
+  }
+
+  .text-education-secondary {
+    color: #475569;
+  }
+
+  .text-education-accent {
+    color: #059669;
+  }
+
+  .bg-education-gradient {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+  }
+
+  /* Subtle interaction effects */
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Clean focus styles */
+  .focus-elegant:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    border-color: #10b981;
+  }
+
+  /* Responsive text sizing */
+  .text-responsive-xl {
+    font-size: clamp(2rem, 5vw, 4rem);
+  }
+
+  .text-responsive-lg {
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+  }
+
+  .text-responsive-base {
+    font-size: clamp(1rem, 2vw, 1.25rem);
   }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+/* Custom scrollbar - elegant style */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-.animate-pulse-soft {
-  animation: pulse-soft 4s ease-in-out infinite;
+::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.8);
+  border-radius: 3px;
 }
 
-/* Elegant gradient text */
-.gradient-text {
-  background: linear-gradient(135deg, #1e293b 0%, #059669 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+  border-radius: 3px;
 }
 
-/* Subtle pattern background */
-.pattern-dots {
-  background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
-  background-size: 20px 20px;
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #94a3b8, #64748b);
+}
+
+/* Selection colors - educational theme */
+::selection {
+  background: rgba(16, 185, 129, 0.2);
+  color: #065f46;
+}
+
+/* Smooth font rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Elegant transitions */
+* {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus styles for accessibility */
+button:focus,
+a:focus,
+input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Responsive design improvements */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .text-slate-600 {
+    color: #374151 !important;
+  }
+  
+  .border-slate-200 {
+    border-color: #6b7280 !important;
+  }
 }
