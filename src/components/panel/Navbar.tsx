@@ -92,7 +92,7 @@ export function Navbar({ onLogout }: NavbarProps) {
   const [mounted, setMounted] = useState(false)
   const [notifications, setNotifications] = useState(3) // Simulado
 
-  // Verificar si el componente está montado (para evitar hidration issues)
+  // Verificar si el componente está montado (para evitar hydration issues)
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -506,7 +506,7 @@ export function Navbar({ onLogout }: NavbarProps) {
                     onClick={handleLogout}
                     className="w-full flex items-center px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
                   >
-                    <LogOut size={16} className="mr-3" />
+                    <LogOut size={18} className="mr-3" />
                     <div>
                       <div className="font-medium">Cerrar Sesión</div>
                       <div className="text-xs text-red-500 dark:text-red-400">Salir de la cuenta</div>
