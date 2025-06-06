@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { NetGetPaymentRequest, NetGetPaymentResponse } from '@/services/paymentService'
+import { GetNetPaymentRequest, GetNetPaymentResponse } from '@/services/paymentService'
 
-// Configuración de NetGet desde variables de entorno
-const NETGET_CONFIG = {
-  apiUrl: process.env.NETGET_API_URL || 'https://api.netget.cl',
-  merchantId: process.env.NETGET_MERCHANT_ID || '',
-  secretKey: process.env.NETGET_SECRET_KEY || '',
-  environment: process.env.NETGET_ENVIRONMENT || 'sandbox' // 'sandbox' o 'production'
+// Configuración de GetNet desde variables de entorno
+const GETNET_CONFIG = {
+  apiUrl: process.env.GETNET_BASE_URL || 'https://checkout.test.getnet.cl',
+  login: process.env.GETNET_LOGIN || '',
+  secret: process.env.GETNET_SECRET || '',
+  environment: process.env.GETNET_ENVIRONMENT || 'test' // 'test' o 'production'
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body: NetGetPaymentRequest = await request.json()
+    const body: GetNetPaymentRequest = await request.json()
     
-    console.log('Creating NetGet payment:', body)
+    console.log('Creating GetNet payment:', body)
 
     // Validar datos requeridos
     if (!body.amount || !body.orderId || !body.customerEmail) {
@@ -26,9 +26,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validar configuración de NetGet
-    if (!NETGET_CONFIG.merchantId || !NETGET_CONFIG.secretKey) {
-      console.error('NetGet configuration missing')
+    // Validar configuración de GetNet
+    if (!GETNET_CONFIG.login || !GETNET_CONFIG.secret) {
+      console.error('GetNet configuration missing:', {
+        hasLogin: !!GETNET_CONFIG.login,
+        hasSecret: !!GETNET_CONFIG.secret,
+        apiUrl: GETNET_CONFIG.apiUrl
+      })
       return NextResponse.json(
         { 
           success: false, 
@@ -38,9 +42,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Preparar datos para NetGet
-    const netGetPayload = {
-      merchant_id: NETGET_CONFIG.merchantId,
+    // Preparar datos para GetNet según su API
+    const getNetPayload = {
+      login: GETNET_CONFIG.login,
       amount: body.amount,
       order_id: body.orderId,
       description: body.description || `Pedido Casino Escolar #${body.orderId}`,
@@ -48,52 +52,51 @@ export async function POST(request: NextRequest) {
       customer_name: body.customerName || 'Cliente',
       return_url: body.returnUrl || `${request.nextUrl.origin}/payment/return`,
       notify_url: body.notifyUrl || `${request.nextUrl.origin}/api/payment/notify`,
-      currency: 'CLP',
-      environment: NETGET_CONFIG.environment
+      currency: 'CLP'
     }
 
-    // Generar firma (implementar según documentación de NetGet)
-    const signature = generateNetGetSignature(netGetPayload, NETGET_CONFIG.secretKey)
-    netGetPayload.signature = signature
+    // Generar firma (implementar según documentación de GetNet)
+    const signature = generateGetNetSignature(getNetPayload, GETNET_CONFIG.secret)
+    getNetPayload.signature = signature
 
-    console.log('NetGet payload prepared:', { ...netGetPayload, signature: '[HIDDEN]' })
+    console.log('GetNet payload prepared:', { ...getNetPayload, signature: '[HIDDEN]' })
 
-    // Llamar a la API de NetGet
-    const netGetResponse = await fetch(`${NETGET_CONFIG.apiUrl}/v1/payments`, {
+    // Llamar a la API de GetNet
+    const getNetResponse = await fetch(`${GETNET_CONFIG.apiUrl}/api/payment/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'User-Agent': 'CasinoEscolar/1.0'
       },
-      body: JSON.stringify(netGetPayload)
+      body: JSON.stringify(getNetPayload)
     })
 
-    const netGetData = await netGetResponse.json()
+    const getNetData = await getNetResponse.json()
     
-    console.log('NetGet API response:', netGetData)
+    console.log('GetNet API response:', getNetData)
 
-    if (!netGetResponse.ok) {
-      throw new Error(netGetData.message || `NetGet API error: ${netGetResponse.status}`)
+    if (!getNetResponse.ok) {
+      throw new Error(getNetData.message || `GetNet API error: ${getNetResponse.status}`)
     }
 
-    // Procesar respuesta exitosa de NetGet
-    if (netGetData.success && netGetData.payment_url) {
-      const response: NetGetPaymentResponse = {
+    // Procesar respuesta exitosa de GetNet
+    if (getNetData.success && getNetData.payment_url) {
+      const response: GetNetPaymentResponse = {
         success: true,
-        paymentId: netGetData.payment_id || netGetData.transaction_id,
-        redirectUrl: netGetData.payment_url,
-        transactionId: netGetData.transaction_id
+        paymentId: getNetData.payment_id || getNetData.transaction_id,
+        redirectUrl: getNetData.payment_url,
+        transactionId: getNetData.transaction_id
       }
 
-      console.log('NetGet payment created successfully:', response)
+      console.log('GetNet payment created successfully:', response)
       return NextResponse.json(response)
     } else {
-      throw new Error(netGetData.error || 'Error en la respuesta de NetGet')
+      throw new Error(getNetData.error || 'Error en la respuesta de GetNet')
     }
 
   } catch (error) {
-    console.error('Error creating NetGet payment:', error)
+    console.error('Error creating GetNet payment:', error)
     
     return NextResponse.json(
       { 
@@ -105,31 +108,31 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Función para generar firma HMAC según documentación de NetGet
-function generateNetGetSignature(payload: any, secretKey: string): string {
+// Función para generar firma HMAC según documentación de GetNet
+function generateGetNetSignature(payload: any, secret: string): string {
   try {
     const crypto = require('crypto')
     
-    // Crear string para firmar (según documentación de NetGet)
-    // Típicamente es: merchant_id + amount + order_id + currency + secret_key
+    // Crear string para firmar según documentación de GetNet
+    // Típicamente es: login + amount + order_id + currency + secret
     const stringToSign = [
-      payload.merchant_id,
+      payload.login,
       payload.amount,
       payload.order_id,
       payload.currency || 'CLP',
-      secretKey
+      secret
     ].join('')
 
     // Generar HMAC-SHA256
     const signature = crypto
-      .createHmac('sha256', secretKey)
+      .createHmac('sha256', secret)
       .update(stringToSign)
       .digest('hex')
 
-    console.log('Generated signature for NetGet')
+    console.log('Generated signature for GetNet')
     return signature
   } catch (error) {
-    console.error('Error generating NetGet signature:', error)
+    console.error('Error generating GetNet signature:', error)
     throw new Error('Error al generar firma de seguridad')
   }
 }
