@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useOrderStore } from '@/store/orderStore'
 import { useWeeklyMenuData } from '@/hooks/useWeeklyMenuData'
 import { OrderService } from '@/services/orderService'
-import { MenuService } from '@/services/menuService'
+import { PaymentService } from '@/services/paymentService'
 import { Navbar } from '@/components/panel/Navbar'
 import { ChildSelector } from '@/components/mi-pedido/ChildSelector'
 import { DaySelector } from '@/components/mi-pedido/DaySelector'
@@ -28,7 +28,9 @@ import {
   User as UserIcon,
   Info,
   CalendarDays,
-  Utensils
+  Utensils,
+  CreditCard,
+  ExternalLink
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -53,10 +55,12 @@ export default function MiPedidoPage() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [existingOrder, setExistingOrder] = useState<any>(null)
   const [isLoadingOrder, setIsLoadingOrder] = useState(true)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
 
-  // Obtener datos del menú semanal
+  // Obtener datos del menú semanal desde admin/menus
   const { weekMenu, isLoading: menuLoading, error: menuError, weekInfo, refetch } = useWeeklyMenuData({ 
-    user 
+    user,
+    useAdminData: true // Usar datos de admin/menus
   })
 
   // Cargar pedido existente
@@ -100,6 +104,7 @@ export default function MiPedidoPage() {
 
     try {
       setIsProcessingPayment(true)
+      setPaymentError(null)
       
       const summary = getOrderSummaryByChild()
       
@@ -125,31 +130,50 @@ export default function MiPedidoPage() {
         status: 'pendiente' as const
       }
 
+      let orderId: string
       if (existingOrder) {
         await OrderService.updateOrder(existingOrder.id, orderData)
+        orderId = existingOrder.id
       } else {
-        const orderId = await OrderService.saveOrder(orderData)
+        orderId = await OrderService.saveOrder(orderData)
         setExistingOrder({ ...orderData, id: orderId })
       }
 
-      // Simular proceso de pago (aquí iría la integración con GetNet)
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Procesar pago con NetGet
+      console.log('Initiating NetGet payment for order:', orderId)
       
-      // Marcar como pagado
-      if (existingOrder) {
-        await OrderService.updateOrder(existingOrder.id, {
-          status: 'pagado',
-          paidAt: new Date(),
-          paymentId: `payment_${Date.now()}`
-        })
+      const paymentRequest = {
+        amount: summary.total,
+        orderId: orderId,
+        description: `Pedido Casino Escolar - Semana ${weekInfo.weekLabel}`,
+        customerEmail: user.email || user.correo || '',
+        customerName: user.name || user.nombre || `${user.firstName || ''} ${user.lastName || ''}`.trim()
       }
 
-      // Actualizar estado local
-      setExistingOrder(prev => prev ? { ...prev, status: 'pagado' } : null)
+      console.log('Payment request:', paymentRequest)
+
+      const paymentResponse = await PaymentService.createPayment(paymentRequest)
+      
+      if (paymentResponse.success && paymentResponse.redirectUrl) {
+        console.log('NetGet payment created, redirecting to:', paymentResponse.redirectUrl)
+        
+        // Actualizar pedido con ID de pago
+        await OrderService.updateOrder(orderId, {
+          paymentId: paymentResponse.paymentId,
+          status: 'procesando_pago'
+        })
+
+        // Redirigir a NetGet para completar el pago
+        window.location.href = paymentResponse.redirectUrl
+      } else {
+        throw new Error(paymentResponse.error || 'Error al inicializar el pago')
+      }
 
     } catch (error) {
       console.error('Error processing payment:', error)
-      alert(error instanceof Error ? error.message : 'Error al procesar el pago')
+      const errorMessage = error instanceof Error ? error.message : 'Error al procesar el pago'
+      setPaymentError(errorMessage)
+      alert(errorMessage)
     } finally {
       setIsProcessingPayment(false)
     }
@@ -259,7 +283,7 @@ export default function MiPedidoPage() {
                 Mi Pedido Semanal
               </h1>
               <p className="text-slate-600 dark:text-slate-400 mt-1">
-                Planifica tus comidas de la semana
+                Planifica tus comidas de la semana con menús actualizados
               </p>
             </div>
           </div>
@@ -273,7 +297,7 @@ export default function MiPedidoPage() {
               
               <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 px-3 py-1">
                 <CheckCircle className="w-3 h-3 mr-1" />
-                Pedidos Disponibles
+                Menús desde Admin
               </Badge>
 
               {existingOrder?.status === 'pagado' && (
@@ -282,11 +306,18 @@ export default function MiPedidoPage() {
                   Pedido Pagado
                 </Badge>
               )}
+
+              {existingOrder?.status === 'procesando_pago' && (
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 px-3 py-1">
+                  <Clock className="w-3 h-3 mr-1" />
+                  Procesando Pago
+                </Badge>
+              )}
             </div>
           )}
         </motion.div>
 
-        {/* Información sobre restricciones */}
+        {/* Información sobre integración */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -295,11 +326,34 @@ export default function MiPedidoPage() {
           <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
             <Info className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-blue-800 dark:text-blue-200">
-              <strong>Información importante:</strong> Puedes hacer pedidos para hoy y días futuros. 
-              No se pueden hacer pedidos para días pasados. El servicio de casino está disponible de lunes a viernes.
+              <strong>Menús actualizados:</strong> Los menús se obtienen directamente desde la administración. 
+              Los pagos se procesan de forma segura con NetGet. Puedes hacer pedidos para hoy y días futuros.
             </AlertDescription>
           </Alert>
         </motion.div>
+
+        {/* Error de pago */}
+        {paymentError && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between">
+                <span>{paymentError}</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setPaymentError(null)}
+                  className="ml-4"
+                >
+                  Cerrar
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Contenido principal */}
@@ -373,6 +427,14 @@ export default function MiPedidoPage() {
                       <p className="text-slate-600 dark:text-slate-400">
                         El menú para esta semana aún no ha sido publicado por el administrador.
                       </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => window.open('/admin/menus', '_blank')}
+                        className="gap-2"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Ver Panel Admin
+                      </Button>
                     </CardContent>
                   </Card>
                 ) : (
