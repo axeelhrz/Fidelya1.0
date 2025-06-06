@@ -33,6 +33,12 @@ import {
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+// Helper function to create local date from YYYY-MM-DD string
+function createLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day) // month is 0-indexed
+}
+
 export default function MiPedidoPage() {
   const { user, isLoading: authLoading } = useAuth()
   const { 
@@ -156,16 +162,19 @@ export default function MiPedidoPage() {
   const isReadOnly = existingOrder?.status === 'pagado'
   const summary = getOrderSummaryByChild()
 
-  // Separar días laborales y fines de semana
-  const weekDays = weekMenu.filter(day => {
-    const dayDate = new Date(day.date)
-    return dayDate.getDay() !== 0 && dayDate.getDay() !== 6 // No domingo ni sábado
+  // Separar días laborales y fines de semana usando el índice en lugar del día de la semana
+  const weekDays = weekMenu.filter((day, index) => {
+    // Los primeros 5 días (índices 0-4) son días laborales (lunes a viernes)
+    return index < 5
   })
   
-  const weekendDays = weekMenu.filter(day => {
-    const dayDate = new Date(day.date)
-    return dayDate.getDay() === 0 || dayDate.getDay() === 6 // Domingo o sábado
+  const weekendDays = weekMenu.filter((day, index) => {
+    // Los últimos 2 días (índices 5-6) son fin de semana (sábado y domingo)
+    return index >= 5
   })
+
+  console.log('Week days (should be Mon-Fri):', weekDays.map(d => `${d.dayLabel} ${d.date}`))
+  console.log('Weekend days (should be Sat-Sun):', weekendDays.map(d => `${d.dayLabel} ${d.date}`))
 
   if (authLoading || menuLoading || isLoadingOrder) {
     return (
@@ -350,7 +359,7 @@ export default function MiPedidoPage() {
                     Días Laborales
                   </h2>
                   <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                    Servicio disponible
+                    Lunes a Viernes
                   </Badge>
                 </div>
                 
@@ -397,7 +406,7 @@ export default function MiPedidoPage() {
                       Fin de Semana
                     </h2>
                     <Badge variant="outline" className="bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-                      Sin servicio
+                      Sábado y Domingo
                     </Badge>
                   </div>
                   

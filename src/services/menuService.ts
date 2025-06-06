@@ -123,7 +123,7 @@ export class MenuService {
         const isPastDay = dayDateNormalized < todayNormalized
         const isCurrentDay = dayDateNormalized.getTime() === todayNormalized.getTime()
         const isFutureDay = dayDateNormalized > todayNormalized
-        const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6 // Domingo o Sábado
+        const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6 // Domingo (0) o Sábado (6)
         
         console.log(`Day: ${day.dayLabel} (${day.date}) - dayDate: ${dayDate}, isPast: ${isPastDay}, isCurrent: ${isCurrentDay}, isFuture: ${isFutureDay}, isWeekend: ${isWeekend}, dayOfWeek: ${dayDate.getDay()}`)
         
@@ -160,6 +160,7 @@ export class MenuService {
     console.log('Current date:', now)
     console.log('Current date formatted:', format(now, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
     
+    // Asegurar que la semana empiece en lunes
     const weekStart = startOfWeek(now, { weekStartsOn: 1 })
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
     
@@ -182,6 +183,7 @@ export class MenuService {
 
   static getCurrentWeekStart(): string {
     const now = new Date()
+    // Asegurar que la semana empiece en lunes
     const weekStart = startOfWeek(now, { weekStartsOn: 1 })
     const weekStartFormatted = format(weekStart, 'yyyy-MM-dd')
     
@@ -224,22 +226,34 @@ export class MenuService {
   }
 
   private static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
+    // Crear fecha de inicio asegurando que sea lunes
     const startDate = this.createLocalDate(weekStart)
-    const endDate = addDays(startDate, 6) // Fin de semana es 6 días después del inicio
+    
+    // Verificar que el startDate sea realmente un lunes
+    if (startDate.getDay() !== 1) {
+      console.warn('Week start is not Monday, adjusting...', startDate.getDay())
+      // Si no es lunes, ajustar al lunes más cercano hacia atrás
+      const daysToSubtract = startDate.getDay() === 0 ? 6 : startDate.getDay() - 1
+      startDate.setDate(startDate.getDate() - daysToSubtract)
+    }
+    
+    const endDate = addDays(startDate, 6) // Domingo es 6 días después del lunes
     const weekLabel = `Del ${format(startDate, 'd')} al ${format(endDate, 'd')} de ${format(endDate, 'MMMM yyyy', { locale: es })}`
     
     console.log('buildWeekMenuStructure - weekStart:', weekStart)
-    console.log('buildWeekMenuStructure - startDate:', startDate)
-    console.log('buildWeekMenuStructure - endDate:', endDate)
+    console.log('buildWeekMenuStructure - startDate (should be Monday):', startDate, 'Day of week:', startDate.getDay())
+    console.log('buildWeekMenuStructure - endDate (should be Sunday):', endDate, 'Day of week:', endDate.getDay())
     
     const days: DayMenuDisplay[] = []
     
-    // Crear estructura para todos los días de la semana (lunes a domingo)
+    // Crear estructura para todos los días de la semana (lunes=0 a domingo=6)
+    const dayNames = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
+    
     for (let i = 0; i < 7; i++) {
       const currentDate = addDays(startDate, i)
       const dateStr = format(currentDate, 'yyyy-MM-dd')
-      const dayName = format(currentDate, 'EEEE', { locale: es })
-      const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6
+      const dayName = dayNames[i]
+      const isWeekend = i >= 5 // Sábado (5) y Domingo (6)
       
       console.log(`Day ${i}: ${dayName} ${format(currentDate, 'd \'de\' MMMM \'de\' yyyy', { locale: es })} (${dateStr}) - Weekend: ${isWeekend}, DayOfWeek: ${currentDate.getDay()}`)
       
@@ -263,7 +277,7 @@ export class MenuService {
     }
     
     return {
-      weekStart,
+      weekStart: format(startDate, 'yyyy-MM-dd'),
       weekEnd: format(endDate, 'yyyy-MM-dd'),
       weekLabel,
       days,
