@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, DM_Sans } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,16 +8,16 @@ const inter = Inter({
   display: "swap",
 });
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Casino Escolar - Gestión de Pedidos Escolares",
-  description: "Plataforma digital para gestionar pedidos de almuerzos y colaciones escolares de forma rápida, segura y organizada.",
-  keywords: "casino escolar, pedidos escolares, almuerzos, colaciones, gestión educativa",
+  title: "Casino Escolar - Gestión Inteligente de Alimentación Escolar",
+  description: "Plataforma digital para la gestión de alimentación escolar. Nutrición, organización y bienestar para la comunidad educativa.",
+  keywords: "casino escolar, alimentación escolar, gestión educativa, nutrición, menús escolares",
   authors: [{ name: "Casino Escolar" }],
   viewport: "width=device-width, initial-scale=1",
 };
@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="scroll-smooth">
       <body
-        className={`${inter.variable} ${dmSans.variable} antialiased font-inter bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 min-h-screen`}
+        className={`${inter.variable} ${playfairDisplay.variable} antialiased font-inter`}
       >
         {children}
       </body>

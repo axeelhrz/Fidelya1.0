@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { BookOpen, Users, Shield, Clock, ArrowRight, GraduationCap } from 'lucide-react';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
-export default function Home() {
+export default function HomePage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -13,164 +13,221 @@ export default function Home() {
   }, []);
 
   if (!mounted) {
-    return null; // Prevent hydration mismatch
+    return null;
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-100/20 dark:bg-blue-900/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-100/20 dark:bg-green-900/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-blue-50/30 to-indigo-50/30 dark:from-blue-900/5 dark:to-indigo-900/5 rounded-full blur-3xl"></div>
-      </div>
-
-      {/* Geometric pattern overlay */}
-      <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]">
-        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <defs>
-            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
-      </div>
-
-      {/* Main content container */}
-      <div className="relative z-10 max-w-4xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
-        {/* Logo and brand section */}
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-emerald-50/30 to-blue-50/40">
+      {/* Subtle Background Elements */}
+      <div className="absolute inset-0">
+        {/* Soft geometric shapes */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-emerald-100/30 to-teal-100/30 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div
+          className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-br from-blue-100/30 to-indigo-100/30 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.15, 0.35, 0.15],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2
+          }}
+        />
+        
+        {/* Elegant pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.03] pattern-dots" />
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
+        {/* Logo/Title Section */}
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mb-8"
+          transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <div className="flex items-center justify-center mb-6">
-            <div className="relative">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25 dark:shadow-blue-400/20">
-                <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-white" strokeWidth={1.5} />
-              </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                <BookOpen className="w-3 h-3 text-white" strokeWidth={2} />
-              </div>
-            </div>
-          </div>
-          
+          {/* Main Title */}
           <motion.h1
+            className="text-6xl md:text-7xl lg:text-8xl font-light mb-4 text-slate-800 font-playfair"
+            style={{
+              letterSpacing: '-0.02em',
+            }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold font-dm-sans mb-4 tracking-tight"
+            transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
           >
-            <span className="gradient-text">Casino Escolar</span>
+            Casino Escolar
           </motion.h1>
+
+          {/* Elegant separator */}
+          <motion.div
+            className="flex items-center justify-center mb-6"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+          >
+            <div className="w-8 h-px bg-slate-300" />
+            <div className="mx-4 w-2 h-2 bg-emerald-500 rounded-full animate-pulse-soft" />
+            <div className="w-8 h-px bg-slate-300" />
+          </motion.div>
+
+          {/* Subtitle */}
+          <motion.p
+            className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed font-light font-inter"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
+          >
+            Gestión inteligente de alimentación escolar
+            <br />
+            <span className="gradient-text font-medium">Nutrición • Organización • Bienestar</span>
+          </motion.p>
         </motion.div>
 
-        {/* Main heading */}
+        {/* Action Buttons */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          className="flex flex-col sm:flex-row gap-6"
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          className="mb-6"
+          transition={{ duration: 0.8, delay: 1, ease: "easeOut" }}
         >
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-4 leading-tight font-dm-sans">
-            Bienvenido a Casino Escolar
-          </h2>
-          <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed font-medium">
-            Tu nueva forma de gestionar pedidos escolares de forma{' '}
-            <span className="text-blue-600 dark:text-blue-400 font-semibold">rápida</span>,{' '}
-            <span className="text-green-600 dark:text-green-400 font-semibold">segura</span> y{' '}
-            <span className="text-indigo-600 dark:text-indigo-400 font-semibold">organizada</span>
-          </p>
+          {/* Login Button */}
+          <Link href="/auth/sign-in">
+            <motion.div
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="group"
+            >
+              <Button
+                size="lg"
+                className="px-8 py-4 text-base font-medium bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-0 font-inter"
+              >
+                Iniciar Sesión
+                <motion.span
+                  className="ml-2 inline-block"
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  →
+                </motion.span>
+              </Button>
+            </motion.div>
+          </Link>
+
+          {/* Register Button */}
+          <Link href="/auth/sign-up">
+            <motion.div
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="group"
+            >
+              <Button
+                size="lg"
+                variant="outline"
+                className="px-8 py-4 text-base font-medium bg-white/80 backdrop-blur-sm border-2 border-slate-200 text-slate-700 hover:bg-white hover:border-emerald-300 hover:text-emerald-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-inter"
+              >
+                Crear Cuenta
+                <motion.span
+                  className="ml-2 inline-block"
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  +
+                </motion.span>
+              </Button>
+            </motion.div>
+          </Link>
         </motion.div>
 
         {/* Feature highlights */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12 max-w-2xl mx-auto"
+          transition={{ duration: 0.8, delay: 1.3, ease: "easeOut" }}
         >
-          <div className="flex flex-col items-center p-4 rounded-xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-3">
-              <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" strokeWidth={1.5} />
+          {/* Feature 1 */}
+          <motion.div
+            className="text-center group"
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow duration-300">
+              <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
             </div>
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Rápido</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 text-center">Pedidos en segundos</p>
-          </div>
-          
-          <div className="flex flex-col items-center p-4 rounded-xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-3">
-              <Shield className="w-6 h-6 text-green-600 dark:text-green-400" strokeWidth={1.5} />
+            <h3 className="text-lg font-medium text-slate-800 mb-2 font-inter">Gestión Intuitiva</h3>
+            <p className="text-sm text-slate-600 leading-relaxed font-inter">
+              Administra menús y pedidos de forma elegante y eficiente
+            </p>
+          </motion.div>
+
+          {/* Feature 2 */}
+          <motion.div
+            className="text-center group"
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow duration-300">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
             </div>
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Seguro</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 text-center">Pagos protegidos</p>
-          </div>
-          
-          <div className="flex flex-col items-center p-4 rounded-xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50">
-            <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center mb-3">
-              <Users className="w-6 h-6 text-indigo-600 dark:text-indigo-400" strokeWidth={1.5} />
+            <h3 className="text-lg font-medium text-slate-800 mb-2 font-inter">Nutrición Balanceada</h3>
+            <p className="text-sm text-slate-600 leading-relaxed font-inter">
+              Promovemos hábitos alimentarios saludables y conscientes
+            </p>
+          </motion.div>
+
+          {/* Feature 3 */}
+          <motion.div
+            className="text-center group"
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow duration-300">
+              <svg className="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
             </div>
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Organizado</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 text-center">Gestión centralizada</p>
-          </div>
+            <h3 className="text-lg font-medium text-slate-800 mb-2 font-inter">Comunidad Conectada</h3>
+            <p className="text-sm text-slate-600 leading-relaxed font-inter">
+              Uniendo familias, estudiantes y administración escolar
+            </p>
+          </motion.div>
         </motion.div>
 
-        {/* CTA Buttons */}
+        {/* Bottom accent */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto"
-        >
-          <Link
-            href="/auth/sign-in"
-            className="group w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 rounded-xl shadow-lg shadow-blue-500/25 dark:shadow-blue-400/20 transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/30 dark:hover:shadow-blue-400/25 hover:-translate-y-0.5 focus-ring"
-          >
-            <span>Iniciar sesión</span>
-            <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" strokeWidth={2} />
-          </Link>
-          
-          <Link
-            href="/auth/sign-up"
-            className="group w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 focus-ring"
-          >
-            <span>Crear cuenta</span>
-            <Users className="ml-2 w-5 h-5 transition-transform group-hover:scale-110" strokeWidth={2} />
-          </Link>
-        </motion.div>
-
-        {/* Trust indicators */}
-        <motion.div
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
-          className="mt-16 pt-8 border-t border-slate-200/50 dark:border-slate-700/50"
+          transition={{ duration: 0.8, delay: 1.8 }}
         >
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-            Confiado por instituciones educativas
-          </p>
-          <div className="flex items-center justify-center space-x-8 opacity-60">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-lg flex items-center justify-center">
-                <GraduationCap className="w-4 h-4 text-slate-600 dark:text-slate-400" strokeWidth={1.5} />
-              </div>
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Colegios</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-lg flex items-center justify-center">
-                <Users className="w-4 h-4 text-slate-600 dark:text-slate-400" strokeWidth={1.5} />
-              </div>
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Familias</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-lg flex items-center justify-center">
-                <Shield className="w-4 h-4 text-slate-600 dark:text-slate-400" strokeWidth={1.5} />
-              </div>
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Seguridad</span>
-            </div>
-          </div>
+          <motion.div
+            className="flex items-center space-x-2 text-slate-400 text-sm font-inter"
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <div className="w-1 h-1 bg-slate-400 rounded-full animate-pulse-soft" />
+            <span>Plataforma de gestión educativa</span>
+            <div className="w-1 h-1 bg-slate-400 rounded-full animate-pulse-soft" />
+          </motion.div>
         </motion.div>
       </div>
     </div>
