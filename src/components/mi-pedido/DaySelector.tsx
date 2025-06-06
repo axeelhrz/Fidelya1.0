@@ -105,6 +105,18 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
   const isFutureDay = isAfter(dayDate, today)
   const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
 
+  // Debug logging
+  console.log(`DaySelector - ${dayMenu.dayLabel}:`, {
+    date: dayMenu.date,
+    dayDate,
+    today,
+    isPastDay,
+    isCurrentDay,
+    isFutureDay,
+    isWeekend,
+    dayOfWeek: dayDate.getDay()
+  })
+
   // Obtener selecciones actuales para este día y hijo
   const getCurrentSelection = () => {
     if (user.tipoUsuario === 'funcionario') {
@@ -235,7 +247,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
             {getDayIcon()}
             <span className="capitalize font-bold">{dayMenu.dayLabel}</span>
             <Badge variant="outline" className="text-xs font-medium">
-              {format(new Date(dayMenu.date), 'd MMM', { locale: es })}
+              {format(new Date(dayMenu.date), 'd \'de\' MMM', { locale: es })}
             </Badge>
           </div>
           <div className="flex items-center gap-2">
@@ -248,6 +260,11 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
             )}
           </div>
         </CardTitle>
+        
+        {/* Mostrar fecha completa para debugging */}
+        <div className="text-xs text-slate-500 dark:text-slate-400">
+          {format(new Date(dayMenu.date), 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es })}
+        </div>
         
         {/* Mostrar para qué hijo es la selección */}
         {user.tipoUsuario === 'apoderado' && currentChild && !isWeekend && (

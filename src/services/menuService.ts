@@ -30,6 +30,8 @@ export class MenuService {
       // Si no se proporciona weekStart, usar la semana actual
       const actualWeekStart = weekStart || this.getCurrentWeekStart()
       
+      console.log('Getting weekly menu for week starting:', actualWeekStart)
+      
       const menusRef = collection(db, 'menus')
       const q = query(
         menusRef,
@@ -102,12 +104,16 @@ export class MenuService {
       
       // Aplicar precios según tipo de usuario y verificar disponibilidad por fecha
       const today = new Date()
+      console.log('Today is:', format(today, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
+      
       const daysWithPrices = weekMenu.days.map(day => {
         const dayDate = new Date(day.date)
         const isPastDay = isBefore(dayDate, today) && !isToday(dayDate)
         const isCurrentDay = isToday(dayDate)
         const isFutureDay = isAfter(dayDate, today)
         const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6 // Domingo o Sábado
+        
+        console.log(`Day: ${day.dayLabel} (${day.date}) - isPast: ${isPastDay}, isCurrent: ${isCurrentDay}, isFuture: ${isFutureDay}, isWeekend: ${isWeekend}`)
         
         return {
           ...day,
@@ -139,8 +145,14 @@ export class MenuService {
 
   static getCurrentWeekInfo() {
     const now = new Date()
+    console.log('Current date:', now)
+    console.log('Current date formatted:', format(now, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
+    
     const weekStart = startOfWeek(now, { weekStartsOn: 1 })
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
+    
+    console.log('Week start:', format(weekStart, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
+    console.log('Week end:', format(weekEnd, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
     
     // Siempre permitir pedidos (sin restricción de horario)
     const isOrderingAllowed = true
@@ -159,14 +171,20 @@ export class MenuService {
   static getCurrentWeekStart(): string {
     const now = new Date()
     const weekStart = startOfWeek(now, { weekStartsOn: 1 })
-    return format(weekStart, 'yyyy-MM-dd')
+    const weekStartFormatted = format(weekStart, 'yyyy-MM-dd')
+    
+    console.log('getCurrentWeekStart - now:', now)
+    console.log('getCurrentWeekStart - weekStart:', weekStart)
+    console.log('getCurrentWeekStart - formatted:', weekStartFormatted)
+    
+    return weekStartFormatted
   }
 
   static getWeekDisplayText(weekStart: string, weekEnd: string): string {
     const start = new Date(weekStart)
     const end = new Date(weekEnd)
     
-    return `Del ${format(start, 'd')} al ${format(end, 'd')} de ${format(end, 'MMMM', { locale: es })}`
+    return `Del ${format(start, 'd')} al ${format(end, 'd')} de ${format(end, 'MMMM yyyy', { locale: es })}`
   }
 
   static getDayDisplayName(date: string): string {
@@ -196,6 +214,10 @@ export class MenuService {
     const endDate = endOfWeek(startDate, { weekStartsOn: 1 })
     const weekLabel = `Del ${format(startDate, 'd')} al ${format(endDate, 'd')} de ${format(endDate, 'MMMM yyyy', { locale: es })}`
     
+    console.log('buildWeekMenuStructure - weekStart:', weekStart)
+    console.log('buildWeekMenuStructure - startDate:', startDate)
+    console.log('buildWeekMenuStructure - endDate:', endDate)
+    
     const days: DayMenuDisplay[] = []
     
     // Crear estructura para todos los días de la semana (lunes a domingo)
@@ -204,6 +226,8 @@ export class MenuService {
       const dateStr = format(currentDate, 'yyyy-MM-dd')
       const dayName = format(currentDate, 'EEEE', { locale: es })
       const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6
+      
+      console.log(`Day ${i}: ${dayName} ${format(currentDate, 'd \'de\' MMMM \'de\' yyyy', { locale: es })} (${dateStr}) - Weekend: ${isWeekend}`)
       
       // Filtrar items por fecha específica
       const dayItems = items.filter(item => item.date === dateStr)
@@ -215,7 +239,7 @@ export class MenuService {
         date: dateStr,
         day: dayName,
         dayLabel: dayName.charAt(0).toUpperCase() + dayName.slice(1),
-        dateFormatted: format(currentDate, 'd \'de\' MMMM', { locale: es }),
+        dateFormatted: format(currentDate, 'd \'de\' MMMM \'de\' yyyy', { locale: es }),
         almuerzos,
         colaciones,
         hasItems: almuerzos.length > 0 || colaciones.length > 0,
