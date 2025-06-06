@@ -8,14 +8,16 @@ import { MenuItemModal } from '@/components/admin/menus/MenuItemModal'
 import { useAdminMenus } from '@/hooks/useAdminMenus'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertTriangle, RefreshCw } from 'lucide-react'
+import { AlertTriangle, RefreshCw, Calendar, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { AdminMenuItem } from '@/types/adminMenu'
 
 export default function AdminMenusPage() {
   const {
     currentWeek,
     weekMenu,
+    weekStats,
     isLoading,
     error,
     modalState,
@@ -27,6 +29,8 @@ export default function AdminMenusPage() {
     updateMenuItem,
     deleteMenuItem,
     duplicateWeek,
+    toggleWeekPublication,
+    deleteWeekMenu,
     refreshMenu
   } = useAdminMenus()
 
@@ -46,7 +50,7 @@ export default function AdminMenusPage() {
   }
 
   const handleDuplicateWeek = async () => {
-    // TODO: Implementar selector de semana destino
+    // Calcular semana siguiente
     const nextWeek = new Date(currentWeek)
     nextWeek.setDate(nextWeek.getDate() + 7)
     const targetWeek = nextWeek.toISOString().split('T')[0]
@@ -83,9 +87,12 @@ export default function AdminMenusPage() {
       {/* Header */}
       <MenuHeader
         weekMenu={weekMenu}
+        weekStats={weekStats}
         isLoading={isLoading}
         onRefresh={refreshMenu}
         onDuplicateWeek={handleDuplicateWeek}
+        onTogglePublication={toggleWeekPublication}
+        onDeleteWeek={deleteWeekMenu}
       />
 
       {/* Contenido principal */}
@@ -106,34 +113,90 @@ export default function AdminMenusPage() {
               ))}
             </div>
           ) : weekMenu ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6"
-            >
-              {weekMenu.days.map((dayMenu, index) => (
+            <>
+              {/* Resumen rápido */}
+              {weekStats && (
                 <motion.div
-                  key={dayMenu.date}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 * index }}
+                  transition={{ duration: 0.5 }}
                 >
-                  <DayMenuContainer
-                    dayMenu={dayMenu}
-                    onAddItem={(type) => handleAddItem(dayMenu.date, dayMenu.day, type)}
-                    onEditItem={handleEditItem}
-                    onDeleteItem={deleteMenuItem}
-                    isLoading={isLoading}
-                  />
+                  <Card className="bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-blue-900/20 dark:to-emerald-900/20 border-blue-200 dark:border-blue-800">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="p-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
+                            <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                              Resumen de la Semana
+                            </h3>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                              {weekStats.totalItems} items totales • {weekStats.activeItems} activos • {weekStats.daysWithMenus}/5 días configurados
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {weekStats.totalItems === 0 && (
+                          <div className="text-right">
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                              ¡Comienza agregando menús!
+                            </p>
+                            <Button
+                              size="sm"
+                              onClick={() => handleAddItem(weekMenu.days[0].date, weekMenu.days[0].day, 'almuerzo')}
+                              className="flex items-center space-x-2"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span>Agregar Primer Menú</span>
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </motion.div>
-              ))}
-            </motion.div>
+              )}
+
+              {/* Grid de días */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6"
+              >
+                {weekMenu.days.map((dayMenu, index) => (
+                  <motion.div
+                    key={dayMenu.date}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 * index }}
+                  >
+                    <DayMenuContainer
+                      dayMenu={dayMenu}
+                      onAddItem={(type) => handleAddItem(dayMenu.date, dayMenu.day, type)}
+                      onEditItem={handleEditItem}
+                      onDeleteItem={deleteMenuItem}
+                      isLoading={isLoading}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </>
           ) : (
             <div className="text-center py-12">
-              <p className="text-slate-500 dark:text-slate-400">
-                No hay datos de menú disponibles para esta semana
+              <Calendar className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                No hay datos de menú disponibles
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 mb-4">
+                Comienza agregando menús para esta semana
               </p>
+              <Button onClick={refreshMenu} className="gap-2">
+                <RefreshCw className="w-4 h-4" />
+                Actualizar
+              </Button>
             </div>
           )}
         </div>
