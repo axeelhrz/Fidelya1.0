@@ -91,6 +91,7 @@ export class AdminMenuService {
       const menusRef = collection(db, this.COLLECTION_NAME)
       const docData = {
         ...itemData,
+        published: false, // Por defecto no publicado - requiere publicación manual
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       }
@@ -99,7 +100,7 @@ export class AdminMenuService {
       
       return {
         success: true,
-        message: `Menú "${itemData.description}" creado exitosamente`,
+        message: `Menú "${itemData.description}" creado exitosamente. Recuerda publicar la semana para que sea visible a los usuarios.`,
         data: { id: docRef.id, ...docData }
       }
     } catch (error) {
@@ -188,7 +189,7 @@ export class AdminMenuService {
     }
   }
 
-  // Obtener menú semanal para administración
+  // Obtener menú semanal para administración (incluye todos los menús, publicados y no publicados)
   static async getWeeklyMenu(weekStart: string): Promise<AdminWeekMenu | null> {
     try {
       const menusRef = collection(db, this.COLLECTION_NAME)
@@ -213,6 +214,7 @@ export class AdminMenuService {
           day: data.day,
           weekStart: data.weekStart,
           active: data.active,
+          published: data.published ?? false, // Manejar menús antiguos sin campo published
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate()
         })
@@ -233,6 +235,7 @@ export class AdminMenuService {
         return {
           totalItems: 0,
           activeItems: 0,
+          publishedItems: 0,
           daysWithMenus: 0,
           almuerzoCount: 0,
           colacionCount: 0
@@ -241,6 +244,7 @@ export class AdminMenuService {
 
       const allItems = menu.days.flatMap(day => [...day.almuerzos, ...day.colaciones])
       const activeItems = allItems.filter(item => item.active)
+      const publishedItems = allItems.filter(item => (item as any).published)
       const daysWithMenus = menu.days.filter(day => 
         day.almuerzos.length > 0 || day.colaciones.length > 0
       ).length
@@ -248,6 +252,7 @@ export class AdminMenuService {
       return {
         totalItems: allItems.length,
         activeItems: activeItems.length,
+        publishedItems: publishedItems.length,
         daysWithMenus,
         almuerzoCount: allItems.filter(item => item.type === 'almuerzo').length,
         colacionCount: allItems.filter(item => item.type === 'colacion').length
@@ -305,6 +310,7 @@ export class AdminMenuService {
           day: newDay,
           weekStart: targetWeek,
           active: sourceItem.active,
+          published: false, // Los menús duplicados no se publican automáticamente
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now()
         }
@@ -316,7 +322,7 @@ export class AdminMenuService {
 
       return {
         success: true,
-        message: `Menú duplicado exitosamente. ${allItems.length} items copiados.`
+        message: `Menú duplicado exitosamente. ${allItems.length} items copiados. Recuerda publicar la semana para que sea visible a los usuarios.`
       }
     } catch (error) {
       console.error('Error duplicating week menu:', error)
@@ -345,11 +351,19 @@ export class AdminMenuService {
         }
       }
 
-      // Actualizar estado de publicación en todos los items
+      // Actualizar estado de publicación en todos los items activos
       const batch = writeBatch(db)
       const allItems = menu.days.flatMap(day => [...day.almuerzos, ...day.colaciones])
+      const activeItems = allItems.filter(item => item.active)
 
-      allItems.forEach(item => {
+      if (activeItems.length === 0) {
+        return {
+          success: false,
+          message: 'No hay menús activos para publicar'
+        }
+      }
+
+      activeItems.forEach(item => {
         if (item.id) {
           const docRef = doc(db, this.COLLECTION_NAME, item.id)
           batch.update(docRef, {
@@ -363,7 +377,9 @@ export class AdminMenuService {
 
       return {
         success: true,
-        message: publish ? 'Menú publicado exitosamente' : 'Menú despublicado exitosamente'
+        message: publish 
+          ? `Menú publicado exitosamente. ${activeItems.length} items ahora son visibles para los usuarios.`
+          : `Menú despublicado exitosamente. ${activeItems.length} items ya no son visibles para los usuarios.`
       }
     } catch (error) {
       console.error('Error toggling menu publication:', error)
@@ -410,6 +426,49 @@ export class AdminMenuService {
     }
   }
 
+  // Función para migrar menús antiguos sin campo published
+  static async migrateOldMenus(): Promise<MenuOperationResult> {
+    try {
+      const menusRef = collection(db, this.COLLECTION_NAME)
+      const q = query(menusRef)
+      const snapshot = await getDocs(q)
+      
+      const batch = writeBatch(db)
+      let migratedCount = 0
+
+      snapshot.forEach((doc) => {
+        const data = doc.data()
+        // Si no tiene el campo published, agregarlo como false
+        if (data.published === undefined) {
+          batch.update(doc.ref, {
+            published: false,
+            updatedAt: Timestamp.now()
+          })
+          migratedCount++
+        }
+      })
+
+      if (migratedCount > 0) {
+        await batch.commit()
+        return {
+          success: true,
+          message: `Migración completada. ${migratedCount} menús actualizados con campo 'published'.`
+        }
+      } else {
+        return {
+          success: true,
+          message: 'No se encontraron menús que requieran migración.'
+        }
+      }
+    } catch (error) {
+      console.error('Error migrating old menus:', error)
+      return {
+        success: false,
+        message: 'Error al migrar menús antiguos.'
+      }
+    }
+  }
+
   // Obtener item por código
   private static async getMenuItemByCode(code: string, weekStart: string): Promise<AdminMenuItem | null> {
     try {
@@ -437,6 +496,7 @@ export class AdminMenuService {
         day: data.day,
         weekStart: data.weekStart,
         active: data.active,
+        published: data.published ?? false,
         createdAt: data.createdAt?.toDate(),
         updatedAt: data.updatedAt?.toDate()
       }
@@ -513,7 +573,7 @@ export class AdminMenuService {
 
     // Verificar si está publicado (si todos los items activos están publicados)
     const activeItems = items.filter(item => item.active)
-    const publishedItems = activeItems.filter(item => (item as any).published)
+    const publishedItems = activeItems.filter(item => (item as any).published === true)
     const isPublished = activeItems.length > 0 && publishedItems.length === activeItems.length
 
     return {

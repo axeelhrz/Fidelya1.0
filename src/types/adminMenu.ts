@@ -7,6 +7,7 @@ export interface AdminMenuItem {
   day: string
   weekStart: string
   active: boolean
+  published?: boolean // Nuevo campo para controlar la publicación
   createdAt?: Date
   updatedAt?: Date
 }
