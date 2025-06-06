@@ -17,6 +17,90 @@ import { AdminMenuItem, AdminWeekMenu, AdminDayMenu, WeekNavigation, MenuOperati
 import { format, startOfWeek, addWeeks, subWeeks, parseISO, isValid, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+// In-memory storage for menu items (simulating database)
+class MenuStorage {
+  private static items: Map<string, AdminMenuItem> = new Map()
+  private static nextId = 1
+
+  static addItem(item: Omit<AdminMenuItem, 'id'>): AdminMenuItem {
+    const id = `menu_${this.nextId++}_${Date.now()}`
+    const newItem: AdminMenuItem = {
+      ...item,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    this.items.set(id, newItem)
+    console.log('Item added to storage:', newItem)
+    console.log('Total items in storage:', this.items.size)
+    return newItem
+  }
+
+  static updateItem(id: string, updates: Partial<AdminMenuItem>): boolean {
+    const item = this.items.get(id)
+    if (!item) return false
+
+    const updatedItem = {
+      ...item,
+      ...updates,
+      updatedAt: new Date()
+    }
+    this.items.set(id, updatedItem)
+    console.log('Item updated in storage:', updatedItem)
+    return true
+  }
+
+  static deleteItem(id: string): boolean {
+    const deleted = this.items.delete(id)
+    console.log('Item deleted from storage:', id, 'Success:', deleted)
+    console.log('Total items in storage:', this.items.size)
+    return deleted
+  }
+
+  static getItemsByWeek(weekStart: string): AdminMenuItem[] {
+    const weekDate = parseISO(weekStart)
+    const weekEnd = addDays(weekDate, 6)
+    
+    const items = Array.from(this.items.values()).filter(item => {
+      const itemDate = parseISO(item.date)
+      return itemDate >= weekDate && itemDate <= weekEnd
+    })
+    
+    console.log('Items retrieved for week:', weekStart, items)
+    return items
+  }
+
+  static getAllItems(): AdminMenuItem[] {
+    return Array.from(this.items.values())
+  }
+
+  static getItem(id: string): AdminMenuItem | undefined {
+    return this.items.get(id)
+  }
+
+  static clear(): void {
+    this.items.clear()
+  }
+
+  static getStats(weekStart: string): any {
+    const weekItems = this.getItemsByWeek(weekStart)
+    const activeItems = weekItems.filter(item => item.active)
+    const almuerzos = weekItems.filter(item => item.type === 'almuerzo')
+    const colaciones = weekItems.filter(item => item.type === 'colacion')
+    
+    // Count days with menus
+    const daysWithMenus = new Set(weekItems.map(item => item.date)).size
+
+    return {
+      totalItems: weekItems.length,
+      activeItems: activeItems.length,
+      totalAlmuerzos: almuerzos.length,
+      totalColaciones: colaciones.length,
+      daysWithMenus
+    }
+  }
+}
+
 export class AdminMenuService {
   // Helper method to create a local date from YYYY-MM-DD string
   static createLocalDate(dateString: string): Date {
@@ -143,6 +227,9 @@ export class AdminMenuService {
 
       const weekLabel = format(current, "'Semana del' d 'de' MMMM yyyy", { locale: es })
       
+      // Obtener items de la semana desde el storage
+      const weekItems = MenuStorage.getItemsByWeek(weekStart)
+      
       // Generar días de la semana (lunes a viernes)
       const days: AdminDayMenu[] = []
       const dayNames = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes']
@@ -152,25 +239,31 @@ export class AdminMenuService {
         const dateStr = format(dayDate, 'yyyy-MM-dd')
         const dayName = dayNames[i]
         
+        // Filtrar items por fecha específica
+        const dayItems = weekItems.filter(item => item.date === dateStr)
+        const almuerzos = dayItems.filter(item => item.type === 'almuerzo')
+        const colaciones = dayItems.filter(item => item.type === 'colacion')
+        
         days.push({
           date: dateStr,
           day: dayName,
           dayName: dayName.charAt(0).toUpperCase() + dayName.slice(1),
-          almuerzos: [],
-          colaciones: [],
+          almuerzos,
+          colaciones,
           isEditable: true
         })
       }
 
       const weekEnd = format(addDays(current, 4), 'yyyy-MM-dd')
+      const hasPublishedItems = weekItems.some(item => item.active)
 
       return {
         weekStart,
         weekEnd,
         weekLabel,
         days,
-        isPublished: false,
-        totalItems: 0
+        isPublished: hasPublishedItems,
+        totalItems: weekItems.length
       }
     } catch (error) {
       console.error('Error getting weekly menu:', error)
@@ -189,20 +282,28 @@ export class AdminMenuService {
         }
       }
 
-      // Simular creación exitosa
-      console.log('Creating menu item:', itemData)
+      // Validar que no exista un código duplicado para la misma fecha
+      const existingItems = MenuStorage.getItemsByWeek(itemData.weekStart)
+      const duplicateCode = existingItems.find(item => 
+        item.code === itemData.code && item.date === itemData.date
+      )
+
+      if (duplicateCode) {
+        return {
+          success: false,
+          message: `Ya existe un menú con el código "${itemData.code}" para este día`
+        }
+      }
+
+      // Crear el item en el storage
+      const newItem = MenuStorage.addItem(itemData)
       
-      // Aquí podrías agregar la lógica real de Firebase
-      // const docRef = await addDoc(collection(db, 'menuItems'), {
-      //   ...itemData,
-      //   createdAt: Timestamp.now(),
-      //   updatedAt: Timestamp.now()
-      // })
+      console.log('Menu item created successfully:', newItem)
 
       return {
         success: true,
         message: 'Menú creado exitosamente',
-        data: { id: `temp_${Date.now()}`, ...itemData }
+        data: newItem
       }
     } catch (error) {
       console.error('Error creating menu item:', error)
@@ -223,15 +324,43 @@ export class AdminMenuService {
         }
       }
 
-      // Simular actualización exitosa
-      console.log('Updating menu item:', id, updates)
+      // Verificar que el item existe
+      const existingItem = MenuStorage.getItem(id)
+      if (!existingItem) {
+        return {
+          success: false,
+          message: 'Menú no encontrado'
+        }
+      }
+
+      // Si se está actualizando el código, verificar que no exista duplicado
+      if (updates.code && updates.code !== existingItem.code) {
+        const weekItems = MenuStorage.getItemsByWeek(existingItem.weekStart)
+        const duplicateCode = weekItems.find(item => 
+          item.id !== id && 
+          item.code === updates.code && 
+          item.date === existingItem.date
+        )
+
+        if (duplicateCode) {
+          return {
+            success: false,
+            message: `Ya existe un menú con el código "${updates.code}" para este día`
+          }
+        }
+      }
+
+      // Actualizar el item
+      const success = MenuStorage.updateItem(id, updates)
       
-      // Aquí podrías agregar la lógica real de Firebase
-      // const docRef = doc(db, 'menuItems', id)
-      // await updateDoc(docRef, {
-      //   ...updates,
-      //   updatedAt: Timestamp.now()
-      // })
+      if (!success) {
+        return {
+          success: false,
+          message: 'Error al actualizar el menú'
+        }
+      }
+
+      console.log('Menu item updated successfully:', id)
 
       return {
         success: true,
@@ -256,12 +385,26 @@ export class AdminMenuService {
         }
       }
 
-      // Simular eliminación exitosa
-      console.log('Deleting menu item:', id)
+      // Verificar que el item existe
+      const existingItem = MenuStorage.getItem(id)
+      if (!existingItem) {
+        return {
+          success: false,
+          message: 'Menú no encontrado'
+        }
+      }
+
+      // Eliminar el item
+      const success = MenuStorage.deleteItem(id)
       
-      // Aquí podrías agregar la lógica real de Firebase
-      // const docRef = doc(db, 'menuItems', id)
-      // await deleteDoc(docRef)
+      if (!success) {
+        return {
+          success: false,
+          message: 'Error al eliminar el menú'
+        }
+      }
+
+      console.log('Menu item deleted successfully:', id)
 
       return {
         success: true,
@@ -297,12 +440,38 @@ export class AdminMenuService {
         }
       }
 
-      // Simular duplicación exitosa
-      console.log('Duplicating week menu:', sourceWeek, 'to', targetWeek)
+      // Obtener items de la semana origen
+      const sourceItems = MenuStorage.getItemsByWeek(sourceWeek)
+      
+      if (sourceItems.length === 0) {
+        return {
+          success: false,
+          message: 'No hay menús en la semana origen para duplicar'
+        }
+      }
+
+      // Duplicar cada item a la semana destino
+      let duplicatedCount = 0
+      for (const sourceItem of sourceItems) {
+        const targetDate = this.getTargetDate(sourceItem.date, sourceWeek, targetWeek)
+        
+        const duplicatedItem: Omit<AdminMenuItem, 'id'> = {
+          ...sourceItem,
+          date: targetDate,
+          weekStart: targetWeek
+        }
+
+        const result = await this.createMenuItem(duplicatedItem)
+        if (result.success) {
+          duplicatedCount++
+        }
+      }
+
+      console.log('Week menu duplicated:', sourceWeek, 'to', targetWeek, 'Items:', duplicatedCount)
       
       return {
         success: true,
-        message: 'Menú semanal duplicado exitosamente'
+        message: `Menú semanal duplicado exitosamente (${duplicatedCount} items)`
       }
     } catch (error) {
       console.error('Error duplicating week menu:', error)
@@ -332,12 +501,34 @@ export class AdminMenuService {
         }
       }
 
-      // Simular cambio de publicación exitoso
-      console.log('Toggling week menu publication:', weekStart, publish)
+      // Obtener items de la semana
+      const weekItems = MenuStorage.getItemsByWeek(weekStart)
+      
+      if (weekItems.length === 0) {
+        return {
+          success: false,
+          message: 'No hay menús en esta semana para publicar'
+        }
+      }
+
+      // Actualizar el estado activo de todos los items
+      let updatedCount = 0
+      for (const item of weekItems) {
+        if (item.id) {
+          const success = MenuStorage.updateItem(item.id, { active: publish })
+          if (success) {
+            updatedCount++
+          }
+        }
+      }
+
+      console.log('Week menu publication toggled:', weekStart, publish, 'Items updated:', updatedCount)
       
       return {
         success: true,
-        message: publish ? 'Menú publicado exitosamente' : 'Menú despublicado exitosamente'
+        message: publish 
+          ? `Menú publicado exitosamente (${updatedCount} items)` 
+          : `Menú despublicado exitosamente (${updatedCount} items)`
       }
     } catch (error) {
       console.error('Error toggling week menu publication:', error)
@@ -367,12 +558,32 @@ export class AdminMenuService {
         }
       }
 
-      // Simular eliminación exitosa
-      console.log('Deleting week menu:', weekStart)
+      // Obtener items de la semana
+      const weekItems = MenuStorage.getItemsByWeek(weekStart)
+      
+      if (weekItems.length === 0) {
+        return {
+          success: false,
+          message: 'No hay menús en esta semana para eliminar'
+        }
+      }
+
+      // Eliminar todos los items de la semana
+      let deletedCount = 0
+      for (const item of weekItems) {
+        if (item.id) {
+          const success = MenuStorage.deleteItem(item.id)
+          if (success) {
+            deletedCount++
+          }
+        }
+      }
+
+      console.log('Week menu deleted:', weekStart, 'Items deleted:', deletedCount)
       
       return {
         success: true,
-        message: 'Menú semanal eliminado exitosamente'
+        message: `Menú semanal eliminado exitosamente (${deletedCount} items)`
       }
     } catch (error) {
       console.error('Error deleting week menu:', error)
@@ -396,14 +607,11 @@ export class AdminMenuService {
         throw new Error('Fecha de semana inválida')
       }
 
-      // Simular estadísticas
-      return {
-        totalItems: 0,
-        activeItems: 0,
-        totalAlmuerzos: 0,
-        totalColaciones: 0,
-        daysWithMenus: 0
-      }
+      // Obtener estadísticas del storage
+      const stats = MenuStorage.getStats(weekStart)
+      console.log('Week stats:', weekStart, stats)
+      
+      return stats
     } catch (error) {
       console.error('Error getting week stats:', error)
       // Retornar estadísticas por defecto en caso de error
@@ -486,9 +694,9 @@ export class AdminMenuService {
   // Obtener fecha objetivo para duplicación
   private static getTargetDate(sourceDate: string, sourceWeek: string, targetWeek: string): string {
     try {
-      const sourceDateObj = this.createLocalDate(sourceDate)
-      const sourceWeekObj = this.createLocalDate(sourceWeek)
-      const targetWeekObj = this.createLocalDate(targetWeek)
+      const sourceDateObj = parseISO(sourceDate)
+      const sourceWeekObj = parseISO(sourceWeek)
+      const targetWeekObj = parseISO(targetWeek)
       
       const dayOffset = Math.floor((sourceDateObj.getTime() - sourceWeekObj.getTime()) / (1000 * 60 * 60 * 24))
       const targetDate = addDays(targetWeekObj, dayOffset)
