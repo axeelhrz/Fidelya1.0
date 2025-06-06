@@ -24,7 +24,6 @@ export default function AdminPedidosPage() {
     updateFilters,
     refreshOrders,
     updateOrderStatus,
-    deleteOrder
   } = useAdminOrders()
 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)

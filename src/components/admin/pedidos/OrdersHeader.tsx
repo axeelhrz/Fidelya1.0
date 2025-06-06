@@ -9,11 +9,20 @@ import { AdminOrderView, OrderMetrics } from '@/types/adminOrder'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+interface OrderFilters {
+  status?: string
+  searchTerm?: string
+  dateRange?: {
+    from: Date
+    to: Date
+  }
+}
+
 interface OrdersHeaderProps {
   selectedWeek: string
   metrics: OrderMetrics | null
   orders: AdminOrderView[]
-  filters: any
+  filters: OrderFilters
   onRefresh: () => void
   isLoading: boolean
 }
@@ -35,7 +44,11 @@ export function OrdersHeader({
       filters
     }
     
-    await ExportUtils.exportOrders(exportData, format)
+    if (format === 'excel') {
+      await ExportUtils.exportToExcel(exportData)
+    } else {
+      await ExportUtils.exportToPDF(exportData)
+    }
   }
 
   const getWeekLabel = () => {

@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { X, Save, AlertCircle } from 'lucide-react'
+import { Save, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,8 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AdminMenuItem, MenuFormData, MenuModalState, MenuOperationResult } from '@/types/adminMenu'
-import { AdminMenuService } from '@/services/adminMenuService'
-import { generateMenuCode, validateMenuCode, getMenuTypeLabel } from '@/lib/adminMenuUtils'
+import { generateMenuCode, validateMenuCode } from '@/lib/adminMenuUtils'
 
 interface MenuItemModalProps {
   modalState: MenuModalState
@@ -136,7 +135,7 @@ export function MenuItemModal({
     }
   }
 
-  const handleInputChange = (field: keyof MenuFormData, value: any) => {
+  const handleInputChange = (field: keyof MenuFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     
     // Limpiar error del campo cuando el usuario empiece a escribir

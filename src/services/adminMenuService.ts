@@ -13,7 +13,6 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { AdminMenuItem, AdminWeekMenu, AdminDayMenu, MenuOperationResult } from '@/types/adminMenu'
-import { MenuItem } from '@/types/menu'
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isValid, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 

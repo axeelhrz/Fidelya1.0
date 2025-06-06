@@ -8,7 +8,7 @@ import { UsersFilters } from '@/components/admin/usuarios/UsersFilters'
 import { UsersTable } from '@/components/admin/usuarios/UsersTable'
 import { UserDetailModal } from '@/components/admin/usuarios/UserDetailModal'
 import { useAdminUsers } from '@/hooks/useAdminUsers'
-import { AdminUserView, UserDetailView } from '@/types/adminUser'
+import { AdminUserView } from '@/types/adminUser'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle, CheckCircle, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -38,7 +38,6 @@ export default function AdminUsersPage() {
     loadUserDetail,
     updateFilters,
     updateSort,
-    updateUser,
     deleteUser,
     resendEmailVerification,
     clearSelectedUser,

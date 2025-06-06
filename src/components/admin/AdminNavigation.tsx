@@ -26,11 +26,7 @@ interface NavigationItem {
   badge?: number
 }
 
-interface AdminNavigationProps {
-  className?: string
-}
-
-export function AdminNavigation({ className }: AdminNavigationProps) {
+export function AdminNavigation() {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 

@@ -9,8 +9,6 @@ import {
   Tooltip, 
   Legend, 
   ResponsiveContainer,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -29,14 +27,14 @@ interface ReportsChartsProps {
 
 export function ReportsCharts({ data }: ReportsChartsProps) {
   // Formatear datos para gráficos
-  const formatTooltipValue = (value: any, name: string) => {
+  const formatTooltipValue = (value: number | string, name: string) => {
     if (name === 'revenue' || name === 'Ingresos') {
-      return [ExportUtils.formatCurrency(value), name]
+      return [ExportUtils.formatCurrency(Number(value)), name]
     }
     return [value, name]
   }
 
-  const formatYAxisTick = (value: any) => {
+  const formatYAxisTick = (value: number) => {
     if (value >= 1000000) {
       return `$${(value / 1000000).toFixed(1)}M`
     }
@@ -198,7 +196,7 @@ export function ReportsCharts({ data }: ReportsChartsProps) {
                       ))}
                     </Pie>
                     <Tooltip 
-                      formatter={(value, name) => [value, 'Pedidos']}
+                      formatter={(value) => [value, 'Pedidos']}
                       contentStyle={{ 
                         backgroundColor: '#f8fafc', 
                         border: '1px solid #e2e8f0',

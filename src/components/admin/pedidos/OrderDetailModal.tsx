@@ -1,8 +1,7 @@
 "use client"
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  X, 
   User, 
   Calendar, 
   CreditCard, 
@@ -10,7 +9,6 @@ import {
   CheckCircle,
   AlertCircle,
   Mail,
-  Phone,
   Package,
   DollarSign
 } from 'lucide-react'
@@ -47,17 +45,7 @@ export function OrderDetailModal({
   const [isUpdating, setIsUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (isOpen && orderId) {
-      loadOrderDetail()
-    } else if (!isOpen) {
-      // Limpiar estado cuando se cierra el modal
-      setOrderDetail(null)
-      setError(null)
-    }
-  }, [isOpen, orderId])
-
-  const loadOrderDetail = async () => {
+  const loadOrderDetail = useCallback(async () => {
     if (!orderId) return
 
     setIsLoading(true)
@@ -71,7 +59,17 @@ export function OrderDetailModal({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [orderId])
+
+  useEffect(() => {
+    if (isOpen && orderId) {
+      loadOrderDetail()
+    } else if (!isOpen) {
+      // Limpiar estado cuando se cierra el modal
+      setOrderDetail(null)
+      setError(null)
+    }
+  }, [isOpen, orderId, loadOrderDetail])
 
   const handleStatusUpdate = async (newStatus: 'pending' | 'paid' | 'cancelled') => {
     if (!orderId) return

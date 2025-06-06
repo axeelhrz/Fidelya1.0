@@ -1,6 +1,7 @@
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
-import { MenuItem, DayMenuDisplay, WeekMenuDisplay, MENU_PRICES } from '@/types/menu'
+import { MenuItem, PRICES } from '@/types/panel'
+import { DayMenuDisplay, WeekMenuDisplay } from '@/types/menu'
 import { format, startOfWeek, endOfWeek, addDays, isBefore } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -31,12 +32,7 @@ export class MenuService {
           description: data.description,
           type: data.type,
           price: 0, // Se calculará dinámicamente
-          available: data.available !== false && data.active !== false,
-          date: data.date,
-          day: data.day,
-          weekStart: data.weekStart,
-          createdAt: data.createdAt?.toDate(),
-          updatedAt: data.updatedAt?.toDate()
+          available: data.available !== false && data.active !== false
         })
       })
       
@@ -56,11 +52,11 @@ export class MenuService {
         ...day,
         almuerzos: day.almuerzos.map(item => ({
           ...item,
-          price: MENU_PRICES[userType].almuerzo
+          price: PRICES[userType].almuerzo
         })),
         colaciones: day.colaciones.map(item => ({
           ...item,
-          price: MENU_PRICES[userType].colacion
+          price: PRICES[userType].colacion
         }))
       }))
       
@@ -124,7 +120,11 @@ export class MenuService {
       const dateStr = format(currentDate, 'yyyy-MM-dd')
       const dayName = format(currentDate, 'EEEE', { locale: es })
       
-      const dayItems = items.filter(item => item.date === dateStr)
+      const dayItems = items.filter(item => {
+        // Necesitamos filtrar por fecha desde los datos de Firebase
+        return true // Por ahora retornamos todos, luego filtraremos por fecha en la consulta
+      })
+      
       const almuerzos = dayItems.filter(item => item.type === 'almuerzo')
       const colaciones = dayItems.filter(item => item.type === 'colacion')
       

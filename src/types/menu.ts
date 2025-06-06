@@ -1,9 +1,9 @@
-import { MenuItem, DayMenu } from './panel'
+import { MenuItem, DayMenu as DayMenuOptions } from './panel'
 
 export interface WeeklyMenuData {
   weekStart: string
   weekEnd: string
-  days: DayMenu[]
+  days: DayMenuDisplay[]
   isLoading: boolean
   isEmpty: boolean
 }
@@ -25,12 +25,23 @@ export interface MenuItemDisplay extends MenuItem {
   }
 }
 
-export interface DayMenuDisplay extends Omit<DayMenu, 'almuerzos' | 'colaciones'> {
-  almuerzos: MenuItemDisplay[]
-  colaciones: MenuItemDisplay[]
-  hasItems: boolean
+export interface DayMenuDisplay {
+  date: string
+  day: string
   dayLabel: string
   dateFormatted: string
+  almuerzos: MenuItem[]
+  colaciones: MenuItem[]
+  hasItems: boolean
+  isAvailable?: boolean
+}
+
+export interface WeekMenuDisplay {
+  weekStart: string
+  weekEnd: string
+  weekLabel: string
+  days: DayMenuDisplay[]
+  totalItems: number
 }
 
 export type MenuLoadingState = 'idle' | 'loading' | 'success' | 'error'
@@ -41,14 +52,8 @@ export interface MenuError {
   code: string
 }
 
-// Precios por tipo de usuario
-export const MENU_PRICES = {
-  funcionario: {
-    almuerzo: 4875,
-    colacion: 1800
-  },
-  estudiante: {
-    almuerzo: 5500,
-    colacion: 2000
-  }
-} as const
+// Precios por tipo de usuario (importar desde panel.ts)
+export { PRICES as MENU_PRICES } from './panel'
+
+// Re-exportar tipos necesarios
+export type { MenuItem } from './panel'

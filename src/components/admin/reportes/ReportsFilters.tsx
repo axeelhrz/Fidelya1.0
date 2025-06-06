@@ -73,7 +73,7 @@ export function ReportsFiltersComponent({
               <Label>Tipo de Usuario</Label>
               <Select
                 value={filters.userType}
-                onValueChange={(value) => onFiltersChange({ userType: value as any })}
+                onValueChange={(value) => onFiltersChange({ userType: value as ReportsFilters['userType'] })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar tipo" />
@@ -91,7 +91,7 @@ export function ReportsFiltersComponent({
               <Label>Estado del Pedido</Label>
               <Select
                 value={filters.orderStatus}
-                onValueChange={(value) => onFiltersChange({ orderStatus: value as any })}
+                onValueChange={(value) => onFiltersChange({ orderStatus: value as ReportsFilters['orderStatus'] })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar estado" />
@@ -109,7 +109,7 @@ export function ReportsFiltersComponent({
               <Label>Tipo de Menú</Label>
               <Select
                 value={filters.menuType}
-                onValueChange={(value) => onFiltersChange({ menuType: value as any })}
+                onValueChange={(value) => onFiltersChange({ menuType: value as ReportsFilters['menuType'] })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar menú" />

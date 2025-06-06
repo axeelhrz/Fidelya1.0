@@ -63,11 +63,12 @@ export default function LoginPage() {
       // Login exitoso, redirigir al panel
       router.push('/panel')
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al iniciar sesión:', error)
       
       // Manejar diferentes tipos de errores de Firebase
-      switch (error.code) {
+      const firebaseError = error as { code?: string }
+      switch (firebaseError.code) {
         case 'auth/user-not-found':
           setError('No existe una cuenta con este correo electrónico.')
           break

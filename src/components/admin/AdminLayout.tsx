@@ -12,7 +12,7 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const { adminUser, isLoading, isAdmin } = useAdminAuth()
+  const { isLoading, isAdmin } = useAdminAuth()
 
   if (isLoading) {
     return (
