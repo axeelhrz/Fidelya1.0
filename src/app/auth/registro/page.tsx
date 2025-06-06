@@ -5,9 +5,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
+import { doc, setDoc } from "firebase/firestore"
+import { auth, db } from "@/app/lib/firebase"
 
 export default function RegistroPage() {
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -41,6 +48,8 @@ export default function RegistroPage() {
       ...formData,
       [e.target.name]: e.target.value
     })
+    // Limpiar error cuando el usuario empiece a escribir
+    if (error) setError("")
   }
 
   const handleChildChange = (id: number, field: string, value: string) => {
@@ -66,13 +75,108 @@ export default function RegistroPage() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const registrationData = {
-      ...formData,
-      children: showChildrenSection ? children.filter(child => child.name.trim() !== "") : []
+  const validateForm = () => {
+    if (!formData.firstName.trim()) {
+      setError("El nombre es requerido")
+      return false
     }
-    console.log("Registro:", registrationData)
+    if (!formData.lastName.trim()) {
+      setError("El apellido es requerido")
+      return false
+    }
+    if (!formData.email.trim()) {
+      setError("El correo electrónico es requerido")
+      return false
+    }
+    if (formData.password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres")
+      return false
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError("Las contraseñas no coinciden")
+      return false
+    }
+    return true
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
+    setIsLoading(true)
+    setError("")
+
+    try {
+      // Crear usuario en Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        formData.email, 
+        formData.password
+      )
+      const user = userCredential.user
+
+      // Actualizar el perfil del usuario con el nombre
+      await updateProfile(user, {
+        displayName: `${formData.firstName} ${formData.lastName}`
+      })
+
+      // Preparar datos de los hijos (solo los que tienen nombre)
+      const validChildren = showChildrenSection 
+        ? children.filter(child => child.name.trim() !== "").map(child => ({
+            id: child.id.toString(),
+            name: child.name.trim(),
+            age: parseInt(child.age) || 0,
+            class: child.class.trim(),
+            level: child.level as 'basico' | 'medio'
+          }))
+        : []
+
+      // Determinar el tipo de usuario basado en si tiene hijos
+      const userType = validChildren.length > 0 ? 'funcionario' : 'estudiante'
+
+      // Guardar datos adicionales en Firestore
+      const userData = {
+        id: user.uid,
+        email: formData.email,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        userType,
+        children: validChildren,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      await setDoc(doc(db, 'users', user.uid), userData)
+
+      // Registro exitoso, redirigir al panel
+      router.push('/panel')
+      
+    } catch (error: any) {
+      console.error('Error al registrar usuario:', error)
+      
+      // Manejar diferentes tipos de errores de Firebase
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          setError('Ya existe una cuenta con este correo electrónico.')
+          break
+        case 'auth/invalid-email':
+          setError('Correo electrónico inválido.')
+          break
+        case 'auth/operation-not-allowed':
+          setError('Registro no permitido. Contacta al administrador.')
+          break
+        case 'auth/weak-password':
+          setError('La contraseña es muy débil. Debe tener al menos 6 caracteres.')
+          break
+        default:
+          setError('Error al crear la cuenta. Intenta nuevamente.')
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -157,6 +261,17 @@ export default function RegistroPage() {
               </motion.div>
             </motion.div>
 
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg"
+              >
+                <p className="text-sm text-red-600 text-clean">{error}</p>
+              </motion.div>
+            )}
+
             {/* Registration Form */}
             <motion.form
               onSubmit={handleSubmit}
@@ -182,6 +297,7 @@ export default function RegistroPage() {
                     onChange={handleInputChange}
                     placeholder="Tu nombre"
                     required
+                    disabled={isLoading}
                   />
                 </motion.div>
 
@@ -200,6 +316,7 @@ export default function RegistroPage() {
                     onChange={handleInputChange}
                     placeholder="Tu apellido"
                     required
+                    disabled={isLoading}
                   />
                 </motion.div>
               </div>
@@ -220,6 +337,7 @@ export default function RegistroPage() {
                   onChange={handleInputChange}
                   placeholder="tu@email.com"
                   required
+                  disabled={isLoading}
                 />
               </motion.div>
 
@@ -239,6 +357,7 @@ export default function RegistroPage() {
                   onChange={handleInputChange}
                   placeholder="••••••••"
                   required
+                  disabled={isLoading}
                 />
               </motion.div>
 
@@ -257,6 +376,7 @@ export default function RegistroPage() {
                   onChange={handleInputChange}
                   placeholder="••••••••"
                   required
+                  disabled={isLoading}
                 />
               </motion.div>
 
@@ -281,6 +401,7 @@ export default function RegistroPage() {
                     onClick={() => setShowChildrenSection(!showChildrenSection)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    disabled={isLoading}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                       showChildrenSection 
                         ? 'bg-emerald-600 text-white' 
@@ -322,6 +443,7 @@ export default function RegistroPage() {
                             <button
                               type="button"
                               onClick={() => removeChild(child.id)}
+                              disabled={isLoading}
                               className="text-red-500 hover:text-red-700 text-sm"
                             >
                               Eliminar
@@ -339,6 +461,7 @@ export default function RegistroPage() {
                               value={child.name}
                               onChange={(e) => handleChildChange(child.id, 'name', e.target.value)}
                               placeholder="Nombre completo"
+                              disabled={isLoading}
                             />
                           </div>
                           
@@ -354,6 +477,7 @@ export default function RegistroPage() {
                                 placeholder="Edad"
                                 min="3"
                                 max="18"
+                                disabled={isLoading}
                               />
                             </div>
                             
@@ -366,6 +490,7 @@ export default function RegistroPage() {
                                 value={child.class}
                                 onChange={(e) => handleChildChange(child.id, 'class', e.target.value)}
                                 placeholder="Ej: 3°A, 1°B"
+                                disabled={isLoading}
                               />
                             </div>
                           </div>
@@ -378,6 +503,7 @@ export default function RegistroPage() {
                               value={child.level}
                               onChange={(e) => handleChildChange(child.id, 'level', e.target.value)}
                               className="select-educational"
+                              disabled={isLoading}
                             >
                               <option value="basico">Educación Básica</option>
                               <option value="medio">Educación Media</option>
@@ -392,6 +518,7 @@ export default function RegistroPage() {
                       onClick={addChild}
                       whileHover={{ y: -1 }}
                       whileTap={{ scale: 0.98 }}
+                      disabled={isLoading}
                       className="w-full p-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-600 hover:border-emerald-400 hover:text-emerald-600 transition-all duration-300 text-sm font-medium text-clean"
                     >
                       + Agregar otro hijo
@@ -408,23 +535,33 @@ export default function RegistroPage() {
                 className="pt-4"
               >
                 <motion.div
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={!isLoading ? { y: -2 } : {}}
+                  whileTap={!isLoading ? { scale: 0.98 } : {}}
                 >
                   <Button
                     type="submit"
+                    disabled={isLoading}
                     className="btn-auth-primary group relative overflow-hidden"
                   >
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100"
-                      animate={{ x: ["-100%", "100%"] }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        repeatDelay: 3
-                      }}
-                    />
-                    <span className="relative z-10">Crear Cuenta</span>
+                    {isLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Creando cuenta...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100"
+                          animate={{ x: ["-100%", "100%"] }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            repeatDelay: 3
+                          }}
+                        />
+                        <span className="relative z-10">Crear Cuenta</span>
+                      </>
+                    )}
                   </Button>
                 </motion.div>
               </motion.div>
@@ -495,7 +632,7 @@ export default function RegistroPage() {
             <div className="w-1 h-1 bg-slate-400 rounded-full" />
             <span className="text-clean">Sistema de gestión educativa</span>
             <div className="w-1 h-1 bg-slate-400 rounded-full" />
-          </motion.div>
+          </div>
         </motion.div>
       </div>
     </div>

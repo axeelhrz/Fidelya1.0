@@ -5,9 +5,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { doc, getDoc } from "firebase/firestore"
+import { auth, db } from "@/app/lib/firebase"
 
 export default function LoginPage() {
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -28,11 +35,63 @@ export default function LoginPage() {
       ...formData,
       [name]: type === 'checkbox' ? checked : value
     })
+    // Limpiar error cuando el usuario empiece a escribir
+    if (error) setError("")
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Login:", formData)
+    setIsLoading(true)
+    setError("")
+
+    try {
+      // Autenticar con Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password)
+      const user = userCredential.user
+
+      // Verificar si el usuario existe en Firestore
+      const userDoc = await getDoc(doc(db, 'users', user.uid))
+      
+      if (!userDoc.exists()) {
+        // Si no existe en Firestore, redirigir al registro para completar perfil
+        setError("Usuario no encontrado. Por favor, completa tu registro.")
+        await auth.signOut()
+        router.push('/auth/registro')
+        return
+      }
+
+      // Login exitoso, redirigir al panel
+      router.push('/panel')
+      
+    } catch (error: any) {
+      console.error('Error al iniciar sesión:', error)
+      
+      // Manejar diferentes tipos de errores de Firebase
+      switch (error.code) {
+        case 'auth/user-not-found':
+          setError('No existe una cuenta con este correo electrónico.')
+          break
+        case 'auth/wrong-password':
+          setError('Contraseña incorrecta.')
+          break
+        case 'auth/invalid-email':
+          setError('Correo electrónico inválido.')
+          break
+        case 'auth/user-disabled':
+          setError('Esta cuenta ha sido deshabilitada.')
+          break
+        case 'auth/too-many-requests':
+          setError('Demasiados intentos fallidos. Intenta más tarde.')
+          break
+        case 'auth/invalid-credential':
+          setError('Credenciales inválidas. Verifica tu correo y contraseña.')
+          break
+        default:
+          setError('Error al iniciar sesión. Intenta nuevamente.')
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -117,6 +176,17 @@ export default function LoginPage() {
               </motion.div>
             </motion.div>
 
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg"
+              >
+                <p className="text-sm text-red-600 text-clean">{error}</p>
+              </motion.div>
+            )}
+
             {/* Login Form */}
             <motion.form
               onSubmit={handleSubmit}
@@ -141,6 +211,7 @@ export default function LoginPage() {
                   onChange={handleInputChange}
                   placeholder="tu@email.com"
                   required
+                  disabled={isLoading}
                 />
               </motion.div>
 
@@ -160,6 +231,7 @@ export default function LoginPage() {
                   onChange={handleInputChange}
                   placeholder="••••••••"
                   required
+                  disabled={isLoading}
                 />
               </motion.div>
 
@@ -176,6 +248,7 @@ export default function LoginPage() {
                     name="rememberMe"
                     checked={formData.rememberMe}
                     onChange={handleInputChange}
+                    disabled={isLoading}
                     className="w-4 h-4 text-emerald-600 bg-white border-slate-300 rounded focus:ring-emerald-500 focus:ring-2"
                   />
                   <span className="text-sm text-slate-600 text-clean">Recordarme</span>
@@ -197,23 +270,33 @@ export default function LoginPage() {
                 className="pt-2"
               >
                 <motion.div
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={!isLoading ? { y: -2 } : {}}
+                  whileTap={!isLoading ? { scale: 0.98 } : {}}
                 >
                   <Button
                     type="submit"
+                    disabled={isLoading}
                     className="btn-auth-primary group relative overflow-hidden"
                   >
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100"
-                      animate={{ x: ["-100%", "100%"] }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        repeatDelay: 3
-                      }}
-                    />
-                    <span className="relative z-10">Iniciar Sesión</span>
+                    {isLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Iniciando sesión...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100"
+                          animate={{ x: ["-100%", "100%"] }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            repeatDelay: 3
+                          }}
+                        />
+                        <span className="relative z-10">Iniciar Sesión</span>
+                      </>
+                    )}
                   </Button>
                 </motion.div>
               </motion.div>
