@@ -201,58 +201,47 @@ export class OrderService {
       errors.push('El tiempo para realizar pedidos ha expirado')
     }
     
+    // Verificar que haya al menos una selección con almuerzo
+    const selectionsWithAlmuerzo = selections.filter(s => s.almuerzo)
+    if (selectionsWithAlmuerzo.length === 0) {
+      errors.push('Debe seleccionar al menos un almuerzo para proceder')
+    }
+    
     if (user.tipoUsuario === 'apoderado') {
-      // Para apoderados: verificar que todos los días laborales tengan almuerzo para al menos un hijo
-      const weekDaysLaboral = weekDays.filter((_, index) => index < 5) // Solo lunes a viernes
-      
-      weekDaysLaboral.forEach(day => {
-        const daySelections = selections.filter(s => s.date === day && s.almuerzo)
-        if (daySelections.length === 0) {
-          missingDays.push(day)
-        }
-      })
-      
-      if (missingDays.length > 0) {
-        errors.push(`Faltan seleccionar almuerzos para ${missingDays.length} día(s) laboral(es)`)
-      }
-      
       // Verificar que haya hijos registrados
       if (!user.children || user.children.length === 0) {
         errors.push('Debe registrar al menos un hijo para realizar pedidos')
       }
-    } else {
-      // Para funcionarios: verificar que todos los días laborales tengan almuerzo
-      const weekDaysLaboral = weekDays.filter((_, index) => index < 5) // Solo lunes a viernes
       
-      weekDaysLaboral.forEach(day => {
-        const selection = selections.find(s => s.date === day && s.almuerzo)
-        if (!selection) {
-          missingDays.push(day)
-        }
-      })
-      
-      if (missingDays.length > 0) {
-        errors.push(`Faltan seleccionar almuerzos para ${missingDays.length} día(s) laboral(es)`)
+      // Verificar que haya al menos una selección para algún hijo
+      if (selections.length === 0) {
+        errors.push('Debe seleccionar menús para al menos un hijo')
       }
     }
     
-    // Verificar que haya al menos una selección
-    if (selections.length === 0) {
-      errors.push('Debe seleccionar al menos un almuerzo')
+    // Advertencias informativas (no bloquean el pago)
+    const weekDaysLaboral = weekDays.filter((_, index) => index < 5) // Solo lunes a viernes
+    const daysWithoutAlmuerzo = weekDaysLaboral.filter(day => {
+      const daySelections = selections.filter(s => s.date === day && s.almuerzo)
+      return daySelections.length === 0
+    })
+    
+    if (daysWithoutAlmuerzo.length > 0 && selectionsWithAlmuerzo.length > 0) {
+      warnings.push(`Tienes ${daysWithoutAlmuerzo.length} día(s) sin almuerzo seleccionado. Puedes agregar más días después del pago.`)
     }
     
-    // Advertencias
+    // Advertencia sobre colaciones
     const selectionsWithoutColacion = selections.filter(s => s.almuerzo && !s.colacion)
     if (selectionsWithoutColacion.length > 0) {
-      warnings.push(`${selectionsWithoutColacion.length} selección(es) sin colación`)
+      warnings.push(`${selectionsWithoutColacion.length} selección(es) sin colación. Las colaciones son opcionales.`)
     }
     
     return {
       isValid: errors.length === 0,
       errors,
       warnings,
-      missingDays,
-      canProceedToPayment: errors.length === 0 && isOrderingAllowed
+      missingDays: daysWithoutAlmuerzo,
+      canProceedToPayment: errors.length === 0 && isOrderingAllowed && selectionsWithAlmuerzo.length > 0
     }
   }
 
@@ -270,21 +259,21 @@ export class OrderService {
       errors.push('El tiempo para realizar pedidos ha expirado')
     }
     
-    const weekDaysLaboral = weekDays.filter((_, index) => index < 5) // Solo lunes a viernes
-    
-    weekDaysLaboral.forEach(day => {
-      const selection = selections.find(s => s.date === day)
-      if (!selection || !selection.almuerzo) {
-        missingDays.push(day)
-      }
-    })
-    
-    if (missingDays.length > 0) {
-      errors.push(`Faltan seleccionar almuerzos para ${missingDays.length} día(s) laboral(es)`)
+    // Solo verificar que haya al menos un almuerzo seleccionado
+    const selectionsWithAlmuerzo = selections.filter(s => s.almuerzo)
+    if (selectionsWithAlmuerzo.length === 0) {
+      errors.push('Debe seleccionar al menos un almuerzo para proceder')
     }
     
-    if (selections.length === 0) {
-      errors.push('Debe seleccionar al menos un almuerzo')
+    // Advertencias informativas
+    const weekDaysLaboral = weekDays.filter((_, index) => index < 5) // Solo lunes a viernes
+    const daysWithoutAlmuerzo = weekDaysLaboral.filter(day => {
+      const selection = selections.find(s => s.date === day && s.almuerzo)
+      return !selection
+    })
+    
+    if (daysWithoutAlmuerzo.length > 0 && selectionsWithAlmuerzo.length > 0) {
+      warnings.push(`${daysWithoutAlmuerzo.length} día(s) sin almuerzo seleccionado`)
     }
     
     const selectionsWithoutColacion = selections.filter(s => s.almuerzo && !s.colacion)
@@ -296,8 +285,8 @@ export class OrderService {
       isValid: errors.length === 0,
       errors,
       warnings,
-      missingDays,
-      canProceedToPayment: errors.length === 0 && isOrderingAllowed
+      missingDays: daysWithoutAlmuerzo,
+      canProceedToPayment: errors.length === 0 && isOrderingAllowed && selectionsWithAlmuerzo.length > 0
     }
   }
 

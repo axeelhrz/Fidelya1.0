@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useOrderStore } from '@/store/orderStore'
@@ -22,7 +22,6 @@ import {
   RefreshCw,
   Calendar,
   User as UserIcon,
-  Info,
   CalendarDays,
   Utensils,
   CreditCard,
@@ -74,12 +73,12 @@ export default function MiPedidoPage() {
   const summary = getOrderSummaryByChild()
 
   // Separar días laborales y fines de semana usando el índice en lugar del día de la semana
-  const weekDays = weekMenu.filter((day, index) => {
+  const weekDays = weekMenu.filter((_, index) => {
     // Los primeros 5 días (índices 0-4) son días laborales (lunes a viernes)
     return index < 5
   })
   
-  const weekendDays = weekMenu.filter((day, index) => {
+  const weekendDays = weekMenu.filter((_, index) => {
     // Los últimos 2 días (índices 5-6) son fin de semana (sábado y domingo)
     return index >= 5
   })
@@ -129,7 +128,7 @@ export default function MiPedidoPage() {
   if (menuError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-        <Navbar user={user} onLogout={handleLogout} />
+        <Navbar onLogout={handleLogout} />
         <div className="container mx-auto px-4 py-8">
           <Card className="w-full max-w-2xl mx-auto">
             <CardContent className="p-6 text-center">
@@ -154,7 +153,7 @@ export default function MiPedidoPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-      <Navbar user={user} onLogout={handleLogout} />
+      <Navbar onLogout={handleLogout} />
       
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Header */}
