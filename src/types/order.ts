@@ -22,12 +22,15 @@ export interface OrderState {
   paymentId?: string
 }
 
+// Actualizar para que coincida con DayMenuDisplay de menu.ts
 export interface DayMenuOptions {
   date: string
   day: string
-  dayName: string
+  dayLabel: string
+  dateFormatted: string
   almuerzos: MenuItem[]
   colaciones: MenuItem[]
+  hasItems: boolean
   isAvailable: boolean
 }
 
