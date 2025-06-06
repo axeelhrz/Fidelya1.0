@@ -1,13 +1,15 @@
 "use client"
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Save, AlertCircle } from 'lucide-react'
+import { Save, AlertCircle, Eye, Users, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -149,14 +151,14 @@ export function MenuItemModal({
 
   return (
     <Dialog open={modalState.isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <span>{modalTitle}</span>
             {modalState.date && (
-              <span className="text-sm font-normal text-slate-600 dark:text-slate-400">
-                - {modalState.day} {modalState.date}
-              </span>
+              <Badge variant="outline" className="text-sm font-normal">
+                {modalState.day} {modalState.date}
+              </Badge>
             )}
           </DialogTitle>
         </DialogHeader>
@@ -168,6 +170,56 @@ export function MenuItemModal({
           transition={{ duration: 0.3 }}
           className="space-y-6"
         >
+          {/* Preview Card */}
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center space-x-2">
+                <Eye className="w-4 h-4" />
+                <span>Vista Previa del Usuario</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center space-x-2 mb-1">
+                      <Badge 
+                        variant={formData.type === 'almuerzo' ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {formData.code || 'Código'}
+                      </Badge>
+                      {formData.active && (
+                        <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+                          Disponible
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="font-medium text-slate-900 dark:text-white">
+                      {formData.description || 'Descripción del menú...'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      {formData.type === 'almuerzo' ? 'Almuerzo' : 'Colación'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-3 flex items-center space-x-4 text-xs text-slate-600 dark:text-slate-400">
+                <div className="flex items-center space-x-1">
+                  <Users className="w-3 h-3" />
+                  <span>Visible para todos los usuarios</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Target className="w-3 h-3" />
+                  <span>Disponible para pedidos</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Tipo de menú */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Tipo de menú</Label>
@@ -179,11 +231,17 @@ export function MenuItemModal({
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="almuerzo" id="almuerzo" />
-                <Label htmlFor="almuerzo">Almuerzo</Label>
+                <Label htmlFor="almuerzo" className="flex items-center space-x-2">
+                  <span>Almuerzo</span>
+                  <Badge variant="outline" className="text-xs">Principal</Badge>
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="colacion" id="colacion" />
-                <Label htmlFor="colacion">Colación</Label>
+                <Label htmlFor="colacion" className="flex items-center space-x-2">
+                  <span>Colación</span>
+                  <Badge variant="outline" className="text-xs">Snack</Badge>
+                </Label>
               </div>
             </RadioGroup>
           </div>
@@ -207,6 +265,9 @@ export function MenuItemModal({
                 <AlertDescription className="text-sm">{errors.code}</AlertDescription>
               </Alert>
             )}
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              El código debe ser único para este día y seguir el formato A1, A2 para almuerzos o C1, C2 para colaciones.
+            </p>
           </div>
 
           {/* Descripción */}
@@ -218,7 +279,7 @@ export function MenuItemModal({
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Describe el plato o colación..."
+              placeholder="Describe el plato o colación de manera atractiva para los usuarios..."
               className={errors.description ? 'border-red-500' : ''}
               rows={3}
               maxLength={200}
@@ -237,11 +298,11 @@ export function MenuItemModal({
           </div>
 
           {/* Estado activo */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
             <div className="space-y-1">
-              <Label className="text-sm font-medium">Estado</Label>
+              <Label className="text-sm font-medium">Estado de disponibilidad</Label>
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                Los menús inactivos no serán visibles para los usuarios
+                Los menús inactivos no serán visibles para los usuarios y no podrán realizar pedidos
               </p>
             </div>
             <Switch
@@ -250,8 +311,28 @@ export function MenuItemModal({
             />
           </div>
 
+          {/* Impact Information */}
+          <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+            <CardContent className="p-4">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-amber-800 dark:text-amber-200 text-sm">
+                    Impacto en usuarios
+                  </h4>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                    {isEditMode 
+                      ? 'Los cambios se reflejarán inmediatamente en el menú público y en la sección "Mi Pedido" de todos los usuarios.'
+                      : 'Este nuevo menú estará disponible inmediatamente para todos los usuarios una vez guardado.'
+                    }
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Botones */}
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-700">
             <Button
               type="button"
               variant="outline"
@@ -263,7 +344,7 @@ export function MenuItemModal({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >
               {isSubmitting ? (
                 <motion.div
@@ -274,7 +355,7 @@ export function MenuItemModal({
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              <span>{isEditMode ? 'Actualizar' : 'Guardar'}</span>
+              <span>{isEditMode ? 'Actualizar Menú' : 'Guardar Menú'}</span>
             </Button>
           </div>
         </motion.form>

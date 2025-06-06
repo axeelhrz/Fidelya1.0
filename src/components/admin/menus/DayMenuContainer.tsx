@@ -144,13 +144,17 @@ export function DayMenuContainer({
             </div>
           )}
         </CardHeader>
-
-        <CardContent className="space-y-6">
+                  <CardContent className="space-y-6">
           {/* Sección de Almuerzos */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
-                Almuerzos ({dayMenu.almuerzos.length})
+              <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide flex items-center space-x-2">
+                <span>Almuerzos ({dayMenu.almuerzos.length})</span>
+                {dayMenu.almuerzos.length > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    {dayMenu.almuerzos.filter(item => item.active).length} activos
+                  </Badge>
+                )}
               </h3>
               <Button
                 variant="outline"
@@ -173,13 +177,24 @@ export function DayMenuContainer({
                     onEdit={onEditItem}
                     onDelete={onDeleteItem}
                     isLoading={isLoading}
+                    showUserPreview={showUserPreview}
                   />
                 ))
               ) : (
-                <div className="p-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg text-center">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                <div className="p-4 border-2 border-dashed border-blue-200 dark:border-blue-800 rounded-lg text-center bg-blue-50/50 dark:bg-blue-900/10">
+                  <p className="text-sm text-blue-600 dark:text-blue-400">
                     {getEmptyDayMessage('almuerzo')}
                   </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onAddItem('almuerzo')}
+                    disabled={isLoading || !dayMenu.isEditable}
+                    className="mt-2 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Agregar primer almuerzo
+                  </Button>
                 </div>
               )}
             </div>
@@ -191,8 +206,13 @@ export function DayMenuContainer({
           {/* Sección de Colaciones */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
-                Colaciones ({dayMenu.colaciones.length})
+              <h3 className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide flex items-center space-x-2">
+                <span>Colaciones ({dayMenu.colaciones.length})</span>
+                {dayMenu.colaciones.length > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    {dayMenu.colaciones.filter(item => item.active).length} activos
+                  </Badge>
+                )}
               </h3>
               <Button
                 variant="outline"
@@ -215,17 +235,40 @@ export function DayMenuContainer({
                     onEdit={onEditItem}
                     onDelete={onDeleteItem}
                     isLoading={isLoading}
+                    showUserPreview={showUserPreview}
                   />
                 ))
               ) : (
-                <div className="p-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg text-center">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                <div className="p-4 border-2 border-dashed border-emerald-200 dark:border-emerald-800 rounded-lg text-center bg-emerald-50/50 dark:bg-emerald-900/10">
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400">
                     {getEmptyDayMessage('colacion')}
                   </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onAddItem('colacion')}
+                    disabled={isLoading || !dayMenu.isEditable}
+                    className="mt-2 text-emerald-600 hover:bg-emerald-100 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Agregar primera colación
+                  </Button>
                 </div>
               )}
             </div>
           </div>
+
+          {/* User Impact Indicator */}
+          {showUserPreview && totalItems > 0 && (
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center space-x-2 text-sm">
+                <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-blue-700 dark:text-blue-300 font-medium">
+                  Vista del usuario: {activeItems} opciones disponibles
+                </span>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>
