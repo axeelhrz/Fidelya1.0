@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { 
@@ -17,7 +17,11 @@ import {
   Home,
   ShoppingCart,
   Settings,
-  HelpCircle
+  HelpCircle,
+  BookOpen,
+  ClipboardList,
+  UserCircle,
+  LayoutDashboard
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
@@ -43,14 +47,50 @@ interface NavbarProps {
   onLogout?: () => void
 }
 
+interface NavigationItem {
+  name: string
+  href: string
+  icon: React.ComponentType<{ size?: number; className?: string }>
+  description: string
+}
+
+const navigationItems: NavigationItem[] = [
+  {
+    name: 'Panel',
+    href: '/panel',
+    icon: LayoutDashboard,
+    description: 'Vista general y resumen'
+  },
+  {
+    name: 'Menú',
+    href: '/menu',
+    icon: BookOpen,
+    description: 'Menú semanal disponible'
+  },
+  {
+    name: 'Mi Pedido',
+    href: '/mi-pedido',
+    icon: ShoppingCart,
+    description: 'Gestionar pedido semanal'
+  },
+  {
+    name: 'Perfil',
+    href: '/perfil',
+    icon: UserCircle,
+    description: 'Información personal'
+  }
+]
+
 export function Navbar({ onLogout }: NavbarProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const [user, setUser] = useState<NavbarUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [notifications, setNotifications] = useState(3) // Simulado
 
   // Verificar si el componente está montado (para evitar hidration issues)
   useEffect(() => {
@@ -137,6 +177,20 @@ export function Navbar({ onLogout }: NavbarProps) {
       : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
   }
 
+  // Verificar si una ruta está activa
+  const isActiveRoute = (href: string) => {
+    if (href === '/panel') {
+      return pathname === '/panel' || pathname === '/'
+    }
+    return pathname === href
+  }
+
+  // Obtener el título de la página actual
+  const getCurrentPageTitle = () => {
+    const currentItem = navigationItems.find(item => isActiveRoute(item.href))
+    return currentItem ? currentItem.name : 'Casino Escolar'
+  }
+
   if (!mounted || isLoading) {
     return (
       <div className="sticky top-0 z-50 w-full h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
@@ -174,30 +228,35 @@ export function Navbar({ onLogout }: NavbarProps) {
                   Casino Escolar
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 text-clean">
-                  Sistema de gestión educativa
+                  {getCurrentPageTitle()}
                 </p>
               </div>
             </Link>
           </motion.div>
 
           {/* Navegación principal - Desktop */}
-          <div className="hidden md:flex items-center space-x-6">
-            <Link 
-              href="/panel" 
-              className="nav-item nav-item-active"
-            >
-              <ShoppingCart size={18} className="mr-2" />
-              Mi Pedido
-            </Link>
-            {/* Futuras secciones */}
-            {/* <Link href="/panel/historial" className="nav-item nav-item-inactive">
-              <Clock size={18} className="mr-2" />
-              Historial
-            </Link>
-            <Link href="/panel/ayuda" className="nav-item nav-item-inactive">
-              <HelpCircle size={18} className="mr-2" />
-              Ayuda
-            </Link> */}
+          <div className="hidden lg:flex items-center space-x-1">
+            {navigationItems.map((item) => {
+              const Icon = item.icon
+              const isActive = isActiveRoute(item.href)
+              
+              return (
+                <Link key={item.href} href={item.href}>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      isActive
+                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100'
+                    }`}
+                  >
+                    <Icon size={18} className="mr-2" />
+                    {item.name}
+                  </motion.div>
+                </Link>
+              )
+            })}
           </div>
 
           {/* Controles del usuario - Desktop */}
@@ -234,7 +293,11 @@ export function Navbar({ onLogout }: NavbarProps) {
               aria-label="Notificaciones"
             >
               <Bell size={18} />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+              {notifications > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
+                  {notifications > 9 ? '9+' : notifications}
+                </span>
+              )}
             </motion.button>
 
             {/* Menú de usuario */}
@@ -287,10 +350,12 @@ export function Navbar({ onLogout }: NavbarProps) {
 
                     {/* Opciones del menú */}
                     <div className="py-1">
-                      <button className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200">
-                        <User size={16} className="mr-3" />
-                        Ver Perfil
-                      </button>
+                      <Link href="/perfil">
+                        <button className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200">
+                          <User size={16} className="mr-3" />
+                          Ver Perfil
+                        </button>
+                      </Link>
                       <button className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200">
                         <Settings size={16} className="mr-3" />
                         Configuración
@@ -317,6 +382,21 @@ export function Navbar({ onLogout }: NavbarProps) {
 
           {/* Controles móviles */}
           <div className="md:hidden flex items-center space-x-2">
+            {/* Notificaciones móvil */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 relative"
+              aria-label="Notificaciones"
+            >
+              <Bell size={18} />
+              {notifications > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {notifications > 9 ? '9' : notifications}
+                </span>
+              )}
+            </motion.button>
+
             {/* Toggle tema móvil */}
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -381,43 +461,56 @@ export function Navbar({ onLogout }: NavbarProps) {
 
               {/* Navegación móvil */}
               <div className="space-y-2">
-                <Link 
-                  href="/panel" 
-                  className="flex items-center px-4 py-3 text-slate-800 dark:text-slate-100 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ShoppingCart size={18} className="mr-3" />
-                  Mi Pedido
-                </Link>
-                
-                <button className="w-full flex items-center px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200">
-                  <User size={18} className="mr-3" />
-                  Ver Perfil
-                </button>
-                
-                <button className="w-full flex items-center px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200">
-                  <Bell size={18} className="mr-3" />
-                  Notificaciones
-                  <span className="ml-auto w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
-                
-                <button className="w-full flex items-center px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200">
-                  <Settings size={18} className="mr-3" />
-                  Configuración
-                </button>
-                
-                <button className="w-full flex items-center px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200">
-                  <HelpCircle size={18} className="mr-3" />
-                  Ayuda
-                </button>
+                {navigationItems.map((item) => {
+                  const Icon = item.icon
+                  const isActive = isActiveRoute(item.href)
+                  
+                  return (
+                    <Link 
+                      key={item.href}
+                      href={item.href} 
+                      className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
+                        isActive
+                          ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                      }`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Icon size={18} className="mr-3" />
+                      <div>
+                        <div className="font-medium">{item.name}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">{item.description}</div>
+                      </div>
+                    </Link>
+                  )
+                })}
                 
                 <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
+                  <button className="w-full flex items-center px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200">
+                    <Settings size={18} className="mr-3" />
+                    <div>
+                      <div className="font-medium">Configuración</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">Ajustes de cuenta</div>
+                    </div>
+                  </button>
+                  
+                  <button className="w-full flex items-center px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200">
+                    <HelpCircle size={18} className="mr-3" />
+                    <div>
+                      <div className="font-medium">Ayuda</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">Soporte y contacto</div>
+                    </div>
+                  </button>
+                  
                   <button 
                     onClick={handleLogout}
                     className="w-full flex items-center px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
                   >
                     <LogOut size={18} className="mr-3" />
-                    Cerrar Sesión
+                    <div>
+                      <div className="font-medium">Cerrar Sesión</div>
+                      <div className="text-xs text-red-500 dark:text-red-400">Salir de la cuenta</div>
+                    </div>
                   </button>
                 </div>
               </div>
