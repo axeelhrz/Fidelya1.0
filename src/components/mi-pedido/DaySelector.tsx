@@ -1,70 +1,186 @@
 "use client"
 
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Utensils, Coffee, Check } from 'lucide-react'
-import { DayMenuOptions } from '@/types/order'
-import { MenuItem } from '@/types/panel'
+import { Button } from '@/components/ui/button'
+import { DayMenuDisplay, MenuItem } from '@/types/menu'
+import { Child, User } from '@/types/panel'
 import { useOrderStore } from '@/store/orderStore'
-import { MenuService } from '@/services/menuService'
+import { Utensils, Coffee, Clock, CheckCircle2, Circle, User as UserIcon } from 'lucide-react'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
 interface DaySelectorProps {
-  dayMenu: DayMenuOptions
+  dayMenu: DayMenuDisplay
+  user: User
   isReadOnly: boolean
 }
 
-export function DaySelector({ dayMenu, isReadOnly }: DaySelectorProps) {
-  const { selections, updateSelection } = useOrderStore()
-  
-  const currentSelection = selections.find(s => s.date === dayMenu.date)
-  const selectedAlmuerzo = currentSelection?.almuerzo?.id
-  const selectedColacion = currentSelection?.colacion?.id
+interface MenuItemOptionProps {
+  item: MenuItem
+  isSelected: boolean
+  isReadOnly: boolean
+}
+
+function MenuItemOption({ item, isSelected, isReadOnly }: MenuItemOptionProps) {
+  return (
+    <div className="flex items-center space-x-3">
+      <RadioGroupItem 
+        value={item.id} 
+        id={item.id}
+        disabled={isReadOnly || !item.available}
+        className="mt-1"
+      />
+      <Label 
+        htmlFor={item.id} 
+        className={cn(
+          "flex-1 cursor-pointer",
+          isReadOnly || !item.available ? "cursor-not-allowed opacity-50" : ""
+        )}
+      >
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-slate-900 dark:text-slate-100">
+                {item.name}
+              </span>
+              <Badge variant="outline" className="text-xs">
+                {item.code}
+              </Badge>
+              {isSelected && (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              )}
+            </div>
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+              ${item.price.toLocaleString('es-CL')}
+            </span>
+          </div>
+          {item.description && (
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              {item.description}
+            </p>
+          )}
+          {!item.available && (
+            <p className="text-xs text-red-500">No disponible</p>
+          )}
+        </div>
+      </Label>
+    </div>
+  )
+}
+
+export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
+  const { 
+    selectionsByChild, 
+    currentChild, 
+    updateSelectionByChild,
+    children 
+  } = useOrderStore()
+
+  // Obtener selecciones actuales para este día y hijo
+  const getCurrentSelection = () => {
+    if (user.tipoUsuario === 'funcionario') {
+      return selectionsByChild.find(s => s.date === dayMenu.date && !s.hijo)
+    } else {
+      return selectionsByChild.find(s => 
+        s.date === dayMenu.date && s.hijo?.id === currentChild?.id
+      )
+    }
+  }
+
+  const currentSelection = getCurrentSelection()
+  const selectedAlmuerzo = currentSelection?.almuerzo?.id || ''
+  const selectedColacion = currentSelection?.colacion?.id || ''
 
   const handleAlmuerzoChange = (itemId: string) => {
     if (isReadOnly) return
     
-    const item = dayMenu.almuerzos.find(a => a.id === itemId)
-    if (item) {
-      updateSelection(dayMenu.date, 'almuerzo', item)
-    }
+    const selectedItem = dayMenu.almuerzos.find(item => item.id === itemId)
+    const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
+    
+    updateSelectionByChild(
+      dayMenu.date,
+      'almuerzo',
+      selectedItem,
+      targetChild
+    )
   }
 
   const handleColacionChange = (itemId: string) => {
     if (isReadOnly) return
     
-    const item = dayMenu.colaciones.find(c => c.id === itemId)
-    if (item) {
-      updateSelection(dayMenu.date, 'colacion', item)
-    }
+    const selectedItem = dayMenu.colaciones.find(item => item.id === itemId)
+    const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
+    
+    updateSelectionByChild(
+      dayMenu.date,
+      'colacion',
+      selectedItem,
+      targetChild
+    )
   }
 
-  const dayDisplayName = MenuService.getDayDisplayName(dayMenu.date)
-  const hasSelections = selectedAlmuerzo || selectedColacion
+  const removeAlmuerzo = () => {
+    if (isReadOnly) return
+    
+    const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
+    updateSelectionByChild(dayMenu.date, 'almuerzo', undefined, targetChild)
+  }
+
+  const removeColacion = () => {
+    if (isReadOnly) return
+    
+    const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
+    updateSelectionByChild(dayMenu.date, 'colacion', undefined, targetChild)
+  }
+
+  // Para apoderados, verificar que haya un hijo seleccionado
+  const canMakeSelection = user.tipoUsuario === 'funcionario' || currentChild
 
   return (
-    <Card className={cn(
-      "transition-all duration-300 hover:shadow-md",
-      hasSelections && "ring-2 ring-emerald-500/20 border-emerald-200 dark:border-emerald-800",
-      !dayMenu.isAvailable && "opacity-60"
-    )}>
+    <Card className="h-full">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center justify-between">
-          <span className="text-lg font-semibold capitalize">
-            {dayDisplayName}
-          </span>
-          {hasSelections && (
+          <div className="flex items-center gap-2">
+            <span className="capitalize">{dayMenu.dayLabel}</span>
+            <Badge variant="outline" className="text-xs">
+              {format(new Date(dayMenu.date), 'd MMM', { locale: es })}
+            </Badge>
+          </div>
+          {currentSelection && (
             <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-              <Check className="w-3 h-3 mr-1" />
               Seleccionado
             </Badge>
           )}
         </CardTitle>
+        
+        {/* Mostrar para qué hijo es la selección */}
+        {user.tipoUsuario === 'apoderado' && currentChild && (
+          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <UserIcon className="w-4 h-4" />
+            <span>Pedido para: <strong>{currentChild.name}</strong></span>
+          </div>
+        )}
+        
+        {user.tipoUsuario === 'funcionario' && (
+          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <UserIcon className="w-4 h-4" />
+            <span>Pedido personal</span>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {!dayMenu.isAvailable ? (
+        {!canMakeSelection ? (
+          <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+            <UserIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p>Selecciona un hijo para hacer el pedido</p>
+          </div>
+        ) : !dayMenu.isAvailable ? (
           <div className="text-center py-8 text-slate-500 dark:text-slate-400">
             <Utensils className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>Menú no disponible para este día</p>
@@ -73,11 +189,23 @@ export function DaySelector({ dayMenu, isReadOnly }: DaySelectorProps) {
           <>
             {/* Sección de Almuerzos */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Utensils className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                <h4 className="font-medium text-slate-900 dark:text-slate-100">
-                  Almuerzo <span className="text-red-500">*</span>
-                </h4>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Utensils className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                  <h4 className="font-medium text-slate-900 dark:text-slate-100">
+                    Almuerzo <span className="text-red-500">*</span>
+                  </h4>
+                </div>
+                {selectedAlmuerzo && !isReadOnly && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={removeAlmuerzo}
+                    className="text-red-500 hover:text-red-700 h-auto p-1"
+                  >
+                    Quitar
+                  </Button>
+                )}
               </div>
               
               {dayMenu.almuerzos.length > 0 ? (
@@ -104,30 +232,33 @@ export function DaySelector({ dayMenu, isReadOnly }: DaySelectorProps) {
             </div>
 
             {/* Sección de Colaciones */}
-            {dayMenu.colaciones.length > 0 && (
-              <div className="space-y-3">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Coffee className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                   <h4 className="font-medium text-slate-900 dark:text-slate-100">
-                    Colación <span className="text-slate-400">(opcional)</span>
+                    Colación
                   </h4>
                 </div>
-                
+                {selectedColacion && !isReadOnly && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={removeColacion}
+                    className="text-red-500 hover:text-red-700 h-auto p-1"
+                  >
+                    Quitar
+                  </Button>
+                )}
+              </div>
+              
+              {dayMenu.colaciones.length > 0 ? (
                 <RadioGroup
                   value={selectedColacion || ''}
                   onValueChange={handleColacionChange}
                   disabled={isReadOnly}
                   className="space-y-2"
                 >
-                  <div className="flex items-center space-x-2 p-3 rounded-lg border border-dashed border-slate-200 dark:border-slate-700">
-                    <RadioGroupItem value="" id={`no-colacion-${dayMenu.date}`} />
-                    <label 
-                      htmlFor={`no-colacion-${dayMenu.date}`}
-                      className="text-sm text-slate-600 dark:text-slate-400 cursor-pointer"
-                    >
-                      Sin colación
-                    </label>
-                  </div>
                   {dayMenu.colaciones.map((item) => (
                     <MenuItemOption
                       key={item.id}
@@ -137,62 +268,47 @@ export function DaySelector({ dayMenu, isReadOnly }: DaySelectorProps) {
                     />
                   ))}
                 </RadioGroup>
+              ) : (
+                <p className="text-sm text-slate-500 dark:text-slate-400 italic">
+                  No hay opciones de colación disponibles
+                </p>
+              )}
+            </div>
+
+            {/* Resumen del día */}
+            {(selectedAlmuerzo || selectedColacion) && (
+              <div className="mt-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                <h5 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                  Resumen del día
+                </h5>
+                <div className="space-y-1 text-sm">
+                  {selectedAlmuerzo && (
+                    <div className="flex justify-between text-blue-800 dark:text-blue-200">
+                      <span>Almuerzo</span>
+                      <span>${dayMenu.almuerzos.find(a => a.id === selectedAlmuerzo)?.price.toLocaleString('es-CL')}</span>
+                    </div>
+                  )}
+                  {selectedColacion && (
+                    <div className="flex justify-between text-blue-800 dark:text-blue-200">
+                      <span>Colación</span>
+                      <span>${dayMenu.colaciones.find(c => c.id === selectedColacion)?.price.toLocaleString('es-CL')}</span>
+                    </div>
+                  )}
+                  <div className="border-t border-blue-200 dark:border-blue-700 pt-1 mt-2">
+                    <div className="flex justify-between font-medium text-blue-900 dark:text-blue-100">
+                      <span>Total día</span>
+                      <span>
+                        ${((dayMenu.almuerzos.find(a => a.id === selectedAlmuerzo)?.price || 0) + 
+                           (dayMenu.colaciones.find(c => c.id === selectedColacion)?.price || 0)).toLocaleString('es-CL')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </>
         )}
       </CardContent>
     </Card>
-  )
-}
-
-interface MenuItemOptionProps {
-  item: MenuItem
-  isSelected: boolean
-  isReadOnly: boolean
-}
-
-function MenuItemOption({ item, isSelected, isReadOnly }: MenuItemOptionProps) {
-  return (
-    <div className={cn(
-      "flex items-center space-x-3 p-3 rounded-lg border transition-all duration-200",
-      isSelected 
-        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20" 
-        : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600",
-      !isReadOnly && "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50",
-      !item.available && "opacity-50 cursor-not-allowed"
-    )}>
-      <RadioGroupItem 
-        value={item.id} 
-        id={item.id}
-        disabled={!item.available || isReadOnly}
-      />
-      <label 
-        htmlFor={item.id} 
-        className={cn(
-          "flex-1 cursor-pointer",
-          !item.available && "cursor-not-allowed"
-        )}
-      >
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="font-medium text-slate-900 dark:text-slate-100">
-              {item.code}
-            </span>
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              ${item.price.toLocaleString('es-CL')}
-            </span>
-          </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            {item.description}
-          </p>
-          {!item.available && (
-            <Badge variant="destructive" className="text-xs">
-              No disponible
-            </Badge>
-          )}
-        </div>
-      </label>
-    </div>
   )
 }

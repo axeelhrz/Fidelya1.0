@@ -1,220 +1,277 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useOrderStore } from '@/store/orderStore'
+import { User } from '@/types/panel'
+import { MenuService } from '@/services/menuService'
 import { 
   ShoppingCart, 
+  Trash2, 
+  CreditCard, 
+  AlertCircle, 
   Utensils, 
-  Coffee, 
-  AlertTriangle, 
-  CheckCircle,
-  Clock
+  Coffee,
+  User as UserIcon,
+  Users
 } from 'lucide-react'
-import { OrderSummary as OrderSummaryType, UserType } from '@/types/panel'
-import { OrderValidation } from '@/types/order'
-import { MenuService } from '@/services/menuService'
+import { motion, AnimatePresence } from 'framer-motion'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 interface OrderSummaryProps {
-  orderSummary: OrderSummaryType
-  validation: OrderValidation
-  userType: UserType
-  isReadOnly: boolean
+  user: User
+  onProceedToPayment: () => void
+  isProcessingPayment: boolean
 }
 
-export function OrderSummary({ 
-  orderSummary, 
-  validation, 
-  userType,
-  isReadOnly 
-}: OrderSummaryProps) {
-  const { selections, totalAlmuerzos, totalColaciones, subtotalAlmuerzos, subtotalColaciones, total } = orderSummary
+export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: OrderSummaryProps) {
+  const { 
+    getOrderSummaryByChild, 
+    removeSelectionByChild,
+    selectionsByChild 
+  } = useOrderStore()
 
-  const userTypeLabel = userType === 'funcionario' ? 'Funcionario' : 'Apoderado'
-  const userTypeBadgeClass = userType === 'funcionario' 
-    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-    : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+  const summary = getOrderSummaryByChild()
+  const hasSelections = summary.selections.length > 0
+
+  const handleRemoveSelection = (date: string, childId?: string) => {
+    removeSelectionByChild(date, childId)
+  }
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0
+    }).format(price)
+  }
+
+  const getDayName = (date: string) => {
+    return format(new Date(date), 'EEEE d', { locale: es })
+  }
+
+  // Agrupar selecciones por hijo
+  const selectionsByChildGroup = summary.selections.reduce((acc, selection) => {
+    const childKey = selection.hijo?.id || 'funcionario'
+    if (!acc[childKey]) {
+      acc[childKey] = []
+    }
+    acc[childKey].push(selection)
+    return acc
+  }, {} as Record<string, typeof summary.selections>)
 
   return (
-    <div className="space-y-6">
-      {/* Resumen del pedido */}
-      <Card className="sticky top-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5" />
-            Resumen del pedido
-          </CardTitle>
-          <Badge className={userTypeBadgeClass}>
-            {userTypeLabel}
-          </Badge>
-        </CardHeader>
+    <Card className="h-fit sticky top-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ShoppingCart className="w-5 h-5" />
+          Resumen del Pedido
+        </CardTitle>
+      </CardHeader>
 
-        <CardContent className="space-y-4">
-          {selections.length === 0 ? (
-            <div className="text-center py-6 text-slate-500 dark:text-slate-400">
-              <ShoppingCart className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No hay selecciones aún</p>
-              <p className="text-xs">Selecciona tus menús para ver el resumen</p>
+      <CardContent className="space-y-4">
+        {!hasSelections ? (
+          <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+            <ShoppingCart className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No has seleccionado ningún menú</p>
+            <p className="text-xs mt-1">
+              {user.tipoUsuario === 'apoderado' 
+                ? 'Selecciona un hijo y elige los menús para cada día'
+                : 'Elige los menús para cada día de la semana'
+              }
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Selecciones agrupadas por hijo */}
+            <div className="space-y-4">
+              {Object.entries(selectionsByChildGroup).map(([childKey, selections]) => {
+                const child = selections[0]?.hijo
+                const isPersonal = childKey === 'funcionario'
+                
+                return (
+                  <motion.div
+                    key={childKey}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-3"
+                  >
+                    {/* Header del hijo/funcionario */}
+                    <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-700">
+                      {isPersonal ? (
+                        <>
+                          <UserIcon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                          <span className="font-medium text-slate-900 dark:text-slate-100">
+                            Pedido Personal
+                          </span>
+                          <Badge variant="secondary" className="text-xs">
+                            Funcionario
+                          </Badge>
+                        </>
+                      ) : (
+                        <>
+                          <Users className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                          <span className="font-medium text-slate-900 dark:text-slate-100">
+                            {child?.name}
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            {child?.curso}
+                          </Badge>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Selecciones del hijo */}
+                    <AnimatePresence>
+                      {selections.map((selection) => (
+                        <motion.div
+                          key={`${selection.date}-${childKey}`}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 space-y-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium text-sm text-slate-900 dark:text-slate-100 capitalize">
+                              {getDayName(selection.date)}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveSelection(selection.date, child?.id)}
+                              className="text-red-500 hover:text-red-700 h-auto p-1"
+                              disabled={isProcessingPayment}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          
+                          {selection.almuerzo && (
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <Utensils className="w-3 h-3 text-slate-500" />
+                                <span className="text-slate-600 dark:text-slate-400">
+                                  {selection.almuerzo.name}
+                                </span>
+                              </div>
+                              <span className="text-slate-900 dark:text-slate-100 font-medium">
+                                {formatPrice(selection.almuerzo.price)}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {selection.colacion && (
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <Coffee className="w-3 h-3 text-slate-500" />
+                                <span className="text-slate-600 dark:text-slate-400">
+                                  {selection.colacion.name}
+                                </span>
+                              </div>
+                              <span className="text-slate-900 dark:text-slate-100 font-medium">
+                                {formatPrice(selection.colacion.price)}
+                              </span>
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+
+                    {/* Subtotal por hijo */}
+                    {summary.resumenPorHijo[childKey] && (
+                      <div className="p-2 rounded bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-blue-800 dark:text-blue-200">
+                            Subtotal {isPersonal ? 'personal' : child?.name}
+                          </span>
+                          <span className="font-medium text-blue-900 dark:text-blue-100">
+                            {formatPrice(summary.resumenPorHijo[childKey].subtotal)}
+                          </span>
+                        </div>
+                        <div className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                          {summary.resumenPorHijo[childKey].almuerzos} almuerzo(s) • {summary.resumenPorHijo[childKey].colaciones} colación(es)
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )
+              })}
             </div>
-          ) : (
-            <>
-              {/* Lista de selecciones por día */}
-              <div className="space-y-3">
-                <h4 className="font-medium text-slate-900 dark:text-slate-100">
-                  Selecciones por día
-                </h4>
-                {selections.map((selection) => (
-                  <SelectionDayItem key={selection.date} selection={selection} />
-                ))}
+
+            <Separator />
+
+            {/* Resumen total */}
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600 dark:text-slate-400">
+                  Total Almuerzos ({summary.totalAlmuerzos})
+                </span>
+                <span className="text-slate-900 dark:text-slate-100">
+                  {formatPrice(summary.subtotalAlmuerzos)}
+                </span>
               </div>
+              
+              {summary.totalColaciones > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600 dark:text-slate-400">
+                    Total Colaciones ({summary.totalColaciones})
+                  </span>
+                  <span className="text-slate-900 dark:text-slate-100">
+                    {formatPrice(summary.subtotalColaciones)}
+                  </span>
+                </div>
+              )}
 
               <Separator />
 
-              {/* Totales */}
-              <div className="space-y-3">
-                <h4 className="font-medium text-slate-900 dark:text-slate-100">
-                  Totales
-                </h4>
-                
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Utensils className="w-4 h-4 text-slate-500" />
-                      <span>Almuerzos ({totalAlmuerzos})</span>
-                    </div>
-                    <span className="font-medium">
-                      ${subtotalAlmuerzos.toLocaleString('es-CL')}
-                    </span>
-                  </div>
-                  
-                  {totalColaciones > 0 && (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Coffee className="w-4 h-4 text-slate-500" />
-                        <span>Colaciones ({totalColaciones})</span>
-                      </div>
-                      <span className="font-medium">
-                        ${subtotalColaciones.toLocaleString('es-CL')}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between text-lg font-semibold">
-                  <span>Total</span>
-                  <span className="text-emerald-600 dark:text-emerald-400">
-                    ${total.toLocaleString('es-CL')} CLP
-                  </span>
-                </div>
+              <div className="flex justify-between text-lg font-semibold">
+                <span className="text-slate-900 dark:text-slate-100">Total</span>
+                <span className="text-slate-900 dark:text-slate-100">
+                  {formatPrice(summary.total)}
+                </span>
               </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            </div>
 
-      {/* Validaciones y alertas */}
-      <ValidationAlerts validation={validation} isReadOnly={isReadOnly} />
-    </div>
-  )
-}
+            {/* Validación y botón de pago */}
+            <div className="space-y-3">
+              {summary.totalAlmuerzos === 0 && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                    Debes seleccionar al menos un almuerzo para proceder
+                  </p>
+                </div>
+              )}
 
-interface SelectionDayItemProps {
-  selection: {
-    date: string
-    almuerzo?: {
-      code: string
-      price: number
-    }
-    colacion?: {
-      code: string
-      price: number
-    }
-  }
-}
+              <Button
+                onClick={onProceedToPayment}
+                disabled={summary.totalAlmuerzos === 0 || isProcessingPayment}
+                className="w-full"
+                size="lg"
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Pagar {formatPrice(summary.total)}
+                  </>
+                )}
+              </Button>
 
-function SelectionDayItem({ selection }: SelectionDayItemProps) {
-  const dayName = MenuService.getDayDisplayName(selection.date)
-
-  return (
-    <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 space-y-2">
-      <div className="font-medium text-sm text-slate-900 dark:text-slate-100 capitalize">
-        {dayName}
-      </div>
-      
-      {selection.almuerzo && (
-        <div className="flex items-center gap-2 text-sm">
-          <Utensils className="w-3 h-3 text-slate-500" />
-          <span className="text-slate-600 dark:text-slate-400">
-            {selection.almuerzo.code}
-          </span>
-          <span className="text-xs text-slate-500">
-            ${selection.almuerzo.price.toLocaleString('es-CL')}
-          </span>
-        </div>
-      )}
-      
-      {selection.colacion && (
-        <div className="flex items-center gap-2 text-sm">
-          <Coffee className="w-3 h-3 text-slate-500" />
-          <span className="text-slate-600 dark:text-slate-400">
-            {selection.colacion.code}
-          </span>
-          <span className="text-xs text-slate-500">
-            ${selection.colacion.price.toLocaleString('es-CL')}
-          </span>
-        </div>
-      )}
-    </div>
-  )
-}
-
-interface ValidationAlertsProps {
-  validation: OrderValidation
-  isReadOnly: boolean
-}
-
-function ValidationAlerts({ validation, isReadOnly }: ValidationAlertsProps) {
-  if (isReadOnly) {
-    return (
-      <Alert variant="info">
-        <CheckCircle className="h-4 w-4" />
-        <AlertDescription>
-          Tu pedido ha sido confirmado y no puede ser modificado.
-        </AlertDescription>
-      </Alert>
-    )
-  }
-
-  return (
-    <div className="space-y-3">
-      {/* Errores */}
-      {validation.errors.map((error, index) => (
-        <Alert key={`error-${index}`} variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ))}
-
-      {/* Advertencias */}
-      {validation.warnings.map((warning, index) => (
-        <Alert key={`warning-${index}`} variant="warning">
-          <Clock className="h-4 w-4" />
-          <AlertDescription>{warning}</AlertDescription>
-        </Alert>
-      ))}
-
-      {/* Éxito */}
-      {validation.isValid && validation.canProceedToPayment && (
-        <Alert variant="success">
-          <CheckCircle className="h-4 w-4" />
-          <AlertDescription>
-            Tu pedido está completo y listo para confirmar.
-          </AlertDescription>
-        </Alert>
-      )}
-    </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+                Al proceder al pago confirmas tu pedido semanal
+              </p>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   )
 }
