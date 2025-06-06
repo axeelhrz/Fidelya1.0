@@ -16,140 +16,97 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-education-gradient flex items-center justify-center relative overflow-hidden">
-      {/* Elementos de fondo sutiles */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Acento geométrico minimalista */}
+    <div className="h-screen bg-education-gradient flex items-center justify-center relative overflow-hidden">
+      {/* Fondo minimalista */}
+      <div className="absolute inset-0">
+        {/* Elemento sutil de fondo */}
         <motion.div
-          className="absolute top-1/4 right-1/4 w-96 h-96 bg-education-accent rounded-full blur-3xl opacity-30"
+          className="absolute top-1/3 right-1/3 w-80 h-80 bg-education-accent rounded-full blur-3xl opacity-20"
           animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.3, 0.5, 0.3],
+            scale: [1, 1.05, 1],
+            opacity: [0.15, 0.25, 0.15],
           }}
           transition={{
-            duration: 8,
+            duration: 12,
             repeat: Infinity,
             ease: "easeInOut"
           }}
         />
-        
-        {/* Patrón de puntos sutil */}
-        <div 
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23334155' fill-opacity='1'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        />
       </div>
 
-      {/* Contenido principal */}
-      <div className="relative z-10 text-center px-6 max-w-2xl mx-auto">
-        {/* Logo/Título */}
+      {/* Contenido principal centrado */}
+      <div className="relative z-10 text-center px-8 max-w-xl mx-auto">
+        {/* Título principal */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-16 animate-content-appear"
+          className="mb-12"
         >
-          {/* Título principal */}
-          <div className="mb-8">
-            <h1 className="text-responsive-xl font-light text-education-primary mb-2 tracking-tight leading-none text-elegant">
-              Casino
-            </h1>
-            <h2 className="text-responsive-lg font-light text-education-accent tracking-tight leading-none text-elegant">
-              Escolar
-            </h2>
-          </div>
+          <h1 className="text-6xl md:text-7xl font-light text-education-primary mb-3 tracking-tight text-elegant">
+            Casino
+          </h1>
+          <h2 className="text-3xl md:text-4xl font-light text-education-accent tracking-tight text-elegant">
+            Escolar
+          </h2>
           
-          {/* Separador elegante */}
+          {/* Línea separadora minimalista */}
           <motion.div
-            className="flex items-center justify-center mb-8"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
-            <motion.div 
-              className="mx-4 w-2 h-2 bg-education-accent rounded-full shadow-soft animate-soft-pulse"
-              animate={{ 
-                scale: [1, 1.2, 1],
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
-          </motion.div>
+            className="w-20 h-px bg-education-accent mx-auto mt-8 mb-6"
+            initial={{ width: 0 }}
+            animate={{ width: 80 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+          />
 
-          {/* Subtítulo */}
-          <motion.p
-            className="text-responsive-base text-education-secondary font-light leading-relaxed max-w-lg mx-auto text-clean"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
-            Plataforma digital para la gestión de alimentación escolar
-          </motion.p>
+          <p className="text-lg text-education-secondary font-light leading-relaxed text-clean">
+            Gestión inteligente de alimentación escolar
+          </p>
         </motion.div>
 
         {/* Botones de acción */}
         <motion.div
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
-          initial={{ opacity: 0, y: 30 }}
+          className="flex flex-col gap-4 items-center"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
         >
-          {/* Botón Iniciar Sesión */}
           <Link href="/auth/sign-in">
             <motion.button
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="btn-primary-elegant hover-lift focus-elegant min-w-[160px] animate-subtle-glow"
+              whileHover={{ y: -1, scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="w-64 py-4 bg-education-primary text-white font-medium rounded-lg 
+                         shadow-soft hover:shadow-soft-lg transition-all duration-300 
+                         focus-elegant text-clean border-none cursor-pointer"
+              style={{ backgroundColor: '#1e293b' }}
             >
               Iniciar Sesión
             </motion.button>
           </Link>
 
-          {/* Botón Crear Cuenta */}
           <Link href="/auth/sign-up">
             <motion.button
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="btn-secondary-elegant hover-lift focus-elegant min-w-[160px] glass-elegant"
+              whileHover={{ y: -1, scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="w-64 py-4 bg-white text-education-primary font-medium rounded-lg 
+                         border border-slate-200 hover:border-education-accent
+                         shadow-soft hover:shadow-soft-lg transition-all duration-300 
+                         focus-elegant text-clean cursor-pointer"
             >
               Crear Cuenta
             </motion.button>
           </Link>
         </motion.div>
 
-        {/* Footer minimalista */}
+        {/* Indicador sutil */}
         <motion.div
-          className="text-sm text-education-secondary font-light tracking-wide text-clean"
+          className="mt-16 text-xs text-education-secondary font-light text-clean opacity-60"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1.2 }}
+          animate={{ opacity: 0.6 }}
+          transition={{ duration: 1, delay: 1.2 }}
         >
-          <div className="flex items-center justify-center space-x-3 animate-elegant-slide">
-            <span>Nutrición</span>
-            <div className="w-1 h-1 bg-slate-300 rounded-full" />
-            <span>Organización</span>
-            <div className="w-1 h-1 bg-slate-300 rounded-full" />
-            <span>Bienestar</span>
-          </div>
+          Plataforma educativa
         </motion.div>
       </div>
-
-      {/* Elemento decorativo adicional */}
-      <motion.div
-        className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, delay: 1.5 }}
-      >
-        <motion.div
-          className="w-6 h-6 border-2 border-slate-300 rounded-full flex items-center justify-center animate-gentle-float"
-        >
-          <div className="w-1 h-1 bg-slate-400 rounded-full" />
-        </motion.div>
-      </motion.div>
     </div>
   );
 }
