@@ -1,0 +1,144 @@
+"use client"
+import { motion } from 'framer-motion'
+import { 
+  Users, 
+  UserCheck, 
+  UserX, 
+  Shield, 
+  Mail, 
+  MailX,
+  TrendingUp,
+  Calendar
+} from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { UserStats } from '@/types/adminUser'
+
+interface UsersStatsProps {
+  stats: UserStats | null
+  isLoading: boolean
+}
+
+export function UsersStats({ stats, isLoading }: UsersStatsProps) {
+  if (isLoading || !stats) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[...Array(8)].map((_, i) => (
+          <Card key={i} className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+            <CardHeader className="pb-3">
+              <Skeleton className="h-4 w-24" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-16 mb-2" />
+              <Skeleton className="h-3 w-20" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  const statsCards = [
+    {
+      title: 'Total Usuarios',
+      value: stats.totalUsers,
+      icon: Users,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+      description: 'Usuarios registrados'
+    },
+    {
+      title: 'Apoderados',
+      value: stats.estudiantes,
+      icon: UserCheck,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+      description: 'Usuarios estudiantes'
+    },
+    {
+      title: 'Funcionarios',
+      value: stats.funcionarios,
+      icon: UserCheck,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+      description: 'Personal del colegio'
+    },
+    {
+      title: 'Administradores',
+      value: stats.admins,
+      icon: Shield,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+      description: 'Usuarios admin'
+    },
+    {
+      title: 'Emails Verificados',
+      value: stats.verifiedEmails,
+      icon: Mail,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100 dark:bg-green-900/30',
+      description: `${Math.round((stats.verifiedEmails / stats.totalUsers) * 100)}% del total`
+    },
+    {
+      title: 'Sin Verificar',
+      value: stats.unverifiedEmails,
+      icon: MailX,
+      color: 'text-red-600',
+      bgColor: 'bg-red-100 dark:bg-red-900/30',
+      description: 'Requieren verificación'
+    },
+    {
+      title: 'Nuevos (Semana)',
+      value: stats.newUsersThisWeek,
+      icon: TrendingUp,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
+      description: 'Últimos 7 días'
+    },
+    {
+      title: 'Nuevos (Mes)',
+      value: stats.newUsersThisMonth,
+      icon: Calendar,
+      color: 'text-cyan-600',
+      bgColor: 'bg-cyan-100 dark:bg-cyan-900/30',
+      description: 'Últimos 30 días'
+    }
+  ]
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {statsCards.map((stat, index) => (
+        <motion.div
+          key={stat.title}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: index * 0.1 }}
+        >
+          <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  {stat.title}
+                </span>
+                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {stat.value.toLocaleString()}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {stat.description}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ))}
+    </div>
+  )
+}
