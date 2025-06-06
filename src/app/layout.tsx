@@ -1,54 +1,34 @@
-import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-const playfairDisplay = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Casino Escolar - Gestión Inteligente de Alimentación Escolar",
-  description: "Plataforma digital para la gestión de alimentación escolar. Nutrición, organización y bienestar para la comunidad educativa.",
-  keywords: "casino escolar, alimentación escolar, gestión educativa, nutrición, menús escolares, bienestar estudiantil",
-  authors: [{ name: "Casino Escolar" }],
-  viewport: "width=device-width, initial-scale=1",
-  themeColor: "#059669",
-  openGraph: {
-    title: "Casino Escolar - Gestión Inteligente de Alimentación Escolar",
-    description: "Plataforma digital para la gestión de alimentación escolar. Nutrición, organización y bienestar para la comunidad educativa.",
-    type: "website",
-    locale: "es_ES",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+  title: "Casino Escolar",
+  description: "Sistema de gestión de casino escolar",
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="es" className={`${inter.variable} ${playfairDisplay.variable}`}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body className="font-sans antialiased">
-        {children}
+    <html lang="es" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }
