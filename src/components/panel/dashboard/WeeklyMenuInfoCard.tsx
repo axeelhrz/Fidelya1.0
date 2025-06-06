@@ -55,7 +55,7 @@ export function WeeklyMenuInfoCard({ weeklyMenuInfo }: WeeklyMenuInfoCardProps) 
             {/* Información adicional */}
             <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3 border border-emerald-200 dark:border-emerald-800">
               <p className="text-sm text-emerald-700 dark:text-emerald-300 text-clean">
-                ✨ El menú de esta semana ya está disponible. Puedes revisar todas las opciones y hacer tus selecciones.
+                El menú de esta semana ya está disponible. Puedes revisar todas las opciones y hacer tus selecciones.
               </p>
             </div>
 
@@ -100,7 +100,7 @@ export function WeeklyMenuInfoCard({ weeklyMenuInfo }: WeeklyMenuInfoCardProps) 
             {/* Mensaje informativo */}
             <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-200 dark:border-amber-800">
               <p className="text-sm text-amber-700 dark:text-amber-300 text-clean">
-                ⏳ El menú de esta semana aún no ha sido publicado por la administración. Te notificaremos cuando esté disponible.
+                El menú de esta semana aún no ha sido publicado por la administración. Te notificaremos cuando esté disponible.
               </p>
             </div>
 

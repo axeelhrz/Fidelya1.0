@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import { ShoppingCart, ArrowRight, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { ShoppingCart, ArrowRight, Clock, CheckCircle, Edit, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { OrderStatus } from '@/types/dashboard'
 import { getOrderStatusInfo, getProgressPercentage } from '@/lib/dashboardUtils'
@@ -9,6 +9,18 @@ import Link from 'next/link'
 
 interface OrderStatusCardProps {
   orderStatus: OrderStatus
+}
+
+const StatusIcon = ({ iconName, className }: { iconName: string; className?: string }) => {
+  const icons = {
+    Clock: Clock,
+    Edit: Edit,
+    CheckCircle: CheckCircle,
+    CreditCard: CreditCard
+  }
+  
+  const IconComponent = icons[iconName as keyof typeof icons] || Clock
+  return <IconComponent className={className} />
 }
 
 export function OrderStatusCard({ orderStatus }: OrderStatusCardProps) {
@@ -42,7 +54,7 @@ export function OrderStatusCard({ orderStatus }: OrderStatusCardProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <span className="text-2xl">{statusInfo.icon}</span>
+              <StatusIcon iconName={statusInfo.iconName} className="w-6 h-6 text-slate-600 dark:text-slate-400" />
               <div>
                 <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusInfo.color}`}>
                   {statusInfo.label}

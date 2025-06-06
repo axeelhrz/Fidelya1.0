@@ -2,14 +2,26 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertTriangle, X, ArrowRight } from 'lucide-react'
+import { AlertTriangle, X, ArrowRight, Info, XCircle, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DashboardAlert } from '@/types/dashboard'
-import { getAlertIcon, getAlertColor } from '@/lib/dashboardUtils'
+import { getAlertIconName, getAlertColor } from '@/lib/dashboardUtils'
 import Link from 'next/link'
 
 interface AlertsCardProps {
   alerts: DashboardAlert[]
+}
+
+const AlertIcon = ({ iconName, className }: { iconName: string; className?: string }) => {
+  const icons = {
+    AlertTriangle: AlertTriangle,
+    Info: Info,
+    XCircle: XCircle,
+    CheckCircle: CheckCircle
+  }
+  
+  const IconComponent = icons[iconName as keyof typeof icons] || AlertTriangle
+  return <IconComponent className={className} />
 }
 
 export function AlertsCard({ alerts }: AlertsCardProps) {
@@ -50,13 +62,13 @@ export function AlertsCard({ alerts }: AlertsCardProps) {
 
           <div className="text-center py-6">
             <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-2xl">✅</span>
+              <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </div>
             <p className="text-slate-600 dark:text-slate-400 text-clean">
               No tienes alertas pendientes
             </p>
             <p className="text-sm text-slate-500 dark:text-slate-500 text-clean mt-1">
-              ¡Todo está en orden!
+              Todo está en orden
             </p>
           </div>
         </div>
@@ -100,9 +112,10 @@ export function AlertsCard({ alerts }: AlertsCardProps) {
                 className={`p-4 rounded-lg border ${getAlertColor(alert.type)}`}
               >
                 <div className="flex items-start space-x-3">
-                  <span className="text-lg flex-shrink-0 mt-0.5">
-                    {getAlertIcon(alert.type)}
-                  </span>
+                  <AlertIcon 
+                    iconName={getAlertIconName(alert.type)} 
+                    className="w-5 h-5 flex-shrink-0 mt-0.5" 
+                  />
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between">

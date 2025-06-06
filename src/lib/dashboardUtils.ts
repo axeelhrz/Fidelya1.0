@@ -17,28 +17,28 @@ export function getOrderStatusInfo(status: OrderStatus) {
       label: 'No iniciado',
       description: 'Aún no has seleccionado ningún menú',
       color: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400',
-      icon: '⏳',
+      iconName: 'Clock',
       actionText: 'Comenzar pedido'
     },
     in_progress: {
       label: 'En progreso',
       description: `${status.daysSelected} de ${status.totalDays} días seleccionados`,
       color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
-      icon: '📝',
+      iconName: 'Edit',
       actionText: 'Continuar pedido'
     },
     confirmed: {
       label: 'Confirmado',
       description: 'Pedido completo, pendiente de pago',
       color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-      icon: '✅',
+      iconName: 'CheckCircle',
       actionText: 'Proceder al pago'
     },
     paid: {
       label: 'Pagado',
       description: 'Pedido confirmado y pagado',
       color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
-      icon: '💳',
+      iconName: 'CreditCard',
       actionText: 'Ver detalles'
     }
   }
@@ -75,12 +75,12 @@ export function getUserTypeBadgeColor(userType: 'funcionario' | 'estudiante'): s
     : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
 }
 
-export function getAlertIcon(type: 'warning' | 'info' | 'error' | 'success'): string {
+export function getAlertIconName(type: 'warning' | 'info' | 'error' | 'success'): string {
   const icons = {
-    warning: '⚠️',
-    info: 'ℹ️',
-    error: '❌',
-    success: '✅'
+    warning: 'AlertTriangle',
+    info: 'Info',
+    error: 'XCircle',
+    success: 'CheckCircle'
   }
   return icons[type]
 }
