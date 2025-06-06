@@ -424,7 +424,7 @@ export default function MiPedidoPage() {
                       <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
                         No hay menús disponibles
                       </h3>
-                      <p className="text-slate-600 dark:text-slate-400">
+                      <p className="text-slate-600 dark:text-slate-400 mb-4">
                         El menú para esta semana aún no ha sido publicado por el administrador.
                       </p>
                       <Button
@@ -506,21 +506,132 @@ export default function MiPedidoPage() {
               isProcessingPayment={isProcessingPayment}
             />
 
-            {/* Botón de pago */}
+            {/* Botón de pago con NetGet */}
             {weekMenu.length > 0 && (
-              <PaymentButton
-                summary={summary}
-                weekDays={weekMenu.map(day => day.date)}
-                isOrderingAllowed={true} // Siempre permitir pedidos
-                onProceedToPayment={handleProceedToPayment}
-                isProcessingPayment={isProcessingPayment}
-                isReadOnly={isReadOnly}
-                user={user}
-              />
+              <Card className="border-green-200 bg-green-50/50 dark:bg-green-900/10 dark:border-green-800">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
+                        <CreditCard className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                          Pago Seguro con NetGet
+                        </h3>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Procesamiento seguro de pagos
+                        </p>
+                      </div>
+                    </div>
+
+                    <PaymentButton
+                      summary={summary}
+                      weekDays={weekMenu.map(day => day.date)}
+                      isOrderingAllowed={true} // Siempre permitir pedidos
+                      onProceedToPayment={handleProceedToPayment}
+                      isProcessingPayment={isProcessingPayment}
+                      isReadOnly={isReadOnly}
+                      user={user}
+                    />
+
+                    {/* Información adicional sobre el pago */}
+                    <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1">
+                      <p>• Pago procesado de forma segura con NetGet</p>
+                      <p>• Recibirás confirmación por email</p>
+                      <p>• Soporte para tarjetas de crédito y débito</p>
+                    </div>
+
+                    {/* Estado del pedido */}
+                    {existingOrder && (
+                      <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Estado del pedido:
+                          </span>
+                          <Badge 
+                            variant={
+                              existingOrder.status === 'pagado' ? 'default' :
+                              existingOrder.status === 'procesando_pago' ? 'secondary' :
+                              'outline'
+                            }
+                            className={
+                              existingOrder.status === 'pagado' ? 'bg-green-100 text-green-700' :
+                              existingOrder.status === 'procesando_pago' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-slate-100 text-slate-700'
+                            }
+                          >
+                            {existingOrder.status === 'pagado' && <CheckCircle className="w-3 h-3 mr-1" />}
+                            {existingOrder.status === 'procesando_pago' && <Clock className="w-3 h-3 mr-1" />}
+                            {existingOrder.status === 'pendiente' && <AlertCircle className="w-3 h-3 mr-1" />}
+                            {existingOrder.status === 'pagado' ? 'Pagado' :
+                             existingOrder.status === 'procesando_pago' ? 'Procesando' :
+                             existingOrder.status === 'pendiente' ? 'Pendiente' :
+                             existingOrder.status}
+                          </Badge>
+                        </div>
+                        
+                        {existingOrder.paymentId && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                            ID de pago: {existingOrder.paymentId}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             )}
+
+            {/* Información de contacto y soporte */}
+            <Card className="border-slate-200 bg-slate-50/50 dark:bg-slate-800/50 dark:border-slate-700">
+              <CardContent className="p-4">
+                <h4 className="font-medium text-slate-900 dark:text-slate-100 mb-2">
+                  ¿Necesitas ayuda?
+                </h4>
+                <div className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                  <p>• Contacta al administrador del casino</p>
+                  <p>• Revisa el estado de tu pedido en tiempo real</p>
+                  <p>• Los menús se actualizan automáticamente</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open('/admin', '_blank')}
+                  className="mt-3 gap-2"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Panel Administrativo
+                </Button>
+              </CardContent>
+            </Card>
           </motion.div>
         </div>
+
+        {/* Footer con información adicional */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="text-center pt-8 border-t border-slate-200 dark:border-slate-700"
+        >
+          <div className="flex items-center justify-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-1">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span>Menús actualizados desde administración</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <CreditCard className="w-4 h-4 text-blue-500" />
+              <span>Pagos seguros con NetGet</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4 text-orange-500" />
+              <span>Disponible 24/7</span>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   )
 }
+

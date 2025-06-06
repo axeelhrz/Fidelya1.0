@@ -1,4 +1,4 @@
-import { MenuItem, OrderSelection, User } from './panel'
+import { MenuItem, OrderSelection } from './panel'
 
 export interface WeekInfo {
   weekStart: string
@@ -20,6 +20,16 @@ export interface OrderState {
   createdAt: Date
   paidAt?: Date
   paymentId?: string
+}
+
+export interface NetGetPaymentRequest {
+  amount: number
+  orderId: string
+  description: string
+  customerEmail: string
+  customerName: string
+  returnUrl?: string
+  notifyUrl?: string
 }
 
 // Actualizar para que coincida con DayMenuDisplay de menu.ts
