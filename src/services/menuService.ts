@@ -2,7 +2,7 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { MenuItem, PRICES, UserType } from '@/types/panel'
 import { DayMenuDisplay, WeekMenuDisplay } from '@/types/menu'
-import { format, startOfWeek, endOfWeek, addDays, isBefore } from 'date-fns'
+import { format, startOfWeek, endOfWeek, addDays, isBefore, isToday, isAfter } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export class MenuService {
@@ -100,18 +100,28 @@ export class MenuService {
         throw new Error('Estructura de precios inválida')
       }
       
-      // Aplicar precios según tipo de usuario
-      const daysWithPrices = weekMenu.days.map(day => ({
-        ...day,
-        almuerzos: day.almuerzos.map(item => ({
-          ...item,
-          price: prices.almuerzo
-        })),
-        colaciones: day.colaciones.map(item => ({
-          ...item,
-          price: prices.colacion
-        }))
-      }))
+      // Aplicar precios según tipo de usuario y verificar disponibilidad por fecha
+      const today = new Date()
+      const daysWithPrices = weekMenu.days.map(day => {
+        const dayDate = new Date(day.date)
+        const isPastDay = isBefore(dayDate, today) && !isToday(dayDate)
+        
+        return {
+          ...day,
+          isAvailable: day.hasItems && !isPastDay, // Disponible si tiene items y no es día pasado
+          isPastDay,
+          almuerzos: day.almuerzos.map(item => ({
+            ...item,
+            price: prices.almuerzo,
+            available: item.available && !isPastDay // Item disponible si no es día pasado
+          })),
+          colaciones: day.colaciones.map(item => ({
+            ...item,
+            price: prices.colacion,
+            available: item.available && !isPastDay // Item disponible si no es día pasado
+          }))
+        }
+      })
       
       return daysWithPrices
     } catch (error) {
@@ -125,12 +135,8 @@ export class MenuService {
     const weekStart = startOfWeek(now, { weekStartsOn: 1 })
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
     
-    // Deadline: miércoles a las 13:00
-    const wednesday = addDays(weekStart, 2)
-    const orderDeadline = new Date(wednesday)
-    orderDeadline.setHours(13, 0, 0, 0)
-    
-    const isOrderingAllowed = isBefore(now, orderDeadline)
+    // Siempre permitir pedidos (sin restricción de horario)
+    const isOrderingAllowed = true
     
     return {
       weekStart: format(weekStart, 'yyyy-MM-dd'),
@@ -139,7 +145,7 @@ export class MenuService {
       year: weekStart.getFullYear(),
       isCurrentWeek: true,
       isOrderingAllowed,
-      orderDeadline
+      orderDeadline: new Date() // Ya no se usa, pero mantenemos compatibilidad
     }
   }
 
@@ -166,6 +172,15 @@ export class MenuService {
 
   static getDayName(date: string): string {
     return format(new Date(date), 'EEEE', { locale: es })
+  }
+
+  // Método para verificar si un día específico permite pedidos
+  static isDayOrderingAllowed(date: string): boolean {
+    const dayDate = new Date(date)
+    const today = new Date()
+    
+    // Permitir pedidos para hoy y días futuros
+    return isToday(dayDate) || isAfter(dayDate, today)
   }
 
   private static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
