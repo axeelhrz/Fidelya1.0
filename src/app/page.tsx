@@ -17,10 +17,10 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center relative overflow-hidden">
-      {/* Subtle background elements */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center relative overflow-hidden font-sans antialiased">
+      {/* Elementos de fondo sutiles */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Minimal geometric accent */}
+        {/* Acento geométrico minimalista */}
         <motion.div
           className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-emerald-50/30 to-blue-50/30 rounded-full blur-3xl"
           animate={{
@@ -34,34 +34,35 @@ export default function HomePage() {
           }}
         />
         
-        {/* Subtle dot pattern */}
-        <div className="absolute inset-0 opacity-[0.02]">
-          <div
-            className="w-full h-full"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23334155' fill-opacity='1'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          />
-        </div>
+        {/* Patrón de puntos sutil */}
+        <div 
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23334155' fill-opacity='1'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E")`,
+          }}
+        />
       </div>
 
-      {/* Main content */}
+      {/* Contenido principal */}
       <div className="relative z-10 text-center px-6 max-w-2xl mx-auto">
-        {/* Logo/Title */}
+        {/* Logo/Título */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="mb-16"
         >
-          <h1 className="text-6xl md:text-7xl font-light text-slate-800 mb-6 tracking-tight">
-            Casino
-          </h1>
-          <h2 className="text-4xl md:text-5xl font-light text-emerald-600 mb-8 tracking-tight">
-            Escolar
-          </h2>
+          {/* Título principal */}
+          <div className="mb-8">
+            <h1 className="text-6xl md:text-7xl lg:text-8xl font-light text-slate-800 mb-2 tracking-tight leading-none">
+              Casino
+            </h1>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-emerald-600 tracking-tight leading-none">
+              Escolar
+            </h2>
+          </div>
           
-          {/* Elegant separator */}
+          {/* Separador elegante */}
           <motion.div
             className="flex items-center justify-center mb-8"
             initial={{ opacity: 0, scale: 0 }}
@@ -69,12 +70,13 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.4 }}
           >
             <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
-            <div className="mx-4 w-2 h-2 bg-emerald-500 rounded-full" />
+            <div className="mx-4 w-2 h-2 bg-emerald-500 rounded-full shadow-sm" />
             <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
           </motion.div>
 
+          {/* Subtítulo */}
           <motion.p
-            className="text-lg text-slate-600 font-light leading-relaxed"
+            className="text-lg md:text-xl text-slate-600 font-light leading-relaxed max-w-lg mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
@@ -83,53 +85,82 @@ export default function HomePage() {
           </motion.p>
         </motion.div>
 
-        {/* Action buttons */}
+        {/* Botones de acción */}
         <motion.div
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
         >
+          {/* Botón Iniciar Sesión */}
           <Link href="/auth/sign-in">
-            <motion.div
-              whileHover={{ y: -2 }}
+            <motion.button
+              whileHover={{ y: -2, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-xl
+                         bg-slate-800 text-white hover:bg-slate-700
+                         shadow-lg hover:shadow-xl
+                         transition-all duration-300 ease-out
+                         focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2
+                         transform hover:-translate-y-0.5
+                         min-w-[160px]"
             >
-              <Button
-                size="lg"
-                className="bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 text-base font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                Iniciar Sesión
-              </Button>
-            </motion.div>
+              Iniciar Sesión
+            </motion.button>
           </Link>
 
+          {/* Botón Crear Cuenta */}
           <Link href="/auth/sign-up">
-            <motion.div
-              whileHover={{ y: -2 }}
+            <motion.button
+              whileHover={{ y: -2, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-xl
+                         bg-white/80 backdrop-blur-sm text-slate-700 
+                         border-2 border-slate-200 hover:border-emerald-300 
+                         hover:text-emerald-600 hover:bg-white
+                         shadow-md hover:shadow-lg
+                         transition-all duration-300 ease-out
+                         focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
+                         transform hover:-translate-y-0.5
+                         min-w-[160px]"
             >
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-2 border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-600 px-8 py-4 text-base font-medium rounded-xl bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-300"
-              >
-                Crear Cuenta
-              </Button>
-            </motion.div>
+              Crear Cuenta
+            </motion.button>
           </Link>
         </motion.div>
 
-        {/* Minimal footer accent */}
+        {/* Footer minimalista */}
         <motion.div
-          className="mt-20 text-sm text-slate-400 font-light"
+          className="text-sm text-slate-400 font-light tracking-wide"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.2 }}
         >
-          Nutrición • Organización • Bienestar
+          <div className="flex items-center justify-center space-x-3">
+            <span>Nutrición</span>
+            <div className="w-1 h-1 bg-slate-300 rounded-full" />
+            <span>Organización</span>
+            <div className="w-1 h-1 bg-slate-300 rounded-full" />
+            <span>Bienestar</span>
+          </div>
         </motion.div>
       </div>
+
+      {/* Elemento decorativo adicional */}
+      <motion.div
+        className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, delay: 1.5 }}
+      >
+        <motion.div
+          className="w-6 h-6 border-2 border-slate-300 rounded-full flex items-center justify-center"
+          animate={{ y: [0, -8, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <div className="w-1 h-1 bg-slate-400 rounded-full" />
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
