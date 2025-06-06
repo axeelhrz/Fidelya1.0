@@ -145,7 +145,7 @@ export default function HomePage() {
           </Link>
 
           {/* Register Button */}
-          <Link href="/auth/registro">
+          <Link href="/auth/sign-up">
             <motion.div
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}

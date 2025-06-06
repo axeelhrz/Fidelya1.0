@@ -1,42 +1,39 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
 
-export default function SignUpPage() {
-  const [mounted, setMounted] = useState(false);
+export default function LoginPage() {
+  const [mounted, setMounted] = useState(false)
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    role: "student"
-  });
+    rememberMe: false
+  })
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   if (!mounted) {
-    return null;
+    return null
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+      [name]: type === 'checkbox' ? checked : value
+    })
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Aquí iría la lógica de registro
-    console.log("Sign up:", formData);
-  };
+    e.preventDefault()
+    console.log("Login:", formData)
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -44,7 +41,7 @@ export default function SignUpPage() {
       <div className="absolute inset-0">
         {/* Soft geometric shapes */}
         <motion.div
-          className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-emerald-100/30 to-teal-100/30 rounded-full blur-3xl"
+          className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-blue-100/30 to-indigo-100/30 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.1, 1],
             opacity: [0.2, 0.4, 0.2],
@@ -57,7 +54,7 @@ export default function SignUpPage() {
         />
         
         <motion.div
-          className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-br from-blue-100/30 to-indigo-100/30 rounded-full blur-3xl"
+          className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-br from-emerald-100/30 to-teal-100/30 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.15, 0.35, 0.15],
@@ -82,14 +79,14 @@ export default function SignUpPage() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-8">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
         
         {/* Auth Form Container */}
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="w-full max-w-lg"
+          className="w-full max-w-md"
         >
           <div className="auth-form-container rounded-2xl p-8">
             
@@ -101,10 +98,10 @@ export default function SignUpPage() {
               className="text-center mb-8"
             >
               <h1 className="text-3xl font-light text-slate-800 mb-2 text-elegant">
-                Únete a nosotros
+                Bienvenido
               </h1>
               <p className="text-slate-600 text-clean">
-                Crea tu cuenta en Casino Escolar
+                Inicia sesión en Casino Escolar
               </p>
               
               {/* Elegant separator */}
@@ -120,58 +117,19 @@ export default function SignUpPage() {
               </motion.div>
             </motion.div>
 
-            {/* Registration Form */}
+            {/* Login Form */}
             <motion.form
               onSubmit={handleSubmit}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="space-y-5"
+              className="space-y-6"
             >
-              {/* Name Fields */}
-              <div className="grid grid-cols-2 gap-4">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.6 }}
-                >
-                  <label className="label-educational">
-                    Nombre
-                  </label>
-                  <Input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="Tu nombre"
-                    required
-                  />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.7 }}
-                >
-                  <label className="label-educational">
-                    Apellido
-                  </label>
-                  <Input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="Tu apellido"
-                    required
-                  />
-                </motion.div>
-              </div>
-
               {/* Email Field */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
               >
                 <label className="label-educational">
                   Correo Electrónico
@@ -186,34 +144,11 @@ export default function SignUpPage() {
                 />
               </motion.div>
 
-              {/* Role Field */}
+              {/* Password Field */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.9 }}
-              >
-                <label className="label-educational">
-                  Tipo de Usuario
-                </label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  className="select-educational"
-                  required
-                >
-                  <option value="student">Estudiante</option>
-                  <option value="teacher">Profesor</option>
-                  <option value="admin">Administrador</option>
-                  <option value="parent">Padre/Madre</option>
-                </select>
-              </motion.div>
-
-              {/* Password Fields */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 1 }}
+                transition={{ duration: 0.6, delay: 0.7 }}
               >
                 <label className="label-educational">
                   Contraseña
@@ -228,30 +163,38 @@ export default function SignUpPage() {
                 />
               </motion.div>
 
+              {/* Remember Me & Forgot Password */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 1.1 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+                className="flex items-center justify-between"
               >
-                <label className="label-educational">
-                  Confirmar Contraseña
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="rememberMe"
+                    checked={formData.rememberMe}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-emerald-600 bg-white border-slate-300 rounded focus:ring-emerald-500 focus:ring-2"
+                  />
+                  <span className="text-sm text-slate-600 text-clean">Recordarme</span>
                 </label>
-                <Input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  placeholder="••••••••"
-                  required
-                />
+                
+                <Link 
+                  href="/auth/forgot-password" 
+                  className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors duration-300 text-clean"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
               </motion.div>
 
               {/* Submit Button */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 1.2 }}
-                className="pt-4"
+                transition={{ duration: 0.6, delay: 0.9 }}
+                className="pt-2"
               >
                 <motion.div
                   whileHover={{ y: -2 }}
@@ -270,7 +213,7 @@ export default function SignUpPage() {
                         repeatDelay: 3
                       }}
                     />
-                    <span className="relative z-10">Crear Cuenta</span>
+                    <span className="relative z-10">Iniciar Sesión</span>
                   </Button>
                 </motion.div>
               </motion.div>
@@ -280,28 +223,28 @@ export default function SignUpPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 1.3 }}
-              className="flex items-center my-6"
+              transition={{ duration: 0.6, delay: 1 }}
+              className="flex items-center my-8"
             >
               <div className="flex-1 h-px bg-slate-200"></div>
               <span className="px-4 text-sm text-slate-500 text-clean">o</span>
               <div className="flex-1 h-px bg-slate-200"></div>
             </motion.div>
 
-            {/* Login Link */}
+            {/* Sign Up Link */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.4 }}
+              transition={{ duration: 0.6, delay: 1.1 }}
               className="text-center"
             >
               <p className="text-sm text-slate-600 text-clean">
-                ¿Ya tienes una cuenta?{" "}
+                ¿No tienes una cuenta?{" "}
                 <Link 
-                  href="/auth/login" 
+                  href="/auth/registro" 
                   className="text-emerald-600 hover:text-emerald-700 transition-colors duration-300 font-medium"
                 >
-                  Iniciar sesión
+                  Crear cuenta
                 </Link>
               </p>
             </motion.div>
@@ -312,7 +255,7 @@ export default function SignUpPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 1.5 }}
+          transition={{ duration: 0.6, delay: 1.2 }}
           className="mt-6"
         >
           <Link href="/">
@@ -331,7 +274,7 @@ export default function SignUpPage() {
           className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1.7 }}
+          transition={{ duration: 0.8, delay: 1.4 }}
         >
           <motion.div
             className="flex items-center space-x-2 text-slate-400 text-sm"
@@ -345,5 +288,5 @@ export default function SignUpPage() {
         </motion.div>
       </div>
     </div>
-  );
+  )
 }
