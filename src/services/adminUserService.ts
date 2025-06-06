@@ -1,88 +1,105 @@
 import { 
   collection, 
-  doc, 
-  getDocs, 
-  getDoc,
-  updateDoc, 
-  deleteDoc,
   query, 
   where, 
-  orderBy,
-  limit,
+  getDocs, 
+  getDoc,
+  doc, 
+  updateDoc, 
+  deleteDoc,
+  orderBy, 
+  limit, 
   startAfter,
-  Timestamp,
   writeBatch,
-  countFromServer
+  Timestamp,
+  DocumentSnapshot
 } from 'firebase/firestore'
-import { 
-  sendEmailVerification,
-  User as FirebaseUser
-} from 'firebase/auth'
 import { db } from '@/app/lib/firebase'
 import { 
   AdminUserView, 
   UserFilters, 
   UserStats, 
   UserDetailView, 
-  UserUpdateRequest, 
+  UserUpdateRequest,
   UserActionResult,
   SortField,
   SortDirection,
-  UserOrderSummary
+  UserSortConfig
 } from '@/types/adminUser'
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, format, subWeeks, subMonths } from 'date-fns'
 
 export class AdminUserService {
   private static readonly USERS_COLLECTION = 'users'
   private static readonly ORDERS_COLLECTION = 'orders'
-  private static readonly PAGE_SIZE = 20
 
+  // Obtener estadísticas de usuarios
   static async getUserStats(): Promise<UserStats> {
     try {
+      // Obtener todos los usuarios
       const usersRef = collection(db, this.USERS_COLLECTION)
+      const usersSnapshot = await getDocs(usersRef)
       
-      // Obtener conteos totales
-      const [
-        totalSnapshot,
-        funcionariosSnapshot,
-        estudiantesSnapshot,
-        adminsSnapshot,
-        verifiedSnapshot,
-        activeSnapshot
-      ] = await Promise.all([
-        countFromServer(query(usersRef)),
-        countFromServer(query(usersRef, where('userType', '==', 'funcionario'))),
-        countFromServer(query(usersRef, where('userType', '==', 'estudiante'))),
-        countFromServer(query(usersRef, where('role', 'in', ['admin', 'super_admin']))),
-        countFromServer(query(usersRef, where('emailVerified', '==', true))),
-        countFromServer(query(usersRef, where('isActive', '==', true)))
-      ])
+      let totalUsers = 0
+      let activeUsers = 0
+      let verifiedUsers = 0
+      let funcionarios = 0
+      let estudiantes = 0
+      let admins = 0
 
-      // Calcular fechas para usuarios nuevos
-      const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
-      const monthStart = startOfMonth(new Date())
+      usersSnapshot.forEach((doc) => {
+        const userData = doc.data()
+        totalUsers++
+        
+        // Contar usuarios activos (por defecto son activos si no se especifica lo contrario)
+        if (userData.isActive !== false) {
+          activeUsers++
+        }
+        
+        // Contar usuarios verificados
+        if (userData.emailVerified === true) {
+          verifiedUsers++
+        }
+        
+        // Contar por tipo de usuario
+        const userType = userData.role || userData.userType || 'estudiante'
+        switch (userType) {
+          case 'funcionario':
+          case 'apoderado':
+            funcionarios++
+            break
+          case 'admin':
+          case 'super_admin':
+            admins++
+            break
+          default:
+            estudiantes++
+            break
+        }
+      })
 
-      const [newWeekSnapshot, newMonthSnapshot] = await Promise.all([
-        countFromServer(query(
-          usersRef, 
-          where('createdAt', '>=', Timestamp.fromDate(weekStart))
-        )),
-        countFromServer(query(
-          usersRef, 
-          where('createdAt', '>=', Timestamp.fromDate(monthStart))
-        ))
-      ])
+      // Obtener estadísticas de pedidos
+      const ordersRef = collection(db, this.ORDERS_COLLECTION)
+      const ordersSnapshot = await getDocs(ordersRef)
+      const totalOrders = ordersSnapshot.size
+
+      // Calcular usuarios con pedidos
+      const usersWithOrders = new Set()
+      ordersSnapshot.forEach((doc) => {
+        const orderData = doc.data()
+        if (orderData.userId) {
+          usersWithOrders.add(orderData.userId)
+        }
+      })
 
       return {
-        totalUsers: totalSnapshot.data().count,
-        funcionarios: funcionariosSnapshot.data().count,
-        estudiantes: estudiantesSnapshot.data().count,
-        admins: adminsSnapshot.data().count,
-        verifiedEmails: verifiedSnapshot.data().count,
-        unverifiedEmails: totalSnapshot.data().count - verifiedSnapshot.data().count,
-        activeUsers: activeSnapshot.data().count,
-        newUsersThisWeek: newWeekSnapshot.data().count,
-        newUsersThisMonth: newMonthSnapshot.data().count
+        totalUsers,
+        activeUsers,
+        verifiedUsers,
+        funcionarios,
+        estudiantes,
+        admins,
+        totalOrders,
+        usersWithOrders: usersWithOrders.size,
+        averageOrdersPerUser: totalUsers > 0 ? totalOrders / totalUsers : 0
       }
     } catch (error) {
       console.error('Error fetching user stats:', error)
@@ -90,70 +107,42 @@ export class AdminUserService {
     }
   }
 
+  // Obtener usuarios con filtros y paginación
   static async getUsers(
-    filters: UserFilters = {},
+    filters: UserFilters,
     sortField: SortField = 'createdAt',
     sortDirection: SortDirection = 'desc',
-    pageSize: number = this.PAGE_SIZE,
-    lastDoc?: any
-  ): Promise<{ users: AdminUserView[], hasMore: boolean, lastDoc: any }> {
+    pageSize: number = 20,
+    lastDoc?: DocumentSnapshot | null
+  ): Promise<{
+    users: AdminUserView[]
+    hasMore: boolean
+    lastDoc: DocumentSnapshot | null
+  }> {
     try {
-      const usersRef = collection(db, this.USERS_COLLECTION)
-      let q = query(usersRef)
+      let q = query(collection(db, this.USERS_COLLECTION))
 
       // Aplicar filtros
       if (filters.role && filters.role !== 'all') {
-        if (filters.role === 'admin') {
-          q = query(q, where('role', 'in', ['admin', 'super_admin']))
+        if (filters.role === 'funcionario') {
+          q = query(q, where('userType', 'in', ['funcionario', 'apoderado']))
         } else {
-          q = query(q, where('userType', '==', filters.role))
+          q = query(q, where('role', '==', filters.role))
         }
       }
 
-      if (filters.emailVerified !== undefined && filters.emailVerified !== 'all') {
-        q = query(q, where('emailVerified', '==', filters.emailVerified))
+      if (filters.emailVerified && filters.emailVerified !== 'all') {
+        q = query(q, where('emailVerified', '==', filters.emailVerified === 'verified'))
       }
 
-      if (filters.isActive !== undefined && filters.isActive !== 'all') {
-        q = query(q, where('isActive', '==', filters.isActive))
+      if (filters.isActive && filters.isActive !== 'all') {
+        q = query(q, where('isActive', '==', filters.isActive === 'active'))
       }
 
-      // Filtro por fecha
-      if (filters.dateRange) {
-        let startDate: Date
-        let endDate = new Date()
-
-        switch (filters.dateRange) {
-          case 'week':
-            startDate = subWeeks(endDate, 1)
-            break
-          case 'month':
-            startDate = subMonths(endDate, 1)
-            break
-          case 'custom':
-            if (filters.customStartDate) {
-              startDate = new Date(filters.customStartDate)
-              if (filters.customEndDate) {
-                endDate = new Date(filters.customEndDate)
-              }
-            } else {
-              startDate = subMonths(endDate, 1)
-            }
-            break
-          default:
-            startDate = subMonths(endDate, 1)
-        }
-
-        q = query(q, 
-          where('createdAt', '>=', Timestamp.fromDate(startDate)),
-          where('createdAt', '<=', Timestamp.fromDate(endDate))
-        )
-      }
-
-      // Ordenamiento
+      // Aplicar ordenamiento
       q = query(q, orderBy(sortField, sortDirection))
 
-      // Paginación
+      // Aplicar paginación
       q = query(q, limit(pageSize + 1))
       if (lastDoc) {
         q = query(q, startAfter(lastDoc))
@@ -174,7 +163,7 @@ export class AdminUserService {
         }
       })
 
-      // Filtrar por término de búsqueda en el frontend (para búsqueda en múltiples campos)
+      // Filtrar por término de búsqueda en el frontend
       let filteredUsers = users
       if (filters.searchTerm) {
         const searchTerm = filters.searchTerm.toLowerCase()
@@ -209,6 +198,7 @@ export class AdminUserService {
     }
   }
 
+  // Obtener detalle de usuario
   static async getUserDetail(userId: string): Promise<UserDetailView> {
     try {
       const userDoc = await getDoc(doc(db, this.USERS_COLLECTION, userId))
@@ -240,6 +230,7 @@ export class AdminUserService {
     }
   }
 
+  // Actualizar usuario
   static async updateUser(userId: string, updates: UserUpdateRequest): Promise<UserActionResult> {
     try {
       const userRef = doc(db, this.USERS_COLLECTION, userId)
@@ -265,6 +256,7 @@ export class AdminUserService {
     }
   }
 
+  // Eliminar usuario
   static async deleteUser(userId: string): Promise<UserActionResult> {
     try {
       const batch = writeBatch(db)
@@ -298,6 +290,7 @@ export class AdminUserService {
     }
   }
 
+  // Reenviar verificación de email
   static async resendEmailVerification(userEmail: string): Promise<UserActionResult> {
     try {
       // Nota: En un entorno real, esto requeriría acceso al objeto User de Firebase Auth
@@ -317,6 +310,7 @@ export class AdminUserService {
     }
   }
 
+  // Métodos privados auxiliares
   private static mapFirestoreToUser(id: string, data: any): AdminUserView {
     return {
       id,
@@ -340,8 +334,8 @@ export class AdminUserService {
     try {
       const ordersRef = collection(db, this.ORDERS_COLLECTION)
       const q = query(ordersRef, where('userId', '==', userId))
-      const snapshot = await countFromServer(q)
-      return snapshot.data().count
+      const snapshot = await getDocs(q)
+      return snapshot.size
     } catch (error) {
       console.error('Error getting user orders count:', error)
       return 0
@@ -371,34 +365,29 @@ export class AdminUserService {
     }
   }
 
-  private static async getUserRecentOrders(userId: string): Promise<UserOrderSummary[]> {
+  private static async getUserRecentOrders(userId: string, limitCount: number = 5) {
     try {
       const ordersRef = collection(db, this.ORDERS_COLLECTION)
       const q = query(
         ordersRef,
         where('userId', '==', userId),
         orderBy('createdAt', 'desc'),
-        limit(5)
+        limit(limitCount)
       )
       
       const snapshot = await getDocs(q)
-      const orders: UserOrderSummary[] = []
-      
-      snapshot.docs.forEach((doc) => {
+      return snapshot.docs.map(doc => {
         const data = doc.data()
-        orders.push({
+        return {
           id: doc.id,
           weekStart: data.weekStart || '',
           total: data.total || 0,
           status: data.status || 'pending',
-          createdAt: data.createdAt?.toDate() || new Date(),
-          itemsCount: data.selections?.length || 0
-        })
+          createdAt: data.createdAt?.toDate() || new Date()
+        }
       })
-      
-      return orders
     } catch (error) {
-      console.error('Error fetching user recent orders:', error)
+      console.error('Error getting user recent orders:', error)
       return []
     }
   }

@@ -43,18 +43,17 @@ interface UseAdminUsersReturn {
 }
 
 export function useAdminUsers(): UseAdminUsersReturn {
-  // Estado principal
+  // Estados
   const [users, setUsers] = useState<AdminUserView[]>([])
   const [userStats, setUserStats] = useState<UserStats | null>(null)
   const [selectedUser, setSelectedUser] = useState<UserDetailView | null>(null)
-  
-  // Estados de carga
-  const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingStats, setIsLoadingStats] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(false)
-  
+  const [lastDoc, setLastDoc] = useState<any>(null)
+
   // Filtros y ordenamiento
   const [filters, setFilters] = useState<UserFilters>({
     role: 'all',
@@ -62,14 +61,11 @@ export function useAdminUsers(): UseAdminUsersReturn {
     isActive: 'all',
     searchTerm: ''
   })
-  
+
   const [sortConfig, setSortConfig] = useState<UserSortConfig>({
     field: 'createdAt',
     direction: 'desc'
   })
-  
-  // Paginación
-  const [lastDoc, setLastDoc] = useState<any>(null)
 
   // Cargar usuarios
   const loadUsers = useCallback(async (reset: boolean = false) => {
@@ -109,10 +105,26 @@ export function useAdminUsers(): UseAdminUsersReturn {
   const loadUserStats = useCallback(async () => {
     try {
       setIsLoadingStats(true)
+      setError(null)
       const stats = await AdminUserService.getUserStats()
       setUserStats(stats)
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar estadísticas'
+      setError(errorMessage)
       console.error('Error loading user stats:', err)
+      
+      // Proporcionar estadísticas por defecto en caso de error
+      setUserStats({
+        totalUsers: 0,
+        activeUsers: 0,
+        verifiedUsers: 0,
+        funcionarios: 0,
+        estudiantes: 0,
+        admins: 0,
+        totalOrders: 0,
+        usersWithOrders: 0,
+        averageOrdersPerUser: 0
+      })
     } finally {
       setIsLoadingStats(false)
     }
