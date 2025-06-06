@@ -21,10 +21,17 @@ export function useAdminMenus() {
   useEffect(() => {
     try {
       const currentWeekStart = AdminMenuService.getCurrentWeekStart()
-      setCurrentWeek(currentWeekStart)
+      if (currentWeekStart) {
+        setCurrentWeek(currentWeekStart)
+      } else {
+        throw new Error('No se pudo obtener la semana actual')
+      }
     } catch (err) {
       console.error('Error initializing current week:', err)
       setError('Error al inicializar la semana actual')
+      // Fallback: usar fecha actual
+      const fallbackDate = new Date().toISOString().split('T')[0]
+      setCurrentWeek(fallbackDate)
     }
   }, [])
 
@@ -36,6 +43,12 @@ export function useAdminMenus() {
   }, [currentWeek])
 
   const loadWeekMenu = useCallback(async (weekStart: string) => {
+    if (!weekStart) {
+      setError('Fecha de semana no válida')
+      setIsLoading(false)
+      return
+    }
+
     try {
       setIsLoading(true)
       setError(null)
@@ -46,10 +59,18 @@ export function useAdminMenus() {
         AdminMenuService.getWeekStats(weekStart)
       ])
       
-      setWeekMenu(menu)
-      setWeekStats(stats)
+      if (menu) {
+        setWeekMenu(menu)
+      } else {
+        throw new Error('No se pudo cargar el menú')
+      }
+      
+      if (stats) {
+        setWeekStats(stats)
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar el menú'
+      console.error('Error loading week menu:', err)
       setError(errorMessage)
       toast({
         title: 'Error',
@@ -62,15 +83,28 @@ export function useAdminMenus() {
   }, [toast])
 
   const navigateWeek = useCallback((direction: 'next' | 'prev') => {
+    if (!currentWeek) {
+      toast({
+        title: 'Error',
+        description: 'No hay semana actual definida',
+        variant: 'destructive'
+      })
+      return
+    }
+
     try {
       const navigation = AdminMenuService.getWeekNavigation(currentWeek)
       
       if (direction === 'next' && navigation.canGoForward) {
         const nextWeek = AdminMenuService.getNextWeek(currentWeek)
-        setCurrentWeek(nextWeek)
+        if (nextWeek && nextWeek !== currentWeek) {
+          setCurrentWeek(nextWeek)
+        }
       } else if (direction === 'prev' && navigation.canGoBack) {
         const prevWeek = AdminMenuService.getPreviousWeek(currentWeek)
-        setCurrentWeek(prevWeek)
+        if (prevWeek && prevWeek !== currentWeek) {
+          setCurrentWeek(prevWeek)
+        }
       }
     } catch (err) {
       console.error('Error navigating week:', err)
@@ -118,7 +152,9 @@ export function useAdminMenus() {
           description: result.message
         })
         // Recargar el menú para mostrar el nuevo item
-        await loadWeekMenu(currentWeek)
+        if (currentWeek) {
+          await loadWeekMenu(currentWeek)
+        }
         closeModal()
       } else {
         toast({
@@ -131,6 +167,7 @@ export function useAdminMenus() {
       return result
     } catch (error) {
       const errorMessage = 'Error al crear el menú'
+      console.error('Error creating menu item:', error)
       toast({
         title: 'Error',
         description: errorMessage,
@@ -153,7 +190,9 @@ export function useAdminMenus() {
           description: result.message
         })
         // Recargar el menú para mostrar los cambios
-        await loadWeekMenu(currentWeek)
+        if (currentWeek) {
+          await loadWeekMenu(currentWeek)
+        }
         closeModal()
       } else {
         toast({
@@ -166,6 +205,7 @@ export function useAdminMenus() {
       return result
     } catch (error) {
       const errorMessage = 'Error al actualizar el menú'
+      console.error('Error updating menu item:', error)
       toast({
         title: 'Error',
         description: errorMessage,
@@ -195,7 +235,9 @@ export function useAdminMenus() {
           description: result.message
         })
         // Recargar el menú para reflejar la eliminación
-        await loadWeekMenu(currentWeek)
+        if (currentWeek) {
+          await loadWeekMenu(currentWeek)
+        }
       } else {
         toast({
           title: 'Error',
@@ -207,6 +249,7 @@ export function useAdminMenus() {
       return result
     } catch (error) {
       const errorMessage = 'Error al eliminar el menú'
+      console.error('Error deleting menu item:', error)
       toast({
         title: 'Error',
         description: errorMessage,
@@ -221,6 +264,13 @@ export function useAdminMenus() {
 
   const duplicateWeek = useCallback(async (targetWeek: string): Promise<MenuOperationResult> => {
     try {
+      if (!currentWeek) {
+        return {
+          success: false,
+          message: 'No hay semana actual definida'
+        }
+      }
+
       const result = await AdminMenuService.duplicateWeekMenu(currentWeek, targetWeek)
       
       toast({
@@ -232,6 +282,7 @@ export function useAdminMenus() {
       return result
     } catch (error) {
       const errorMessage = 'Error al duplicar el menú semanal'
+      console.error('Error duplicating week:', error)
       toast({
         title: 'Error',
         description: errorMessage,
@@ -246,6 +297,13 @@ export function useAdminMenus() {
 
   const toggleWeekPublication = useCallback(async (publish: boolean): Promise<MenuOperationResult> => {
     try {
+      if (!currentWeek) {
+        return {
+          success: false,
+          message: 'No hay semana actual definida'
+        }
+      }
+
       const result = await AdminMenuService.toggleWeekMenuPublication(currentWeek, publish)
       
       if (result.success) {
@@ -266,6 +324,7 @@ export function useAdminMenus() {
       return result
     } catch (error) {
       const errorMessage = 'Error al cambiar el estado de publicación'
+      console.error('Error toggling publication:', error)
       toast({
         title: 'Error',
         description: errorMessage,
@@ -280,6 +339,13 @@ export function useAdminMenus() {
 
   const deleteWeekMenu = useCallback(async (): Promise<MenuOperationResult> => {
     try {
+      if (!currentWeek) {
+        return {
+          success: false,
+          message: 'No hay semana actual definida'
+        }
+      }
+
       const result = await AdminMenuService.deleteWeekMenu(currentWeek)
       
       if (result.success) {
@@ -300,6 +366,7 @@ export function useAdminMenus() {
       return result
     } catch (error) {
       const errorMessage = 'Error al eliminar el menú semanal'
+      console.error('Error deleting week menu:', error)
       toast({
         title: 'Error',
         description: errorMessage,
@@ -315,11 +382,29 @@ export function useAdminMenus() {
   const refreshMenu = useCallback(() => {
     if (currentWeek) {
       loadWeekMenu(currentWeek)
+    } else {
+      // Reinicializar si no hay semana actual
+      try {
+        const newCurrentWeek = AdminMenuService.getCurrentWeekStart()
+        setCurrentWeek(newCurrentWeek)
+      } catch (err) {
+        console.error('Error refreshing menu:', err)
+        setError('Error al actualizar el menú')
+      }
     }
   }, [currentWeek, loadWeekMenu])
 
   const getWeekNavigation = useCallback(() => {
     try {
+      if (!currentWeek) {
+        return {
+          currentWeek: '',
+          canGoBack: false,
+          canGoForward: false,
+          weekLabel: 'Sin semana'
+        }
+      }
+
       return AdminMenuService.getWeekNavigation(currentWeek)
     } catch (err) {
       console.error('Error getting week navigation:', err)
