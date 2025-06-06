@@ -11,6 +11,7 @@ interface AuthUser {
   firstName: string
   lastName: string
   email: string
+  phone?: string
   userType: 'funcionario' | 'estudiante'
   children?: Array<{
     id: string
