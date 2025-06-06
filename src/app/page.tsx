@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
@@ -16,17 +17,15 @@ export default function HomePage() {
   }
 
   return (
-    <div className="h-screen bg-gradient-magical flex items-center justify-center relative overflow-hidden">
-      {/* Elementos de fondo artísticos */}
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Subtle Background Elements */}
       <div className="absolute inset-0">
-        {/* Orbes flotantes con gradientes únicos */}
+        {/* Soft geometric shapes */}
         <motion.div
-          className="absolute top-20 left-20 w-72 h-72 bg-gradient-orb-1 rounded-full blur-2xl"
+          className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-blue-100/40 to-indigo-100/40 rounded-full blur-3xl"
           animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.4, 0.7, 0.4],
-            x: [0, 30, 0],
-            y: [0, -20, 0],
+            scale: [1, 1.1, 1],
+            opacity: [0.3, 0.5, 0.3],
           }}
           transition={{
             duration: 8,
@@ -34,14 +33,11 @@ export default function HomePage() {
             ease: "easeInOut"
           }}
         />
-        
         <motion.div
-          className="absolute bottom-32 right-16 w-96 h-96 bg-gradient-orb-2 rounded-full blur-3xl"
+          className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-br from-emerald-100/40 to-teal-100/40 rounded-full blur-3xl"
           animate={{
-            scale: [1, 1.15, 1],
-            opacity: [0.3, 0.6, 0.3],
-            x: [0, -25, 0],
-            y: [0, 15, 0],
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.4, 0.2],
           }}
           transition={{
             duration: 10,
@@ -51,274 +47,203 @@ export default function HomePage() {
           }}
         />
 
-        <motion.div
-          className="absolute top-1/2 right-1/4 w-64 h-64 bg-gradient-orb-3 rounded-full blur-2xl"
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.2, 0.5, 0.2],
-            rotate: [0, 180, 360],
-          }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 4
-          }}
-        />
-
-        {/* Partículas flotantes */}
-        {[...Array(12)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 bg-gradient-particle rounded-full"
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-5">
+          <div
+            className="w-full h-full"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              opacity: [0, 1, 0],
-              scale: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: 4 + Math.random() * 4,
-              repeat: Infinity,
-              delay: Math.random() * 5,
-              ease: "easeInOut"
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
             }}
           />
-        ))}
-
-        {/* Ondas de fondo */}
-        <div className="absolute inset-0 bg-wave-pattern opacity-5" />
+        </div>
       </div>
 
-      {/* Contenido principal con efectos únicos */}
-      <div className="relative z-10 text-center px-8 max-w-2xl mx-auto">
-        {/* Título con efectos especiales */}
+      {/* Main Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
+        {/* Logo/Title Section */}
         <motion.div
-          initial={{ opacity: 0, y: 30, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-          className="mb-16"
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          {/* Halo de luz detrás del título */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-halo rounded-full blur-3xl opacity-20"
-            animate={{
-              scale: [1, 1.1, 1],
-              opacity: [0.1, 0.3, 0.1],
+          {/* Main Title */}
+          <motion.h1
+            className="text-6xl md:text-7xl lg:text-8xl font-light mb-4 text-slate-800"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              letterSpacing: '-0.02em',
             }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-
-          <div className="relative">
-            <motion.h1 
-              className="text-7xl md:text-8xl font-light text-gradient-title mb-4 tracking-tight text-elegant"
-              animate={{
-                textShadow: [
-                  "0 0 20px rgba(5, 150, 105, 0.3)",
-                  "0 0 40px rgba(5, 150, 105, 0.5)",
-                  "0 0 20px rgba(5, 150, 105, 0.3)"
-                ]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            >
-              Casino
-            </motion.h1>
-            
-            <motion.h2 
-              className="text-4xl md:text-5xl font-light text-gradient-subtitle tracking-tight text-elegant"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1, delay: 0.5 }}
-            >
-              Escolar
-            </motion.h2>
-          </div>
-          
-          {/* Separador artístico */}
-          <motion.div
-            className="flex items-center justify-center mt-8 mb-8"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-          >
-            <motion.div 
-              className="w-24 h-px bg-gradient-separator"
-              animate={{
-                scaleX: [1, 1.2, 1],
-                opacity: [0.7, 1, 0.7]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-            <motion.div 
-              className="mx-6 w-3 h-3 bg-gradient-dot rounded-full shadow-glow"
-              animate={{
-                scale: [1, 1.3, 1],
-                boxShadow: [
-                  "0 0 10px rgba(5, 150, 105, 0.5)",
-                  "0 0 25px rgba(5, 150, 105, 0.8)",
-                  "0 0 10px rgba(5, 150, 105, 0.5)"
-                ]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-            <motion.div 
-              className="w-24 h-px bg-gradient-separator"
-              animate={{
-                scaleX: [1, 1.2, 1],
-                opacity: [0.7, 1, 0.7]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-          </motion.div>
-
-          <motion.p
-            className="text-xl text-gradient-description font-light leading-relaxed text-clean max-w-lg mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 1 }}
+            transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
           >
-            Transformando la experiencia de alimentación escolar con tecnología innovadora
+            Casino Escolar
+          </motion.h1>
+
+          {/* Elegant separator */}
+          <motion.div
+            className="flex items-center justify-center mb-6"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+          >
+            <div className="w-8 h-px bg-slate-300" />
+            <div className="mx-4 w-2 h-2 bg-emerald-400 rounded-full" />
+            <div className="w-8 h-px bg-slate-300" />
+          </motion.div>
+
+          {/* Subtitle */}
+          <motion.p
+            className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed font-light"
+            style={{
+              fontFamily: "'Inter', sans-serif",
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
+          >
+            Gestión inteligente de alimentación escolar
+            <br />
+            <span className="text-emerald-600">Nutrición • Organización • Bienestar</span>
           </motion.p>
         </motion.div>
 
-        {/* Botones con efectos únicos */}
+        {/* Action Buttons */}
         <motion.div
-          className="flex flex-col gap-6 items-center"
+          className="flex flex-col sm:flex-row gap-6"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 1.2 }}
+          transition={{ duration: 0.8, delay: 1, ease: "easeOut" }}
         >
+          {/* Login Button */}
           <Link href="/auth/sign-in">
-            <motion.button
-              whileHover={{ 
-                y: -3, 
-                scale: 1.02,
-                boxShadow: "0 20px 40px rgba(5, 150, 105, 0.3)"
-              }}
+            <motion.div
+              whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="btn-primary-magical group relative overflow-hidden"
+              className="group"
             >
-              {/* Efecto de brillo que se mueve */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-shine opacity-0 group-hover:opacity-100"
-                animate={{
-                  x: ["-100%", "100%"]
+              <Button
+                size="lg"
+                className="px-8 py-4 text-base font-medium bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-0"
+                style={{
+                  fontFamily: "'Inter', sans-serif",
                 }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  repeatDelay: 3
-                }}
-              />
-              <span className="relative z-10">Iniciar Sesión</span>
-            </motion.button>
+              >
+                Iniciar Sesión
+                <motion.div
+                  className="ml-2 w-4 h-4"
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  →
+                </motion.div>
+              </Button>
+            </motion.div>
           </Link>
 
+          {/* Register Button */}
           <Link href="/auth/sign-up">
-            <motion.button
-              whileHover={{ 
-                y: -3, 
-                scale: 1.02,
-                backgroundColor: "rgba(255, 255, 255, 0.95)"
-              }}
+            <motion.div
+              whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="btn-secondary-magical group relative overflow-hidden"
+              className="group"
             >
-              {/* Borde animado */}
-              <motion.div
-                className="absolute inset-0 border-2 border-gradient-animated rounded-xl"
-                animate={{
-                  borderColor: [
-                    "rgba(5, 150, 105, 0.3)",
-                    "rgba(5, 150, 105, 0.8)",
-                    "rgba(5, 150, 105, 0.3)"
-                  ]
+              <Button
+                size="lg"
+                variant="outline"
+                className="px-8 py-4 text-base font-medium bg-white/80 backdrop-blur-sm border-2 border-slate-200 text-slate-700 hover:bg-white hover:border-emerald-300 hover:text-emerald-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                style={{
+                  fontFamily: "'Inter', sans-serif",
                 }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-              <span className="relative z-10">Crear Cuenta</span>
-            </motion.button>
+              >
+                Crear Cuenta
+                <motion.div
+                  className="ml-2 w-4 h-4"
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  +
+                </motion.div>
+              </Button>
+            </motion.div>
           </Link>
         </motion.div>
 
-        {/* Indicador flotante */}
+        {/* Feature highlights */}
         <motion.div
-          className="mt-20 flex items-center justify-center"
+          className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.3, ease: "easeOut" }}
+        >
+          {/* Feature 1 */}
+          <motion.div
+            className="text-center group"
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow duration-300">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-slate-800 mb-2">Gestión Simple</h3>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Administra menús y pedidos de forma intuitiva
+            </p>
+          </motion.div>
+
+          {/* Feature 2 */}
+          <motion.div
+            className="text-center group"
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow duration-300">
+              <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-slate-800 mb-2">Alimentación Saludable</h3>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Promovemos hábitos nutricionales balanceados
+            </p>
+          </motion.div>
+
+          {/* Feature 3 */}
+          <motion.div
+            className="text-center group"
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow duration-300">
+              <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-slate-800 mb-2">Comunidad Educativa</h3>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Conecta familias, estudiantes y administración
+            </p>
+          </motion.div>
+        </motion.div>
+
+        {/* Bottom accent */}
+        <motion.div
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1.8 }}
+          transition={{ duration: 0.8, delay: 1.8 }}
         >
           <motion.div
-            className="glass-indicator px-6 py-3 rounded-full"
-            animate={{
-              y: [0, -5, 0],
-              boxShadow: [
-                "0 10px 30px rgba(0, 0, 0, 0.1)",
-                "0 15px 40px rgba(0, 0, 0, 0.15)",
-                "0 10px 30px rgba(0, 0, 0, 0.1)"
-              ]
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
+            className="flex items-center space-x-2 text-slate-400 text-sm"
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
-            <div className="flex items-center space-x-3 text-sm text-gradient-indicator font-medium">
-              <motion.div 
-                className="w-2 h-2 bg-gradient-dot rounded-full"
-                animate={{
-                  scale: [1, 1.5, 1],
-                  opacity: [0.7, 1, 0.7]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-              <span>Innovación Educativa</span>
-              <motion.div 
-                className="w-2 h-2 bg-gradient-dot rounded-full"
-                animate={{
-                  scale: [1, 1.5, 1],
-                  opacity: [0.7, 1, 0.7]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1
-                }}
-              />
-            </div>
+            <div className="w-1 h-1 bg-slate-400 rounded-full" />
+            <span style={{ fontFamily: "'Inter', sans-serif" }}>Sistema de gestión educativa</span>
+            <div className="w-1 h-1 bg-slate-400 rounded-full" />
           </motion.div>
         </motion.div>
       </div>
