@@ -6,6 +6,25 @@ import { format, startOfWeek, endOfWeek, addDays, isBefore } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export class MenuService {
+  // Helper method to determine user type from various possible field names
+  static getUserTypeFromUser(user: any): UserType {
+    // Try different possible field names
+    const userType = user?.tipoUsuario || user?.userType || user?.tipo_usuario || user?.type
+    
+    // Normalize to expected values
+    if (userType === 'funcionario' || userType === 'staff' || userType === 'employee') {
+      return 'funcionario'
+    }
+    
+    if (userType === 'apoderado' || userType === 'parent' || userType === 'guardian' || userType === 'estudiante' || userType === 'student') {
+      return 'apoderado'
+    }
+    
+    // Default fallback
+    console.warn('Unknown user type, defaulting to apoderado:', userType)
+    return 'apoderado'
+  }
+
   static async getWeeklyMenu(weekStart?: string): Promise<WeekMenuDisplay> {
     try {
       // Si no se proporciona weekStart, usar la semana actual
@@ -47,8 +66,17 @@ export class MenuService {
     }
   }
 
-  static async getWeeklyMenuForUser(userType: UserType, weekStart?: string): Promise<DayMenuDisplay[]> {
+  static async getWeeklyMenuForUser(userTypeOrUser: UserType | any, weekStart?: string): Promise<DayMenuDisplay[]> {
     try {
+      let userType: UserType
+      
+      // Handle both direct UserType and user object
+      if (typeof userTypeOrUser === 'string') {
+        userType = userTypeOrUser
+      } else {
+        userType = this.getUserTypeFromUser(userTypeOrUser)
+      }
+
       // Validar userType antes de proceder
       if (!userType) {
         console.error('UserType is undefined or null')

@@ -31,8 +31,8 @@ export function useWeeklyMenuData({ user, weekStart }: UseWeeklyMenuDataProps): 
   const [weekInfo, setWeekInfo] = useState<UseWeeklyMenuDataReturn['weekInfo']>(null)
 
   const fetchWeeklyMenu = async () => {
-    if (!user || !user.tipoUsuario) {
-      console.log('User or tipoUsuario not available:', { user: !!user, tipoUsuario: user?.tipoUsuario })
+    if (!user) {
+      console.log('User not available')
       setIsLoading(false)
       return
     }
@@ -41,16 +41,13 @@ export function useWeeklyMenuData({ user, weekStart }: UseWeeklyMenuDataProps): 
       setIsLoading(true)
       setError(null)
 
+      console.log('Fetching menu for user:', user)
+
       // Obtener información de la semana actual
       const currentWeekInfo = MenuService.getCurrentWeekInfo()
       
-      // Validar que el usuario tenga un tipo válido
-      if (!user.tipoUsuario || (user.tipoUsuario !== 'funcionario' && user.tipoUsuario !== 'apoderado')) {
-        throw new Error('Tipo de usuario no válido')
-      }
-      
-      // Obtener menú semanal con precios según tipo de usuario
-      const menuData = await MenuService.getWeeklyMenuForUser(user.tipoUsuario, weekStart)
+      // Usar el método mejorado que puede manejar diferentes formatos de usuario
+      const menuData = await MenuService.getWeeklyMenuForUser(user, weekStart)
       
       setWeekMenu(menuData)
       setWeekInfo({
@@ -72,7 +69,7 @@ export function useWeeklyMenuData({ user, weekStart }: UseWeeklyMenuDataProps): 
 
   useEffect(() => {
     fetchWeeklyMenu()
-  }, [user?.id, user?.tipoUsuario, weekStart]) // Depend on user.id and tipoUsuario specifically
+  }, [user?.id, weekStart]) // Simplified dependency array
 
   const refetch = async () => {
     await fetchWeeklyMenu()
