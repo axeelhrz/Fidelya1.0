@@ -1,79 +1,82 @@
-import { useState, useEffect, useMemo } from 'react'
-import { MenuService } from '@/services/menuService'
-import { DayMenuOptions, WeekInfo } from '@/types/order'
-import { DayMenuDisplay } from '@/types/menu'
+"use client"
 
-export function useWeeklyMenuData() {
-  const [weekInfo, setWeekInfo] = useState<WeekInfo | null>(null)
-  const [menuData, setMenuData] = useState<DayMenuDisplay[]>([])
+import { useState, useEffect } from 'react'
+import { MenuService } from '@/services/menuService'
+import { DayMenuDisplay } from '@/types/menu'
+import { User } from '@/types/panel'
+
+interface UseWeeklyMenuDataProps {
+  user: User | null
+  weekStart?: string
+}
+
+interface UseWeeklyMenuDataReturn {
+  weekMenu: DayMenuDisplay[]
+  isLoading: boolean
+  error: string | null
+  weekInfo: {
+    weekStart: string
+    weekEnd: string
+    weekLabel: string
+    isOrderingAllowed: boolean
+    orderDeadline: Date
+  } | null
+  refetch: () => Promise<void>
+}
+
+export function useWeeklyMenuData({ user, weekStart }: UseWeeklyMenuDataProps): UseWeeklyMenuDataReturn {
+  const [weekMenu, setWeekMenu] = useState<DayMenuDisplay[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [weekInfo, setWeekInfo] = useState<UseWeeklyMenuDataReturn['weekInfo']>(null)
 
-  useEffect(() => {
-    async function loadWeeklyData() {
-      setIsLoading(true)
-      setError(null)
-      
-      try {
-        // Obtener información de la semana actual
-        const currentWeekInfo = MenuService.getCurrentWeekInfo()
-        setWeekInfo(currentWeekInfo)
-        
-        // Cargar menú de la semana - esto devuelve WeekMenuDisplay
-        const weekMenu = await MenuService.getWeeklyMenu(currentWeekInfo.weekStart)
-        
-        // Extraer el array de días del objeto WeekMenuDisplay
-        setMenuData(weekMenu.days)
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Error al cargar los datos'
-        setError(errorMessage)
-        console.error('Error loading weekly data:', err)
-        // Asegurar que menuData sea un array vacío en caso de error
-        setMenuData([])
-      } finally {
-        setIsLoading(false)
-      }
+  const fetchWeeklyMenu = async () => {
+    if (!user) {
+      setIsLoading(false)
+      return
     }
 
-    loadWeeklyData()
-  }, [])
-
-  // Usar useMemo para evitar recálculos innecesarios que causan re-renders
-  const weekDays = useMemo(() => {
-    return Array.isArray(menuData) ? menuData.map(day => day.date) : []
-  }, [menuData])
-
-  const weekDisplayText = useMemo(() => {
-    return weekInfo 
-      ? MenuService.getWeekDisplayText(weekInfo.weekStart, weekInfo.weekEnd)
-      : ''
-  }, [weekInfo])
-
-  const refetch = async () => {
-    if (!weekInfo) return
-    
-    setIsLoading(true)
-    setError(null)
-    
     try {
-      const weekMenu = await MenuService.getWeeklyMenu(weekInfo.weekStart)
-      setMenuData(weekMenu.days)
+      setIsLoading(true)
+      setError(null)
+
+      // Obtener información de la semana actual
+      const currentWeekInfo = MenuService.getCurrentWeekInfo()
+      
+      // Obtener menú semanal con precios según tipo de usuario
+      const menuData = await MenuService.getWeeklyMenuForUser(user.tipoUsuario, weekStart)
+      
+      setWeekMenu(menuData)
+      setWeekInfo({
+        weekStart: currentWeekInfo.weekStart,
+        weekEnd: currentWeekInfo.weekEnd,
+        weekLabel: MenuService.getWeekDisplayText(currentWeekInfo.weekStart, currentWeekInfo.weekEnd),
+        isOrderingAllowed: currentWeekInfo.isOrderingAllowed,
+        orderDeadline: currentWeekInfo.orderDeadline
+      })
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al recargar los datos'
-      setError(errorMessage)
-      setMenuData([])
+      console.error('Error fetching weekly menu:', err)
+      setError(err instanceof Error ? err.message : 'Error al cargar el menú')
+      setWeekMenu([])
+      setWeekInfo(null)
     } finally {
       setIsLoading(false)
     }
   }
 
+  useEffect(() => {
+    fetchWeeklyMenu()
+  }, [user, weekStart])
+
+  const refetch = async () => {
+    await fetchWeeklyMenu()
+  }
+
   return {
-    weekInfo,
-    menuData,
-    weekDays,
-    weekDisplayText,
+    weekMenu,
     isLoading,
     error,
+    weekInfo,
     refetch
   }
 }

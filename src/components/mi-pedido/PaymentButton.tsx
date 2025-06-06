@@ -1,151 +1,196 @@
 "use client"
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { OrderService } from '@/services/orderService'
+import { OrderSummaryByChild, User } from '@/types/panel'
 import { 
   CreditCard, 
-  Loader2, 
+  AlertCircle, 
   CheckCircle, 
-  AlertTriangle,
-  Lock
+  Clock,
+  Shield,
+  Users,
+  User as UserIcon
 } from 'lucide-react'
-import { OrderValidation } from '@/types/order'
-import { PaymentService } from '@/services/paymentService'
-import { useToast } from '@/hooks/use-toast'
 
 interface PaymentButtonProps {
-  validation: OrderValidation
+  summary: OrderSummaryByChild
+  weekDays: string[]
+  isOrderingAllowed: boolean
+  onProceedToPayment: () => void
+  isProcessingPayment: boolean
   isReadOnly: boolean
-  isSaving: boolean
-  total: number
-  userEmail: string
-  onSaveOrder: () => Promise<string | null>
+  user: User
 }
 
 export function PaymentButton({
-  validation,
+  summary,
+  weekDays,
+  isOrderingAllowed,
+  onProceedToPayment,
+  isProcessingPayment,
   isReadOnly,
-  isSaving,
-  total,
-  userEmail,
-  onSaveOrder
+  user
 }: PaymentButtonProps) {
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
-  const { toast } = useToast()
-
-  const handleConfirmAndPay = async () => {
-    if (!validation.canProceedToPayment) {
-      toast({
-        title: "No se puede proceder",
-        description: "Por favor, completa todas las selecciones requeridas.",
-        variant: "destructive"
-      })
-      return
-    }
-
-    setIsProcessingPayment(true)
-
-    try {
-      // 1. Guardar el pedido
-      const orderId = await onSaveOrder()
-      
-      if (!orderId) {
-        throw new Error('No se pudo guardar el pedido')
-      }
-
-      // 2. Crear el pago
-      const paymentRequest = {
-        orderId,
-        amount: total,
-        currency: 'CLP' as const,
-        description: `Pedido semanal Casino Escolar - ${new Date().toLocaleDateString('es-CL')}`,
-        userEmail,
-        returnUrl: `${window.location.origin}/mi-pedido/success?orderId=${orderId}`,
-        cancelUrl: `${window.location.origin}/mi-pedido?cancelled=true`
-      }
-
-      const paymentResponse = await PaymentService.createPayment(paymentRequest)
-
-      if (paymentResponse.success && paymentResponse.redirectUrl) {
-        // Redirigir a la pasarela de pago
-        window.location.href = paymentResponse.redirectUrl
-      } else {
-        throw new Error(paymentResponse.error || 'Error al procesar el pago')
-      }
-
-    } catch (error) {
-      console.error('Error processing payment:', error)
-      toast({
-        title: "Error al procesar el pago",
-        description: error instanceof Error ? error.message : "Ocurrió un error inesperado",
-        variant: "destructive"
-      })
-    } finally {
-      setIsProcessingPayment(false)
-    }
-  }
+  
+  // Validar pedido
+  const validation = OrderService.validateOrderByChild(
+    summary.selections,
+    weekDays,
+    isOrderingAllowed,
+    user
+  )
 
   if (isReadOnly) {
     return (
-      <Alert variant="success">
-        <CheckCircle className="h-4 w-4" />
-        <AlertDescription>
-          Tu pedido ha sido confirmado y pagado exitosamente.
-        </AlertDescription>
-      </Alert>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+            <CheckCircle className="w-5 h-5" />
+            Pedido Confirmado
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="default" className="border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20">
+            <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <AlertDescription className="text-emerald-800 dark:text-emerald-200">
+              Tu pedido ha sido confirmado y pagado exitosamente. Podrás ver los detalles en tu historial de pedidos.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
     )
   }
 
-  const isLoading = isSaving || isProcessingPayment
-  const canProceed = validation.canProceedToPayment && !isLoading
+  const isLoading = isProcessingPayment
+  const canProceed = validation.canProceedToPayment && !isLoading && summary.total > 0
 
   return (
-    <div className="space-y-4">
-      {/* Información de seguridad */}
-      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-        <Lock className="w-4 h-4" />
-        <span>Pago seguro procesado por GetNet</span>
-      </div>
-
-      {/* Botón principal */}
-      <Button
-        onClick={handleConfirmAndPay}
-        disabled={!canProceed}
-        size="lg"
-        className="w-full"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            {isSaving ? 'Guardando pedido...' : 'Procesando pago...'}
-          </>
-        ) : (
-          <>
-            <CreditCard className="w-4 h-4 mr-2" />
-            Confirmar y pagar ${total.toLocaleString('es-CL')} CLP
-          </>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CreditCard className="w-5 h-5" />
+          Confirmar Pedido
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Validaciones y errores */}
+        {validation.errors.length > 0 && (
+          <div className="space-y-2">
+            {validation.errors.map((error, index) => (
+              <Alert key={index} variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ))}
+          </div>
         )}
-      </Button>
 
-      {/* Información adicional */}
-      {!validation.canProceedToPayment && (
-        <Alert variant="warning">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {validation.errors.length > 0 
-              ? "Completa todas las selecciones requeridas para continuar."
-              : "Revisa tu pedido antes de proceder al pago."
-            }
-          </AlertDescription>
-        </Alert>
-      )}
+        {/* Advertencias */}
+        {validation.warnings.length > 0 && (
+          <div className="space-y-2">
+            {validation.warnings.map((warning, index) => (
+              <Alert key={index} variant="default" className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
+                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <AlertDescription className="text-amber-800 dark:text-amber-200">
+                  {warning}
+                </AlertDescription>
+              </Alert>
+            ))}
+          </div>
+        )}
 
-      <div className="text-xs text-slate-500 dark:text-slate-400 text-center">
-        Al confirmar tu pedido, aceptas los términos y condiciones del servicio.
-        <br />
-        Una vez confirmado, el pedido no podrá ser modificado.
-      </div>
-    </div>
+        {/* Información de deadline */}
+        {!isOrderingAllowed && (
+          <Alert variant="destructive">
+            <Clock className="h-4 w-4" />
+            <AlertDescription>
+              El tiempo para realizar pedidos ha expirado. Los pedidos cierran los miércoles a las 13:00.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Resumen de validación para apoderados */}
+        {user.tipoUsuario === 'apoderado' && summary.selections.length > 0 && (
+          <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                Resumen por hijo
+              </span>
+            </div>
+            <div className="space-y-1 text-xs">
+              {Object.values(summary.resumenPorHijo).map((resumen) => (
+                <div key={resumen.hijo.id} className="flex justify-between text-blue-800 dark:text-blue-200">
+                  <span>{resumen.hijo.name}</span>
+                  <span>{resumen.almuerzos} almuerzo(s), {resumen.colaciones} colación(es)</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Resumen para funcionarios */}
+        {user.tipoUsuario === 'funcionario' && summary.selections.length > 0 && (
+          <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+            <div className="flex items-center gap-2 mb-2">
+              <UserIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <span className="text-sm font-medium text-green-900 dark:text-green-100">
+                Pedido personal
+              </span>
+            </div>
+            <div className="text-xs text-green-800 dark:text-green-200">
+              {summary.totalAlmuerzos} almuerzo(s) • {summary.totalColaciones} colación(es)
+            </div>
+          </div>
+        )}
+
+        {/* Información de seguridad */}
+        <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+              Pago Seguro
+            </span>
+          </div>
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            Tu pago será procesado de forma segura. Una vez confirmado, recibirás un comprobante por email.
+          </p>
+        </div>
+
+        {/* Botón de pago */}
+        <Button
+          onClick={onProceedToPayment}
+          disabled={!canProceed}
+          className="w-full"
+          size="lg"
+        >
+          {isLoading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              Procesando Pago...
+            </>
+          ) : (
+            <>
+              <CreditCard className="w-4 h-4 mr-2" />
+              {summary.total > 0 
+                ? `Pagar $${summary.total.toLocaleString('es-CL')}`
+                : 'Selecciona menús para continuar'
+              }
+            </>
+          )}
+        </Button>
+
+        {/* Texto de ayuda */}
+        <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+          {user.tipoUsuario === 'apoderado' 
+            ? 'Al confirmar, estarás realizando el pedido para todos los hijos seleccionados'
+            : 'Al confirmar, estarás realizando tu pedido personal para la semana'
+          }
+        </p>
+      </CardContent>
+    </Card>
   )
 }

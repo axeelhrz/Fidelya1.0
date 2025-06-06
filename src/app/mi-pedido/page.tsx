@@ -1,218 +1,396 @@
 "use client"
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { onAuthStateChanged } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
-import { auth, db } from '@/app/lib/firebase'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { OrderHeader } from '@/components/mi-pedido/OrderHeader'
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { useAuth } from '@/hooks/useAuth'
+import { useOrderStore } from '@/store/orderStore'
+import { useWeeklyMenuData } from '@/hooks/useWeeklyMenuData'
+import { OrderService } from '@/services/orderService'
+import { MenuService } from '@/services/menuService'
+import { Navbar } from '@/components/panel/Navbar'
+import { ChildSelector } from '@/components/mi-pedido/ChildSelector'
 import { DaySelector } from '@/components/mi-pedido/DaySelector'
 import { OrderSummary } from '@/components/mi-pedido/OrderSummary'
+import { OrderHeader } from '@/components/mi-pedido/OrderHeader'
 import { PaymentButton } from '@/components/mi-pedido/PaymentButton'
-import { useWeeklyMenuData } from '@/hooks/useWeeklyMenuData'
-import { useOrderManagement } from '@/hooks/useOrderManagement'
-import { User } from '@/types/panel'
-import { AlertTriangle, ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
+import { Card, CardContent } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { 
+  AlertCircle, 
+  Clock, 
+  CheckCircle, 
+  RefreshCw,
+  Calendar,
+  Users,
+  User as UserIcon
+} from 'lucide-react'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 export default function MiPedidoPage() {
-  const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  const [isAuthLoading, setIsAuthLoading] = useState(true)
-  const [authError, setAuthError] = useState<string | null>(null)
+  const { user, isLoading: authLoading } = useAuth()
+  const { 
+    selectionsByChild, 
+    setUserType, 
+    setChildren,
+    loadExistingSelections,
+    clearSelectionsByChild,
+    getOrderSummaryByChild
+  } = useOrderStore()
 
-  const {
-    weekInfo,
-    menuData,
-    weekDays,
-    weekDisplayText,
-    isLoading: isMenuLoading,
-    error: menuError
-  } = useWeeklyMenuData()
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [existingOrder, setExistingOrder] = useState<any>(null)
+  const [isLoadingOrder, setIsLoadingOrder] = useState(true)
 
-  const {
-    isLoading: isOrderLoading,
-    isSaving,
-    validation,
-    isReadOnly,
-    saveOrder,
-    orderSummary
-  } = useOrderManagement({
-    user,
-    weekStart: weekInfo?.weekStart || '',
-    weekDays,
-    isOrderingAllowed: weekInfo?.isOrderingAllowed || false
+  // Obtener datos del menú semanal
+  const { weekMenu, isLoading: menuLoading, error: menuError, weekInfo, refetch } = useWeeklyMenuData({ 
+    user 
   })
 
-  // Autenticación y carga de usuario
+  // Cargar pedido existente
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
-          if (userDoc.exists()) {
-            const userData = userDoc.data()
-            setUser({
-              id: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              firstName: userData.firstName || '',
-              lastName: userData.lastName || '',
-              userType: userData.userType || 'estudiante',
-              children: userData.children || []
-            })
-          } else {
-            setAuthError('No se encontraron datos del usuario')
-          }
-        } catch (error) {
-          console.error('Error loading user data:', error)
-          setAuthError('Error al cargar los datos del usuario')
+    const loadExistingOrder = async () => {
+      if (!user || !weekInfo) return
+
+      try {
+        setIsLoadingOrder(true)
+        const order = await OrderService.getUserOrder(user.id, weekInfo.weekStart)
+        
+        if (order) {
+          setExistingOrder(order)
+          loadExistingSelections(order.resumenPedido)
+        } else {
+          setExistingOrder(null)
+          clearSelectionsByChild()
         }
-      } else {
-        router.push('/auth/login?redirect=/mi-pedido')
+      } catch (error) {
+        console.error('Error loading existing order:', error)
+      } finally {
+        setIsLoadingOrder(false)
       }
-      setIsAuthLoading(false)
-    })
+    }
 
-    return () => unsubscribe()
-  }, [router])
+    loadExistingOrder()
+  }, [user, weekInfo, loadExistingSelections, clearSelectionsByChild])
 
-  // Estados de carga
-  const isLoading = isAuthLoading || isMenuLoading || isOrderLoading
-  const hasError = authError || menuError
+  // Configurar tipo de usuario y hijos
+  useEffect(() => {
+    if (user) {
+      setUserType(user.tipoUsuario)
+      if (user.tipoUsuario === 'apoderado' && user.children) {
+        setChildren(user.children.filter(child => child.active))
+      }
+    }
+  }, [user, setUserType, setChildren])
 
-  if (isLoading) {
-    return <LoadingSkeleton />
+  const handleProceedToPayment = async () => {
+    if (!user || !weekInfo) return
+
+    try {
+      setIsProcessingPayment(true)
+      
+      const summary = getOrderSummaryByChild()
+      
+      // Validar pedido
+      const validation = OrderService.validateOrderByChild(
+        summary.selections,
+        weekMenu.map(day => day.date),
+        weekInfo.isOrderingAllowed,
+        user
+      )
+
+      if (!validation.isValid) {
+        throw new Error(validation.errors[0])
+      }
+
+      // Crear o actualizar pedido
+      const orderData = {
+        userId: user.id,
+        tipoUsuario: user.tipoUsuario,
+        weekStart: weekInfo.weekStart,
+        resumenPedido: summary.selections,
+        total: summary.total,
+        status: 'pendiente' as const
+      }
+
+      if (existingOrder) {
+        await OrderService.updateOrder(existingOrder.id, orderData)
+      } else {
+        const orderId = await OrderService.saveOrder(orderData)
+        setExistingOrder({ ...orderData, id: orderId })
+      }
+
+      // Simular proceso de pago (aquí iría la integración con GetNet)
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // Marcar como pagado
+      if (existingOrder) {
+        await OrderService.updateOrder(existingOrder.id, {
+          status: 'pagado',
+          paidAt: new Date(),
+          paymentId: `payment_${Date.now()}`
+        })
+      }
+
+      // Actualizar estado local
+      setExistingOrder(prev => prev ? { ...prev, status: 'pagado' } : null)
+
+    } catch (error) {
+      console.error('Error processing payment:', error)
+      alert(error instanceof Error ? error.message : 'Error al procesar el pago')
+    } finally {
+      setIsProcessingPayment(false)
+    }
   }
 
-  if (hasError) {
+  const handleLogout = () => {
+    clearSelectionsByChild()
+  }
+
+  const isReadOnly = existingOrder?.status === 'pagado' || !weekInfo?.isOrderingAllowed
+  const summary = getOrderSummaryByChild()
+
+  if (authLoading || menuLoading || isLoadingOrder) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
-        <div className="max-w-md w-full space-y-4">
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              {authError || menuError}
-            </AlertDescription>
-          </Alert>
-          <Button asChild variant="outline" className="w-full">
-            <Link href="/panel">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver al panel
-            </Link>
-          </Button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+        <div className="container mx-auto px-4 py-8 space-y-6">
+          <Skeleton className="h-16 w-full" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <Skeleton className="h-32 w-full" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <Skeleton key={i} className="h-96 w-full" />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-6">
+              <Skeleton className="h-64 w-full" />
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
-  if (!weekInfo || !user) {
-    return null
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Acceso Requerido</h2>
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
+              Debes iniciar sesión para acceder a esta página
+            </p>
+            <Button onClick={() => window.location.href = '/auth/login'}>
+              Iniciar Sesión
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (menuError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+        <Navbar user={user} onLogout={handleLogout} />
+        <div className="container mx-auto px-4 py-8">
+          <Card className="w-full max-w-2xl mx-auto">
+            <CardContent className="p-6 text-center">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Error al cargar el menú</h2>
+              <p className="text-slate-600 dark:text-slate-400 mb-4">{menuError}</p>
+              <Button onClick={refetch} className="gap-2">
+                <RefreshCw className="w-4 h-4" />
+                Reintentar
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Navegación */}
-        <div className="mb-6">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/panel">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver al panel
-            </Link>
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+      <Navbar user={user} onLogout={handleLogout} />
+      
+      <div className="container mx-auto px-4 py-8 space-y-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-4"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <Calendar className="w-6 h-6 text-blue-600" />
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+              Mi Pedido Semanal
+            </h1>
+          </div>
+          
+          {weekInfo && (
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              <Badge variant="outline" className="text-sm">
+                {weekInfo.weekLabel}
+              </Badge>
+              
+              {weekInfo.isOrderingAllowed ? (
+                <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Pedidos Abiertos
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                  <Clock className="w-3 h-3 mr-1" />
+                  Pedidos Cerrados
+                </Badge>
+              )}
 
-        {/* Encabezado */}
-        <OrderHeader 
-          weekInfo={weekInfo} 
-          weekDisplayText={weekDisplayText} 
-        />
+              {existingOrder?.status === 'pagado' && (
+                <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Pedido Pagado
+                </Badge>
+              )}
+            </div>
+          )}
+        </motion.div>
 
-        {/* Contenido principal */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Selección de menús por día */}
+        {/* Alertas importantes */}
+        {!weekInfo?.isOrderingAllowed && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Alert variant="destructive">
+              <Clock className="h-4 w-4" />
+              <AlertDescription>
+                El tiempo para realizar pedidos ha expirado. Los pedidos cierran los miércoles a las 13:00.
+                {weekInfo && (
+                  <span className="block mt-1 text-sm">
+                    Próximo deadline: {format(weekInfo.orderDeadline, "EEEE d 'de' MMMM 'a las' HH:mm", { locale: es })}
+                  </span>
+                )}
+              </AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Contenido principal */}
           <div className="lg:col-span-2 space-y-6">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-              Selecciona tu menú por día
-            </h2>
-            
-            {menuData.length === 0 ? (
-              <Alert variant="warning">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  No hay menús disponibles para esta semana.
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <div className="grid gap-6">
-                {menuData.map((dayMenu) => (
-                  <DaySelector
-                    key={dayMenu.date}
-                    dayMenu={dayMenu}
-                    isReadOnly={isReadOnly}
-                  />
-                ))}
-              </div>
+            {/* Selector de hijo (solo para apoderados) */}
+            {user.tipoUsuario === 'apoderado' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <ChildSelector user={user} isReadOnly={isReadOnly} />
+              </motion.div>
             )}
+
+            {/* Información del usuario funcionario */}
+            {user.tipoUsuario === 'funcionario' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <UserIcon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                      <span className="font-medium text-slate-900 dark:text-slate-100">
+                        Pedido Personal
+                      </span>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                        Funcionario
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Menús por día */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="space-y-4"
+            >
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Seleccionar Menús por Día
+              </h2>
+              
+              {weekMenu.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                      No hay menús disponibles
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      El menú para esta semana aún no ha sido publicado por el administrador.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {weekMenu.map((dayMenu, index) => (
+                    <motion.div
+                      key={dayMenu.date}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 + index * 0.1 }}
+                    >
+                      <DaySelector
+                        dayMenu={dayMenu}
+                        user={user}
+                        isReadOnly={isReadOnly}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
           </div>
 
-          {/* Resumen y pago */}
-          <div className="lg:col-span-1 space-y-6">
+          {/* Sidebar - Resumen del pedido */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="space-y-6"
+          >
             <OrderSummary
-              orderSummary={orderSummary}
-              validation={validation}
-              userType={user.userType}
-              isReadOnly={isReadOnly}
+              user={user}
+              onProceedToPayment={handleProceedToPayment}
+              isProcessingPayment={isProcessingPayment}
             />
 
-            <PaymentButton
-              validation={validation}
-              isReadOnly={isReadOnly}
-              isSaving={isSaving}
-              total={orderSummary.total}
-              userEmail={user.email}
-              onSaveOrder={saveOrder}
-            />
-          </div>
-        </div>
-
-        {/* Información adicional */}
-        <div className="mt-12 text-center text-sm text-slate-500 dark:text-slate-400">
-          <p>
-            ¿Necesitas ayuda? Contacta al administrador del casino escolar.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* Header skeleton */}
-          <div className="text-center space-y-4">
-            <Skeleton className="h-8 w-64 mx-auto" />
-            <Skeleton className="h-6 w-48 mx-auto" />
-            <Skeleton className="h-16 w-full max-w-2xl mx-auto" />
-          </div>
-
-          {/* Content skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Skeleton key={i} className="h-64 w-full" />
-              ))}
-            </div>
-            <div className="lg:col-span-1">
-              <Skeleton className="h-96 w-full" />
-            </div>
-          </div>
+            {/* Botón de pago */}
+            {weekMenu.length > 0 && (
+              <PaymentButton
+                summary={summary}
+                weekDays={weekMenu.map(day => day.date)}
+                isOrderingAllowed={weekInfo?.isOrderingAllowed || false}
+                onProceedToPayment={handleProceedToPayment}
+                isProcessingPayment={isProcessingPayment}
+                isReadOnly={isReadOnly}
+                user={user}
+              />
+            )}
+          </motion.div>
         </div>
       </div>
     </div>
