@@ -88,6 +88,14 @@ export default function RegistroPage() {
       setError("El correo electrónico es requerido")
       return false
     }
+    
+    // Validación de email más robusta
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      setError("Por favor ingresa un correo electrónico válido")
+      return false
+    }
+    
     if (formData.password.length < 6) {
       setError("La contraseña debe tener al menos 6 caracteres")
       return false
@@ -96,6 +104,26 @@ export default function RegistroPage() {
       setError("Las contraseñas no coinciden")
       return false
     }
+
+    // Validar datos de hijos si la sección está visible
+    if (showChildrenSection) {
+      const validChildren = children.filter(child => child.name.trim() !== "")
+      for (const child of validChildren) {
+        if (!child.name.trim()) {
+          setError("El nombre del niño es requerido")
+          return false
+        }
+        if (!child.age || parseInt(child.age) < 3 || parseInt(child.age) > 18) {
+          setError("La edad del niño debe estar entre 3 y 18 años")
+          return false
+        }
+        if (!child.class.trim()) {
+          setError("La clase del niño es requerida")
+          return false
+        }
+      }
+    }
+
     return true
   }
 
@@ -113,14 +141,14 @@ export default function RegistroPage() {
       // Crear usuario en Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth, 
-        formData.email, 
+        formData.email.trim(), 
         formData.password
       )
       const user = userCredential.user
 
       // Actualizar el perfil del usuario con el nombre
       await updateProfile(user, {
-        displayName: `${formData.firstName} ${formData.lastName}`
+        displayName: `${formData.firstName.trim()} ${formData.lastName.trim()}`
       })
 
       // Preparar datos de los hijos (solo los que tienen nombre)
@@ -134,13 +162,13 @@ export default function RegistroPage() {
           }))
         : []
 
-      // Determinar el tipo de usuario basado en si tiene hijos
+      // Determinar el tipo de usuario: si tiene hijos es funcionario/padre, si no es estudiante
       const userType = validChildren.length > 0 ? 'funcionario' : 'estudiante'
 
       // Guardar datos adicionales en Firestore
       const userData = {
         id: user.uid,
-        email: formData.email,
+        email: formData.email.trim().toLowerCase(),
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         userType,
@@ -170,6 +198,12 @@ export default function RegistroPage() {
           break
         case 'auth/weak-password':
           setError('La contraseña es muy débil. Debe tener al menos 6 caracteres.')
+          break
+        case 'auth/network-request-failed':
+          setError('Error de conexión. Verifica tu conexión a internet.')
+          break
+        case 'auth/too-many-requests':
+          setError('Demasiados intentos. Intenta más tarde.')
           break
         default:
           setError('Error al crear la cuenta. Intenta nuevamente.')
@@ -288,7 +322,7 @@ export default function RegistroPage() {
                   transition={{ duration: 0.6, delay: 0.6 }}
                 >
                   <label className="label-educational">
-                    Nombre
+                    Nombre *
                   </label>
                   <Input
                     type="text"
@@ -307,7 +341,7 @@ export default function RegistroPage() {
                   transition={{ duration: 0.6, delay: 0.7 }}
                 >
                   <label className="label-educational">
-                    Apellido
+                    Apellido *
                   </label>
                   <Input
                     type="text"
@@ -328,7 +362,7 @@ export default function RegistroPage() {
                 transition={{ duration: 0.6, delay: 0.8 }}
               >
                 <label className="label-educational">
-                  Correo Electrónico
+                  Correo Electrónico *
                 </label>
                 <Input
                   type="email"
@@ -348,16 +382,17 @@ export default function RegistroPage() {
                 transition={{ duration: 0.6, delay: 0.9 }}
               >
                 <label className="label-educational">
-                  Contraseña
+                  Contraseña *
                 </label>
                 <Input
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  placeholder="••••••••"
+                  placeholder="Mínimo 6 caracteres"
                   required
                   disabled={isLoading}
+                  minLength={6}
                 />
               </motion.div>
 
@@ -367,16 +402,17 @@ export default function RegistroPage() {
                 transition={{ duration: 0.6, delay: 1 }}
               >
                 <label className="label-educational">
-                  Confirmar Contraseña
+                  Confirmar Contraseña *
                 </label>
                 <Input
                   type="password"
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  placeholder="••••••••"
+                  placeholder="Repite tu contraseña"
                   required
                   disabled={isLoading}
+                  minLength={6}
                 />
               </motion.div>
 
@@ -406,7 +442,7 @@ export default function RegistroPage() {
                       showChildrenSection 
                         ? 'bg-emerald-600 text-white' 
                         : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-300'
-                    }`}
+                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {showChildrenSection ? 'Ocultar' : 'Agregar'}
                   </motion.button>
@@ -444,7 +480,7 @@ export default function RegistroPage() {
                               type="button"
                               onClick={() => removeChild(child.id)}
                               disabled={isLoading}
-                              className="text-red-500 hover:text-red-700 text-sm"
+                              className="text-red-500 hover:text-red-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               Eliminar
                             </button>
@@ -516,10 +552,10 @@ export default function RegistroPage() {
                     <motion.button
                       type="button"
                       onClick={addChild}
-                      whileHover={{ y: -1 }}
-                      whileTap={{ scale: 0.98 }}
+                      whileHover={!isLoading ? { y: -1 } : {}}
+                      whileTap={!isLoading ? { scale: 0.98 } : {}}
                       disabled={isLoading}
-                      className="w-full p-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-600 hover:border-emerald-400 hover:text-emerald-600 transition-all duration-300 text-sm font-medium text-clean"
+                      className="w-full p-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-600 hover:border-emerald-400 hover:text-emerald-600 transition-all duration-300 text-sm font-medium text-clean disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       + Agregar otro hijo
                     </motion.button>
@@ -632,7 +668,7 @@ export default function RegistroPage() {
             <div className="w-1 h-1 bg-slate-400 rounded-full" />
             <span className="text-clean">Sistema de gestión educativa</span>
             <div className="w-1 h-1 bg-slate-400 rounded-full" />
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     </div>
