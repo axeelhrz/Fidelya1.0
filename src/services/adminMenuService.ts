@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { AdminMenuItem, AdminWeekMenu, AdminDayMenu, MenuOperationResult } from '@/types/adminMenu'
-import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks } from 'date-fns'
+import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isValid, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export class AdminMenuService {
@@ -134,16 +134,28 @@ export class AdminMenuService {
       const batch = writeBatch(db)
       const menusRef = collection(db, this.COLLECTION_NAME)
 
+      // Validar fechas
+      const sourceDate = this.parseWeekDate(sourceWeek)
+      const targetDate = this.parseWeekDate(targetWeek)
+      
+      if (!sourceDate || !targetDate) {
+        return {
+          success: false,
+          message: 'Fechas de semana inválidas'
+        }
+      }
+
       // Calcular las nuevas fechas
-      const sourceDate = new Date(sourceWeek)
-      const targetDate = new Date(targetWeek)
       const daysDiff = Math.floor((targetDate.getTime() - sourceDate.getTime()) / (1000 * 60 * 60 * 24))
 
       let itemsCreated = 0
 
       for (const day of sourceMenu.days) {
-        const newDate = format(addDays(new Date(day.date), daysDiff), 'yyyy-MM-dd')
-        const newDay = format(addDays(new Date(day.date), daysDiff), 'EEEE', { locale: es })
+        const dayDate = this.parseWeekDate(day.date)
+        if (!dayDate) continue
+
+        const newDate = format(addDays(dayDate, daysDiff), 'yyyy-MM-dd')
+        const newDay = format(addDays(dayDate, daysDiff), 'EEEE', { locale: es })
 
         // Duplicar almuerzos
         for (const almuerzo of day.almuerzos) {
@@ -197,24 +209,43 @@ export class AdminMenuService {
   }
 
   static getWeekNavigation(currentWeek: string) {
-    const current = new Date(currentWeek)
-    const now = new Date()
-    const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 })
-    
-    const maxFutureWeek = addWeeks(currentWeekStart, this.MAX_WEEKS_AHEAD)
-    const maxPastWeek = subWeeks(currentWeekStart, this.MAX_WEEKS_BACK)
-    
-    const canGoBack = current > maxPastWeek
-    const canGoForward = current < maxFutureWeek
-    
-    const weekEnd = endOfWeek(current, { weekStartsOn: 1 })
-    const weekLabel = `Del ${format(current, 'd')} al ${format(weekEnd, 'd')} de ${format(weekEnd, 'MMMM yyyy', { locale: es })}`
-    
-    return {
-      currentWeek,
-      canGoBack,
-      canGoForward,
-      weekLabel
+    try {
+      const current = this.parseWeekDate(currentWeek)
+      if (!current) {
+        throw new Error('Fecha de semana inválida')
+      }
+
+      const now = new Date()
+      const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 })
+      
+      const maxFutureWeek = addWeeks(currentWeekStart, this.MAX_WEEKS_AHEAD)
+      const maxPastWeek = subWeeks(currentWeekStart, this.MAX_WEEKS_BACK)
+      
+      const canGoBack = current > maxPastWeek
+      const canGoForward = current < maxFutureWeek
+      
+      const weekEnd = endOfWeek(current, { weekStartsOn: 1 })
+      const weekLabel = `Del ${format(current, 'd')} al ${format(weekEnd, 'd')} de ${format(weekEnd, 'MMMM yyyy', { locale: es })}`
+      
+      return {
+        currentWeek,
+        canGoBack,
+        canGoForward,
+        weekLabel
+      }
+    } catch (error) {
+      console.error('Error in getWeekNavigation:', error)
+      // Fallback a la semana actual si hay error
+      const fallbackWeek = this.getCurrentWeekStart()
+      const fallbackDate = this.parseWeekDate(fallbackWeek)!
+      const fallbackEnd = endOfWeek(fallbackDate, { weekStartsOn: 1 })
+      
+      return {
+        currentWeek: fallbackWeek,
+        canGoBack: true,
+        canGoForward: true,
+        weekLabel: `Del ${format(fallbackDate, 'd')} al ${format(fallbackEnd, 'd')} de ${format(fallbackEnd, 'MMMM yyyy', { locale: es })}`
+      }
     }
   }
 
@@ -225,15 +256,44 @@ export class AdminMenuService {
   }
 
   static getNextWeek(currentWeek: string): string {
-    const current = new Date(currentWeek)
+    const current = this.parseWeekDate(currentWeek)
+    if (!current) {
+      return this.getCurrentWeekStart()
+    }
     const nextWeek = addWeeks(current, 1)
     return format(nextWeek, 'yyyy-MM-dd')
   }
 
   static getPreviousWeek(currentWeek: string): string {
-    const current = new Date(currentWeek)
+    const current = this.parseWeekDate(currentWeek)
+    if (!current) {
+      return this.getCurrentWeekStart()
+    }
     const prevWeek = subWeeks(current, 1)
     return format(prevWeek, 'yyyy-MM-dd')
+  }
+
+  private static parseWeekDate(dateString: string): Date | null {
+    try {
+      // Intentar parsear como ISO string primero
+      let date = parseISO(dateString)
+      
+      // Si no es válida, intentar crear directamente
+      if (!isValid(date)) {
+        date = new Date(dateString)
+      }
+      
+      // Verificar que la fecha sea válida
+      if (!isValid(date)) {
+        console.error('Invalid date string:', dateString)
+        return null
+      }
+      
+      return date
+    } catch (error) {
+      console.error('Error parsing date:', dateString, error)
+      return null
+    }
   }
 
   private static async getItemByCodeAndDate(code: string, date: string, type: string): Promise<AdminMenuItem | null> {
@@ -271,7 +331,11 @@ export class AdminMenuService {
   }
 
   private static buildWeekMenuStructure(weekStart: string, items: AdminMenuItem[]): AdminWeekMenu {
-    const startDate = new Date(weekStart)
+    const startDate = this.parseWeekDate(weekStart)
+    if (!startDate) {
+      throw new Error('Fecha de inicio de semana inválida')
+    }
+
     const endDate = endOfWeek(startDate, { weekStartsOn: 1 })
     const weekLabel = `Del ${format(startDate, 'd')} al ${format(endDate, 'd')} de ${format(endDate, 'MMMM yyyy', { locale: es })}`
     

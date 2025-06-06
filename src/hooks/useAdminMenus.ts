@@ -18,8 +18,13 @@ export function useAdminMenus() {
 
   // Inicializar con la semana actual
   useEffect(() => {
-    const currentWeekStart = AdminMenuService.getCurrentWeekStart()
-    setCurrentWeek(currentWeekStart)
+    try {
+      const currentWeekStart = AdminMenuService.getCurrentWeekStart()
+      setCurrentWeek(currentWeekStart)
+    } catch (err) {
+      console.error('Error initializing current week:', err)
+      setError('Error al inicializar la semana actual')
+    }
   }, [])
 
   // Cargar menú cuando cambia la semana
@@ -49,16 +54,25 @@ export function useAdminMenus() {
   }, [toast])
 
   const navigateWeek = useCallback((direction: 'next' | 'prev') => {
-    const navigation = AdminMenuService.getWeekNavigation(currentWeek)
-    
-    if (direction === 'next' && navigation.canGoForward) {
-      const nextWeek = AdminMenuService.getNextWeek(currentWeek)
-      setCurrentWeek(nextWeek)
-    } else if (direction === 'prev' && navigation.canGoBack) {
-      const prevWeek = AdminMenuService.getPreviousWeek(currentWeek)
-      setCurrentWeek(prevWeek)
+    try {
+      const navigation = AdminMenuService.getWeekNavigation(currentWeek)
+      
+      if (direction === 'next' && navigation.canGoForward) {
+        const nextWeek = AdminMenuService.getNextWeek(currentWeek)
+        setCurrentWeek(nextWeek)
+      } else if (direction === 'prev' && navigation.canGoBack) {
+        const prevWeek = AdminMenuService.getPreviousWeek(currentWeek)
+        setCurrentWeek(prevWeek)
+      }
+    } catch (err) {
+      console.error('Error navigating week:', err)
+      toast({
+        title: 'Error',
+        description: 'Error al navegar entre semanas',
+        variant: 'destructive'
+      })
     }
-  }, [currentWeek])
+  }, [currentWeek, toast])
 
   const openModal = useCallback((
     mode: 'create' | 'edit',
@@ -156,9 +170,16 @@ export function useAdminMenus() {
     }
   }, [currentWeek, loadWeekMenu, closeModal, toast])
 
-  const deleteMenuItem = useCallback(async (id: string): Promise<MenuOperationResult> => {
+  const deleteMenuItem = useCallback(async (item: AdminMenuItem): Promise<MenuOperationResult> => {
     try {
-      const result = await AdminMenuService.deleteMenuItem(id)
+      if (!item.id) {
+        return {
+          success: false,
+          message: 'ID del menú no válido'
+        }
+      }
+
+      const result = await AdminMenuService.deleteMenuItem(item.id)
       
       if (result.success) {
         toast({
@@ -229,7 +250,18 @@ export function useAdminMenus() {
   }, [currentWeek, loadWeekMenu])
 
   const getWeekNavigation = useCallback(() => {
-    return AdminMenuService.getWeekNavigation(currentWeek)
+    try {
+      return AdminMenuService.getWeekNavigation(currentWeek)
+    } catch (err) {
+      console.error('Error getting week navigation:', err)
+      // Fallback navigation
+      return {
+        currentWeek,
+        canGoBack: true,
+        canGoForward: true,
+        weekLabel: 'Semana actual'
+      }
+    }
   }, [currentWeek])
 
   return {
