@@ -7,8 +7,7 @@ import {
   limit,
   Timestamp,
   doc,
-  getDoc,
-  countFromServer
+  getDoc
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { AdminStats, WeeklyOrderData, UserTypeStats, MenuPopularity } from '@/types/admin'
@@ -130,18 +129,18 @@ export class AdminService {
         funcionarios: { total: 0, withOrders: 0, revenue: 0 }
       }
 
-      // Obtener totales de usuarios por tipo
+      // Obtener totales de usuarios por tipo usando getDocs en lugar de countFromServer
       const usersRef = collection(db, 'users')
       const estudiantesQuery = query(usersRef, where('userType', '==', 'estudiante'))
       const funcionariosQuery = query(usersRef, where('userType', '==', 'funcionario'))
       
       const [estudiantesSnapshot, funcionariosSnapshot] = await Promise.all([
-        countFromServer(estudiantesQuery),
-        countFromServer(funcionariosQuery)
+        getDocs(estudiantesQuery),
+        getDocs(funcionariosQuery)
       ])
       
-      stats.estudiantes.total = estudiantesSnapshot.data().count
-      stats.funcionarios.total = funcionariosSnapshot.data().count
+      stats.estudiantes.total = estudiantesSnapshot.size
+      stats.funcionarios.total = funcionariosSnapshot.size
 
       // Calcular usuarios con pedidos
       for (const userId of userIds) {
