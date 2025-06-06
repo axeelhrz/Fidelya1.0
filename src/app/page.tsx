@@ -17,12 +17,25 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div 
+      className="min-h-screen relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #f8fafc 0%, #dbeafe 50%, #e0e7ff 100%)'
+      }}
+    >
       {/* Subtle Background Elements */}
       <div className="absolute inset-0">
         {/* Soft geometric shapes */}
         <motion.div
-          className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-blue-100/40 to-indigo-100/40 rounded-full blur-3xl"
+          className="absolute rounded-full"
+          style={{
+            top: '5rem',
+            right: '5rem',
+            width: '24rem',
+            height: '24rem',
+            background: 'linear-gradient(135deg, rgba(147, 197, 253, 0.4) 0%, rgba(165, 180, 252, 0.4) 100%)',
+            filter: 'blur(48px)'
+          }}
           animate={{
             scale: [1, 1.1, 1],
             opacity: [0.3, 0.5, 0.3],
@@ -34,7 +47,15 @@ export default function HomePage() {
           }}
         />
         <motion.div
-          className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-br from-emerald-100/40 to-teal-100/40 rounded-full blur-3xl"
+          className="absolute rounded-full"
+          style={{
+            bottom: '5rem',
+            left: '5rem',
+            width: '20rem',
+            height: '20rem',
+            background: 'linear-gradient(135deg, rgba(167, 243, 208, 0.4) 0%, rgba(110, 231, 183, 0.4) 100%)',
+            filter: 'blur(48px)'
+          }}
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.2, 0.4, 0.2],
@@ -48,14 +69,13 @@ export default function HomePage() {
         />
 
         {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 opacity-5">
-          <div
-            className="w-full h-full"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          />
-        </div>
+        <div 
+          className="absolute inset-0"
+          style={{
+            opacity: 0.05,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}
+        />
       </div>
 
       {/* Main Content */}
@@ -69,10 +89,14 @@ export default function HomePage() {
         >
           {/* Main Title */}
           <motion.h1
-            className="text-6xl md:text-7xl lg:text-8xl font-light mb-4 text-slate-800"
+            className="mb-4"
             style={{
+              fontSize: 'clamp(3.75rem, 8vw, 6rem)',
+              fontWeight: '300',
+              color: '#1e293b',
               fontFamily: "'Playfair Display', serif",
               letterSpacing: '-0.02em',
+              lineHeight: '1'
             }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -88,25 +112,47 @@ export default function HomePage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
           >
-            <div className="w-8 h-px bg-slate-300" />
-            <div className="mx-4 w-2 h-2 bg-emerald-400 rounded-full" />
-            <div className="w-8 h-px bg-slate-300" />
+            <div 
+              className="h-px"
+              style={{
+                width: '2rem',
+                backgroundColor: '#cbd5e1'
+              }}
+            />
+            <div 
+              className="mx-4 rounded-full"
+              style={{
+                width: '0.5rem',
+                height: '0.5rem',
+                backgroundColor: '#4ade80'
+              }}
+            />
+            <div 
+              className="h-px"
+              style={{
+                width: '2rem',
+                backgroundColor: '#cbd5e1'
+              }}
+            />
           </motion.div>
 
           {/* Subtitle */}
-          <motion.p
-            className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed font-light"
+          <motion.div
+            className="max-w-2xl mx-auto leading-relaxed"
             style={{
-              fontFamily: "'Inter', sans-serif",
+              fontSize: 'clamp(1.125rem, 2vw, 1.25rem)',
+              color: '#475569',
+              fontWeight: '300',
+              fontFamily: "'Inter', sans-serif"
             }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
           >
-            Gestión inteligente de alimentación escolar
+            <p>Gestión inteligente de alimentación escolar</p>
             <br />
-            <span className="text-emerald-600">Nutrición • Organización • Bienestar</span>
-          </motion.p>
+            <span style={{ color: '#059669' }}>Nutrición • Organización • Bienestar</span>
+          </motion.div>
         </motion.div>
 
         {/* Action Buttons */}
@@ -118,55 +164,83 @@ export default function HomePage() {
         >
           {/* Login Button */}
           <Link href="/auth/sign-in">
-            <motion.div
+            <motion.button
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="group"
+              className="group flex items-center justify-center rounded-xl transition-all duration-300"
+              style={{
+                padding: '1rem 2rem',
+                fontSize: '1rem',
+                fontWeight: '500',
+                backgroundColor: '#1e293b',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: "'Inter', sans-serif",
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                minWidth: '200px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#334155';
+                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#1e293b';
+                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+              }}
             >
-              <Button
-                size="lg"
-                className="px-8 py-4 text-base font-medium bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-0"
-                style={{
-                  fontFamily: "'Inter', sans-serif",
-                }}
+              Iniciar Sesión
+              <motion.span
+                className="ml-2"
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
               >
-                Iniciar Sesión
-                <motion.div
-                  className="ml-2 w-4 h-4"
-                  animate={{ x: [0, 4, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  →
-                </motion.div>
-              </Button>
-            </motion.div>
+                →
+              </motion.span>
+            </motion.button>
           </Link>
 
           {/* Register Button */}
           <Link href="/auth/sign-up">
-            <motion.div
+            <motion.button
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="group"
+              className="group flex items-center justify-center rounded-xl transition-all duration-300"
+              style={{
+                padding: '1rem 2rem',
+                fontSize: '1rem',
+                fontWeight: '500',
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(8px)',
+                color: '#374151',
+                border: '2px solid #e5e7eb',
+                cursor: 'pointer',
+                fontFamily: "'Inter', sans-serif",
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                minWidth: '200px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.borderColor = '#10b981';
+                e.currentTarget.style.color = '#059669';
+                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.color = '#374151';
+                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+              }}
             >
-              <Button
-                size="lg"
-                variant="outline"
-                className="px-8 py-4 text-base font-medium bg-white/80 backdrop-blur-sm border-2 border-slate-200 text-slate-700 hover:bg-white hover:border-emerald-300 hover:text-emerald-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                style={{
-                  fontFamily: "'Inter', sans-serif",
-                }}
+              Crear Cuenta
+              <motion.span
+                className="ml-2"
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               >
-                Crear Cuenta
-                <motion.div
-                  className="ml-2 w-4 h-4"
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                >
-                  +
-                </motion.div>
-              </Button>
-            </motion.div>
+                +
+              </motion.span>
+            </motion.button>
           </Link>
         </motion.div>
 
@@ -183,13 +257,44 @@ export default function HomePage() {
             whileHover={{ y: -5 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow duration-300">
-              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div 
+              className="flex items-center justify-center mx-auto mb-4 rounded-2xl transition-shadow duration-300"
+              style={{
+                width: '4rem',
+                height: '4rem',
+                background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              <svg className="w-8 h-8" style={{ color: '#2563eb' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-slate-800 mb-2">Gestión Simple</h3>
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <h3 
+              className="mb-2"
+              style={{
+                fontSize: '1.125rem',
+                fontWeight: '500',
+                color: '#1e293b',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
+              Gestión Simple
+            </h3>
+            <p 
+              className="leading-relaxed"
+              style={{
+                fontSize: '0.875rem',
+                color: '#475569',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
               Administra menús y pedidos de forma intuitiva
             </p>
           </motion.div>
@@ -200,13 +305,44 @@ export default function HomePage() {
             whileHover={{ y: -5 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow duration-300">
-              <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div 
+              className="flex items-center justify-center mx-auto mb-4 rounded-2xl transition-shadow duration-300"
+              style={{
+                width: '4rem',
+                height: '4rem',
+                background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              <svg className="w-8 h-8" style={{ color: '#059669' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-slate-800 mb-2">Alimentación Saludable</h3>
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <h3 
+              className="mb-2"
+              style={{
+                fontSize: '1.125rem',
+                fontWeight: '500',
+                color: '#1e293b',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
+              Alimentación Saludable
+            </h3>
+            <p 
+              className="leading-relaxed"
+              style={{
+                fontSize: '0.875rem',
+                color: '#475569',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
               Promovemos hábitos nutricionales balanceados
             </p>
           </motion.div>
@@ -217,13 +353,44 @@ export default function HomePage() {
             whileHover={{ y: -5 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow duration-300">
-              <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div 
+              className="flex items-center justify-center mx-auto mb-4 rounded-2xl transition-shadow duration-300"
+              style={{
+                width: '4rem',
+                height: '4rem',
+                background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              <svg className="w-8 h-8" style={{ color: '#d97706' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-slate-800 mb-2">Comunidad Educativa</h3>
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <h3 
+              className="mb-2"
+              style={{
+                fontSize: '1.125rem',
+                fontWeight: '500',
+                color: '#1e293b',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
+              Comunidad Educativa
+            </h3>
+            <p 
+              className="leading-relaxed"
+              style={{
+                fontSize: '0.875rem',
+                color: '#475569',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
               Conecta familias, estudiantes y administración
             </p>
           </motion.div>
@@ -231,19 +398,43 @@ export default function HomePage() {
 
         {/* Bottom accent */}
         <motion.div
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center"
+          className="absolute text-center"
+          style={{
+            bottom: '2rem',
+            left: '50%',
+            transform: 'translateX(-50%)'
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.8 }}
         >
           <motion.div
-            className="flex items-center space-x-2 text-slate-400 text-sm"
+            className="flex items-center space-x-2"
+            style={{
+              color: '#94a3b8',
+              fontSize: '0.875rem',
+              fontFamily: "'Inter', sans-serif"
+            }}
             animate={{ y: [0, -4, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
-            <div className="w-1 h-1 bg-slate-400 rounded-full" />
-            <span style={{ fontFamily: "'Inter', sans-serif" }}>Sistema de gestión educativa</span>
-            <div className="w-1 h-1 bg-slate-400 rounded-full" />
+            <div 
+              className="rounded-full"
+              style={{
+                width: '0.25rem',
+                height: '0.25rem',
+                backgroundColor: '#94a3b8'
+              }}
+            />
+            <span>Sistema de gestión educativa</span>
+            <div 
+              className="rounded-full"
+              style={{
+                width: '0.25rem',
+                height: '0.25rem',
+                backgroundColor: '#94a3b8'
+              }}
+            />
           </motion.div>
         </motion.div>
       </div>
