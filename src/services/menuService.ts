@@ -2,10 +2,16 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { MenuItem, PRICES, UserType } from '@/types/panel'
 import { DayMenuDisplay, WeekMenuDisplay } from '@/types/menu'
-import { format, startOfWeek, endOfWeek, addDays, isBefore, isToday, isAfter, isSameDay } from 'date-fns'
+import { format, startOfWeek, endOfWeek, addDays, isBefore, isToday, isAfter, isSameDay, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export class MenuService {
+  // Helper method to create a local date from YYYY-MM-DD string
+  static createLocalDate(dateString: string): Date {
+    const [year, month, day] = dateString.split('-').map(Number)
+    return new Date(year, month - 1, day) // month is 0-indexed
+  }
+
   // Helper method to determine user type from various possible field names
   static getUserTypeFromUser(user: any): UserType {
     // Try different possible field names
@@ -104,16 +110,22 @@ export class MenuService {
       
       // Aplicar precios según tipo de usuario y verificar disponibilidad por fecha
       const today = new Date()
+      // Normalizar today para comparación (solo fecha, sin hora)
+      const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+      
       console.log('Today is:', format(today, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
+      console.log('Today normalized:', todayNormalized)
       
       const daysWithPrices = weekMenu.days.map(day => {
-        const dayDate = new Date(day.date)
-        const isPastDay = isBefore(dayDate, today) && !isToday(dayDate)
-        const isCurrentDay = isToday(dayDate)
-        const isFutureDay = isAfter(dayDate, today)
+        const dayDate = this.createLocalDate(day.date)
+        const dayDateNormalized = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate())
+        
+        const isPastDay = dayDateNormalized < todayNormalized
+        const isCurrentDay = dayDateNormalized.getTime() === todayNormalized.getTime()
+        const isFutureDay = dayDateNormalized > todayNormalized
         const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6 // Domingo o Sábado
         
-        console.log(`Day: ${day.dayLabel} (${day.date}) - isPast: ${isPastDay}, isCurrent: ${isCurrentDay}, isFuture: ${isFutureDay}, isWeekend: ${isWeekend}`)
+        console.log(`Day: ${day.dayLabel} (${day.date}) - dayDate: ${dayDate}, isPast: ${isPastDay}, isCurrent: ${isCurrentDay}, isFuture: ${isFutureDay}, isWeekend: ${isWeekend}, dayOfWeek: ${dayDate.getDay()}`)
         
         return {
           ...day,
@@ -181,37 +193,39 @@ export class MenuService {
   }
 
   static getWeekDisplayText(weekStart: string, weekEnd: string): string {
-    const start = new Date(weekStart)
-    const end = new Date(weekEnd)
+    const start = this.createLocalDate(weekStart)
+    const end = this.createLocalDate(weekEnd)
     
     return `Del ${format(start, 'd')} al ${format(end, 'd')} de ${format(end, 'MMMM yyyy', { locale: es })}`
   }
 
   static getDayDisplayName(date: string): string {
-    return format(new Date(date), 'EEEE d', { locale: es })
+    return format(this.createLocalDate(date), 'EEEE d', { locale: es })
   }
 
   static getFormattedDate(date: string): string {
-    return format(new Date(date), 'yyyy-MM-dd')
+    return format(this.createLocalDate(date), 'yyyy-MM-dd')
   }
 
   static getDayName(date: string): string {
-    return format(new Date(date), 'EEEE', { locale: es })
+    return format(this.createLocalDate(date), 'EEEE', { locale: es })
   }
 
   // Método para verificar si un día específico permite pedidos
   static isDayOrderingAllowed(date: string): boolean {
-    const dayDate = new Date(date)
+    const dayDate = this.createLocalDate(date)
     const today = new Date()
+    const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    const dayDateNormalized = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate())
     const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
     
     // Permitir pedidos para hoy y días futuros, pero no fines de semana
-    return (isToday(dayDate) || isAfter(dayDate, today)) && !isWeekend
+    return (dayDateNormalized.getTime() >= todayNormalized.getTime()) && !isWeekend
   }
 
   private static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
-    const startDate = new Date(weekStart)
-    const endDate = endOfWeek(startDate, { weekStartsOn: 1 })
+    const startDate = this.createLocalDate(weekStart)
+    const endDate = addDays(startDate, 6) // Fin de semana es 6 días después del inicio
     const weekLabel = `Del ${format(startDate, 'd')} al ${format(endDate, 'd')} de ${format(endDate, 'MMMM yyyy', { locale: es })}`
     
     console.log('buildWeekMenuStructure - weekStart:', weekStart)
@@ -227,7 +241,7 @@ export class MenuService {
       const dayName = format(currentDate, 'EEEE', { locale: es })
       const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6
       
-      console.log(`Day ${i}: ${dayName} ${format(currentDate, 'd \'de\' MMMM \'de\' yyyy', { locale: es })} (${dateStr}) - Weekend: ${isWeekend}`)
+      console.log(`Day ${i}: ${dayName} ${format(currentDate, 'd \'de\' MMMM \'de\' yyyy', { locale: es })} (${dateStr}) - Weekend: ${isWeekend}, DayOfWeek: ${currentDate.getDay()}`)
       
       // Filtrar items por fecha específica
       const dayItems = items.filter(item => item.date === dateStr)

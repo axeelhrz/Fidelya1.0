@@ -40,6 +40,12 @@ interface MenuItemOptionProps {
   isWeekend: boolean
 }
 
+// Helper function to create local date from YYYY-MM-DD string
+function createLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day) // month is 0-indexed
+}
+
 function MenuItemOption({ item, isSelected, isReadOnly, isPastDay, isWeekend }: MenuItemOptionProps) {
   const isDisabled = isReadOnly || !item.available || isPastDay || isWeekend
 
@@ -97,19 +103,26 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
     children 
   } = useOrderStore()
 
-  // Verificar el estado del día
-  const dayDate = new Date(dayMenu.date)
+  // Verificar el estado del día usando fechas locales
+  const dayDate = createLocalDate(dayMenu.date)
   const today = new Date()
-  const isPastDay = isBefore(dayDate, today) && !isToday(dayDate)
-  const isCurrentDay = isToday(dayDate)
-  const isFutureDay = isAfter(dayDate, today)
+  
+  // Normalizar fechas para comparación (solo fecha, sin hora)
+  const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const dayDateNormalized = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate())
+  
+  const isPastDay = dayDateNormalized < todayNormalized
+  const isCurrentDay = dayDateNormalized.getTime() === todayNormalized.getTime()
+  const isFutureDay = dayDateNormalized > todayNormalized
   const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
 
   // Debug logging
   console.log(`DaySelector - ${dayMenu.dayLabel}:`, {
     date: dayMenu.date,
     dayDate,
+    dayDateNormalized,
     today,
+    todayNormalized,
     isPastDay,
     isCurrentDay,
     isFutureDay,
@@ -247,7 +260,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
             {getDayIcon()}
             <span className="capitalize font-bold">{dayMenu.dayLabel}</span>
             <Badge variant="outline" className="text-xs font-medium">
-              {format(new Date(dayMenu.date), 'd \'de\' MMM', { locale: es })}
+              {format(dayDate, 'd \'de\' MMM', { locale: es })}
             </Badge>
           </div>
           <div className="flex items-center gap-2">
@@ -263,7 +276,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
         
         {/* Mostrar fecha completa para debugging */}
         <div className="text-xs text-slate-500 dark:text-slate-400">
-          {format(new Date(dayMenu.date), 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es })}
+          {format(dayDate, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es })}
         </div>
         
         {/* Mostrar para qué hijo es la selección */}
