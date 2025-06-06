@@ -145,7 +145,7 @@ export default function AdminMenusPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onRefresh}
+                onClick={refreshMenu}
                 disabled={isLoading}
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -217,7 +217,7 @@ export default function AdminMenusPage() {
                       </div>
                     </div>
                     
-                    {weekStats.totalItems === 0 && (
+                    {weekStats.totalItems === 0 && weekMenu.days.length > 0 && (
                       <Button
                         size="sm"
                         onClick={() => handleAddItem(weekMenu.days[0].date, weekMenu.days[0].day, 'almuerzo')}

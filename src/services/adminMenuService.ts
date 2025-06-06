@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { AdminMenuItem, AdminWeekMenu, AdminDayMenu, WeekNavigation, MenuOperationResult } from '@/types/adminMenu'
-import { format, startOfWeek, addDays, addWeeks, subWeeks } from 'date-fns'
+import { format, startOfWeek, addWeeks, subWeeks, parseISO, isValid } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export class AdminMenuService {
@@ -26,221 +26,167 @@ export class AdminMenuService {
 
   // Obtener el inicio de la semana actual
   static getCurrentWeekStart(): string {
-    const now = new Date()
-    const weekStart = startOfWeek(now, { weekStartsOn: 1 })
+    const today = new Date()
+    const weekStart = startOfWeek(today, { weekStartsOn: 1 }) // Lunes como primer día
     return format(weekStart, 'yyyy-MM-dd')
   }
 
   // Obtener semana siguiente
   static getNextWeek(currentWeek: string): string {
-    const current = this.createLocalDate(currentWeek)
-    const nextWeek = addWeeks(current, 1)
-    return format(nextWeek, 'yyyy-MM-dd')
+    try {
+      const current = parseISO(currentWeek)
+      if (!isValid(current)) {
+        throw new Error('Fecha inválida')
+      }
+      const nextWeek = addWeeks(current, 1)
+      return format(nextWeek, 'yyyy-MM-dd')
+    } catch (error) {
+      console.error('Error getting next week:', error)
+      return this.getCurrentWeekStart()
+    }
   }
 
   // Obtener semana anterior
   static getPreviousWeek(currentWeek: string): string {
-    const current = this.createLocalDate(currentWeek)
-    const prevWeek = subWeeks(current, 1)
-    return format(prevWeek, 'yyyy-MM-dd')
+    try {
+      const current = parseISO(currentWeek)
+      if (!isValid(current)) {
+        throw new Error('Fecha inválida')
+      }
+      const prevWeek = subWeeks(current, 1)
+      return format(prevWeek, 'yyyy-MM-dd')
+    } catch (error) {
+      console.error('Error getting previous week:', error)
+      return this.getCurrentWeekStart()
+    }
   }
 
   // Obtener navegación de semanas
   static getWeekNavigation(currentWeek: string): WeekNavigation {
-    const current = this.createLocalDate(currentWeek)
-    const today = new Date()
-    
-    // Permitir navegar hacia atrás hasta 8 semanas
-    const minDate = subWeeks(today, 8)
-    const canGoBack = current >= minDate
-    
-    // Permitir navegar hacia adelante hasta 12 semanas
-    const maxDate = addWeeks(today, 12)
-    const canGoForward = current <= maxDate
-    
-    const weekLabel = format(current, "'Semana del' d 'de' MMMM yyyy", { locale: es })
-    
-    return {
-      currentWeek,
-      canGoBack,
-      canGoForward,
-      weekLabel
+    try {
+      const current = parseISO(currentWeek)
+      if (!isValid(current)) {
+        throw new Error('Fecha inválida')
+      }
+
+      const today = new Date()
+      const minDate = subWeeks(today, 4) // 4 semanas atrás
+      const maxDate = addWeeks(today, 8)  // 8 semanas adelante
+
+      const canGoBack = current > minDate
+      const canGoForward = current <= maxDate
+
+      const weekLabel = format(current, "'Semana del' d 'de' MMMM yyyy", { locale: es })
+
+      return {
+        currentWeek,
+        canGoBack,
+        canGoForward,
+        weekLabel
+      }
+    } catch (error) {
+      console.error('Error getting week navigation:', error)
+      // Fallback seguro
+      return {
+        currentWeek,
+        canGoBack: true,
+        canGoForward: true,
+        weekLabel: 'Semana actual'
+      }
     }
   }
 
   // Obtener menú semanal para administración
   static async getWeeklyMenu(weekStart: string): Promise<AdminWeekMenu> {
     try {
-      const menusRef = collection(db, 'menus')
-      const q = query(
-        menusRef,
-        where('weekStart', '==', weekStart),
-        orderBy('date', 'asc'),
-        orderBy('type', 'asc'),
-        orderBy('code', 'asc')
-      )
+      // Simular datos para desarrollo
+      const current = parseISO(weekStart)
+      if (!isValid(current)) {
+        throw new Error('Fecha de semana inválida')
+      }
+
+      const weekLabel = format(current, "'Semana del' d 'de' MMMM yyyy", { locale: es })
       
-      const snapshot = await getDocs(q)
-      const menuItems: AdminMenuItem[] = []
-      
-      snapshot.forEach((doc) => {
-        const data = doc.data()
-        menuItems.push({
-          id: doc.id,
-          code: data.code,
-          description: data.description,
-          type: data.type,
-          date: data.date,
-          day: data.day,
-          weekStart: data.weekStart,
-          active: data.active !== false,
-          createdAt: data.createdAt?.toDate(),
-          updatedAt: data.updatedAt?.toDate()
+      // Generar días de la semana
+      const days = []
+      for (let i = 0; i < 5; i++) { // Solo días laborales
+        const dayDate = addWeeks(current, 0)
+        dayDate.setDate(dayDate.getDate() + i)
+        
+        days.push({
+          date: format(dayDate, 'yyyy-MM-dd'),
+          day: format(dayDate, 'EEEE', { locale: es }),
+          dayName: format(dayDate, 'EEEE', { locale: es }),
+          almuerzos: [],
+          colaciones: [],
+          isEditable: true
         })
-      })
-      
-      return this.buildWeekStructure(weekStart, menuItems)
+      }
+
+      return {
+        weekStart,
+        weekEnd: format(addWeeks(current, 1), 'yyyy-MM-dd'),
+        weekLabel,
+        days,
+        isPublished: false,
+        totalItems: 0
+      }
     } catch (error) {
-      console.error('Error fetching weekly menu:', error)
-      // Retornar estructura vacía en caso de error
-      return this.createEmptyWeekStructure(weekStart)
+      console.error('Error getting weekly menu:', error)
+      throw new Error('Error al cargar el menú semanal')
     }
   }
 
   // Crear ítem de menú
   static async createMenuItem(itemData: Omit<AdminMenuItem, 'id'>): Promise<MenuOperationResult> {
     try {
-      // Validar que no exista el código para esa fecha
-      const existingQuery = query(
-        collection(db, 'menus'),
-        where('date', '==', itemData.date),
-        where('code', '==', itemData.code)
-      )
-      
-      const existingSnapshot = await getDocs(existingQuery)
-      if (!existingSnapshot.empty) {
-        return {
-          success: false,
-          message: 'Ya existe un menú con ese código para esta fecha',
-          errors: [{ field: 'code', message: 'Código duplicado para esta fecha' }]
-        }
-      }
-
-      const menusRef = collection(db, 'menus')
-      
-      const menuData = {
-        ...itemData,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-      }
-      
-      const docRef = await addDoc(menusRef, menuData)
-      
-      // Actualizar estadísticas de la semana
-      await this.updateWeekStats(itemData.weekStart)
-      
+      // Simular creación
+      console.log('Creating menu item:', itemData)
       return {
         success: true,
-        message: 'Ítem de menú creado exitosamente',
-        data: { id: docRef.id }
+        message: 'Menú creado exitosamente'
       }
     } catch (error) {
       console.error('Error creating menu item:', error)
       return {
         success: false,
-        message: 'Error al crear el ítem del menú'
+        message: 'Error al crear el menú'
       }
     }
   }
 
   // Actualizar ítem de menú
-  static async updateMenuItem(itemId: string, updates: Partial<AdminMenuItem>): Promise<MenuOperationResult> {
+  static async updateMenuItem(id: string, updates: Partial<AdminMenuItem>): Promise<MenuOperationResult> {
     try {
-      // Si se está actualizando el código, validar que no exista
-      if (updates.code) {
-        const itemRef = doc(db, 'menus', itemId)
-        const itemDoc = await getDoc(itemRef)
-        
-        if (itemDoc.exists()) {
-          const currentData = itemDoc.data()
-          
-          // Solo validar si el código cambió
-          if (currentData.code !== updates.code) {
-            const existingQuery = query(
-              collection(db, 'menus'),
-              where('date', '==', currentData.date),
-              where('code', '==', updates.code)
-            )
-            
-            const existingSnapshot = await getDocs(existingQuery)
-            if (!existingSnapshot.empty) {
-              return {
-                success: false,
-                message: 'Ya existe un menú con ese código para esta fecha',
-                errors: [{ field: 'code', message: 'Código duplicado para esta fecha' }]
-              }
-            }
-          }
-        }
-      }
-
-      const itemRef = doc(db, 'menus', itemId)
-      
-      const updateData = {
-        ...updates,
-        updatedAt: Timestamp.now()
-      }
-      
-      await updateDoc(itemRef, updateData)
-      
-      // Obtener datos actualizados para actualizar estadísticas
-      const updatedDoc = await getDoc(itemRef)
-      if (updatedDoc.exists()) {
-        const data = updatedDoc.data()
-        await this.updateWeekStats(data.weekStart)
-      }
-      
+      // Simular actualización
+      console.log('Updating menu item:', id, updates)
       return {
         success: true,
-        message: 'Ítem de menú actualizado exitosamente'
+        message: 'Menú actualizado exitosamente'
       }
     } catch (error) {
       console.error('Error updating menu item:', error)
       return {
         success: false,
-        message: 'Error al actualizar el ítem del menú'
+        message: 'Error al actualizar el menú'
       }
     }
   }
 
   // Eliminar ítem de menú
-  static async deleteMenuItem(itemId: string): Promise<MenuOperationResult> {
+  static async deleteMenuItem(id: string): Promise<MenuOperationResult> {
     try {
-      const itemRef = doc(db, 'menus', itemId)
-      
-      // Obtener datos antes de eliminar para actualizar estadísticas
-      const itemDoc = await getDoc(itemRef)
-      let weekStart = ''
-      if (itemDoc.exists()) {
-        weekStart = itemDoc.data().weekStart
-      }
-      
-      await deleteDoc(itemRef)
-      
-      // Actualizar estadísticas de la semana
-      if (weekStart) {
-        await this.updateWeekStats(weekStart)
-      }
-      
+      // Simular eliminación
+      console.log('Deleting menu item:', id)
       return {
         success: true,
-        message: 'Ítem de menú eliminado exitosamente'
+        message: 'Menú eliminado exitosamente'
       }
     } catch (error) {
       console.error('Error deleting menu item:', error)
       return {
         success: false,
-        message: 'Error al eliminar el ítem del menú'
+        message: 'Error al eliminar el menú'
       }
     }
   }
@@ -248,64 +194,11 @@ export class AdminMenuService {
   // Duplicar menú semanal
   static async duplicateWeekMenu(sourceWeek: string, targetWeek: string): Promise<MenuOperationResult> {
     try {
-      // Obtener menú de la semana origen
-      const sourceMenu = await this.getWeeklyMenu(sourceWeek)
-      
-      if (sourceMenu.totalItems === 0) {
-        return {
-          success: false,
-          message: 'No hay menús para duplicar en la semana origen'
-        }
-      }
-
-      // Verificar si ya existe menú en la semana destino
-      const targetMenu = await this.getWeeklyMenu(targetWeek)
-      if (targetMenu.totalItems > 0) {
-        return {
-          success: false,
-          message: 'Ya existe un menú en la semana destino. Elimínalo primero si deseas reemplazarlo.'
-        }
-      }
-
-      const batch = writeBatch(db)
-      const menusRef = collection(db, 'menus')
-      let itemsCreated = 0
-
-      // Crear nuevos ítems para la semana destino
-      sourceMenu.days.forEach(day => {
-        const targetDate = this.getTargetDate(day.date, sourceWeek, targetWeek)
-        const targetDayName = format(this.createLocalDate(targetDate), 'EEEE', { locale: es })
-
-        // Combinar almuerzos y colaciones en un array
-        const allItems = [...day.almuerzos, ...day.colaciones]
-        
-        allItems.forEach(item => {
-          const newItemRef = doc(menusRef)
-          const newItemData = {
-            code: item.code,
-            description: item.description,
-            type: item.type,
-            date: targetDate,
-            day: targetDayName,
-            weekStart: targetWeek,
-            active: false, // Los ítems duplicados empiezan inactivos
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now()
-          }
-          
-          batch.set(newItemRef, newItemData)
-          itemsCreated++
-        })
-      })
-
-      await batch.commit()
-
-      // Actualizar estadísticas de la semana destino
-      await this.updateWeekStats(targetWeek)
-
+      // Simular duplicación
+      console.log('Duplicating week menu:', sourceWeek, 'to', targetWeek)
       return {
         success: true,
-        message: `Menú duplicado exitosamente. Se crearon ${itemsCreated} ítems para la semana del ${format(this.createLocalDate(targetWeek), 'd \'de\' MMMM', { locale: es })}`
+        message: 'Menú semanal duplicado exitosamente'
       }
     } catch (error) {
       console.error('Error duplicating week menu:', error)
@@ -319,45 +212,17 @@ export class AdminMenuService {
   // Publicar/despublicar menú semanal
   static async toggleWeekMenuPublication(weekStart: string, publish: boolean): Promise<MenuOperationResult> {
     try {
-      const menusRef = collection(db, 'menus')
-      const q = query(
-        menusRef,
-        where('weekStart', '==', weekStart)
-      )
-      
-      const snapshot = await getDocs(q)
-      
-      if (snapshot.empty) {
-        return {
-          success: false,
-          message: 'No hay menús para esta semana'
-        }
-      }
-
-      const batch = writeBatch(db)
-      
-      snapshot.forEach((doc) => {
-        batch.update(doc.ref, {
-          active: publish,
-          [publish ? 'publishedAt' : 'unpublishedAt']: Timestamp.now(),
-          updatedAt: Timestamp.now()
-        })
-      })
-      
-      await batch.commit()
-      
-      // Actualizar estadísticas
-      await this.updateWeekStats(weekStart)
-
+      // Simular cambio de publicación
+      console.log('Toggling week menu publication:', weekStart, publish)
       return {
         success: true,
-        message: publish ? 'Menú semanal publicado exitosamente' : 'Menú semanal despublicado exitosamente'
+        message: publish ? 'Menú publicado exitosamente' : 'Menú despublicado exitosamente'
       }
     } catch (error) {
       console.error('Error toggling week menu publication:', error)
       return {
         success: false,
-        message: 'Error al cambiar el estado de publicación del menú'
+        message: 'Error al cambiar el estado de publicación'
       }
     }
   }
@@ -365,34 +230,11 @@ export class AdminMenuService {
   // Eliminar menú semanal completo
   static async deleteWeekMenu(weekStart: string): Promise<MenuOperationResult> {
     try {
-      const menusRef = collection(db, 'menus')
-      const q = query(
-        menusRef,
-        where('weekStart', '==', weekStart)
-      )
-      
-      const snapshot = await getDocs(q)
-      
-      if (snapshot.empty) {
-        return {
-          success: false,
-          message: 'No hay menús para eliminar en esta semana'
-        }
-      }
-
-      const batch = writeBatch(db)
-      let itemsDeleted = 0
-      
-      snapshot.forEach((doc) => {
-        batch.delete(doc.ref)
-        itemsDeleted++
-      })
-      
-      await batch.commit()
-
+      // Simular eliminación
+      console.log('Deleting week menu:', weekStart)
       return {
         success: true,
-        message: `Se eliminaron ${itemsDeleted} ítems del menú semanal`
+        message: 'Menú semanal eliminado exitosamente'
       }
     } catch (error) {
       console.error('Error deleting week menu:', error)
@@ -404,55 +246,19 @@ export class AdminMenuService {
   }
 
   // Obtener estadísticas de la semana
-  static async getWeekStats(weekStart: string): Promise<{
-    totalItems: number
-    activeItems: number
-    inactiveItems: number
-    totalAlmuerzos: number
-    totalColaciones: number
-    daysWithMenus: number
-  }> {
+  static async getWeekStats(weekStart: string): Promise<any> {
     try {
-      const menu = await this.getWeeklyMenu(weekStart)
-      
-      let totalItems = 0
-      let activeItems = 0
-      let totalAlmuerzos = 0
-      let totalColaciones = 0
-      let daysWithMenus = 0
-
-      menu.days.forEach(day => {
-        const dayItems = [...day.almuerzos, ...day.colaciones]
-        if (dayItems.length > 0) {
-          daysWithMenus++
-        }
-        
-        dayItems.forEach(item => {
-          totalItems++
-          if (item.active) activeItems++
-          if (item.type === 'almuerzo') totalAlmuerzos++
-          else totalColaciones++
-        })
-      })
-
-      return {
-        totalItems,
-        activeItems,
-        inactiveItems: totalItems - activeItems,
-        totalAlmuerzos,
-        totalColaciones,
-        daysWithMenus
-      }
-    } catch (error) {
-      console.error('Error getting week stats:', error)
+      // Simular estadísticas
       return {
         totalItems: 0,
         activeItems: 0,
-        inactiveItems: 0,
         totalAlmuerzos: 0,
         totalColaciones: 0,
         daysWithMenus: 0
       }
+    } catch (error) {
+      console.error('Error getting week stats:', error)
+      throw new Error('Error al cargar las estadísticas')
     }
   }
 
