@@ -170,7 +170,7 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
                       key={option.value}
                       variant={isActive ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => onFiltersChange({ status: option.value as any })}
+                      onClick={() => onFiltersChange({ status: option.value as 'all' | 'pending' | 'paid' | 'cancelled' })}
                       className={`text-xs transition-all duration-200 ${getStatusButtonStyle(option.value)}`}
                     >
                       <Icon className="w-3 h-3 mr-1" />
@@ -362,7 +362,7 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
                 <div className="flex items-center space-x-2">
                   <Search className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                    Búsqueda activa: "{filters.searchTerm}"
+                    Búsqueda activa: &quot;{filters.searchTerm}&quot;
                   </span>
                 </div>
                 <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
