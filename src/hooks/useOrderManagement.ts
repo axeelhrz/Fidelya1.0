@@ -92,7 +92,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
     }
   }, [user, weekInfo])
 
-  // Procesar pago con mejor manejo de errores
+  // Procesar pago con mejor manejo de errores - CORREGIDO
   const processPayment = useCallback(async () => {
     if (!user || !weekInfo) {
       setPaymentError('Información de usuario o semana no disponible')
@@ -105,25 +105,62 @@ export function useOrderManagement(): UseOrderManagementReturn {
 
       const summary = getOrderSummaryByChild()
       
+      console.log('Order summary from store:', summary)
+      
       // Validar que hay selecciones
       if (!summary.selections || summary.selections.length === 0) {
         throw new Error('No hay elementos seleccionados para procesar el pago')
       }
 
-      // Transformar las selecciones al formato requerido por processCompleteOrder
-      const processOrderSelections = summary.selections.map(selection => ({
-        childId: selection.childId || '',
-        childName: selection.childName || '',
-        date: weekInfo.weekStart,
-        selectedItems: Object.entries(selection.selectedItems || {}).map(([category, item]) => ({
-          itemId: item?.id || '',
-          itemName: item?.nombre || '',
-          itemCode: item?.codigo || '',
-          category: category as 'almuerzo' | 'colacion',
-          price: item?.precio || 0,
-          description: item?.descripcion
-        }))
-      }))
+      // CORREGIDO: Transformar correctamente las selecciones al formato requerido
+      const processOrderSelections = summary.selections.map(selection => {
+        const selectedItems: Array<{
+          itemId: string
+          itemName: string
+          itemCode: string
+          category: 'almuerzo' | 'colacion'
+          price: number
+          description?: string
+        }> = []
+
+        // Agregar almuerzo si existe
+        if (selection.almuerzo) {
+          selectedItems.push({
+            itemId: selection.almuerzo.id,
+            itemName: selection.almuerzo.name,
+            itemCode: selection.almuerzo.code,
+            category: 'almuerzo',
+            price: selection.almuerzo.price,
+            description: selection.almuerzo.description
+          })
+        }
+
+        // Agregar colación si existe
+        if (selection.colacion) {
+          selectedItems.push({
+            itemId: selection.colacion.id,
+            itemName: selection.colacion.name,
+            itemCode: selection.colacion.code,
+            category: 'colacion',
+            price: selection.colacion.price,
+            description: selection.colacion.description
+          })
+        }
+
+        return {
+          childId: selection.hijo?.id || 'funcionario',
+          childName: selection.hijo?.name || 'Funcionario',
+          date: selection.date,
+          selectedItems
+        }
+      }).filter(selection => selection.selectedItems.length > 0) // Solo incluir selecciones con items
+
+      console.log('Transformed selections for payment:', processOrderSelections)
+
+      // Validar que hay selecciones transformadas
+      if (processOrderSelections.length === 0) {
+        throw new Error('No hay selecciones válidas para procesar el pago')
+      }
 
       // Usar el servicio de integración para procesar el pedido completo
       const result = await MenuIntegrationService.processCompleteOrder(
@@ -164,7 +201,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
           errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.'
         } else if (error.message.includes('configuración')) {
           errorMessage = 'Error de configuración del sistema. Contacta al administrador.'
-        } else if (error.message.includes('seleccionados')) {
+        } else if (error.message.includes('seleccionados') || error.message.includes('selecciones válidas')) {
           errorMessage = 'Debes seleccionar al menos un elemento antes de proceder al pago.'
         } else {
           errorMessage = error.message
