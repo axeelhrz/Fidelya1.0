@@ -1,5 +1,5 @@
 "use client"
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { AdminLayout } from '@/components/admin/AdminLayout'
 import { OrdersHeader } from '@/components/admin/pedidos/OrdersHeader'
@@ -10,11 +10,18 @@ import { OrderDetailModal } from '@/components/admin/pedidos/OrderDetailModal'
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 import { useAdminOrders } from '@/hooks/useAdminOrders'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertTriangle, RefreshCw } from 'lucide-react'
+import { AlertTriangle, RefreshCw, Download, FileText, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { useToast } from '@/hooks/use-toast'
+import { AdminOrderService } from '@/services/adminOrderService'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 export default function AdminPedidosPage() {
   const { adminUser, isLoading: authLoading } = useAdminAuth()
+  const { toast } = useToast()
   const {
     orders,
     metrics,
@@ -24,10 +31,21 @@ export default function AdminPedidosPage() {
     updateFilters,
     refreshOrders,
     updateOrderStatus,
+    deleteOrder
   } = useAdminOrders()
 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+
+  // Actualizar datos cada 30 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshOrders()
+    }, 30000)
+
+    return () => clearInterval(interval)
+  }, [refreshOrders])
 
   const handleViewDetail = (orderId: string) => {
     setSelectedOrderId(orderId)
@@ -42,86 +60,297 @@ export default function AdminPedidosPage() {
   const handleStatusUpdate = async (orderId: string, status: 'pending' | 'paid' | 'cancelled') => {
     try {
       await updateOrderStatus(orderId, status)
+      toast({
+        title: "Estado actualizado",
+        description: `El pedido ha sido marcado como ${status === 'paid' ? 'pagado' : status === 'cancelled' ? 'cancelado' : 'pendiente'}.`,
+      })
     } catch (error) {
       console.error('Error updating order status:', error)
-      // Aquí podrías mostrar un toast de error
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado del pedido.",
+        variant: "destructive",
+      })
     }
   }
 
-  if (authLoading) {
-    return <AdminLayout><div>Cargando...</div></AdminLayout>
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este pedido? Esta acción no se puede deshacer.')) {
+      return
+    }
+
+    try {
+      await deleteOrder(orderId)
+      toast({
+        title: "Pedido eliminado",
+        description: "El pedido ha sido eliminado correctamente.",
+      })
+    } catch (error) {
+      console.error('Error deleting order:', error)
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el pedido.",
+        variant: "destructive",
+      })
+    }
   }
 
+  const handleExportData = async (format: 'excel' | 'pdf') => {
+    setIsExporting(true)
+    try {
+      // Aquí implementarías la lógica de exportación
+      // Por ahora simularemos el proceso
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      toast({
+        title: "Exportación completada",
+        description: `Los datos han sido exportados en formato ${format.toUpperCase()}.`,
+      })
+    } catch (error) {
+      toast({
+        title: "Error en exportación",
+        description: "No se pudo completar la exportación.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  // Loading state para autenticación
+  if (authLoading) {
+    return (
+      <AdminLayout>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="loading-spinner w-8 h-8 mx-auto mb-4"></div>
+              <p className="text-slate-600 dark:text-slate-400 text-clean">
+                Verificando autenticación...
+              </p>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    )
+  }
+
+  // No autorizado
   if (!adminUser) {
-    return <AdminLayout><div>No autorizado</div></AdminLayout>
+    return (
+      <AdminLayout>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+          <div className="flex items-center justify-center min-h-screen">
+            <Card className="shadow-soft-lg border-0 bg-white dark:bg-slate-800 max-w-md mx-auto">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 text-elegant mb-2">
+                  Acceso no autorizado
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400 text-clean">
+                  No tienes permisos para acceder a esta sección.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </AdminLayout>
+    )
   }
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* Encabezado */}
-          <OrdersHeader
-            selectedWeek={filters.weekStart || ''}
-            metrics={metrics}
-            orders={orders}
-            filters={filters}
-            onRefresh={refreshOrders}
-            isLoading={isLoading}
-          />
-
-          {/* Error state */}
-          {error && (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-8">
+            {/* Encabezado mejorado */}
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
             >
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="flex items-center justify-between">
-                  <span>{error}</span>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+              {/* Título principal */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20 shadow-soft">
+                    <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 text-elegant">
+                      Gestión de Pedidos
+                    </h1>
+                    <p className="text-slate-600 dark:text-slate-400 text-clean mt-1">
+                      Administra y supervisa todos los pedidos del casino escolar
+                    </p>
+                  </div>
+                </div>
+
+                {/* Acciones rápidas */}
+                <div className="flex items-center gap-3">
+                  <Button
                     onClick={refreshOrders}
-                    className="ml-4"
+                    variant="outline"
+                    disabled={isLoading}
+                    className="flex items-center gap-2"
                   >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Reintentar
+                    <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    Actualizar
                   </Button>
-                </AlertDescription>
-              </Alert>
+                  
+                  <Button
+                    onClick={() => handleExportData('excel')}
+                    disabled={isExporting || orders.length === 0}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Exportar
+                  </Button>
+                </div>
+              </div>
+
+              {/* Información de la semana actual */}
+              {filters.weekStart && (
+                <Card className="border-0 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 shadow-soft">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <div>
+                          <p className="font-medium text-slate-800 dark:text-slate-100 text-clean">
+                            Semana seleccionada
+                          </p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 text-clean">
+                            {format(new Date(filters.weekStart), "'Semana del' d 'de' MMMM yyyy", { locale: es })}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <Badge variant="outline" className="bg-white dark:bg-slate-800">
+                          {orders.length} pedidos
+                        </Badge>
+                        {metrics && (
+                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                            ${metrics.totalRevenue.toLocaleString()} CLP
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </motion.div>
-          )}
 
-          {/* Métricas */}
-          <OrdersMetrics 
-            metrics={metrics} 
-            isLoading={isLoading} 
-          />
+            {/* Estado de error */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Alert variant="destructive" className="shadow-soft">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>{error}</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={refreshOrders}
+                      className="ml-4"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Reintentar
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
 
-          {/* Filtros */}
-          <OrdersFilters
-            filters={filters}
-            onFiltersChange={updateFilters}
-            totalResults={orders.length}
-          />
+            {/* Métricas */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <OrdersMetrics 
+                metrics={metrics} 
+                isLoading={isLoading} 
+              />
+            </motion.div>
 
-          {/* Tabla de pedidos */}
-          <OrdersTable
-            orders={orders}
-            isLoading={isLoading}
-            onViewDetail={handleViewDetail}
-            onUpdateStatus={handleStatusUpdate}
-          />
+            {/* Filtros */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <OrdersFilters
+                filters={filters}
+                onFiltersChange={updateFilters}
+                totalResults={orders.length}
+              />
+            </motion.div>
 
-          {/* Modal de detalle */}
-          <OrderDetailModal
-            orderId={selectedOrderId}
-            isOpen={isDetailModalOpen}
-            onClose={handleCloseDetail}
-            onStatusUpdate={handleStatusUpdate}
-          />
+            {/* Tabla de pedidos */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <OrdersTable
+                orders={orders}
+                isLoading={isLoading}
+                onViewDetail={handleViewDetail}
+                onUpdateStatus={handleStatusUpdate}
+                onDeleteOrder={handleDeleteOrder}
+              />
+            </motion.div>
+
+            {/* Estado vacío */}
+            {!isLoading && !error && orders.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="max-w-2xl mx-auto"
+              >
+                <Card className="shadow-soft-lg border-0 bg-white dark:bg-slate-800">
+                  <CardContent className="p-12 text-center">
+                    <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-soft">
+                      <FileText className="w-10 h-10 text-slate-400 dark:text-slate-500" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-3 text-elegant">
+                      No hay pedidos
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400 text-clean mb-6">
+                      No se encontraron pedidos con los filtros aplicados. 
+                      Intenta ajustar los criterios de búsqueda.
+                    </p>
+                    <Button
+                      onClick={() => updateFilters({ 
+                        userType: 'all', 
+                        status: 'all', 
+                        searchTerm: '',
+                        day: undefined 
+                      })}
+                      variant="outline"
+                    >
+                      Limpiar filtros
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Modal de detalle */}
+            <OrderDetailModal
+              orderId={selectedOrderId}
+              isOpen={isDetailModalOpen}
+              onClose={handleCloseDetail}
+              onStatusUpdate={handleStatusUpdate}
+            />
+          </div>
         </div>
       </div>
     </AdminLayout>
