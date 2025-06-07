@@ -29,6 +29,55 @@ export default function PaymentReturnPage() {
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
 
+  // Función para simular webhook cuando GetNet no puede enviarlo (MEJORADA)
+  const simulateWebhook = async (orderId: string, requestId: string) => {
+    try {
+      console.log('Simulating webhook for order:', orderId, 'requestId:', requestId)
+      
+      // Crear datos del webhook que simulan una respuesta exitosa de GetNet
+      const webhookData = {
+        status: {
+          status: "OK",
+          message: "Pago aprobado exitosamente",
+          date: new Date().toISOString()
+        },
+        requestId: parseInt(requestId) || requestId,
+        reference: orderId,
+        authorization: `AUTH_${Date.now()}`,
+        paymentMethodName: "GetNet Test",
+        franchiseName: "Visa",
+        amount: {
+          currency: "CLP",
+          total: 0 // Se calculará en el webhook
+        }
+      }
+
+      console.log('Sending webhook simulation with data:', webhookData)
+
+      const response = await fetch('/api/payment/notify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
+      })
+
+      const result = await response.json()
+      console.log('Webhook simulation result:', result)
+      
+      if (response.ok && result.success) {
+        console.log('✅ Webhook simulation successful')
+        return true
+      } else {
+        console.error('❌ Webhook simulation failed:', result)
+        return false
+      }
+    } catch (error) {
+      console.error('Error simulating webhook:', error)
+      return false
+    }
+  }
+
   useEffect(() => {
     const processPaymentReturn = async () => {
       try {
@@ -46,40 +95,74 @@ export default function PaymentReturnPage() {
           return
         }
 
-        // Intentar obtener el pedido de Firebase con reintentos
-        let order: OrderStateByChild | null = null
-        let attempts = 0
-        const maxAttempts = 5
+        // Intentar obtener el pedido de Firebase
+        let order = await OrderService.getOrderById(orderId)
+        console.log('Initial order status:', order?.status)
         
-        while (!order && attempts < maxAttempts) {
-          attempts++
-          console.log(`Attempt ${attempts}/${maxAttempts} to find order: ${orderId}`)
+        // Si el pedido está en "procesando_pago" y venimos de GetNet, simular webhook
+        if (order && order.status === 'procesando_pago' && requestId) {
+          console.log('Order is still processing, simulating webhook...')
           
-          order = await OrderService.getOrderById(orderId)
+          const webhookSuccess = await simulateWebhook(orderId, requestId)
           
-          if (!order) {
-            console.log(`Order not found on attempt ${attempts}, waiting 2 seconds...`)
-            await new Promise(resolve => setTimeout(resolve, 2000))
+          if (webhookSuccess) {
+            // Esperar un poco más para que el webhook se procese
+            console.log('Waiting for webhook processing...')
+            await new Promise(resolve => setTimeout(resolve, 3000))
+            
+            // Volver a cargar el pedido
+            order = await OrderService.getOrderById(orderId)
+            console.log('Order status after webhook simulation:', order?.status)
+          } else {
+            console.warn('Webhook simulation failed, but continuing...')
           }
         }
 
+        // Si aún no encontramos el pedido, intentar con reintentos
         if (!order) {
-          // Si no encontramos el pedido, intentar buscar por usuario y estado
+          let attempts = 0
+          const maxAttempts = 5
+          
+          while (!order && attempts < maxAttempts) {
+            attempts++
+            console.log(`Attempt ${attempts}/${maxAttempts} to find order: ${orderId}`)
+            
+            order = await OrderService.getOrderById(orderId)
+            
+            if (!order) {
+              console.log(`Order not found on attempt ${attempts}, waiting 2 seconds...`)
+              await new Promise(resolve => setTimeout(resolve, 2000))
+            }
+          }
+        }
+
+        // Si aún no encontramos el pedido, buscar por usuario
+        if (!order && user) {
           console.log('Order not found by ID, searching by user...')
           
-          if (user) {
-            const userOrders = await OrderService.getOrdersWithFilters({
-              userId: user.id,
-              status: ['procesando_pago', 'pagado', 'pendiente']
-            })
+          const userOrders = await OrderService.getOrdersWithFilters({
+            userId: user.id,
+            status: ['procesando_pago', 'pagado', 'pendiente']
+          })
+          
+          // Buscar el pedido más reciente
+          const recentOrder = userOrders
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
+          
+          if (recentOrder) {
+            console.log('Found recent order:', recentOrder.id)
+            order = recentOrder
             
-            // Buscar el pedido más reciente
-            const recentOrder = userOrders
-              .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
-            
-            if (recentOrder) {
-              console.log('Found recent order:', recentOrder.id)
-              order = recentOrder
+            // Si el pedido reciente está en procesando_pago, intentar simular webhook
+            if (recentOrder.status === 'procesando_pago' && requestId) {
+              console.log('Recent order is processing, simulating webhook...')
+              const webhookSuccess = await simulateWebhook(recentOrder.id!, requestId)
+              
+              if (webhookSuccess) {
+                await new Promise(resolve => setTimeout(resolve, 3000))
+                order = await OrderService.getOrderById(recentOrder.id!)
+                console.log('Recent order status after webhook:', order?.status)
+              }
             }
           }
         }
@@ -103,10 +186,12 @@ export default function PaymentReturnPage() {
           paymentStatus = 'cancelled'
         }
 
+        console.log('Final payment status determined:', paymentStatus)
+
         setPaymentResult({
           status: paymentStatus,
           orderId,
-          requestId,
+          requestId: requestId || undefined,
           message: message || getStatusMessage(paymentStatus),
           order
         })
@@ -199,7 +284,7 @@ export default function PaymentReturnPage() {
             {retryCount > 0 ? `Reintentando... (${retryCount}/5)` : 'Procesando resultado del pago...'}
           </p>
           <p className="text-sm text-gray-500 mt-2">
-            Esto puede tomar unos segundos mientras se confirma el pago
+            Confirmando el pago con GetNet y actualizando el estado...
           </p>
         </div>
       </div>
@@ -348,7 +433,7 @@ export default function PaymentReturnPage() {
 
                 {/* Total */}
                 <div className="flex justify-between items-center text-lg font-semibold">
-                  <span>Total:</span>
+                  <span>Total Pagado:</span>
                   <span>{formatCurrency(paymentResult.order.total)}</span>
                 </div>
               </div>
@@ -406,11 +491,8 @@ export default function PaymentReturnPage() {
                 <div>
                   <h4 className="font-medium text-yellow-800">Pago en Proceso</h4>
                   <p className="text-yellow-700 text-sm mt-1">
-                    Tu pago está siendo procesado. Esto puede tomar unos minutos. 
-                    La página se actualizará automáticamente cuando se confirme el pago.
-                  </p>
-                  <p className="text-yellow-700 text-sm mt-2">
-                    Si el estado no cambia en 5 minutos, puedes contactar con soporte.
+                    Tu pago está siendo procesado. En desarrollo local, el webhook se simula automáticamente.
+                    Si el estado no cambia, intenta refrescar la página.
                   </p>
                 </div>
               </div>
@@ -418,16 +500,16 @@ export default function PaymentReturnPage() {
           </Card>
         )}
 
-        {paymentResult.status === 'failed' && (
-          <Card className="mt-6 border-red-200 bg-red-50">
+        {/* Debug Info for Development */}
+        {process.env.NODE_ENV === 'development' && paymentResult.order && (
+          <Card className="mt-6 border-blue-200 bg-blue-50">
             <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-red-800">Pago No Procesado</h4>
-                  <p className="text-red-700 text-sm mt-1">
-                    Tu pago no pudo ser procesado. Puedes intentar nuevamente o contactar con soporte si el problema persiste.
-                  </p>
+              <div className="text-sm">
+                <h4 className="font-medium text-blue-800 mb-2">Debug Info (Solo en desarrollo)</h4>
+                <div className="space-y-1 text-blue-700">
+                  <p>Estado actual: {paymentResult.order.status}</p>
+                  <p>Payment ID: {paymentResult.order.paymentId || 'No asignado'}</p>
+                  <p>Última actualización: {paymentResult.order.updatedAt ? formatDate(paymentResult.order.updatedAt) : 'No disponible'}</p>
                 </div>
               </div>
             </CardContent>

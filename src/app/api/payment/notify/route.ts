@@ -140,19 +140,25 @@ export async function POST(request: NextRequest) {
       userId: order.userId
     })
 
-    // Procesar según el estado del pago - MEJORADO PARA GETNET
+    // Procesar según el estado del pago - CORREGIDO PARA GETNET
     let orderUpdateData: Partial<typeof order> = {}
 
-    // Normalizar el estado para comparación
-    const normalizedStatus = typeof paymentStatus === 'string' ? paymentStatus.toUpperCase() : String(paymentStatus).toUpperCase()
+    // Normalizar el estado para comparación (más específico)
+    const normalizedStatus = typeof paymentStatus === 'string' ? paymentStatus.toUpperCase().trim() : String(paymentStatus).toUpperCase().trim()
 
+    console.log('Normalized payment status:', normalizedStatus)
+
+    // ESTADOS DE PAGO EXITOSO - AMPLIADO
     if (normalizedStatus === 'OK' || 
         normalizedStatus === 'APPROVED' || 
         normalizedStatus === 'PAID' || 
         normalizedStatus === 'COMPLETED' || 
         normalizedStatus === 'SUCCESS' ||
         normalizedStatus === 'APROBADA' ||
-        normalizedStatus === 'EXITOSO') {
+        normalizedStatus === 'EXITOSO' ||
+        normalizedStatus === 'SUCCESSFUL' ||
+        normalizedStatus === 'CONFIRMED' ||
+        normalizedStatus === 'CONFIRMADO') {
       
       // Pago exitoso
       console.log(`✅ Payment APPROVED for order ${orderId}`)
@@ -173,17 +179,23 @@ export async function POST(request: NextRequest) {
           webhookData: JSON.stringify({
             requestId: notificationData.requestId,
             status: notificationData.status,
-            amount: notificationData.amount
+            amount: notificationData.amount,
+            originalStatus: paymentStatus
           })
         }
       }
-    } else if (normalizedStatus === 'FAILED' || 
+    } 
+    // ESTADOS DE PAGO FALLIDO
+    else if (normalizedStatus === 'FAILED' || 
                normalizedStatus === 'REJECTED' || 
                normalizedStatus === 'CANCELLED' || 
                normalizedStatus === 'DECLINED' ||
                normalizedStatus === 'RECHAZADA' ||
                normalizedStatus === 'CANCELADA' ||
-               normalizedStatus === 'FALLIDA') {
+               normalizedStatus === 'FALLIDA' ||
+               normalizedStatus === 'ERROR' ||
+               normalizedStatus === 'DENIED' ||
+               normalizedStatus === 'DENEGADA') {
       
       // Pago fallido
       console.log(`❌ Payment FAILED for order ${orderId}: ${notificationData.status?.message}`)
@@ -199,19 +211,24 @@ export async function POST(request: NextRequest) {
           webhookData: JSON.stringify({
             requestId: notificationData.requestId,
             status: notificationData.status,
-            amount: notificationData.amount
+            amount: notificationData.amount,
+            originalStatus: paymentStatus
           })
         }
       }
-    } else if (normalizedStatus === 'PENDING' || 
+    } 
+    // ESTADOS DE PAGO PENDIENTE
+    else if (normalizedStatus === 'PENDING' || 
                normalizedStatus === 'PROCESSING' ||
                normalizedStatus === 'PENDIENTE' ||
-               normalizedStatus === 'PROCESANDO') {
+               normalizedStatus === 'PROCESANDO' ||
+               normalizedStatus === 'IN_PROGRESS' ||
+               normalizedStatus === 'EN_PROCESO') {
       
         // Pago pendiente
         console.log(`⏳ Payment PENDING for order ${orderId}`)
         orderUpdateData = {
-          status: 'pendiente',
+          status: 'procesando_pago',
           metadata: {
             version: order.metadata?.version || '1.0',
             source: order.metadata?.source || 'webhook',
@@ -221,13 +238,21 @@ export async function POST(request: NextRequest) {
             webhookData: JSON.stringify({
               requestId: notificationData.requestId,
               status: notificationData.status,
-              amount: notificationData.amount
+              amount: notificationData.amount,
+              originalStatus: paymentStatus
             })
           }
         }
       } else {
-        // Estado desconocido
+        // Estado desconocido - MEJORADO
         console.log(`⚠️ Unknown payment status for order ${orderId}: ${paymentStatus}`)
+        console.log('Available status fields:', {
+          'status.status': notificationData.status?.status,
+          'state': notificationData.state,
+          'status': (notificationData as Record<string, unknown>).status,
+          'all_keys': Object.keys(notificationData)
+        })
+        
         orderUpdateData = {
           metadata: {
             version: order.metadata?.version || '1.0',
@@ -239,7 +264,9 @@ export async function POST(request: NextRequest) {
             webhookData: JSON.stringify({
               requestId: notificationData.requestId,
               status: notificationData.status,
-              amount: notificationData.amount
+              amount: notificationData.amount,
+              originalStatus: paymentStatus,
+              fullNotification: notificationData
             })
           }
         }
@@ -250,11 +277,14 @@ export async function POST(request: NextRequest) {
       console.log('Updating order with data:', {
         orderId,
         newStatus: orderUpdateData.status,
-        paymentId: orderUpdateData.paymentId
+        paymentId: orderUpdateData.paymentId,
+        updateFields: Object.keys(orderUpdateData)
       })
       
       await OrderService.updateOrder(orderId, orderUpdateData)
-      console.log(`✅ Order ${orderId} updated successfully`)
+      console.log(`✅ Order ${orderId} updated successfully to status: ${orderUpdateData.status || 'metadata only'}`)
+    } else {
+      console.log('No update data generated for order')
     }
 
     // Responder a GetNet con confirmación
@@ -263,6 +293,8 @@ export async function POST(request: NextRequest) {
       message: 'Notification processed successfully',
       orderId: orderId,
       status: orderUpdateData.status || order.status,
+      originalStatus: paymentStatus,
+      normalizedStatus: normalizedStatus,
       timestamp: new Date().toISOString()
     }
 
