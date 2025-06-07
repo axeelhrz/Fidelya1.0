@@ -3,7 +3,58 @@ import { AdminMenuService } from '@/services/adminMenuService'
 import { AdminWeekMenu, AdminMenuItem, MenuModalState, MenuOperationResult } from '@/types/adminMenu'
 import { useToast } from '@/hooks/use-toast'
 
-export function useAdminMenus() {
+interface WeekStats {
+  totalItems: number
+  activeItems: number
+  publishedItems: number
+  daysWithMenus: number
+  totalAlmuerzos: number
+  totalColaciones: number
+}
+
+interface UseAdminMenusReturn {
+  // Estado
+  currentWeek: string
+  weekMenu: AdminWeekMenu | null
+  weekStats: WeekStats | null
+  isLoading: boolean
+  error: string | null
+  modalState: MenuModalState
+  
+  // Navegación
+  navigateWeek: (direction: 'next' | 'prev') => void
+  getWeekNavigation: () => {
+    currentWeek: string
+    canGoBack: boolean
+    canGoForward: boolean
+    weekLabel: string
+  }
+  
+  // Modal
+  openModal: (
+    mode: 'create' | 'edit',
+    date: string,
+    day: string,
+    type?: 'almuerzo' | 'colacion',
+    item?: AdminMenuItem
+  ) => void
+  closeModal: () => void
+  
+  // CRUD Operations
+  createMenuItem: (itemData: Omit<AdminMenuItem, 'id'>) => Promise<MenuOperationResult>
+  updateMenuItem: (id: string, updates: Partial<AdminMenuItem>) => Promise<MenuOperationResult>
+  deleteMenuItem: (item: AdminMenuItem) => Promise<MenuOperationResult>
+  duplicateWeek: (targetWeek: string) => Promise<MenuOperationResult>
+  
+  // Operaciones de semana
+  toggleWeekPublication: (publish: boolean) => Promise<MenuOperationResult>
+  deleteWeekMenu: () => Promise<MenuOperationResult>
+  
+  // Utilidades
+  refreshMenu: () => void
+}
+
+export function useAdminMenus(): UseAdminMenusReturn {
   const [currentWeek, setCurrentWeek] = useState<string>('')
   const [weekMenu, setWeekMenu] = useState<AdminWeekMenu | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -14,7 +65,7 @@ export function useAdminMenus() {
     date: '',
     day: ''
   })
-  const [weekStats, setWeekStats] = useState<any>(null)
+  const [weekStats, setWeekStats] = useState<WeekStats | null>(null)
   const { toast } = useToast()
 
   // Inicializar con la semana actual

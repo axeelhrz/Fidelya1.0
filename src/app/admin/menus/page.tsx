@@ -4,7 +4,6 @@ import { AdminLayout } from '@/components/admin/AdminLayout'
 import { WeekNavigator } from '@/components/admin/menus/WeekNavigator'
 import { DayMenuContainer } from '@/components/admin/menus/DayMenuContainer'
 import { MenuItemModal } from '@/components/admin/menus/MenuItemModal'
-import { useAdminMenus } from '@/hooks/useAdminMenus'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -20,6 +19,7 @@ import {
   BarChart3
 } from 'lucide-react'
 import { AdminMenuItem } from '@/types/adminMenu'
+import { useAdminMenus } from '@/hooks/useAdminMenus'
 
 export default function AdminMenusPage() {
   const {
@@ -57,6 +57,8 @@ export default function AdminMenusPage() {
   }
 
   const handleDuplicateWeek = async () => {
+    if (!currentWeek) return
+    
     const nextWeek = new Date(currentWeek)
     nextWeek.setDate(nextWeek.getDate() + 7)
     const targetWeek = nextWeek.toISOString().split('T')[0]
@@ -251,7 +253,7 @@ export default function AdminMenusPage() {
                 >
                   <DayMenuContainer
                     dayMenu={dayMenu}
-                    onAddItem={(type) => handleAddItem(dayMenu.date, dayMenu.day, type)}
+                    onAddItem={(type: 'almuerzo' | 'colacion') => handleAddItem(dayMenu.date, dayMenu.day, type)}
                     onEditItem={handleEditItem}
                     onDeleteItem={deleteMenuItem}
                     isLoading={isLoading}
