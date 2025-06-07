@@ -13,6 +13,10 @@ export interface MenuItem {
   category?: string
   allergens?: string[]
   nutritionalInfo?: Record<string, string | number>
+  nombre?: string // Compatibilidad con diferentes formatos
+  codigo?: string // Compatibilidad con diferentes formatos
+  precio?: number // Compatibilidad con diferentes formatos
+  descripcion?: string // Compatibilidad con diferentes formatos
 }
 
 export interface DayMenu {
@@ -63,6 +67,12 @@ export interface OrderSelectionByChild {
   hijo: Child | null // null para funcionarios
   almuerzo?: MenuItem
   colacion?: MenuItem
+  childId?: string // ID del hijo, opcional para funcionarios
+  childName?: string // Nombre del hijo, opcional para funcionarios
+  selectedItems?: {
+    almuerzo?: MenuItem
+    colacion?: MenuItem
+  }
 }
 
 export interface OrderSelection {

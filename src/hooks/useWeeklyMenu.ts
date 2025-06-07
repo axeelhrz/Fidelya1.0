@@ -36,7 +36,7 @@ export function useWeeklyMenu(): UseWeeklyMenuReturn {
 
       // Cargar menú con precios según tipo de usuario
       const menuData = await MenuService.getWeeklyMenuForUser(
-        user.type as 'funcionario' | 'estudiante',
+        user,
         weekInfo.weekStart
       )
       
