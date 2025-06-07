@@ -14,9 +14,6 @@ import {
 } from '@/components/ui/select'
 import { OrderFilters } from '@/types/adminOrder'
 import { AdminOrderService } from '@/services/adminOrderService'
-import { format, parseISO, addDays } from 'date-fns'
-import { es } from 'date-fns/locale'
-
 interface OrdersFiltersProps {
   filters: OrderFilters
   onFiltersChange: (filters: Partial<OrderFilters>) => void
@@ -169,7 +166,7 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
                 </label>
                 <Select
                   value={filters.userType || 'all'}
-                  onValueChange={(value) => onFiltersChange({ userType: value as any })}
+                  onValueChange={(value) => onFiltersChange({ userType: value as 'all' | 'estudiante' | 'funcionario' })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -191,7 +188,7 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
                 </label>
                 <Select
                   value={filters.status || 'all'}
-                  onValueChange={(value) => onFiltersChange({ status: value as any })}
+                  onValueChange={(value) => onFiltersChange({ status: value as 'all' | 'pending' | 'paid' })}
                 >
                   <SelectTrigger>
                     <SelectValue />

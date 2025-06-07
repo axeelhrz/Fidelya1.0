@@ -93,7 +93,7 @@ export function UsersFilters({
                   </Label>
                   <Select
                     value={filters.role || 'all'}
-                    onValueChange={(value) => onFiltersChange({ role: value as any })}
+                    onValueChange={(value) => onFiltersChange({ role: value as 'all' | 'estudiante' | 'funcionario' | 'admin' })}
                   >
                     <SelectTrigger className="bg-slate-50 dark:bg-slate-700">
                       <SelectValue placeholder="Seleccionar tipo" />

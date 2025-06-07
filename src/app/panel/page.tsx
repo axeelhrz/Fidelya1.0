@@ -57,7 +57,10 @@ export default function PanelPage() {
                 description: 'Pollo al horno con papas doradas, ensalada mixta y postre',
                 type: 'almuerzo',
                 price: dashboardData.user.userType === 'funcionario' ? 4875 : 5500,
-                available: true
+                available: true,
+                date: format(currentDay, 'yyyy-MM-dd'),
+                dia: format(currentDay, 'EEEE', { locale: es }),
+                active: true
               },
               {
                 id: `almuerzo-${i}-2`,
@@ -66,7 +69,10 @@ export default function PanelPage() {
                 description: 'Pescado fresco a la plancha con arroz y verduras al vapor',
                 type: 'almuerzo',
                 price: dashboardData.user.userType === 'funcionario' ? 4875 : 5500,
-                available: true
+                available: true,
+                date: format(currentDay, 'yyyy-MM-dd'),
+                dia: format(currentDay, 'EEEE', { locale: es }),
+                active: true
               },
               {
                 id: `almuerzo-${i}-3`,
@@ -75,7 +81,10 @@ export default function PanelPage() {
                 description: 'Pasta fresca con salsa boloñesa casera y queso parmesano',
                 type: 'almuerzo',
                 price: dashboardData.user.userType === 'funcionario' ? 4875 : 5500,
-                available: true
+                available: true,
+                date: format(currentDay, 'yyyy-MM-dd'),
+                dia: format(currentDay, 'EEEE', { locale: es }),
+                active: true
               }
             ],
             colaciones: [
@@ -86,7 +95,10 @@ export default function PanelPage() {
                 description: 'Sándwich integral con pavo, palta y tomate',
                 type: 'colacion',
                 price: dashboardData.user.userType === 'funcionario' ? 1800 : 2000,
-                available: true
+                available: true,
+                date: format(currentDay, 'yyyy-MM-dd'),
+                dia: format(currentDay, 'EEEE', { locale: es }),
+                active: true
               },
               {
                 id: `colacion-${i}-2`,
@@ -95,7 +107,10 @@ export default function PanelPage() {
                 description: 'Mix de frutas frescas de temporada con yogurt',
                 type: 'colacion',
                 price: dashboardData.user.userType === 'funcionario' ? 1800 : 2000,
-                available: true
+                available: true,
+                date: format(currentDay, 'yyyy-MM-dd'),
+                dia: format(currentDay, 'EEEE', { locale: es }),
+                active: true
               }
             ]
           }

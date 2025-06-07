@@ -7,7 +7,7 @@ import { MenuItemCard } from './MenuItemCard'
 
 interface DayMenuCardProps {
   dayMenu: DayMenuDisplay
-  userType: 'funcionario' | 'estudiante'
+  userType: 'apoderado' | 'funcionario'
   index: number
 }
 

@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import { 
   Users, 
   UserCheck, 
-  UserX, 
   Shield, 
   Mail, 
   MailX,
@@ -11,7 +10,6 @@ import {
   Calendar
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { UserStats } from '@/types/adminUser'
 
