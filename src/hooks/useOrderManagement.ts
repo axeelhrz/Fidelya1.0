@@ -5,14 +5,8 @@ import { MenuIntegrationService } from '@/services/menuIntegrationService'
 import { OrderService } from '@/services/orderService'
 import { MenuService } from '@/services/menuService'
 import { DayMenuDisplay } from '@/types/menu'
+import { WeekInfo } from '@/types/order'
 import { OrderStateByChild } from '@/services/orderService'
-
-interface WeekInfo {
-  weekStart: string
-  weekEnd: string
-  weekNumber: number
-  year: number
-}
 
 interface UseOrderManagementReturn {
   // Estado del menú
@@ -36,6 +30,7 @@ interface UseOrderManagementReturn {
   clearErrors: () => void
   retryPayment: () => Promise<void>
 }
+
 export function useOrderManagement(): UseOrderManagementReturn {
   const { getOrderSummaryByChild } = useOrderStore()
   const { user } = useAuthStore()

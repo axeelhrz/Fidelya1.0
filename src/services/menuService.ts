@@ -171,6 +171,12 @@ export class MenuService {
     // Siempre permitir pedidos (sin restricción de horario)
     const isOrderingAllowed = true
     
+    // Generate week label
+    const weekLabel = this.getWeekDisplayText(
+      format(weekStart, 'yyyy-MM-dd'),
+      format(weekEnd, 'yyyy-MM-dd')
+    )
+    
     return {
       weekStart: format(weekStart, 'yyyy-MM-dd'),
       weekEnd: format(weekEnd, 'yyyy-MM-dd'),
@@ -178,7 +184,8 @@ export class MenuService {
       year: weekStart.getFullYear(),
       isCurrentWeek: true,
       isOrderingAllowed,
-      orderDeadline: new Date() // Ya no se usa, pero mantenemos compatibilidad
+      orderDeadline: new Date(), // Ya no se usa, pero mantenemos compatibilidad
+      weekLabel
     }
   }
 
