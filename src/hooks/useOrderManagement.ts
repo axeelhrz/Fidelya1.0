@@ -27,6 +27,7 @@ interface UseOrderManagementReturn {
   refreshMenu: () => Promise<void>
   processPayment: () => Promise<void>
   clearErrors: () => void
+  retryPayment: () => Promise<void>
 }
 
 export function useOrderManagement(): UseOrderManagementReturn {
@@ -97,9 +98,12 @@ export function useOrderManagement(): UseOrderManagementReturn {
     }
   }, [user, weekInfo])
 
-  // Procesar pago
+  // Procesar pago con mejor manejo de errores
   const processPayment = useCallback(async () => {
-    if (!user || !weekInfo) return
+    if (!user || !weekInfo) {
+      setPaymentError('Información de usuario o semana no disponible')
+      return
+    }
 
     try {
       setIsProcessingPayment(true)
@@ -107,6 +111,11 @@ export function useOrderManagement(): UseOrderManagementReturn {
 
       const summary = getOrderSummaryByChild()
       
+      // Validar que hay selecciones
+      if (!summary.selections || summary.selections.length === 0) {
+        throw new Error('No hay elementos seleccionados para procesar el pago')
+      }
+
       // Usar el servicio de integración para procesar el pedido completo
       const result = await MenuIntegrationService.processCompleteOrder(
         user,
@@ -117,11 +126,17 @@ export function useOrderManagement(): UseOrderManagementReturn {
       if (result.success && result.paymentUrl) {
         // Actualizar el pedido existente
         if (result.orderId) {
-          const updatedOrder = await OrderService.getOrderById(result.orderId)
-          setExistingOrder(updatedOrder)
+          try {
+            const updatedOrder = await OrderService.getOrderById(result.orderId)
+            setExistingOrder(updatedOrder)
+          } catch (orderError) {
+            console.warn('Could not fetch updated order:', orderError)
+            // No es crítico, continuar con el pago
+          }
         }
 
         // Redirigir a la página de pago
+        console.log('Redirecting to payment URL:', result.paymentUrl)
         window.location.href = result.paymentUrl
       } else {
         throw new Error(result.error || 'Error al procesar el pago')
@@ -129,12 +144,35 @@ export function useOrderManagement(): UseOrderManagementReturn {
 
     } catch (error) {
       console.error('Error processing payment:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Error al procesar el pago'
+      
+      // Proporcionar mensajes de error más específicos
+      let errorMessage = 'Error al procesar el pago'
+      
+      if (error instanceof Error) {
+        if (error.message.includes('no disponible')) {
+          errorMessage = 'El servicio de pagos no está disponible temporalmente. Por favor, intenta más tarde.'
+        } else if (error.message.includes('conexión')) {
+          errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.'
+        } else if (error.message.includes('configuración')) {
+          errorMessage = 'Error de configuración del sistema. Contacta al administrador.'
+        } else if (error.message.includes('seleccionados')) {
+          errorMessage = 'Debes seleccionar al menos un elemento antes de proceder al pago.'
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
       setPaymentError(errorMessage)
     } finally {
       setIsProcessingPayment(false)
     }
   }, [user, weekInfo, getOrderSummaryByChild])
+
+  // Reintentar pago
+  const retryPayment = useCallback(async () => {
+    setPaymentError(null)
+    await processPayment()
+  }, [processPayment])
 
   // Refrescar menú
   const refreshMenu = useCallback(async () => {
@@ -180,6 +218,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
     // Acciones
     refreshMenu,
     processPayment,
-    clearErrors
+    clearErrors,
+    retryPayment
   }
 }

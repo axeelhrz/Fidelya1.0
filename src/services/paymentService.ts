@@ -2,9 +2,11 @@ import { PaymentRequest, PaymentResponse } from '@/types/order'
 
 // Configuración de GetNet (corregida)
 const GETNET_CONFIG = {
-  apiUrl: process.env.GETNET_BASE_URL || 'https://checkout.test.getnet.cl',
+  apiUrl: process.env.GETNET_BASE_URL || 'https://api.getnet.cl',
+  testApiUrl: 'https://api-test.getnet.cl',
   login: process.env.GETNET_LOGIN || '',
   secret: process.env.GETNET_SECRET || '',
+  environment: process.env.GETNET_ENVIRONMENT || 'test',
   returnUrl: typeof window !== 'undefined' 
     ? `${window.location.origin}/payment/return` 
     : `${process.env.NEXT_PUBLIC_APP_URL}/payment/return`,
@@ -68,20 +70,47 @@ export class PaymentService {
         body: JSON.stringify(getNetRequest),
       })
       
+      let responseData
+      try {
+        responseData = await response.json()
+      } catch (parseError) {
+        console.error('Error parsing payment API response:', parseError)
+        throw new Error('Error en la respuesta del servidor de pagos')
+      }
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
         console.error('Payment API error:', {
           status: response.status,
           statusText: response.statusText,
-          errorData
+          errorData: responseData
         })
-        throw new Error(errorData.error || errorData.message || `Error del servidor: ${response.status}`)
+        
+        // Proporcionar mensajes de error más específicos
+        let errorMessage = 'Error del servidor de pagos'
+        
+        if (response.status === 400) {
+          errorMessage = responseData.error || 'Datos de pago inválidos'
+        } else if (response.status === 500) {
+          errorMessage = responseData.error || 'Error interno del servidor'
+        } else if (response.status === 404) {
+          errorMessage = 'Servicio de pagos no disponible'
+        } else {
+          errorMessage = responseData.error || responseData.message || `Error del servidor: ${response.status}`
+        }
+        
+        throw new Error(errorMessage)
       }
       
-      const data: GetNetPaymentResponse = await response.json()
+      const data: GetNetPaymentResponse = responseData
       
       if (!data.success) {
         throw new Error(data.error || 'Error en la respuesta del servicio de pago')
+      }
+
+      // Validar que tenemos los datos necesarios para el redirect
+      if (!data.redirectUrl) {
+        console.error('GetNet response missing redirect URL:', data)
+        throw new Error('No se recibió la URL de pago. Por favor, intenta nuevamente.')
       }
 
       console.log('GetNet payment created successfully:', data)
@@ -89,13 +118,29 @@ export class PaymentService {
       return {
         success: true,
         paymentId: data.paymentId || data.transactionId || '',
-        redirectUrl: data.redirectUrl || ''
+        redirectUrl: data.redirectUrl
       }
     } catch (error) {
       console.error('Error creating GetNet payment:', error)
+      
+      // Mejorar mensajes de error para el usuario
+      let userFriendlyMessage = 'Error desconocido al procesar el pago'
+      
+      if (error instanceof Error) {
+        if (error.message.includes('fetch') || error.message.includes('network')) {
+          userFriendlyMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.'
+        } else if (error.message.includes('no disponible')) {
+          userFriendlyMessage = 'El servicio de pagos no está disponible temporalmente. Intenta más tarde.'
+        } else if (error.message.includes('configuración')) {
+          userFriendlyMessage = 'Error de configuración del sistema. Contacta al administrador.'
+        } else {
+          userFriendlyMessage = error.message
+        }
+      }
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Error desconocido al procesar el pago'
+        error: userFriendlyMessage
       }
     }
   }
@@ -173,17 +218,20 @@ export class PaymentService {
         case 'approved':
         case 'paid':
         case 'completed':
+        case 'success':
           console.log(`Payment approved for order ${orderId}, transaction: ${transactionId}, amount: ${amount}`)
           // Aquí se actualizaría el estado del pedido en la base de datos
           break
         
         case 'rejected':
         case 'failed':
+        case 'cancelled':
           console.log(`Payment failed for order ${orderId}, transaction: ${transactionId}, amount: ${amount}`)
           // Manejar pago fallido
           break
         
         case 'pending':
+        case 'processing':
           console.log(`Payment pending for order ${orderId}, transaction: ${transactionId}, amount: ${amount}`)
           // Manejar pago pendiente
           break
@@ -220,6 +268,7 @@ export class PaymentService {
         console.error('Missing required fields in notification:', notificationData)
         return false
       }
+      
       // Aquí se validaría la firma HMAC con la clave secreta
       // const expectedSignature = this.generateSignature(notificationData)
       // return expectedSignature === notificationData.signature
@@ -242,6 +291,8 @@ export class PaymentService {
   static getConfig() {
     return {
       apiUrl: GETNET_CONFIG.apiUrl,
+      testApiUrl: GETNET_CONFIG.testApiUrl,
+      environment: GETNET_CONFIG.environment,
       login: GETNET_CONFIG.login,
       hasSecret: !!GETNET_CONFIG.secret,
       returnUrl: GETNET_CONFIG.returnUrl,
