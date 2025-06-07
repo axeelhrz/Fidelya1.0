@@ -119,6 +119,7 @@ export class MenuService {
       }
       
       // Aplicar precios y filtrar días disponibles
+      
       return weekMenu.days.map(day => {
         const isPastDay = this.isPastDay(day.date)
         const isWeekend = this.isWeekend(day.date)
@@ -227,7 +228,7 @@ export class MenuService {
   }
 
   /**
-   * Obtiene el inicio de una semana específica basada en una fecha - NUEVO
+   * Obtiene el inicio de una semana específica basada en una fecha - CORREGIDO
    */
   static getWeekStartFromDate(date: Date): string {
     const weekStart = startOfWeek(date, { weekStartsOn: 1 })
@@ -273,6 +274,7 @@ export class MenuService {
    */
   static isDayOrderingAllowed(date: string): boolean {
     try {
+      
       // No permitir pedidos para días pasados
       if (this.isPastDay(date)) {
         return false

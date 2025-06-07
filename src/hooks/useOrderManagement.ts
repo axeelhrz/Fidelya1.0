@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useMultiWeekMenu } from '@/hooks/useMultiWeekMenu'
 import { MenuIntegrationService } from '@/services/menuIntegrationService'
 import { OrderService } from '@/services/orderService'
+import { MenuService } from '@/services/menuService'
 import { DayMenuDisplay } from '@/types/menu'
 import { WeekInfo } from '@/types/order'
 import { OrderStateByChild } from '@/services/orderService'
@@ -92,10 +93,10 @@ export function useOrderManagement(): UseOrderManagementReturn {
     }
   }, [user, weekInfo])
 
-  // Procesar pago con mejor manejo de errores - CORREGIDO
+  // Procesar pago con mejor manejo de errores - CORREGIDO PARA MÚLTIPLES SEMANAS
   const processPayment = useCallback(async () => {
-    if (!user || !weekInfo) {
-      setPaymentError('Información de usuario o semana no disponible')
+    if (!user) {
+      setPaymentError('Información de usuario no disponible')
       return
     }
 
@@ -112,80 +113,124 @@ export function useOrderManagement(): UseOrderManagementReturn {
         throw new Error('No hay elementos seleccionados para procesar el pago')
       }
 
-      // CORREGIDO: Transformar correctamente las selecciones al formato requerido
-      const processOrderSelections = summary.selections.map(selection => {
-        const selectedItems: Array<{
-          itemId: string
-          itemName: string
-          itemCode: string
-          category: 'almuerzo' | 'colacion'
-          price: number
-          description?: string
-        }> = []
-
-        // Agregar almuerzo si existe
-        if (selection.almuerzo) {
-          selectedItems.push({
-            itemId: selection.almuerzo.id,
-            itemName: selection.almuerzo.name,
-            itemCode: selection.almuerzo.code,
-            category: 'almuerzo',
-            price: selection.almuerzo.price,
-            description: selection.almuerzo.description
-          })
+      // NUEVO: Agrupar selecciones por semana para procesarlas correctamente
+      const selectionsByWeek = new Map<string, typeof summary.selections>()
+      
+      for (const selection of summary.selections) {
+        // Determinar a qué semana pertenece esta fecha
+        const weekStart = MenuService.getWeekStartFromDate(MenuService.createLocalDate(selection.date))
+        
+        if (!selectionsByWeek.has(weekStart)) {
+          selectionsByWeek.set(weekStart, [])
         }
-
-        // Agregar colación si existe
-        if (selection.colacion) {
-          selectedItems.push({
-            itemId: selection.colacion.id,
-            itemName: selection.colacion.name,
-            itemCode: selection.colacion.code,
-            category: 'colacion',
-            price: selection.colacion.price,
-            description: selection.colacion.description
-          })
-        }
-
-        return {
-          childId: selection.hijo?.id || 'funcionario',
-          childName: selection.hijo?.name || 'Funcionario',
-          date: selection.date,
-          selectedItems
-        }
-      }).filter(selection => selection.selectedItems.length > 0) // Solo incluir selecciones con items
-
-      console.log('Transformed selections for payment:', processOrderSelections)
-
-      // Validar que hay selecciones transformadas
-      if (processOrderSelections.length === 0) {
-        throw new Error('No hay selecciones válidas para procesar el pago')
+        selectionsByWeek.get(weekStart)!.push(selection)
       }
 
-      // Usar el servicio de integración para procesar el pedido completo
-      const result = await MenuIntegrationService.processCompleteOrder(
-        user,
-        processOrderSelections,
-        weekInfo.weekStart
-      )
+      console.log('Selections grouped by week:', Object.fromEntries(selectionsByWeek))
 
-      if (result.success && result.paymentUrl) {
-        // Actualizar el pedido existente
-        if (result.orderId) {
-          try {
-            const updatedOrder = await OrderService.getOrderById(result.orderId)
-            setExistingOrder(updatedOrder)
-          } catch (orderError) {
-            console.warn('Could not fetch updated order:', orderError)
-            // No es crítico, continuar con el pago
+      // Procesar cada semana por separado
+      const processResults: Array<{
+        weekStart: string
+        success: boolean
+        orderId?: string
+        paymentUrl?: string
+        error?: string
+      }> = []
+
+      for (const [weekStart, weekSelections] of selectionsByWeek) {
+        console.log(`Processing week ${weekStart} with ${weekSelections.length} selections`)
+
+        // Transformar selecciones al formato requerido para esta semana específica
+        const processOrderSelections = weekSelections.map(selection => {
+          const selectedItems: Array<{
+            itemId: string
+            itemName: string
+            itemCode: string
+            category: 'almuerzo' | 'colacion'
+            price: number
+            description?: string
+          }> = []
+
+          // Agregar almuerzo si existe
+          if (selection.almuerzo) {
+            selectedItems.push({
+              itemId: selection.almuerzo.id,
+              itemName: selection.almuerzo.name,
+              itemCode: selection.almuerzo.code,
+              category: 'almuerzo',
+              price: selection.almuerzo.price,
+              description: selection.almuerzo.description
+            })
           }
+
+          // Agregar colación si existe
+          if (selection.colacion) {
+            selectedItems.push({
+              itemId: selection.colacion.id,
+              itemName: selection.colacion.name,
+              itemCode: selection.colacion.code,
+              category: 'colacion',
+              price: selection.colacion.price,
+              description: selection.colacion.description
+            })
+          }
+
+          return {
+            childId: selection.hijo?.id || 'funcionario',
+            childName: selection.hijo?.name || 'Funcionario',
+            date: selection.date,
+            selectedItems
+          }
+        }).filter(selection => selection.selectedItems.length > 0)
+
+        console.log(`Transformed selections for week ${weekStart}:`, processOrderSelections)
+
+        // Validar que hay selecciones transformadas para esta semana
+        if (processOrderSelections.length === 0) {
+          console.warn(`No valid selections for week ${weekStart}`)
+          continue
         }
 
-        // Redirigir a la página de pago
-        console.log('Redirecting to payment URL:', result.paymentUrl)
-        window.location.href = result.paymentUrl
-      } else {
-        throw new Error(result.error || 'Error al procesar el pago')
+        // Procesar el pedido para esta semana específica
+        try {
+          const result = await MenuIntegrationService.processCompleteOrder(
+            user,
+            processOrderSelections,
+            weekStart
+          )
+
+          processResults.push({
+            weekStart,
+            success: result.success,
+            orderId: result.orderId,
+            paymentUrl: result.paymentUrl,
+            error: result.error
+          })
+
+          // Si es exitoso, redirigir inmediatamente al primer pago
+          if (result.success && result.paymentUrl) {
+            console.log(`Redirecting to payment URL for week ${weekStart}:`, result.paymentUrl)
+            window.location.href = result.paymentUrl
+            return // Salir después de la primera redirección exitosa
+          }
+
+        } catch (weekError) {
+          console.error(`Error processing week ${weekStart}:`, weekError)
+          processResults.push({
+            weekStart,
+            success: false,
+            error: weekError instanceof Error ? weekError.message : 'Error desconocido'
+          })
+        }
+      }
+
+      // Si llegamos aquí, ningún pago fue exitoso
+      const failedResults = processResults.filter(r => !r.success)
+      if (failedResults.length > 0) {
+        const errorMessages = failedResults.map(r => `Semana ${r.weekStart}: ${r.error}`).join('; ')
+        throw new Error(`Error procesando pagos: ${errorMessages}`)
+      } else if (processResults.length === 0) {
+        throw new Error('No hay selecciones válidas para procesar el pago')
       }
 
     } catch (error) {
@@ -212,7 +257,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
     } finally {
       setIsProcessingPayment(false)
     }
-  }, [user, weekInfo, getOrderSummaryByChild])
+  }, [user, getOrderSummaryByChild])
 
   // Reintentar pago
   const retryPayment = useCallback(async () => {
