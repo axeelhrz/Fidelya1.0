@@ -156,7 +156,11 @@ export class AdminOrderService {
         totalByUserType: { estudiante: 0, funcionario: 0 },
         averageOrderValue: 0,
         pendingOrders: 0,
-        paidOrders: 0
+        paidOrders: 0,
+        cancelledOrders: 0,
+        criticalPendingOrders: 0,
+        totalByStatus: { pending: 0, paid: 0, cancelled: 0 },
+        revenueByStatus: { pending: 0, paid: 0, cancelled: 0 }
       }
 
       // Calcular métricas

@@ -9,7 +9,7 @@ import { OrderDetailModal } from '@/components/admin/pedidos/OrderDetailModal'
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 import { useAdminOrders } from '@/hooks/useAdminOrders'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertTriangle, RefreshCw, Download, FileText, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react'
+import { AlertTriangle, RefreshCw, Download, FileText, Calendar, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -119,6 +119,10 @@ export default function AdminPedidosPage() {
     }
   }
 
+  const handleQuickFilter = (status: 'all' | 'pending' | 'paid' | 'cancelled') => {
+    updateFilters({ status })
+  }
+
   // Loading state para autenticación
   if (authLoading) {
     return (
@@ -207,7 +211,7 @@ export default function AdminPedidosPage() {
                     className="flex items-center gap-2"
                   >
                     <Download className="w-4 h-4" />
-                    Exportar
+                    {isExporting ? 'Exportando...' : 'Exportar'}
                   </Button>
                 </div>
               </div>
@@ -243,6 +247,69 @@ export default function AdminPedidosPage() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Filtros rápidos por estado */}
+              <Card className="border-0 bg-white dark:bg-slate-800 shadow-soft">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Filtros rápidos:
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant={filters.status === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleQuickFilter('all')}
+                        className="text-xs"
+                      >
+                        <FileText className="w-3 h-3 mr-1" />
+                        Todos ({orders.length})
+                      </Button>
+                      <Button
+                        variant={filters.status === 'pending' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleQuickFilter('pending')}
+                        className={`text-xs ${
+                          filters.status === 'pending' 
+                            ? 'bg-amber-600 hover:bg-amber-700' 
+                            : 'text-amber-600 border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                        }`}
+                      >
+                        <Clock className="w-3 h-3 mr-1" />
+                        Pendientes ({metrics?.pendingOrders || 0})
+                      </Button>
+                      <Button
+                        variant={filters.status === 'paid' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleQuickFilter('paid')}
+                        className={`text-xs ${
+                          filters.status === 'paid' 
+                            ? 'bg-emerald-600 hover:bg-emerald-700' 
+                            : 'text-emerald-600 border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                        }`}
+                      >
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Pagados ({metrics?.paidOrders || 0})
+                      </Button>
+                      <Button
+                        variant={filters.status === 'cancelled' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleQuickFilter('cancelled')}
+                        className={`text-xs ${
+                          filters.status === 'cancelled' 
+                            ? 'bg-red-600 hover:bg-red-700' 
+                            : 'text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20'
+                        }`}
+                      >
+                        <XCircle className="w-3 h-3 mr-1" />
+                        Cancelados ({metrics?.cancelledOrders || 0})
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
 
             {/* Estado de error */}
@@ -264,6 +331,36 @@ export default function AdminPedidosPage() {
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Reintentar
                     </Button>
+                  </AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+
+            {/* Alerta para pedidos críticos */}
+            {metrics && (metrics.criticalPendingOrders || 0) > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 shadow-soft">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>
+                      <strong>{metrics.criticalPendingOrders}</strong> pedidos llevan más de 3 días pendientes de pago
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="destructive" className="animate-pulse">
+                        Requiere atención
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuickFilter('pending')}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        Ver pendientes
+                      </Button>
+                    </div>
                   </AlertDescription>
                 </Alert>
               </motion.div>
