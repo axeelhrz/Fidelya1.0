@@ -36,7 +36,7 @@ export function useWeeklyMenu(): UseWeeklyMenuReturn {
 
       // Cargar menú con precios según tipo de usuario
       const menuData = await MenuService.getWeeklyMenuForUser(
-        user,
+        user.tipoUsuario || user.userType || user.tipo_usuario || user.type || 'apoderado',
         weekInfo.weekStart
       )
       
@@ -54,9 +54,9 @@ export function useWeeklyMenu(): UseWeeklyMenuReturn {
     }
   }, [user])
 
-  const refreshMenu = async () => {
+  const refreshMenu = useCallback(async () => {
     await loadWeekMenu()
-  }
+  }, [loadWeekMenu])
 
   useEffect(() => {
     if (user) {

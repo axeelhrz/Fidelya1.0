@@ -5,7 +5,20 @@ import { DayMenuDisplay, WeekMenuDisplay } from '@/types/menu'
 import { format, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+export interface WeekInfo {
+  weekStart: string
+  weekEnd: string
+  weekNumber: number
+  year: number
+  isCurrentWeek: boolean
+  isOrderingAllowed: boolean
+  orderDeadline: Date
+  weekLabel: string
+}
+
 export class MenuService {
+  private static readonly COLLECTION_NAME = 'menus'
+
   // Helper method to create a local date from YYYY-MM-DD string
   static createLocalDate(dateString: string): Date {
     const [year, month, day] = dateString.split('-').map(Number)
@@ -31,177 +44,133 @@ export class MenuService {
     return 'apoderado'
   }
 
+  /**
+   * Obtiene el menú semanal completo
+   */
   static async getWeeklyMenu(weekStart?: string): Promise<WeekMenuDisplay> {
     try {
-      // Si no se proporciona weekStart, usar la semana actual
       const actualWeekStart = weekStart || this.getCurrentWeekStart()
       
-      console.log('Getting weekly menu for week starting:', actualWeekStart)
-      
-      const menusRef = collection(db, 'menus')
+      const menusRef = collection(db, this.COLLECTION_NAME)
       const q = query(
         menusRef,
         where('weekStart', '==', actualWeekStart),
-        where('active', '==', true), // Solo items activos
-        where('published', '==', true), // Solo items publicados
+        where('active', '==', true),
+        where('published', '==', true),
         orderBy('date', 'asc'),
         orderBy('type', 'asc')
       )
-      
+
       const snapshot = await getDocs(q)
-      const menuItems: MenuItem[] = []
-      
+      const items: MenuItem[] = []
+
       snapshot.forEach((doc) => {
         const data = doc.data()
-        menuItems.push({
+        items.push({
           id: doc.id,
           code: data.code,
-          name: data.description, // Usar description como name
+          name: data.description, // En admin se guarda como description
           description: data.description,
           type: data.type,
-          price: 0, // Se calculará dinámicamente según tipo de usuario
-          available: data.active && data.published,
-          image: data.image,
+          price: 0, // Se asignará según el tipo de usuario
+          available: data.active,
           date: data.date,
           dia: data.day,
           active: data.active
         })
       })
-      
-      return this.buildWeekMenuStructure(actualWeekStart, menuItems)
+
+      return this.buildWeekMenuStructure(actualWeekStart, items)
     } catch (error) {
       console.error('Error fetching weekly menu:', error)
-      throw new Error('No se pudo cargar el menú de la semana')
+      throw new Error('No se pudo cargar el menú semanal')
     }
   }
 
+  /**
+   * Obtiene el menú semanal para un usuario específico con precios
+   */
   static async getWeeklyMenuForUser(userTypeOrUser: UserType | { tipoUsuario?: string; userType?: string; tipo_usuario?: string; type?: string } | null | undefined, weekStart?: string): Promise<DayMenuDisplay[]> {
     try {
+      // Determinar el tipo de usuario
       let userType: UserType
-      
-      // Handle both direct UserType and user object
       if (typeof userTypeOrUser === 'string') {
-        userType = userTypeOrUser
+        userType = userTypeOrUser as UserType
       } else {
         userType = this.getUserTypeFromUser(userTypeOrUser)
       }
 
-      // Validar userType antes de proceder
-      if (!userType) {
-        console.error('UserType is undefined or null')
-        throw new Error('Tipo de usuario no definido')
-      }
-
-      // Normalizar userType para asegurar que sea válido
-      const normalizedUserType: UserType = userType === 'funcionario' ? 'funcionario' : 'apoderado'
-      
+      // Obtener el menú base
       const weekMenu = await this.getWeeklyMenu(weekStart)
       
-      // Verificar que PRICES esté definido y tenga la estructura correcta
-      if (!PRICES || !PRICES[normalizedUserType]) {
-        console.error('PRICES not defined or missing userType:', normalizedUserType)
-        throw new Error('Configuración de precios no encontrada')
-      }
-
-      const prices = PRICES[normalizedUserType]
-      if (!prices || typeof prices.almuerzo !== 'number' || typeof prices.colacion !== 'number') {
-        console.error('Price structure invalid for userType:', normalizedUserType, prices)
-        throw new Error('Estructura de precios inválida')
-      }
+      // Aplicar precios según el tipo de usuario
+      const prices = PRICES[userType]
       
-      // Aplicar precios según tipo de usuario y verificar disponibilidad por fecha
-      const today = new Date()
-      // Normalizar today para comparación (solo fecha, sin hora)
-      const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-      
-      console.log('Today is:', format(today, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
-      console.log('Today normalized:', todayNormalized)
-      
-      const daysWithPrices = weekMenu.days.map(day => {
-        const dayDate = this.createLocalDate(day.date)
-        const dayDateNormalized = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate())
-        
-        const isPastDay = dayDateNormalized < todayNormalized
-        const isCurrentDay = dayDateNormalized.getTime() === todayNormalized.getTime()
-        const isFutureDay = dayDateNormalized > todayNormalized
-        const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6 // Domingo (0) o Sábado (6)
-        
-        console.log(`Day: ${day.dayLabel} (${day.date}) - dayDate: ${dayDate}, isPast: ${isPastDay}, isCurrent: ${isCurrentDay}, isFuture: ${isFutureDay}, isWeekend: ${isWeekend}, dayOfWeek: ${dayDate.getDay()}`)
-        
-        return {
-          ...day,
-          isAvailable: day.hasItems && !isPastDay && !isWeekend, // Disponible si tiene items, no es día pasado y no es fin de semana
-          isPastDay,
-          isCurrentDay,
-          isFutureDay,
-          isWeekend,
-          canOrder: !isPastDay && !isWeekend, // Se puede pedir si no es día pasado y no es fin de semana
-          almuerzos: day.almuerzos.map(item => ({
-            ...item,
-            price: prices.almuerzo,
-            available: item.available && !isPastDay && !isWeekend
-          })),
-          colaciones: day.colaciones.map(item => ({
-            ...item,
-            price: prices.colacion,
-            available: item.available && !isPastDay && !isWeekend
-          }))
-        }
-      })
-      
-      return daysWithPrices
+      return weekMenu.days.map(day => ({
+        ...day,
+        almuerzos: day.almuerzos.map(item => ({
+          ...item,
+          price: prices.almuerzo
+        })),
+        colaciones: day.colaciones.map(item => ({
+          ...item,
+          price: prices.colacion
+        })),
+        isAvailable: this.isDayOrderingAllowed(day.date)
+      }))
     } catch (error) {
       console.error('Error fetching weekly menu for user:', error)
-      throw error
+      throw new Error('No se pudo cargar el menú para el usuario')
     }
   }
 
-  static getCurrentWeekInfo() {
+  /**
+   * Obtiene información de la semana actual
+   */
+  static getCurrentWeekInfo(): WeekInfo {
     const now = new Date()
-    console.log('Current date:', now)
-    console.log('Current date formatted:', format(now, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 }) // Lunes
+    const weekEnd = endOfWeek(now, { weekStartsOn: 1 }) // Domingo
     
-    // Asegurar que la semana empiece en lunes
-    const weekStart = startOfWeek(now, { weekStartsOn: 1 })
-    const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
+    // Calcular número de semana
+    const startOfYear = new Date(now.getFullYear(), 0, 1)
+    const weekNumber = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7)
     
-    console.log('Week start:', format(weekStart, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
-    console.log('Week end:', format(weekEnd, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
+    // Deadline para pedidos: miércoles a las 13:00
+    const wednesday = addDays(weekStart, 2)
+    const orderDeadline = new Date(wednesday)
+    orderDeadline.setHours(13, 0, 0, 0)
     
-    // Siempre permitir pedidos (sin restricción de horario)
-    const isOrderingAllowed = true
-    
-    // Generate week label
-    const weekLabel = this.getWeekDisplayText(
-      format(weekStart, 'yyyy-MM-dd'),
-      format(weekEnd, 'yyyy-MM-dd')
-    )
+    const isCurrentWeek = true
+    const isOrderingAllowed = now <= orderDeadline
     
     return {
       weekStart: format(weekStart, 'yyyy-MM-dd'),
       weekEnd: format(weekEnd, 'yyyy-MM-dd'),
-      weekNumber: parseInt(format(weekStart, 'w')),
-      year: weekStart.getFullYear(),
-      isCurrentWeek: true,
+      weekNumber,
+      year: now.getFullYear(),
+      isCurrentWeek,
       isOrderingAllowed,
-      orderDeadline: new Date(), // Ya no se usa, pero mantenemos compatibilidad
-      weekLabel
+      orderDeadline,
+      weekLabel: this.getWeekDisplayText(
+        format(weekStart, 'yyyy-MM-dd'),
+        format(weekEnd, 'yyyy-MM-dd')
+      )
     }
   }
 
+  /**
+   * Obtiene el inicio de la semana actual
+   */
   static getCurrentWeekStart(): string {
     const now = new Date()
-    // Asegurar que la semana empiece en lunes
     const weekStart = startOfWeek(now, { weekStartsOn: 1 })
-    const weekStartFormatted = format(weekStart, 'yyyy-MM-dd')
-    
-    console.log('getCurrentWeekStart - now:', now)
-    console.log('getCurrentWeekStart - weekStart:', weekStart)
-    console.log('getCurrentWeekStart - formatted:', weekStartFormatted)
-    
-    return weekStartFormatted
+    return format(weekStart, 'yyyy-MM-dd')
   }
 
+  /**
+   * Formatea el texto de visualización de la semana
+   */
   static getWeekDisplayText(weekStart: string, weekEnd: string): string {
     const start = this.createLocalDate(weekStart)
     const end = this.createLocalDate(weekEnd)
@@ -209,19 +178,33 @@ export class MenuService {
     return `Del ${format(start, 'd')} al ${format(end, 'd')} de ${format(end, 'MMMM yyyy', { locale: es })}`
   }
 
+  /**
+   * Obtiene el nombre del día para mostrar
+   */
   static getDayDisplayName(date: string): string {
-    return format(this.createLocalDate(date), 'EEEE d', { locale: es })
+    const dayDate = this.createLocalDate(date)
+    return format(dayDate, 'EEEE d', { locale: es })
   }
 
+  /**
+   * Formatea una fecha
+   */
   static getFormattedDate(date: string): string {
-    return format(this.createLocalDate(date), 'yyyy-MM-dd')
+    const dayDate = this.createLocalDate(date)
+    return format(dayDate, 'yyyy-MM-dd')
   }
 
+  /**
+   * Obtiene el nombre del día
+   */
   static getDayName(date: string): string {
-    return format(this.createLocalDate(date), 'EEEE', { locale: es })
+    const dayDate = this.createLocalDate(date)
+    return format(dayDate, 'EEEE', { locale: es })
   }
 
-  // Método para verificar si un día específico permite pedidos
+  /**
+   * Verifica si se permite hacer pedidos para un día específico
+   */
   static isDayOrderingAllowed(date: string): boolean {
     const dayDate = this.createLocalDate(date)
     const today = new Date()
@@ -233,62 +216,95 @@ export class MenuService {
     return (dayDateNormalized.getTime() >= todayNormalized.getTime()) && !isWeekend
   }
 
+  /**
+   * Construye la estructura del menú semanal
+   */
   private static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
-    // Crear fecha de inicio asegurando que sea lunes
     const startDate = this.createLocalDate(weekStart)
+    const endDate = addDays(startDate, 6)
     
-    // Verificar que el startDate sea realmente un lunes
-    if (startDate.getDay() !== 1) {
-      console.warn('Week start is not Monday, adjusting...', startDate.getDay())
-      // Si no es lunes, ajustar al lunes más cercano hacia atrás
-      const daysToSubtract = startDate.getDay() === 0 ? 6 : startDate.getDay() - 1
-      startDate.setDate(startDate.getDate() - daysToSubtract)
-    }
-    
-    const endDate = addDays(startDate, 6) // Domingo es 6 días después del lunes
-    const weekLabel = `Del ${format(startDate, 'd')} al ${format(endDate, 'd')} de ${format(endDate, 'MMMM yyyy', { locale: es })}`
-    
-    console.log('buildWeekMenuStructure - weekStart:', weekStart)
-    console.log('buildWeekMenuStructure - startDate (should be Monday):', startDate, 'Day of week:', startDate.getDay())
-    console.log('buildWeekMenuStructure - endDate (should be Sunday):', endDate, 'Day of week:', endDate.getDay())
-    
+    // Crear estructura de 7 días (lunes a domingo)
     const days: DayMenuDisplay[] = []
-    
-    // Crear estructura para todos los días de la semana (lunes=0 a domingo=6)
-    const dayNames = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
     
     for (let i = 0; i < 7; i++) {
       const currentDate = addDays(startDate, i)
       const dateStr = format(currentDate, 'yyyy-MM-dd')
-      const dayName = dayNames[i]
-      const isWeekend = i >= 5 // Sábado (5) y Domingo (6)
+      const dayName = format(currentDate, 'EEEE', { locale: es })
+      const dayLabel = format(currentDate, 'EEEE d', { locale: es })
+      const dateFormatted = format(currentDate, 'dd/MM/yyyy')
       
-      console.log(`Day ${i}: ${dayName} ${format(currentDate, 'd \'de\' MMMM \'de\' yyyy', { locale: es })} (${dateStr}) - Weekend: ${isWeekend}, DayOfWeek: ${currentDate.getDay()}`)
-      
-      // Filtrar items por fecha específica
+      // Filtrar items para este día
       const dayItems = items.filter(item => item.date === dateStr)
-      
       const almuerzos = dayItems.filter(item => item.type === 'almuerzo')
       const colaciones = dayItems.filter(item => item.type === 'colacion')
       
       days.push({
         date: dateStr,
         day: dayName,
-        dayLabel: dayName.charAt(0).toUpperCase() + dayName.slice(1),
-        dateFormatted: format(currentDate, 'd \'de\' MMMM \'de\' yyyy', { locale: es }),
+        dayLabel,
+        dateFormatted,
         almuerzos,
         colaciones,
-        hasItems: almuerzos.length > 0 || colaciones.length > 0,
-        isAvailable: (almuerzos.length > 0) && !isWeekend // Disponible si hay almuerzo y no es fin de semana
+        hasItems: dayItems.length > 0,
+        isAvailable: this.isDayOrderingAllowed(dateStr)
       })
     }
     
     return {
-      weekStart: format(startDate, 'yyyy-MM-dd'),
+      weekStart,
       weekEnd: format(endDate, 'yyyy-MM-dd'),
-      weekLabel,
+      weekLabel: this.getWeekDisplayText(weekStart, format(endDate, 'yyyy-MM-dd')),
       days,
       totalItems: items.length
+    }
+  }
+
+  /**
+   * Verifica si hay menús disponibles para una semana
+   */
+  static async hasMenusForWeek(weekStart: string): Promise<boolean> {
+    try {
+      const menusRef = collection(db, this.COLLECTION_NAME)
+      const q = query(
+        menusRef,
+        where('weekStart', '==', weekStart),
+        where('active', '==', true),
+        where('published', '==', true)
+      )
+
+      const snapshot = await getDocs(q)
+      return !snapshot.empty
+    } catch (error) {
+      console.error('Error checking menus for week:', error)
+      return false
+    }
+  }
+
+  /**
+   * Obtiene los días disponibles para una semana
+   */
+  static async getAvailableDaysForWeek(weekStart: string): Promise<string[]> {
+    try {
+      const menusRef = collection(db, this.COLLECTION_NAME)
+      const q = query(
+        menusRef,
+        where('weekStart', '==', weekStart),
+        where('active', '==', true),
+        where('published', '==', true)
+      )
+
+      const snapshot = await getDocs(q)
+      const availableDays = new Set<string>()
+      
+      snapshot.forEach((doc) => {
+        const data = doc.data()
+        availableDays.add(data.date)
+      })
+
+      return Array.from(availableDays).sort()
+    } catch (error) {
+      console.error('Error getting available days for week:', error)
+      return []
     }
   }
 }
