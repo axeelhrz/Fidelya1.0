@@ -2,17 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { updateProfile, updateEmail, sendEmailVerification } from 'firebase/auth'
-import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore'
+import { doc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '@/app/lib/firebase'
 import { useAuth } from '@/hooks/useAuth'
-
-interface Child {
-  id: string
-  name: string
-  age: number
-  class: string
-  level: 'basico' | 'medio'
-}
+import { Child } from '@/types/panel'
 
 interface ProfileFormData {
   firstName: string
@@ -21,9 +14,14 @@ interface ProfileFormData {
   phone: string
 }
 
+interface ExtendedChild extends Child {
+  edad: number
+  level: 'basico' | 'medio'
+}
+
 interface UseProfileFormReturn {
   formData: ProfileFormData
-  children: Child[]
+  children: ExtendedChild[]
   isLoading: boolean
   isSaving: boolean
   hasChanges: boolean
@@ -31,7 +29,7 @@ interface UseProfileFormReturn {
   errors: Record<string, string>
   updateFormData: (field: keyof ProfileFormData, value: string) => void
   addChild: () => void
-  updateChild: (id: string, field: keyof Child, value: string | number) => void
+  updateChild: (id: string, field: keyof ExtendedChild, value: string | number | boolean) => void
   removeChild: (id: string) => void
   saveChanges: () => Promise<boolean>
   resendEmailVerification: () => Promise<boolean>
@@ -46,14 +44,14 @@ export function useProfileForm(): UseProfileFormReturn {
     email: '',
     phone: ''
   })
-  const [children, setChildren] = useState<Child[]>([])
+  const [children, setChildren] = useState<ExtendedChild[]>([])
   const [originalData, setOriginalData] = useState<ProfileFormData>({
     firstName: '',
     lastName: '',
     email: '',
     phone: ''
   })
-  const [originalChildren, setOriginalChildren] = useState<Child[]>([])
+  const [originalChildren, setOriginalChildren] = useState<ExtendedChild[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [emailVerified, setEmailVerified] = useState(false)
@@ -66,13 +64,20 @@ export function useProfileForm(): UseProfileFormReturn {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
-        phone: user.phone || ''
+        phone: (user as any).phone || ''
       }
+      
+      // Transform children to include edad and level properties
+      const transformedChildren: ExtendedChild[] = (user.children || []).map(child => ({
+        ...child,
+        edad: (child as any).edad || (child as any).age || 0,
+        level: (child as any).level || 'basico'
+      }))
       
       setFormData(userData)
       setOriginalData(userData)
-      setChildren(user.children || [])
-      setOriginalChildren(user.children || [])
+      setChildren(transformedChildren)
+      setOriginalChildren(transformedChildren)
       setEmailVerified(auth.currentUser?.emailVerified || false)
       setIsLoading(false)
     }
@@ -92,24 +97,43 @@ export function useProfileForm(): UseProfileFormReturn {
   }
 
   const addChild = () => {
-    const newChild: Child = {
+    const newChild: ExtendedChild = {
       id: Date.now().toString(),
       name: '',
-      age: 0,
-      class: '',
+      curso: '',
+      rut: undefined,
+      active: true,
+      edad: 0,
       level: 'basico'
     }
     setChildren(prev => [...prev, newChild])
   }
 
-  const updateChild = (id: string, field: keyof Child, value: string | number) => {
+  const updateChild = (id: string, field: keyof ExtendedChild, value: string | number | boolean) => {
     setChildren(prev => prev.map(child => 
       child.id === id ? { ...child, [field]: value } : child
     ))
+    
+    // Clear error for this field
+    const errorKey = `child_${id}_${field}`
+    if (errors[errorKey]) {
+      setErrors(prev => ({ ...prev, [errorKey]: '' }))
+    }
   }
 
   const removeChild = (id: string) => {
     setChildren(prev => prev.filter(child => child.id !== id))
+    
+    // Remove any errors for this child
+    setErrors(prev => {
+      const newErrors = { ...prev }
+      Object.keys(newErrors).forEach(key => {
+        if (key.startsWith(`child_${id}_`)) {
+          delete newErrors[key]
+        }
+      })
+      return newErrors
+    })
   }
 
   const validateForm = (): boolean => {
@@ -129,16 +153,16 @@ export function useProfileForm(): UseProfileFormReturn {
     }
 
     // Validar hijos si es apoderado
-    if (user?.userType === 'funcionario' && children.length > 0) {
+    if (user?.tipoUsuario === 'apoderado' && children.length > 0) {
       children.forEach((child, index) => {
         if (!child.name.trim()) {
           newErrors[`child_${child.id}_name`] = `Nombre del hijo ${index + 1} es requerido`
         }
-        if (!child.age || child.age < 1 || child.age > 18) {
-          newErrors[`child_${child.id}_age`] = `Edad del hijo ${index + 1} debe estar entre 1 y 18 años`
+        if (!child.edad || child.edad < 1 || child.edad > 18) {
+          newErrors[`child_${child.id}_edad`] = `Edad del hijo ${index + 1} debe estar entre 1 y 18 años`
         }
-        if (!child.class.trim()) {
-          newErrors[`child_${child.id}_class`] = `Curso del hijo ${index + 1} es requerido`
+        if (!child.curso.trim()) {
+          newErrors[`child_${child.id}_curso`] = `Curso del hijo ${index + 1} es requerido`
         }
       })
     }
@@ -171,13 +195,24 @@ export function useProfileForm(): UseProfileFormReturn {
         setEmailVerified(false)
       }
 
+      // Transform children back to the format expected by the database
+      const transformedChildren = children.map(child => ({
+        id: child.id,
+        name: child.name,
+        curso: child.curso,
+        rut: child.rut,
+        active: child.active,
+        age: child.edad, // Map edad back to age
+        level: child.level
+      }))
+
       // Actualizar documento en Firestore
-      const updateData: any = {
+      const updateData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
-        children: children,
+        children: transformedChildren,
         updatedAt: new Date()
       }
 
@@ -190,7 +225,7 @@ export function useProfileForm(): UseProfileFormReturn {
       return true
     } catch (error) {
       console.error('Error al guardar cambios:', error)
-      const firebaseError = error as { code?: string, message?: string }
+      const firebaseError = error as { code?: string; message?: string }
       
       if (firebaseError.code === 'auth/email-already-in-use') {
         setErrors({ email: 'Este correo electrónico ya está en uso' })
