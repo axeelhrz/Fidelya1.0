@@ -19,7 +19,7 @@ import { es } from 'date-fns/locale'
 export class AdminOrderService {
   // Cache para mejorar rendimiento
   private static cache = new Map<string, { data: AdminOrderView[]; timestamp: number }>()
-  private static CACHE_DURATION = 2 * 60 * 1000 // 2 minutos para datos más frescos
+  private static CACHE_DURATION = 1 * 60 * 1000 // 1 minuto para datos más frescos
 
   private static getCacheKey(filters: OrderFilters): string {
     return JSON.stringify(filters)
@@ -75,10 +75,10 @@ export class AdminOrderService {
       console.log('Fetching fresh data for filters:', filters)
       const ordersRef = collection(db, 'orders')
       
-      // Construir query básico
+      // Construir query básico - siempre ordenar por fecha de creación
       let q = query(ordersRef, orderBy('createdAt', 'desc'))
 
-      // Solo aplicar filtro de estado si no es 'all'
+      // Aplicar filtro de estado si no es 'all'
       if (filters.status && filters.status !== 'all') {
         q = query(ordersRef, where('status', '==', filters.status), orderBy('createdAt', 'desc'))
       }
@@ -89,7 +89,7 @@ export class AdminOrderService {
       console.log(`Processing ${ordersSnapshot.docs.length} orders from Firestore`)
 
       // Procesar pedidos en lotes para mejor rendimiento
-      const batchSize = 15
+      const batchSize = 20
       const orderDocs = ordersSnapshot.docs
       
       for (let i = 0; i < orderDocs.length; i += batchSize) {
@@ -136,7 +136,7 @@ export class AdminOrderService {
             const selections = orderData.selections || []
             const itemsCount = selections.length
             const hasColaciones = selections.some((s: { colacion?: unknown }) => s.colacion)
-            const total = orderData.total || 0
+            const total = Number(orderData.total) || 0
 
             // Calcular días desde que está pendiente
             const daysSincePending = orderData.status === 'pending' 
@@ -217,7 +217,13 @@ export class AdminOrderService {
       const metrics: OrderMetrics = {
         totalOrders: orders.length,
         totalRevenue: 0,
-        totalByDay: {},
+        totalByDay: {
+          'lunes': 0,
+          'martes': 0,
+          'miércoles': 0,
+          'jueves': 0,
+          'viernes': 0
+        },
         totalByUserType: { estudiante: 0, funcionario: 0 },
         averageOrderValue: 0,
         pendingOrders: 0,
@@ -230,7 +236,7 @@ export class AdminOrderService {
 
       // Calcular métricas
       orders.forEach(order => {
-        const orderTotal = order.total || 0
+        const orderTotal = Number(order.total) || 0
         
         // Contadores por estado
         switch (order.status) {
@@ -252,7 +258,11 @@ export class AdminOrderService {
             metrics.totalRevenue += orderTotal // Solo contar revenue de pedidos pagados
             
             // Totales por tipo de usuario (solo pedidos pagados)
-            metrics.totalByUserType[order.user.userType] += orderTotal
+            if (order.user.userType === 'estudiante') {
+              metrics.totalByUserType.estudiante += orderTotal
+            } else if (order.user.userType === 'funcionario') {
+              metrics.totalByUserType.funcionario += orderTotal
+            }
             break
             
           case 'cancelled':
@@ -265,8 +275,10 @@ export class AdminOrderService {
         // Totales por día (contar todos los pedidos)
         order.selections.forEach(selection => {
           try {
-            const dayKey = format(parseISO(selection.date), 'EEEE', { locale: es })
-            metrics.totalByDay[dayKey] = (metrics.totalByDay[dayKey] || 0) + 1
+            const dayKey = format(parseISO(selection.date), 'EEEE', { locale: es }).toLowerCase()
+            if (metrics.totalByDay[dayKey] !== undefined) {
+              metrics.totalByDay[dayKey] = (metrics.totalByDay[dayKey] || 0) + 1
+            }
           } catch (error) {
             console.error('Error parsing date:', selection.date, error)
           }
@@ -275,7 +287,7 @@ export class AdminOrderService {
 
       // Valor promedio (solo de pedidos pagados)
       metrics.averageOrderValue = metrics.paidOrders > 0 
-        ? metrics.totalRevenue / metrics.paidOrders 
+        ? Math.round(metrics.totalRevenue / metrics.paidOrders)
         : 0
 
       console.log('Calculated metrics:', {
@@ -284,7 +296,8 @@ export class AdminOrderService {
         paid: metrics.paidOrders,
         cancelled: metrics.cancelledOrders,
         critical: metrics.criticalPendingOrders,
-        revenue: metrics.totalRevenue
+        revenue: metrics.totalRevenue,
+        averageValue: metrics.averageOrderValue
       })
 
       return metrics
@@ -428,7 +441,7 @@ export class AdminOrderService {
         {
           date: createdAt,
           status: 'created',
-          amount: orderData.total || 0
+          amount: Number(orderData.total) || 0
         }
       ]
 
@@ -436,7 +449,7 @@ export class AdminOrderService {
         paymentHistory.push({
           date: paidAt,
           status: 'paid',
-          amount: orderData.total || 0
+          amount: Number(orderData.total) || 0
         })
       }
 
@@ -453,7 +466,7 @@ export class AdminOrderService {
         userId: orderData.userId,
         weekStart: orderData.weekStart,
         selections: processedSelections,
-        total: orderData.total || 0,
+        total: Number(orderData.total) || 0,
         status: orderData.status,
         createdAt: createdAt,
         paidAt: paidAt,
