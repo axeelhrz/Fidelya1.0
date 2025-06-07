@@ -5,10 +5,10 @@ interface ExtendedPaymentRequest extends PaymentRequest {
   customerName?: string
 }
 
-// Configuración de GetNet (corregida)
+// Configuración de GetNet corregida con endpoints válidos
 const GETNET_CONFIG = {
-  apiUrl: process.env.GETNET_BASE_URL || 'https://api.getnet.cl',
-  testApiUrl: 'https://api-test.getnet.cl',
+  apiUrl: process.env.GETNET_BASE_URL || 'https://checkout.getnet.cl',
+  testApiUrl: 'https://checkout.test.getnet.cl',
   login: process.env.GETNET_LOGIN || '',
   secret: process.env.GETNET_SECRET || '',
   environment: process.env.GETNET_ENVIRONMENT || 'test',
@@ -135,6 +135,8 @@ export class PaymentService {
       if (error instanceof Error) {
         if (error.message.includes('fetch') || error.message.includes('network')) {
           userFriendlyMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.'
+        } else if (error.message.includes('ENOTFOUND')) {
+          userFriendlyMessage = 'Servicio de pagos temporalmente no disponible. Intenta más tarde.'
         } else if (error.message.includes('no disponible')) {
           userFriendlyMessage = 'El servicio de pagos no está disponible temporalmente. Intenta más tarde.'
         } else if (error.message.includes('configuración')) {

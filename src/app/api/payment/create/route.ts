@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GetNetPaymentRequest, GetNetPaymentResponse } from '@/services/paymentService'
 import * as crypto from 'crypto'
 
-// Configuración de GetNet corregida
+// Configuración de GetNet corregida con el endpoint correcto
 const GETNET_CONFIG = {
-  // GetNet Chile usa diferentes endpoints según el ambiente
-  apiUrl: process.env.GETNET_BASE_URL || 'https://api.getnet.cl',
-  testApiUrl: 'https://api-test.getnet.cl',
+  // GetNet Chile endpoints corregidos
+  apiUrl: process.env.GETNET_BASE_URL || 'https://checkout.getnet.cl',
+  testApiUrl: 'https://checkout.test.getnet.cl',
   login: process.env.GETNET_LOGIN || '',
   secret: process.env.GETNET_SECRET || '',
   environment: process.env.GETNET_ENVIRONMENT || 'test'
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       ? GETNET_CONFIG.apiUrl 
       : GETNET_CONFIG.testApiUrl
 
-    // Preparar datos para GetNet según su API - CORREGIDO
+    // Preparar datos para GetNet según su API
     const getNetPayload = {
       merchant_id: GETNET_CONFIG.login,
       amount: Math.round(body.amount), // Asegurar que sea entero
@@ -76,17 +76,16 @@ export async function POST(request: NextRequest) {
     console.log('GetNet payload prepared:', { 
       ...getNetPayload, 
       signature: '[HIDDEN]',
-      endpoint: `${baseUrl}/v1/payments/create`
+      endpoint: `${baseUrl}/api/v1/payments`
     })
 
-    // Llamar a la API de GetNet - ENDPOINT CORREGIDO
-    const getNetResponse = await fetch(`${baseUrl}/v1/payments/create`, {
+    // Llamar a la API de GetNet con el endpoint correcto
+    const getNetResponse = await fetch(`${baseUrl}/api/v1/payments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'CasinoEscolar/1.0',
-        'Authorization': `Bearer ${GETNET_CONFIG.login}` // Algunos proveedores requieren esto
+        'User-Agent': 'CasinoEscolar/1.0'
       },
       body: JSON.stringify(getNetPayload)
     })
@@ -131,7 +130,7 @@ export async function POST(request: NextRequest) {
       throw new Error(`${errorMessage} (${getNetResponse.status})`)
     }
 
-    // Procesar respuesta exitosa de GetNet - MEJORADO
+    // Procesar respuesta exitosa de GetNet
     if (getNetData.success === true || getNetData.status === 'created' || getNetData.payment_url) {
       const response: GetNetPaymentResponse = {
         success: true,
@@ -156,6 +155,8 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error) {
       if (error.message.includes('fetch')) {
         errorMessage = 'No se pudo conectar con el proveedor de pagos'
+      } else if (error.message.includes('ENOTFOUND')) {
+        errorMessage = 'Servicio de pagos no disponible. Verificando configuración...'
       } else if (error.message.includes('404')) {
         errorMessage = 'Servicio de pagos no disponible. Por favor, intenta más tarde.'
       } else if (error.message.includes('401')) {
