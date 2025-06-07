@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { NetGetPaymentRequest } from '@/services/paymentService'
+import { createHmac } from 'crypto'
+import { GetNetPaymentRequest } from '@/services/paymentService'
 
 // Configuración de NetGet
 const NETGET_CONFIG = {
@@ -10,9 +11,34 @@ const NETGET_CONFIG = {
   notifyUrl: process.env.NEXT_PUBLIC_NETGET_NOTIFY_URL || `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/notify`
 }
 
+// Interface para los datos de pago de NetGet
+interface NetGetPaymentData {
+  merchant_id: string
+  amount: number
+  currency: string
+  order_id: string
+  description: string
+  customer_email: string
+  customer_name: string
+  return_url: string
+  notify_url: string
+  timestamp: number
+  signature?: string
+}
+
+// Interface para la respuesta de NetGet
+interface NetGetResponse {
+  success: boolean
+  payment_id?: string
+  transaction_id?: string
+  redirect_url?: string
+  payment_url?: string
+  message?: string
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body: NetGetPaymentRequest = await request.json()
+    const body: GetNetPaymentRequest = await request.json()
     
     console.log('Creating NetGet payment with data:', body)
 
@@ -43,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Preparar datos para NetGet
-    const paymentData = {
+    const paymentData: NetGetPaymentData = {
       merchant_id: NETGET_CONFIG.merchantId,
       amount: body.amount, // Ya viene en centavos
       currency: 'CLP',
@@ -92,7 +118,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const netGetResult = await netGetResponse.json()
+    const netGetResult: NetGetResponse = await netGetResponse.json()
     console.log('NetGet response:', netGetResult)
 
     if (netGetResult.success) {
@@ -125,22 +151,19 @@ export async function POST(request: NextRequest) {
 }
 
 // Función para generar firma de NetGet (implementar según documentación)
-function generateNetGetSignature(data: any, secretKey: string): string {
+function generateNetGetSignature(data: NetGetPaymentData, secretKey: string): string {
   // Implementar según la documentación específica de NetGet
   // Típicamente es un HMAC-SHA256 de los parámetros concatenados en orden alfabético
-  
-  const crypto = require('crypto')
   
   // Ordenar parámetros alfabéticamente (excluyendo signature)
   const sortedParams = Object.keys(data)
     .filter(key => key !== 'signature')
     .sort()
-    .map(key => `${key}=${data[key]}`)
+    .map(key => `${key}=${data[key as keyof NetGetPaymentData]}`)
     .join('&')
   
   // Generar HMAC-SHA256
-  const signature = crypto
-    .createHmac('sha256', secretKey)
+  const signature = createHmac('sha256', secretKey)
     .update(sortedParams)
     .digest('hex')
   
