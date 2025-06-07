@@ -1,4 +1,5 @@
 import { ReportsData, ReportsFilters, ReportMetadata } from '@/types/reports'
+import { AdminOrderView, OrderMetrics } from '@/types/adminOrder'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -43,6 +44,181 @@ export class ExportUtils {
     } catch (error) {
       console.error('Error exporting to Excel:', error)
       throw new Error('No se pudo generar el reporte Excel')
+    }
+  }
+
+  // New methods for order exports
+  static async exportOrdersToPDF(orders: AdminOrderView[], metrics: OrderMetrics, filters: any, adminUser: any): Promise<void> {
+    try {
+      const htmlContent = this.generateOrdersPDFContent(orders, metrics, filters, adminUser)
+      
+      const printWindow = window.open('', '_blank')
+      if (printWindow) {
+        printWindow.document.write(htmlContent)
+        printWindow.document.close()
+        printWindow.focus()
+        setTimeout(() => {
+          printWindow.print()
+          printWindow.close()
+        }, 250)
+      }
+    } catch (error) {
+      console.error('Error exporting orders to PDF:', error)
+      throw new Error('No se pudo generar el reporte de pedidos PDF')
+    }
+  }
+
+  static async exportOrdersToExcel(orders: AdminOrderView[], metrics: OrderMetrics, filters: any, adminUser: any): Promise<void> {
+    try {
+      const csvContent = this.generateOrdersCSVContent(orders, metrics, filters, adminUser)
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob)
+        link.setAttribute('href', url)
+        link.setAttribute('download', `pedidos-casino-escolar-${format(new Date(), 'yyyy-MM-dd')}.csv`)
+        link.style.visibility = 'hidden'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+    } catch (error) {
+      console.error('Error exporting orders to Excel:', error)
+      throw new Error('No se pudo generar el reporte de pedidos Excel')
+    }
+  }
+
+  private static generateOrdersPDFContent(orders: AdminOrderView[], metrics: OrderMetrics, filters: any, adminUser: any): string {
+    const currentDate = format(new Date(), 'dd/MM/yyyy HH:mm')
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Reporte de Pedidos - Casino Escolar</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+          .stat-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
+          .stat-value { font-size: 24px; font-weight: bold; color: #3B82F6; }
+          .stat-label { font-size: 14px; color: #666; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 12px; }
+          th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+          th { background-color: #f5f5f5; font-weight: bold; }
+          .footer { margin-top: 30px; font-size: 12px; color: #666; }
+          .status-paid { color: #059669; font-weight: bold; }
+          .status-pending { color: #D97706; font-weight: bold; }
+          .status-cancelled { color: #DC2626; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Reporte de Pedidos - Casino Escolar</h1>
+          <p>Generado por: ${adminUser?.firstName || 'Administrador'} ${adminUser?.lastName || ''}</p>
+          <p>Fecha: ${currentDate}</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">${metrics.totalOrders}</div>
+            <div class="stat-label">Total Pedidos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">$${metrics.totalRevenue.toLocaleString('es-CL')}</div>
+            <div class="stat-label">Ingresos Totales</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">$${metrics.averageOrderValue.toLocaleString('es-CL')}</div>
+            <div class="stat-label">Valor Promedio</div>
+          </div>
+        </div>
+
+        <h2>Detalle de Pedidos</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Email</th>
+              <th>Tipo</th>
+              <th>Fecha</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th>Items</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${orders.map(order => `
+              <tr>
+                <td>${order.id?.substring(0, 8) || 'N/A'}</td>
+                <td>${order.user.firstName} ${order.user.lastName}</td>
+                <td>${order.user.email}</td>
+                <td>${order.user.userType === 'funcionario' ? 'Funcionario' : 'Estudiante'}</td>
+                <td>${format(new Date(order.createdAt), 'dd/MM/yyyy')}</td>
+                <td>$${order.total.toLocaleString('es-CL')}</td>
+                <td class="status-${order.status}">${this.getStatusLabel(order.status)}</td>
+                <td>${order.itemsCount}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <p>Reporte generado automáticamente por el sistema Casino Escolar</p>
+        </div>
+      </body>
+      </html>
+    `
+  }
+
+  private static generateOrdersCSVContent(orders: AdminOrderView[], metrics: OrderMetrics, filters: any, adminUser: any): string {
+    const currentDate = format(new Date(), 'dd/MM/yyyy HH:mm')
+    
+    let csv = `Reporte de Pedidos - Casino Escolar\n`
+    csv += `Generado por:,${adminUser?.firstName || 'Administrador'} ${adminUser?.lastName || ''}\n`
+    csv += `Fecha:,${currentDate}\n\n`
+
+    csv += `RESUMEN ESTADÍSTICO\n`
+    csv += `Total Pedidos,${metrics.totalOrders}\n`
+    csv += `Ingresos Totales,$${metrics.totalRevenue.toLocaleString('es-CL')}\n`
+    csv += `Valor Promedio Pedido,$${metrics.averageOrderValue.toLocaleString('es-CL')}\n`
+    csv += `Pedidos Pagados,${metrics.paidOrders}\n`
+    csv += `Pedidos Pendientes,${metrics.pendingOrders}\n\n`
+
+    csv += `DETALLE DE PEDIDOS\n`
+    csv += `ID,Usuario,Email,Tipo Usuario,Fecha Creación,Total,Estado,Cantidad Items,Tiene Colaciones\n`
+    
+    orders.forEach(order => {
+      csv += `${order.id?.substring(0, 8) || 'N/A'},`
+      csv += `"${order.user.firstName} ${order.user.lastName}",`
+      csv += `${order.user.email},`
+      csv += `${order.user.userType === 'funcionario' ? 'Funcionario' : 'Estudiante'},`
+      csv += `${format(new Date(order.createdAt), 'dd/MM/yyyy')},`
+      csv += `$${order.total.toLocaleString('es-CL')},`
+      csv += `${this.getStatusLabel(order.status)},`
+      csv += `${order.itemsCount},`
+      csv += `${order.hasColaciones ? 'Sí' : 'No'}\n`
+    })
+
+    return csv
+  }
+
+  private static getStatusLabel(status: string): string {
+    switch (status) {
+      case 'paid':
+      case 'pagado':
+        return 'Pagado'
+      case 'pending':
+      case 'pendiente':
+        return 'Pendiente'
+      case 'cancelled':
+      case 'cancelado':
+        return 'Cancelado'
+      default:
+        return status
     }
   }
 

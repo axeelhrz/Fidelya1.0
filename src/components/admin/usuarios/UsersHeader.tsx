@@ -4,7 +4,6 @@ import {
   Users, 
   Download, 
   RefreshCw, 
-  Plus,
   Search
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'

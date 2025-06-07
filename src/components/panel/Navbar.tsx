@@ -14,16 +14,13 @@ import {
   Menu, 
   X, 
   ChevronDown,
-  Home,
   ShoppingCart,
   Settings,
   HelpCircle,
   BookOpen,
-  ClipboardList,
   UserCircle,
   LayoutDashboard
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/app/lib/firebase'
@@ -90,7 +87,7 @@ export function Navbar({ onLogout }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [notifications, setNotifications] = useState(3) // Simulado
+  const [notifications] = useState(3) // Simulado
 
   // Verificar si el componente está montado (para evitar hydration issues)
   useEffect(() => {

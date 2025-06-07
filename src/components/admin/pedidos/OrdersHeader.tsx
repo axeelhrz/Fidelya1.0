@@ -38,16 +38,11 @@ export function OrdersHeader({
   const handleExport = async (format: 'excel' | 'pdf') => {
     if (!metrics) return
     
-    const exportData = {
-      orders,
-      metrics,
-      filters
-    }
-    
+    // Use the order-specific export methods
     if (format === 'excel') {
-      await ExportUtils.exportToExcel(exportData)
+      await ExportUtils.exportOrdersToExcel(orders, metrics, filters, null)
     } else {
-      await ExportUtils.exportToPDF(exportData)
+      await ExportUtils.exportOrdersToPDF(orders, metrics, filters, null)
     }
   }
 

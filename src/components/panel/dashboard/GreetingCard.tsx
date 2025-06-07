@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import { User, Crown, GraduationCap } from 'lucide-react'
+import { Crown, GraduationCap } from 'lucide-react'
 import { DashboardUser } from '@/types/dashboard'
 import { getGreetingMessage, getUserTypeLabel, getUserTypeBadgeColor } from '@/lib/dashboardUtils'
 

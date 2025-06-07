@@ -1,28 +1,25 @@
 "use client"
 
-import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DayMenuDisplay, MenuItem } from '@/types/menu'
-import { Child, User } from '@/types/panel'
+import { User } from '@/types/panel'
 import { useOrderStore } from '@/store/orderStore'
 import { 
   Utensils, 
   Coffee, 
   Clock, 
   CheckCircle2, 
-  Circle, 
   User as UserIcon, 
   AlertCircle,
   Calendar,
   Moon,
   Sun,
-  Sunset
 } from 'lucide-react'
-import { format, isToday, isBefore, isAfter } from 'date-fns'
+import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
@@ -100,7 +97,6 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
     selectionsByChild, 
     currentChild, 
     updateSelectionByChild,
-    children 
   } = useOrderStore()
 
   // Verificar el estado del día usando fechas locales

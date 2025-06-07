@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import { DollarSign, TrendingUp, Calculator, Info } from 'lucide-react'
+import { DollarSign, TrendingUp, Calculator } from 'lucide-react'
 import { EconomicSummary } from '@/types/dashboard'
 import { formatCurrency, calculateProjectedTotal } from '@/lib/dashboardUtils'
 

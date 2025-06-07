@@ -1,12 +1,10 @@
 "use client"
-import { motion } from 'framer-motion'
 import { 
   X, 
   User, 
   Mail, 
   Phone, 
   Calendar, 
-  Shield, 
   Users, 
   ShoppingCart,
   Edit,
@@ -19,7 +17,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import { 
   Dialog, 
   DialogContent, 
@@ -43,7 +40,6 @@ interface UserDetailModalProps {
 export function UserDetailModal({
   user,
   isOpen,
-  isLoading,
   onClose,
   onEdit,
   onDelete,
@@ -221,7 +217,7 @@ export function UserDetailModal({
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {user.children.map((child, index) => (
+                  {user.children.map((child) => (
                     <div key={child.id} className="p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
                       <div className="font-medium text-slate-900 dark:text-white mb-2">
                         {child.name}
@@ -307,7 +303,7 @@ export function UserDetailModal({
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {user.recentOrders.map((order, index) => (
+                  {user.recentOrders.map((order) => (
                     <div key={order.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3">

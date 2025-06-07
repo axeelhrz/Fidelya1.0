@@ -9,9 +9,7 @@ import {
   Trash2, 
   Mail, 
   MailCheck,
-  Shield,
   User,
-  Calendar,
   ShoppingCart
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'

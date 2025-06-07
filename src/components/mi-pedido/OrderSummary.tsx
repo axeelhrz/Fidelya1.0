@@ -7,7 +7,6 @@ import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useOrderStore } from '@/store/orderStore'
 import { User } from '@/types/panel'
-import { MenuService } from '@/services/menuService'
 import { 
   ShoppingCart, 
   Trash2, 
@@ -34,7 +33,6 @@ export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: 
   const { 
     getOrderSummaryByChild, 
     removeSelectionByChild,
-    selectionsByChild 
   } = useOrderStore()
 
   const summary = getOrderSummaryByChild()

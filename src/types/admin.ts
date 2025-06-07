@@ -56,6 +56,7 @@ export interface SystemAlert {
   isRead: boolean
   actionUrl?: string
   actionText?: string
+  dismissible?: boolean
 }
 
 export interface AdminDashboardData {

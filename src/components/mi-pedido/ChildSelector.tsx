@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { useOrderStore } from '@/store/orderStore'
-import { User, Child } from '@/types/panel'
+import { User } from '@/types/panel'
 import { Users, Plus, User as UserIcon, GraduationCap } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -17,7 +17,7 @@ interface ChildSelectorProps {
   isReadOnly: boolean
 }
 
-export function ChildSelector({ user, isReadOnly }: ChildSelectorProps) {
+export function ChildSelector({ isReadOnly }: ChildSelectorProps) {
   const { currentChild, setCurrentChild, children } = useOrderStore()
   const [showAddChild, setShowAddChild] = useState(false)
 
