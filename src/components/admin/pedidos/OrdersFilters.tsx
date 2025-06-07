@@ -27,7 +27,7 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
   const weekOptions = AdminOrderService.generateWeekOptions()
   
   const dayOptions = [
-    { value: '', label: 'Todos los días' },
+    { value: 'none', label: 'Todos los días' },
     { value: 'monday', label: 'Lunes' },
     { value: 'tuesday', label: 'Martes' },
     { value: 'wednesday', label: 'Miércoles' },
@@ -49,7 +49,7 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
 
   const getActiveFiltersCount = () => {
     let count = 0
-    if (filters.day) count++
+    if (filters.day && filters.day !== 'none') count++
     if (filters.userType && filters.userType !== 'all') count++
     if (filters.status && filters.status !== 'all') count++
     if (filters.searchTerm) count++
@@ -58,7 +58,7 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
 
   const clearAllFilters = () => {
     onFiltersChange({
-      day: '',
+      day: 'none',
       userType: 'all',
       status: 'all',
       searchTerm: ''
@@ -116,13 +116,14 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
                   Semana
                 </label>
                 <Select
-                  value={filters.weekStart || ''}
-                  onValueChange={(value) => onFiltersChange({ weekStart: value })}
+                  value={filters.weekStart || 'none'}
+                  onValueChange={(value) => onFiltersChange({ weekStart: value === 'none' ? undefined : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar semana" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">Todas las semanas</SelectItem>
                     {weekOptions.map((week) => (
                       <SelectItem key={week.value} value={week.value}>
                         <div className="flex items-center space-x-2">
@@ -145,8 +146,8 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
                   Día específico
                 </label>
                 <Select
-                  value={filters.day || ''}
-                  onValueChange={(value) => onFiltersChange({ day: value })}
+                  value={filters.day || 'none'}
+                  onValueChange={(value) => onFiltersChange({ day: value === 'none' ? undefined : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Todos los días" />

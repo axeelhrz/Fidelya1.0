@@ -32,12 +32,12 @@ export function UsersFilters({
   onToggle 
 }: UsersFiltersProps) {
   const activeFiltersCount = Object.values(filters).filter(value => 
-    value !== undefined && value !== 'all' && value !== ''
+    value !== undefined && value !== 'all' && value !== '' && value !== 'none'
   ).length
 
   const handleDateRangeChange = (value: string) => {
     onFiltersChange({ 
-      dateRange: value as 'week' | 'month' | 'custom',
+      dateRange: value === 'none' ? undefined : value as 'week' | 'month' | 'custom',
       customStartDate: undefined,
       customEndDate: undefined
     })
@@ -139,14 +139,14 @@ export function UsersFilters({
                     <span>Fecha de Registro</span>
                   </Label>
                   <Select
-                    value={filters.dateRange || ''}
+                    value={filters.dateRange || 'none'}
                     onValueChange={handleDateRangeChange}
                   >
                     <SelectTrigger className="bg-slate-50 dark:bg-slate-700">
                       <SelectValue placeholder="Seleccionar período" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Cualquier fecha</SelectItem>
+                      <SelectItem value="none">Cualquier fecha</SelectItem>
                       <SelectItem value="week">Últimos 7 días</SelectItem>
                       <SelectItem value="month">Este mes</SelectItem>
                       <SelectItem value="custom">Personalizado</SelectItem>
