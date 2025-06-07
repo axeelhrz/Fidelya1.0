@@ -593,20 +593,72 @@ export class OrderService {
 
   // Métodos privados de utilidad
 
+  /**
+   * Mapea un documento de Firestore a un objeto OrderStateByChild
+   * CORREGIDO: Maneja correctamente los timestamps de Firestore
+   */
   private static mapDocumentToOrder(id: string, data: DocumentData): OrderStateByChild | null {
     try {
+      // Función auxiliar para convertir timestamps de manera segura
+      const safeToDate = (timestamp: unknown): Date => {
+        if (!timestamp) {
+          return new Date()
+        }
+        
+        // Si es un Timestamp de Firestore
+        if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp) {
+          try {
+            return (timestamp as Timestamp).toDate()
+          } catch (error) {
+            console.warn('Error converting Firestore timestamp:', error)
+            return new Date()
+          }
+        }
+        
+        // Si es una fecha como string
+        if (typeof timestamp === 'string') {
+          const date = new Date(timestamp)
+          return isNaN(date.getTime()) ? new Date() : date
+        }
+        
+        // Si es un número (timestamp en milisegundos)
+        if (typeof timestamp === 'number') {
+          return new Date(timestamp)
+        }
+        
+        // Si es ya un objeto Date
+        if (timestamp instanceof Date) {
+          return timestamp
+        }
+        
+        // Si es un objeto con seconds y nanoseconds (formato Firestore)
+        if (timestamp && typeof timestamp === 'object' && 'seconds' in timestamp) {
+          try {
+            const seconds = (timestamp as { seconds: number; nanoseconds?: number }).seconds
+            const nanoseconds = (timestamp as { seconds: number; nanoseconds?: number }).nanoseconds || 0
+            return new Date(seconds * 1000 + nanoseconds / 1000000)
+          } catch (error) {
+            console.warn('Error converting timestamp object:', error)
+            return new Date()
+          }
+        }
+        
+        console.warn('Unknown timestamp format:', timestamp)
+        return new Date()
+      }
+
       return {
         id,
-        userId: data.userId,
-        tipoUsuario: data.tipoUsuario,
-        weekStart: data.weekStart,
-        fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
+        userId: data.userId || '',
+        tipoUsuario: data.tipoUsuario || 'apoderado',
+        weekStart: data.weekStart || '',
+        fechaCreacion: safeToDate(data.fechaCreacion),
         resumenPedido: data.resumenPedido || [],
         total: data.total || 0,
         status: data.status || 'pendiente',
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate(),
-        paidAt: data.paidAt?.toDate(),
+        createdAt: safeToDate(data.createdAt),
+        updatedAt: data.updatedAt ? safeToDate(data.updatedAt) : undefined,
+        paidAt: data.paidAt ? safeToDate(data.paidAt) : undefined,
         paymentId: data.paymentId,
         metadata: data.metadata
       }
