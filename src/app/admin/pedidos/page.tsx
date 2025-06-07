@@ -123,6 +123,27 @@ export default function AdminPedidosPage() {
     updateFilters({ status })
   }
 
+  // Calcular contadores para filtros rápidos basados en datos actuales
+  const getFilterCounts = () => {
+    if (!metrics) {
+      return {
+        all: orders.length,
+        pending: 0,
+        paid: 0,
+        cancelled: 0
+      }
+    }
+
+    return {
+      all: metrics.totalOrders,
+      pending: metrics.pendingOrders,
+      paid: metrics.paidOrders,
+      cancelled: metrics.cancelledOrders
+    }
+  }
+
+  const filterCounts = getFilterCounts()
+
   // Loading state para autenticación
   if (authLoading) {
     return (
@@ -235,7 +256,7 @@ export default function AdminPedidosPage() {
                       
                       <div className="flex items-center gap-4">
                         <Badge variant="outline" className="bg-white dark:bg-slate-800">
-                          {orders.length} pedidos
+                          {filterCounts.all} pedidos
                         </Badge>
                         {metrics && (
                           <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
@@ -257,7 +278,7 @@ export default function AdminPedidosPage() {
                         Filtros rápidos:
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Button
                         variant={filters.status === 'all' ? 'default' : 'outline'}
                         size="sm"
@@ -265,7 +286,7 @@ export default function AdminPedidosPage() {
                         className="text-xs"
                       >
                         <FileText className="w-3 h-3 mr-1" />
-                        Todos ({orders.length})
+                        Todos ({filterCounts.all})
                       </Button>
                       <Button
                         variant={filters.status === 'pending' ? 'default' : 'outline'}
@@ -278,7 +299,12 @@ export default function AdminPedidosPage() {
                         }`}
                       >
                         <Clock className="w-3 h-3 mr-1" />
-                        Pendientes ({metrics?.pendingOrders || 0})
+                        Pendientes ({filterCounts.pending})
+                        {(metrics?.criticalPendingOrders || 0) > 0 && (
+                          <Badge variant="destructive" className="ml-1 text-xs animate-pulse">
+                            {metrics?.criticalPendingOrders}
+                          </Badge>
+                        )}
                       </Button>
                       <Button
                         variant={filters.status === 'paid' ? 'default' : 'outline'}
@@ -291,7 +317,7 @@ export default function AdminPedidosPage() {
                         }`}
                       >
                         <CheckCircle className="w-3 h-3 mr-1" />
-                        Pagados ({metrics?.paidOrders || 0})
+                        Pagados ({filterCounts.paid})
                       </Button>
                       <Button
                         variant={filters.status === 'cancelled' ? 'default' : 'outline'}
@@ -304,7 +330,7 @@ export default function AdminPedidosPage() {
                         }`}
                       >
                         <XCircle className="w-3 h-3 mr-1" />
-                        Cancelados ({metrics?.cancelledOrders || 0})
+                        Cancelados ({filterCounts.cancelled})
                       </Button>
                     </div>
                   </div>

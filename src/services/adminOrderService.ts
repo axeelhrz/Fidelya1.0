@@ -19,7 +19,7 @@ import { es } from 'date-fns/locale'
 export class AdminOrderService {
   // Cache para mejorar rendimiento
   private static cache = new Map<string, { data: AdminOrderView[]; timestamp: number }>()
-  private static CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
+  private static CACHE_DURATION = 2 * 60 * 1000 // 2 minutos para datos más frescos
 
   private static getCacheKey(filters: OrderFilters): string {
     return JSON.stringify(filters)
@@ -66,17 +66,19 @@ export class AdminOrderService {
     try {
       const cacheKey = this.getCacheKey(filters)
       
-      // Verificar cache
+      // Verificar cache solo si no es una consulta en tiempo real
       if (this.isValidCache(cacheKey)) {
+        console.log('Using cached data for filters:', filters)
         return this.cache.get(cacheKey)!.data
       }
 
+      console.log('Fetching fresh data for filters:', filters)
       const ordersRef = collection(db, 'orders')
       
-      // Construir query básico sin filtros complejos para evitar errores de índice
+      // Construir query básico
       let q = query(ordersRef, orderBy('createdAt', 'desc'))
 
-      // Solo aplicar filtros simples que no requieren índices complejos
+      // Solo aplicar filtro de estado si no es 'all'
       if (filters.status && filters.status !== 'all') {
         q = query(ordersRef, where('status', '==', filters.status), orderBy('createdAt', 'desc'))
       }
@@ -84,8 +86,10 @@ export class AdminOrderService {
       const ordersSnapshot = await getDocs(q)
       const orders: AdminOrderView[] = []
 
+      console.log(`Processing ${ordersSnapshot.docs.length} orders from Firestore`)
+
       // Procesar pedidos en lotes para mejor rendimiento
-      const batchSize = 10
+      const batchSize = 15
       const orderDocs = ordersSnapshot.docs
       
       for (let i = 0; i < orderDocs.length; i += batchSize) {
@@ -101,7 +105,10 @@ export class AdminOrderService {
             
             // Obtener datos del usuario
             const userDoc = await getDoc(doc(db, 'users', orderData.userId))
-            if (!userDoc.exists()) return null
+            if (!userDoc.exists()) {
+              console.warn(`User not found for order ${orderDoc.id}: ${orderData.userId}`)
+              return null
+            }
 
             const userData = userDoc.data()
 
@@ -142,7 +149,7 @@ export class AdminOrderService {
               weekStart: orderData.weekStart,
               selections: selections,
               total: total,
-              status: orderData.status,
+              status: orderData.status || 'pending',
               createdAt: createdAt,
               paidAt: paidAt,
               cancelledAt: cancelledAt,
@@ -186,6 +193,8 @@ export class AdminOrderService {
         orders.push(...batchResults.filter(order => order !== null) as AdminOrderView[])
       }
 
+      console.log(`Processed ${orders.length} orders after filtering`)
+
       // Guardar en cache
       this.cache.set(cacheKey, {
         data: orders,
@@ -203,6 +212,8 @@ export class AdminOrderService {
     try {
       const orders = await this.getOrdersWithFilters(filters)
       
+      console.log(`Calculating metrics for ${orders.length} orders`)
+      
       const metrics: OrderMetrics = {
         totalOrders: orders.length,
         totalRevenue: 0,
@@ -219,41 +230,39 @@ export class AdminOrderService {
 
       // Calcular métricas
       orders.forEach(order => {
-        // Revenue total (solo contar pedidos pagados para revenue real)
-        if (order.status === 'paid') {
-          metrics.totalRevenue += order.total
-        }
-
+        const orderTotal = order.total || 0
+        
         // Contadores por estado
-        if (order.status === 'pending') {
-          metrics.pendingOrders++
-          metrics.totalByStatus.pending++
-          metrics.revenueByStatus.pending += order.total
-          
-          // Pedidos críticos (más de 3 días pendientes)
-          if ((order.daysSincePending || 0) > 3) {
-            metrics.criticalPendingOrders++
-          }
-        }
-        
-        if (order.status === 'paid') {
-          metrics.paidOrders++
-          metrics.totalByStatus.paid++
-          metrics.revenueByStatus.paid += order.total
-        }
-        
-        if (order.status === 'cancelled') {
-          metrics.cancelledOrders++
-          metrics.totalByStatus.cancelled++
-          metrics.revenueByStatus.cancelled += order.total
+        switch (order.status) {
+          case 'pending':
+            metrics.pendingOrders++
+            metrics.totalByStatus.pending++
+            metrics.revenueByStatus.pending += orderTotal
+            
+            // Pedidos críticos (más de 3 días pendientes)
+            if ((order.daysSincePending || 0) > 3) {
+              metrics.criticalPendingOrders++
+            }
+            break
+            
+          case 'paid':
+            metrics.paidOrders++
+            metrics.totalByStatus.paid++
+            metrics.revenueByStatus.paid += orderTotal
+            metrics.totalRevenue += orderTotal // Solo contar revenue de pedidos pagados
+            
+            // Totales por tipo de usuario (solo pedidos pagados)
+            metrics.totalByUserType[order.user.userType] += orderTotal
+            break
+            
+          case 'cancelled':
+            metrics.cancelledOrders++
+            metrics.totalByStatus.cancelled++
+            metrics.revenueByStatus.cancelled += orderTotal
+            break
         }
 
-        // Totales por tipo de usuario (solo pedidos pagados)
-        if (order.status === 'paid') {
-          metrics.totalByUserType[order.user.userType] += order.total
-        }
-
-        // Totales por día
+        // Totales por día (contar todos los pedidos)
         order.selections.forEach(selection => {
           try {
             const dayKey = format(parseISO(selection.date), 'EEEE', { locale: es })
@@ -268,6 +277,15 @@ export class AdminOrderService {
       metrics.averageOrderValue = metrics.paidOrders > 0 
         ? metrics.totalRevenue / metrics.paidOrders 
         : 0
+
+      console.log('Calculated metrics:', {
+        total: metrics.totalOrders,
+        pending: metrics.pendingOrders,
+        paid: metrics.paidOrders,
+        cancelled: metrics.cancelledOrders,
+        critical: metrics.criticalPendingOrders,
+        revenue: metrics.totalRevenue
+      })
 
       return metrics
     } catch (error) {
@@ -286,27 +304,41 @@ export class AdminOrderService {
         throw new Error('El pedido no existe')
       }
 
-      const updateData: Record<string, string | number | boolean | Timestamp | null> = {
+      const currentData = orderDoc.data()
+      console.log(`Updating order ${request.orderId} from ${currentData.status} to ${request.status}`)
+
+      const updateData: Record<string, string | Timestamp | null> = {
+        status: request.status || 'pending',
         updatedAt: Timestamp.now()
       }
 
-      if (request.status) {
-        updateData.status = request.status
-        
-        // Agregar timestamp específico según el estado
-        if (request.status === 'paid') {
+      // Manejar timestamps según el nuevo estado
+      switch (request.status) {
+        case 'paid':
           updateData.paidAt = Timestamp.now()
           // Limpiar cancelledAt si existía
-          updateData.cancelledAt = null
-        } else if (request.status === 'cancelled') {
+          if (currentData.cancelledAt) {
+            updateData.cancelledAt = null
+          }
+          break
+          
+        case 'cancelled':
           updateData.cancelledAt = Timestamp.now()
           // Limpiar paidAt si existía
-          updateData.paidAt = null
-        } else if (request.status === 'pending') {
+          if (currentData.paidAt) {
+            updateData.paidAt = null
+          }
+          break
+          
+        case 'pending':
           // Limpiar ambos timestamps si vuelve a pendiente
-          updateData.paidAt = null
-          updateData.cancelledAt = null
-        }
+          if (currentData.paidAt) {
+            updateData.paidAt = null
+          }
+          if (currentData.cancelledAt) {
+            updateData.cancelledAt = null
+          }
+          break
       }
 
       if (request.notes) {
@@ -314,6 +346,8 @@ export class AdminOrderService {
       }
 
       await updateDoc(orderRef, updateData)
+      
+      console.log(`Order ${request.orderId} updated successfully to ${request.status}`)
       
       // Limpiar cache relacionado
       this.clearCache()
@@ -334,6 +368,8 @@ export class AdminOrderService {
       }
 
       await deleteDoc(orderRef)
+      
+      console.log(`Order ${orderId} deleted successfully`)
       
       // Limpiar cache
       this.clearCache()
@@ -360,11 +396,7 @@ export class AdminOrderService {
       const cancelledAt = orderData.cancelledAt ? this.safeTimestampToDate(orderData.cancelledAt) : undefined
 
       // Procesar selecciones con manejo de errores
-      const processedSelections = (orderData.selections || []).map((s: {
-        date: string;
-        almuerzo?: { code: string; name: string; price: number };
-        colacion?: { code: string; name: string; price: number };
-      }) => {
+      const processedSelections = (orderData.selections || []).map((s: { date: string; almuerzo?: { code: string; name: string; price: number }; colacion?: { code: string; name: string; price: number } }) => {
         try {
           return {
             date: s.date,
@@ -474,6 +506,7 @@ export class AdminOrderService {
 
   // Método para limpiar cache
   static clearCache(): void {
+    console.log('Clearing cache')
     this.cache.clear()
   }
 
