@@ -4,7 +4,6 @@ import {
   where, 
   getDocs, 
   orderBy,
-  Timestamp,
   doc,
   getDoc
 } from 'firebase/firestore'
@@ -18,7 +17,31 @@ import {
   DailyMetrics,
   ReportsData 
 } from '@/types/reports'
-import { format, parseISO, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns'
+
+interface OrderData {
+  id: string
+  userId: string
+  status: string
+  total?: number
+  createdAt?: any
+  selections?: Array<{
+    almuerzo?: {
+      code: string
+      name: string
+      price?: number
+    }
+    colacion?: {
+      code: string
+      name: string
+      price?: number
+    }
+  }>
+  user?: {
+    userType: string
+    [key: string]: string | number | boolean | Date | null | undefined
+  }
+}
+import { format, parseISO, eachDayOfInterval} from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export class ReportsService {
@@ -54,7 +77,7 @@ export class ReportsService {
     }
   }
 
-  private static async getFilteredOrders(filters: ReportsFilters): Promise<any[]> {
+  private static async getFilteredOrders(filters: ReportsFilters): Promise<OrderData[]> {
     try {
       const ordersRef = collection(db, 'orders')
       let q = query(ordersRef, orderBy('createdAt', 'desc'))
@@ -85,7 +108,7 @@ export class ReportsService {
                     id: orderDoc.id,
                     ...orderData,
                     user: userData
-                  })
+                  } as OrderData)
                 }
               }
             } else {
@@ -95,7 +118,7 @@ export class ReportsService {
                 id: orderDoc.id,
                 ...orderData,
                 user: userData
-              })
+              } as OrderData)
             }
           }
         }

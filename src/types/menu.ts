@@ -1,4 +1,4 @@
-import { MenuItem, DayMenu as DayMenuOptions } from './panel'
+import { MenuItem } from './panel'
 
 export interface WeeklyMenuData {
   weekStart: string

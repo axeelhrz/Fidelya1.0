@@ -1,5 +1,4 @@
 import { OrderState } from './order'
-import { User } from './panel'
 
 export interface AdminOrderView extends OrderState {
   user: {
@@ -59,7 +58,7 @@ export interface OrderUpdateRequest {
   notes?: string
 }
 
-export interface OrderDetailView extends AdminOrderView {
+export interface OrderDetailView extends Omit<AdminOrderView, 'selections'> {
   selections: Array<{
     date: string
     dayName: string

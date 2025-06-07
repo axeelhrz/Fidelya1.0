@@ -64,15 +64,18 @@ export function useProfileForm(): UseProfileFormReturn {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
-        phone: (user as any).phone || ''
+        phone: (user as { phone?: string }).phone || ''
       }
       
       // Transform children to include edad and level properties
-      const transformedChildren: ExtendedChild[] = (user.children || []).map(child => ({
-        ...child,
-        edad: (child as any).edad || (child as any).age || 0,
-        level: (child as any).level || 'basico'
-      }))
+      const transformedChildren: ExtendedChild[] = (user.children || []).map(child => {
+        const childWithAge = child as Child & { edad?: number; age?: number; level?: 'basico' | 'medio' }
+        return {
+          ...child,
+          edad: childWithAge.edad || childWithAge.age || 0,
+          level: childWithAge.level || 'basico'
+        }
+      })
       
       setFormData(userData)
       setOriginalData(userData)

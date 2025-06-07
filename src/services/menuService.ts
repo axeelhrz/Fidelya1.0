@@ -1,6 +1,6 @@
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
-import { MenuItem, PRICES, UserType } from '@/types/panel'
+import { MenuItem, PRICES, UserType, User } from '@/types/panel'
 import { DayMenuDisplay, WeekMenuDisplay } from '@/types/menu'
 import { format, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -13,9 +13,14 @@ export class MenuService {
   }
 
   // Helper method to determine user type from various possible field names
-  static getUserTypeFromUser(user: any): UserType {
+  static getUserTypeFromUser(user: User | { tipoUsuario?: string; userType?: string; tipo_usuario?: string; type?: string } | null | undefined): UserType {
+    if (!user) {
+      console.warn('User is null or undefined, defaulting to apoderado')
+      return 'apoderado'
+    }
+
     // Try different possible field names
-    const userType = user?.tipoUsuario || user?.userType || user?.tipo_usuario || user?.type
+    const userType = user.tipoUsuario || user.userType || user.tipo_usuario || user.type
     
     // Normalize to expected values
     if (userType === 'funcionario' || userType === 'staff' || userType === 'employee') {
@@ -64,7 +69,10 @@ export class MenuService {
           image: data.image,
           date: data.date,
           dia: data.day,
-          active: data.active
+          active: data.active,
+          category: data.type,
+          allergens: data.allergens || [],
+          nutritionalInfo: data.nutritionalInfo || {}
         })
       })
       
@@ -75,7 +83,7 @@ export class MenuService {
     }
   }
 
-  static async getWeeklyMenuForUser(userTypeOrUser: UserType | any, weekStart?: string): Promise<DayMenuDisplay[]> {
+  static async getWeeklyMenuForUser(userTypeOrUser: UserType | User | { tipoUsuario?: string; userType?: string; tipo_usuario?: string; type?: string } | null | undefined, weekStart?: string): Promise<DayMenuDisplay[]> {
     try {
       let userType: UserType
       
@@ -130,166 +138,4 @@ export class MenuService {
         
         return {
           ...day,
-          isAvailable: day.hasItems && !isPastDay && !isWeekend, // Disponible si tiene items, no es día pasado y no es fin de semana
-          isPastDay,
-          isCurrentDay,
-          isFutureDay,
-          isWeekend,
-          canOrder: !isPastDay && !isWeekend, // Se puede pedir si no es día pasado y no es fin de semana
-          almuerzos: day.almuerzos.map(item => ({
-            ...item,
-            price: prices.almuerzo,
-            available: item.available && !isPastDay && !isWeekend
-          })),
-          colaciones: day.colaciones.map(item => ({
-            ...item,
-            price: prices.colacion,
-            available: item.available && !isPastDay && !isWeekend
-          }))
-        }
-      })
-      
-      return daysWithPrices
-    } catch (error) {
-      console.error('Error fetching weekly menu for user:', error)
-      throw error
-    }
-  }
-
-  static getCurrentWeekInfo() {
-    const now = new Date()
-    console.log('Current date:', now)
-    console.log('Current date formatted:', format(now, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
-    
-    // Asegurar que la semana empiece en lunes
-    const weekStart = startOfWeek(now, { weekStartsOn: 1 })
-    const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
-    
-    console.log('Week start:', format(weekStart, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
-    console.log('Week end:', format(weekEnd, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es }))
-    
-    // Siempre permitir pedidos (sin restricción de horario)
-    const isOrderingAllowed = true
-    
-    // Generate week label
-    const weekLabel = this.getWeekDisplayText(
-      format(weekStart, 'yyyy-MM-dd'),
-      format(weekEnd, 'yyyy-MM-dd')
-    )
-    
-    return {
-      weekStart: format(weekStart, 'yyyy-MM-dd'),
-      weekEnd: format(weekEnd, 'yyyy-MM-dd'),
-      weekNumber: parseInt(format(weekStart, 'w')),
-      year: weekStart.getFullYear(),
-      isCurrentWeek: true,
-      isOrderingAllowed,
-      orderDeadline: new Date(), // Ya no se usa, pero mantenemos compatibilidad
-      weekLabel
-    }
-  }
-
-  static getCurrentWeekStart(): string {
-    const now = new Date()
-    // Asegurar que la semana empiece en lunes
-    const weekStart = startOfWeek(now, { weekStartsOn: 1 })
-    const weekStartFormatted = format(weekStart, 'yyyy-MM-dd')
-    
-    console.log('getCurrentWeekStart - now:', now)
-    console.log('getCurrentWeekStart - weekStart:', weekStart)
-    console.log('getCurrentWeekStart - formatted:', weekStartFormatted)
-    
-    return weekStartFormatted
-  }
-
-  static getWeekDisplayText(weekStart: string, weekEnd: string): string {
-    const start = this.createLocalDate(weekStart)
-    const end = this.createLocalDate(weekEnd)
-    
-    return `Del ${format(start, 'd')} al ${format(end, 'd')} de ${format(end, 'MMMM yyyy', { locale: es })}`
-  }
-
-  static getDayDisplayName(date: string): string {
-    return format(this.createLocalDate(date), 'EEEE d', { locale: es })
-  }
-
-  static getFormattedDate(date: string): string {
-    return format(this.createLocalDate(date), 'yyyy-MM-dd')
-  }
-
-  static getDayName(date: string): string {
-    return format(this.createLocalDate(date), 'EEEE', { locale: es })
-  }
-
-  // Método para verificar si un día específico permite pedidos
-  static isDayOrderingAllowed(date: string): boolean {
-    const dayDate = this.createLocalDate(date)
-    const today = new Date()
-    const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const dayDateNormalized = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate())
-    const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
-    
-    // Permitir pedidos para hoy y días futuros, pero no fines de semana
-    return (dayDateNormalized.getTime() >= todayNormalized.getTime()) && !isWeekend
-  }
-
-  private static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
-    // Crear fecha de inicio asegurando que sea lunes
-    const startDate = this.createLocalDate(weekStart)
-    
-    // Verificar que el startDate sea realmente un lunes
-    if (startDate.getDay() !== 1) {
-      console.warn('Week start is not Monday, adjusting...', startDate.getDay())
-      // Si no es lunes, ajustar al lunes más cercano hacia atrás
-      const daysToSubtract = startDate.getDay() === 0 ? 6 : startDate.getDay() - 1
-      startDate.setDate(startDate.getDate() - daysToSubtract)
-    }
-    
-    const endDate = addDays(startDate, 6) // Domingo es 6 días después del lunes
-    const weekLabel = `Del ${format(startDate, 'd')} al ${format(endDate, 'd')} de ${format(endDate, 'MMMM yyyy', { locale: es })}`
-    
-    console.log('buildWeekMenuStructure - weekStart:', weekStart)
-    console.log('buildWeekMenuStructure - startDate (should be Monday):', startDate, 'Day of week:', startDate.getDay())
-    console.log('buildWeekMenuStructure - endDate (should be Sunday):', endDate, 'Day of week:', endDate.getDay())
-    
-    const days: DayMenuDisplay[] = []
-    
-    // Crear estructura para todos los días de la semana (lunes=0 a domingo=6)
-    const dayNames = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
-    
-    for (let i = 0; i < 7; i++) {
-      const currentDate = addDays(startDate, i)
-      const dateStr = format(currentDate, 'yyyy-MM-dd')
-      const dayName = dayNames[i]
-      const isWeekend = i >= 5 // Sábado (5) y Domingo (6)
-      
-      console.log(`Day ${i}: ${dayName} ${format(currentDate, 'd \'de\' MMMM \'de\' yyyy', { locale: es })} (${dateStr}) - Weekend: ${isWeekend}, DayOfWeek: ${currentDate.getDay()}`)
-      
-      // Filtrar items por fecha específica
-      const dayItems = items.filter(item => item.date === dateStr)
-      
-      const almuerzos = dayItems.filter(item => item.type === 'almuerzo')
-      const colaciones = dayItems.filter(item => item.type === 'colacion')
-      
-      days.push({
-        date: dateStr,
-        day: dayName,
-        dayLabel: dayName.charAt(0).toUpperCase() + dayName.slice(1),
-        dateFormatted: format(currentDate, 'd \'de\' MMMM \'de\' yyyy', { locale: es }),
-        almuerzos,
-        colaciones,
-        hasItems: almuerzos.length > 0 || colaciones.length > 0,
-        isAvailable: (almuerzos.length > 0) && !isWeekend, // Disponible si hay almuerzo y no es fin de semana
-        isWeekend
-      })
-    }
-    
-    return {
-      weekStart: format(startDate, 'yyyy-MM-dd'),
-      weekEnd: format(endDate, 'yyyy-MM-dd'),
-      weekLabel,
-      days,
-      totalItems: items.length
-    }
-  }
-}
+          isAvailable: day.hasItems && !isPastDay && !isWeekend, // Dispon

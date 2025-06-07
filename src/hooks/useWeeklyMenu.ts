@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { MenuService } from '@/services/menuService'
 import { DayMenuDisplay, MenuLoadingState, MenuError } from '@/types/menu'
 import { useAuth } from '@/hooks/useAuth'
@@ -21,7 +21,7 @@ export function useWeeklyMenu(): UseWeeklyMenuReturn {
   const [error, setError] = useState<MenuError | null>(null)
   const [weekRange, setWeekRange] = useState('')
 
-  const loadWeekMenu = async () => {
+  const loadWeekMenu = useCallback(async () => {
     if (!user) return
 
     setLoadingState('loading')
@@ -36,7 +36,7 @@ export function useWeeklyMenu(): UseWeeklyMenuReturn {
 
       // Cargar menú con precios según tipo de usuario
       const menuData = await MenuService.getWeeklyMenuForUser(
-        user.userType as 'funcionario' | 'estudiante',
+        user.type as 'funcionario' | 'estudiante',
         weekInfo.weekStart
       )
       
@@ -52,7 +52,7 @@ export function useWeeklyMenu(): UseWeeklyMenuReturn {
       })
       setLoadingState('error')
     }
-  }
+  }, [user])
 
   const refreshMenu = async () => {
     await loadWeekMenu()
@@ -62,7 +62,7 @@ export function useWeeklyMenu(): UseWeeklyMenuReturn {
     if (user) {
       loadWeekMenu()
     }
-  }, [user])
+  }, [user, loadWeekMenu])
 
   return {
     weekMenu,

@@ -23,7 +23,7 @@ interface OrderState {
   setUserType: (type: UserType) => void
   addSelection: (selection: OrderSelection) => void
   removeSelection: (date: string) => void
-  updateSelection: (date: string, field: 'almuerzo' | 'colacion', item: any) => void
+  updateSelection: (date: string, field: 'almuerzo' | 'colacion', item: MenuItem | undefined) => void
   clearSelections: () => void
   getOrderSummary: () => OrderSummary
   setLoading: (loading: boolean) => void
@@ -74,7 +74,7 @@ export const useOrderStore = create<OrderState>()(
         set({ selections: selections.filter(s => s.date !== date) })
       },
 
-      updateSelection: (date: string, field: 'almuerzo' | 'colacion', item: any) => {
+      updateSelection: (date: string, field: 'almuerzo' | 'colacion', item: MenuItem | undefined) => {
         const { selections } = get()
         const existingIndex = selections.findIndex(s => s.date === date)
         
@@ -189,7 +189,7 @@ export const useOrderStore = create<OrderState>()(
             updated[existingIndex] = { ...updated[existingIndex], [field]: item }
           } else {
             // Remover el campo si item es undefined
-            const { [field]: removed, ...rest } = updated[existingIndex]
+            const { ...rest } = updated[existingIndex]
             updated[existingIndex] = rest as OrderSelectionByChild
           }
           set({ selectionsByChild: updated })

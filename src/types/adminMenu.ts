@@ -49,10 +49,10 @@ export interface MenuValidationError {
   message: string
 }
 
-export interface MenuOperationResult {
+export interface MenuOperationResult<T = unknown> {
   success: boolean
   message: string
-  data?: any
+  data?: T
   errors?: MenuValidationError[]
 }
 

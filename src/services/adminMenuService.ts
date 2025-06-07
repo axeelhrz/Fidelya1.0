@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { AdminMenuItem, AdminWeekMenu, AdminDayMenu, MenuOperationResult, WeekNavigation } from '@/types/adminMenu'
-import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks } from 'date-fns'
+import { format, startOfWeek, addDays, addWeeks, subWeeks } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export class AdminMenuService {
@@ -244,7 +244,7 @@ export class AdminMenuService {
 
       const allItems = menu.days.flatMap(day => [...day.almuerzos, ...day.colaciones])
       const activeItems = allItems.filter(item => item.active)
-      const publishedItems = allItems.filter(item => (item as any).published)
+      const publishedItems = allItems.filter(item => (item as AdminMenuItem).published)
       const daysWithMenus = menu.days.filter(day => 
         day.almuerzos.length > 0 || day.colaciones.length > 0
       ).length
@@ -573,7 +573,7 @@ export class AdminMenuService {
 
     // Verificar si está publicado (si todos los items activos están publicados)
     const activeItems = items.filter(item => item.active)
-    const publishedItems = activeItems.filter(item => (item as any).published === true)
+    const publishedItems = activeItems.filter(item => (item as AdminMenuItem).published === true)
     const isPublished = activeItems.length > 0 && publishedItems.length === activeItems.length
 
     return {

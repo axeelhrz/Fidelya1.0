@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { MenuService } from '@/services/menuService'
 import { AdminMenuService } from '@/services/adminMenuService'
 import { DayMenuDisplay } from '@/types/menu'
@@ -33,7 +33,7 @@ export function useWeeklyMenuData({
   const [error, setError] = useState<string | null>(null)
   const [weekInfo, setWeekInfo] = useState<WeekInfoExtended | null>(null)
 
-  const loadMenuData = async () => {
+  const loadMenuData = useCallback(async () => {
     if (!user) {
       setIsLoading(false)
       return
@@ -117,7 +117,7 @@ export function useWeeklyMenuData({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user, weekStart, useAdminData])
 
   const refetch = async () => {
     await loadMenuData()
@@ -125,7 +125,7 @@ export function useWeeklyMenuData({
 
   useEffect(() => {
     loadMenuData()
-  }, [user, weekStart, useAdminData])
+  }, [loadMenuData])
 
   return {
     weekMenu,

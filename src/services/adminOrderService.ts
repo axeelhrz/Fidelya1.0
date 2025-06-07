@@ -10,19 +10,15 @@ import {
   Timestamp,
   getDoc,
   onSnapshot,
-  limit,
-  startAfter,
-  QueryDocumentSnapshot,
-  DocumentData
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { AdminOrderView, OrderFilters, OrderMetrics, OrderUpdateRequest, OrderDetailView } from '@/types/adminOrder'
-import { format, parseISO, startOfWeek, endOfWeek, addDays, isWithinInterval } from 'date-fns'
+import { format, parseISO, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export class AdminOrderService {
   // Cache para mejorar rendimiento
-  private static cache = new Map<string, { data: any; timestamp: number }>()
+  private static cache = new Map<string, { data: AdminOrderView[]; timestamp: number }>()
   private static CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
 
   private static getCacheKey(filters: OrderFilters): string {
@@ -93,7 +89,7 @@ export class AdminOrderService {
             // Calcular estadísticas del pedido
             const selections = orderData.selections || []
             const itemsCount = selections.length
-            const hasColaciones = selections.some((s: any) => s.colacion)
+            const hasColaciones = selections.some((s: { colacion?: unknown }) => s.colacion)
             const total = orderData.total || 0
 
             const order: AdminOrderView = {
@@ -180,7 +176,7 @@ export class AdminOrderService {
           try {
             const dayKey = format(parseISO(selection.date), 'EEEE', { locale: es })
             metrics.totalByDay[dayKey] = (metrics.totalByDay[dayKey] || 0) + 1
-          } catch (error) {
+          } catch {
             console.error('Error parsing date:', selection.date)
           }
         })
@@ -208,7 +204,7 @@ export class AdminOrderService {
         throw new Error('El pedido no existe')
       }
 
-      const updateData: any = {
+      const updateData: Record<string, Timestamp | string> = {
         updatedAt: Timestamp.now()
       }
 
@@ -269,7 +265,7 @@ export class AdminOrderService {
       const userData = userDoc.data()
 
       // Procesar selecciones con manejo de errores
-      const processedSelections = (orderData.selections || []).map((s: any) => {
+      const processedSelections = (orderData.selections || []).map((s: { date: string; almuerzo?: { code: string; name: string; price: number }; colacion?: { code: string; name: string; price: number } }) => {
         try {
           return {
             date: s.date,
@@ -309,8 +305,7 @@ export class AdminOrderService {
         paymentHistory.push({
           date: orderData.paidAt.toDate(),
           status: 'paid',
-          amount: orderData.total || 0,
-          method: 'online'
+          amount: orderData.total || 0
         })
       }
 
@@ -342,7 +337,7 @@ export class AdminOrderService {
         dayName: format(orderData.createdAt?.toDate() || new Date(), 'EEEE', { locale: es }),
         formattedDate: format(orderData.createdAt?.toDate() || new Date(), 'dd/MM/yyyy HH:mm'),
         itemsCount: processedSelections.length,
-        hasColaciones: processedSelections.some((s: any) => s.colacion),
+        hasColaciones: processedSelections.some((s: { colacion?: unknown }) => s.colacion),
         paymentHistory: paymentHistory
       }
 
@@ -397,7 +392,7 @@ export class AdminOrderService {
       q = query(q, where('status', '==', filters.status))
     }
 
-    return onSnapshot(q, (snapshot) => {
+    return onSnapshot(q, () => {
       // Procesar cambios en tiempo real
       this.clearCache() // Limpiar cache cuando hay cambios
       this.getOrdersWithFilters(filters).then(callback).catch(console.error)

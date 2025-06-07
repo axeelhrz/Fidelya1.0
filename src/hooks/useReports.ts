@@ -41,7 +41,7 @@ export function useReports() {
 
   useEffect(() => {
     fetchReportsData(filters)
-  }, []) // Solo ejecutar al montar el componente
+  }, [fetchReportsData, filters]) // Solo ejecutar al montar el componente
 
   return {
     filters,

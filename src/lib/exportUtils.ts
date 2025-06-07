@@ -1,13 +1,27 @@
-import { ReportsData, ReportsFilters, ReportMetadata } from '@/types/reports'
+import { ReportsData, ReportsFilters } from '@/types/reports'
 import { AdminOrderView, OrderMetrics } from '@/types/adminOrder'
 import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
+
+interface AdminUser {
+  firstName?: string
+  lastName?: string
+}
+
+interface OrderFilters {
+  dateRange?: {
+    start: string
+    end: string
+  }
+  status?: string
+  userType?: string
+  searchTerm?: string
+}
 
 export class ExportUtils {
-  static async exportToPDF(data: ReportsData, filters: ReportsFilters, adminUser: any): Promise<void> {
+  static async exportToPDF(data: ReportsData, filters: ReportsFilters, adminUser: AdminUser): Promise<void> {
     try {
       // Crear contenido HTML para el PDF
-      const htmlContent = this.generatePDFContent(data, filters, adminUser)
+      const htmlContent = ExportUtils.generatePDFContent(data, filters, adminUser)
       
       // Abrir ventana de impresión
       const printWindow = window.open('', '_blank')
@@ -26,9 +40,9 @@ export class ExportUtils {
     }
   }
 
-  static async exportToExcel(data: ReportsData, filters: ReportsFilters, adminUser: any): Promise<void> {
+  static async exportToExcel(data: ReportsData, filters: ReportsFilters, adminUser: AdminUser): Promise<void> {
     try {
-      const csvContent = this.generateCSVContent(data, filters, adminUser)
+      const csvContent = ExportUtils.generateCSVContent(data, filters, adminUser)
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
       const link = document.createElement('a')
       
@@ -48,9 +62,9 @@ export class ExportUtils {
   }
 
   // New methods for order exports
-  static async exportOrdersToPDF(orders: AdminOrderView[], metrics: OrderMetrics, filters: any, adminUser: any): Promise<void> {
+  static async exportOrdersToPDF(orders: AdminOrderView[], metrics: OrderMetrics, filters: OrderFilters, adminUser: AdminUser): Promise<void> {
     try {
-      const htmlContent = this.generateOrdersPDFContent(orders, metrics, filters, adminUser)
+      const htmlContent = ExportUtils.generateOrdersPDFContent(orders, metrics, filters, adminUser)
       
       const printWindow = window.open('', '_blank')
       if (printWindow) {
@@ -68,9 +82,9 @@ export class ExportUtils {
     }
   }
 
-  static async exportOrdersToExcel(orders: AdminOrderView[], metrics: OrderMetrics, filters: any, adminUser: any): Promise<void> {
+  static async exportOrdersToExcel(orders: AdminOrderView[], metrics: OrderMetrics, filters: OrderFilters, adminUser: AdminUser): Promise<void> {
     try {
-      const csvContent = this.generateOrdersCSVContent(orders, metrics, filters, adminUser)
+      const csvContent = ExportUtils.generateOrdersCSVContent(orders, metrics, filters, adminUser)
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
       const link = document.createElement('a')
       
@@ -89,7 +103,7 @@ export class ExportUtils {
     }
   }
 
-  private static generateOrdersPDFContent(orders: AdminOrderView[], metrics: OrderMetrics, filters: any, adminUser: any): string {
+  private static generateOrdersPDFContent(orders: AdminOrderView[], metrics: OrderMetrics, filters: OrderFilters, adminUser: AdminUser): string {
     const currentDate = format(new Date(), 'dd/MM/yyyy HH:mm')
     
     return `
@@ -159,7 +173,7 @@ export class ExportUtils {
                 <td>${order.user.userType === 'funcionario' ? 'Funcionario' : 'Estudiante'}</td>
                 <td>${format(new Date(order.createdAt), 'dd/MM/yyyy')}</td>
                 <td>$${order.total.toLocaleString('es-CL')}</td>
-                <td class="status-${order.status}">${this.getStatusLabel(order.status)}</td>
+                <td class="status-${order.status}">${ExportUtils.getStatusLabel(order.status)}</td>
                 <td>${order.itemsCount}</td>
               </tr>
             `).join('')}
@@ -174,7 +188,7 @@ export class ExportUtils {
     `
   }
 
-  private static generateOrdersCSVContent(orders: AdminOrderView[], metrics: OrderMetrics, filters: any, adminUser: any): string {
+  private static generateOrdersCSVContent(orders: AdminOrderView[], metrics: OrderMetrics, filters: OrderFilters, adminUser: AdminUser): string {
     const currentDate = format(new Date(), 'dd/MM/yyyy HH:mm')
     
     let csv = `Reporte de Pedidos - Casino Escolar\n`
@@ -198,7 +212,7 @@ export class ExportUtils {
       csv += `${order.user.userType === 'funcionario' ? 'Funcionario' : 'Estudiante'},`
       csv += `${format(new Date(order.createdAt), 'dd/MM/yyyy')},`
       csv += `$${order.total.toLocaleString('es-CL')},`
-      csv += `${this.getStatusLabel(order.status)},`
+      csv += `${ExportUtils.getStatusLabel(order.status)},`
       csv += `${order.itemsCount},`
       csv += `${order.hasColaciones ? 'Sí' : 'No'}\n`
     })
@@ -222,7 +236,7 @@ export class ExportUtils {
     }
   }
 
-  private static generatePDFContent(data: ReportsData, filters: ReportsFilters, adminUser: any): string {
+  private static generatePDFContent(data: ReportsData, filters: ReportsFilters, adminUser: AdminUser): string {
     const dateRange = `${format(new Date(filters.dateRange.start), 'dd/MM/yyyy')} - ${format(new Date(filters.dateRange.end), 'dd/MM/yyyy')}`
     
     return `
@@ -323,7 +337,7 @@ export class ExportUtils {
     `
   }
 
-  private static generateCSVContent(data: ReportsData, filters: ReportsFilters, adminUser: any): string {
+  private static generateCSVContent(data: ReportsData, filters: ReportsFilters, adminUser: AdminUser): string {
     const dateRange = `${format(new Date(filters.dateRange.start), 'dd/MM/yyyy')} - ${format(new Date(filters.dateRange.end), 'dd/MM/yyyy')}`
     
     let csv = `Reporte Casino Escolar\n`

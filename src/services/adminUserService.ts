@@ -6,7 +6,6 @@ import {
   getDoc,
   doc, 
   updateDoc, 
-  deleteDoc,
   orderBy, 
   limit, 
   startAfter,
@@ -24,7 +23,6 @@ import {
   UserActionResult,
   SortField,
   SortDirection,
-  UserSortConfig
 } from '@/types/adminUser'
 
 export class AdminUserService {
@@ -98,7 +96,6 @@ export class AdminUserService {
       // Obtener estadísticas de pedidos
       const ordersRef = collection(db, this.ORDERS_COLLECTION)
       const ordersSnapshot = await getDocs(ordersRef)
-      const totalOrders = ordersSnapshot.size
 
       // Calcular usuarios con pedidos
       const usersWithOrders = new Set()
@@ -150,12 +147,12 @@ export class AdminUserService {
         }
       }
 
-      if (filters.emailVerified && filters.emailVerified !== 'all') {
-        q = query(q, where('emailVerified', '==', filters.emailVerified === 'verified'))
+      if (filters.emailVerified !== undefined && filters.emailVerified !== 'all') {
+        q = query(q, where('emailVerified', '==', filters.emailVerified))
       }
 
       if (filters.isActive && filters.isActive !== 'all') {
-        q = query(q, where('isActive', '==', filters.isActive === 'active'))
+        q = query(q, where('isActive', '==', filters.isActive))
       }
 
       // Aplicar ordenamiento
@@ -254,7 +251,7 @@ export class AdminUserService {
     try {
       const userRef = doc(db, this.USERS_COLLECTION, userId)
       
-      const updateData: any = {
+      const updateData: { [key: string]: string | boolean | number | Timestamp | string[] | undefined } = {
         ...updates,
         updatedAt: Timestamp.now()
       }
@@ -314,6 +311,7 @@ export class AdminUserService {
     try {
       // Nota: En un entorno real, esto requeriría acceso al objeto User de Firebase Auth
       // Por ahora, simulamos el envío
+      console.log(`Sending verification email to: ${userEmail}`)
       
       return {
         success: true,
@@ -330,20 +328,26 @@ export class AdminUserService {
   }
 
   // Métodos privados auxiliares
-  private static mapFirestoreToUser(id: string, data: any): AdminUserView {
+  private static mapFirestoreToUser(id: string, data: Record<string, unknown>): AdminUserView {
     return {
       id,
-      firstName: data.firstName || '',
-      lastName: data.lastName || '',
-      email: data.email || '',
-      role: data.role || data.userType || 'estudiante',
-      userType: data.userType || 'estudiante',
-      emailVerified: data.emailVerified || false,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      lastLogin: data.lastLogin?.toDate(),
-      phone: data.phone,
+      firstName: typeof data.firstName === 'string' ? data.firstName : '',
+      lastName: typeof data.lastName === 'string' ? data.lastName : '',
+      email: typeof data.email === 'string' ? data.email : '',
+      role: (typeof data.role === 'string' ? data.role : typeof data.userType === 'string' ? data.userType : 'estudiante') as 'estudiante' | 'funcionario' | 'admin' | 'super_admin',
+      userType: (typeof data.userType === 'string' && ['estudiante', 'funcionario'].includes(data.userType)) 
+        ? data.userType as 'estudiante' | 'funcionario' 
+        : 'estudiante',
+      emailVerified: typeof data.emailVerified === 'boolean' ? data.emailVerified : false,
+      createdAt: (data.createdAt && typeof data.createdAt === 'object' && 'toDate' in data.createdAt) 
+        ? (data.createdAt as Timestamp).toDate() 
+        : new Date(),
+      lastLogin: (data.lastLogin && typeof data.lastLogin === 'object' && 'toDate' in data.lastLogin) 
+        ? (data.lastLogin as Timestamp).toDate() 
+        : undefined,
+      phone: typeof data.phone === 'string' ? data.phone : undefined,
       isActive: data.isActive !== false,
-      children: data.children || [],
+      children: Array.isArray(data.children) ? data.children : [],
       ordersCount: 0, // Se actualiza después
       lastOrderDate: undefined // Se actualiza después
     }

@@ -5,20 +5,34 @@ import {
   getDocs, 
   orderBy, 
   limit,
-  Timestamp,
   doc,
-  getDoc
+  getDoc,
+  Timestamp,
+  QueryDocumentSnapshot,
+  DocumentData
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { AdminStats, WeeklyOrderData, UserTypeStats, MenuPopularity } from '@/types/admin'
-import { startOfWeek, endOfWeek, format, addDays } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { addDays, format, startOfWeek, endOfWeek } from 'date-fns'
+interface Selection {
+  date: string
+  almuerzo?: { name: string; code: string; price: number }
+  colacion?: { name: string; code: string; price: number }
+}
+
+interface Order {
+  id: string
+  userId: string
+  status: 'paid' | 'pending'
+  total: number
+  createdAt: Timestamp
+  weekStart: string
+  selections?: Selection[]
+}
 
 export class AdminService {
   static async getWeeklyStats(weekStart: string): Promise<AdminStats> {
     try {
-      const weekEnd = format(addDays(new Date(weekStart), 6), 'yyyy-MM-dd')
-      
       // Consultar pedidos de la semana
       const ordersRef = collection(db, 'orders')
       const weekQuery = query(
@@ -28,18 +42,15 @@ export class AdminService {
       )
       
       const ordersSnapshot = await getDocs(weekQuery)
-      const orders = ordersSnapshot.docs.map(doc => ({
+      const orders = ordersSnapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
         id: doc.id,
         ...doc.data()
-      }))
-
-      // Calcular estadísticas
+      })) as Order[]
       const totalOrdersWeek = orders.length
-      const paidOrders = orders.filter(order => order.status === 'paid').length
-      const pendingOrders = orders.filter(order => order.status === 'pending').length
+      const paidOrders = orders.filter(order => order.status === 'paid')
+      const pendingOrdersCount = orders.filter(order => order.status === 'pending').length
       
-      const totalRevenueWeek = orders
-        .filter(order => order.status === 'paid')
+      const totalRevenueWeek = paidOrders
         .reduce((sum, order) => sum + (order.total || 0), 0)
 
       // Obtener usuarios únicos con pedidos
@@ -48,18 +59,18 @@ export class AdminService {
       // Consultar tipos de usuario
       const userTypeStats = await this.getUserTypeStats(usersWithOrders)
       
-      const averageOrderValue = totalRevenueWeek > 0 ? totalRevenueWeek / paidOrders : 0
+      const averageOrderValue = totalRevenueWeek > 0 ? totalRevenueWeek / paidOrders.length : 0
       
       // Obtener items más populares
-      const popularMenuItems = await this.getPopularMenuItems(orders)
+      const popularMenuItems = await this.getPopularMenuItems(paidOrders)
 
       return {
         totalOrdersWeek,
         totalStudentsWithOrder: userTypeStats.estudiantes.withOrders,
         totalStaffWithOrder: userTypeStats.funcionarios.withOrders,
         totalRevenueWeek,
-        pendingOrders,
-        paidOrders,
+        pendingOrders: pendingOrdersCount,
+        paidOrders: paidOrders.length,
         averageOrderValue,
         popularMenuItems
       }
@@ -87,20 +98,23 @@ export class AdminService {
         )
         
         const snapshot = await getDocs(dayQuery)
-        const dayOrders = snapshot.docs.map(doc => doc.data())
+        const dayOrders = snapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Order[]
         
-        // Filtrar pedidos que incluyan este día específico
-        const dayOrderCount = dayOrders.filter(order => 
-          order.selections?.some((selection: any) => selection.date === dateStr)
-        ).length
-        
+        const dayOrderCount = dayOrders
+          .filter(order => 
+            order.selections?.some((selection: Selection) => selection.date === dateStr)
+          ).length
+
         const dayRevenue = dayOrders
           .filter(order => 
-            order.selections?.some((selection: any) => selection.date === dateStr)
+            order.selections?.some((selection: Selection) => selection.date === dateStr)
           )
           .reduce((sum, order) => {
-            const daySelections = order.selections?.filter((s: any) => s.date === dateStr) || []
-            return sum + daySelections.reduce((daySum: number, selection: any) => {
+            const daySelections = order.selections?.filter((s: Selection) => s.date === dateStr) || []
+            return sum + daySelections.reduce((daySum: number, selection: Selection) => {
               const almuerzoPrice = selection.almuerzo?.price || 0
               const colacionPrice = selection.colacion?.price || 0
               return daySum + almuerzoPrice + colacionPrice
@@ -165,13 +179,13 @@ export class AdminService {
     }
   }
 
-  static async getPopularMenuItems(orders: any[]): Promise<MenuPopularity[]> {
+  static async getPopularMenuItems(orders: Order[]): Promise<MenuPopularity[]> {
     try {
       const itemCounts: { [key: string]: { name: string; count: number } } = {}
       
       orders.forEach(order => {
         if (order.selections) {
-          order.selections.forEach((selection: any) => {
+          order.selections.forEach((selection: Selection) => {
             if (selection.almuerzo) {
               const key = selection.almuerzo.code
               if (!itemCounts[key]) {
@@ -189,7 +203,6 @@ export class AdminService {
           })
         }
       })
-
       const totalSelections = Object.values(itemCounts).reduce((sum, item) => sum + item.count, 0)
       
       return Object.entries(itemCounts)

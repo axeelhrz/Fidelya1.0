@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useOrderStore } from '@/store/orderStore'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/hooks/useAuth'
 import { MenuIntegrationService } from '@/services/menuIntegrationService'
 import { OrderService } from '@/services/orderService'
 import { MenuService } from '@/services/menuService'
@@ -33,7 +33,7 @@ interface UseOrderManagementReturn {
 
 export function useOrderManagement(): UseOrderManagementReturn {
   const { getOrderSummaryByChild } = useOrderStore()
-  const { user } = useAuthStore()
+  const { user } = useAuth() // Corregido: usar useAuth en lugar de useAuthStore
   
   // Estados del menú
   const [weekMenu, setWeekMenu] = useState<DayMenuDisplay[]>([])
@@ -52,7 +52,10 @@ export function useOrderManagement(): UseOrderManagementReturn {
 
   // Cargar datos del menú
   const loadMenuData = useCallback(async () => {
-    if (!user) return
+    if (!user) {
+      setIsLoadingMenu(false)
+      return
+    }
 
     try {
       setIsLoadingMenu(true)
@@ -74,6 +77,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
       console.error('Error loading menu data:', error)
       const errorMessage = error instanceof Error ? error.message : 'Error al cargar el menú'
       setMenuError(errorMessage)
+      setWeekMenu([]) // Asegurar que weekMenu esté vacío en caso de error
     } finally {
       setIsLoadingMenu(false)
     }
@@ -81,7 +85,10 @@ export function useOrderManagement(): UseOrderManagementReturn {
 
   // Cargar pedido existente
   const loadExistingOrder = useCallback(async () => {
-    if (!user || !weekInfo) return
+    if (!user || !weekInfo) {
+      setIsLoadingOrder(false)
+      return
+    }
 
     try {
       setIsLoadingOrder(true)
@@ -94,6 +101,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
       console.error('Error loading existing order:', error)
       const errorMessage = error instanceof Error ? error.message : 'Error al cargar el pedido'
       setOrderError(errorMessage)
+      setExistingOrder(null)
     } finally {
       setIsLoadingOrder(false)
     }
@@ -191,12 +199,21 @@ export function useOrderManagement(): UseOrderManagementReturn {
   useEffect(() => {
     if (user) {
       loadMenuData()
+    } else {
+      // Si no hay usuario, limpiar estados
+      setWeekMenu([])
+      setWeekInfo(null)
+      setIsLoadingMenu(false)
     }
   }, [user, loadMenuData])
 
   useEffect(() => {
     if (user && weekInfo) {
       loadExistingOrder()
+    } else {
+      // Si no hay usuario o weekInfo, limpiar estado del pedido
+      setExistingOrder(null)
+      setIsLoadingOrder(false)
     }
   }, [user, weekInfo, loadExistingOrder])
 

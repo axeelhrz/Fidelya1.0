@@ -373,14 +373,14 @@ export default function PerfilPage() {
                                   type="number"
                                   min="1"
                                   max="18"
-                                  value={child.age || ''}
-                                  onChange={(e) => updateChild(child.id, 'age', parseInt(e.target.value) || 0)}
+                                  value={child.edad || ''}
+                                  onChange={(e) => updateChild(child.id, 'edad', parseInt(e.target.value) || 0)}
                                   placeholder="Edad"
-                                  className={errors[`child_${child.id}_age`] ? 'border-red-500' : ''}
+                                  className={errors[`child_${child.id}_edad`] ? 'border-red-500' : ''}
                                 />
-                                {errors[`child_${child.id}_age`] && (
+                                {errors[`child_${child.id}_edad`] && (
                                   <p className="text-red-500 text-sm mt-1">
-                                    {errors[`child_${child.id}_age`]}
+                                    {errors[`child_${child.id}_edad`]}
                                   </p>
                                 )}
                               </div>
@@ -389,14 +389,14 @@ export default function PerfilPage() {
                                   Curso *
                                 </label>
                                 <Input
-                                  value={child.class}
-                                  onChange={(e) => updateChild(child.id, 'class', e.target.value)}
+                                  value={child.curso}
+                                  onChange={(e) => updateChild(child.id, 'curso', e.target.value)}
                                   placeholder="Ej: 3° Básico A"
-                                  className={errors[`child_${child.id}_class`] ? 'border-red-500' : ''}
+                                  className={errors[`child_${child.id}_curso`] ? 'border-red-500' : ''}
                                 />
-                                {errors[`child_${child.id}_class`] && (
+                                {errors[`child_${child.id}_curso`] && (
                                   <p className="text-red-500 text-sm mt-1">
-                                    {errors[`child_${child.id}_class`]}
+                                    {errors[`child_${child.id}_curso`]}
                                   </p>
                                 )}
                               </div>

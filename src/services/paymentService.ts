@@ -1,5 +1,10 @@
 import { PaymentRequest, PaymentResponse } from '@/types/order'
 
+// Extend PaymentRequest to include optional customerName
+interface ExtendedPaymentRequest extends PaymentRequest {
+  customerName?: string
+}
+
 // Configuración de GetNet (corregida)
 const GETNET_CONFIG = {
   apiUrl: process.env.GETNET_BASE_URL || 'https://api.getnet.cl',
@@ -37,8 +42,9 @@ export interface GetNetNotificationData {
   status: string
   orderId: string
   transactionId: string
-  amount: number
+  amount?: number
   signature?: string
+  [key: string]: string | number | boolean | undefined
 }
 
 export class PaymentService {
@@ -48,7 +54,7 @@ export class PaymentService {
       console.log('Creating GetNet payment with request:', request)
 
       // Extraer nombre del cliente de manera más robusta
-      const customerName = this.extractCustomerName(request)
+      const customerName = PaymentService.extractCustomerName(request)
 
       const getNetRequest: GetNetPaymentRequest = {
         amount: request.amount,
@@ -148,8 +154,8 @@ export class PaymentService {
   // Método auxiliar para extraer nombre del cliente
   private static extractCustomerName(request: PaymentRequest): string {
     // Si hay un customerName en el request, usarlo
-    if ((request as any).customerName) {
-      return (request as any).customerName
+    if ((request as ExtendedPaymentRequest).customerName) {
+      return (request as ExtendedPaymentRequest).customerName!
     }
 
     // Intentar extraer nombre del email
@@ -197,7 +203,7 @@ export class PaymentService {
   }
 
   // Procesar notificación de GetNet (webhook)
-  static async processNotification(notificationData: any): Promise<{ success: boolean; message: string }> {
+  static async processNotification(notificationData: GetNetNotificationData): Promise<{ success: boolean; message: string }> {
     try {
       console.log('Processing GetNet notification:', notificationData)
 
@@ -254,7 +260,7 @@ export class PaymentService {
   }
 
   // Validar notificación de GetNet
-  private static async validateNotification(notificationData: any): Promise<boolean> {
+  private static async validateNotification(notificationData: GetNetNotificationData): Promise<boolean> {
     try {
       // Implementar validación de firma según documentación de GetNet
       // Por ahora retornamos true, pero en producción debe validarse la firma
@@ -278,13 +284,6 @@ export class PaymentService {
       console.error('Error validating GetNet notification:', error)
       return false
     }
-  }
-
-  // Generar firma para validación (implementar según documentación de GetNet)
-  private static generateSignature(data: any): string {
-    // Implementar según la documentación de GetNet
-    // Típicamente es un HMAC-SHA256 de los datos concatenados
-    return ''
   }
 
   // Obtener configuración de GetNet (para debugging)

@@ -10,6 +10,9 @@ export interface MenuItem {
   date: string
   dia: string
   active: boolean
+  category?: string
+  allergens?: string[]
+  nutritionalInfo?: Record<string, any>
 }
 
 export interface DayMenu {
@@ -28,6 +31,7 @@ export interface WeekMenu {
 export interface Child {
   id: string
   name: string
+  nombre?: string // Compatibilidad con diferentes formatos
   curso: string
   rut?: string
   active: boolean
@@ -36,10 +40,18 @@ export interface Child {
 export interface User {
   id: string
   email: string
+  correo?: string // Compatibilidad con diferentes formatos
   firstName: string
   lastName: string
+  nombre?: string // Compatibilidad con diferentes formatos
+  apellido?: string // Compatibilidad con diferentes formatos
+  name?: string // Compatibilidad con diferentes formatos
   tipoUsuario: 'apoderado' | 'funcionario'
+  userType?: 'apoderado' | 'funcionario' // Compatibilidad
+  tipo_usuario?: 'apoderado' | 'funcionario' // Compatibilidad
+  type?: 'apoderado' | 'funcionario' // Compatibilidad
   children?: Child[]
+  hijos?: Child[] // Compatibilidad con diferentes formatos
   active: boolean
   createdAt: Date
 }
@@ -93,7 +105,7 @@ export interface Order {
   fechaCreacion: Date
   resumenPedido: OrderSelectionByChild[]
   total: number
-  status: 'pendiente' | 'pagado' | 'cancelado'
+  status: 'pendiente' | 'pagado' | 'cancelado' | 'procesando_pago'
   createdAt: Date
   paidAt?: Date
   paymentId?: string

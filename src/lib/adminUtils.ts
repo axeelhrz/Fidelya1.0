@@ -1,6 +1,29 @@
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+interface AdminStats {
+  pendingOrders: number
+  totalRevenueWeek: number
+}
+
+interface WeekInfo {
+  isMenuPublished: boolean
+  orderDeadline: Date
+}
+
+interface SystemAlert {
+  id: string
+  type: 'warning' | 'error' | 'info' | 'success'
+  title: string
+  message: string
+  priority: 'high' | 'medium' | 'low'
+  actionText?: string
+  actionUrl?: string
+  createdAt: Date
+  isRead: boolean
+  dismissible: boolean
+}
+
 export function formatAdminCurrency(amount: number): string {
   return new Intl.NumberFormat('es-CL', {
     style: 'currency',
@@ -87,8 +110,8 @@ export function getGrowthColor(percentage: number): string {
   return 'text-slate-600 dark:text-slate-400'
 }
 
-export function generateSystemAlerts(stats: any, weekInfo: any): any[] {
-  const alerts = []
+export function generateSystemAlerts(stats: AdminStats, weekInfo: WeekInfo): SystemAlert[] {
+  const alerts: Omit<SystemAlert, 'createdAt' | 'isRead' | 'dismissible'>[] = []
   const now = new Date()
   
   // Alerta si no hay menú publicado
