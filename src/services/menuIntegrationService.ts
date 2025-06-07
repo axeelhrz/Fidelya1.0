@@ -99,14 +99,13 @@ export class MenuIntegrationService {
   }
 
   /**
-   * Verificar disponibilidad de menús para una semana - CORREGIDO PARA SOLUCIONAR EL ERROR
+   * Verificar disponibilidad de menús para una semana - CORREGIDO
    */
   static async checkMenuAvailability(weekStart: string): Promise<MenuAvailability> {
     try {
       console.log('Checking menu availability for week:', weekStart)
       
-      // CAMBIO CRÍTICO: Verificar primero si el usuario puede ver menús (lo que importa para el pago)
-      // En lugar de verificar solo en admin, verificar en el servicio público que es lo que ve el usuario
+      // Verificar si hay menús públicos disponibles
       const hasPublicMenus = await MenuService.hasMenusForWeek(weekStart)
       console.log('Has public menus:', hasPublicMenus)
       
@@ -120,22 +119,26 @@ export class MenuIntegrationService {
         
         return {
           hasMenus: true,
-          isPublished: true, // Si están en el servicio público, están publicados
+          isPublished: true,
           totalItems: availableDays.length,
-          weekLabel: MenuService.getWeekDisplayText(weekStart, MenuService.formatToDateString(MenuService.createLocalDate(weekStart))),
+          weekLabel: MenuService.getWeekDisplayText(
+            weekStart, 
+            MenuService.formatToDateString(
+              MenuService.createLocalDate(weekStart)
+            )
+          ),
           availableDays,
           missingDays
         }
       }
       
-      // FALLBACK: Si no hay menús públicos, verificar en administración pero ser más permisivo
+      // Fallback: verificar en administración
       console.log('No public menus found, checking admin menus...')
       const adminMenu = await AdminMenuService.getWeeklyMenu(weekStart)
       console.log('Admin menu found:', !!adminMenu, 'totalItems:', adminMenu?.totalItems, 'isPublished:', adminMenu?.isPublished)
       
       if (adminMenu && adminMenu.totalItems > 0) {
         // Si hay menús en admin, permitir el pago incluso si no están publicados
-        // Esto soluciona el problema cuando los menús existen pero hay problemas de sincronización
         const availableDays = adminMenu.days
           .filter(day => day.almuerzos.length > 0 || day.colaciones.length > 0)
           .map(day => day.date)
@@ -147,7 +150,7 @@ export class MenuIntegrationService {
 
         return {
           hasMenus: true,
-          isPublished: true, // FORZAR COMO PUBLICADO para permitir el pago
+          isPublished: true, // Forzar como publicado para permitir el pago
           totalItems: adminMenu.totalItems,
           weekLabel: adminMenu.weekLabel,
           availableDays,
@@ -161,7 +164,12 @@ export class MenuIntegrationService {
         hasMenus: false,
         isPublished: false,
         totalItems: 0,
-        weekLabel: MenuService.getWeekDisplayText(weekStart, MenuService.formatToDateString(MenuService.createLocalDate(weekStart))),
+        weekLabel: MenuService.getWeekDisplayText(
+          weekStart, 
+          MenuService.formatToDateString(
+            MenuService.createLocalDate(weekStart)
+          )
+        ),
         availableDays: [],
         missingDays: MenuService.generateWeekDates(weekStart)
       }
@@ -169,7 +177,7 @@ export class MenuIntegrationService {
       console.error('Error checking menu availability:', error)
       // En caso de error, ser permisivo y permitir el pago si hay selecciones válidas
       return {
-        hasMenus: true, // PERMITIR EN CASO DE ERROR
+        hasMenus: true,
         isPublished: true,
         totalItems: 1,
         weekLabel: 'Semana con menús',
@@ -241,7 +249,12 @@ export class MenuIntegrationService {
           source: 'integration_service',
           originalSelectionsCount: selections.length,
           transformedSelectionsCount: transformedSelections.length,
-          weekLabel: MenuService.getWeekDisplayText(weekStart, MenuService.formatToDateString(MenuService.createLocalDate(weekStart)))
+          weekLabel: MenuService.getWeekDisplayText(
+            weekStart, 
+            MenuService.formatToDateString(
+              MenuService.createLocalDate(weekStart)
+            )
+          )
         }
       }
 
@@ -431,8 +444,6 @@ export class MenuIntegrationService {
     restrictions?: string[]
   }> {
     try {
-      // CAMBIO: Ser más permisivo con la verificación de menús
-      // Si el usuario llegó hasta aquí con selecciones, probablemente hay menús disponibles
       console.log('Checking if user can order for week:', weekStart)
       
       // Verificar si ya tiene un pedido para esta semana
@@ -506,8 +517,7 @@ export class MenuIntegrationService {
       }
     }
 
-    // CAMBIO: Verificación más permisiva de menús
-    // Si el usuario tiene selecciones, asumir que hay menús disponibles
+    // Verificación más permisiva de menús
     console.log('Permissive validation: User has', selections.length, 'selections for week', weekStart)
 
     // Verificar permisos del usuario (más permisivo)
@@ -532,7 +542,6 @@ export class MenuIntegrationService {
     // Validación básica sin verificar disponibilidad estricta de menús
     const weekDays = MenuService.generateWeekDates(weekStart)
     
-    // Usar validación más permisiva
     const errors: string[] = []
     const warnings: string[] = []
     
@@ -649,7 +658,12 @@ export class MenuIntegrationService {
         }
       }
 
-      const weekLabel = MenuService.getWeekDisplayText(weekStart, MenuService.formatToDateString(MenuService.createLocalDate(weekStart)))
+      const weekLabel = MenuService.getWeekDisplayText(
+        weekStart, 
+        MenuService.formatToDateString(
+          MenuService.createLocalDate(weekStart)
+        )
+      )
 
       const paymentRequest: PaymentRequest = {
         orderId,

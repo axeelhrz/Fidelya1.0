@@ -2,7 +2,7 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { MenuItem, PRICES, UserType } from '@/types/panel'
 import { DayMenuDisplay, WeekMenuDisplay } from '@/types/menu'
-import { format, startOfWeek, endOfWeek, addDays, parseISO, isValid } from 'date-fns'
+import { format, startOfWeek, endOfWeek, addDays, parseISO, isValid, getDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export interface WeekInfo {
@@ -61,7 +61,7 @@ export class MenuService {
   }
 
   /**
-   * Obtiene el menú semanal completo
+   * Obtiene el menú semanal para un tipo de usuario específico
    */
   static async getWeeklyMenu(weekStart?: string): Promise<WeekMenuDisplay> {
     try {
@@ -73,19 +73,18 @@ export class MenuService {
         where('weekStart', '==', actualWeekStart),
         where('active', '==', true),
         where('published', '==', true),
-        orderBy('date', 'asc'),
-        orderBy('type', 'asc')
+        orderBy('date', 'asc')
       )
-
+      
       const snapshot = await getDocs(q)
       const items: MenuItem[] = []
-
+      
       snapshot.forEach((doc) => {
         const data = doc.data()
         items.push({
           id: doc.id,
           code: data.code,
-          name: data.description, // En admin se guarda como description
+          name: data.description,
           description: data.description,
           type: data.type,
           price: 0, // Se asignará según el tipo de usuario
@@ -95,7 +94,7 @@ export class MenuService {
           active: data.active
         })
       })
-
+      
       return this.buildWeekMenuStructure(actualWeekStart, items)
     } catch (error) {
       console.error('Error fetching weekly menu:', error)
@@ -108,32 +107,41 @@ export class MenuService {
    */
   static async getWeeklyMenuForUser(userTypeOrUser: UserType | { tipoUsuario?: string; userType?: string; tipo_usuario?: string; type?: string } | null | undefined, weekStart?: string): Promise<DayMenuDisplay[]> {
     try {
-      // Determinar el tipo de usuario
-      let userType: UserType
-      if (typeof userTypeOrUser === 'string') {
-        userType = userTypeOrUser as UserType
-      } else {
-        userType = this.getUserTypeFromUser(userTypeOrUser)
-      }
-
-      // Obtener el menú base
-      const weekMenu = await this.getWeeklyMenu(weekStart)
+      const userType = typeof userTypeOrUser === 'string' 
+        ? userTypeOrUser 
+        : this.getUserTypeFromUser(userTypeOrUser)
       
-      // Aplicar precios según el tipo de usuario
+      const weekMenu = await this.getWeeklyMenu(weekStart)
       const prices = PRICES[userType]
       
-      return weekMenu.days.map(day => ({
-        ...day,
-        almuerzos: day.almuerzos.map(item => ({
+      if (!prices) {
+        throw new Error(`Precios no definidos para el tipo de usuario: ${userType}`)
+      }
+      
+      // Aplicar precios y filtrar días disponibles
+      return weekMenu.days.map(day => {
+        const isPastDay = this.isPastDay(day.date)
+        const isWeekend = this.isWeekend(day.date)
+        
+        // Aplicar precios a los items
+        const almuerzos = day.almuerzos.map(item => ({
           ...item,
           price: prices.almuerzo
-        })),
-        colaciones: day.colaciones.map(item => ({
+        }))
+        
+        const colaciones = day.colaciones.map(item => ({
           ...item,
           price: prices.colacion
-        })),
-        isAvailable: this.isDayOrderingAllowed(day.date)
-      }))
+        }))
+        
+        return {
+          ...day,
+          almuerzos,
+          colaciones,
+          hasItems: almuerzos.length > 0 || colaciones.length > 0,
+          isAvailable: !isPastDay && !isWeekend && (almuerzos.length > 0 || colaciones.length > 0)
+        }
+      }).filter(day => day.hasItems) // Solo devolver días con items
     } catch (error) {
       console.error('Error fetching weekly menu for user:', error)
       throw new Error('No se pudo cargar el menú para el usuario')
@@ -141,7 +149,7 @@ export class MenuService {
   }
 
   /**
-   * Obtiene información de la semana actual - MEJORADO
+   * Obtiene información de la semana actual
    */
   static getCurrentWeekInfo(): WeekInfo {
     const now = new Date()
@@ -265,33 +273,19 @@ export class MenuService {
    */
   static isDayOrderingAllowed(date: string): boolean {
     try {
-      const dayDate = this.createLocalDate(date)
-      const today = new Date()
+      // No permitir pedidos para días pasados
+      if (this.isPastDay(date)) {
+        return false
+      }
       
-      // Normalizar fechas para comparación (solo fecha, sin hora)
-      const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-      const dayDateNormalized = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate())
+      // No permitir pedidos para fines de semana
+      if (this.isWeekend(date)) {
+        return false
+      }
       
-      const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
-      const isPastDay = dayDateNormalized < todayNormalized
-      
-      // Permitir pedidos para hoy y días futuros, pero no fines de semana ni días pasados
-      return !isPastDay && !isWeekend
+      return true
     } catch (error) {
       console.error('Error checking if day ordering is allowed:', error)
-      return false
-    }
-  }
-
-  /**
-   * Verifica si un día es fin de semana - NUEVO
-   */
-  static isWeekend(date: string): boolean {
-    try {
-      const dayDate = this.createLocalDate(date)
-      return dayDate.getDay() === 0 || dayDate.getDay() === 6
-    } catch (error) {
-      console.error('Error checking if day is weekend:', error)
       return false
     }
   }
@@ -316,50 +310,21 @@ export class MenuService {
   }
 
   /**
-   * Construye la estructura del menú semanal - MEJORADO
+   * Verifica si un día es fin de semana - NUEVO
    */
-  private static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
-    const startDate = this.createLocalDate(weekStart)
-    const endDate = addDays(startDate, 6)
-    
-    // Crear estructura de 7 días (lunes a domingo)
-    const days: DayMenuDisplay[] = []
-    
-    for (let i = 0; i < 7; i++) {
-      const currentDate = addDays(startDate, i)
-      const dateStr = this.formatToDateString(currentDate)
-      const dayName = format(currentDate, 'EEEE', { locale: es })
-      const dayLabel = format(currentDate, 'EEEE d', { locale: es })
-      const dateFormatted = format(currentDate, 'dd/MM/yyyy')
-      
-      // Filtrar items para este día
-      const dayItems = items.filter(item => item.date === dateStr)
-      const almuerzos = dayItems.filter(item => item.type === 'almuerzo')
-      const colaciones = dayItems.filter(item => item.type === 'colacion')
-      
-      days.push({
-        date: dateStr,
-        day: dayName,
-        dayLabel,
-        dateFormatted,
-        almuerzos,
-        colaciones,
-        hasItems: dayItems.length > 0,
-        isAvailable: this.isDayOrderingAllowed(dateStr)
-      })
-    }
-    
-    return {
-      weekStart,
-      weekEnd: this.formatToDateString(endDate),
-      weekLabel: this.getWeekDisplayText(weekStart, this.formatToDateString(endDate)),
-      days,
-      totalItems: items.length
+  static isWeekend(date: string): boolean {
+    try {
+      const dayDate = this.createLocalDate(date)
+      const dayOfWeek = getDay(dayDate) // 0 = domingo, 6 = sábado
+      return dayOfWeek === 0 || dayOfWeek === 6
+    } catch (error) {
+      console.error('Error checking if day is weekend:', error)
+      return false
     }
   }
 
   /**
-   * Verifica si hay menús disponibles para una semana
+   * Verifica si hay menús para una semana específica - NUEVO
    */
   static async hasMenusForWeek(weekStart: string): Promise<boolean> {
     try {
@@ -370,17 +335,17 @@ export class MenuService {
         where('active', '==', true),
         where('published', '==', true)
       )
-
+      
       const snapshot = await getDocs(q)
       return !snapshot.empty
     } catch (error) {
-      console.error('Error checking menus for week:', error)
+      console.error('Error checking if week has menus:', error)
       return false
     }
   }
 
   /**
-   * Obtiene los días disponibles para una semana
+   * Obtiene los días disponibles para una semana específica - NUEVO
    */
   static async getAvailableDaysForWeek(weekStart: string): Promise<string[]> {
     try {
@@ -391,15 +356,17 @@ export class MenuService {
         where('active', '==', true),
         where('published', '==', true)
       )
-
+      
       const snapshot = await getDocs(q)
       const availableDays = new Set<string>()
       
       snapshot.forEach((doc) => {
         const data = doc.data()
-        availableDays.add(data.date)
+        if (data.date) {
+          availableDays.add(data.date)
+        }
       })
-
+      
       return Array.from(availableDays).sort()
     } catch (error) {
       console.error('Error getting available days for week:', error)
@@ -408,18 +375,23 @@ export class MenuService {
   }
 
   /**
-   * Genera las fechas de una semana - NUEVO
+   * Genera las fechas de una semana específica - NUEVO
    */
   static generateWeekDates(weekStart: string): string[] {
-    const startDate = this.createLocalDate(weekStart)
-    const dates: string[] = []
-    
-    for (let i = 0; i < 7; i++) {
-      const currentDate = addDays(startDate, i)
-      dates.push(this.formatToDateString(currentDate))
+    try {
+      const startDate = this.createLocalDate(weekStart)
+      const dates: string[] = []
+      
+      for (let i = 0; i < 7; i++) {
+        const date = addDays(startDate, i)
+        dates.push(this.formatToDateString(date))
+      }
+      
+      return dates
+    } catch (error) {
+      console.error('Error generating week dates:', error)
+      return []
     }
-    
-    return dates
   }
 
   /**
@@ -436,5 +408,46 @@ export class MenuService {
     }
     
     return weekStarts
+  }
+
+  /**
+   * Construye la estructura del menú semanal - MEJORADO
+   */
+  static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
+    const weekStartDate = this.createLocalDate(weekStart)
+    const weekEndDate = addDays(weekStartDate, 6)
+    
+    // Crear estructura de días (lunes a domingo)
+    const days: DayMenuDisplay[] = []
+    
+    for (let i = 0; i < 7; i++) {
+      const date = addDays(weekStartDate, i)
+      const dateString = this.formatToDateString(date)
+      const dayName = format(date, 'EEEE', { locale: es }).toLowerCase()
+      
+      // Filtrar items para este día
+      const dayItems = items.filter(item => item.date === dateString)
+      const almuerzos = dayItems.filter(item => item.type === 'almuerzo')
+      const colaciones = dayItems.filter(item => item.type === 'colacion')
+      
+      days.push({
+        date: dateString,
+        day: dayName,
+        dayLabel: this.getDayDisplayName(dateString),
+        dateFormatted: format(date, 'dd/MM/yyyy'),
+        almuerzos,
+        colaciones,
+        hasItems: almuerzos.length > 0 || colaciones.length > 0,
+        isAvailable: !this.isPastDay(dateString) && !this.isWeekend(dateString)
+      })
+    }
+    
+    return {
+      weekStart,
+      weekEnd: this.formatToDateString(weekEndDate),
+      weekLabel: this.getWeekDisplayText(weekStart, this.formatToDateString(weekEndDate)),
+      days,
+      totalItems: items.length
+    }
   }
 }
