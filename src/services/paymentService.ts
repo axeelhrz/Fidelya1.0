@@ -1,4 +1,5 @@
 import { PaymentRequest, PaymentResponse } from '@/types/order'
+import { OrderService } from './orderService'
 
 // Extend PaymentRequest to include optional customerName
 interface ExtendedPaymentRequest extends PaymentRequest {
@@ -204,7 +205,7 @@ export class PaymentService {
     }
   }
 
-  // Procesar notificación de GetNet (webhook)
+  // Procesar notificación de GetNet (webhook) - MEJORADO
   static async processNotification(notificationData: GetNetNotificationData): Promise<{ success: boolean; message: string }> {
     try {
       console.log('Processing GetNet notification:', notificationData)
@@ -222,30 +223,85 @@ export class PaymentService {
       // Procesar según el estado del pago
       const { status, orderId, transactionId, amount } = notificationData
 
-      switch (status) {
+      // Obtener el pedido de Firebase
+      const order = await OrderService.getOrderById(orderId)
+      if (!order) {
+        console.error(`Order not found for notification: ${orderId}`)
+        return {
+          success: false,
+          message: 'Pedido no encontrado'
+        }
+      }
+
+      switch (status.toLowerCase()) {
+        case 'ok':
         case 'approved':
         case 'paid':
         case 'completed':
         case 'success':
           console.log(`Payment approved for order ${orderId}, transaction: ${transactionId}, amount: ${amount}`)
-          // Aquí se actualizaría el estado del pedido en la base de datos
+          
+          // Marcar pedido como pagado
+          await OrderService.updateOrder(orderId, {
+            status: 'pagado',
+            paidAt: new Date(),
+            paymentId: transactionId,
+            metadata: {
+              ...order.metadata,
+              version: order.metadata?.version || '1.0',
+              source: order.metadata?.source || 'payment',
+              paymentProcessedAt: new Date().toISOString(),
+              paymentMethod: 'GetNet',
+              transactionId: transactionId
+            }
+          })
           break
         
         case 'rejected':
         case 'failed':
         case 'cancelled':
+        case 'declined':
           console.log(`Payment failed for order ${orderId}, transaction: ${transactionId}, amount: ${amount}`)
-          // Manejar pago fallido
+          await OrderService.updateOrder(orderId, {
+            status: 'cancelado',
+            metadata: {
+              ...order.metadata,
+              version: order.metadata?.version || '1.0',
+              source: order.metadata?.source || 'payment',
+              paymentFailedAt: new Date().toISOString(),
+              failureReason: status,
+              transactionId: transactionId
+            }
+          })
           break
         
         case 'pending':
-        case 'processing':
-          console.log(`Payment pending for order ${orderId}, transaction: ${transactionId}, amount: ${amount}`)
-          // Manejar pago pendiente
+          await OrderService.updateOrder(orderId, {
+            status: 'procesando_pago',
+            paymentId: transactionId,
+            metadata: {
+              ...order.metadata,
+              version: order.metadata?.version || '1.0',
+              source: order.metadata?.source || 'payment',
+              paymentPendingAt: new Date().toISOString(),
+              transactionId: transactionId
+            }
+          })
           break
         
         default:
-          console.log(`Unknown payment status: ${status} for order ${orderId}, transaction: ${transactionId}, amount: ${amount}`)
+          console.log(`Unknown payment status for order ${orderId}: ${status}`)
+          await OrderService.updateOrder(orderId, {
+            metadata: {
+              ...order.metadata,
+              version: order.metadata?.version || '1.0',
+              source: order.metadata?.source || 'payment',
+              unknownStatusAt: new Date().toISOString(),
+              unknownStatus: status,
+              transactionId: transactionId
+            }
+          })
+          break
       }
 
       return {
@@ -267,7 +323,7 @@ export class PaymentService {
       // Implementar validación de firma según documentación de GetNet
       // Por ahora retornamos true, pero en producción debe validarse la firma
       
-      const requiredFields = ['status', 'orderId', 'transactionId', 'amount']
+      const requiredFields = ['status', 'orderId', 'transactionId']
       const hasRequiredFields = requiredFields.every(field => 
         notificationData.hasOwnProperty(field) && notificationData[field] !== null
       )
