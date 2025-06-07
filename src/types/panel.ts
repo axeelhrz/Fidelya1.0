@@ -12,7 +12,7 @@ export interface MenuItem {
   active: boolean
   category?: string
   allergens?: string[]
-  nutritionalInfo?: Record<string, any>
+  nutritionalInfo?: Record<string, string | number>
 }
 
 export interface DayMenu {

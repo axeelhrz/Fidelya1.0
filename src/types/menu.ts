@@ -21,7 +21,7 @@ export interface MenuItemDisplay extends MenuItem {
     calories?: number
     protein?: string
     carbs?: string
-    allergens?: string[]
+    allergens?: string
   }
 }
 

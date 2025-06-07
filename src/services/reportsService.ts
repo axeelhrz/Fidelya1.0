@@ -5,7 +5,8 @@ import {
   getDocs, 
   orderBy,
   doc,
-  getDoc
+  getDoc,
+  Timestamp
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { 
@@ -17,13 +18,15 @@ import {
   DailyMetrics,
   ReportsData 
 } from '@/types/reports'
+import { format, parseISO, eachDayOfInterval } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 interface OrderData {
   id: string
   userId: string
   status: string
   total?: number
-  createdAt?: any
+  createdAt?: Timestamp
   selections?: Array<{
     almuerzo?: {
       code: string
@@ -41,22 +44,26 @@ interface OrderData {
     [key: string]: string | number | boolean | Date | null | undefined
   }
 }
-import { format, parseISO, eachDayOfInterval} from 'date-fns'
-import { es } from 'date-fns/locale'
+
+interface UserData {
+  id: string
+  userType: string
+  [key: string]: string | number | boolean | Date | null | undefined
+}
 
 export class ReportsService {
   static async getReportsData(filters: ReportsFilters): Promise<ReportsData> {
     try {
-      const [orders, users] = await Promise.all([
+      const [orders] = await Promise.all([
         this.getFilteredOrders(filters),
         this.getUsers()
       ])
 
-      const stats = this.calculateStats(orders, users, filters)
+      const stats = this.calculateStats(orders)
       const dailyData = this.generateDailyData(orders, filters)
       const revenueData = this.generateRevenueData(orders, filters)
       const menuDistribution = this.calculateMenuDistribution(orders)
-      const userTypeData = this.calculateUserTypeData(orders, users)
+      const userTypeData = this.calculateUserTypeData(orders)
       const dailyMetrics = this.calculateDailyMetrics(orders, filters)
       const topMenuItems = this.getTopMenuItems(orders)
 
@@ -84,11 +91,11 @@ export class ReportsService {
 
       // Filtrar por estado si no es 'all'
       if (filters.orderStatus !== 'all') {
-        q = query(q, where('status', '==', filters.orderStatus))
+        q = query(ordersRef, where('status', '==', filters.orderStatus), orderBy('createdAt', 'desc'))
       }
 
       const ordersSnapshot = await getDocs(q)
-      const orders = []
+      const orders: OrderData[] = []
 
       for (const orderDoc of ordersSnapshot.docs) {
         const orderData = orderDoc.data()
@@ -98,11 +105,17 @@ export class ReportsService {
         if (orderDate) {
           const orderDateStr = format(orderDate, 'yyyy-MM-dd')
           if (orderDateStr >= filters.dateRange.start && orderDateStr <= filters.dateRange.end) {
-            // Obtener datos del usuario para filtrar por tipo
-            if (filters.userType !== 'all') {
+            // Obtener datos del usuario
+            try {
               const userDoc = await getDoc(doc(db, 'users', orderData.userId))
+              let userData: Partial<UserData> = {}
+              
               if (userDoc.exists()) {
-                const userData = userDoc.data()
+                userData = userDoc.data()
+              }
+
+              // Filtrar por tipo de usuario si no es 'all'
+              if (filters.userType !== 'all') {
                 if (userData.userType === filters.userType) {
                   orders.push({
                     id: orderDoc.id,
@@ -110,15 +123,23 @@ export class ReportsService {
                     user: userData
                   } as OrderData)
                 }
+              } else {
+                orders.push({
+                  id: orderDoc.id,
+                  ...orderData,
+                  user: userData
+                } as OrderData)
               }
-            } else {
-              const userDoc = await getDoc(doc(db, 'users', orderData.userId))
-              const userData = userDoc.exists() ? userDoc.data() : {}
-              orders.push({
-                id: orderDoc.id,
-                ...orderData,
-                user: userData
-              } as OrderData)
+            } catch (userError) {
+              console.error(`Error fetching user ${orderData.userId}:`, userError)
+              // Incluir orden sin datos de usuario si hay error
+              if (filters.userType === 'all') {
+                orders.push({
+                  id: orderDoc.id,
+                  ...orderData,
+                  user: { userType: 'estudiante' } // valor por defecto
+                } as OrderData)
+              }
             }
           }
         }
@@ -131,41 +152,46 @@ export class ReportsService {
     }
   }
 
-  private static async getUsers(): Promise<any[]> {
+  private static async getUsers(): Promise<UserData[]> {
     try {
       const usersRef = collection(db, 'users')
       const usersSnapshot = await getDocs(usersRef)
       return usersSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }))
+      })) as UserData[]
     } catch (error) {
       console.error('Error fetching users:', error)
       return []
     }
   }
 
-  private static calculateStats(orders: any[], users: any[], filters: ReportsFilters): ReportsStats {
+  private static calculateStats(orders: OrderData[]): ReportsStats {
     const totalOrders = orders.length
-    const totalRevenue = orders
-      .filter(order => order.status === 'paid')
-      .reduce((sum, order) => sum + (order.total || 0), 0)
+    const paidOrders = orders.filter(order => order.status === 'paid')
+    const totalRevenue = paidOrders.reduce((sum, order) => sum + (order.total || 0), 0)
     
     const uniqueUserIds = [...new Set(orders.map(order => order.userId))]
     const totalUsers = uniqueUserIds.length
 
     // Calcular total de items de menú seleccionados
     const totalMenuItems = orders.reduce((sum, order) => {
-      return sum + (order.selections?.length || 0)
+      if (!order.selections) return sum
+      return sum + order.selections.reduce((itemSum, selection) => {
+        let count = 0
+        if (selection.almuerzo) count++
+        if (selection.colacion) count++
+        return itemSum + count
+      }, 0)
     }, 0)
 
-    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
+    const averageOrderValue = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0
 
     // Calcular crecimiento (simulado - en producción compararía con período anterior)
     const growthPercentage = Math.random() * 20 - 10 // -10% a +10%
 
     // Tasa de conversión (pedidos pagados vs total)
-    const conversionRate = totalOrders > 0 ? (orders.filter(o => o.status === 'paid').length / totalOrders) * 100 : 0
+    const conversionRate = totalOrders > 0 ? (paidOrders.length / totalOrders) * 100 : 0
 
     return {
       totalOrders,
@@ -178,7 +204,7 @@ export class ReportsService {
     }
   }
 
-  private static generateDailyData(orders: any[], filters: ReportsFilters): ChartDataPoint[] {
+  private static generateDailyData(orders: OrderData[], filters: ReportsFilters): ChartDataPoint[] {
     const startDate = parseISO(filters.dateRange.start)
     const endDate = parseISO(filters.dateRange.end)
     const days = eachDayOfInterval({ start: startDate, end: endDate })
@@ -206,17 +232,17 @@ export class ReportsService {
     })
   }
 
-  private static generateRevenueData(orders: any[], filters: ReportsFilters): ChartDataPoint[] {
+  private static generateRevenueData(orders: OrderData[], filters: ReportsFilters): ChartDataPoint[] {
     return this.generateDailyData(orders, filters)
   }
 
-  private static calculateMenuDistribution(orders: any[]): MenuDistribution[] {
+  private static calculateMenuDistribution(orders: OrderData[]): MenuDistribution[] {
     const menuCounts: { [key: string]: { name: string; count: number; revenue: number } } = {}
     const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16']
 
     orders.forEach(order => {
-      if (order.selections) {
-        order.selections.forEach((selection: any) => {
+      if (order.selections && Array.isArray(order.selections)) {
+        order.selections.forEach((selection) => {
           if (selection.almuerzo) {
             const key = selection.almuerzo.code
             if (!menuCounts[key]) {
@@ -252,7 +278,7 @@ export class ReportsService {
         name: data.name,
         code,
         count: data.count,
-        percentage: totalCount > 0 ? (data.count / totalCount) * 100 : 0,
+        percentage: totalCount > 0 ? Math.round((data.count / totalCount) * 100 * 100) / 100 : 0,
         revenue: data.revenue,
         color: colors[index % colors.length]
       }))
@@ -260,20 +286,20 @@ export class ReportsService {
       .slice(0, 8)
   }
 
-  private static calculateUserTypeData(orders: any[], users: any[]): UserTypeData[] {
-    const userTypeStats = {
+  private static calculateUserTypeData(orders: OrderData[]): UserTypeData[] {
+    const userTypeStats: { [key: string]: { orders: number; revenue: number; users: Set<string> } } = {
       estudiante: { orders: 0, revenue: 0, users: new Set() },
       funcionario: { orders: 0, revenue: 0, users: new Set() }
     }
 
     orders.forEach(order => {
       const userType = order.user?.userType || 'estudiante'
-      if (userTypeStats[userType as keyof typeof userTypeStats]) {
-        userTypeStats[userType as keyof typeof userTypeStats].orders++
+      if (userTypeStats[userType]) {
+        userTypeStats[userType].orders++
         if (order.status === 'paid') {
-          userTypeStats[userType as keyof typeof userTypeStats].revenue += order.total || 0
+          userTypeStats[userType].revenue += order.total || 0
         }
-        userTypeStats[userType as keyof typeof userTypeStats].users.add(order.userId)
+        userTypeStats[userType].users.add(order.userId)
       }
     })
 
@@ -284,11 +310,11 @@ export class ReportsService {
       orders: data.orders,
       revenue: data.revenue,
       users: data.users.size,
-      percentage: totalOrders > 0 ? (data.orders / totalOrders) * 100 : 0
+      percentage: totalOrders > 0 ? Math.round((data.orders / totalOrders) * 100 * 100) / 100 : 0
     }))
   }
 
-  private static calculateDailyMetrics(orders: any[], filters: ReportsFilters): DailyMetrics[] {
+  private static calculateDailyMetrics(orders: OrderData[], filters: ReportsFilters): DailyMetrics[] {
     const startDate = parseISO(filters.dateRange.start)
     const endDate = parseISO(filters.dateRange.end)
     const days = eachDayOfInterval({ start: startDate, end: endDate })
@@ -310,8 +336,8 @@ export class ReportsService {
       let colacionOrders = 0
 
       dayOrders.forEach(order => {
-        if (order.selections) {
-          order.selections.forEach((selection: any) => {
+        if (order.selections && Array.isArray(order.selections)) {
+          order.selections.forEach((selection) => {
             if (selection.almuerzo) almuerzoOrders++
             if (selection.colacion) colacionOrders++
           })
@@ -326,12 +352,12 @@ export class ReportsService {
         uniqueUsers,
         almuerzoOrders,
         colacionOrders,
-        averageOrderValue: dayOrders.length > 0 ? totalRevenue / dayOrders.length : 0
+        averageOrderValue: dayOrders.length > 0 ? Math.round((totalRevenue / dayOrders.length) * 100) / 100 : 0
       }
     })
   }
 
-  private static getTopMenuItems(orders: any[]): MenuDistribution[] {
+  private static getTopMenuItems(orders: OrderData[]): MenuDistribution[] {
     return this.calculateMenuDistribution(orders).slice(0, 5)
   }
 
@@ -348,5 +374,33 @@ export class ReportsService {
       orderStatus: 'all',
       menuType: 'all'
     }
+  }
+
+  // Método adicional para exportar datos
+  static async exportReportsData(filters: ReportsFilters, format: 'csv' | 'json' = 'json'): Promise<string> {
+    try {
+      const data = await this.getReportsData(filters)
+      
+      if (format === 'csv') {
+        return this.convertToCSV(data)
+      }
+      
+      return JSON.stringify(data, null, 2)
+    } catch (error) {
+      console.error('Error exporting reports data:', error)
+      throw new Error('No se pudieron exportar los datos de reportes')
+    }
+  }
+
+  private static convertToCSV(data: ReportsData): string {
+    const headers = ['Fecha', 'Pedidos', 'Ingresos', 'Usuarios']
+    const rows = data.dailyData.map(item => [
+      item.date,
+      item.orders.toString(),
+      item.revenue.toString(),
+      item.users.toString()
+    ])
+
+    return [headers, ...rows].map(row => row.join(',')).join('\n')
   }
 }
