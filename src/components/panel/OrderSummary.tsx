@@ -42,7 +42,7 @@ export function OrderSummary({ onProceedToPayment, isProcessingPayment }: OrderS
             Resumen del Pedido
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 text-clean">
-            Usuario: {userType === 'estudiante' ? 'Estudiante' : 'Funcionario'}
+            Usuario: {userType === 'apoderado' ? 'Apoderado' : 'Funcionario'}
           </p>
         </div>
       </div>

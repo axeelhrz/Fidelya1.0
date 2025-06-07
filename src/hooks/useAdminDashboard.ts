@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from 'react'
 import { AdminService } from '@/services/adminService'
-import { AdminDashboardData, SystemAlert } from '@/types/admin'
+import { AdminDashboardData } from '@/types/admin'
 import { generateSystemAlerts } from '@/lib/adminUtils'
 
 interface UseAdminDashboardReturn {
