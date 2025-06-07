@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { AdminOrderView, OrderFilters, OrderMetrics, OrderUpdateRequest, OrderDetailView } from '@/types/adminOrder'
-import { format, parseISO, startOfWeek, endOfWeek, addDays } from 'date-fns'
+import { format, parseISO, startOfWeek, endOfWeek, addDays, differenceInDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export class AdminOrderService {
@@ -31,6 +31,37 @@ export class AdminOrderService {
     return Date.now() - cached.timestamp < this.CACHE_DURATION
   }
 
+  // Función helper para convertir timestamps de Firebase de forma segura
+  private static safeTimestampToDate(timestamp: Date | Timestamp | { seconds: number; nanoseconds?: number } | string | number | null | undefined): Date {
+    if (!timestamp) return new Date()
+    
+    // Si ya es una fecha
+    if (timestamp instanceof Date) return timestamp
+    
+    // Si es un Timestamp de Firebase
+    if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp && typeof timestamp.toDate === 'function') {
+      return timestamp.toDate()
+    }
+    
+    // Si es un objeto con seconds y nanoseconds
+    if (timestamp && typeof timestamp === 'object' && 'seconds' in timestamp && typeof timestamp.seconds === 'number') {
+      return new Date(timestamp.seconds * 1000)
+    }
+    
+    // Si es un string de fecha
+    if (typeof timestamp === 'string') {
+      return new Date(timestamp)
+    }
+    
+    // Si es un número (timestamp en ms)
+    if (typeof timestamp === 'number') {
+      return new Date(timestamp)
+    }
+    
+    console.warn('Unknown timestamp format:', timestamp)
+    return new Date()
+  }
+
   static async getOrdersWithFilters(filters: OrderFilters): Promise<AdminOrderView[]> {
     try {
       const cacheKey = this.getCacheKey(filters)
@@ -41,15 +72,13 @@ export class AdminOrderService {
       }
 
       const ordersRef = collection(db, 'orders')
+      
+      // Construir query básico sin filtros complejos para evitar errores de índice
       let q = query(ordersRef, orderBy('createdAt', 'desc'))
 
-      // Aplicar filtros de Firestore
-      if (filters.weekStart) {
-        q = query(q, where('weekStart', '==', filters.weekStart))
-      }
-
+      // Solo aplicar filtros simples que no requieren índices complejos
       if (filters.status && filters.status !== 'all') {
-        q = query(q, where('status', '==', filters.status))
+        q = query(ordersRef, where('status', '==', filters.status), orderBy('createdAt', 'desc'))
       }
 
       const ordersSnapshot = await getDocs(q)
@@ -64,6 +93,11 @@ export class AdminOrderService {
         const batchPromises = batch.map(async (orderDoc) => {
           try {
             const orderData = orderDoc.data()
+            
+            // Aplicar filtro de semana del lado del cliente
+            if (filters.weekStart && orderData.weekStart !== filters.weekStart) {
+              return null
+            }
             
             // Obtener datos del usuario
             const userDoc = await getDoc(doc(db, 'users', orderData.userId))
@@ -86,11 +120,21 @@ export class AdminOrderService {
               }
             }
 
+            // Convertir timestamps de forma segura
+            const createdAt = this.safeTimestampToDate(orderData.createdAt)
+            const paidAt = orderData.paidAt ? this.safeTimestampToDate(orderData.paidAt) : undefined
+            const cancelledAt = orderData.cancelledAt ? this.safeTimestampToDate(orderData.cancelledAt) : undefined
+
             // Calcular estadísticas del pedido
             const selections = orderData.selections || []
             const itemsCount = selections.length
             const hasColaciones = selections.some((s: { colacion?: unknown }) => s.colacion)
             const total = orderData.total || 0
+
+            // Calcular días desde que está pendiente
+            const daysSincePending = orderData.status === 'pending' 
+              ? differenceInDays(new Date(), createdAt)
+              : 0
 
             const order: AdminOrderView = {
               id: orderDoc.id,
@@ -99,8 +143,10 @@ export class AdminOrderService {
               selections: selections,
               total: total,
               status: orderData.status,
-              createdAt: orderData.createdAt?.toDate() || new Date(),
-              paidAt: orderData.paidAt?.toDate(),
+              createdAt: createdAt,
+              paidAt: paidAt,
+              cancelledAt: cancelledAt,
+              daysSincePending: daysSincePending,
               paymentId: orderData.paymentId,
               user: {
                 id: userData.id || orderData.userId,
@@ -109,15 +155,23 @@ export class AdminOrderService {
                 email: userData.email || '',
                 userType: userData.userType || 'estudiante'
               },
-              dayName: format(orderData.createdAt?.toDate() || new Date(), 'EEEE', { locale: es }),
-              formattedDate: format(orderData.createdAt?.toDate() || new Date(), 'dd/MM/yyyy HH:mm'),
+              dayName: format(createdAt, 'EEEE', { locale: es }),
+              formattedDate: format(createdAt, 'dd/MM/yyyy HH:mm'),
               itemsCount: itemsCount,
               hasColaciones: hasColaciones
             }
 
             // Filtrar por día específico
-            if (filters.day) {
-              const hasSelectionForDay = order.selections.some(s => s.date === filters.day)
+            if (filters.day && filters.day !== 'none') {
+              const hasSelectionForDay = order.selections.some(s => {
+                try {
+                  const selectionDate = parseISO(s.date)
+                  const dayName = format(selectionDate, 'EEEE', { locale: es }).toLowerCase()
+                  return dayName === filters.day?.toLowerCase()
+                } catch {
+                  return false
+                }
+              })
               if (!hasSelectionForDay) return null
             }
 
@@ -165,30 +219,54 @@ export class AdminOrderService {
 
       // Calcular métricas
       orders.forEach(order => {
-        // Revenue total
-        metrics.totalRevenue += order.total
+        // Revenue total (solo contar pedidos pagados para revenue real)
+        if (order.status === 'paid') {
+          metrics.totalRevenue += order.total
+        }
 
         // Contadores por estado
-        if (order.status === 'pending') metrics.pendingOrders++
-        if (order.status === 'paid') metrics.paidOrders++
+        if (order.status === 'pending') {
+          metrics.pendingOrders++
+          metrics.totalByStatus.pending++
+          metrics.revenueByStatus.pending += order.total
+          
+          // Pedidos críticos (más de 3 días pendientes)
+          if ((order.daysSincePending || 0) > 3) {
+            metrics.criticalPendingOrders++
+          }
+        }
+        
+        if (order.status === 'paid') {
+          metrics.paidOrders++
+          metrics.totalByStatus.paid++
+          metrics.revenueByStatus.paid += order.total
+        }
+        
+        if (order.status === 'cancelled') {
+          metrics.cancelledOrders++
+          metrics.totalByStatus.cancelled++
+          metrics.revenueByStatus.cancelled += order.total
+        }
 
-        // Totales por tipo de usuario
-        metrics.totalByUserType[order.user.userType] += order.total
+        // Totales por tipo de usuario (solo pedidos pagados)
+        if (order.status === 'paid') {
+          metrics.totalByUserType[order.user.userType] += order.total
+        }
 
         // Totales por día
         order.selections.forEach(selection => {
           try {
             const dayKey = format(parseISO(selection.date), 'EEEE', { locale: es })
             metrics.totalByDay[dayKey] = (metrics.totalByDay[dayKey] || 0) + 1
-          } catch {
-            console.error('Error parsing date:', selection.date)
+          } catch (error) {
+            console.error('Error parsing date:', selection.date, error)
           }
         })
       })
 
-      // Valor promedio
-      metrics.averageOrderValue = metrics.totalOrders > 0 
-        ? metrics.totalRevenue / metrics.totalOrders 
+      // Valor promedio (solo de pedidos pagados)
+      metrics.averageOrderValue = metrics.paidOrders > 0 
+        ? metrics.totalRevenue / metrics.paidOrders 
         : 0
 
       return metrics
@@ -208,7 +286,7 @@ export class AdminOrderService {
         throw new Error('El pedido no existe')
       }
 
-      const updateData: Record<string, Timestamp | string> = {
+      const updateData: Record<string, string | number | boolean | Timestamp | null> = {
         updatedAt: Timestamp.now()
       }
 
@@ -218,8 +296,16 @@ export class AdminOrderService {
         // Agregar timestamp específico según el estado
         if (request.status === 'paid') {
           updateData.paidAt = Timestamp.now()
+          // Limpiar cancelledAt si existía
+          updateData.cancelledAt = null
         } else if (request.status === 'cancelled') {
           updateData.cancelledAt = Timestamp.now()
+          // Limpiar paidAt si existía
+          updateData.paidAt = null
+        } else if (request.status === 'pending') {
+          // Limpiar ambos timestamps si vuelve a pendiente
+          updateData.paidAt = null
+          updateData.cancelledAt = null
         }
       }
 
@@ -268,8 +354,17 @@ export class AdminOrderService {
       if (!userDoc.exists()) return null
       const userData = userDoc.data()
 
+      // Convertir timestamps de forma segura
+      const createdAt = this.safeTimestampToDate(orderData.createdAt)
+      const paidAt = orderData.paidAt ? this.safeTimestampToDate(orderData.paidAt) : undefined
+      const cancelledAt = orderData.cancelledAt ? this.safeTimestampToDate(orderData.cancelledAt) : undefined
+
       // Procesar selecciones con manejo de errores
-      const processedSelections = (orderData.selections || []).map((s: { date: string; almuerzo?: { code: string; name: string; price: number }; colacion?: { code: string; name: string; price: number } }) => {
+      const processedSelections = (orderData.selections || []).map((s: {
+        date: string;
+        almuerzo?: { code: string; name: string; price: number };
+        colacion?: { code: string; name: string; price: number };
+      }) => {
         try {
           return {
             date: s.date,
@@ -299,23 +394,23 @@ export class AdminOrderService {
       // Construir historial de pagos
       const paymentHistory = [
         {
-          date: orderData.createdAt?.toDate() || new Date(),
+          date: createdAt,
           status: 'created',
           amount: orderData.total || 0
         }
       ]
 
-      if (orderData.paidAt) {
+      if (paidAt) {
         paymentHistory.push({
-          date: orderData.paidAt.toDate(),
+          date: paidAt,
           status: 'paid',
           amount: orderData.total || 0
         })
       }
 
-      if (orderData.cancelledAt) {
+      if (cancelledAt) {
         paymentHistory.push({
-          date: orderData.cancelledAt.toDate(),
+          date: cancelledAt,
           status: 'cancelled',
           amount: 0
         })
@@ -328,8 +423,10 @@ export class AdminOrderService {
         selections: processedSelections,
         total: orderData.total || 0,
         status: orderData.status,
-        createdAt: orderData.createdAt?.toDate() || new Date(),
-        paidAt: orderData.paidAt?.toDate(),
+        createdAt: createdAt,
+        paidAt: paidAt,
+        cancelledAt: cancelledAt,
+        daysSincePending: orderData.status === 'pending' ? differenceInDays(new Date(), createdAt) : 0,
         paymentId: orderData.paymentId,
         user: {
           id: userData.id || orderData.userId,
@@ -338,10 +435,10 @@ export class AdminOrderService {
           email: userData.email || '',
           userType: userData.userType || 'estudiante'
         },
-        dayName: format(orderData.createdAt?.toDate() || new Date(), 'EEEE', { locale: es }),
-        formattedDate: format(orderData.createdAt?.toDate() || new Date(), 'dd/MM/yyyy HH:mm'),
+        dayName: format(createdAt, 'EEEE', { locale: es }),
+        formattedDate: format(createdAt, 'dd/MM/yyyy HH:mm'),
         itemsCount: processedSelections.length,
-        hasColaciones: processedSelections.some((s: { colacion?: unknown }) => s.colacion),
+        hasColaciones: processedSelections.some((s: { colacion?: { code: string; name: string; price: number } }) => s.colacion),
         paymentHistory: paymentHistory
       }
 
@@ -388,12 +485,9 @@ export class AdminOrderService {
     const ordersRef = collection(db, 'orders')
     let q = query(ordersRef, orderBy('createdAt', 'desc'))
 
-    if (filters.weekStart) {
-      q = query(q, where('weekStart', '==', filters.weekStart))
-    }
-
+    // Solo aplicar filtros simples para evitar errores de índice
     if (filters.status && filters.status !== 'all') {
-      q = query(q, where('status', '==', filters.status))
+      q = query(ordersRef, where('status', '==', filters.status), orderBy('createdAt', 'desc'))
     }
 
     return onSnapshot(q, () => {
