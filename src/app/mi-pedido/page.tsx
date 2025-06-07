@@ -27,7 +27,8 @@ import {
   CreditCard,
   ExternalLink,
   Wifi,
-  Database
+  Database,
+  ArrowRight
 } from 'lucide-react'
 
 export default function MiPedidoPage() {
@@ -39,9 +40,10 @@ export default function MiPedidoPage() {
     getOrderSummaryByChild
   } = useOrderStore()
 
-  // Usar el hook unificado de gestión de pedidos
+  // Usar el hook unificado de gestión de pedidos con múltiples semanas
   const {
-    weekMenu,
+    currentWeekMenu,
+    allWeeks,
     isLoadingMenu,
     menuError,
     weekInfo,
@@ -51,6 +53,7 @@ export default function MiPedidoPage() {
     isProcessingPayment,
     paymentError,
     refreshMenu,
+    refreshWeek,
     processPayment,
     clearErrors
   } = useOrderManagement()
@@ -72,16 +75,7 @@ export default function MiPedidoPage() {
   const isReadOnly = existingOrder?.status === 'pagado'
   const summary = getOrderSummaryByChild()
 
-  // Separar días laborales y fines de semana usando el índice en lugar del día de la semana
-  const weekDays = weekMenu.filter((_, index) => {
-    // Los primeros 5 días (índices 0-4) son días laborales (lunes a viernes)
-    return index < 5
-  })
-  
-  const weekendDays = weekMenu.filter((_, index) => {
-    // Los últimos 2 días (índices 5-6) son fin de semana (sábado y domingo)
-    return index >= 5
-  })
+  // Separar días laborales y fines de semana para la semana actual
 
   if (authLoading || isLoadingMenu || isLoadingOrder) {
     return (
@@ -284,109 +278,222 @@ export default function MiPedidoPage() {
               </motion.div>
             )}
 
-            {/* Menús por día */}
+            {/* Mostrar todas las semanas */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="space-y-6"
+              className="space-y-12"
             >
-              {/* Días laborales */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-                    <Utensils className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    Días Laborales
-                  </h2>
-                  <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                    Lunes a Viernes
-                  </Badge>
-                </div>
-                
-                {weekDays.length === 0 ? (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
-                        No hay menús disponibles
-                      </h3>
-                      <p className="text-slate-600 dark:text-slate-400 mb-4">
-                        El menú para esta semana aún no ha sido publicado desde Firebase.
-                      </p>
-                      <div className="flex gap-3 justify-center">
-                        <Button
-                          onClick={refreshMenu}
-                          className="gap-2"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                          Actualizar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => window.open('/admin/menus', '_blank')}
-                          className="gap-2"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          Panel Admin
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {weekDays.map((dayMenu, index) => (
-                      <motion.div
-                        key={dayMenu.date}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 + index * 0.1 }}
-                      >
-                        <DaySelector
-                          dayMenu={dayMenu}
-                          user={user}
-                          isReadOnly={isReadOnly}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {allWeeks.map((week, weekIndex) => {
+                const weekDays = week.weekMenu.filter((_, index) => index < 5)
+                const weekendDays = week.weekMenu.filter((_, index) => index >= 5)
+                const isCurrentWeek = week.weekInfo.isCurrentWeek
 
-              {/* Fines de semana */}
-              {weekendDays.length > 0 && weekendDays.some(day => day.hasItems) && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-purple-100 dark:bg-purple-900/30">
-                      <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                      Fin de Semana
-                    </h2>
-                    <Badge variant="outline" className="bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-                      Sábado y Domingo
-                    </Badge>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {weekendDays.filter(day => day.hasItems).map((dayMenu, index) => (
-                      <motion.div
-                        key={dayMenu.date}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6 + index * 0.1 }}
+                return (
+                  <div key={week.weekInfo.weekStart} className="space-y-6">
+                    {/* Header de la semana */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-full ${
+                          isCurrentWeek 
+                            ? 'bg-emerald-100 dark:bg-emerald-900/30' 
+                            : 'bg-slate-100 dark:bg-slate-800'
+                        }`}>
+                          <CalendarDays className={`w-6 h-6 ${
+                            isCurrentWeek 
+                              ? 'text-emerald-600 dark:text-emerald-400' 
+                              : 'text-slate-600 dark:text-slate-400'
+                          }`} />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                            {week.weekInfo.weekLabel}
+                          </h2>
+                          <div className="flex items-center gap-2 mt-1">
+                            {isCurrentWeek && (
+                              <Badge variant="default" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                Semana Actual
+                              </Badge>
+                            )}
+                            {!isCurrentWeek && (
+                              <Badge variant="outline" className="text-slate-600 dark:text-slate-400">
+                                Próxima Semana
+                              </Badge>
+                            )}
+                            {week.hasMenus && (
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                Menú Disponible
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Botón de refresh para la semana */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => refreshWeek(week.weekInfo.weekStart)}
+                        disabled={week.isLoading}
+                        className="gap-2"
                       >
-                        <DaySelector
-                          dayMenu={dayMenu}
-                          user={user}
-                          isReadOnly={isReadOnly}
-                        />
-                      </motion.div>
-                    ))}
+                        <RefreshCw className={`w-4 h-4 ${week.isLoading ? 'animate-spin' : ''}`} />
+                        Actualizar
+                      </Button>
+                    </div>
+
+                    {/* Contenido de la semana */}
+                    {week.isLoading ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {[1, 2, 3, 4, 5].map(i => (
+                          <Skeleton key={i} className="h-96 w-full" />
+                        ))}
+                      </div>
+                    ) : week.error ? (
+                      <Card className="border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800">
+                        <CardContent className="p-6 text-center">
+                          <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-3" />
+                          <h3 className="font-medium text-red-900 dark:text-red-100 mb-2">
+                            Error al cargar esta semana
+                          </h3>
+                          <p className="text-red-700 dark:text-red-300 text-sm mb-4">
+                            {week.error}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => refreshWeek(week.weekInfo.weekStart)}
+                            className="gap-2"
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                            Reintentar
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ) : !week.hasMenus ? (
+                      <Card className="border-slate-200 bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700">
+                        <CardContent className="p-8 text-center">
+                          <Calendar className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                            Menú no disponible
+                          </h3>
+                          <p className="text-slate-600 dark:text-slate-400 mb-4">
+                            El menú para esta semana aún no ha sido publicado.
+                          </p>
+                          <div className="flex gap-3 justify-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => refreshWeek(week.weekInfo.weekStart)}
+                              className="gap-2"
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                              Verificar
+                            </Button>
+                            {isCurrentWeek && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open('/admin/menus', '_blank')}
+                                className="gap-2"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                Panel Admin
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="space-y-6">
+                        {/* Días laborales */}
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+                              <Utensils className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                              Días Laborales
+                            </h3>
+                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                              Lunes a Viernes
+                            </Badge>
+                          </div>
+                          
+                          {weekDays.length === 0 ? (
+                            <p className="text-slate-600 dark:text-slate-400 text-center py-8">
+                              No hay menús disponibles para los días laborales
+                            </p>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                              {weekDays.map((dayMenu, index) => (
+                                <motion.div
+                                  key={dayMenu.date}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: 0.4 + weekIndex * 0.1 + index * 0.05 }}
+                                >
+                                  <DaySelector
+                                    dayMenu={dayMenu}
+                                    user={user}
+                                    isReadOnly={isReadOnly && isCurrentWeek}
+                                  />
+                                </motion.div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Fines de semana */}
+                        {weekendDays.length > 0 && weekendDays.some(day => day.hasItems) && (
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                                <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                              </div>
+                              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                                Fin de Semana
+                              </h3>
+                              <Badge variant="outline" className="bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                                Sábado y Domingo
+                              </Badge>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {weekendDays.filter(day => day.hasItems).map((dayMenu, index) => (
+                                <motion.div
+                                  key={dayMenu.date}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: 0.6 + weekIndex * 0.1 + index * 0.05 }}
+                                >
+                                  <DaySelector
+                                    dayMenu={dayMenu}
+                                    user={user}
+                                    isReadOnly={isReadOnly && isCurrentWeek}
+                                  />
+                                </motion.div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Separador entre semanas */}
+                    {weekIndex < allWeeks.length - 1 && (
+                      <div className="flex items-center justify-center py-6">
+                        <div className="flex items-center gap-3 text-slate-400 dark:text-slate-600">
+                          <div className="h-px bg-slate-200 dark:bg-slate-700 w-16"></div>
+                          <ArrowRight className="w-5 h-5" />
+                          <div className="h-px bg-slate-200 dark:bg-slate-700 w-16"></div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                )
+              })}
             </motion.div>
           </div>
 
@@ -404,7 +511,7 @@ export default function MiPedidoPage() {
             />
 
             {/* Botón de pago con NetGet */}
-            {weekMenu.length > 0 && (
+            {currentWeekMenu.length > 0 && (
               <Card className="border-green-200 bg-green-50/50 dark:bg-green-900/10 dark:border-green-800">
                 <CardContent className="p-6">
                   <div className="space-y-4">
@@ -424,7 +531,7 @@ export default function MiPedidoPage() {
 
                     <PaymentButton
                       summary={summary}
-                      weekDays={weekMenu.map(day => day.date)}
+                      weekDays={currentWeekMenu.map(day => day.date)}
                       isOrderingAllowed={true} // Siempre permitir pedidos
                       onProceedToPayment={processPayment}
                       isProcessingPayment={isProcessingPayment}

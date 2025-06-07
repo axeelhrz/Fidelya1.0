@@ -1,16 +1,23 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useOrderStore } from '@/store/orderStore'
 import { useAuth } from '@/hooks/useAuth'
+import { useMultiWeekMenu } from '@/hooks/useMultiWeekMenu'
 import { MenuIntegrationService } from '@/services/menuIntegrationService'
 import { OrderService } from '@/services/orderService'
-import { MenuService } from '@/services/menuService'
 import { DayMenuDisplay } from '@/types/menu'
 import { WeekInfo } from '@/types/order'
 import { OrderStateByChild } from '@/services/orderService'
 
 interface UseOrderManagementReturn {
-  // Estado del menú
-  weekMenu: DayMenuDisplay[]
+  // Estado del menú - ahora incluye múltiples semanas
+  currentWeekMenu: DayMenuDisplay[]
+  allWeeks: Array<{
+    weekInfo: WeekInfo & { weekLabel: string }
+    weekMenu: DayMenuDisplay[]
+    isLoading: boolean
+    error: string | null
+    hasMenus: boolean
+  }>
   isLoadingMenu: boolean
   menuError: string | null
   weekInfo: WeekInfo | null
@@ -26,6 +33,7 @@ interface UseOrderManagementReturn {
   
   // Acciones
   refreshMenu: () => Promise<void>
+  refreshWeek: (weekStart: string) => Promise<void>
   processPayment: () => Promise<void>
   clearErrors: () => void
   retryPayment: () => Promise<void>
@@ -33,13 +41,16 @@ interface UseOrderManagementReturn {
 
 export function useOrderManagement(): UseOrderManagementReturn {
   const { getOrderSummaryByChild } = useOrderStore()
-  const { user } = useAuth() // Corregido: usar useAuth en lugar de useAuthStore
+  const { user } = useAuth()
   
-  // Estados del menú
-  const [weekMenu, setWeekMenu] = useState<DayMenuDisplay[]>([])
-  const [isLoadingMenu, setIsLoadingMenu] = useState(true)
-  const [menuError, setMenuError] = useState<string | null>(null)
-  const [weekInfo, setWeekInfo] = useState<WeekInfo | null>(null)
+  // Usar el nuevo hook de múltiples semanas
+  const { 
+    weeks: allWeeks, 
+    isLoading: isLoadingMultiWeek, 
+    error: multiWeekError,
+    refreshWeek,
+    refreshAll
+  } = useMultiWeekMenu(user, 4) // Mostrar 4 semanas próximas
   
   // Estados del pedido
   const [existingOrder, setExistingOrder] = useState<OrderStateByChild | null>(null)
@@ -50,38 +61,12 @@ export function useOrderManagement(): UseOrderManagementReturn {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)
 
-  // Cargar datos del menú
-  const loadMenuData = useCallback(async () => {
-    if (!user) {
-      setIsLoadingMenu(false)
-      return
-    }
-
-    try {
-      setIsLoadingMenu(true)
-      setMenuError(null)
-
-      // Obtener información de la semana actual
-      const currentWeekInfo = MenuService.getCurrentWeekInfo()
-      setWeekInfo(currentWeekInfo)
-
-      // Cargar menú con precios según tipo de usuario
-      const menuData = await MenuIntegrationService.getPublicWeeklyMenu(
-        user.tipoUsuario,
-        currentWeekInfo.weekStart
-      )
-      
-      setWeekMenu(menuData)
-
-    } catch (error) {
-      console.error('Error loading menu data:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Error al cargar el menú'
-      setMenuError(errorMessage)
-      setWeekMenu([]) // Asegurar que weekMenu esté vacío en caso de error
-    } finally {
-      setIsLoadingMenu(false)
-    }
-  }, [user])
+  // Obtener la semana actual y su menú
+  const currentWeek = allWeeks.find(week => week.weekInfo.isCurrentWeek)
+  const currentWeekMenu = currentWeek?.weekMenu || []
+  const weekInfo = currentWeek?.weekInfo || null
+  const isLoadingMenu = isLoadingMultiWeek || (currentWeek?.isLoading ?? true)
+  const menuError = multiWeekError || currentWeek?.error || null
 
   // Cargar pedido existente
   const loadExistingOrder = useCallback(async () => {
@@ -198,30 +183,18 @@ export function useOrderManagement(): UseOrderManagementReturn {
     await processPayment()
   }, [processPayment])
 
-  // Refrescar menú
+  // Refrescar menú (todas las semanas)
   const refreshMenu = useCallback(async () => {
-    await loadMenuData()
-  }, [loadMenuData])
+    await refreshAll()
+  }, [refreshAll])
 
   // Limpiar errores
   const clearErrors = useCallback(() => {
-    setMenuError(null)
     setOrderError(null)
     setPaymentError(null)
   }, [])
 
   // Efectos
-  useEffect(() => {
-    if (user) {
-      loadMenuData()
-    } else {
-      // Si no hay usuario, limpiar estados
-      setWeekMenu([])
-      setWeekInfo(null)
-      setIsLoadingMenu(false)
-    }
-  }, [user, loadMenuData])
-
   useEffect(() => {
     if (user && weekInfo) {
       loadExistingOrder()
@@ -233,8 +206,9 @@ export function useOrderManagement(): UseOrderManagementReturn {
   }, [user, weekInfo, loadExistingOrder])
 
   return {
-    // Estado del menú
-    weekMenu,
+    // Estado del menú - ahora incluye múltiples semanas
+    currentWeekMenu,
+    allWeeks,
     isLoadingMenu,
     menuError,
     weekInfo,
@@ -250,6 +224,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
     
     // Acciones
     refreshMenu,
+    refreshWeek,
     processPayment,
     clearErrors,
     retryPayment
