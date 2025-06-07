@@ -77,6 +77,8 @@ export class MenuIntegrationService {
     error?: string
   }> {
     try {
+      console.log('Processing complete order for user:', user.id, 'selections:', selections.length)
+
       // 1. Validar que hay menús disponibles
       const availability = await this.checkMenuAvailability(weekStart)
       if (!availability.hasMenus || !availability.isPublished) {
@@ -86,7 +88,15 @@ export class MenuIntegrationService {
         }
       }
 
-      // 2. Validar pedido
+      // 2. Validar que hay selecciones
+      if (!selections || selections.length === 0) {
+        return {
+          success: false,
+          error: 'No hay selecciones para procesar'
+        }
+      }
+
+      // 3. Validar pedido
       const weekDays = Array.from({ length: 7 }, (_, i) => {
         const date = new Date(weekStart)
         date.setDate(date.getDate() + i)
@@ -107,24 +117,49 @@ export class MenuIntegrationService {
         }
       }
 
-      // 3. Calcular total
+      // 4. Calcular total
       const total = OrderService.calculateOrderTotal(selections, user.tipoUsuario)
 
-      // 4. Guardar pedido
+      if (total <= 0) {
+        return {
+          success: false,
+          error: 'El total del pedido debe ser mayor a cero'
+        }
+      }
+
+      // 5. Preparar datos del pedido con validación
       const orderData = {
-        userId: user.id,
+        userId: user.id || '',
         tipoUsuario: user.tipoUsuario,
-        weekStart,
+        weekStart: weekStart,
         resumenPedido: selections,
-        total,
+        total: total,
         status: 'pendiente' as const
       }
 
-      const orderId = await OrderService.saveOrder(orderData)
+      console.log('Order data prepared:', {
+        userId: orderData.userId,
+        tipoUsuario: orderData.tipoUsuario,
+        weekStart: orderData.weekStart,
+        selectionsCount: orderData.resumenPedido.length,
+        total: orderData.total,
+        status: orderData.status
+      })
 
-      // 5. Crear pago - MEJORADO con mejor manejo del nombre del cliente
+      // 6. Guardar pedido
+      const orderId = await OrderService.saveOrder(orderData)
+      console.log('Order saved with ID:', orderId)
+
+      // 7. Crear pago - MEJORADO con mejor manejo del nombre del cliente
       const customerName = this.extractCustomerName(user)
       const customerEmail = user.email || user.correo || ''
+
+      if (!customerEmail) {
+        return {
+          success: false,
+          error: 'Email del usuario es requerido para procesar el pago'
+        }
+      }
 
       const paymentRequest = {
         amount: total,
@@ -151,6 +186,8 @@ export class MenuIntegrationService {
           paymentUrl: paymentResponse.redirectUrl
         }
       } else {
+        // Si falla el pago, mantener el pedido como pendiente
+        console.error('Payment creation failed:', paymentResponse.error)
         return {
           success: false,
           error: paymentResponse.error || 'Error al procesar el pago'
@@ -159,9 +196,21 @@ export class MenuIntegrationService {
 
     } catch (error) {
       console.error('Error processing complete order:', error)
+      
+      let errorMessage = 'Error interno del servidor'
+      if (error instanceof Error) {
+        if (error.message.includes('guardar el pedido')) {
+          errorMessage = 'No se pudo guardar el pedido. Verifica que todos los datos estén completos.'
+        } else if (error.message.includes('requerido')) {
+          errorMessage = error.message
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor'
+        error: errorMessage
       }
     }
   }

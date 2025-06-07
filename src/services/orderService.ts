@@ -68,18 +68,148 @@ export class OrderService {
     }
   }
 
+  // Función auxiliar para limpiar datos undefined
+  private static cleanOrderData(data: any): any {
+    const cleaned: any = {}
+    
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined && value !== null) {
+        if (Array.isArray(value)) {
+          // Limpiar arrays recursivamente
+          cleaned[key] = value.map(item => 
+            typeof item === 'object' && item !== null 
+              ? this.cleanOrderData(item) 
+              : item
+          ).filter(item => item !== undefined && item !== null)
+        } else if (typeof value === 'object' && value !== null) {
+          // Limpiar objetos recursivamente
+          const cleanedObject = this.cleanOrderData(value)
+          if (Object.keys(cleanedObject).length > 0) {
+            cleaned[key] = cleanedObject
+          }
+        } else {
+          cleaned[key] = value
+        }
+      }
+    }
+    
+    return cleaned
+  }
+
+  // Función auxiliar para validar y limpiar selecciones
+  private static cleanSelections(selections: OrderSelectionByChild[]): OrderSelectionByChild[] {
+    return selections.map(selection => {
+      const cleanedSelection: any = {
+        date: selection.date || '',
+        day: selection.day || '',
+        fecha: selection.fecha || selection.date || ''
+      }
+
+      // Limpiar hijo (puede ser null para funcionarios)
+      if (selection.hijo) {
+        cleanedSelection.hijo = {
+          id: selection.hijo.id || '',
+          name: selection.hijo.name || '',
+          curso: selection.hijo.curso || '',
+          rut: selection.hijo.rut || null,
+          active: selection.hijo.active !== undefined ? selection.hijo.active : true
+        }
+      } else {
+        cleanedSelection.hijo = null
+      }
+
+      // Limpiar almuerzo
+      if (selection.almuerzo) {
+        cleanedSelection.almuerzo = {
+          id: selection.almuerzo.id || '',
+          code: selection.almuerzo.code || '',
+          name: selection.almuerzo.name || '',
+          description: selection.almuerzo.description || '',
+          type: selection.almuerzo.type || 'almuerzo',
+          price: selection.almuerzo.price || 0,
+          available: selection.almuerzo.available !== undefined ? selection.almuerzo.available : true,
+          date: selection.almuerzo.date || selection.date || '',
+          day: selection.almuerzo.day || selection.day || '',
+          active: selection.almuerzo.active !== undefined ? selection.almuerzo.active : true
+        }
+      }
+
+      // Limpiar colación
+      if (selection.colacion) {
+        cleanedSelection.colacion = {
+          id: selection.colacion.id || '',
+          code: selection.colacion.code || '',
+          name: selection.colacion.name || '',
+          description: selection.colacion.description || '',
+          type: selection.colacion.type || 'colacion',
+          price: selection.colacion.price || 0,
+          available: selection.colacion.available !== undefined ? selection.colacion.available : true,
+          date: selection.colacion.date || selection.date || '',
+          day: selection.colacion.day || selection.day || '',
+          active: selection.colacion.active !== undefined ? selection.colacion.active : true
+        }
+      }
+
+      return cleanedSelection as OrderSelectionByChild
+    }).filter(selection => 
+      // Filtrar selecciones que tengan al menos almuerzo o colación
+      selection.almuerzo || selection.colacion
+    )
+  }
+
   static async saveOrder(order: Omit<OrderStateByChild, 'id' | 'createdAt' | 'fechaCreacion'>): Promise<string> {
     try {
+      console.log('Saving order with data:', order)
+
+      // Validar datos requeridos
+      if (!order.userId) {
+        throw new Error('userId es requerido')
+      }
+      if (!order.tipoUsuario) {
+        throw new Error('tipoUsuario es requerido')
+      }
+      if (!order.weekStart) {
+        throw new Error('weekStart es requerido')
+      }
+      if (!order.resumenPedido || order.resumenPedido.length === 0) {
+        throw new Error('resumenPedido no puede estar vacío')
+      }
+
       const ordersRef = collection(db, this.COLLECTION_NAME)
       
+      // Limpiar y validar las selecciones
+      const cleanedSelections = this.cleanSelections(order.resumenPedido)
+      
+      if (cleanedSelections.length === 0) {
+        throw new Error('No hay selecciones válidas para guardar')
+      }
+
+      // Preparar datos limpios para Firebase
       const orderData = {
-        ...order,
+        userId: order.userId,
+        tipoUsuario: order.tipoUsuario,
+        weekStart: order.weekStart,
+        resumenPedido: cleanedSelections,
+        total: order.total || 0,
+        status: order.status || 'pendiente',
         fechaCreacion: Timestamp.now(),
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       }
+
+      // Agregar paymentId solo si existe
+      if (order.paymentId) {
+        orderData.paymentId = order.paymentId
+      }
+
+      // Limpiar cualquier undefined restante
+      const finalOrderData = this.cleanOrderData(orderData)
       
-      const docRef = await addDoc(ordersRef, orderData)
+      console.log('Final order data for Firebase:', finalOrderData)
+      
+      const docRef = await addDoc(ordersRef, finalOrderData)
+      console.log('Order saved successfully with ID:', docRef.id)
+      
       return docRef.id
     } catch (error) {
       console.error('Error saving order:', error)
@@ -114,8 +244,11 @@ export class OrderService {
       if (createdAt) {
         updateData.createdAt = Timestamp.fromDate(createdAt)
       }
+
+      // Limpiar datos undefined
+      const cleanedUpdateData = this.cleanOrderData(updateData)
       
-      await updateDoc(orderRef, updateData)
+      await updateDoc(orderRef, cleanedUpdateData)
     } catch (error) {
       console.error('Error updating order:', error)
       throw new Error('No se pudo actualizar el pedido')
