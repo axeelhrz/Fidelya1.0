@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { OrderService } from '@/services/orderService'
 
-// Configuración de GetNet para validación
-const GETNET_CONFIG = {
-  secret: process.env.GETNET_SECRET || '',
-  login: process.env.GETNET_LOGIN || ''
-}
-
-// Interface para notificaciones de GetNet
+// Interface para notificaciones de GetNet según su documentación
 interface GetNetNotification {
   status: {
     status: string
     message: string
-    reason?: string
+    reason?: string | number
     date: string
   }
-  requestId: string
-  reference: string // Este es nuestro orderId
+  requestId?: string | number
+  reference?: string // Este es nuestro orderId
   signature?: string
   authorization?: string
   receipt?: string
@@ -29,62 +23,100 @@ interface GetNetNotification {
   paymentMethodName?: string
   issuerName?: string
   amount?: {
-    from: {
+    from?: {
       currency: string
       total: number
     }
-    to: {
+    to?: {
       currency: string
       total: number
     }
   }
   authorization_code?: string
   transaction?: {
-    transactionID: string
-    cus: string
-    reference: string
-    description: string
+    transactionID?: string
+    cus?: string
+    reference?: string
+    description?: string
   }
+  // Campos adicionales alternativos que puede enviar GetNet
+  order_id?: string
+  orderId?: string
+  state?: string
+  transaction_id?: string
+  transactionId?: string
+  // Campos adicionales que puede enviar GetNet
+  [key: string]: unknown
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const notificationData: GetNetNotification = await request.json()
+    console.log('=== WEBHOOK GETNET RECEIVED ===')
     
-    console.log('Received GetNet notification:', {
-      status: notificationData.status?.status,
-      requestId: notificationData.requestId,
-      reference: notificationData.reference,
-      message: notificationData.status?.message
-    })
-
-    // Validar que tenemos los datos mínimos requeridos
-    if (!notificationData.reference || !notificationData.status) {
-      console.error('Invalid GetNet notification - missing required fields')
+    // Leer el cuerpo de la petición
+    const rawBody = await request.text()
+    console.log('Raw webhook body:', rawBody)
+    
+    let notificationData: GetNetNotification
+    try {
+      notificationData = JSON.parse(rawBody)
+    } catch (parseError) {
+      console.error('Error parsing webhook JSON:', parseError)
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Notificación inválida - faltan campos requeridos' 
+          error: 'Invalid JSON format' 
+        },
+        { status: 400 }
+      )
+    }
+    
+    console.log('Parsed GetNet notification:', JSON.stringify(notificationData, null, 2))
+
+    // Extraer información clave de la notificación
+    const orderId = notificationData.reference || 
+                   notificationData.transaction?.reference ||
+                   notificationData.order_id ||
+                   notificationData.orderId
+
+    const paymentStatus = notificationData.status?.status || 
+                         notificationData.state ||
+                         (notificationData as Record<string, unknown>).status
+
+    const requestId = notificationData.requestId?.toString() || 
+                     notificationData.transaction?.transactionID ||
+                     notificationData.transaction_id ||
+                     notificationData.transactionId
+
+    console.log('Extracted data:', {
+      orderId,
+      paymentStatus,
+      requestId,
+      statusMessage: notificationData.status?.message
+    })
+
+    // Validar que tenemos los datos mínimos requeridos
+    if (!orderId) {
+      console.error('Missing orderId in notification')
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Missing order reference' 
         },
         { status: 400 }
       )
     }
 
-    // Validar firma si está presente (recomendado para producción)
-    if (notificationData.signature && !validateGetNetSignature(notificationData)) {
-      console.error('Invalid GetNet signature')
+    if (!paymentStatus) {
+      console.error('Missing payment status in notification')
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Firma inválida' 
+          error: 'Missing payment status' 
         },
-        { status: 401 }
+        { status: 400 }
       )
     }
-
-    const orderId = notificationData.reference
-    const paymentStatus = notificationData.status.status
-    const requestId = notificationData.requestId
 
     console.log(`Processing payment notification for order ${orderId}: ${paymentStatus}`)
 
@@ -95,127 +127,161 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Pedido no encontrado' 
+          error: 'Order not found' 
         },
         { status: 404 }
       )
     }
 
-    // Procesar según el estado del pago
+    console.log('Found order:', {
+      id: order.id,
+      currentStatus: order.status,
+      total: order.total,
+      userId: order.userId
+    })
+
+    // Procesar según el estado del pago - MEJORADO PARA GETNET
     let orderUpdateData: Partial<typeof order> = {}
 
-    switch (paymentStatus.toUpperCase()) {
-      case 'OK':
-      case 'APPROVED':
-      case 'PAID':
-      case 'COMPLETED':
-      case 'SUCCESS':
-        // Pago exitoso
-        console.log(`Payment approved for order ${orderId}`)
-        orderUpdateData = {
-          status: 'pagado',
-          paidAt: new Date(),
-          paymentId: requestId,
-          metadata: {
-            ...order.metadata,
-            version: order.metadata?.version || '1.0',
-            source: order.metadata?.source || 'payment-notification',
-            paymentMethod: notificationData.paymentMethodName || 'GetNet',
-            authorization: notificationData.authorization ?? null,
-            franchise: notificationData.franchiseName ?? null,
-            bank: notificationData.bankName ?? null,
-            processedAt: new Date().toISOString()
-          }
-        }
-        break
+    // Normalizar el estado para comparación
+    const normalizedStatus = typeof paymentStatus === 'string' ? paymentStatus.toUpperCase() : String(paymentStatus).toUpperCase()
+
+    if (normalizedStatus === 'OK' || 
+        normalizedStatus === 'APPROVED' || 
+        normalizedStatus === 'PAID' || 
+        normalizedStatus === 'COMPLETED' || 
+        normalizedStatus === 'SUCCESS' ||
+        normalizedStatus === 'APROBADA' ||
+        normalizedStatus === 'EXITOSO') {
       
-      case 'FAILED':
-      case 'REJECTED':
-      case 'CANCELLED':
-      case 'DECLINED':
-        orderUpdateData = {
-          status: 'cancelado',
-          metadata: {
-            ...order.metadata,
-            version: order.metadata?.version || '1.0',
-            source: order.metadata?.source || 'payment-notification',
-            failureReason: notificationData.status.message,
-            failureCode: notificationData.status.reason ?? null,
-            processedAt: new Date().toISOString()
-          }
+      // Pago exitoso
+      console.log(`✅ Payment APPROVED for order ${orderId}`)
+      orderUpdateData = {
+        status: 'pagado',
+        paidAt: new Date(),
+        paymentId: requestId || notificationData.requestId?.toString() || 'getnet_payment',
+        metadata: {
+          version: order.metadata?.version || '1.0',
+          source: order.metadata?.source || 'webhook',
+          ...order.metadata,
+          paymentMethod: notificationData.paymentMethodName || notificationData.franchiseName || 'GetNet',
+          authorization: notificationData.authorization || notificationData.authorization_code || null,
+          franchise: notificationData.franchiseName || null,
+          bank: notificationData.bankName || null,
+          receipt: notificationData.receipt || null,
+          processedAt: new Date().toISOString(),
+          webhookData: JSON.stringify({
+            requestId: notificationData.requestId,
+            status: notificationData.status,
+            amount: notificationData.amount
+          })
         }
-        break
+      }
+    } else if (normalizedStatus === 'FAILED' || 
+               normalizedStatus === 'REJECTED' || 
+               normalizedStatus === 'CANCELLED' || 
+               normalizedStatus === 'DECLINED' ||
+               normalizedStatus === 'RECHAZADA' ||
+               normalizedStatus === 'CANCELADA' ||
+               normalizedStatus === 'FALLIDA') {
       
-      case 'PENDING':
-      case 'PROCESSING':
-        orderUpdateData = {
-          status: 'procesando_pago',
-          paymentId: requestId,
-          metadata: {
-            ...order.metadata,
-            version: order.metadata?.version || '1.0',
-            source: order.metadata?.source || 'payment-notification',
-            pendingReason: notificationData.status.message,
-            processedAt: new Date().toISOString()
-          }
+      // Pago fallido
+      console.log(`❌ Payment FAILED for order ${orderId}: ${notificationData.status?.message}`)
+      orderUpdateData = {
+        status: 'cancelado',
+        metadata: {
+          version: order.metadata?.version || '1.0',
+          source: order.metadata?.source || 'webhook',
+          ...order.metadata,
+          failureReason: notificationData.status?.message || 'Payment failed',
+          failureCode: notificationData.status?.reason || null,
+          processedAt: new Date().toISOString(),
+          webhookData: JSON.stringify({
+            requestId: notificationData.requestId,
+            status: notificationData.status,
+            amount: notificationData.amount
+          })
         }
-        break
+      }
+    } else if (normalizedStatus === 'PENDING' || 
+               normalizedStatus === 'PROCESSING' ||
+               normalizedStatus === 'PENDIENTE' ||
+               normalizedStatus === 'PROCESANDO') {
       
-      default:
+        // Pago pendiente
+        console.log(`⏳ Payment PENDING for order ${orderId}`)
         orderUpdateData = {
+          status: 'pendiente',
           metadata: {
-            ...order.metadata,
             version: order.metadata?.version || '1.0',
-            source: order.metadata?.source || 'payment-notification',
-            unknownStatus: paymentStatus,
-            unknownMessage: notificationData.status.message,
-            processedAt: new Date().toISOString()
+            source: order.metadata?.source || 'webhook',
+            ...order.metadata,
+            pendingReason: notificationData.status?.message || 'Payment processing',
+            processedAt: new Date().toISOString(),
+            webhookData: JSON.stringify({
+              requestId: notificationData.requestId,
+              status: notificationData.status,
+              amount: notificationData.amount
+            })
           }
         }
-        break
+      } else {
+        // Estado desconocido
+        console.log(`⚠️ Unknown payment status for order ${orderId}: ${paymentStatus}`)
+        orderUpdateData = {
+          metadata: {
+            version: order.metadata?.version || '1.0',
+            source: order.metadata?.source || 'webhook',
+            ...order.metadata,
+            unknownStatus: String(paymentStatus),
+            unknownMessage: notificationData.status?.message,
+            processedAt: new Date().toISOString(),
+            webhookData: JSON.stringify({
+              requestId: notificationData.requestId,
+              status: notificationData.status,
+              amount: notificationData.amount
+            })
+          }
+        }
     }
 
     // Actualizar el pedido en Firebase
     if (Object.keys(orderUpdateData).length > 0) {
+      console.log('Updating order with data:', {
+        orderId,
+        newStatus: orderUpdateData.status,
+        paymentId: orderUpdateData.paymentId
+      })
+      
       await OrderService.updateOrder(orderId, orderUpdateData)
-      console.log(`Order ${orderId} updated successfully with status: ${orderUpdateData.status || 'metadata only'}`)
+      console.log(`✅ Order ${orderId} updated successfully`)
     }
 
-    // Responder a GetNet
-    return NextResponse.json({ 
+    // Responder a GetNet con confirmación
+    const response = { 
       success: true, 
-      message: 'Notificación procesada correctamente',
+      message: 'Notification processed successfully',
       orderId: orderId,
-      status: orderUpdateData.status || order.status
-    })
+      status: orderUpdateData.status || order.status,
+      timestamp: new Date().toISOString()
+    }
+
+    console.log('Webhook response:', response)
+    console.log('=== WEBHOOK PROCESSING COMPLETE ===')
+
+    return NextResponse.json(response)
 
   } catch (error) {
-    console.error('Error processing GetNet notification:', error)
+    console.error('❌ Error processing GetNet notification:', error)
     
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Error interno al procesar la notificación' 
+        error: 'Internal server error',
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     )
-  }
-}
-
-// Validar firma de GetNet (implementar según documentación)
-function validateGetNetSignature(notification: GetNetNotification): boolean {
-  try {
-    if (!notification.signature || !GETNET_CONFIG.secret) {
-      return true // Si no hay firma o secreto, no validamos (para desarrollo)
-    }
-
-    // Implementar validación de firma según documentación de GetNet
-    // Por ahora retornamos true, pero en producción debe implementarse
-    console.log('Signature validation not implemented - accepting notification')
-    return true
-  } catch (error) {
-    console.error('Error validating GetNet signature:', error)
-    return false
   }
 }
 
@@ -224,6 +290,7 @@ export async function GET() {
   return NextResponse.json({ 
     status: 'ok', 
     service: 'getnet-payment-notification',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   })
 }

@@ -10,15 +10,13 @@ import { ChildSelector } from '@/components/mi-pedido/ChildSelector'
 import { DaySelector } from '@/components/mi-pedido/DaySelector'
 import { OrderSummary } from '@/components/mi-pedido/OrderSummary'
 import { PaymentButton } from '@/components/mi-pedido/PaymentButton'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { 
   AlertCircle, 
-  Clock, 
-  CheckCircle, 
   RefreshCw,
   Calendar,
   User as UserIcon,
@@ -28,15 +26,8 @@ import {
   ExternalLink,
   Wifi,
   Database,
-  ArrowRight,
-  Receipt,
-  Package,
-  XCircle,
-  Eye,
-  EyeOff
+  ArrowRight
 } from 'lucide-react'
-import { OrderStateByChild } from '@/services/orderService'
-import { useState } from 'react'
 
 export default function MiPedidoPage() {
   const { user, isLoading: authLoading } = useAuth()
@@ -47,9 +38,6 @@ export default function MiPedidoPage() {
     getOrderSummaryByChild
   } = useOrderStore()
 
-  // Estado para mostrar/ocultar pedidos existentes
-  const [showExistingOrders, setShowExistingOrders] = useState(true)
-
   // Usar el hook unificado de gestión de pedidos con múltiples semanas
   const {
     currentWeekMenu,
@@ -57,7 +45,6 @@ export default function MiPedidoPage() {
     isLoadingMenu,
     menuError,
     weekInfo,
-    existingOrders, // Todos los pedidos
     isLoadingOrder,
     orderError,
     isProcessingPayment,
@@ -65,8 +52,7 @@ export default function MiPedidoPage() {
     refreshMenu,
     refreshWeek,
     processPayment,
-    clearErrors,
-    refreshOrders
+    clearErrors
   } = useOrderManagement()
 
   // Configurar tipo de usuario y hijos
@@ -84,200 +70,6 @@ export default function MiPedidoPage() {
   }
 
   const summary = getOrderSummaryByChild()
-
-  // Función para formatear fecha
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-CL', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date)
-  }
-
-  // Función para formatear moneda
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP'
-    }).format(amount)
-  }
-
-  // Función para obtener el badge del estado
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pagado':
-        return (
-          <Badge variant="default" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            Pagado
-          </Badge>
-        )
-      case 'procesando_pago':
-        return (
-          <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
-            <Clock className="w-3 h-3 mr-1" />
-            Procesando Pago
-          </Badge>
-        )
-      case 'pendiente':
-        return (
-          <Badge variant="outline" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-            <AlertCircle className="w-3 h-3 mr-1" />
-            Pendiente
-          </Badge>
-        )
-      case 'cancelado':
-        return (
-          <Badge variant="destructive" className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
-            <XCircle className="w-3 h-3 mr-1" />
-            Cancelado
-          </Badge>
-        )
-      default:
-        return (
-          <Badge variant="outline">
-            {status}
-          </Badge>
-        )
-    }
-  }
-
-  // Componente para mostrar detalles de un pedido
-  const OrderDetails = ({ order }: { order: OrderStateByChild }) => {
-    const [expanded, setExpanded] = useState(false)
-
-    return (
-      <Card className="border-slate-200 dark:border-slate-700">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-800">
-                <Receipt className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">
-                  Pedido #{order.id?.slice(-8)}
-                </CardTitle>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {formatDate(order.createdAt)}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {getStatusBadge(order.status)}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setExpanded(!expanded)}
-              >
-                {expanded ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="pt-0">
-          <div className="space-y-3">
-            {/* Información básica */}
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Total:
-              </span>
-              <span className="font-semibold text-lg">
-                {formatCurrency(order.total)}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Elementos:
-              </span>
-              <span className="text-sm">
-                {order.resumenPedido.length} selección(es)
-              </span>
-            </div>
-
-            {order.paidAt && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Pagado el:
-                </span>
-                <span className="text-sm">
-                  {formatDate(order.paidAt)}
-                </span>
-              </div>
-            )}
-
-            {order.paymentId && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  ID de Pago:
-                </span>
-                <span className="text-xs font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
-                  {order.paymentId}
-                </span>
-              </div>
-            )}
-
-            {/* Detalles expandidos */}
-            {expanded && (
-              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <h4 className="font-medium text-slate-900 dark:text-slate-100 mb-3">
-                  Detalles del Pedido
-                </h4>
-                <div className="space-y-3">
-                  {order.resumenPedido.map((selection, index) => (
-                    <div key={index} className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="font-medium text-slate-900 dark:text-slate-100">
-                            {selection.dia}
-                          </p>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">
-                            {selection.fecha}
-                          </p>
-                          {selection.hijo && (
-                            <p className="text-sm text-blue-600 dark:text-blue-400">
-                              Para: {selection.hijo.name}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        {selection.almuerzo && (
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="flex items-center gap-1">
-                              🍽️ {selection.almuerzo.name}
-                            </span>
-                            <span className="font-medium">
-                              {formatCurrency(selection.almuerzo.price)}
-                            </span>
-                          </div>
-                        )}
-                        {selection.colacion && (
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="flex items-center gap-1">
-                              🥪 {selection.colacion.name}
-                            </span>
-                            <span className="font-medium">
-                              {formatCurrency(selection.colacion.price)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
 
   if (authLoading || isLoadingMenu || isLoadingOrder) {
     return (
@@ -367,7 +159,7 @@ export default function MiPedidoPage() {
                 Mi Pedido Semanal
               </h1>
               <p className="text-slate-600 dark:text-slate-400 mt-1">
-                Gestiona tus pedidos y revisa el historial
+                Selecciona tus menús y procede al pago
               </p>
             </div>
           </div>
@@ -383,15 +175,23 @@ export default function MiPedidoPage() {
                 <Database className="w-3 h-3 mr-1" />
                 Conectado a Firebase
               </Badge>
-
-              {existingOrders.length > 0 && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-3 py-1">
-                  <Package className="w-3 h-3 mr-1" />
-                  {existingOrders.length} pedido(s) esta semana
-                </Badge>
-              )}
             </div>
           )}
+        </motion.div>
+
+        {/* Información sobre integración con Firebase */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+            <Wifi className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800 dark:text-blue-200">
+              <strong>Sistema integrado:</strong> Los menús se obtienen en tiempo real desde Firebase. 
+              Los pagos se procesan de forma segura con GetNet. Todos los datos se sincronizan automáticamente.
+            </AlertDescription>
+          </Alert>
         </motion.div>
 
         {/* Errores de pedido o pago */}
@@ -414,61 +214,6 @@ export default function MiPedidoPage() {
                 </Button>
               </AlertDescription>
             </Alert>
-          </motion.div>
-        )}
-
-        {/* Pedidos Existentes */}
-        {existingOrders.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-900/10 dark:border-blue-800">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
-                      <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <CardTitle>Pedidos de esta Semana</CardTitle>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {existingOrders.length} pedido(s) encontrado(s)
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={refreshOrders}
-                      className="gap-2"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                      Actualizar
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowExistingOrders(!showExistingOrders)}
-                    >
-                      {showExistingOrders ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              
-              {showExistingOrders && (
-                <CardContent>
-                  <div className="space-y-4">
-                    {existingOrders.map((order) => (
-                      <OrderDetails key={order.id} order={order} />
-                    ))}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
           </motion.div>
         )}
 
@@ -745,7 +490,7 @@ export default function MiPedidoPage() {
               isProcessingPayment={isProcessingPayment}
             />
 
-            {/* Botón de pago */}
+            {/* Botón de pago con GetNet */}
             {currentWeekMenu.length > 0 && (
               <Card className="border-green-200 bg-green-50/50 dark:bg-green-900/10 dark:border-green-800">
                 <CardContent className="p-6">
@@ -781,30 +526,6 @@ export default function MiPedidoPage() {
                       <p>• Confirmación automática por webhook</p>
                       <p>• Soporte para tarjetas de crédito y débito</p>
                     </div>
-
-                    {/* Estado de pedidos existentes */}
-                    {existingOrders.length > 0 && (
-                      <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-                        <h4 className="font-medium text-slate-900 dark:text-slate-100 mb-3">
-                          Estado de Pedidos
-                        </h4>
-                        <div className="space-y-2">
-                          {existingOrders.slice(0, 3).map((order) => (
-                            <div key={order.id} className="flex items-center justify-between text-sm">
-                              <span className="text-slate-600 dark:text-slate-400">
-                                #{order.id?.slice(-6)}
-                              </span>
-                              {getStatusBadge(order.status)}
-                            </div>
-                          ))}
-                          {existingOrders.length > 3 && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                              +{existingOrders.length - 3} pedido(s) más
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -866,10 +587,6 @@ export default function MiPedidoPage() {
             <div className="flex items-center gap-1">
               <Wifi className="w-4 h-4 text-purple-500" />
               <span>Webhooks Automáticos</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <CheckCircle className="w-4 h-4 text-emerald-500" />
-              <span>Sincronización Completa</span>
             </div>
           </div>
         </motion.div>
