@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { AdminLayout } from '@/components/admin/AdminLayout'
-import { OrdersHeader } from '@/components/admin/pedidos/OrdersHeader'
 import { OrdersFilters } from '@/components/admin/pedidos/OrdersFilters'
 import { OrdersMetrics } from '@/components/admin/pedidos/OrdersMetrics'
 import { OrdersTable } from '@/components/admin/pedidos/OrdersTable'
@@ -15,7 +14,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { AdminOrderService } from '@/services/adminOrderService'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -107,6 +105,7 @@ export default function AdminPedidosPage() {
         description: `Los datos han sido exportados en formato ${format.toUpperCase()}.`,
       })
     } catch (error) {
+      console.error('Error exporting data:', error)
       toast({
         title: "Error en exportación",
         description: "No se pudo completar la exportación.",

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GetNetPaymentRequest, GetNetPaymentResponse } from '@/services/paymentService'
+import * as crypto from 'crypto'
 
 // Configuración de GetNet corregida
 const GETNET_CONFIG = {
@@ -64,7 +65,8 @@ export async function POST(request: NextRequest) {
         return_url: body.returnUrl || `${request.nextUrl.origin}/payment/return`,
         notify_url: body.notifyUrl || `${request.nextUrl.origin}/api/payment/notify`,
         cancel_url: `${request.nextUrl.origin}/mi-pedido?cancelled=true`
-      }
+      },
+      signature: ''
     }
 
     // Generar firma según documentación de GetNet
@@ -173,11 +175,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Función mejorada para generar firma HMAC según documentación de GetNet
-function generateGetNetSignature(payload: any, secret: string): string {
+function generateGetNetSignature(payload: {
+  merchant_id: string;
+  amount: number;
+  currency: string;
+  order_id: string;
+}, secret: string): string {
   try {
-    const crypto = require('crypto')
-    
     // Crear string para firmar según documentación de GetNet Chile
     // Formato típico: merchant_id + amount + currency + order_id + secret
     const stringToSign = [

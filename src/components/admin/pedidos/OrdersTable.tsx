@@ -8,6 +8,7 @@ import {
   Clock, 
   AlertCircle,
   Calendar,
+  Trash2,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,6 +19,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import {
   Table,
@@ -35,15 +37,18 @@ interface OrdersTableProps {
   isLoading: boolean
   onViewDetail: (orderId: string) => void
   onUpdateStatus: (orderId: string, status: 'pending' | 'paid' | 'cancelled') => Promise<void>
+  onDeleteOrder: (orderId: string) => Promise<void>
 }
 
 export function OrdersTable({ 
   orders, 
   isLoading, 
   onViewDetail, 
-  onUpdateStatus 
+  onUpdateStatus,
+  onDeleteOrder
 }: OrdersTableProps) {
   const [updatingOrders, setUpdatingOrders] = useState<Set<string>>(new Set())
+  const [deletingOrders, setDeletingOrders] = useState<Set<string>>(new Set())
 
   const handleStatusUpdate = async (orderId: string, status: 'pending' | 'paid' | 'cancelled') => {
     setUpdatingOrders(prev => new Set(prev).add(orderId))
@@ -51,6 +56,19 @@ export function OrdersTable({
       await onUpdateStatus(orderId, status)
     } finally {
       setUpdatingOrders(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(orderId)
+        return newSet
+      })
+    }
+  }
+
+  const handleDeleteOrder = async (orderId: string) => {
+    setDeletingOrders(prev => new Set(prev).add(orderId))
+    try {
+      await onDeleteOrder(orderId)
+    } finally {
+      setDeletingOrders(prev => {
         const newSet = new Set(prev)
         newSet.delete(orderId)
         return newSet
@@ -246,7 +264,7 @@ export function OrdersTable({
                             <Button
                               variant="ghost"
                               size="sm"
-                              disabled={updatingOrders.has(order.id!)}
+                              disabled={updatingOrders.has(order.id!) || deletingOrders.has(order.id!)}
                               className="text-slate-600 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-300 dark:hover:bg-slate-700"
                             >
                               <MoreHorizontal className="w-4 h-4" />
@@ -282,6 +300,17 @@ export function OrdersTable({
                                 Cancelar Pedido
                               </DropdownMenuItem>
                             )}
+                            
+                            <DropdownMenuSeparator />
+                            
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteOrder(order.id!)}
+                              disabled={deletingOrders.has(order.id!)}
+                              className="text-red-600 focus:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              {deletingOrders.has(order.id!) ? 'Eliminando...' : 'Eliminar Pedido'}
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
