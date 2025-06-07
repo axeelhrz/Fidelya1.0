@@ -9,6 +9,9 @@ import {
   AlertCircle,
   Calendar,
   Trash2,
+  XCircle,
+  AlertTriangle,
+  Timer
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -31,6 +34,8 @@ import {
 } from '@/components/ui/table'
 import { AdminOrderView } from '@/types/adminOrder'
 import { formatAdminCurrency, formatAdminDate, formatAdminTime } from '@/lib/adminUtils'
+import { differenceInDays, format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 interface OrdersTableProps {
   orders: AdminOrderView[]
@@ -83,34 +88,51 @@ export function OrdersTable({
       case 'pending':
         return <Clock className="w-4 h-4 text-amber-600" />
       case 'cancelled':
-        return <AlertCircle className="w-4 h-4 text-red-600" />
+        return <XCircle className="w-4 h-4 text-red-600" />
       default:
         return <Clock className="w-4 h-4 text-slate-600" />
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, daysSincePending?: number) => {
     switch (status) {
       case 'paid':
-        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+        return 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
       case 'pending':
-        return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+        if ((daysSincePending || 0) > 3) {
+          return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800 animate-pulse'
+        }
+        return 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800'
       case 'cancelled':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+        return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800'
       default:
-        return 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-300'
+        return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/30 dark:text-slate-300 dark:border-slate-800'
     }
   }
 
   const getUserTypeColor = (userType: string) => {
     return userType === 'estudiante' 
-      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-      : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+      ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
+      : 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800'
+  }
+
+  const getDaysSincePending = (order: AdminOrderView) => {
+    if (order.status !== 'pending') return 0
+    return differenceInDays(new Date(), new Date(order.createdAt))
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'paid': return 'Pagado'
+      case 'pending': return 'Pendiente'
+      case 'cancelled': return 'Cancelado'
+      default: return status
+    }
   }
 
   if (isLoading) {
     return (
-      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-soft">
         <CardHeader>
           <CardTitle>Pedidos</CardTitle>
         </CardHeader>
@@ -127,7 +149,7 @@ export function OrdersTable({
 
   if (orders.length === 0) {
     return (
-      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-soft">
         <CardHeader>
           <CardTitle>Pedidos</CardTitle>
         </CardHeader>
@@ -152,13 +174,20 @@ export function OrdersTable({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
     >
-      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-soft">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Tabla de Pedidos</span>
-            <Badge variant="secondary" className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
-              {orders.length} pedidos
-            </Badge>
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary" className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                {orders.length} pedidos
+              </Badge>
+              {orders.filter(o => o.status === 'pending' && getDaysSincePending(o) > 3).length > 0 && (
+                <Badge variant="destructive" className="animate-pulse">
+                  {orders.filter(o => o.status === 'pending' && getDaysSincePending(o) > 3).length} críticos
+                </Badge>
+              )}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -171,152 +200,199 @@ export function OrdersTable({
                   <TableHead>Fecha del Pedido</TableHead>
                   <TableHead>Items</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead>Fecha de Pago</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order, index) => (
-                  <motion.tr
-                    key={order.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
-                  >
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                          {order.user.firstName.charAt(0)}{order.user.lastName.charAt(0)}
+                {orders.map((order, index) => {
+                  const daysSincePending = getDaysSincePending(order)
+                  const isCritical = order.status === 'pending' && daysSincePending > 3
+                  
+                  return (
+                    <motion.tr
+                      key={order.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      className={`hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
+                        isCritical ? 'bg-red-50 dark:bg-red-900/10' : ''
+                      }`}
+                    >
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-8 h-8 bg-gradient-to-br ${
+                            order.user.userType === 'estudiante' 
+                              ? 'from-blue-500 to-blue-600' 
+                              : 'from-purple-500 to-purple-600'
+                          } rounded-full flex items-center justify-center text-white text-sm font-semibold`}>
+                            {order.user.firstName.charAt(0)}{order.user.lastName.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900 dark:text-white">
+                              {order.user.firstName} {order.user.lastName}
+                            </p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                              {order.user.email}
+                            </p>
+                          </div>
                         </div>
+                      </TableCell>
+                      
+                      <TableCell>
+                        <Badge className={`border ${getUserTypeColor(order.user.userType)}`}>
+                          {order.user.userType === 'estudiante' ? 'Estudiante' : 'Funcionario'}
+                        </Badge>
+                      </TableCell>
+                      
+                      <TableCell>
                         <div>
-                          <p className="font-semibold text-slate-900 dark:text-white">
-                            {order.user.firstName} {order.user.lastName}
+                          <p className="font-medium text-slate-900 dark:text-white">
+                            {formatAdminDate(order.createdAt)}
                           </p>
                           <p className="text-sm text-slate-600 dark:text-slate-400">
-                            {order.user.email}
+                            {formatAdminTime(order.createdAt)}
                           </p>
                         </div>
-                      </div>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Badge className={getUserTypeColor(order.user.userType)}>
-                        {order.user.userType === 'estudiante' ? 'Estudiante' : 'Funcionario'}
-                      </Badge>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-slate-900 dark:text-white">
-                          {formatAdminDate(order.createdAt)}
-                        </p>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          {formatAdminTime(order.createdAt)}
-                        </p>
-                      </div>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium text-slate-900 dark:text-white">
-                          {order.itemsCount}
-                        </span>
-                        {order.hasColaciones && (
-                          <Badge variant="secondary" className="text-xs">
-                            +Col
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Badge className={getStatusColor(order.status)}>
-                        <div className="flex items-center space-x-1">
-                          {getStatusIcon(order.status)}
-                          <span className="capitalize">
-                            {order.status === 'paid' ? 'Pagado' : 
-                             order.status === 'pending' ? 'Pendiente' : 'Cancelado'}
+                      </TableCell>
+                      
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium text-slate-900 dark:text-white">
+                            {order.itemsCount}
                           </span>
+                          {order.hasColaciones && (
+                            <Badge variant="secondary" className="text-xs border">
+                              +Col
+                            </Badge>
+                          )}
                         </div>
-                      </Badge>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <span className="font-semibold text-slate-900 dark:text-white">
-                        {formatAdminCurrency(order.total)}
-                      </span>
-                    </TableCell>
-                    
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onViewDetail(order.id!)}
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              disabled={updatingOrders.has(order.id!) || deletingOrders.has(order.id!)}
-                              className="text-slate-600 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-300 dark:hover:bg-slate-700"
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {order.status === 'pending' && (
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(order.id!, 'paid')}
-                                className="text-emerald-600 focus:text-emerald-700"
+                      </TableCell>
+                      
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={`border ${getStatusColor(order.status, daysSincePending)}`}>
+                            <div className="flex items-center space-x-1">
+                              {isCritical ? (
+                                <AlertTriangle className="w-4 h-4" />
+                              ) : (
+                                getStatusIcon(order.status)
+                              )}
+                              <span>{getStatusText(order.status)}</span>
+                            </div>
+                          </Badge>
+                          {order.status === 'pending' && daysSincePending > 0 && (
+                            <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
+                              <Timer className="w-3 h-3" />
+                              <span>{daysSincePending}d</span>
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      <TableCell>
+                        {order.status === 'paid' && order.paidAt ? (
+                          <div>
+                            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                              {format(new Date(order.paidAt), 'dd/MM/yyyy', { locale: es })}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {format(new Date(order.paidAt), 'HH:mm', { locale: es })}
+                            </p>
+                          </div>
+                        ) : order.status === 'cancelled' && order.cancelledAt ? (
+                          <div>
+                            <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                              Cancelado
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {format(new Date(order.cancelledAt), 'dd/MM/yyyy', { locale: es })}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-slate-400 dark:text-slate-500">
+                            Pendiente
+                          </span>
+                        )}
+                      </TableCell>
+                      
+                      <TableCell>
+                        <span className="font-semibold text-slate-900 dark:text-white">
+                          {formatAdminCurrency(order.total)}
+                        </span>
+                      </TableCell>
+                      
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onViewDetail(order.id!)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={updatingOrders.has(order.id!) || deletingOrders.has(order.id!)}
+                                className="text-slate-600 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-300 dark:hover:bg-slate-700"
                               >
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                Marcar como Pagado
-                              </DropdownMenuItem>
-                            )}
-                            
-                            {order.status === 'paid' && (
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {order.status === 'pending' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusUpdate(order.id!, 'paid')}
+                                  className="text-emerald-600 focus:text-emerald-700"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Marcar como Pagado
+                                </DropdownMenuItem>
+                              )}
+                              
+                              {order.status === 'paid' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusUpdate(order.id!, 'pending')}
+                                  className="text-amber-600 focus:text-amber-700"
+                                >
+                                  <Clock className="w-4 h-4 mr-2" />
+                                  Marcar como Pendiente
+                                </DropdownMenuItem>
+                              )}
+                              
+                              {order.status !== 'cancelled' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusUpdate(order.id!, 'cancelled')}
+                                  className="text-red-600 focus:text-red-700"
+                                >
+                                  <XCircle className="w-4 h-4 mr-2" />
+                                  Cancelar Pedido
+                                </DropdownMenuItem>
+                              )}
+                              
+                              <DropdownMenuSeparator />
+                              
                               <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(order.id!, 'pending')}
-                                className="text-amber-600 focus:text-amber-700"
-                              >
-                                <Clock className="w-4 h-4 mr-2" />
-                                Marcar como Pendiente
-                              </DropdownMenuItem>
-                            )}
-                            
-                            {order.status !== 'cancelled' && (
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(order.id!, 'cancelled')}
+                                onClick={() => handleDeleteOrder(order.id!)}
+                                disabled={deletingOrders.has(order.id!)}
                                 className="text-red-600 focus:text-red-700"
                               >
-                                <AlertCircle className="w-4 h-4 mr-2" />
-                                Cancelar Pedido
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                {deletingOrders.has(order.id!) ? 'Eliminando...' : 'Eliminar Pedido'}
                               </DropdownMenuItem>
-                            )}
-                            
-                            <DropdownMenuSeparator />
-                            
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteOrder(order.id!)}
-                              disabled={deletingOrders.has(order.id!)}
-                              className="text-red-600 focus:text-red-700"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              {deletingOrders.has(order.id!) ? 'Eliminando...' : 'Eliminar Pedido'}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
-                  </motion.tr>
-                ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </motion.tr>
+                  )
+                })}
               </TableBody>
             </Table>
           </div>

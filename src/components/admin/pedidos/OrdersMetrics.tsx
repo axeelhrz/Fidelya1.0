@@ -6,10 +6,15 @@ import {
   Users, 
   Clock,
   TrendingUp,
-  Calendar
+  Calendar,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
+  AlertCircle
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { OrderMetrics } from '@/types/adminOrder'
 import { formatAdminCurrency } from '@/lib/adminUtils'
 
@@ -21,19 +26,21 @@ interface OrdersMetricsProps {
 export function OrdersMetrics({ metrics, isLoading }: OrdersMetricsProps) {
   if (isLoading || !metrics) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-6">
-              <div className="h-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     )
   }
 
-  const metricCards = [
+  const mainMetricCards = [
     {
       title: 'Total de Pedidos',
       value: metrics.totalOrders.toString(),
@@ -59,13 +66,46 @@ export function OrdersMetrics({ metrics, isLoading }: OrdersMetricsProps) {
       borderColor: 'border-purple-200 dark:border-purple-800'
     },
     {
+      title: 'Pedidos Críticos',
+      value: metrics.criticalPendingOrders?.toString() || '0',
+      icon: AlertTriangle,
+      color: 'text-red-600 dark:text-red-400',
+      bgColor: 'bg-red-50 dark:bg-red-900/20',
+      borderColor: 'border-red-200 dark:border-red-800',
+      badge: (metrics.criticalPendingOrders || 0) > 0 ? metrics.criticalPendingOrders : undefined
+    }
+  ]
+
+  const statusMetricCards = [
+    {
+      title: 'Pedidos Pagados',
+      count: metrics.paidOrders,
+      revenue: metrics.revenueByStatus?.paid || 0,
+      icon: CheckCircle,
+      color: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
+      borderColor: 'border-emerald-200 dark:border-emerald-800',
+      percentage: metrics.totalOrders > 0 ? Math.round((metrics.paidOrders / metrics.totalOrders) * 100) : 0
+    },
+    {
       title: 'Pedidos Pendientes',
-      value: metrics.pendingOrders.toString(),
+      count: metrics.pendingOrders,
+      revenue: metrics.revenueByStatus?.pending || 0,
       icon: Clock,
       color: 'text-amber-600 dark:text-amber-400',
       bgColor: 'bg-amber-50 dark:bg-amber-900/20',
       borderColor: 'border-amber-200 dark:border-amber-800',
-      badge: metrics.pendingOrders > 0 ? metrics.pendingOrders : undefined
+      percentage: metrics.totalOrders > 0 ? Math.round((metrics.pendingOrders / metrics.totalOrders) * 100) : 0
+    },
+    {
+      title: 'Pedidos Cancelados',
+      count: metrics.cancelledOrders || 0,
+      revenue: metrics.revenueByStatus?.cancelled || 0,
+      icon: XCircle,
+      color: 'text-red-600 dark:text-red-400',
+      bgColor: 'bg-red-50 dark:bg-red-900/20',
+      borderColor: 'border-red-200 dark:border-red-800',
+      percentage: metrics.totalOrders > 0 ? Math.round(((metrics.cancelledOrders || 0) / metrics.totalOrders) * 100) : 0
     }
   ]
 
@@ -76,23 +116,43 @@ export function OrdersMetrics({ metrics, isLoading }: OrdersMetricsProps) {
       transition={{ duration: 0.5, delay: 0.1 }}
       className="space-y-6"
     >
+      {/* Alerta para pedidos críticos */}
+      {(metrics.criticalPendingOrders || 0) > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>
+                <strong>{metrics.criticalPendingOrders}</strong> pedidos llevan más de 3 días pendientes de pago
+              </span>
+              <Badge variant="destructive" className="ml-4">
+                Requiere atención
+              </Badge>
+            </AlertDescription>
+          </Alert>
+        </motion.div>
+      )}
+
       {/* Métricas principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metricCards.map((metric, index) => (
+        {mainMetricCards.map((metric, index) => (
           <motion.div
             key={metric.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
           >
-            <Card className={`${metric.bgColor} ${metric.borderColor} border-2`}>
+            <Card className={`${metric.bgColor} ${metric.borderColor} border-2 shadow-soft`}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
                       <metric.icon className={`w-5 h-5 ${metric.color}`} />
                       {metric.badge && (
-                        <Badge variant="destructive" className="text-xs">
+                        <Badge variant="destructive" className="text-xs animate-pulse">
                           {metric.badge}
                         </Badge>
                       )}
@@ -111,19 +171,76 @@ export function OrdersMetrics({ metrics, isLoading }: OrdersMetricsProps) {
         ))}
       </div>
 
+      {/* Métricas por estado de pago */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {statusMetricCards.map((metric, index) => (
+          <motion.div
+            key={metric.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.4 + index * 0.1 }}
+          >
+            <Card className={`${metric.bgColor} ${metric.borderColor} border-2 shadow-soft`}>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <metric.icon className={`w-5 h-5 ${metric.color}`} />
+                      <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                        {metric.title}
+                      </span>
+                    </div>
+                    <Badge className={`${metric.color.replace('text-', 'bg-').replace('dark:text-', 'dark:bg-')} text-white`}>
+                      {metric.percentage}%
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Cantidad:</span>
+                      <span className={`text-lg font-bold ${metric.color}`}>
+                        {metric.count}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Valor:</span>
+                      <span className={`text-lg font-bold ${metric.color}`}>
+                        {formatAdminCurrency(metric.revenue)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Barra de progreso */}
+                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all duration-500 ${
+                        metric.title.includes('Pagados') ? 'bg-emerald-500' :
+                        metric.title.includes('Pendientes') ? 'bg-amber-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${metric.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
       {/* Métricas adicionales */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Distribución por tipo de usuario */}
-        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-soft">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Users className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              <span>Por Tipo de Usuario</span>
+              <span>Recaudación por Tipo de Usuario</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -132,12 +249,16 @@ export function OrdersMetrics({ metrics, isLoading }: OrdersMetricsProps) {
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                    {formatAdminCurrency(metrics.totalByUserType.estudiante)}
+                    {formatAdminCurrency(metrics.totalByUserType.estudiante || 0)}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    {metrics.totalRevenue > 0 ? 
+                      Math.round(((metrics.totalByUserType.estudiante || 0) / metrics.totalRevenue) * 100) : 0}%
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -146,7 +267,11 @@ export function OrdersMetrics({ metrics, isLoading }: OrdersMetricsProps) {
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                    {formatAdminCurrency(metrics.totalByUserType.funcionario)}
+                    {formatAdminCurrency(metrics.totalByUserType.funcionario || 0)}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    {metrics.totalRevenue > 0 ? 
+                      Math.round(((metrics.totalByUserType.funcionario || 0) / metrics.totalRevenue) * 100) : 0}%
                   </div>
                 </div>
               </div>
@@ -155,37 +280,40 @@ export function OrdersMetrics({ metrics, isLoading }: OrdersMetricsProps) {
         </Card>
 
         {/* Distribución por día */}
-        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-soft">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Calendar className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              <span>Por Día de la Semana</span>
+              <span>Pedidos por Día de la Semana</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Object.entries(metrics.totalByDay).map(([day, count]) => (
-                <div key={day} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-16 text-sm font-medium text-slate-600 dark:text-slate-400 capitalize">
-                      {day}
-                    </div>
-                    <div className="flex-1">
-                      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                        <div 
-                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
-                          style={{ 
-                            width: `${Math.max((count / Math.max(...Object.values(metrics.totalByDay))) * 100, 5)}%` 
-                          }}
-                        />
+              {Object.entries(metrics.totalByDay).map(([day, count]) => {
+                const maxCount = Math.max(...Object.values(metrics.totalByDay))
+                const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0
+                
+                return (
+                  <div key={day} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3 flex-1">
+                      <div className="w-16 text-sm font-medium text-slate-600 dark:text-slate-400 capitalize">
+                        {day}
+                      </div>
+                      <div className="flex-1">
+                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.max(percentage, 5)}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
+                    <div className="text-sm font-semibold text-slate-900 dark:text-white ml-3">
+                      {count}
+                    </div>
                   </div>
-                  <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                    {count}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </CardContent>
         </Card>

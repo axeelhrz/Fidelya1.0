@@ -1,6 +1,6 @@
 "use client"
 import { motion } from 'framer-motion'
-import { Search, Filter, X } from 'lucide-react'
+import { Search, Filter, X, AlertTriangle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select'
 import { OrderFilters } from '@/types/adminOrder'
 import { AdminOrderService } from '@/services/adminOrderService'
+
 interface OrdersFiltersProps {
   filters: OrderFilters
   onFiltersChange: (filters: Partial<OrderFilters>) => void
@@ -39,9 +40,10 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
   ]
 
   const statusOptions = [
-    { value: 'all', label: 'Todos los estados' },
-    { value: 'pending', label: 'Pendientes' },
-    { value: 'paid', label: 'Pagados' }
+    { value: 'all', label: 'Todos los estados', icon: null },
+    { value: 'pending', label: 'Pendientes de pago', icon: null },
+    { value: 'paid', label: 'Pagados', icon: null },
+    { value: 'cancelled', label: 'Cancelados', icon: null }
   ]
 
   const getActiveFiltersCount = () => {
@@ -62,6 +64,19 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
     })
   }
 
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+      case 'paid':
+        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+      case 'cancelled':
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+      default:
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+    }
+  }
+
   const activeFiltersCount = getActiveFiltersCount()
 
   return (
@@ -70,9 +85,9 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
     >
-      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-soft">
         <CardContent className="p-6">
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Encabezado de filtros */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -87,7 +102,7 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
                 )}
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <span className="text-sm text-slate-600 dark:text-slate-400">
                   {totalResults} resultados
                 </span>
@@ -102,6 +117,47 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
                     Limpiar
                   </Button>
                 )}
+              </div>
+            </div>
+
+            {/* Filtros rápidos por estado */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Filtros Rápidos
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={filters.status === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onFiltersChange({ status: 'all' })}
+                  className="text-xs"
+                >
+                  Todos
+                </Button>
+                <Button
+                  variant={filters.status === 'pending' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onFiltersChange({ status: 'pending' })}
+                  className={`text-xs ${filters.status === 'pending' ? 'bg-amber-600 hover:bg-amber-700' : 'text-amber-600 border-amber-300 hover:bg-amber-50'}`}
+                >
+                  Pendientes
+                </Button>
+                <Button
+                  variant={filters.status === 'paid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onFiltersChange({ status: 'paid' })}
+                  className={`text-xs ${filters.status === 'paid' ? 'bg-emerald-600 hover:bg-emerald-700' : 'text-emerald-600 border-emerald-300 hover:bg-emerald-50'}`}
+                >
+                  Pagados
+                </Button>
+                <Button
+                  variant={filters.status === 'cancelled' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onFiltersChange({ status: 'cancelled' })}
+                  className={`text-xs ${filters.status === 'cancelled' ? 'bg-red-600 hover:bg-red-700' : 'text-red-600 border-red-300 hover:bg-red-50'}`}
+                >
+                  Cancelados
+                </Button>
               </div>
             </div>
 
@@ -181,14 +237,14 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
                 </Select>
               </div>
 
-              {/* Filtro por estado */}
+              {/* Filtro por estado detallado */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Estado del pedido
+                  Estado detallado
                 </label>
                 <Select
                   value={filters.status || 'all'}
-                  onValueChange={(value) => onFiltersChange({ status: value as 'all' | 'pending' | 'paid' })}
+                  onValueChange={(value) => onFiltersChange({ status: value as 'all' | 'pending' | 'paid' | 'cancelled' })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -196,7 +252,14 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
                   <SelectContent>
                     {statusOptions.map((status) => (
                       <SelectItem key={status.value} value={status.value}>
-                        {status.label}
+                        <div className="flex items-center space-x-2">
+                          <span>{status.label}</span>
+                          {status.value !== 'all' && (
+                            <Badge className={getStatusBadgeColor(status.value)} variant="secondary">
+                              {status.value === 'pending' ? 'P' : status.value === 'paid' ? '✓' : '✗'}
+                            </Badge>
+                          )}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -219,6 +282,21 @@ export function OrdersFilters({ filters, onFiltersChange, totalResults }: Orders
                 />
               </div>
             </div>
+
+            {/* Información adicional */}
+            {filters.status === 'pending' && (
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    Mostrando solo pedidos pendientes de pago
+                  </span>
+                </div>
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                  Los pedidos con más de 3 días pendientes aparecen resaltados como críticos.
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

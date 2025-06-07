@@ -12,13 +12,16 @@ export interface AdminOrderView extends OrderState {
   formattedDate: string
   itemsCount: number
   hasColaciones: boolean
+  paidAt?: Date
+  cancelledAt?: Date
+  daysSincePending?: number
 }
 
 export interface OrderFilters {
   weekStart?: string
   day?: string
   userType?: 'estudiante' | 'funcionario' | 'all'
-  status?: 'pending' | 'paid' | 'all'
+  status?: 'pending' | 'paid' | 'cancelled' | 'all'
   searchTerm?: string
 }
 
@@ -30,6 +33,18 @@ export interface OrderMetrics {
   averageOrderValue: number
   pendingOrders: number
   paidOrders: number
+  cancelledOrders: number
+  criticalPendingOrders: number // Pedidos pendientes por más de 3 días
+  totalByStatus: {
+    pending: number
+    paid: number
+    cancelled: number
+  }
+  revenueByStatus: {
+    pending: number
+    paid: number
+    cancelled: number
+  }
 }
 
 export interface WeekOption {

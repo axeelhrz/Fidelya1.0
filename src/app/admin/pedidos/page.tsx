@@ -9,7 +9,7 @@ import { OrderDetailModal } from '@/components/admin/pedidos/OrderDetailModal'
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 import { useAdminOrders } from '@/hooks/useAdminOrders'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertTriangle, RefreshCw, Download, FileText, Calendar } from 'lucide-react'
+import { AlertTriangle, RefreshCw, Download, FileText, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -60,7 +60,10 @@ export default function AdminPedidosPage() {
       await updateOrderStatus(orderId, status)
       toast({
         title: "Estado actualizado",
-        description: `El pedido ha sido marcado como ${status === 'paid' ? 'pagado' : status === 'cancelled' ? 'cancelado' : 'pendiente'}.`,
+        description: `El pedido ha sido marcado como ${
+          status === 'paid' ? 'pagado' : 
+          status === 'cancelled' ? 'cancelado' : 'pendiente'
+        }.`,
       })
     } catch (error) {
       console.error('Error updating order status:', error)
