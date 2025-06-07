@@ -3,7 +3,6 @@ import { MenuService } from '@/services/menuService'
 import { DayMenuDisplay } from '@/types/menu'
 import { WeekInfo } from '@/types/order'
 import { User } from '@/types/panel'
-import { format, addWeeks, startOfWeek } from 'date-fns'
 
 interface WeekMenuData {
   weekInfo: WeekInfo & { weekLabel: string }
@@ -26,28 +25,19 @@ export function useMultiWeekMenu(user: User | null, numberOfWeeks: number = 4): 
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Generar las fechas de inicio de las próximas semanas
+  // Generar las fechas de inicio de las próximas semanas - MEJORADO
   const generateWeekStarts = useCallback((count: number): string[] => {
-    const now = new Date()
-    const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 })
-    const weekStarts: string[] = []
-    
-    for (let i = 0; i < count; i++) {
-      const weekStart = addWeeks(currentWeekStart, i)
-      weekStarts.push(format(weekStart, 'yyyy-MM-dd'))
-    }
-    
-    return weekStarts
+    return MenuService.getNextWeeks(count)
   }, [])
 
-  // Cargar datos de una semana específica
+  // Cargar datos de una semana específica - MEJORADO
   const loadWeekData = useCallback(async (weekStart: string): Promise<WeekMenuData> => {
     if (!user) {
+      const weekInfo = MenuService.getWeekInfo(weekStart)
       return {
         weekInfo: {
-          ...MenuService.getCurrentWeekInfo(),
-          weekStart,
-          weekLabel: 'Semana no disponible'
+          ...weekInfo,
+          weekLabel: weekInfo.weekLabel
         },
         weekMenu: [],
         isLoading: false,
@@ -57,17 +47,11 @@ export function useMultiWeekMenu(user: User | null, numberOfWeeks: number = 4): 
     }
 
     try {
-      // Crear información de la semana
-      const baseWeekInfo = MenuService.getCurrentWeekInfo()
-      const weekEnd = format(addWeeks(new Date(weekStart), 1), 'yyyy-MM-dd')
-      const weekLabel = MenuService.getWeekDisplayText(weekStart, weekEnd)
-      
-      const weekInfo: WeekInfo & { weekLabel: string } = {
-        ...baseWeekInfo,
-        weekStart,
-        weekEnd,
-        weekLabel,
-        isCurrentWeek: weekStart === baseWeekInfo.weekStart
+      // Crear información de la semana usando el servicio mejorado
+      const weekInfo = MenuService.getWeekInfo(weekStart)
+      const weekInfoWithLabel = {
+        ...weekInfo,
+        weekLabel: weekInfo.weekLabel
       }
 
       // Verificar si hay menús para esta semana
@@ -75,7 +59,7 @@ export function useMultiWeekMenu(user: User | null, numberOfWeeks: number = 4): 
       
       if (!hasMenus) {
         return {
-          weekInfo,
+          weekInfo: weekInfoWithLabel,
           weekMenu: [],
           isLoading: false,
           error: null,
@@ -87,7 +71,7 @@ export function useMultiWeekMenu(user: User | null, numberOfWeeks: number = 4): 
       const weekMenu = await MenuService.getWeeklyMenuForUser(user, weekStart)
 
       return {
-        weekInfo,
+        weekInfo: weekInfoWithLabel,
         weekMenu,
         isLoading: false,
         error: null,
@@ -98,10 +82,10 @@ export function useMultiWeekMenu(user: User | null, numberOfWeeks: number = 4): 
       console.error(`Error loading week data for ${weekStart}:`, err)
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar el menú'
       
+      const weekInfo = MenuService.getWeekInfo(weekStart)
       return {
         weekInfo: {
-          ...MenuService.getCurrentWeekInfo(),
-          weekStart,
+          ...weekInfo,
           weekLabel: 'Error al cargar'
         },
         weekMenu: [],
@@ -112,7 +96,7 @@ export function useMultiWeekMenu(user: User | null, numberOfWeeks: number = 4): 
     }
   }, [user])
 
-  // Cargar todas las semanas
+  // Cargar todas las semanas - MEJORADO
   const loadAllWeeks = useCallback(async () => {
     if (!user) {
       setIsLoading(false)
@@ -124,10 +108,14 @@ export function useMultiWeekMenu(user: User | null, numberOfWeeks: number = 4): 
       setError(null)
 
       const weekStarts = generateWeekStarts(numberOfWeeks)
+      console.log('Loading weeks:', weekStarts)
       
       // Cargar todas las semanas en paralelo
       const weekPromises = weekStarts.map(weekStart => loadWeekData(weekStart))
       const weekResults = await Promise.all(weekPromises)
+
+      // Ordenar por fecha de inicio de semana
+      weekResults.sort((a, b) => a.weekInfo.weekStart.localeCompare(b.weekInfo.weekStart))
 
       setWeeks(weekResults)
 
@@ -142,6 +130,17 @@ export function useMultiWeekMenu(user: User | null, numberOfWeeks: number = 4): 
 
   // Refrescar una semana específica
   const refreshWeek = useCallback(async (weekStart: string) => {
+    console.log('Refreshing week:', weekStart)
+    
+    // Marcar la semana como cargando
+    setWeeks(prevWeeks => 
+      prevWeeks.map(week => 
+        week.weekInfo.weekStart === weekStart 
+          ? { ...week, isLoading: true, error: null }
+          : week
+      )
+    )
+
     const weekData = await loadWeekData(weekStart)
     
     setWeeks(prevWeeks => 
@@ -153,18 +152,31 @@ export function useMultiWeekMenu(user: User | null, numberOfWeeks: number = 4): 
 
   // Refrescar todas las semanas
   const refreshAll = useCallback(async () => {
+    console.log('Refreshing all weeks')
     await loadAllWeeks()
   }, [loadAllWeeks])
 
   // Efecto para cargar datos iniciales
   useEffect(() => {
     if (user) {
+      console.log('User changed, loading weeks for:', user.id)
       loadAllWeeks()
     } else {
+      console.log('No user, clearing weeks')
       setWeeks([])
       setIsLoading(false)
     }
   }, [user, loadAllWeeks])
+
+  // Debug logging
+  useEffect(() => {
+    console.log('useMultiWeekMenu state:', {
+      weeksCount: weeks.length,
+      isLoading,
+      error,
+      weekStarts: weeks.map(w => w.weekInfo.weekStart)
+    })
+  }, [weeks, isLoading, error])
 
   return {
     weeks,

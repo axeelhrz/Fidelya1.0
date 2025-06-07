@@ -2,7 +2,7 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { MenuItem, PRICES, UserType } from '@/types/panel'
 import { DayMenuDisplay, WeekMenuDisplay } from '@/types/menu'
-import { format, startOfWeek, endOfWeek, addDays } from 'date-fns'
+import { format, startOfWeek, endOfWeek, addDays, parseISO, isValid } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export interface WeekInfo {
@@ -19,10 +19,26 @@ export interface WeekInfo {
 export class MenuService {
   private static readonly COLLECTION_NAME = 'menus'
 
-  // Helper method to create a local date from YYYY-MM-DD string
+  // Helper method to create a local date from YYYY-MM-DD string - CORREGIDO
   static createLocalDate(dateString: string): Date {
-    const [year, month, day] = dateString.split('-').map(Number)
-    return new Date(year, month - 1, day) // month is 0-indexed
+    try {
+      // Usar parseISO para manejar fechas ISO correctamente
+      const date = parseISO(dateString)
+      if (!isValid(date)) {
+        throw new Error(`Invalid date string: ${dateString}`)
+      }
+      return date
+    } catch (error) {
+      console.error('Error parsing date:', dateString, error)
+      // Fallback al método anterior si parseISO falla
+      const [year, month, day] = dateString.split('-').map(Number)
+      return new Date(year, month - 1, day)
+    }
+  }
+
+  // Helper method to format date to YYYY-MM-DD - NUEVO
+  static formatToDateString(date: Date): string {
+    return format(date, 'yyyy-MM-dd')
   }
 
   // Helper method to determine user type from various possible field names
@@ -125,7 +141,7 @@ export class MenuService {
   }
 
   /**
-   * Obtiene información de la semana actual
+   * Obtiene información de la semana actual - MEJORADO
    */
   static getCurrentWeekInfo(): WeekInfo {
     const now = new Date()
@@ -145,17 +161,51 @@ export class MenuService {
     const isOrderingAllowed = now <= orderDeadline
     
     return {
-      weekStart: format(weekStart, 'yyyy-MM-dd'),
-      weekEnd: format(weekEnd, 'yyyy-MM-dd'),
+      weekStart: this.formatToDateString(weekStart),
+      weekEnd: this.formatToDateString(weekEnd),
       weekNumber,
       year: now.getFullYear(),
       isCurrentWeek,
       isOrderingAllowed,
       orderDeadline,
       weekLabel: this.getWeekDisplayText(
-        format(weekStart, 'yyyy-MM-dd'),
-        format(weekEnd, 'yyyy-MM-dd')
+        this.formatToDateString(weekStart),
+        this.formatToDateString(weekEnd)
       )
+    }
+  }
+
+  /**
+   * Obtiene información de una semana específica - NUEVO
+   */
+  static getWeekInfo(weekStart: string): WeekInfo {
+    const now = new Date()
+    const currentWeekStart = this.getCurrentWeekStart()
+    const weekStartDate = this.createLocalDate(weekStart)
+    const weekEndDate = addDays(weekStartDate, 6)
+    
+    // Calcular número de semana
+    const startOfYear = new Date(weekStartDate.getFullYear(), 0, 1)
+    const weekNumber = Math.ceil(((weekStartDate.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7)
+    
+    // Deadline para pedidos: miércoles a las 13:00 de la semana actual
+    const currentWeekStartDate = this.createLocalDate(currentWeekStart)
+    const wednesday = addDays(currentWeekStartDate, 2)
+    const orderDeadline = new Date(wednesday)
+    orderDeadline.setHours(13, 0, 0, 0)
+    
+    const isCurrentWeek = weekStart === currentWeekStart
+    const isOrderingAllowed = isCurrentWeek ? now <= orderDeadline : weekStart > currentWeekStart
+    
+    return {
+      weekStart,
+      weekEnd: this.formatToDateString(weekEndDate),
+      weekNumber,
+      year: weekStartDate.getFullYear(),
+      isCurrentWeek,
+      isOrderingAllowed,
+      orderDeadline,
+      weekLabel: this.getWeekDisplayText(weekStart, this.formatToDateString(weekEndDate))
     }
   }
 
@@ -165,7 +215,15 @@ export class MenuService {
   static getCurrentWeekStart(): string {
     const now = new Date()
     const weekStart = startOfWeek(now, { weekStartsOn: 1 })
-    return format(weekStart, 'yyyy-MM-dd')
+    return this.formatToDateString(weekStart)
+  }
+
+  /**
+   * Obtiene el inicio de una semana específica basada en una fecha - NUEVO
+   */
+  static getWeekStartFromDate(date: Date): string {
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 })
+    return this.formatToDateString(weekStart)
   }
 
   /**
@@ -179,11 +237,11 @@ export class MenuService {
   }
 
   /**
-   * Obtiene el nombre del día para mostrar
+   * Obtiene el nombre del día para mostrar - MEJORADO
    */
   static getDayDisplayName(date: string): string {
     const dayDate = this.createLocalDate(date)
-    return format(dayDate, 'EEEE d', { locale: es })
+    return format(dayDate, 'EEEE d \'de\' MMMM', { locale: es })
   }
 
   /**
@@ -191,7 +249,7 @@ export class MenuService {
    */
   static getFormattedDate(date: string): string {
     const dayDate = this.createLocalDate(date)
-    return format(dayDate, 'yyyy-MM-dd')
+    return this.formatToDateString(dayDate)
   }
 
   /**
@@ -203,21 +261,62 @@ export class MenuService {
   }
 
   /**
-   * Verifica si se permite hacer pedidos para un día específico
+   * Verifica si se permite hacer pedidos para un día específico - MEJORADO
    */
   static isDayOrderingAllowed(date: string): boolean {
-    const dayDate = this.createLocalDate(date)
-    const today = new Date()
-    const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const dayDateNormalized = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate())
-    const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
-    
-    // Permitir pedidos para hoy y días futuros, pero no fines de semana
-    return (dayDateNormalized.getTime() >= todayNormalized.getTime()) && !isWeekend
+    try {
+      const dayDate = this.createLocalDate(date)
+      const today = new Date()
+      
+      // Normalizar fechas para comparación (solo fecha, sin hora)
+      const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+      const dayDateNormalized = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate())
+      
+      const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
+      const isPastDay = dayDateNormalized < todayNormalized
+      
+      // Permitir pedidos para hoy y días futuros, pero no fines de semana ni días pasados
+      return !isPastDay && !isWeekend
+    } catch (error) {
+      console.error('Error checking if day ordering is allowed:', error)
+      return false
+    }
   }
 
   /**
-   * Construye la estructura del menú semanal
+   * Verifica si un día es fin de semana - NUEVO
+   */
+  static isWeekend(date: string): boolean {
+    try {
+      const dayDate = this.createLocalDate(date)
+      return dayDate.getDay() === 0 || dayDate.getDay() === 6
+    } catch (error) {
+      console.error('Error checking if day is weekend:', error)
+      return false
+    }
+  }
+
+  /**
+   * Verifica si un día es pasado - NUEVO
+   */
+  static isPastDay(date: string): boolean {
+    try {
+      const dayDate = this.createLocalDate(date)
+      const today = new Date()
+      
+      // Normalizar fechas para comparación (solo fecha, sin hora)
+      const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+      const dayDateNormalized = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate())
+      
+      return dayDateNormalized < todayNormalized
+    } catch (error) {
+      console.error('Error checking if day is past:', error)
+      return false
+    }
+  }
+
+  /**
+   * Construye la estructura del menú semanal - MEJORADO
    */
   private static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
     const startDate = this.createLocalDate(weekStart)
@@ -228,7 +327,7 @@ export class MenuService {
     
     for (let i = 0; i < 7; i++) {
       const currentDate = addDays(startDate, i)
-      const dateStr = format(currentDate, 'yyyy-MM-dd')
+      const dateStr = this.formatToDateString(currentDate)
       const dayName = format(currentDate, 'EEEE', { locale: es })
       const dayLabel = format(currentDate, 'EEEE d', { locale: es })
       const dateFormatted = format(currentDate, 'dd/MM/yyyy')
@@ -252,8 +351,8 @@ export class MenuService {
     
     return {
       weekStart,
-      weekEnd: format(endDate, 'yyyy-MM-dd'),
-      weekLabel: this.getWeekDisplayText(weekStart, format(endDate, 'yyyy-MM-dd')),
+      weekEnd: this.formatToDateString(endDate),
+      weekLabel: this.getWeekDisplayText(weekStart, this.formatToDateString(endDate)),
       days,
       totalItems: items.length
     }
@@ -306,5 +405,36 @@ export class MenuService {
       console.error('Error getting available days for week:', error)
       return []
     }
+  }
+
+  /**
+   * Genera las fechas de una semana - NUEVO
+   */
+  static generateWeekDates(weekStart: string): string[] {
+    const startDate = this.createLocalDate(weekStart)
+    const dates: string[] = []
+    
+    for (let i = 0; i < 7; i++) {
+      const currentDate = addDays(startDate, i)
+      dates.push(this.formatToDateString(currentDate))
+    }
+    
+    return dates
+  }
+
+  /**
+   * Obtiene las próximas N semanas - NUEVO
+   */
+  static getNextWeeks(numberOfWeeks: number = 4): string[] {
+    const now = new Date()
+    const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 })
+    const weekStarts: string[] = []
+    
+    for (let i = 0; i < numberOfWeeks; i++) {
+      const weekStart = addDays(currentWeekStart, i * 7)
+      weekStarts.push(this.formatToDateString(weekStart))
+    }
+    
+    return weekStarts
   }
 }

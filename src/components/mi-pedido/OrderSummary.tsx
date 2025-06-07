@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useOrderStore } from '@/store/orderStore'
+import { MenuService } from '@/services/menuService'
 import { User } from '@/types/panel'
 import { 
   ShoppingCart, 
@@ -20,8 +21,6 @@ import {
   Info
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 
 interface OrderSummaryProps {
   user: User
@@ -51,8 +50,14 @@ export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: 
     }).format(price)
   }
 
+  // Función mejorada para mostrar el nombre del día
   const getDayName = (date: string) => {
-    return format(new Date(date), 'EEEE d', { locale: es })
+    try {
+      return MenuService.getDayDisplayName(date)
+    } catch (error) {
+      console.error('Error formatting date:', date, error)
+      return date
+    }
   }
 
   // Agrupar selecciones por hijo
@@ -135,9 +140,11 @@ export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: 
                       )}
                     </div>
 
-                    {/* Selecciones del hijo */}
+                    {/* Selecciones del hijo ordenadas por fecha */}
                     <AnimatePresence>
-                      {selections.map((selection) => (
+                      {selections
+                        .sort((a, b) => a.date.localeCompare(b.date))
+                        .map((selection) => (
                         <motion.div
                           key={`${selection.date}-${childKey}`}
                           initial={{ opacity: 0, height: 0 }}

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { DayMenuDisplay, MenuItem } from '@/types/menu'
 import { User } from '@/types/panel'
 import { useOrderStore } from '@/store/orderStore'
+import { MenuService } from '@/services/menuService'
 import { 
   Utensils, 
   Coffee, 
@@ -37,11 +38,6 @@ interface MenuItemOptionProps {
   isWeekend: boolean
 }
 
-// Helper function to create local date from YYYY-MM-DD string
-function createLocalDate(dateString: string): Date {
-  const [year, month, day] = dateString.split('-').map(Number)
-  return new Date(year, month - 1, day) // month is 0-indexed
-}
 
 function MenuItemOption({ item, isSelected, isReadOnly, isPastDay, isWeekend }: MenuItemOptionProps) {
   const isDisabled = isReadOnly || !item.available || isPastDay || isWeekend
@@ -99,31 +95,23 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
     updateSelectionByChild,
   } = useOrderStore()
 
-  // Verificar el estado del día usando fechas locales
-  const dayDate = createLocalDate(dayMenu.date)
-  const today = new Date()
-  
-  // Normalizar fechas para comparación (solo fecha, sin hora)
-  const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const dayDateNormalized = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate())
-  
-  const isPastDay = dayDateNormalized < todayNormalized
-  const isCurrentDay = dayDateNormalized.getTime() === todayNormalized.getTime()
-  const isFutureDay = dayDateNormalized > todayNormalized
-  const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
+  // Usar el servicio mejorado para verificar el estado del día
+  const dayDate = MenuService.createLocalDate(dayMenu.date)
+  const isPastDay = MenuService.isPastDay(dayMenu.date)
+  const isWeekend = MenuService.isWeekend(dayMenu.date)
+  const isCurrentDay = !isPastDay && !isWeekend && MenuService.formatToDateString(new Date()) === dayMenu.date
+  const isFutureDay = !isPastDay && !isCurrentDay
 
-  // Debug logging
+  // Debug logging mejorado
   console.log(`DaySelector - ${dayMenu.dayLabel}:`, {
     date: dayMenu.date,
-    dayDate,
-    dayDateNormalized,
-    today,
-    todayNormalized,
+    dayDate: dayDate.toISOString(),
     isPastDay,
     isCurrentDay,
     isFutureDay,
     isWeekend,
-    dayOfWeek: dayDate.getDay()
+    dayOfWeek: dayDate.getDay(),
+    formattedDate: MenuService.getDayDisplayName(dayMenu.date)
   })
 
   // Obtener selecciones actuales para este día y hijo
@@ -270,9 +258,9 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
           </div>
         </CardTitle>
         
-        {/* Mostrar fecha completa para debugging */}
+        {/* Mostrar fecha completa mejorada */}
         <div className="text-xs text-slate-500 dark:text-slate-400">
-          {format(dayDate, 'EEEE d \'de\' MMMM \'de\' yyyy', { locale: es })}
+          {MenuService.getDayDisplayName(dayMenu.date)}
         </div>
         
         {/* Mostrar para qué hijo es la selección */}

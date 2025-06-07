@@ -99,7 +99,7 @@ export class MenuIntegrationService {
   }
 
   /**
-   * Verificar disponibilidad de menús para una semana
+   * Verificar disponibilidad de menús para una semana - MEJORADO
    */
   static async checkMenuAvailability(weekStart: string): Promise<MenuAvailability> {
     try {
@@ -110,9 +110,9 @@ export class MenuIntegrationService {
           hasMenus: false,
           isPublished: false,
           totalItems: 0,
-          weekLabel: this.getWeekLabel(weekStart),
+          weekLabel: MenuService.getWeekDisplayText(weekStart, MenuService.formatToDateString(MenuService.createLocalDate(weekStart))),
           availableDays: [],
-          missingDays: this.getWeekDays(weekStart)
+          missingDays: MenuService.generateWeekDates(weekStart)
         }
       }
 
@@ -120,7 +120,7 @@ export class MenuIntegrationService {
         .filter(day => day.almuerzos.length > 0 || day.colaciones.length > 0)
         .map(day => day.date)
 
-      const allWeekDays = this.getWeekDays(weekStart)
+      const allWeekDays = MenuService.generateWeekDates(weekStart)
       const missingDays = allWeekDays.filter(day => !availableDays.includes(day))
 
       return {
@@ -145,7 +145,7 @@ export class MenuIntegrationService {
   }
 
   /**
-   * Procesar pedido completo (validación + guardado + pago)
+   * Procesar pedido completo (validación + guardado + pago) - MEJORADO
    */
   static async processCompleteOrder(
     user: User,
@@ -155,7 +155,7 @@ export class MenuIntegrationService {
     let orderId: string | undefined
 
     try {
-      console.log('Processing complete order for user:', user.id, 'selections:', selections.length)
+      console.log('Processing complete order for user:', user.id, 'selections:', selections.length, 'weekStart:', weekStart)
 
       // 1. Validaciones iniciales
       const initialValidation = await this.validateInitialOrderData(user, selections, weekStart)
@@ -164,7 +164,7 @@ export class MenuIntegrationService {
       }
 
       // 2. Transformar selecciones al formato interno
-      const transformedSelections = await this.transformSelections(selections, user)
+      const transformedSelections = await this.transformSelections(selections, user, weekStart)
       if (transformedSelections.length === 0) {
         return {
           success: false,
@@ -204,7 +204,8 @@ export class MenuIntegrationService {
           version: '1.0.0',
           source: 'integration_service',
           originalSelectionsCount: selections.length,
-          transformedSelectionsCount: transformedSelections.length
+          transformedSelectionsCount: transformedSelections.length,
+          weekLabel: MenuService.getWeekDisplayText(weekStart, MenuService.formatToDateString(MenuService.createLocalDate(weekStart)))
         }
       }
 
@@ -459,6 +460,16 @@ export class MenuIntegrationService {
       }
     }
 
+    // Validar formato de weekStart
+    try {
+      MenuService.createLocalDate(weekStart)
+    } catch {
+      return {
+        success: false,
+        error: 'Formato de fecha de semana inválido'
+      }
+    }
+
     // Verificar disponibilidad de menús
     const availability = await this.checkMenuAvailability(weekStart)
     if (!availability.hasMenus || !availability.isPublished) {
@@ -482,7 +493,8 @@ export class MenuIntegrationService {
 
   private static async transformSelections(
     selections: ProcessOrderSelection[], 
-    user: User
+    user: User,
+    weekStart: string
   ): Promise<OrderSelectionByChild[]> {
     const transformed: OrderSelectionByChild[] = []
 
@@ -491,6 +503,13 @@ export class MenuIntegrationService {
         // Validar que el item tenga los datos mínimos requeridos
         if (!item.itemId || !item.itemName || !item.category) {
           console.warn('Skipping invalid item:', item)
+          continue
+        }
+
+        // Validar que la fecha esté dentro de la semana
+        const weekDates = MenuService.generateWeekDates(weekStart)
+        if (!weekDates.includes(selection.date)) {
+          console.warn('Date not in week range:', selection.date, 'weekStart:', weekStart)
           continue
         }
 
@@ -503,13 +522,13 @@ export class MenuIntegrationService {
           price: item.price || PRICES[user.tipoUsuario][item.category],
           available: true,
           date: selection.date,
-          dia: this.getDayName(selection.date),
+          dia: MenuService.getDayName(selection.date),
           active: true
         }
 
         const orderSelection: OrderSelectionByChild = {
           date: selection.date,
-          dia: this.getDayName(selection.date),
+          dia: MenuService.getDayName(selection.date),
           fecha: selection.date,
           hijo: user.tipoUsuario === 'apoderado' ? {
             id: selection.childId,
@@ -537,7 +556,7 @@ export class MenuIntegrationService {
     weekStart: string, 
     user: User
   ) {
-    const weekDays = this.getWeekDays(weekStart)
+    const weekDays = MenuService.generateWeekDates(weekStart)
     return OrderService.validateOrderByChild(selections, weekDays, true, user)
   }
 
@@ -558,16 +577,21 @@ export class MenuIntegrationService {
         }
       }
 
+      const weekLabel = MenuService.getWeekDisplayText(weekStart, MenuService.formatToDateString(MenuService.createLocalDate(weekStart)))
+
       const paymentRequest: PaymentRequest = {
         orderId,
         amount: total,
         currency: 'CLP',
-        description: `Pedido Casino Escolar - ${this.getWeekLabel(weekStart)}`,
+        description: `Pedido Casino Escolar - ${weekLabel}`,
         userEmail: customerEmail,
         customerName
       }
 
-      console.log('Creating payment with request:', paymentRequest)
+      console.log('Creating payment with request:', {
+        ...paymentRequest,
+        userEmail: '[HIDDEN]'
+      })
 
       const paymentResponse = await PaymentService.createPayment(paymentRequest)
 
@@ -624,26 +648,6 @@ export class MenuIntegrationService {
     }
 
     return 'Cliente'
-  }
-
-  private static getWeekDays(weekStart: string): string[] {
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(weekStart)
-      date.setDate(date.getDate() + i)
-      return date.toISOString().split('T')[0]
-    })
-  }
-
-  private static getWeekLabel(weekStart: string): string {
-    const start = new Date(weekStart)
-    const end = new Date(weekStart)
-    end.setDate(end.getDate() + 6)
-    
-    return `${start.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
-  }
-
-  private static getDayName(date: string): string {
-    return new Date(date).toLocaleDateString('es-ES', { weekday: 'long' })
   }
 
   private static getErrorMessage(error: unknown): string {
