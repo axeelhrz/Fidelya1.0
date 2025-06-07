@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { CheckCircle, XCircle, Clock, AlertCircle, ArrowLeft, Receipt } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, AlertCircle, ArrowLeft, Receipt, RefreshCw } from 'lucide-react'
 import { OrderService, OrderStateByChild } from '@/services/orderService'
+import { useAuth } from '@/hooks/useAuth'
 
 type PaymentStatus = 'success' | 'failed' | 'pending' | 'cancelled' | 'unknown'
 
@@ -22,9 +23,11 @@ interface PaymentResult {
 export default function PaymentReturnPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { user } = useAuth()
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     const processPaymentReturn = async () => {
@@ -38,15 +41,51 @@ export default function PaymentReturnPage() {
         console.log('Payment return params:', { status, orderId, requestId, message })
 
         if (!orderId) {
-          setError('No se encontró información del pedido')
+          setError('No se encontró información del pedido en la URL')
           setLoading(false)
           return
         }
 
-        // Obtener el pedido actualizado de Firebase
-        const order = await OrderService.getOrderById(orderId)
+        // Intentar obtener el pedido de Firebase con reintentos
+        let order: OrderStateByChild | null = null
+        let attempts = 0
+        const maxAttempts = 5
+        
+        while (!order && attempts < maxAttempts) {
+          attempts++
+          console.log(`Attempt ${attempts}/${maxAttempts} to find order: ${orderId}`)
+          
+          order = await OrderService.getOrderById(orderId)
+          
+          if (!order) {
+            console.log(`Order not found on attempt ${attempts}, waiting 2 seconds...`)
+            await new Promise(resolve => setTimeout(resolve, 2000))
+          }
+        }
+
         if (!order) {
-          setError('No se pudo encontrar el pedido')
+          // Si no encontramos el pedido, intentar buscar por usuario y estado
+          console.log('Order not found by ID, searching by user...')
+          
+          if (user) {
+            const userOrders = await OrderService.getOrdersWithFilters({
+              userId: user.id,
+              status: ['procesando_pago', 'pagado', 'pendiente']
+            })
+            
+            // Buscar el pedido más reciente
+            const recentOrder = userOrders
+              .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
+            
+            if (recentOrder) {
+              console.log('Found recent order:', recentOrder.id)
+              order = recentOrder
+            }
+          }
+        }
+
+        if (!order) {
+          setError(`No se pudo encontrar el pedido con ID: ${orderId}`)
           setLoading(false)
           return
         }
@@ -67,7 +106,7 @@ export default function PaymentReturnPage() {
         setPaymentResult({
           status: paymentStatus,
           orderId,
-          requestId: requestId || undefined,
+          requestId,
           message: message || getStatusMessage(paymentStatus),
           order
         })
@@ -81,7 +120,13 @@ export default function PaymentReturnPage() {
     }
 
     processPaymentReturn()
-  }, [searchParams])
+  }, [searchParams, user, retryCount])
+
+  const handleRetry = () => {
+    setLoading(true)
+    setError(null)
+    setRetryCount(prev => prev + 1)
+  }
 
   const getStatusMessage = (status: PaymentStatus): string => {
     switch (status) {
@@ -90,7 +135,7 @@ export default function PaymentReturnPage() {
       case 'failed':
         return 'El pago no pudo ser procesado'
       case 'pending':
-        return 'Tu pago está siendo procesado'
+        return 'Tu pago está siendo procesado. Esto puede tomar unos minutos.'
       case 'cancelled':
         return 'El pago fue cancelado'
       default:
@@ -150,7 +195,12 @@ export default function PaymentReturnPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Procesando resultado del pago...</p>
+          <p className="text-gray-600">
+            {retryCount > 0 ? `Reintentando... (${retryCount}/5)` : 'Procesando resultado del pago...'}
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Esto puede tomar unos segundos mientras se confirma el pago
+          </p>
         </div>
       </div>
     )
@@ -165,9 +215,19 @@ export default function PaymentReturnPage() {
               <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-900 mb-2">Error</h2>
               <p className="text-gray-600 mb-4">{error}</p>
-              <Button onClick={() => router.push('/panel')} className="w-full">
-                Volver al Panel
-              </Button>
+              <div className="space-y-2">
+                <Button onClick={handleRetry} className="w-full gap-2">
+                  <RefreshCw className="w-4 h-4" />
+                  Reintentar
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => router.push('/panel')} 
+                  className="w-full"
+                >
+                  Volver al Panel
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -219,6 +279,12 @@ export default function PaymentReturnPage() {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Fecha del Pedido:</span>
                   <span>{formatDate(paymentResult.order.createdAt)}</span>
+                </div>
+              )}
+              {paymentResult.order?.paidAt && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Fecha de Pago:</span>
+                  <span>{formatDate(paymentResult.order.paidAt)}</span>
                 </div>
               )}
             </div>
@@ -282,7 +348,7 @@ export default function PaymentReturnPage() {
 
                 {/* Total */}
                 <div className="flex justify-between items-center text-lg font-semibold">
-                  <span>Total Pagado:</span>
+                  <span>Total:</span>
                   <span>{formatCurrency(paymentResult.order.total)}</span>
                 </div>
               </div>
@@ -318,6 +384,17 @@ export default function PaymentReturnPage() {
               Intentar Nuevamente
             </Button>
           )}
+
+          {paymentResult.status === 'pending' && (
+            <Button 
+              onClick={handleRetry}
+              variant="outline"
+              className="flex-1 gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Verificar Estado
+            </Button>
+          )}
         </div>
 
         {/* Additional Info */}
@@ -329,8 +406,11 @@ export default function PaymentReturnPage() {
                 <div>
                   <h4 className="font-medium text-yellow-800">Pago en Proceso</h4>
                   <p className="text-yellow-700 text-sm mt-1">
-                    Tu pago está siendo procesado. Recibirás una confirmación por email una vez que se complete. 
-                    Puedes revisar el estado en tu panel de usuario.
+                    Tu pago está siendo procesado. Esto puede tomar unos minutos. 
+                    La página se actualizará automáticamente cuando se confirme el pago.
+                  </p>
+                  <p className="text-yellow-700 text-sm mt-2">
+                    Si el estado no cambia en 5 minutos, puedes contactar con soporte.
                   </p>
                 </div>
               </div>
