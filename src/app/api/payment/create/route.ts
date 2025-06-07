@@ -125,6 +125,11 @@ export async function POST(request: NextRequest) {
     // Generar autenticación ANTES de crear el payload
     const auth = generateGetNetAuth(GETNET_CONFIG.login, GETNET_CONFIG.secret)
 
+    // MEJORAR URLs de retorno para incluir parámetros necesarios
+    const baseReturnUrl = body.returnUrl || `${request.nextUrl.origin}/payment/return`
+    const returnUrlWithParams = `${baseReturnUrl}?reference=${body.orderId}&orderId=${body.orderId}`
+    const cancelUrlWithParams = `${request.nextUrl.origin}/mi-pedido?cancelled=true&reference=${body.orderId}`
+
     // Preparar request completo según manual oficial de GetNet Web Checkout
     const checkoutRequest: GetNetWebCheckoutRequest = {
       auth: auth,
@@ -148,8 +153,8 @@ export async function POST(request: NextRequest) {
       expiration: expiration,
       ipAddress: clientIP,
       userAgent: userAgent,
-      returnUrl: body.returnUrl || `${request.nextUrl.origin}/payment/return`,
-      cancelUrl: `${request.nextUrl.origin}/mi-pedido?cancelled=true`,
+      returnUrl: returnUrlWithParams,
+      cancelUrl: cancelUrlWithParams,
       notifyUrl: body.notifyUrl || `${request.nextUrl.origin}/api/payment/notify`
     }
 
