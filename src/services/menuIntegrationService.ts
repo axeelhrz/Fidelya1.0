@@ -75,7 +75,7 @@ export class MenuIntegrationService {
   static async getPublicWeeklyMenu(userType: UserType, weekStart?: string): Promise<DayMenuDisplay[]> {
     try {
       const user = { tipoUsuario: userType } as User
-      const menu = await MenuService.getWeeklyMenuForUser(user, weekStart)
+      const menu: DayMenuDisplay[] = await MenuService.getWeeklyMenuForUser(user, weekStart)
       
       // Filtrar solo menús publicados y disponibles
       return menu.filter(day => day.isAvailable && day.hasItems)
@@ -245,6 +245,8 @@ export class MenuIntegrationService {
           await OrderService.updateOrder(orderId, {
             status: 'pendiente',
             metadata: {
+              version: '1.0.0',
+              source: 'integration_service',
               error: error instanceof Error ? error.message : 'Unknown error',
               errorTimestamp: new Date().toISOString()
             }

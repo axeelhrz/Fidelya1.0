@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ExportUtils } from '@/lib/exportUtils'
 import { AdminOrderView, OrderMetrics } from '@/types/adminOrder'
+import { AdminUser } from '@/types/user'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -25,24 +26,34 @@ interface OrdersHeaderProps {
   filters: OrderFilters
   onRefresh: () => void
   isLoading: boolean
+  adminUser: AdminUser
 }
-
 export function OrdersHeader({ 
   selectedWeek, 
   metrics, 
   orders, 
   filters, 
   onRefresh, 
-  isLoading 
+  isLoading,
+  adminUser 
 }: OrdersHeaderProps) {
   const handleExport = async (format: 'excel' | 'pdf') => {
     if (!metrics) return
     
+    // Convert filters to match expected format
+    const exportFilters = {
+      ...filters,
+      dateRange: filters.dateRange ? {
+        start: filters.dateRange.from.toISOString(),
+        end: filters.dateRange.to.toISOString()
+      } : undefined
+    }
+    
     // Use the order-specific export methods
     if (format === 'excel') {
-      await ExportUtils.exportOrdersToExcel(orders, metrics, filters, null)
+      await ExportUtils.exportOrdersToExcel(orders, metrics, exportFilters, adminUser)
     } else {
-      await ExportUtils.exportOrdersToPDF(orders, metrics, filters, null)
+      await ExportUtils.exportOrdersToPDF(orders, metrics, exportFilters, adminUser)
     }
   }
 

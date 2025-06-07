@@ -1,6 +1,8 @@
 
+import type { NextConfig } from 'next';
+
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig: NextConfig = {
   // Configuración optimizada para producción
   reactStrictMode: true,
   poweredByHeader: false,
@@ -52,10 +54,11 @@ const nextConfig = {
       },
     ];
   },
-  
+
   // Configuración de webpack optimizada
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config: import('webpack').Configuration, { dev, isServer }: { dev: boolean; isServer: boolean }) => {
     if (!dev && !isServer) {
+      config.optimization = config.optimization || {};
       config.optimization.splitChunks = {
         chunks: 'all',
         cacheGroups: {

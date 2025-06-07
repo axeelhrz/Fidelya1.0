@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac } from 'crypto'
-import { GetNetPaymentRequest } from '@/'
+import { GetNetPaymentRequest } from '@/services/paymentService'
 
 // Configuración de NetGet
 const NETGET_CONFIG = {

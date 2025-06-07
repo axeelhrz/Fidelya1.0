@@ -125,10 +125,25 @@ export function useOrderManagement(): UseOrderManagementReturn {
         throw new Error('No hay elementos seleccionados para procesar el pago')
       }
 
+      // Transformar las selecciones al formato requerido por processCompleteOrder
+      const processOrderSelections = summary.selections.map(selection => ({
+        childId: selection.childId || '',
+        childName: selection.childName || '',
+        date: weekInfo.weekStart,
+        selectedItems: Object.entries(selection.selectedItems || {}).map(([category, item]) => ({
+          itemId: item?.id || '',
+          itemName: item?.nombre || '',
+          itemCode: item?.codigo || '',
+          category: category as 'almuerzo' | 'colacion',
+          price: item?.precio || 0,
+          description: item?.descripcion
+        }))
+      }))
+
       // Usar el servicio de integración para procesar el pedido completo
       const result = await MenuIntegrationService.processCompleteOrder(
         user,
-        summary.selections,
+        processOrderSelections,
         weekInfo.weekStart
       )
 
