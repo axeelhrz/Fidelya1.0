@@ -11,8 +11,17 @@ const GETNET_CONFIG = {
   environment: process.env.GETNET_ENVIRONMENT || 'test'
 }
 
-// Interface para el payload de GetNet Web Checkout según manual oficial
-interface GetNetWebCheckoutPayload {
+// Interface para la autenticación de GetNet según manual
+interface GetNetAuth {
+  login: string
+  tranKey: string
+  nonce: string
+  seed: string
+}
+
+// Interface para el request completo de GetNet
+interface GetNetWebCheckoutRequest {
+  auth: GetNetAuth
   locale: string
   buyer: {
     name: string
@@ -30,7 +39,7 @@ interface GetNetWebCheckoutPayload {
       total: number
     }
   }
-  expiration: string // ISO8601 format
+  expiration: string
   ipAddress: string
   userAgent: string
   returnUrl: string
@@ -38,20 +47,12 @@ interface GetNetWebCheckoutPayload {
   notifyUrl: string
 }
 
-// Interface para la autenticación de GetNet
-interface GetNetAuth {
-  login: string
-  tranKey: string
-  nonce: string
-  seed: string
-}
-
 // Interface para la respuesta de GetNet
 interface GetNetSessionResponse {
   status: {
     status: string
     message: string
-    reason?: string
+    reason?: string | number
     date?: string
   }
   requestId?: string
@@ -102,21 +103,31 @@ export async function POST(request: NextRequest) {
     const firstName = nameParts[0] || 'Cliente'
     const lastName = nameParts.slice(1).join(' ') || 'Usuario'
 
-    // Generar fecha de expiración (5 minutos desde ahora)
+    // Generar fecha de expiración (5 minutos desde ahora) en formato correcto
     const expirationDate = new Date()
     expirationDate.setMinutes(expirationDate.getMinutes() + 5)
-    const expiration = expirationDate.toISOString()
+    // Formato ISO8601 con timezone de Chile
+    const expiration = expirationDate.toISOString().replace('Z', '-04:00')
 
-    // Obtener IP del cliente (simplificado para desarrollo)
-    const clientIP = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     '127.0.0.1'
+    // Obtener IP del cliente (convertir IPv6 localhost a IPv4)
+    let clientIP = request.headers.get('x-forwarded-for') || 
+                   request.headers.get('x-real-ip') || 
+                   '127.0.0.1'
+    
+    // Convertir ::1 (IPv6 localhost) a 127.0.0.1 (IPv4 localhost)
+    if (clientIP === '::1' || clientIP === '::ffff:127.0.0.1') {
+      clientIP = '127.0.0.1'
+    }
 
     // Obtener User Agent
     const userAgent = request.headers.get('user-agent') || 'CasinoEscolar/1.0'
 
-    // Preparar payload según manual oficial de GetNet Web Checkout
-    const checkoutPayload: GetNetWebCheckoutPayload = {
+    // Generar autenticación ANTES de crear el payload
+    const auth = generateGetNetAuth(GETNET_CONFIG.login, GETNET_CONFIG.secret)
+
+    // Preparar request completo según manual oficial de GetNet Web Checkout
+    const checkoutRequest: GetNetWebCheckoutRequest = {
+      auth: auth,
       locale: 'es_CL',
       buyer: {
         name: firstName,
@@ -142,12 +153,14 @@ export async function POST(request: NextRequest) {
       notifyUrl: body.notifyUrl || `${request.nextUrl.origin}/api/payment/notify`
     }
 
-    // Generar autenticación según manual de GetNet
-    const auth = generateGetNetAuth(GETNET_CONFIG.login, GETNET_CONFIG.secret)
-
-    console.log('GetNet Web Checkout payload prepared:', {
-      ...checkoutPayload,
-      auth: { ...auth, tranKey: '[HIDDEN]' },
+    console.log('GetNet Web Checkout request prepared:', {
+      ...checkoutRequest,
+      auth: { 
+        login: auth.login,
+        tranKey: '[HIDDEN]',
+        nonce: auth.nonce,
+        seed: auth.seed
+      },
       endpoint: `${baseUrl}/api/session/`
     })
 
@@ -159,10 +172,7 @@ export async function POST(request: NextRequest) {
         'Accept': 'application/json',
         'User-Agent': 'CasinoEscolar/1.0'
       },
-      body: JSON.stringify({
-        auth: auth,
-        ...checkoutPayload
-      })
+      body: JSON.stringify(checkoutRequest)
     })
 
     let getNetData: GetNetSessionResponse
@@ -195,7 +205,15 @@ export async function POST(request: NextRequest) {
       if (getNetResponse.status === 404) {
         errorMessage = 'Servicio de pagos no disponible temporalmente'
       } else if (getNetResponse.status === 401) {
-        errorMessage = 'Error de autenticación con el proveedor de pagos'
+        // Error de autenticación - proporcionar más detalles
+        const authError = getNetData?.status?.message || 'Error de autenticación'
+        console.error('GetNet authentication failed:', {
+          login: GETNET_CONFIG.login,
+          hasSecret: !!GETNET_CONFIG.secret,
+          authError: authError,
+          reason: getNetData?.status?.reason
+        })
+        errorMessage = `Error de autenticación: ${authError}`
       } else if (getNetResponse.status === 400) {
         errorMessage = getNetData?.status?.message || 'Datos de pago inválidos'
       } else if (getNetData?.status?.message) {
@@ -236,7 +254,7 @@ export async function POST(request: NextRequest) {
         errorMessage = 'Servicio de pagos no disponible. Verificando configuración...'
       } else if (error.message.includes('404')) {
         errorMessage = 'Servicio de pagos no disponible. Por favor, intenta más tarde.'
-      } else if (error.message.includes('401')) {
+      } else if (error.message.includes('401') || error.message.includes('autenticación')) {
         errorMessage = 'Error de configuración del sistema de pagos'
       } else {
         errorMessage = error.message
@@ -254,24 +272,34 @@ export async function POST(request: NextRequest) {
 }
 
 // Generar autenticación según manual de GetNet (páginas 11-12)
+// CORREGIDO: Implementación exacta según documentación
 function generateGetNetAuth(login: string, secretKey: string): GetNetAuth {
   try {
-    // Generar nonce (número aleatorio)
-    const nonce = crypto.randomBytes(16).toString('base64')
+    // 1. Generar nonce (16 bytes aleatorios en base64)
+    const nonceBytes = crypto.randomBytes(16)
+    const nonce = nonceBytes.toString('base64')
     
-    // Generar seed (timestamp actual en ISO8601)
+    // 2. Generar seed (timestamp actual en ISO8601 UTC)
     const seed = new Date().toISOString()
     
-    // Crear tranKey según fórmula: Base64(SHA256(nonce + seed + secretKey))
-    const tranKeyString = nonce + seed + secretKey
-    const tranKeyHash = crypto.createHash('sha256').update(tranKeyString).digest()
+    // 3. Crear tranKey según fórmula exacta del manual:
+    // tranKey = Base64(SHA256(nonce + seed + secretKey))
+    // IMPORTANTE: nonce debe ser los bytes originales, no la versión base64
+    const tranKeyInput = Buffer.concat([
+      nonceBytes,  // nonce como bytes originales
+      Buffer.from(seed, 'utf8'),
+      Buffer.from(secretKey, 'utf8')
+    ])
+    
+    const tranKeyHash = crypto.createHash('sha256').update(tranKeyInput).digest()
     const tranKey = tranKeyHash.toString('base64')
     
-    console.log('Generated GetNet auth:', {
+    console.log('Generated GetNet auth (corrected):', {
       login,
       nonce: nonce.substring(0, 10) + '...',
       seed,
-      tranKey: tranKey.substring(0, 10) + '...'
+      tranKey: tranKey.substring(0, 10) + '...',
+      secretKeyLength: secretKey.length
     })
     
     return {
