@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { NetGetPaymentRequest, NetGetPaymentResponse } from '@/services/paymentService'
+import { GetNetPaymentRequest, GetNetPaymentResponse } from '@/services/paymentService'
+import crypto from 'crypto'
+
+// Interface para el payload de NetGet
+interface NetGetPayload {
+  merchant_id: string
+  amount: number
+  order_id: string
+  description: string
+  customer_email: string
+  customer_name: string
+  return_url: string
+  notify_url: string
+  currency: string
+  environment: string
+  signature?: string
+}
 
 // Configuración de NetGet desde variables de entorno
 const NETGET_CONFIG = {
@@ -11,7 +27,7 @@ const NETGET_CONFIG = {
 
 export async function POST(request: NextRequest) {
   try {
-    const body: NetGetPaymentRequest = await request.json()
+    const body: GetNetPaymentRequest = await request.json()
     
     console.log('Creating NetGet payment:', body)
 
@@ -39,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Preparar datos para NetGet
-    const netGetPayload = {
+    const netGetPayload: NetGetPayload = {
       merchant_id: NETGET_CONFIG.merchantId,
       amount: body.amount,
       order_id: body.orderId,
@@ -79,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     // Procesar respuesta exitosa de NetGet
     if (netGetData.success && netGetData.payment_url) {
-      const response: NetGetPaymentResponse = {
+      const response: GetNetPaymentResponse = {
         success: true,
         paymentId: netGetData.payment_id || netGetData.transaction_id,
         redirectUrl: netGetData.payment_url,
@@ -88,11 +104,10 @@ export async function POST(request: NextRequest) {
 
       console.log('NetGet payment created successfully:', response)
       return NextResponse.json(response)
-    } else {
-      throw new Error(netGetData.error || 'Error en la respuesta de NetGet')
-    }
-
-  } catch (error) {
+  } else {
+    throw new Error(netGetData.error || 'Error en la respuesta de NetGet')
+  }
+} catch (error) {
     console.error('Error creating NetGet payment:', error)
     
     return NextResponse.json(
@@ -105,11 +120,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Función para generar firma HMAC según documentación de NetGet
-function generateNetGetSignature(payload: any, secretKey: string): string {
+function generateNetGetSignature(payload: NetGetPayload, secretKey: string): string {
   try {
-    const crypto = require('crypto')
-    
+    // Crear string para firmar (según documentación de NetGet)
     // Crear string para firmar (según documentación de NetGet)
     // Típicamente es: merchant_id + amount + order_id + currency + secret_key
     const stringToSign = [

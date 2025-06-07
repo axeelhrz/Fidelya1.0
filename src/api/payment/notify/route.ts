@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 
+interface NetGetNotification {
+  status: string
+  order_id: string
+  transaction_id: string
+  amount: number
+  signature?: string
+  [key: string]: string | number | boolean | null | undefined
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -17,15 +26,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { status, order_id, transaction_id, amount } = body
+    const { status, order_id, transaction_id } = body
 
     // Actualizar el estado del pedido en Firebase
     try {
       const orderRef = doc(db, 'orders', order_id)
       
-      let updateData: any = {
+      const updateData: {
+        paymentId: string;
+        updatedAt: Timestamp;
+        status: string;
+        paidAt?: Timestamp;
+      } = {
         paymentId: transaction_id,
-        updatedAt: Timestamp.now()
+        updatedAt: Timestamp.now(),
+        status: 'pendiente'
       }
 
       switch (status) {
@@ -79,7 +94,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function validateNetGetNotification(data: any): Promise<boolean> {
+async function validateNetGetNotification(data: NetGetNotification): Promise<boolean> {
   try {
     // Validar campos requeridos
     const requiredFields = ['status', 'order_id', 'transaction_id', 'amount']

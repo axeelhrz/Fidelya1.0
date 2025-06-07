@@ -132,7 +132,7 @@ export default function AdminPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {dashboardData.weeklyData.map((day, index) => (
+                    {dashboardData.weeklyData.map((day) => (
                       <div key={day.date} className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <div className="w-16 text-sm font-medium text-slate-600 dark:text-slate-400 capitalize">

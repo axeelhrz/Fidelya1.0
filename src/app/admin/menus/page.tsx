@@ -1,8 +1,6 @@
 "use client"
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { AdminLayout } from '@/components/admin/AdminLayout'
-import { MenuHeader } from '@/components/admin/menus/MenuHeader'
 import { WeekNavigator } from '@/components/admin/menus/WeekNavigator'
 import { DayMenuContainer } from '@/components/admin/menus/DayMenuContainer'
 import { MenuItemModal } from '@/components/admin/menus/MenuItemModal'
@@ -12,7 +10,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   AlertTriangle, 
   RefreshCw, 
@@ -41,7 +38,6 @@ export default function AdminMenusPage() {
     deleteMenuItem,
     duplicateWeek,
     toggleWeekPublication,
-    deleteWeekMenu,
     refreshMenu
   } = useAdminMenus()
 

@@ -8,6 +8,7 @@ export interface WeekInfo {
   isCurrentWeek: boolean
   isOrderingAllowed: boolean
   orderDeadline: Date
+  weekLabel: string
 }
 
 export interface OrderState {

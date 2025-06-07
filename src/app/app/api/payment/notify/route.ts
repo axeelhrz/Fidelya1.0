@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PaymentService } from '@/services/paymentService'
+import crypto from 'crypto'
+
+// Interfaz para el payload de NetGet
+interface NetGetPayload {
+  signature: string
+  merchant_id: string
+  amount: string
+  order_id: string
+  status: string
+  transaction_id: string
+}
 
 // Configuración de NetGet
 const NETGET_CONFIG = {
@@ -61,9 +72,8 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error processing NetGet notification:', error)
-    
     return NextResponse.json(
-      { 
+      {
         success: false, 
         message: 'Error interno del servidor' 
       },
@@ -72,11 +82,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Validar firma de NetGet
-function validateNetGetSignature(payload: any, secretKey: string): boolean {
+function validateNetGetSignature(payload: NetGetPayload, secretKey: string): boolean {
   try {
-    const crypto = require('crypto')
-    
+    // Extraer la firma recibida
     // Extraer la firma recibida
     const receivedSignature = payload.signature
     
@@ -100,26 +108,26 @@ function validateNetGetSignature(payload: any, secretKey: string): boolean {
       .update(stringToSign)
       .digest('hex')
 
-    const isValid = receivedSignature === expectedSignature
-    
-    if (!isValid) {
-      console.error('NetGet signature mismatch:', {
-        received: receivedSignature,
-        expected: expectedSignature
-      })
-    }
-
-    return isValid
-  } catch (error) {
-    console.error('Error validating NetGet signature:', error)
-    return false
+  const isValid = receivedSignature === expectedSignature
+  
+  if (!isValid) {
+    console.error('NetGet signature mismatch:', {
+      received: receivedSignature,
+      expected: expectedSignature
+    })
   }
+
+  return isValid
+} catch (error) {
+  console.error('Error validating NetGet signature:', error)
+  return false
+}
 }
 
 // Actualizar estado del pedido según notificación de NetGet
-async function updateOrderStatus(notificationData: any) {
+async function updateOrderStatus(notificationData: NetGetPayload) {
   try {
-    const { status, order_id, transaction_id, amount } = notificationData
+    const { status, order_id } = notificationData
     
     console.log(`Updating order ${order_id} with status ${status}`)
 
