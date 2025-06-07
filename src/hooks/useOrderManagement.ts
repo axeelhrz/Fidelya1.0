@@ -1,18 +1,25 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from './useAuth'
 import { useOrderStore } from '@/store/orderStore'
+import { useAuthStore } from '@/store/authStore'
 import { MenuIntegrationService } from '@/services/menuIntegrationService'
 import { OrderService } from '@/services/orderService'
 import { MenuService } from '@/services/menuService'
 import { DayMenuDisplay } from '@/types/menu'
 import { OrderStateByChild } from '@/services/orderService'
 
+interface WeekInfo {
+  weekStart: string
+  weekEnd: string
+  weekNumber: number
+  year: number
+}
+
 interface UseOrderManagementReturn {
   // Estado del menú
   weekMenu: DayMenuDisplay[]
   isLoadingMenu: boolean
   menuError: string | null
-  weekInfo: any
+  weekInfo: WeekInfo | null
   
   // Estado del pedido
   existingOrder: OrderStateByChild | null
@@ -29,16 +36,15 @@ interface UseOrderManagementReturn {
   clearErrors: () => void
   retryPayment: () => Promise<void>
 }
-
 export function useOrderManagement(): UseOrderManagementReturn {
-  const { user } = useAuth()
   const { getOrderSummaryByChild } = useOrderStore()
+  const { user } = useAuthStore()
   
   // Estados del menú
   const [weekMenu, setWeekMenu] = useState<DayMenuDisplay[]>([])
   const [isLoadingMenu, setIsLoadingMenu] = useState(true)
   const [menuError, setMenuError] = useState<string | null>(null)
-  const [weekInfo, setWeekInfo] = useState<any>(null)
+  const [weekInfo, setWeekInfo] = useState<WeekInfo | null>(null)
   
   // Estados del pedido
   const [existingOrder, setExistingOrder] = useState<OrderStateByChild | null>(null)

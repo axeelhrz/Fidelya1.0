@@ -6,7 +6,7 @@ import { MenuItem } from '@/types/menu'
 
 interface MenuItemCardProps {
   item: MenuItem
-  userType: 'funcionario' | 'estudiante'
+  userType: 'apoderado' | 'funcionario'
   index: number
 }
 
@@ -77,6 +77,11 @@ export function MenuItemCard({ item, userType, index }: MenuItemCardProps) {
           {userType === 'funcionario' && (
             <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
               Precio funcionario
+            </div>
+          )}
+          {userType === 'apoderado' && (
+            <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+              Precio apoderado
             </div>
           )}
         </div>
