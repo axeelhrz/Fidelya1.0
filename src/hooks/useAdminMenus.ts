@@ -68,31 +68,6 @@ export function useAdminMenus(): UseAdminMenusReturn {
   const [weekStats, setWeekStats] = useState<WeekStats | null>(null)
   const { toast } = useToast()
 
-  // Inicializar con la semana actual
-  useEffect(() => {
-    try {
-      const currentWeekStart = AdminMenuService.getCurrentWeekStart()
-      if (currentWeekStart) {
-        setCurrentWeek(currentWeekStart)
-      } else {
-        throw new Error('No se pudo obtener la semana actual')
-      }
-    } catch (err) {
-      console.error('Error initializing current week:', err)
-      setError('Error al inicializar la semana actual')
-      // Fallback: usar fecha actual
-      const fallbackDate = new Date().toISOString().split('T')[0]
-      setCurrentWeek(fallbackDate)
-    }
-  }, [])
-
-  // Cargar menú cuando cambia la semana
-  useEffect(() => {
-    if (currentWeek) {
-      loadWeekMenu(currentWeek)
-    }
-  }, [currentWeek])
-
   const loadWeekMenu = useCallback(async (weekStart: string) => {
     if (!weekStart) {
       setError('Fecha de semana no válida')
@@ -117,7 +92,16 @@ export function useAdminMenus(): UseAdminMenusReturn {
       }
       
       if (stats) {
-        setWeekStats(stats)
+        // Transform the stats to match our interface
+        const transformedStats: WeekStats = {
+          totalItems: stats.totalItems,
+          activeItems: stats.activeItems,
+          publishedItems: stats.publishedItems,
+          daysWithMenus: stats.daysWithMenus,
+          totalAlmuerzos: stats.almuerzoCount,
+          totalColaciones: stats.colacionCount
+        }
+        setWeekStats(transformedStats)
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar el menú'
@@ -132,6 +116,31 @@ export function useAdminMenus(): UseAdminMenusReturn {
       setIsLoading(false)
     }
   }, [toast])
+
+  // Inicializar con la semana actual
+  useEffect(() => {
+    try {
+      const currentWeekStart = AdminMenuService.getCurrentWeekStart()
+      if (currentWeekStart) {
+        setCurrentWeek(currentWeekStart)
+      } else {
+        throw new Error('No se pudo obtener la semana actual')
+      }
+    } catch (err) {
+      console.error('Error initializing current week:', err)
+      setError('Error al inicializar la semana actual')
+      // Fallback: usar fecha actual
+      const fallbackDate = new Date().toISOString().split('T')[0]
+      setCurrentWeek(fallbackDate)
+    }
+  }, [])
+
+  // Cargar menú cuando cambia la semana
+  useEffect(() => {
+    if (currentWeek) {
+      loadWeekMenu(currentWeek)
+    }
+  }, [currentWeek, loadWeekMenu])
 
   const navigateWeek = useCallback((direction: 'next' | 'prev') => {
     if (!currentWeek) {

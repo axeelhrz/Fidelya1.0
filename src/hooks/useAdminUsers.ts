@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect, useCallback } from 'react'
+import { DocumentSnapshot, DocumentData } from 'firebase/firestore'
 import { AdminUserService } from '@/services/adminUserService'
 import { 
   AdminUserView, 
@@ -9,7 +10,6 @@ import {
   UserUpdateRequest,
   UserActionResult,
   SortField,
-  SortDirection,
   UserSortConfig
 } from '@/types/adminUser'
 
@@ -52,7 +52,7 @@ export function useAdminUsers(): UseAdminUsersReturn {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(false)
-  const [lastDoc, setLastDoc] = useState<any>(null)
+  const [lastDoc, setLastDoc] = useState<DocumentSnapshot<DocumentData> | null>(null)
 
   // Filtros y ordenamiento
   const [filters, setFilters] = useState<UserFilters>({
@@ -117,13 +117,13 @@ export function useAdminUsers(): UseAdminUsersReturn {
       setUserStats({
         totalUsers: 0,
         activeUsers: 0,
-        verifiedUsers: 0,
         funcionarios: 0,
         estudiantes: 0,
         admins: 0,
-        totalOrders: 0,
-        usersWithOrders: 0,
-        averageOrdersPerUser: 0
+        verifiedEmails: 0,
+        unverifiedEmails: 0,
+        newUsersThisWeek: 0,
+        newUsersThisMonth: 0
       })
     } finally {
       setIsLoadingStats(false)
@@ -255,7 +255,7 @@ export function useAdminUsers(): UseAdminUsersReturn {
   // Efectos
   useEffect(() => {
     loadUsers(true)
-  }, [filters, sortConfig])
+  }, [filters, sortConfig, loadUsers])
 
   useEffect(() => {
     loadUserStats()

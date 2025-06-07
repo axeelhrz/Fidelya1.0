@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
-import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/app/lib/firebase'
 import { useOrderStore } from '@/store/orderStore'
 import { DashboardData, DashboardUser, OrderStatus, EconomicSummary, WeeklyMenuInfo, DashboardAlert } from '@/types/dashboard'
@@ -51,7 +51,7 @@ export function useDashboardData() {
         }
 
         // Calcular resumen económico
-        const prices = PRICES[user.userType]
+        const prices = PRICES[user.userType as keyof typeof PRICES]
         const economicSummary: EconomicSummary = {
           selectedDays: orderSummary.selections.length,
           estimatedTotal: orderSummary.total,

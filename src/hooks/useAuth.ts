@@ -5,23 +5,7 @@ import { useRouter } from 'next/navigation'
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/app/lib/firebase'
-import { User, Child } from '@/types/panel'
-
-interface AuthUser {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  phone?: string
-  userType: 'funcionario' | 'estudiante'
-  children?: Array<{
-    id: string
-    name: string
-    age: number
-    class: string
-    level: 'basico' | 'medio'
-  }>
-}
+import { User } from '@/types/panel'
 
 interface UseAuthReturn {
   user: User | null
