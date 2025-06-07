@@ -23,8 +23,9 @@ interface UseOrderManagementReturn {
   menuError: string | null
   weekInfo: WeekInfo | null
   
-  // Estado del pedido
-  existingOrder: OrderStateByChild | null
+  // Estado del pedido - ACTUALIZADO
+  existingOrders: OrderStateByChild[] // Cambio: ahora es un array
+  paidOrders: OrderStateByChild[] // Nuevo: solo pedidos pagados
   isLoadingOrder: boolean
   orderError: string | null
   
@@ -38,6 +39,7 @@ interface UseOrderManagementReturn {
   processPayment: () => Promise<void>
   clearErrors: () => void
   retryPayment: () => Promise<void>
+  refreshOrders: () => Promise<void> // Nuevo
 }
 
 export function useOrderManagement(): UseOrderManagementReturn {
@@ -53,8 +55,9 @@ export function useOrderManagement(): UseOrderManagementReturn {
     refreshAll
   } = useMultiWeekMenu(user, 4) // Mostrar 4 semanas próximas
   
-  // Estados del pedido
-  const [existingOrder, setExistingOrder] = useState<OrderStateByChild | null>(null)
+  // Estados del pedido - ACTUALIZADOS
+  const [existingOrders, setExistingOrders] = useState<OrderStateByChild[]>([])
+  const [paidOrders, setPaidOrders] = useState<OrderStateByChild[]>([])
   const [isLoadingOrder, setIsLoadingOrder] = useState(true)
   const [orderError, setOrderError] = useState<string | null>(null)
   
@@ -69,8 +72,8 @@ export function useOrderManagement(): UseOrderManagementReturn {
   const isLoadingMenu = isLoadingMultiWeek || (currentWeek?.isLoading ?? true)
   const menuError = multiWeekError || currentWeek?.error || null
 
-  // Cargar pedido existente
-  const loadExistingOrder = useCallback(async () => {
+  // Cargar pedidos existentes - ACTUALIZADO PARA CARGAR TODOS LOS PEDIDOS
+  const loadExistingOrders = useCallback(async () => {
     if (!user || !weekInfo) {
       setIsLoadingOrder(false)
       return
@@ -80,20 +83,39 @@ export function useOrderManagement(): UseOrderManagementReturn {
       setIsLoadingOrder(true)
       setOrderError(null)
 
-      const order = await OrderService.getUserOrder(user.id, weekInfo.weekStart)
-      setExistingOrder(order)
+      // Cargar TODOS los pedidos del usuario para esta semana
+      const orders = await OrderService.getOrdersWithFilters({
+        userId: user.id,
+        weekStart: weekInfo.weekStart
+      })
+
+      console.log('Loaded orders for week:', weekInfo.weekStart, 'count:', orders.length)
+
+      setExistingOrders(orders)
+      
+      // Separar pedidos pagados
+      const paid = orders.filter(order => order.status === 'pagado')
+      setPaidOrders(paid)
+
+      console.log('Paid orders:', paid.length, 'Total orders:', orders.length)
 
     } catch (error) {
-      console.error('Error loading existing order:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Error al cargar el pedido'
+      console.error('Error loading existing orders:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Error al cargar los pedidos'
       setOrderError(errorMessage)
-      setExistingOrder(null)
+      setExistingOrders([])
+      setPaidOrders([])
     } finally {
       setIsLoadingOrder(false)
     }
   }, [user, weekInfo])
 
-  // Procesar pago con mejor manejo de errores - CORREGIDO PARA MÚLTIPLES SEMANAS
+  // Función para refrescar pedidos
+  const refreshOrders = useCallback(async () => {
+    await loadExistingOrders()
+  }, [loadExistingOrders])
+
+  // Procesar pago con mejor manejo de errores - ACTUALIZADO PARA DETECTAR DUPLICADOS
   const processPayment = useCallback(async () => {
     if (!user) {
       setPaymentError('Información de usuario no disponible')
@@ -113,11 +135,10 @@ export function useOrderManagement(): UseOrderManagementReturn {
         throw new Error('No hay elementos seleccionados para procesar el pago')
       }
 
-      // NUEVO: Agrupar selecciones por semana para procesarlas correctamente
+      // NUEVO: Verificar duplicados antes de procesar
       const selectionsByWeek = new Map<string, typeof summary.selections>()
       
       for (const selection of summary.selections) {
-        // Determinar a qué semana pertenece esta fecha
         const weekStart = MenuService.getWeekStartFromDate(MenuService.createLocalDate(selection.date))
         
         if (!selectionsByWeek.has(weekStart)) {
@@ -127,6 +148,45 @@ export function useOrderManagement(): UseOrderManagementReturn {
       }
 
       console.log('Selections grouped by week:', Object.fromEntries(selectionsByWeek))
+
+      // Verificar duplicados para cada semana
+      for (const [weekStart, weekSelections] of selectionsByWeek) {
+        const processOrderSelections = weekSelections.map(selection => ({
+          childId: selection.hijo?.id || 'funcionario',
+          childName: selection.hijo?.name || 'Funcionario',
+          date: selection.date,
+          selectedItems: [
+            ...(selection.almuerzo ? [{
+              itemId: selection.almuerzo.id,
+              itemName: selection.almuerzo.name,
+              itemCode: selection.almuerzo.code,
+              category: 'almuerzo' as const,
+              price: selection.almuerzo.price,
+              description: selection.almuerzo.description
+            }] : []),
+            ...(selection.colacion ? [{
+              itemId: selection.colacion.id,
+              itemName: selection.colacion.name,
+              itemCode: selection.colacion.code,
+              category: 'colacion' as const,
+              price: selection.colacion.price,
+              description: selection.colacion.description
+            }] : [])
+          ]
+        })).filter(selection => selection.selectedItems.length > 0)
+
+        // Verificar duplicados
+        const duplicateCheck = await MenuIntegrationService.checkForDuplicateSelections(
+          user, 
+          processOrderSelections, 
+          weekStart
+        )
+
+        if (duplicateCheck.hasDuplicates) {
+          const duplicateMessages = duplicateCheck.warnings.join('\n')
+          throw new Error(`No puedes pagar menús que ya pagaste:\n${duplicateMessages}`)
+        }
+      }
 
       // Procesar cada semana por separado
       const processResults: Array<{
@@ -248,6 +308,8 @@ export function useOrderManagement(): UseOrderManagementReturn {
           errorMessage = 'Error de configuración del sistema. Contacta al administrador.'
         } else if (error.message.includes('seleccionados') || error.message.includes('selecciones válidas')) {
           errorMessage = 'Debes seleccionar al menos un elemento antes de proceder al pago.'
+        } else if (error.message.includes('ya pagaste')) {
+          errorMessage = error.message // Mostrar mensaje específico de duplicados
         } else {
           errorMessage = error.message
         }
@@ -279,13 +341,14 @@ export function useOrderManagement(): UseOrderManagementReturn {
   // Efectos
   useEffect(() => {
     if (user && weekInfo) {
-      loadExistingOrder()
+      loadExistingOrders()
     } else {
       // Si no hay usuario o weekInfo, limpiar estado del pedido
-      setExistingOrder(null)
+      setExistingOrders([])
+      setPaidOrders([])
       setIsLoadingOrder(false)
     }
-  }, [user, weekInfo, loadExistingOrder])
+  }, [user, weekInfo, loadExistingOrders])
 
   return {
     // Estado del menú - ahora incluye múltiples semanas
@@ -295,8 +358,9 @@ export function useOrderManagement(): UseOrderManagementReturn {
     menuError,
     weekInfo,
     
-    // Estado del pedido
-    existingOrder,
+    // Estado del pedido - ACTUALIZADO
+    existingOrders, // Todos los pedidos
+    paidOrders, // Solo pedidos pagados
     isLoadingOrder,
     orderError,
     
@@ -309,6 +373,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
     refreshWeek,
     processPayment,
     clearErrors,
-    retryPayment
+    retryPayment,
+    refreshOrders // Nuevo
   }
 }

@@ -188,7 +188,7 @@ export class MenuIntegrationService {
   }
 
   /**
-   * Procesar pedido completo (validación + guardado + pago) - MEJORADO
+   * Procesar pedido completo (validación + guardado + pago) - MEJORADO PARA PERMITIR PEDIDOS ADICIONALES
    */
   static async processCompleteOrder(
     user: User,
@@ -200,8 +200,8 @@ export class MenuIntegrationService {
     try {
       console.log('Processing complete order for user:', user.id, 'selections:', selections.length, 'weekStart:', weekStart)
 
-      // 1. Validaciones iniciales MEJORADAS - MÁS PERMISIVAS
-      const initialValidation = await this.validateInitialOrderDataPermissive(user, selections, weekStart)
+      // 1. Validaciones iniciales MEJORADAS - PERMITIR PEDIDOS ADICIONALES
+      const initialValidation = await this.validateInitialOrderDataWithDuplicates(user, selections, weekStart)
       if (!initialValidation.success) {
         console.log('Initial validation failed:', initialValidation.error)
         return initialValidation
@@ -254,7 +254,8 @@ export class MenuIntegrationService {
             MenuService.formatToDateString(
               MenuService.createLocalDate(weekStart)
             )
-          )
+          ),
+          isAdditionalOrder: true // Marcar como pedido adicional
         }
       }
 
@@ -436,7 +437,7 @@ export class MenuIntegrationService {
   }
 
   /**
-   * Verificar si un usuario puede hacer pedidos para una semana - MÁS PERMISIVO
+   * Verificar si un usuario puede hacer pedidos para una semana - ACTUALIZADO PARA PERMITIR PEDIDOS ADICIONALES
    */
   static async canUserOrderForWeek(user: User, weekStart: string): Promise<{
     canOrder: boolean
@@ -446,15 +447,6 @@ export class MenuIntegrationService {
     try {
       console.log('Checking if user can order for week:', weekStart)
       
-      // Verificar si ya tiene un pedido para esta semana
-      const existingOrder = await OrderService.getUserOrder(user.id, weekStart)
-      if (existingOrder && ['pagado', 'procesando_pago'].includes(existingOrder.status)) {
-        return {
-          canOrder: false,
-          reason: 'Ya tienes un pedido activo para esta semana'
-        }
-      }
-
       // Verificaciones específicas por tipo de usuario
       const restrictions: string[] = []
       
@@ -464,6 +456,9 @@ export class MenuIntegrationService {
           restrictions.push('Debes registrar al menos un hijo para hacer pedidos')
         }
       }
+
+      // REMOVIDO: La verificación de pedido existente
+      // Ahora permitimos múltiples pedidos para la misma semana
 
       return {
         canOrder: restrictions.length === 0,
@@ -481,12 +476,126 @@ export class MenuIntegrationService {
     }
   }
 
+  /**
+   * Verificar duplicados en selecciones - NUEVO MÉTODO
+   */
+  static async checkForDuplicateSelections(
+    user: User, 
+    newSelections: ProcessOrderSelection[], 
+    weekStart: string
+  ): Promise<{
+    hasDuplicates: boolean
+    duplicates: Array<{
+      date: string
+      childId: string
+      category: 'almuerzo' | 'colacion'
+      existingItem: string
+      newItem: string
+    }>
+    warnings: string[]
+  }> {
+    try {
+      // Obtener todos los pedidos pagados del usuario para esta semana
+      const existingOrders = await OrderService.getOrdersWithFilters({
+        userId: user.id,
+        weekStart: weekStart,
+        status: ['pagado']
+      })
+
+      const duplicates: Array<{
+        date: string
+        childId: string
+        category: 'almuerzo' | 'colacion'
+        existingItem: string
+        newItem: string
+      }> = []
+
+      const warnings: string[] = []
+
+      // Crear un mapa de selecciones existentes pagadas
+      const existingSelections = new Map<string, {
+        almuerzo?: string
+        colacion?: string
+      }>()
+
+      existingOrders.forEach(order => {
+        order.resumenPedido.forEach(selection => {
+          const key = `${selection.date}-${selection.hijo?.id || 'funcionario'}`
+          
+          if (!existingSelections.has(key)) {
+            existingSelections.set(key, {})
+          }
+          
+          const existing = existingSelections.get(key)!
+          if (selection.almuerzo) {
+            existing.almuerzo = selection.almuerzo.name
+          }
+          if (selection.colacion) {
+            existing.colacion = selection.colacion.name
+          }
+        })
+      })
+
+      // Verificar nuevas selecciones contra las existentes
+      newSelections.forEach(newSelection => {
+        newSelection.selectedItems.forEach(item => {
+          const key = `${newSelection.date}-${newSelection.childId}`
+          const existing = existingSelections.get(key)
+          
+          if (existing) {
+            if (item.category === 'almuerzo' && existing.almuerzo) {
+              duplicates.push({
+                date: newSelection.date,
+                childId: newSelection.childId,
+                category: 'almuerzo',
+                existingItem: existing.almuerzo,
+                newItem: item.itemName
+              })
+            }
+            
+            if (item.category === 'colacion' && existing.colacion) {
+              duplicates.push({
+                date: newSelection.date,
+                childId: newSelection.childId,
+                category: 'colacion',
+                existingItem: existing.colacion,
+                newItem: item.itemName
+              })
+            }
+          }
+        })
+      })
+
+      // Generar advertencias
+      if (duplicates.length > 0) {
+        warnings.push(`Tienes ${duplicates.length} selección(es) que ya fueron pagadas anteriormente`)
+        duplicates.forEach(dup => {
+          const childName = newSelections.find(s => s.childId === dup.childId)?.childName || 'Funcionario'
+          warnings.push(`${dup.date} - ${childName}: Ya tienes ${dup.category} (${dup.existingItem}) pagado`)
+        })
+      }
+
+      return {
+        hasDuplicates: duplicates.length > 0,
+        duplicates,
+        warnings
+      }
+    } catch (error) {
+      console.error('Error checking for duplicate selections:', error)
+      return {
+        hasDuplicates: false,
+        duplicates: [],
+        warnings: []
+      }
+    }
+  }
+
   // Métodos privados de utilidad
 
   /**
-   * Validación inicial más permisiva - NUEVO MÉTODO
+   * Validación inicial que permite pedidos adicionales pero detecta duplicados - NUEVO MÉTODO
    */
-  private static async validateInitialOrderDataPermissive(
+  private static async validateInitialOrderDataWithDuplicates(
     user: User, 
     selections: ProcessOrderSelection[], 
     weekStart: string
@@ -517,10 +626,7 @@ export class MenuIntegrationService {
       }
     }
 
-    // Verificación más permisiva de menús
-    console.log('Permissive validation: User has', selections.length, 'selections for week', weekStart)
-
-    // Verificar permisos del usuario (más permisivo)
+    // Verificar permisos del usuario
     const canOrder = await this.canUserOrderForWeek(user, weekStart)
     if (!canOrder.canOrder) {
       return {
@@ -529,11 +635,23 @@ export class MenuIntegrationService {
       }
     }
 
+    // Verificar duplicados
+    const duplicateCheck = await this.checkForDuplicateSelections(user, selections, weekStart)
+    if (duplicateCheck.hasDuplicates) {
+      return {
+        success: false,
+        error: 'No puedes pagar el mismo menú que ya pagaste anteriormente',
+        validationErrors: duplicateCheck.warnings
+      }
+    }
+
+    console.log('Validation passed: User can make additional order for week', weekStart)
+
     return { success: true }
   }
 
   /**
-   * Validación de pedido completo más permisiva - NUEVO MÉTODO
+   * Validación de pedido completo más permisiva - MÉTODO EXISTENTE
    */
   private static async validateCompleteOrderPermissive(
     selections: OrderSelectionByChild[], 
@@ -569,8 +687,8 @@ export class MenuIntegrationService {
     selections: ProcessOrderSelection[], 
     weekStart: string
   ): Promise<OrderProcessResult> {
-    // Usar la versión permisiva
-    return this.validateInitialOrderDataPermissive(user, selections, weekStart)
+    // Usar la nueva versión que permite pedidos adicionales
+    return this.validateInitialOrderDataWithDuplicates(user, selections, weekStart)
   }
 
   private static async transformSelections(
