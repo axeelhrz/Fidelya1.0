@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { MenuService } from '@/services/menuService'
 import { AdminMenuService } from '@/services/adminMenuService'
 import { DayMenuDisplay } from '@/types/menu'
+import { WeekInfo } from '@/types/order'
 import { User } from '@/types/panel'
 
 interface UseWeeklyMenuDataProps {
@@ -10,11 +11,15 @@ interface UseWeeklyMenuDataProps {
   useAdminData?: boolean // Si true, usa datos de admin (incluye no publicados)
 }
 
+interface WeekInfoExtended extends WeekInfo {
+  weekLabel: string
+}
+
 interface UseWeeklyMenuDataReturn {
   weekMenu: DayMenuDisplay[]
   isLoading: boolean
   error: string | null
-  weekInfo: any
+  weekInfo: WeekInfoExtended | null
   refetch: () => Promise<void>
 }
 
@@ -26,7 +31,7 @@ export function useWeeklyMenuData({
   const [weekMenu, setWeekMenu] = useState<DayMenuDisplay[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [weekInfo, setWeekInfo] = useState<any>(null)
+  const [weekInfo, setWeekInfo] = useState<WeekInfoExtended | null>(null)
 
   const loadMenuData = async () => {
     if (!user) {
@@ -42,7 +47,8 @@ export function useWeeklyMenuData({
       const currentWeekInfo = MenuService.getCurrentWeekInfo()
       const targetWeekStart = weekStart || currentWeekInfo.weekStart
       
-      setWeekInfo({
+      // Crear weekInfo extendido con weekLabel
+      const extendedWeekInfo: WeekInfoExtended = {
         ...currentWeekInfo,
         weekStart: targetWeekStart,
         weekLabel: MenuService.getWeekDisplayText(
@@ -51,7 +57,9 @@ export function useWeeklyMenuData({
             new Date(new Date(targetWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           )
         )
-      })
+      }
+      
+      setWeekInfo(extendedWeekInfo)
 
       let menuData: DayMenuDisplay[]
 
