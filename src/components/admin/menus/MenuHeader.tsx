@@ -10,12 +10,10 @@ import {
   Eye,
   EyeOff,
   Trash2,
-  Plus,
   BarChart3,
   ExternalLink,
   Users,
   Activity,
-  Settings
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -38,9 +36,17 @@ import {
 import { AdminWeekMenu } from '@/types/adminMenu'
 import { getWeekSummary, exportWeekMenuToCSV, downloadCSV } from '@/lib/adminMenuUtils'
 
+interface WeekStats {
+  totalItems: number
+  activeItems: number
+  totalAlmuerzos: number
+  totalColaciones: number
+  daysWithMenus: number
+}
+
 interface MenuHeaderProps {
   weekMenu: AdminWeekMenu | null
-  weekStats: any
+  weekStats: WeekStats | null
   isLoading: boolean
   onRefresh: () => void
   onDuplicateWeek: () => void

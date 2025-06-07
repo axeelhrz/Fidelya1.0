@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { AdminDayMenu, AdminMenuItem } from '@/types/adminMenu'
 import { MenuItemCard } from './MenuItemCard'
-import { getEmptyDayMessage } from '@/lib/adminMenuUtils'
 
 interface DayMenuContainerProps {
   dayMenu: AdminDayMenu

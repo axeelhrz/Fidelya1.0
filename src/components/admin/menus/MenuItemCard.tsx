@@ -126,7 +126,7 @@ export function MenuItemCard({
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar menú?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción eliminará permanentemente el menú "{item.description}" ({item.code}).
+              Esta acción eliminará permanentemente el menú &quot;{item.description}&quot; ({item.code}).
               Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>

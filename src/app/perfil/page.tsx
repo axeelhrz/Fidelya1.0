@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { 
   User, 
   Mail, 
-  Phone, 
   Shield, 
   ShieldCheck, 
   ShieldAlert,
@@ -17,7 +16,6 @@ import {
   CheckCircle,
   ArrowLeft,
   Users,
-  Edit3,
   RefreshCw
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -25,7 +23,6 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Separator } from '@/components/ui/separator'
 import { Navbar } from '@/components/panel/Navbar'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfileForm } from '@/hooks/useProfileForm'
@@ -53,7 +50,6 @@ export default function PerfilPage() {
     removeChild,
     saveChanges,
     resendEmailVerification,
-    validateForm
   } = useProfileForm()
 
   useEffect(() => {
@@ -105,11 +101,11 @@ export default function PerfilPage() {
   }
 
   const getUserTypeLabel = () => {
-    return user?.userType === 'funcionario' ? 'Funcionario' : 'Apoderado'
+    return user?.tipoUsuario === 'funcionario' ? 'Funcionario' : 'Apoderado'
   }
 
   const getUserTypeBadgeColor = () => {
-    return user?.userType === 'funcionario' 
+    return user?.tipoUsuario === 'funcionario' 
       ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
       : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
   }
@@ -299,7 +295,7 @@ export default function PerfilPage() {
               </Card>
 
               {/* Gestión de hijos - Solo para apoderados */}
-              {user.userType === 'funcionario' && (
+              {user.tipoUsuario === 'apoderado' && (
                 <Card className="panel-card">
                   <CardHeader className="panel-card-header">
                     <div className="flex items-center justify-between">
@@ -543,7 +539,7 @@ export default function PerfilPage() {
                         Mantén tu correo actualizado para recibir notificaciones importantes.
                       </p>
                     </div>
-                    {user.userType === 'funcionario' && (
+                    {user.tipoUsuario === 'apoderado' && (
                       <div className="flex items-start space-x-2">
                         <Users className="w-4 h-4 mt-0.5 text-blue-600" />
                         <p>
