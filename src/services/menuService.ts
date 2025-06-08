@@ -36,9 +36,13 @@ export class MenuService {
     }
   }
 
-  // Helper method to format date to YYYY-MM-DD - NUEVO
+  // Helper method to format date to YYYY-MM-DD - CORREGIDO
   static formatToDateString(date: Date): string {
-    return format(date, 'yyyy-MM-dd')
+    // Asegurar que usamos la zona horaria local
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
   }
 
   // Helper method to determine user type from various possible field names
@@ -184,12 +188,17 @@ export class MenuService {
   }
 
   /**
-   * Obtiene información de la semana actual
+   * Obtiene información de la semana actual - CORREGIDO
    */
   static getCurrentWeekInfo(): WeekInfo {
     const now = new Date()
+    console.log(`📅 Current date: ${now.toISOString()}`)
+    
     const weekStart = startOfWeek(now, { weekStartsOn: 1 }) // Lunes
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 }) // Domingo
+    
+    console.log(`📅 Week start: ${weekStart.toISOString()}`)
+    console.log(`📅 Week end: ${weekEnd.toISOString()}`)
     
     // Calcular número de semana
     const startOfYear = new Date(now.getFullYear(), 0, 1)
@@ -203,18 +212,21 @@ export class MenuService {
     const isCurrentWeek = true
     const isOrderingAllowed = now <= orderDeadline
     
+    const weekStartStr = this.formatToDateString(weekStart)
+    const weekEndStr = this.formatToDateString(weekEnd)
+    
+    console.log(`📅 Formatted week start: ${weekStartStr}`)
+    console.log(`📅 Formatted week end: ${weekEndStr}`)
+    
     return {
-      weekStart: this.formatToDateString(weekStart),
-      weekEnd: this.formatToDateString(weekEnd),
+      weekStart: weekStartStr,
+      weekEnd: weekEndStr,
       weekNumber,
       year: now.getFullYear(),
       isCurrentWeek,
       isOrderingAllowed,
       orderDeadline,
-      weekLabel: this.getWeekDisplayText(
-        this.formatToDateString(weekStart),
-        this.formatToDateString(weekEnd)
-      )
+      weekLabel: this.getWeekDisplayText(weekStartStr, weekEndStr)
     }
   }
 
@@ -253,12 +265,19 @@ export class MenuService {
   }
 
   /**
-   * Obtiene el inicio de la semana actual
+   * Obtiene el inicio de la semana actual - CORREGIDO
    */
   static getCurrentWeekStart(): string {
     const now = new Date()
+    console.log(`📅 Getting current week start from: ${now.toISOString()}`)
+    
     const weekStart = startOfWeek(now, { weekStartsOn: 1 })
-    return this.formatToDateString(weekStart)
+    console.log(`📅 Week start date object: ${weekStart.toISOString()}`)
+    
+    const formatted = this.formatToDateString(weekStart)
+    console.log(`📅 Formatted week start: ${formatted}`)
+    
+    return formatted
   }
 
   /**
