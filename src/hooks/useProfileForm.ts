@@ -43,8 +43,16 @@ const RESEND_COOLDOWN_SECONDS = 60 // 1 minute cooldown
 const MAX_RETRY_ATTEMPTS = 3
 const RETRY_DELAYS = [1000, 3000, 5000] // Progressive delays in milliseconds
 
+// Helper function to safely trim strings
+function safeTrim(value: any): string {
+  if (typeof value === 'string') {
+    return value.trim()
+  }
+  return String(value || '').trim()
+}
+
 // Helper function to clean data for Firestore (remove undefined values)
-function cleanDataForFirestore(obj: unknown): unknown {
+function cleanDataForFirestore(obj: any): any {
   if (obj === null || obj === undefined) {
     return null
   }
@@ -54,7 +62,7 @@ function cleanDataForFirestore(obj: unknown): unknown {
   }
   
   if (typeof obj === 'object') {
-    const cleaned: Record<string, unknown> = {}
+    const cleaned: any = {}
     for (const [key, value] of Object.entries(obj)) {
       if (value !== undefined) {
         cleaned[key] = cleanDataForFirestore(value)
@@ -103,7 +111,11 @@ export function useProfileForm(): UseProfileFormReturn {
       const transformedChildren: ExtendedChild[] = (user.children || []).map(child => {
         const childWithAge = child as Child & { edad?: number; age?: number; level?: 'basico' | 'medio' }
         return {
-          ...child,
+          id: child.id || Date.now().toString(),
+          name: child.name || '',
+          curso: child.curso || '',
+          rut: child.rut,
+          active: child.active !== undefined ? child.active : true,
           edad: childWithAge.edad || childWithAge.age || 0,
           level: childWithAge.level || 'basico'
         }
@@ -198,23 +210,24 @@ export function useProfileForm(): UseProfileFormReturn {
     const newErrors: Record<string, string> = {}
 
     // Validar campos requeridos
-    if (!formData.firstName.trim()) {
+    if (!safeTrim(formData.firstName)) {
       newErrors.firstName = 'El nombre es requerido'
     }
-    if (!formData.lastName.trim()) {
+    if (!safeTrim(formData.lastName)) {
       newErrors.lastName = 'El apellido es requerido'
     }
-    if (!formData.email.trim()) {
+    if (!safeTrim(formData.email)) {
       newErrors.email = 'El correo electrónico es requerido'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(safeTrim(formData.email))) {
       newErrors.email = 'Formato de correo electrónico inválido'
     }
 
     // Validar teléfono si se proporciona
-    if (formData.phone && formData.phone.trim()) {
+    const phoneValue = safeTrim(formData.phone)
+    if (phoneValue) {
       // Basic phone validation - allow various formats
       const phoneRegex = /^[\+]?[0-9\s\-\(\)]{8,15}$/
-      if (!phoneRegex.test(formData.phone.trim())) {
+      if (!phoneRegex.test(phoneValue)) {
         newErrors.phone = 'Formato de teléfono inválido'
       }
     }
@@ -222,13 +235,13 @@ export function useProfileForm(): UseProfileFormReturn {
     // Validar hijos si es apoderado
     if (user?.tipoUsuario === 'apoderado' && children.length > 0) {
       children.forEach((child, index) => {
-        if (!child.name.trim()) {
+        if (!safeTrim(child.name)) {
           newErrors[`child_${child.id}_name`] = `Nombre del hijo ${index + 1} es requerido`
         }
         if (!child.edad || child.edad < 1 || child.edad > 18) {
           newErrors[`child_${child.id}_edad`] = `Edad del hijo ${index + 1} debe estar entre 1 y 18 años`
         }
-        if (!child.curso.trim()) {
+        if (!safeTrim(child.curso)) {
           newErrors[`child_${child.id}_curso`] = `Curso del hijo ${index + 1} es requerido`
         }
       })
@@ -248,85 +261,78 @@ export function useProfileForm(): UseProfileFormReturn {
       const currentUser = auth.currentUser
       const userDocRef = doc(db, 'users', user.id)
 
+      // Safely trim form data
+      const trimmedFirstName = safeTrim(formData.firstName)
+      const trimmedLastName = safeTrim(formData.lastName)
+      const trimmedEmail = safeTrim(formData.email)
+      const trimmedPhone = safeTrim(formData.phone)
+
       // Actualizar perfil en Firebase Auth si cambió el nombre
-      if (formData.firstName !== originalData.firstName || formData.lastName !== originalData.lastName) {
+      if (trimmedFirstName !== safeTrim(originalData.firstName) || 
+          trimmedLastName !== safeTrim(originalData.lastName)) {
         await updateProfile(currentUser, {
-          displayName: `${formData.firstName} ${formData.lastName}`
+          displayName: `${trimmedFirstName} ${trimmedLastName}`
         })
       }
 
       // Actualizar email si cambió
-      if (formData.email !== originalData.email) {
-        await updateEmail(currentUser, formData.email)
+      if (trimmedEmail !== safeTrim(originalData.email)) {
+        await updateEmail(currentUser, trimmedEmail)
         await sendEmailVerification(currentUser)
         setEmailVerified(false)
       }
 
       // Transform children back to the format expected by the database
       const transformedChildren = children.map(child => {
-        const childData: {
-          id: string
-          name: string
-          curso: string
-          active: boolean
-          age: number
-          level: 'basico' | 'medio'
-          rut?: string
-        } = {
+        const childName = safeTrim(child.name)
+        const childCurso = safeTrim(child.curso)
+        const childRut = safeTrim(child.rut)
+        
+        const childData: any = {
           id: child.id,
-          name: child.name.trim(),
-          curso: child.curso.trim(),
-          active: child.active,
-          age: child.edad, // Map edad back to age
-          level: child.level
+          name: childName,
+          curso: childCurso,
+          active: child.active !== undefined ? child.active : true,
+          age: child.edad || 0, // Map edad back to age
+          level: child.level || 'basico'
         }
         
         // Only include rut if it has a value
-        if (child.rut && child.rut.trim()) {
-          childData.rut = child.rut.trim()
+        if (childRut) {
+          childData.rut = childRut
         }
         
         return childData
       })
 
       // Prepare update data, ensuring no undefined values
-      const updateData: {
-        firstName: string
-        lastName: string
-        email: string
-        children: Array<{
-          id: string
-          name: string
-          curso: string
-          active: boolean
-          age: number
-          level: 'basico' | 'medio'
-          rut?: string
-        }>
-        updatedAt: Date
-        phone?: string
-      } = {
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        email: formData.email.trim(),
+      const updateData: any = {
+        firstName: trimmedFirstName,
+        lastName: trimmedLastName,
+        email: trimmedEmail,
         children: transformedChildren,
         updatedAt: new Date()
       }
 
       // Only include phone if it has a value
-      if (formData.phone && formData.phone.trim()) {
-        updateData.phone = formData.phone.trim()
+      if (trimmedPhone) {
+        updateData.phone = trimmedPhone
       }
 
       // Clean the data to remove any undefined values
-      const cleanedUpdateData = cleanDataForFirestore(updateData) as typeof updateData
+      const cleanedUpdateData = cleanDataForFirestore(updateData)
 
       console.log('Saving data to Firestore:', cleanedUpdateData) // Debug log
 
       await updateDoc(userDocRef, cleanedUpdateData)
 
       // Actualizar datos originales
-      setOriginalData(formData)
+      setOriginalData({
+        firstName: trimmedFirstName,
+        lastName: trimmedLastName,
+        email: trimmedEmail,
+        phone: trimmedPhone
+      })
       setOriginalChildren([...children])
 
       // Clear any previous errors
@@ -343,6 +349,8 @@ export function useProfileForm(): UseProfileFormReturn {
         setErrors({ email: 'Formato de correo electrónico inválido' })
       } else if (firebaseError.code === 'auth/requires-recent-login') {
         setErrors({ email: 'Debes volver a iniciar sesión para cambiar tu correo' })
+      } else if (error instanceof TypeError && error.message.includes('trim')) {
+        setErrors({ general: 'Error en el formato de los datos. Verifica que todos los campos estén completos.' })
       } else if (firebaseError.message?.includes('invalid data')) {
         setErrors({ general: 'Error en los datos proporcionados. Verifica que todos los campos estén completos correctamente.' })
       } else {
