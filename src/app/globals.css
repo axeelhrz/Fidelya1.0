@@ -405,4 +405,127 @@
   }
 }
 
-@media (min-width: 1280px)
+@media (min-width: 1280px) {
+  .admin-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+/* Mejoras específicas para textos largos en tarjetas pequeñas */
+@media (max-width: 1280px) {
+  .admin-card-text {
+    font-size: 0.7rem;
+    line-height: 1.2;
+  }
+  
+  .menu-card-compact {
+    min-height: auto;
+  }
+}
+
+/* Estilos para pantallas muy pequeñas */
+@media (max-width: 768px) {
+  .admin-card-text {
+    font-size: 0.65rem;
+    line-height: 1.1;
+  }
+}
+
+/* Estilos específicos para el nuevo layout del menú */
+@media (max-width: 1024px) {
+  .menu-sidebar {
+    @apply fixed inset-y-0 left-0 z-50 w-80 transform transition-transform duration-300 ease-in-out;
+  }
+  
+  .menu-sidebar.closed {
+    @apply -translate-x-full;
+  }
+  
+  .menu-sidebar.open {
+    @apply translate-x-0;
+  }
+}
+
+/* Mejoras para el contenido principal del menú */
+.menu-main-content {
+  @apply flex-1 flex flex-col min-w-0 overflow-hidden;
+}
+
+.menu-content-area {
+  @apply flex-1 overflow-y-auto p-6 scroll-container;
+}
+
+/* Estilos para elementos de navegación del sidebar */
+.sidebar-nav-item {
+  @apply w-full p-4 rounded-lg border text-left transition-all duration-200 hover:shadow-md;
+}
+
+.sidebar-nav-item:hover {
+  @apply bg-slate-50 dark:bg-slate-600;
+}
+
+.sidebar-nav-item.active {
+  @apply bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700 shadow-sm;
+}
+
+.sidebar-nav-item.past {
+  @apply opacity-60;
+}
+
+/* Mejoras para las transiciones del contenido */
+.content-transition {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Estilos para el overlay móvil */
+.mobile-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 z-40;
+}
+
+/* Mejoras para los badges en el sidebar */
+.sidebar-badge {
+  @apply text-xs px-2 py-0.5 rounded-full font-medium;
+}
+
+.sidebar-badge.almuerzo {
+  @apply bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300;
+}
+
+.sidebar-badge.colacion {
+  @apply bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300;
+}
+
+.sidebar-badge.sin-menu {
+  @apply bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300;
+}
+
+/* Estilos para el header del contenido principal */
+.content-header {
+  @apply bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4;
+}
+
+/* Mejoras para la responsividad del layout */
+@media (min-width: 1024px) {
+  .menu-sidebar {
+    @apply static translate-x-0;
+  }
+}
+
+/* Estilos para loading states mejorados */
+.loading-skeleton {
+  @apply animate-pulse bg-slate-200 dark:bg-slate-700 rounded;
+}
+
+.loading-skeleton.h-16 {
+  @apply h-16;
+}
+
+.loading-skeleton.h-4 {
+  @apply h-4;
+}
+
+.loading-skeleton.w-full {
+  @apply w-full;
+}
+
+/* Mejoras para los estados de hover y
