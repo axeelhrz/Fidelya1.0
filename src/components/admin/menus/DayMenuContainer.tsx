@@ -30,7 +30,7 @@ export function DayMenuContainer({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="h-full"
+      className="h-full admin-card-container"
     >
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
         <CardHeader className="pb-4 flex-shrink-0 border-b border-slate-100 dark:border-slate-700">
@@ -40,10 +40,10 @@ export function DayMenuContainer({
                 <Calendar className="w-4 h-4 text-white" />
               </div>
               <div className="min-w-0 flex-1">
-                <CardTitle className="text-base font-bold text-slate-900 dark:text-white capitalize truncate">
+                <CardTitle className="text-base font-bold text-slate-900 dark:text-white capitalize text-truncate-1">
                   {dayMenu.dayName}
                 </CardTitle>
-                <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
+                <p className="text-sm text-slate-600 dark:text-slate-400 text-truncate-1">
                   {new Date(dayMenu.date).toLocaleDateString('es-CL', {
                     day: 'numeric',
                     month: 'short'
@@ -70,15 +70,15 @@ export function DayMenuContainer({
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden">
+        <CardContent className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden admin-card-content">
           {/* Sección de Almuerzos */}
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 min-h-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 min-w-0 flex-1">
                 <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex-shrink-0">
                   <ChefHat className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 truncate">
+                <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 text-truncate-1">
                   Almuerzos
                 </h3>
                 <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200 flex-shrink-0">
@@ -97,10 +97,10 @@ export function DayMenuContainer({
               </Button>
             </div>
             
-            <div className="space-y-2 overflow-y-auto max-h-48">
+            <div className="space-y-2 overflow-y-auto max-h-48 scroll-container">
               {dayMenu.almuerzos.length > 0 ? (
                 dayMenu.almuerzos.map((item, index) => (
-                  <div key={item.id || index} className="w-full">
+                  <div key={item.id || index} className="w-full admin-card-container">
                     <MenuItemCard
                       item={item}
                       onEdit={onEditItem}
@@ -134,16 +134,16 @@ export function DayMenuContainer({
           </div>
 
           {/* Separador */}
-          <div className="border-t border-slate-200 dark:border-slate-700"></div>
+          <div className="border-t border-slate-200 dark:border-slate-700 flex-shrink-0"></div>
 
           {/* Sección de Colaciones */}
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 min-h-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 min-w-0 flex-1">
                 <div className="p-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex-shrink-0">
                   <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <h3 className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 truncate">
+                <h3 className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 text-truncate-1">
                   Colaciones
                 </h3>
                 <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-600 border-emerald-200 flex-shrink-0">
@@ -162,10 +162,10 @@ export function DayMenuContainer({
               </Button>
             </div>
             
-            <div className="space-y-2 overflow-y-auto max-h-48">
+            <div className="space-y-2 overflow-y-auto max-h-48 scroll-container">
               {dayMenu.colaciones.length > 0 ? (
                 dayMenu.colaciones.map((item, index) => (
-                  <div key={item.id || index} className="w-full">
+                  <div key={item.id || index} className="w-full admin-card-container">
                     <MenuItemCard
                       item={item}
                       onEdit={onEditItem}

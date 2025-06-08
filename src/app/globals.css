@@ -206,6 +206,38 @@
     min-width: 0;
     overflow: hidden;
   }
+
+  /* Estilos específicos para evitar overflow en admin cards */
+  .admin-card-container {
+    @apply min-w-0 overflow-hidden;
+  }
+
+  .admin-card-content {
+    @apply overflow-hidden;
+  }
+
+  .admin-card-text {
+    @apply break-words;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+}
+
+@layer utilities {
+  /* Utilidades personalizadas para manejo de texto */
+  .break-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  
+  .text-wrap-balance {
+    text-wrap: balance;
+  }
+  
+  .text-wrap-pretty {
+    text-wrap: pretty;
+  }
 }
 
 /* Animaciones suaves */
@@ -232,19 +264,6 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Estilos específicos para evitar overflow en admin cards */
-.admin-card-container {
-  @apply min-w-0 overflow-hidden;
-}
-
-.admin-card-content {
-  @apply overflow-hidden;
-}
-
-.admin-card-text {
-  @apply break-words overflow-wrap-anywhere;
 }
 
 /* Responsive grid mejorado */
