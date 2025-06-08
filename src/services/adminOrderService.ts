@@ -62,58 +62,174 @@ export class AdminOrderService {
     return new Date()
   }
 
+  // Función helper para extraer información de productos desde description o name
+  private static parseProductInfo(orderData: any): {
+    productsSummary: string
+    itemsDetail: Array<{
+      date: string
+      dayName: string
+      almuerzo?: { code: string; name: string; price: number }
+      colacion?: { code: string; name: string; price: number }
+    }>
+  } {
+    const itemsDetail: Array<{
+      date: string
+      dayName: string
+      almuerzo?: { code: string; name: string; price: number }
+      colacion?: { code: string; name: string; price: number }
+    }> = []
+
+    let productsSummary = ''
+
+    // Intentar extraer desde description si existe
+    if (orderData.description) {
+      productsSummary = orderData.description
+      console.log('Found description:', orderData.description)
+    }
+
+    // Intentar extraer desde name si existe
+    if (orderData.name && !productsSummary) {
+      productsSummary = orderData.name
+      console.log('Found name:', orderData.name)
+    }
+
+    // Si tenemos selections, procesarlas
+    if (orderData.selections && Array.isArray(orderData.selections)) {
+      orderData.selections.forEach((selection: any) => {
+        try {
+          const dayName = format(parseISO(selection.date), 'EEEE', { locale: es })
+          
+          const dayDetail: any = {
+            date: selection.date,
+            dayName: dayName
+          }
+
+          // Procesar almuerzo
+          if (selection.almuerzo) {
+            dayDetail.almuerzo = {
+              code: selection.almuerzo.code || selection.almuerzo.codigo || 'ALM',
+              name: selection.almuerzo.name || selection.almuerzo.nombre || selection.almuerzo.description || 'Almuerzo',
+              price: Number(selection.almuerzo.price || selection.almuerzo.precio) || 0
+            }
+          }
+
+          // Procesar colación
+          if (selection.colacion) {
+            dayDetail.colacion = {
+              code: selection.colacion.code || selection.colacion.codigo || 'COL',
+              name: selection.colacion.name || selection.colacion.nombre || selection.colacion.description || 'Colación',
+              price: Number(selection.colacion.price || selection.colacion.precio) || 0
+            }
+          }
+
+          itemsDetail.push(dayDetail)
+        } catch (error) {
+          console.error('Error processing selection:', selection, error)
+        }
+      })
+    }
+
+    // Si no hay selections pero hay description/name, intentar parsear
+    if (itemsDetail.length === 0 && productsSummary) {
+      // Intentar extraer información de productos desde el texto
+      const lines = productsSummary.split('\n').filter(line => line.trim())
+      
+      lines.forEach((line, index) => {
+        // Buscar patrones como "Lunes: ALM001 - Almuerzo especial"
+        const dayMatch = line.match(/(lunes|martes|miércoles|jueves|viernes)/i)
+        if (dayMatch) {
+          const dayName = dayMatch[1].toLowerCase()
+          
+          // Crear fecha estimada basada en el índice
+          const today = new Date()
+          const dayIndex = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'].indexOf(dayName)
+          const estimatedDate = new Date(today)
+          estimatedDate.setDate(today.getDate() + dayIndex)
+          
+          const dayDetail: any = {
+            date: format(estimatedDate, 'yyyy-MM-dd'),
+            dayName: dayName
+          }
+
+          // Buscar códigos de productos en la línea
+          const almuerzoMatch = line.match(/ALM\d+|A\d+/i)
+          const colacionMatch = line.match(/COL\d+|C\d+/i)
+
+          if (almuerzoMatch) {
+            dayDetail.almuerzo = {
+              code: almuerzoMatch[0],
+              name: line.replace(/.*?ALM\d+\s*-?\s*/i, '').split(',')[0].trim() || 'Almuerzo',
+              price: 0 // No podemos extraer precio del texto
+            }
+          }
+
+          if (colacionMatch) {
+            dayDetail.colacion = {
+              code: colacionMatch[0],
+              name: line.replace(/.*?COL\d+\s*-?\s*/i, '').split(',')[0].trim() || 'Colación',
+              price: 0 // No podemos extraer precio del texto
+            }
+          }
+
+          itemsDetail.push(dayDetail)
+        }
+      })
+    }
+
+    return { productsSummary, itemsDetail }
+  }
+
   // Función helper para procesar selecciones y calcular resumen de items
-  private static processOrderSelections(selections: any[]): {
+  private static processOrderSelections(orderData: any): {
     itemsCount: number
     hasColaciones: boolean
     itemsSummary: AdminOrderView['itemsSummary']
+    productsSummary: string
   } {
+    const { productsSummary, itemsDetail } = this.parseProductInfo(orderData)
+    
     let totalAlmuerzos = 0
     let totalColaciones = 0
     let almuerzosPrice = 0
     let colacionesPrice = 0
-    const itemsDetail: AdminOrderView['itemsSummary']['itemsDetail'] = []
 
-    selections.forEach((selection: any) => {
-      try {
-        const dayName = format(parseISO(selection.date), 'EEEE', { locale: es })
-        
-        const dayDetail: AdminOrderView['itemsSummary']['itemsDetail'][0] = {
-          date: selection.date,
-          dayName: dayName
-        }
-
-        if (selection.almuerzo) {
-          totalAlmuerzos++
-          const price = Number(selection.almuerzo.price) || 0
-          almuerzosPrice += price
-          dayDetail.almuerzo = {
-            code: selection.almuerzo.code || '',
-            name: selection.almuerzo.name || selection.almuerzo.nombre || '',
-            price: price
-          }
-        }
-
-        if (selection.colacion) {
-          totalColaciones++
-          const price = Number(selection.colacion.price) || 0
-          colacionesPrice += price
-          dayDetail.colacion = {
-            code: selection.colacion.code || '',
-            name: selection.colacion.name || selection.colacion.nombre || '',
-            price: price
-          }
-        }
-
-        itemsDetail.push(dayDetail)
-      } catch (error) {
-        console.error('Error processing selection:', selection, error)
+    itemsDetail.forEach(detail => {
+      if (detail.almuerzo) {
+        totalAlmuerzos++
+        almuerzosPrice += detail.almuerzo.price
+      }
+      if (detail.colacion) {
+        totalColaciones++
+        colacionesPrice += detail.colacion.price
       }
     })
+
+    // Si no pudimos extraer precios de las selections, usar el total del pedido
+    const orderTotal = Number(orderData.total) || 0
+    if (almuerzosPrice === 0 && colacionesPrice === 0 && orderTotal > 0) {
+      // Distribuir el total proporcionalmente
+      const totalItems = totalAlmuerzos + totalColaciones
+      if (totalItems > 0) {
+        const pricePerItem = orderTotal / totalItems
+        almuerzosPrice = totalAlmuerzos * pricePerItem
+        colacionesPrice = totalColaciones * pricePerItem
+        
+        // Actualizar precios en itemsDetail
+        itemsDetail.forEach(detail => {
+          if (detail.almuerzo && detail.almuerzo.price === 0) {
+            detail.almuerzo.price = pricePerItem
+          }
+          if (detail.colacion && detail.colacion.price === 0) {
+            detail.colacion.price = pricePerItem
+          }
+        })
+      }
+    }
 
     return {
       itemsCount: totalAlmuerzos + totalColaciones,
       hasColaciones: totalColaciones > 0,
+      productsSummary,
       itemsSummary: {
         totalAlmuerzos,
         totalColaciones,
@@ -160,6 +276,13 @@ export class AdminOrderService {
           try {
             const orderData = orderDoc.data()
             
+            console.log(`Processing order ${orderDoc.id}:`, {
+              description: orderData.description,
+              name: orderData.name,
+              selections: orderData.selections?.length || 0,
+              total: orderData.total
+            })
+            
             // Aplicar filtro de semana del lado del cliente
             if (filters.weekStart && orderData.weekStart !== filters.weekStart) {
               return null
@@ -198,8 +321,7 @@ export class AdminOrderService {
             const cancelledAt = orderData.cancelledAt ? this.safeTimestampToDate(orderData.cancelledAt) : undefined
 
             // Procesar selecciones y calcular estadísticas
-            const selections = orderData.selections || []
-            const { itemsCount, hasColaciones, itemsSummary } = this.processOrderSelections(selections)
+            const { itemsCount, hasColaciones, itemsSummary, productsSummary } = this.processOrderSelections(orderData)
             const total = Number(orderData.total) || 0
 
             // Calcular días desde que está pendiente
@@ -211,7 +333,7 @@ export class AdminOrderService {
               id: orderDoc.id,
               userId: orderData.userId,
               weekStart: orderData.weekStart,
-              selections: selections,
+              selections: orderData.selections || [],
               total: total,
               status: orderData.status || 'pending',
               createdAt: createdAt,
@@ -235,10 +357,9 @@ export class AdminOrderService {
 
             // Filtrar por día específico
             if (filters.day && filters.day !== 'none') {
-              const hasSelectionForDay = order.selections.some(s => {
+              const hasSelectionForDay = itemsSummary.itemsDetail.some(detail => {
                 try {
-                  const selectionDate = parseISO(s.date)
-                  const dayName = format(selectionDate, 'EEEE', { locale: es }).toLowerCase()
+                  const dayName = format(parseISO(detail.date), 'EEEE', { locale: es }).toLowerCase()
                   return dayName === filters.day?.toLowerCase()
                 } catch {
                   return false
@@ -246,6 +367,13 @@ export class AdminOrderService {
               })
               if (!hasSelectionForDay) return null
             }
+
+            console.log(`Processed order ${orderDoc.id}:`, {
+              itemsCount: order.itemsCount,
+              hasColaciones: order.hasColaciones,
+              totalAlmuerzos: itemsSummary.totalAlmuerzos,
+              totalColaciones: itemsSummary.totalColaciones
+            })
 
             return order
           } catch (error) {
@@ -393,14 +521,14 @@ export class AdminOrderService {
         })
 
         // Totales por día (contar todos los pedidos)
-        order.selections.forEach(selection => {
+        order.itemsSummary.itemsDetail.forEach(detail => {
           try {
-            const dayKey = format(parseISO(selection.date), 'EEEE', { locale: es }).toLowerCase()
+            const dayKey = format(parseISO(detail.date), 'EEEE', { locale: es }).toLowerCase()
             if (metrics.totalByDay[dayKey] !== undefined) {
               metrics.totalByDay[dayKey] = (metrics.totalByDay[dayKey] || 0) + 1
             }
           } catch (error) {
-            console.error('Error parsing date:', selection.date, error)
+            console.error('Error parsing date:', detail.date, error)
           }
         })
       })
@@ -434,7 +562,8 @@ export class AdminOrderService {
         revenue: metrics.totalRevenue,
         averageValue: metrics.averageOrderValue,
         totalItems: totalItems,
-        conversionRate: metrics.weeklyTrends.conversionRate
+        conversionRate: metrics.weeklyTrends.conversionRate,
+        popularItems: metrics.itemsMetrics.mostPopularItems.slice(0, 3)
       })
 
       return metrics
@@ -540,57 +669,43 @@ export class AdminOrderService {
       if (!userDoc.exists()) return null
       const userData = userDoc.data()
 
+      console.log(`Loading order detail for ${orderId}:`, {
+        description: orderData.description,
+        name: orderData.name,
+        selections: orderData.selections?.length || 0,
+        total: orderData.total
+      })
+
       // Convertir timestamps de forma segura
       const createdAt = this.safeTimestampToDate(orderData.createdAt)
       const paidAt = orderData.paidAt ? this.safeTimestampToDate(orderData.paidAt) : undefined
       const cancelledAt = orderData.cancelledAt ? this.safeTimestampToDate(orderData.cancelledAt) : undefined
 
-      // Procesar selecciones con manejo de errores
-      const processedSelections = (orderData.selections || []).map((s: any) => {
-        try {
-          return {
-            date: s.date,
-            dayName: format(parseISO(s.date), 'EEEE', { locale: es }),
-            almuerzo: s.almuerzo ? {
-              code: s.almuerzo.code,
-              name: s.almuerzo.name || s.almuerzo.nombre,
-              price: s.almuerzo.price,
-              description: s.almuerzo.description || s.almuerzo.descripcion
-            } : undefined,
-            colacion: s.colacion ? {
-              code: s.colacion.code,
-              name: s.colacion.name || s.colacion.nombre,
-              price: s.colacion.price,
-              description: s.colacion.description || s.colacion.descripcion
-            } : undefined
-          }
-        } catch (error) {
-          console.error('Error processing selection:', s, error)
-          return {
-            date: s.date,
-            dayName: 'Fecha inválida',
-            almuerzo: s.almuerzo,
-            colacion: s.colacion
-          }
-        }
-      })
+      // Procesar información de productos
+      const { itemsSummary, productsSummary } = this.processOrderSelections(orderData)
+
+      // Usar itemsDetail del procesamiento mejorado
+      const processedSelections = itemsSummary.itemsDetail.map(detail => ({
+        date: detail.date,
+        dayName: detail.dayName,
+        almuerzo: detail.almuerzo ? {
+          code: detail.almuerzo.code,
+          name: detail.almuerzo.name,
+          price: detail.almuerzo.price,
+          description: detail.almuerzo.name // Usar name como description si no hay otra
+        } : undefined,
+        colacion: detail.colacion ? {
+          code: detail.colacion.code,
+          name: detail.colacion.name,
+          price: detail.colacion.price,
+          description: detail.colacion.name // Usar name como description si no hay otra
+        } : undefined
+      }))
 
       // Calcular resumen financiero
-      let subtotalAlmuerzos = 0
-      let subtotalColaciones = 0
-      let totalItems = 0
-
-      processedSelections.forEach(selection => {
-        if (selection.almuerzo) {
-          subtotalAlmuerzos += selection.almuerzo.price
-          totalItems++
-        }
-        if (selection.colacion) {
-          subtotalColaciones += selection.colacion.price
-          totalItems++
-        }
-      })
-
+      const subtotalAlmuerzos = itemsSummary.almuerzosPrice
+      const subtotalColaciones = itemsSummary.colacionesPrice
+      const totalItems = itemsSummary.totalAlmuerzos + itemsSummary.totalColaciones
       const averageItemPrice = totalItems > 0 ? (subtotalAlmuerzos + subtotalColaciones) / totalItems : 0
 
       // Construir historial de pagos
@@ -620,7 +735,6 @@ export class AdminOrderService {
 
       // Procesar información del usuario
       const userType = userData.userType || userData.tipoUsuario || 'estudiante'
-      const { itemsCount, hasColaciones, itemsSummary } = this.processOrderSelections(orderData.selections || [])
 
       const detail: OrderDetailView = {
         id: orderDoc.id,
@@ -643,8 +757,8 @@ export class AdminOrderService {
         },
         dayName: format(createdAt, 'EEEE', { locale: es }),
         formattedDate: format(createdAt, 'dd/MM/yyyy HH:mm'),
-        itemsCount: itemsCount,
-        hasColaciones: hasColaciones,
+        itemsCount: totalItems,
+        hasColaciones: itemsSummary.totalColaciones > 0,
         itemsSummary: itemsSummary,
         paymentHistory: paymentHistory,
         financialSummary: {
@@ -654,6 +768,14 @@ export class AdminOrderService {
           averageItemPrice: Math.round(averageItemPrice)
         }
       }
+
+      console.log(`Order detail processed:`, {
+        itemsCount: detail.itemsCount,
+        hasColaciones: detail.hasColaciones,
+        selectionsCount: detail.selections.length,
+        totalAlmuerzos: itemsSummary.totalAlmuerzos,
+        totalColaciones: itemsSummary.totalColaciones
+      })
 
       return detail
     } catch (error) {
