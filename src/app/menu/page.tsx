@@ -164,24 +164,16 @@ export default function MenuPage() {
                   Menú no disponible
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 text-clean mb-8 text-lg leading-relaxed">
-                  El menú de esta semana aún no ha sido publicado por la administración.
+                  El menú para esta semana aún no ha sido publicado.
                   Por favor, vuelve a consultar más tarde.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <div className="flex justify-center">
                   <Button
                     onClick={refetch}
                     className="flex items-center space-x-2 px-6 py-3"
                   >
                     <RefreshCw size={18} />
-                    <span>Verificar nuevamente</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => router.push('/panel')}
-                    className="flex items-center space-x-2 px-6 py-3"
-                  >
-                    <span>Volver al Panel</span>
-                    <ArrowRight size={18} />
+                    <span>Verificar</span>
                   </Button>
                 </div>
               </CardContent>
