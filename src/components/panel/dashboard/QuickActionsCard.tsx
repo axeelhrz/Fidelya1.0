@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import { BookOpen, ShoppingCart, User, ArrowRight, CreditCard, FileText, Phone } from 'lucide-react'
+import { BookOpen, ShoppingCart, User, ArrowRight, CreditCard } from 'lucide-react'
 import Link from 'next/link'
 
 interface QuickAction {
@@ -46,23 +46,6 @@ const quickActions: QuickAction[] = [
     icon: CreditCard,
     color: 'text-indigo-600 dark:text-indigo-400',
     bgColor: 'bg-indigo-100 dark:bg-indigo-900/30 hover:bg-indigo-200 dark:hover:bg-indigo-900/50'
-  },
-  {
-    title: 'Menús anteriores',
-    description: 'Consulta menús pasados',
-    href: '/menu',
-    icon: FileText,
-    color: 'text-orange-600 dark:text-orange-400',
-    bgColor: 'bg-orange-100 dark:bg-orange-900/30 hover:bg-orange-200 dark:hover:bg-orange-900/50'
-  },
-  {
-    title: 'Contacto',
-    description: 'Soporte y ayuda',
-    href: 'tel:+56223456789',
-    icon: Phone,
-    color: 'text-pink-600 dark:text-pink-400',
-    bgColor: 'bg-pink-100 dark:bg-pink-900/30 hover:bg-pink-200 dark:hover:bg-pink-900/50',
-    isExternal: true
   }
 ]
 
@@ -101,7 +84,7 @@ export function QuickActionsCard() {
 
             return (
               <motion.div
-                key={`${action.title}-${index}`} // Usar título + índice para evitar duplicados
+                key={`${action.title}-${index}`}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 * index }}
