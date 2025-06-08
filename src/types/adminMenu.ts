@@ -1,7 +1,8 @@
 export interface AdminMenuItem {
   id?: string
   code: string
-  description: string
+  title: string
+  description?: string
   type: 'almuerzo' | 'colacion'
   date: string
   day: string
@@ -34,7 +35,8 @@ export interface AdminWeekMenu {
 export interface MenuFormData {
   type: 'almuerzo' | 'colacion'
   code: string
-  description: string
+  title: string
+  description?: string
   active: boolean
   price?: number
 }
@@ -72,7 +74,8 @@ export interface MenuModalState {
 // Configuración del menú de colaciones predeterminado
 export interface DefaultColacionConfig {
   code: string
-  description: string
+  title: string
+  description?: string
   price: number
   active: boolean
 }
@@ -80,37 +83,43 @@ export interface DefaultColacionConfig {
 export const DEFAULT_COLACIONES: DefaultColacionConfig[] = [
   {
     code: 'C1',
-    description: 'Yogurt con Granola + Jugo 200 cc',
+    title: 'Yogurt con Granola',
+    description: 'Yogurt natural con granola casera + Jugo natural 200cc',
     price: 3100,
     active: true
   },
   {
     code: 'C2', 
-    description: 'Yogurt con Granola + Agua Saborizada 200 cc',
+    title: 'Yogurt Saludable',
+    description: 'Yogurt con granola + Agua saborizada natural 200cc',
     price: 3100,
     active: true
   },
   {
     code: 'C3',
-    description: 'Miga Ave Mayo + Jugo 200 cc',
+    title: 'Sándwich de Ave',
+    description: 'Miga de ave con mayonesa casera + Jugo natural 200cc',
     price: 2800,
     active: true
   },
   {
     code: 'C4',
-    description: 'Miga Aliado (Jamón de Pavo + Queso) + Leche Semidescremada 200 cc',
+    title: 'Sándwich Aliado',
+    description: 'Jamón de pavo y queso fresco + Leche semidescremada 200cc',
     price: 2850,
     active: true
   },
   {
     code: 'C5',
-    description: 'Barra Cereal Saludable + Jugo 200 cc',
+    title: 'Barra de Cereal',
+    description: 'Barra de cereal saludable + Jugo natural 200cc',
     price: 1500,
     active: true
   },
   {
     code: 'C6',
-    description: 'Barra Cereal Saludable + Leche Semidescremada',
+    title: 'Cereal con Leche',
+    description: 'Barra de cereal saludable + Leche semidescremada 200cc',
     price: 1800,
     active: true
   }

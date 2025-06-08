@@ -55,6 +55,7 @@ export function DefaultColacionesManager({ onConfigUpdated }: DefaultColacionesM
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [newColacion, setNewColacion] = useState<DefaultColacionConfig>({
     code: '',
+    title: '',
     description: '',
     price: 0,
     active: true
@@ -131,8 +132,7 @@ export function DefaultColacionesManager({ onConfigUpdated }: DefaultColacionesM
       return
     }
 
-    setColaciones([...colaciones, { ...newColacion }])
-    setNewColacion({ code: '', description: '', price: 0, active: true })
+    setNewColacion({ code: '', title: '', description: '', price: 0, active: true })
     setShowAddForm(false)
     
     toast({
@@ -330,7 +330,7 @@ export function DefaultColacionesManager({ onConfigUpdated }: DefaultColacionesM
                             size="sm"
                             onClick={() => {
                               setShowAddForm(false)
-                              setNewColacion({ code: '', description: '', price: 0, active: true })
+                              setNewColacion({ code: '', title: '', description: '', price: 0, active: true })
                             }}
                           >
                             <X className="w-4 h-4 mr-2" />

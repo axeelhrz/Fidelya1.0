@@ -619,6 +619,7 @@ export class AdminMenuService {
         items.push({
           id: doc.id,
           code: data.code,
+          title: data.description, // Use description as title to match interface
           description: data.description,
           type: data.type,
           date: data.date,
@@ -718,7 +719,7 @@ export class AdminMenuService {
         // Preparar datos del nuevo item - CORREGIDO: No enviar campos undefined
         const newItemData: Record<string, string | number | boolean | Timestamp> = {
           code: sourceItem.code,
-          description: sourceItem.description,
+          description: sourceItem.description || '',
           type: sourceItem.type,
           date: newDateStr,
           day: newDay,
@@ -909,6 +910,7 @@ export class AdminMenuService {
       return {
         id: doc.id,
         code: data.code,
+        title: data.description, // Use description as title to match interface
         description: data.description,
         type: data.type,
         date: data.date,

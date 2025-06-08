@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Save, AlertCircle, Eye, Users, Target, DollarSign } from 'lucide-react'
+import { Save, AlertCircle, Eye, Users, Target, DollarSign, Type, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -42,6 +42,7 @@ export function MenuItemModal({
   const [formData, setFormData] = useState<MenuFormData>({
     type: 'almuerzo',
     code: '',
+    title: '',
     description: '',
     active: true,
     price: undefined
@@ -58,7 +59,8 @@ export function MenuItemModal({
         setFormData({
           type: modalState.item.type,
           code: modalState.item.code,
-          description: modalState.item.description,
+          title: modalState.item.title,
+          description: modalState.item.description || '',
           active: modalState.item.active,
           price: modalState.item.price
         })
@@ -72,6 +74,7 @@ export function MenuItemModal({
         setFormData({
           type: modalState.type || 'almuerzo',
           code: suggestedCode,
+          title: '',
           description: '',
           active: true,
           price: undefined
@@ -97,10 +100,15 @@ export function MenuItemModal({
       newErrors.code = 'Este código ya existe para este día'
     }
 
-    // Validar descripción
-    if (!formData.description.trim()) {
-      newErrors.description = 'La descripción es obligatoria'
-    } else if (formData.description.length > 200) {
+    // Validar título
+    if (!formData.title.trim()) {
+      newErrors.title = 'El título es obligatorio'
+    } else if (formData.title.length > 100) {
+      newErrors.title = 'El título no puede tener más de 100 caracteres'
+    }
+
+    // Validar descripción (opcional)
+    if (formData.description && formData.description.length > 200) {
       newErrors.description = 'La descripción no puede tener más de 200 caracteres'
     }
 
@@ -131,7 +139,8 @@ export function MenuItemModal({
         // Preparar datos del item para actualización
         const itemData: Partial<AdminMenuItem> = {
           code: formData.code,
-          description: formData.description,
+          title: formData.title,
+          description: formData.description || undefined,
           type: formData.type,
           active: formData.active
         }
@@ -145,7 +154,8 @@ export function MenuItemModal({
       } else {
         const fullItemData: Omit<AdminMenuItem, 'id'> = {
           code: formData.code,
-          description: formData.description,
+          title: formData.title,
+          description: formData.description || undefined,
           type: formData.type,
           active: formData.active,
           published: true,
@@ -213,7 +223,7 @@ export function MenuItemModal({
           <DialogDescription>
             {isEditMode 
               ? 'Modifica los detalles del menú. Los cambios se reflejarán inmediatamente para todos los usuarios.'
-              : 'Crea un nuevo elemento del menú con descripción y precio personalizable.'
+              : 'Crea un nuevo elemento del menú con título y descripción opcional.'
             }
           </DialogDescription>
         </DialogHeader>
@@ -235,9 +245,10 @@ export function MenuItemModal({
             </CardHeader>
             <CardContent>
               <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
+                <div className="space-y-3">
+                  {/* Header de la preview */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
                       <Badge 
                         variant={formData.type === 'almuerzo' ? 'default' : 'secondary'}
                         className="text-xs"
@@ -251,19 +262,41 @@ export function MenuItemModal({
                       )}
                       {useCustomPrice && (
                         <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700">
-                          Precio personalizado
+                          Precio especial
                         </Badge>
                       )}
                     </div>
-                    <p className="font-medium text-slate-900 dark:text-white mb-1">
-                      {formData.description || 'Descripción del menú...'}
-                    </p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      {formData.type === 'almuerzo' ? 'Almuerzo' : 'Colación'}
-                    </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-green-600 dark:text-green-400">
+
+                  {/* Título */}
+                  <div>
+                    <h4 className="font-semibold text-sm text-slate-900 dark:text-white">
+                      {formData.title || 'Título del menú...'}
+                    </h4>
+                  </div>
+
+                  {/* Descripción */}
+                  {formData.description && (
+                    <div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        {formData.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700">
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs ${
+                        formData.type === 'almuerzo' 
+                          ? 'text-blue-600 border-blue-200 bg-blue-50' 
+                          : 'text-emerald-600 border-emerald-200 bg-emerald-50'
+                      }`}
+                    >
+                      {formData.type === 'almuerzo' ? 'Almuerzo' : 'Colación'}
+                    </Badge>
+                    <p className="text-sm font-bold text-green-600 dark:text-green-400">
                       {getDisplayPrice()}
                     </p>
                   </div>
@@ -333,16 +366,47 @@ export function MenuItemModal({
             </p>
           </div>
 
+          {/* Título */}
+          <div className="space-y-2">
+            <Label htmlFor="title" className="text-sm font-medium flex items-center space-x-2">
+              <Type className="w-4 h-4" />
+              <span>Título *</span>
+            </Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              placeholder="Ej: Pollo a la plancha, Ensalada César, Yogurt con granola..."
+              className={errors.title ? 'border-red-500' : ''}
+              maxLength={100}
+            />
+            <div className="flex justify-between items-center">
+              {errors.title && (
+                <Alert variant="destructive" className="py-2 flex-1 mr-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-sm">{errors.title}</AlertDescription>
+                </Alert>
+              )}
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                {formData.title.length}/100
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Un título claro y atractivo que identifique el plato o colación.
+            </p>
+          </div>
+
           {/* Descripción */}
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium">
-              Descripción *
+            <Label htmlFor="description" className="text-sm font-medium flex items-center space-x-2">
+              <FileText className="w-4 h-4" />
+              <span>Descripción (opcional)</span>
             </Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Describe el plato o colación de manera atractiva para los usuarios..."
+              placeholder="Agrega detalles adicionales como ingredientes, acompañamientos, etc..."
               className={errors.description ? 'border-red-500' : ''}
               rows={3}
               maxLength={200}
@@ -355,9 +419,12 @@ export function MenuItemModal({
                 </Alert>
               )}
               <span className="text-xs text-slate-500 dark:text-slate-400">
-                {formData.description.length}/200
+                {formData.description?.length || 0}/200
               </span>
             </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Información adicional que ayude a los usuarios a conocer mejor el menú.
+            </p>
           </div>
 
           {/* Precio personalizado */}

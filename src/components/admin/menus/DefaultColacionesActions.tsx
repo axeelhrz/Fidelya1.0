@@ -54,7 +54,10 @@ export function DefaultColacionesActions({
     setIsLoadingColaciones(true)
     try {
       const colaciones = await DefaultColacionesService.getDefaultColaciones()
-      setDefaultColaciones(colaciones.filter(c => c.active))
+      setDefaultColaciones(colaciones.filter(c => c.active && c.description).map(c => ({
+        ...c,
+        description: c.description!
+      })))
     } catch (error) {
       console.error('Error loading default colaciones:', error)
     } finally {

@@ -26,6 +26,7 @@ export class DefaultColacionesService {
         const data = doc.data()
         colaciones.push({
           code: data.code,
+          title: data.description, // Use description as title to match interface
           description: data.description,
           price: data.price,
           active: data.active
@@ -166,41 +167,46 @@ export class DefaultColacionesService {
     }
   }
 
-  // Obtener colaciones predeterminadas hardcodeadas
   private static getHardcodedDefaults(): DefaultColacionConfig[] {
     return [
       {
         code: 'C1',
+        title: 'Yogurt con Granola + Jugo 200 cc',
         description: 'Yogurt con Granola + Jugo 200 cc',
         price: 3100,
         active: true
       },
       {
-        code: 'C2', 
+        code: 'C2',
+        title: 'Yogurt con Granola + Agua Saborizada 200 cc',
         description: 'Yogurt con Granola + Agua Saborizada 200 cc',
         price: 3100,
         active: true
       },
       {
         code: 'C3',
+        title: 'Miga Ave Mayo + Jugo 200 cc',
         description: 'Miga Ave Mayo + Jugo 200 cc',
         price: 2800,
         active: true
       },
       {
         code: 'C4',
+        title: 'Miga Aliado (Jamón de Pavo + Queso) + Leche Semidescremada 200 cc',
         description: 'Miga Aliado (Jamón de Pavo + Queso) + Leche Semidescremada 200 cc',
         price: 2850,
         active: true
       },
       {
         code: 'C5',
+        title: 'Barra Cereal Saludable + Jugo 200 cc',
         description: 'Barra Cereal Saludable + Jugo 200 cc',
         price: 1500,
         active: true
       },
       {
         code: 'C6',
+        title: 'Barra Cereal Saludable + Leche Semidescremada',
         description: 'Barra Cereal Saludable + Leche Semidescremada',
         price: 1800,
         active: true
