@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { AdminDayMenu, AdminMenuItem } from '@/types/adminMenu'
 import { MenuItemCard } from './MenuItemCard'
+import { formatDateShort } from '@/lib/utils'
 
 interface DayMenuContainerProps {
   dayMenu: AdminDayMenu
@@ -44,10 +45,7 @@ export function DayMenuContainer({
                   {dayMenu.dayName}
                 </CardTitle>
                 <p className="text-xs text-slate-600 dark:text-slate-400 text-truncate-1">
-                  {new Date(dayMenu.date).toLocaleDateString('es-CL', {
-                    day: 'numeric',
-                    month: 'short'
-                  })}
+                  {formatDateShort(dayMenu.date)}
                 </p>
               </div>
             </div>
