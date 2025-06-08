@@ -26,7 +26,7 @@ interface OrderData {
   userId: string
   status: string
   total?: number
-  createdAt?: Timestamp
+  createdAt?: Timestamp | Date | any
   selections?: Array<{
     almuerzo?: {
       code: string
@@ -49,6 +49,59 @@ interface UserData {
   id: string
   userType: string
   [key: string]: string | number | boolean | Date | null | undefined
+}
+
+// Helper function to safely convert Firebase timestamp to Date
+function safeToDate(timestamp: any): Date | null {
+  if (!timestamp) return null
+  
+  // If it's already a Date object
+  if (timestamp instanceof Date) {
+    return timestamp
+  }
+  
+  // If it's a Firebase Timestamp
+  if (timestamp && typeof timestamp.toDate === 'function') {
+    try {
+      return timestamp.toDate()
+    } catch (error) {
+      console.error('Error converting timestamp to date:', error)
+      return null
+    }
+  }
+  
+  // If it's a timestamp object with seconds
+  if (timestamp && typeof timestamp.seconds === 'number') {
+    try {
+      return new Date(timestamp.seconds * 1000)
+    } catch (error) {
+      console.error('Error converting seconds to date:', error)
+      return null
+    }
+  }
+  
+  // If it's a string, try to parse it
+  if (typeof timestamp === 'string') {
+    try {
+      return new Date(timestamp)
+    } catch (error) {
+      console.error('Error parsing date string:', error)
+      return null
+    }
+  }
+  
+  // If it's a number (milliseconds)
+  if (typeof timestamp === 'number') {
+    try {
+      return new Date(timestamp)
+    } catch (error) {
+      console.error('Error converting number to date:', error)
+      return null
+    }
+  }
+  
+  console.warn('Unknown timestamp format:', timestamp)
+  return null
 }
 
 export class ReportsService {
@@ -99,7 +152,7 @@ export class ReportsService {
 
       for (const orderDoc of ordersSnapshot.docs) {
         const orderData = orderDoc.data()
-        const orderDate = orderData.createdAt?.toDate()
+        const orderDate = safeToDate(orderData.createdAt)
 
         // Filtrar por rango de fechas
         if (orderDate) {
@@ -120,6 +173,7 @@ export class ReportsService {
                   orders.push({
                     id: orderDoc.id,
                     ...orderData,
+                    createdAt: orderDate, // Use the safely converted date
                     user: userData
                   } as OrderData)
                 }
@@ -127,6 +181,7 @@ export class ReportsService {
                 orders.push({
                   id: orderDoc.id,
                   ...orderData,
+                  createdAt: orderDate, // Use the safely converted date
                   user: userData
                 } as OrderData)
               }
@@ -137,11 +192,14 @@ export class ReportsService {
                 orders.push({
                   id: orderDoc.id,
                   ...orderData,
+                  createdAt: orderDate, // Use the safely converted date
                   user: { userType: 'estudiante' } // valor por defecto
                 } as OrderData)
               }
             }
           }
+        } else {
+          console.warn(`Order ${orderDoc.id} has invalid createdAt timestamp:`, orderData.createdAt)
         }
       }
 
@@ -212,7 +270,7 @@ export class ReportsService {
     return days.map(day => {
       const dayStr = format(day, 'yyyy-MM-dd')
       const dayOrders = orders.filter(order => {
-        const orderDate = order.createdAt?.toDate()
+        const orderDate = order.createdAt instanceof Date ? order.createdAt : safeToDate(order.createdAt)
         return orderDate && format(orderDate, 'yyyy-MM-dd') === dayStr
       })
 
@@ -322,7 +380,7 @@ export class ReportsService {
     return days.map(day => {
       const dayStr = format(day, 'yyyy-MM-dd')
       const dayOrders = orders.filter(order => {
-        const orderDate = order.createdAt?.toDate()
+        const orderDate = order.createdAt instanceof Date ? order.createdAt : safeToDate(order.createdAt)
         return orderDate && format(orderDate, 'yyyy-MM-dd') === dayStr
       })
 

@@ -20,6 +20,7 @@ import { Separator } from '@/components/ui/separator'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -237,6 +238,9 @@ export function BulkColacionesDelete({ weekStart, onMenuUpdated }: BulkColacione
               <Trash2 className="w-5 h-5" />
               <span>Eliminación Masiva de Colaciones</span>
             </DialogTitle>
+            <DialogDescription>
+              Selecciona las colaciones que deseas eliminar de la semana. Esta acción no se puede deshacer.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
