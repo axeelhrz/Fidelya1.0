@@ -70,7 +70,7 @@ export default function AdminMenusPage() {
   if (error) {
     return (
       <AdminLayout>
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="flex items-center justify-between">
@@ -95,19 +95,19 @@ export default function AdminMenusPage() {
     <AdminLayout>
       {/* Header Simplificado */}
       <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
             {/* Información principal */}
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-3 mb-3">
-                <div className="p-2 bg-gradient-to-br from-blue-500 to-emerald-600 rounded-xl">
+                <div className="p-2 bg-gradient-to-br from-blue-500 to-emerald-600 rounded-xl flex-shrink-0">
                   <BarChart3 className="w-6 h-6 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                <div className="min-w-0">
+                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white truncate">
                     Gestión de Menús
                   </h1>
-                  <p className="text-slate-600 dark:text-slate-400">
+                  <p className="text-slate-600 dark:text-slate-400 truncate">
                     Administra las opciones de almuerzos y colaciones
                   </p>
                 </div>
@@ -115,23 +115,23 @@ export default function AdminMenusPage() {
               
               {/* Stats rápidas */}
               {weekMenu && weekStats && (
-                <div className="flex flex-wrap items-center gap-3 text-sm">
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 flex-shrink-0">
                     {weekStats.totalItems} items totales
                   </Badge>
-                  <Badge variant="outline" className="bg-green-50 text-green-700">
+                  <Badge variant="outline" className="bg-green-50 text-green-700 flex-shrink-0">
                     {weekStats.activeItems} activos
                   </Badge>
-                  <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                  <Badge variant="outline" className="bg-purple-50 text-purple-700 flex-shrink-0">
                     {weekStats.daysWithMenus}/5 días
                   </Badge>
                   {weekMenu.isPublished ? (
-                    <Badge className="bg-green-100 text-green-700">
+                    <Badge className="bg-green-100 text-green-700 flex-shrink-0">
                       <Eye className="w-3 h-3 mr-1" />
                       Publicado
                     </Badge>
                   ) : (
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" className="flex-shrink-0">
                       No publicado
                     </Badge>
                   )}
@@ -140,7 +140,7 @@ export default function AdminMenusPage() {
             </div>
 
             {/* Controles */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-shrink-0">
               <Button
                 variant="outline"
                 size="sm"
@@ -185,7 +185,7 @@ export default function AdminMenusPage() {
       </div>
 
       {/* Contenido principal */}
-      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="space-y-6">
           {/* Navegador de semanas */}
           <WeekNavigator
@@ -210,13 +210,13 @@ export default function AdminMenusPage() {
               <Card className="bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-blue-900/20 dark:to-emerald-900/20">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Calendar className="w-5 h-5 text-blue-600" />
-                      <div>
-                        <h3 className="font-semibold text-slate-900 dark:text-white">
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <Calendar className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 dark:text-white truncate">
                           {weekMenu.weekLabel}
                         </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                        <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
                           {weekStats.totalItems} items • {weekStats.activeItems} activos
                         </p>
                       </div>
@@ -226,6 +226,7 @@ export default function AdminMenusPage() {
                       <Button
                         size="sm"
                         onClick={() => handleAddItem(weekMenu.days[0].date, weekMenu.days[0].day, 'almuerzo')}
+                        className="flex-shrink-0"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Agregar Primer Menú
@@ -237,11 +238,11 @@ export default function AdminMenusPage() {
             </motion.div>
           )}
 
-          {/* Grid de días - Más ancho para mejor visualización */}
+          {/* Grid de días - Optimizado para mejor visualización */}
           {isLoading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
               {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-96" />
+                <Skeleton key={i} className="h-[600px]" />
               ))}
             </div>
           ) : weekMenu ? (
@@ -249,7 +250,7 @@ export default function AdminMenusPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4"
             >
               {weekMenu.days.map((dayMenu, index) => (
                 <motion.div
@@ -257,7 +258,7 @@ export default function AdminMenusPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 * index }}
-                  className="min-w-0" // Permite que el contenido se ajuste
+                  className="min-w-0 h-[600px]" // Altura fija para consistencia
                 >
                   <DayMenuContainer
                     dayMenu={dayMenu}

@@ -60,6 +60,14 @@
 
 @layer components {
   /* Utilidades para manejo de texto */
+  .text-truncate-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+  }
+  
   .text-truncate-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -86,11 +94,11 @@
 
   /* Estilos para tarjetas mejoradas */
   .card-enhanced {
-    @apply bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-300;
+    @apply bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden;
   }
   
   .card-content-enhanced {
-    @apply p-4 space-y-3;
+    @apply p-4 space-y-3 overflow-hidden;
   }
   
   .card-header-enhanced {
@@ -107,7 +115,7 @@
   
   /* Estilos para badges mejorados */
   .badge-enhanced {
-    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium flex-shrink-0;
   }
   
   .badge-almuerzo {
@@ -137,16 +145,66 @@
 
   /* Panel cards para dashboard */
   .panel-card {
-    @apply bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-300;
+    @apply bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden;
   }
   
   .panel-card-content {
-    @apply p-6;
+    @apply p-6 overflow-hidden;
   }
 
   /* Tooltip personalizado */
   .tooltip-content {
     @apply bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-3 py-2 rounded-lg text-sm font-medium shadow-lg;
+  }
+
+  /* Contenedores con scroll personalizado */
+  .scroll-container {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(203 213 225) transparent;
+  }
+  
+  .scroll-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scroll-container::-webkit-scrollbar-thumb {
+    background-color: rgb(203 213 225);
+    border-radius: 3px;
+  }
+  
+  .scroll-container::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(148 163 184);
+  }
+
+  /* Prevenir overflow en contenedores */
+  .prevent-overflow {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* Flex containers que manejan overflow correctamente */
+  .flex-container-safe {
+    display: flex;
+    min-width: 0;
+  }
+
+  .flex-container-safe > * {
+    min-width: 0;
+  }
+
+  /* Grid containers seguros */
+  .grid-container-safe {
+    display: grid;
+    min-width: 0;
+  }
+
+  .grid-container-safe > * {
+    min-width: 0;
+    overflow: hidden;
   }
 }
 
@@ -174,4 +232,36 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Estilos específicos para evitar overflow en admin cards */
+.admin-card-container {
+  @apply min-w-0 overflow-hidden;
+}
+
+.admin-card-content {
+  @apply overflow-hidden;
+}
+
+.admin-card-text {
+  @apply break-words overflow-wrap-anywhere;
+}
+
+/* Responsive grid mejorado */
+@media (min-width: 768px) {
+  .admin-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .admin-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .admin-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
 }
