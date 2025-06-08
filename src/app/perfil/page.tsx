@@ -16,7 +16,9 @@ import {
   CheckCircle,
   ArrowLeft,
   Users,
-  RefreshCw
+  RefreshCw,
+  Clock,
+  Info
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -44,6 +46,9 @@ export default function PerfilPage() {
     hasChanges,
     emailVerified,
     errors,
+    isResendingVerification,
+    canResendVerification,
+    resendCooldownTime,
     updateFormData,
     addChild,
     updateChild,
@@ -85,7 +90,7 @@ export default function PerfilPage() {
     } else {
       toast({
         title: "Error",
-        description: "No se pudo enviar el correo de verificación.",
+        description: errors.verification || "No se pudo enviar el correo de verificación.",
         variant: "destructive"
       })
     }
@@ -108,6 +113,15 @@ export default function PerfilPage() {
     return user?.tipoUsuario === 'funcionario' 
       ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
       : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+  }
+
+  const formatCooldownTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    if (minutes > 0) {
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+    }
+    return `${remainingSeconds}s`
   }
 
   if (!mounted || authLoading || isLoading) {
@@ -191,6 +205,19 @@ export default function PerfilPage() {
               </motion.div>
             )}
 
+            {errors.verification && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>{errors.verification}</AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+
             {showEmailAlert && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -201,6 +228,28 @@ export default function PerfilPage() {
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
                     Al cambiar tu correo deberás volver a verificarlo
+                  </AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+
+            {resendCooldownTime > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+                  <Clock className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-800 dark:text-blue-200">
+                    <div className="flex items-center justify-between">
+                      <span>
+                        Espera <strong>{formatCooldownTime(resendCooldownTime)}</strong> antes de solicitar otro correo de verificación
+                      </span>
+                      <div className="text-xs text-blue-600 dark:text-blue-400">
+                        {formatCooldownTime(resendCooldownTime)}
+                      </div>
+                    </div>
                   </AlertDescription>
                 </Alert>
               </motion.div>
@@ -461,15 +510,41 @@ export default function PerfilPage() {
                     </p>
 
                     {!emailVerified && (
-                      <Button
-                        onClick={handleResendVerification}
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                      >
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Reenviar verificación
-                      </Button>
+                      <div className="space-y-2">
+                        <Button
+                          onClick={handleResendVerification}
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          disabled={!canResendVerification}
+                        >
+                          {isResendingVerification ? (
+                            <>
+                              <div className="loading-spinner w-4 h-4 mr-2" />
+                              Enviando...
+                            </>
+                          ) : resendCooldownTime > 0 ? (
+                            <>
+                              <Clock className="w-4 h-4 mr-2" />
+                              Esperar {formatCooldownTime(resendCooldownTime)}
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="w-4 h-4 mr-2" />
+                              Reenviar verificación
+                            </>
+                          )}
+                        </Button>
+                        
+                        {resendCooldownTime > 0 && (
+                          <div className="flex items-start space-x-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                            <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <p className="text-xs text-blue-700 dark:text-blue-300">
+                              Para evitar spam, hay un límite en la frecuencia de envío de correos de verificación.
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -547,6 +622,12 @@ export default function PerfilPage() {
                         </p>
                       </div>
                     )}
+                    <div className="flex items-start space-x-2">
+                      <Clock className="w-4 h-4 mt-0.5 text-blue-600" />
+                      <p>
+                        Los correos de verificación tienen un límite de frecuencia para prevenir spam.
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

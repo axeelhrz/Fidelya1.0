@@ -27,6 +27,9 @@ interface UseProfileFormReturn {
   hasChanges: boolean
   emailVerified: boolean
   errors: Record<string, string>
+  isResendingVerification: boolean
+  canResendVerification: boolean
+  resendCooldownTime: number
   updateFormData: (field: keyof ProfileFormData, value: string) => void
   addChild: () => void
   updateChild: (id: string, field: keyof ExtendedChild, value: string | number | boolean) => void
@@ -35,6 +38,10 @@ interface UseProfileFormReturn {
   resendEmailVerification: () => Promise<boolean>
   validateForm: () => boolean
 }
+
+const RESEND_COOLDOWN_SECONDS = 60 // 1 minute cooldown
+const MAX_RETRY_ATTEMPTS = 3
+const RETRY_DELAYS = [1000, 3000, 5000] // Progressive delays in milliseconds
 
 export function useProfileForm(): UseProfileFormReturn {
   const { user } = useAuth()
@@ -56,6 +63,8 @@ export function useProfileForm(): UseProfileFormReturn {
   const [isSaving, setIsSaving] = useState(false)
   const [emailVerified, setEmailVerified] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isResendingVerification, setIsResendingVerification] = useState(false)
+  const [resendCooldownTime, setResendCooldownTime] = useState<number>(0)
 
   // Cargar datos del usuario
   useEffect(() => {
@@ -85,6 +94,29 @@ export function useProfileForm(): UseProfileFormReturn {
       setIsLoading(false)
     }
   }, [user])
+
+  // Cooldown timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null
+    
+    if (resendCooldownTime > 0) {
+      interval = setInterval(() => {
+        setResendCooldownTime(prev => {
+          if (prev <= 1) {
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [resendCooldownTime])
+
+  // Check if user can resend verification
+  const canResendVerification = resendCooldownTime === 0 && !isResendingVerification
 
   // Verificar si hay cambios
   const hasChanges = 
@@ -225,6 +257,9 @@ export function useProfileForm(): UseProfileFormReturn {
       setOriginalData(formData)
       setOriginalChildren([...children])
 
+      // Clear any previous errors
+      setErrors({})
+
       return true
     } catch (error) {
       console.error('Error al guardar cambios:', error)
@@ -245,15 +280,79 @@ export function useProfileForm(): UseProfileFormReturn {
     }
   }
 
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
   const resendEmailVerification = async (): Promise<boolean> => {
-    if (!auth.currentUser) return false
+    if (!auth.currentUser || !canResendVerification) {
+      return false
+    }
+
+    setIsResendingVerification(true)
+    setErrors(prev => ({ ...prev, verification: '' })) // Clear previous verification errors
 
     try {
-      await sendEmailVerification(auth.currentUser)
-      return true
+      // Attempt to send verification with retry logic
+      let lastError: { code?: string; message?: string } | null = null
+      
+      for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
+        try {
+          await sendEmailVerification(auth.currentUser)
+          
+          // Success - set cooldown
+          setResendCooldownTime(RESEND_COOLDOWN_SECONDS)
+          return true
+        } catch (error) {
+          lastError = error as { code?: string; message?: string }
+          const firebaseError = error as { code?: string; message?: string }
+          
+          // If it's a rate limiting error, don't retry immediately
+          if (firebaseError.code === 'auth/too-many-requests') {
+            // Set a longer cooldown for rate limiting
+            const cooldownTime = Math.min(RESEND_COOLDOWN_SECONDS * (attempt + 1), 300) // Max 5 minutes
+            setResendCooldownTime(cooldownTime)
+            setErrors(prev => ({ ...prev,
+              verification: `Demasiadas solicitudes. Intenta nuevamente en ${cooldownTime} segundos.` 
+            }))
+            break // Don't retry for rate limiting
+          }
+          
+          // Wait before retrying for other errors
+          if (attempt < MAX_RETRY_ATTEMPTS - 1) {
+            await sleep(RETRY_DELAYS[attempt])
+          }
+        }
+      }
+      
+      // If we get here, all attempts failed
+      const firebaseError = lastError as { code?: string; message?: string }
+      
+      if (firebaseError.code === 'auth/too-many-requests') {
+        setErrors({ 
+          verification: 'Se han enviado demasiadas solicitudes de verificación. Espera un momento antes de intentar nuevamente.' 
+        })
+      } else if (firebaseError.code === 'auth/user-not-found') {
+        setErrors({ 
+          verification: 'Usuario no encontrado. Intenta cerrar sesión e iniciar sesión nuevamente.' 
+        })
+      } else if (firebaseError.code === 'auth/invalid-email') {
+        setErrors({ 
+          verification: 'El correo electrónico no es válido.' 
+        })
+      } else {
+        setErrors({ 
+          verification: 'Error al enviar el correo de verificación. Verifica tu conexión a internet e intenta nuevamente.' 
+        })
+      }
+      
+      return false
     } catch (error) {
       console.error('Error al reenviar verificación:', error)
+      setErrors({ 
+        verification: 'Error inesperado. Intenta nuevamente más tarde.' 
+      })
       return false
+    } finally {
+      setIsResendingVerification(false)
     }
   }
 
@@ -265,6 +364,9 @@ export function useProfileForm(): UseProfileFormReturn {
     hasChanges,
     emailVerified,
     errors,
+    isResendingVerification,
+    canResendVerification,
+    resendCooldownTime,
     updateFormData,
     addChild,
     updateChild,
