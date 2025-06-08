@@ -78,7 +78,7 @@ export default function HomePage() {
                 className={`object-contain transition-all duration-500 ${
                   theme === 'dark' 
                     ? 'brightness-125 contrast-125 saturate-110 drop-shadow-[0_0_20px_rgba(255,255,255,0.25)]' 
-                    : 'brightness-100 contrast-110 saturate-105 drop-shadow-[0_0_15px_rgba(0,0,0,0.12)]'
+                    : 'invert brightness-90 contrast-110 saturate-105 drop-shadow-[0_0_15px_rgba(0,0,0,0.12)]'
                 }`}
                 priority
               />
