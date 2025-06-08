@@ -119,7 +119,7 @@ export class AdminMenuService {
             day: dayName,
             weekStart,
             active: colacion.active,
-            published: false, // Por defecto no publicado
+            published: true, // Auto-publicar colaciones predeterminadas
             price: colacion.price, // Precio personalizado
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now()
@@ -192,7 +192,7 @@ export class AdminMenuService {
           day: dayName,
           weekStart,
           active: colacion.active,
-          published: false, // Por defecto no publicado
+          published: true, // Auto-publicar colaciones predeterminadas
           price: colacion.price, // Precio personalizado
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now()

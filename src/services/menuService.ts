@@ -99,6 +99,12 @@ export class MenuService {
         items.push(item)
       })
 
+      console.log(`MenuService.getWeeklyMenu: Found ${items.length} published items for week ${targetWeek}`)
+      console.log('Items breakdown:', {
+        almuerzos: items.filter(i => i.type === 'almuerzo').length,
+        colaciones: items.filter(i => i.type === 'colacion').length
+      })
+
       return this.buildWeekMenuStructure(targetWeek, items)
     } catch (error) {
       console.error('Error fetching weekly menu:', error)
@@ -116,20 +122,30 @@ export class MenuService {
         ? userTypeOrUser 
         : this.getUserTypeFromUser(userTypeOrUser)
       
+      console.log(`MenuService.getWeeklyMenuForUser: Loading menu for user type ${userType}, week ${weekStart}`)
+      
       const weekMenu = await this.getWeeklyMenu(weekStart)
       
+      console.log(`MenuService.getWeeklyMenuForUser: Loaded ${weekMenu.totalItems} items, ${weekMenu.days.length} days`)
+      
       // Aplicar precios según tipo de usuario
-      const daysWithPrices = weekMenu.days.map(day => ({
-        ...day,
-        almuerzos: day.almuerzos.map(item => ({
-          ...item,
-          price: getItemPrice(item, userType) // Usar función helper para obtener precio correcto
-        })),
-        colaciones: day.colaciones.map(item => ({
-          ...item,
-          price: getItemPrice(item, userType) // Usar función helper para obtener precio correcto
-        }))
-      }))
+      const daysWithPrices = weekMenu.days.map(day => {
+        const processedDay = {
+          ...day,
+          almuerzos: day.almuerzos.map(item => ({
+            ...item,
+            price: getItemPrice(item, userType) // Usar función helper para obtener precio correcto
+          })),
+          colaciones: day.colaciones.map(item => ({
+            ...item,
+            price: getItemPrice(item, userType) // Usar función helper para obtener precio correcto
+          }))
+        }
+        
+        console.log(`Day ${day.date}: ${processedDay.almuerzos.length} almuerzos, ${processedDay.colaciones.length} colaciones`)
+        
+        return processedDay
+      })
 
       return daysWithPrices
     } catch (error) {
@@ -328,7 +344,11 @@ export class MenuService {
       )
 
       const snapshot = await getDocs(q)
-      return !snapshot.empty
+      const hasMenus = !snapshot.empty
+      
+      console.log(`MenuService.hasMenusForWeek: Week ${weekStart} has ${snapshot.size} published items, hasMenus: ${hasMenus}`)
+      
+      return hasMenus
     } catch (error) {
       console.error('Error checking if week has menus:', error)
       return false
