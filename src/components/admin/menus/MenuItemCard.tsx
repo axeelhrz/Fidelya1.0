@@ -1,10 +1,16 @@
 "use client"
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Edit, Trash2, Eye, EyeOff, DollarSign, Clock, Utensils, Coffee, ChevronDown, ChevronUp } from 'lucide-react'
+import { Edit, Trash2, Eye, EyeOff, DollarSign, Utensils, Coffee, MoreVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +38,6 @@ export function MenuItemCard({
   isLoading = false
 }: MenuItemCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
 
   const handleEdit = () => {
     onEdit(item)
@@ -66,30 +71,21 @@ export function MenuItemCard({
     ? item.description 
     : undefined
 
-  // Verificar si el contenido es largo
-  const isLongTitle = title.length > 50
-  const isLongDescription = description && description.length > 100
-  const shouldShowExpandButton = isLongTitle || isLongDescription
-
   // Configuración de colores por tipo
   const typeConfig = {
     almuerzo: {
       icon: Utensils,
-      gradient: 'from-blue-500 to-indigo-600',
       bgColor: 'bg-blue-50 dark:bg-blue-900/20',
       borderColor: 'border-blue-200 dark:border-blue-800',
       textColor: 'text-blue-700 dark:text-blue-300',
       badgeColor: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
-      label: 'Almuerzo'
     },
     colacion: {
       icon: Coffee,
-      gradient: 'from-emerald-500 to-teal-600',
       bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
       borderColor: 'border-emerald-200 dark:border-emerald-800',
       textColor: 'text-emerald-700 dark:text-emerald-300',
       badgeColor: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
-      label: 'Colación'
     }
   }
 
@@ -101,111 +97,78 @@ export function MenuItemCard({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-        whileHover={{ y: -2 }}
+        transition={{ duration: 0.2 }}
         className="group w-full"
       >
-        <Card className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg w-full ${
+        <Card className={`relative overflow-hidden transition-all duration-200 hover:shadow-md w-full ${
           item.active 
             ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600' 
             : 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600 opacity-75'
         }`}>
-          {/* Indicador de tipo en la parte superior */}
-          <div className={`h-1 bg-gradient-to-r ${config.gradient}`} />
-
-          <CardContent className="p-5">
-            {/* Header con código y controles */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                {/* Icono del tipo */}
-                <div className={`p-2 rounded-lg ${config.bgColor} ${config.borderColor} border`}>
-                  <TypeIcon className={`w-4 h-4 ${config.textColor}`} />
+          <CardContent className="p-3">
+            {/* Header compacto */}
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className={`p-1.5 rounded-lg ${config.bgColor} ${config.borderColor} border flex-shrink-0`}>
+                  <TypeIcon className={`w-3 h-3 ${config.textColor}`} />
                 </div>
-                
-                {/* Código y tipo */}
-                <div className="space-y-1">
-                  <Badge className={`text-sm font-bold ${config.badgeColor}`}>
-                    {item.code}
-                  </Badge>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                    {config.label}
-                  </div>
-                </div>
+                <Badge className={`text-xs font-bold ${config.badgeColor} flex-shrink-0`}>
+                  {item.code}
+                </Badge>
               </div>
               
-              {/* Controles de acción */}
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleEdit}
-                  disabled={isLoading}
-                  className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30"
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleDelete}
-                  disabled={isLoading}
-                  className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-900/30"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
+              {/* Menú de acciones */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                    disabled={isLoading}
+                  >
+                    <MoreVertical className="w-3 h-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-32">
+                  <DropdownMenuItem onClick={handleEdit}>
+                    <Edit className="w-3 h-3 mr-2" />
+                    Editar
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                    <Trash2 className="w-3 h-3 mr-2" />
+                    Eliminar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
-            {/* Contenido principal */}
-            <div className="space-y-3">
-              {/* Título */}
-              <div>
-                <h4 className={`font-bold text-lg leading-tight ${
+            {/* Título compacto */}
+            <div className="mb-2">
+              <h4 className={`font-semibold text-sm leading-tight ${
+                item.active 
+                  ? 'text-slate-900 dark:text-slate-100' 
+                  : 'text-slate-600 dark:text-slate-400'
+              } text-truncate-2`} title={title}>
+                {title}
+              </h4>
+            </div>
+
+            {/* Descripción compacta (si existe y es diferente) */}
+            {description && (
+              <div className={`${config.bgColor} ${config.borderColor} border rounded-lg p-2 mb-2`}>
+                <p className={`text-xs leading-relaxed ${
                   item.active 
-                    ? 'text-slate-900 dark:text-slate-100' 
-                    : 'text-slate-600 dark:text-slate-400'
-                } ${!isExpanded && isLongTitle ? 'text-truncate-2' : ''}`}>
-                  {title}
-                </h4>
+                    ? 'text-slate-700 dark:text-slate-300' 
+                    : 'text-slate-500 dark:text-slate-500'
+                } text-truncate-2`} title={description}>
+                  {description}
+                </p>
               </div>
+            )}
 
-              {/* Descripción adicional */}
-              {description && (
-                <div className={`${config.bgColor} ${config.borderColor} border rounded-lg p-3`}>
-                  <p className={`text-sm leading-relaxed ${
-                    item.active 
-                      ? 'text-slate-700 dark:text-slate-300' 
-                      : 'text-slate-500 dark:text-slate-500'
-                  } ${!isExpanded && isLongDescription ? 'text-truncate-3' : ''}`}>
-                    {description}
-                  </p>
-                </div>
-              )}
-
-              {/* Botón para expandir/contraer */}
-              {shouldShowExpandButton && (
-                <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                >
-                  {isExpanded ? (
-                    <>
-                      <ChevronUp size={12} />
-                      Ver menos
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown size={12} />
-                      Ver más
-                    </>
-                  )}
-                </button>
-              )}
-
-              {/* Estados y badges */}
-              <div className="flex flex-wrap items-center gap-2">
-                {/* Estado activo/inactivo */}
+            {/* Footer con estado y precio */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
                 <Badge className={`text-xs ${
                   item.active 
                     ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' 
@@ -213,61 +176,33 @@ export function MenuItemCard({
                 }`}>
                   {item.active ? (
                     <>
-                      <Eye className="w-3 h-3 mr-1" />
-                      Disponible
+                      <Eye className="w-2 h-2 mr-1" />
+                      Activo
                     </>
                   ) : (
                     <>
-                      <EyeOff className="w-3 h-3 mr-1" />
-                      No disponible
+                      <EyeOff className="w-2 h-2 mr-1" />
+                      Inactivo
                     </>
                   )}
                 </Badge>
-
-                {/* Precio especial */}
+                
                 {hasCustomPrice && (
                   <Badge className="text-xs bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800">
-                    <DollarSign className="w-3 h-3 mr-1" />
-                    Precio especial
+                    <DollarSign className="w-2 h-2 mr-1" />
+                    Especial
                   </Badge>
                 )}
-
-                {/* Horario */}
-                <Badge className={`text-xs ${config.badgeColor}`}>
-                  <Clock className="w-3 h-3 mr-1" />
-                  {item.type === 'almuerzo' ? '12:00-14:00' : '15:30-16:30'}
-                </Badge>
               </div>
-            </div>
-
-            {/* Footer con precio */}
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  Precio:
+              
+              <div className="text-right">
+                <span className={`text-sm font-bold ${
+                  item.active 
+                    ? 'text-green-600 dark:text-green-400' 
+                    : 'text-slate-500 dark:text-slate-500'
+                }`}>
+                  ${displayPrice.toLocaleString('es-CL')}
                 </span>
-                
-                <div className="text-right">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xl font-bold ${
-                      item.active 
-                        ? 'text-green-600 dark:text-green-400' 
-                        : 'text-slate-500 dark:text-slate-500'
-                    }`}>
-                      ${displayPrice.toLocaleString('es-CL')}
-                    </span>
-                    {hasCustomPrice && (
-                      <Badge className="text-xs bg-orange-100 text-orange-600 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400">
-                        Especial
-                      </Badge>
-                    )}
-                  </div>
-                  {!hasCustomPrice && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Precio base
-                    </p>
-                  )}
-                </div>
               </div>
             </div>
           </CardContent>

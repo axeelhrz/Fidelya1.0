@@ -32,18 +32,18 @@ export function DayMenuContainer({
       transition={{ duration: 0.5 }}
       className="h-full"
     >
-      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200">
-        <CardHeader className="pb-4 flex-shrink-0">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+        <CardHeader className="pb-4 flex-shrink-0 border-b border-slate-100 dark:border-slate-700">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+            <div className="flex items-center space-x-3 min-w-0 flex-1">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex-shrink-0">
                 <Calendar className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <CardTitle className="text-base font-bold text-slate-900 dark:text-white capitalize">
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-base font-bold text-slate-900 dark:text-white capitalize truncate">
                   {dayMenu.dayName}
                 </CardTitle>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
+                <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
                   {new Date(dayMenu.date).toLocaleDateString('es-CL', {
                     day: 'numeric',
                     month: 'short'
@@ -53,7 +53,7 @@ export function DayMenuContainer({
             </div>
             
             {totalItems > 0 && (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-shrink-0">
                 <Badge 
                   variant="secondary" 
                   className="text-xs bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
@@ -70,18 +70,18 @@ export function DayMenuContainer({
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 flex flex-col space-y-6">
+        <CardContent className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden">
           {/* Sección de Almuerzos */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <div className="flex items-center space-x-2 min-w-0 flex-1">
+                <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex-shrink-0">
                   <ChefHat className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 truncate">
                   Almuerzos
                 </h3>
-                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200 flex-shrink-0">
                   {dayMenu.almuerzos.length}
                 </Badge>
               </div>
@@ -90,23 +90,24 @@ export function DayMenuContainer({
                 size="sm"
                 onClick={() => onAddItem('almuerzo')}
                 disabled={isLoading || !dayMenu.isEditable}
-                className="h-7 px-3 text-xs hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+                className="h-7 px-3 text-xs hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 flex-shrink-0"
               >
                 <Plus className="w-3 h-3 mr-1" />
                 Agregar
               </Button>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-2 overflow-y-auto max-h-48">
               {dayMenu.almuerzos.length > 0 ? (
                 dayMenu.almuerzos.map((item, index) => (
-                  <MenuItemCard
-                    key={item.id || index}
-                    item={item}
-                    onEdit={onEditItem}
-                    onDelete={onDeleteItem}
-                    isLoading={isLoading}
-                  />
+                  <div key={item.id || index} className="w-full">
+                    <MenuItemCard
+                      item={item}
+                      onEdit={onEditItem}
+                      onDelete={onDeleteItem}
+                      isLoading={isLoading}
+                    />
+                  </div>
                 ))
               ) : (
                 <div className="p-4 border-2 border-dashed border-blue-200 dark:border-blue-800 rounded-lg text-center bg-blue-50/30 dark:bg-blue-900/10">
@@ -132,17 +133,20 @@ export function DayMenuContainer({
             </div>
           </div>
 
+          {/* Separador */}
+          <div className="border-t border-slate-200 dark:border-slate-700"></div>
+
           {/* Sección de Colaciones */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="p-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+              <div className="flex items-center space-x-2 min-w-0 flex-1">
+                <div className="p-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex-shrink-0">
                   <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <h3 className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                <h3 className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 truncate">
                   Colaciones
                 </h3>
-                <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-600 border-emerald-200">
+                <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-600 border-emerald-200 flex-shrink-0">
                   {dayMenu.colaciones.length}
                 </Badge>
               </div>
@@ -151,23 +155,24 @@ export function DayMenuContainer({
                 size="sm"
                 onClick={() => onAddItem('colacion')}
                 disabled={isLoading || !dayMenu.isEditable}
-                className="h-7 px-3 text-xs hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300"
+                className="h-7 px-3 text-xs hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 flex-shrink-0"
               >
                 <Plus className="w-3 h-3 mr-1" />
                 Agregar
               </Button>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-2 overflow-y-auto max-h-48">
               {dayMenu.colaciones.length > 0 ? (
                 dayMenu.colaciones.map((item, index) => (
-                  <MenuItemCard
-                    key={item.id || index}
-                    item={item}
-                    onEdit={onEditItem}
-                    onDelete={onDeleteItem}
-                    isLoading={isLoading}
-                  />
+                  <div key={item.id || index} className="w-full">
+                    <MenuItemCard
+                      item={item}
+                      onEdit={onEditItem}
+                      onDelete={onDeleteItem}
+                      isLoading={isLoading}
+                    />
+                  </div>
                 ))
               ) : (
                 <div className="p-4 border-2 border-dashed border-emerald-200 dark:border-emerald-800 rounded-lg text-center bg-emerald-50/30 dark:bg-emerald-900/10">
