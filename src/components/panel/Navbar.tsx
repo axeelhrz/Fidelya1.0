@@ -9,15 +9,12 @@ import Image from 'next/image'
 import { 
   User, 
   LogOut, 
-  Bell, 
   Sun, 
   Moon, 
   Menu, 
   X, 
   ChevronDown,
   ShoppingCart,
-  Settings,
-  HelpCircle,
   BookOpen,
   UserCircle,
   LayoutDashboard
@@ -88,7 +85,6 @@ export function Navbar({ onLogout }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [notifications] = useState(3) // Simulado
 
   // Verificar si el componente está montado (para evitar hydration issues)
   useEffect(() => {
@@ -280,21 +276,6 @@ export function Navbar({ onLogout }: NavbarProps) {
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </motion.button>
 
-            {/* Notificaciones */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200 relative"
-              aria-label="Notificaciones"
-            >
-              <Bell size={18} />
-              {notifications > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
-                  {notifications > 9 ? '9+' : notifications}
-                </span>
-              )}
-            </motion.button>
-
             {/* Menú de usuario */}
             <div className="relative">
               <motion.button
@@ -351,14 +332,6 @@ export function Navbar({ onLogout }: NavbarProps) {
                           Ver Perfil
                         </button>
                       </Link>
-                      <button className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200">
-                        <Settings size={16} className="mr-3" />
-                        Configuración
-                      </button>
-                      <button className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200">
-                        <HelpCircle size={16} className="mr-3" />
-                        Ayuda
-                      </button>
                       <div className="border-t border-slate-200 dark:border-slate-700 mt-1 pt-1">
                         <button 
                           onClick={handleLogout}
@@ -377,21 +350,6 @@ export function Navbar({ onLogout }: NavbarProps) {
 
           {/* Controles móviles */}
           <div className="md:hidden flex items-center space-x-2">
-            {/* Notificaciones móvil */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 relative"
-              aria-label="Notificaciones"
-            >
-              <Bell size={18} />
-              {notifications > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {notifications > 9 ? '9' : notifications}
-                </span>
-              )}
-            </motion.button>
-
             {/* Toggle tema móvil */}
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -488,22 +446,6 @@ export function Navbar({ onLogout }: NavbarProps) {
                 })}
                 
                 <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
-                  <button className="w-full flex items-center px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200">
-                    <Settings size={18} className="mr-3" />
-                    <div>
-                      <div className="font-medium">Configuración</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">Ajustes de cuenta</div>
-                    </div>
-                  </button>
-                  
-                  <button className="w-full flex items-center px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200">
-                    <HelpCircle size={18} className="mr-3" />
-                    <div>
-                      <div className="font-medium">Ayuda</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">Soporte y contacto</div>
-                    </div>
-                  </button>
-                  
                   <button 
                     onClick={handleLogout}
                     className="w-full flex items-center px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
