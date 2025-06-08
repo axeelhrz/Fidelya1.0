@@ -24,6 +24,7 @@ import { AdminMenuService } from '@/services/adminMenuService'
 import { DefaultColacionesService } from '@/services/defaultColacionesService'
 import { DefaultColacionesManager } from './DefaultColacionesManager'
 import { ColacionesDiagnostic } from './ColacionesDiagnostic'
+import { BulkColacionesDelete } from './BulkColacionesDelete'
 import { useToast } from '@/hooks/use-toast'
 
 interface DefaultColacion {
@@ -114,10 +115,16 @@ export function DefaultColacionesActions({
           }}
         />
 
-        {/* NUEVO: Componente de diagnóstico */}
+        {/* Componente de diagnóstico */}
         <ColacionesDiagnostic 
           weekStart={weekStart}
           onDiagnosticComplete={onMenuUpdated}
+        />
+
+        {/* NUEVO: Componente de eliminación masiva */}
+        <BulkColacionesDelete 
+          weekStart={weekStart}
+          onMenuUpdated={onMenuUpdated}
         />
 
         <Dialog open={isDialogOpen} onOpenChange={handleDialogOpen}>
