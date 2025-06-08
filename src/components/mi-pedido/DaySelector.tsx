@@ -21,6 +21,7 @@ import {
   Moon,
   Sun,
   Trash2,
+  DollarSign,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -45,7 +46,7 @@ function MenuItemOption({ item, isSelected, isReadOnly, isPastDay, isWeekend }: 
   const isDisabled = isReadOnly || !item.available || isPastDay || isWeekend
 
   return (
-    <div className="flex items-center space-x-3">
+    <div className="flex items-start space-x-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
       <RadioGroupItem 
         value={item.id} 
         id={item.id}
@@ -55,34 +56,53 @@ function MenuItemOption({ item, isSelected, isReadOnly, isPastDay, isWeekend }: 
       <Label 
         htmlFor={item.id} 
         className={cn(
-          "flex-1 cursor-pointer min-w-0",
+          "flex-1 cursor-pointer min-w-0 space-y-2",
           isDisabled ? "cursor-not-allowed opacity-50" : ""
         )}
       >
-        <div className="space-y-1">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <span className="font-medium text-slate-900 dark:text-slate-100 truncate">
-                {item.name}
-              </span>
-              <Badge variant="outline" className="text-xs flex-shrink-0">
-                {item.code}
-              </Badge>
-              {isSelected && (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              )}
-            </div>
-            <span className="text-sm font-medium text-slate-900 dark:text-slate-100 flex-shrink-0">
-              ${item.price.toLocaleString('es-CL')}
+        {/* Header del item */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <Badge variant="outline" className="text-xs font-mono flex-shrink-0 px-2 py-0.5">
+              {item.code}
+            </Badge>
+            {isSelected && (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            )}
+          </div>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <DollarSign className="w-3 h-3 text-green-600" />
+            <span className="text-sm font-bold text-green-600">
+              {item.price.toLocaleString('es-CL')}
             </span>
           </div>
-          {item.description && (
-            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+        </div>
+
+        {/* Título del item */}
+        <div className="space-y-1">
+          <h4 className="font-medium text-sm text-slate-900 dark:text-slate-100 leading-tight">
+            {item.name}
+          </h4>
+          
+          {/* Descripción compacta */}
+          {item.description && item.description !== item.name && (
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">
               {item.description}
             </p>
           )}
+        </div>
+
+        {/* Estados del item */}
+        <div className="flex items-center gap-2">
           {!item.available && !isPastDay && !isWeekend && (
-            <p className="text-xs text-red-500">No disponible</p>
+            <Badge variant="destructive" className="text-xs px-2 py-0.5">
+              No disponible
+            </Badge>
+          )}
+          {isSelected && (
+            <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 text-xs px-2 py-0.5">
+              Seleccionado
+            </Badge>
           )}
         </div>
       </Label>
@@ -139,35 +159,19 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
     )
   }
 
-  // Función corregida para remover item específico
+  // Función para remover item específico
   const removeItem = () => {
     if (isReadOnly || isPastDay || isWeekend) return
     
     const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
-    
-    console.log('Removing item:', {
-      date: dayMenu.date,
-      menuType,
-      targetChild: targetChild?.name || 'funcionario',
-      currentSelection
-    })
-    
-    // Llamar a updateSelectionByChild con undefined para remover el campo específico
     updateSelectionByChild(dayMenu.date, menuType, undefined, targetChild)
   }
 
-  // Función para remover toda la selección del día (icono de basurero)
+  // Función para remover toda la selección del día
   const removeEntireSelection = () => {
     if (isReadOnly || isPastDay || isWeekend) return
     
     const targetChildId = user.tipoUsuario === 'funcionario' ? undefined : currentChild?.id
-    
-    console.log('Removing entire selection:', {
-      date: dayMenu.date,
-      targetChildId,
-      currentSelection
-    })
-    
     removeSelectionByChild(dayMenu.date, targetChildId)
   }
 
@@ -199,11 +203,11 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
     return <Calendar className="w-4 h-4" />
   }
 
-  // Obtener badge del estado - CORREGIDO para evitar sobreposición
+  // Obtener badge del estado
   const getDayStatusBadge = () => {
     if (isPastDay) {
       return (
-        <Badge variant="secondary" className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs">
+        <Badge variant="secondary" className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs px-2 py-0.5">
           <Clock className="w-3 h-3 mr-1" />
           Pasado
         </Badge>
@@ -211,7 +215,7 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
     }
     if (isWeekend) {
       return (
-        <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-xs">
+        <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-xs px-2 py-0.5">
           <Moon className="w-3 h-3 mr-1" />
           Fin de semana
         </Badge>
@@ -219,16 +223,15 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
     }
     if (isCurrentDay) {
       return (
-        <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-xs">
+        <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-xs px-2 py-0.5">
           <Sun className="w-3 h-3 mr-1" />
           Hoy
         </Badge>
       )
     }
-    // Solo mostrar "Disponible" si NO hay nada seleccionado
     if (isFutureDay && hasItems && !selectedItemId) {
       return (
-        <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800 text-xs">
+        <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800 text-xs px-2 py-0.5">
           <CheckCircle2 className="w-3 h-3 mr-1" />
           Disponible
         </Badge>
@@ -250,88 +253,71 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
 
   return (
     <Card className={getCardClassName()}>
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            {getDayIcon()}
-            <span className="capitalize font-bold truncate">{dayMenu.dayLabel}</span>
-            <Badge variant="outline" className="text-xs font-medium flex-shrink-0">
-              {format(dayDate, 'd \'de\' MMM', { locale: es })}
-            </Badge>
+      {/* Header compacto */}
+      <CardHeader className="pb-3">
+        <CardTitle className="space-y-2">
+          {/* Primera línea: Día y fecha */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {getDayIcon()}
+              <span className="capitalize font-bold text-base truncate">{dayMenu.dayLabel}</span>
+              <Badge variant="outline" className="text-xs font-medium flex-shrink-0 px-2 py-0.5">
+                {format(dayDate, 'd MMM', { locale: es })}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {getDayStatusBadge()}
+            </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {getDayStatusBadge()}
-            {selectedItemId && (
-              <div className="flex items-center gap-1">
-                <Badge 
-                  variant="secondary" 
-                  className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 text-xs px-2 py-1"
-                >
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                  <span className="hidden sm:inline">Seleccionado</span>
-                  <span className="sm:hidden">✓</span>
-                </Badge>
-                {/* Icono de basurero para eliminar toda la selección del día */}
-                {!isReadOnly && !isPastDay && !isWeekend && (currentSelection?.almuerzo || currentSelection?.colacion) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={removeEntireSelection}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 h-auto p-1"
-                    title="Eliminar toda la selección del día"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                )}
-              </div>
+
+          {/* Segunda línea: Usuario y acciones */}
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 flex-1 min-w-0">
+              <UserIcon className="w-3 h-3 flex-shrink-0" />
+              {user.tipoUsuario === 'apoderado' && currentChild ? (
+                <span className="truncate">Para: <strong>{currentChild.name}</strong></span>
+              ) : user.tipoUsuario === 'funcionario' ? (
+                <span>Pedido personal</span>
+              ) : (
+                <span className="text-amber-600">Selecciona un hijo</span>
+              )}
+            </div>
+            
+            {/* Acciones de eliminación */}
+            {!isReadOnly && !isPastDay && !isWeekend && (currentSelection?.almuerzo || currentSelection?.colacion) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={removeEntireSelection}
+                className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 h-auto p-1 flex-shrink-0"
+                title="Eliminar toda la selección del día"
+              >
+                <Trash2 className="w-3 h-3" />
+              </Button>
             )}
           </div>
         </CardTitle>
-        
-        {/* Mostrar fecha completa solo cuando NO hay selección */}
-        {!selectedItemId && (
-          <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
-            {MenuService.getDayDisplayName(dayMenu.date)}
-          </div>
-        )}
-        
-        {/* Mostrar para qué hijo es la selección */}
-        {user.tipoUsuario === 'apoderado' && currentChild && !isWeekend && (
-          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-            <UserIcon className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">Pedido para: <strong>{currentChild.name}</strong></span>
-          </div>
-        )}
-        
-        {user.tipoUsuario === 'funcionario' && !isWeekend && (
-          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-            <UserIcon className="w-4 h-4 flex-shrink-0" />
-            <span>Pedido personal</span>
-          </div>
-        )}
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {isWeekend ? (
-          <div className="text-center py-8 text-purple-600 dark:text-purple-400">
-            <Moon className="w-12 h-12 mx-auto mb-3 opacity-60" />
-            <h3 className="font-medium text-lg mb-2">Fin de Semana</h3>
-            <p className="text-sm opacity-80">
-              No hay servicio de casino los fines de semana
-            </p>
+          <div className="text-center py-6 text-purple-600 dark:text-purple-400">
+            <Moon className="w-10 h-10 mx-auto mb-2 opacity-60" />
+            <h3 className="font-medium text-sm mb-1">Fin de Semana</h3>
+            <p className="text-xs opacity-80">No hay servicio de casino</p>
           </div>
         ) : !canMakeSelection && !isPastDay ? (
-          <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+          <div className="text-center py-6 text-slate-500 dark:text-slate-400">
             <UserIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>Selecciona un hijo para hacer el pedido</p>
+            <p className="text-sm">Selecciona un hijo para hacer el pedido</p>
           </div>
         ) : isPastDay ? (
-          <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+          <div className="text-center py-6 text-slate-500 dark:text-slate-400">
             <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>No se pueden hacer pedidos para días pasados</p>
+            <p className="text-sm">No se pueden hacer pedidos para días pasados</p>
             {selectedItemId && (
-              <div className="mt-4 p-3 rounded-lg bg-slate-100 dark:bg-slate-800">
-                <p className="text-xs font-medium mb-2">Pedido existente:</p>
+              <div className="mt-3 p-3 rounded-lg bg-slate-100 dark:bg-slate-800">
+                <p className="text-xs font-medium mb-1">Pedido existente:</p>
                 <div className="flex items-center gap-2 text-xs justify-center">
                   {getMenuTypeIcon()}
                   <span className="truncate">{menuItems.find(item => item.id === selectedItemId)?.name}</span>
@@ -340,37 +326,41 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
             )}
           </div>
         ) : !dayMenu.isAvailable ? (
-          <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+          <div className="text-center py-6 text-slate-500 dark:text-slate-400">
             {getMenuTypeIcon()}
             <div className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>Menú no disponible para este día</p>
+            <p className="text-sm">Menú no disponible para este día</p>
           </div>
         ) : (
           <>
-            {/* Sección del tipo de menú actual */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  {getMenuTypeIcon()}
-                  <h4 className="font-medium text-slate-900 dark:text-slate-100 truncate">
-                    {menuType === 'almuerzo' ? 'Almuerzo' : 'Colación'}
-                    {menuType === 'almuerzo' && <span className="text-red-500 ml-1">*</span>}
-                  </h4>
-                </div>
-                {selectedItemId && !isReadOnly && !isPastDay && !isWeekend && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={removeItem}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 h-auto px-3 py-1.5 flex-shrink-0 transition-colors"
-                    title={`Quitar ${menuType}`}
-                  >
-                    <span className="text-xs font-medium">Quitar</span>
-                  </Button>
-                )}
+            {/* Header del tipo de menú */}
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {getMenuTypeIcon()}
+                <h4 className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">
+                  {menuType === 'almuerzo' ? 'Almuerzo' : 'Colación'}
+                  {menuType === 'almuerzo' && <span className="text-red-500 ml-1">*</span>}
+                </h4>
+                <Badge variant="outline" className="text-xs px-2 py-0.5 flex-shrink-0">
+                  {menuItems.length} opciones
+                </Badge>
               </div>
-              
-              {hasItems ? (
+              {selectedItemId && !isReadOnly && !isPastDay && !isWeekend && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={removeItem}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 h-auto px-2 py-1 flex-shrink-0 transition-colors"
+                  title={`Quitar ${menuType}`}
+                >
+                  <span className="text-xs font-medium">Quitar</span>
+                </Button>
+              )}
+            </div>
+            
+            {/* Lista de opciones */}
+            {hasItems ? (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
                 <RadioGroup
                   value={selectedItemId || ''}
                   onValueChange={handleItemChange}
@@ -388,49 +378,34 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
                     />
                   ))}
                 </RadioGroup>
-              ) : (
-                <p className="text-sm text-slate-500 dark:text-slate-400 italic">
-                  No hay opciones de {menuType === 'almuerzo' ? 'almuerzo' : 'colación'} disponibles
-                </p>
-              )}
-            </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400 italic text-center py-4">
+                No hay opciones de {menuType === 'almuerzo' ? 'almuerzo' : 'colación'} disponibles
+              </p>
+            )}
 
-            {/* Resumen del día para el tipo de menú actual */}
+            {/* Resumen de selección */}
             {selectedItemId && (
               <div className={cn(
-                "mt-4 p-4 rounded-lg border",
+                "p-3 rounded-lg border",
                 isPastDay 
                   ? "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
                   : isCurrentDay
                   ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
                   : "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
               )}>
-                <h5 className={cn(
-                  "text-sm font-medium mb-3 flex items-center gap-2",
-                  isPastDay 
-                    ? "text-slate-700 dark:text-slate-300"
-                    : isCurrentDay
-                    ? "text-blue-900 dark:text-blue-100"
-                    : "text-emerald-900 dark:text-emerald-100"
-                )}>
-                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate">Selección del día</span>
-                </h5>
-                <div className="space-y-2 text-sm">
-                  <div className={cn(
-                    "flex justify-between items-center gap-2",
-                    isPastDay 
-                      ? "text-slate-600 dark:text-slate-400"
-                      : isCurrentDay
-                      ? "text-blue-800 dark:text-blue-200"
-                      : "text-emerald-800 dark:text-emerald-200"
-                  )}>
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      {getMenuTypeIcon()}
-                      <span className="truncate">{menuType === 'almuerzo' ? 'Almuerzo' : 'Colación'}</span>
-                    </div>
-                    <span className="font-medium flex-shrink-0">
-                      ${getSelectedItemPrice().toLocaleString('es-CL')}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                      {menuItems.find(item => item.id === selectedItemId)?.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <DollarSign className="w-3 h-3 text-green-600" />
+                    <span className="text-sm font-bold text-green-600">
+                      {getSelectedItemPrice().toLocaleString('es-CL')}
                     </span>
                   </div>
                 </div>
