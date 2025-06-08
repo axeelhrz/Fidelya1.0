@@ -213,7 +213,7 @@ export function Navbar({ onLogout }: NavbarProps) {
             className="flex items-center cursor-pointer"
           >
             <Link href="/panel" className="flex items-center">
-              <div className="relative w-14 h-14 flex-shrink-0 p-1">
+              <div className="relative w-20 h-12 sm:w-24 sm:h-14 flex-shrink-0 p-1">
                 <Image
                   src="/logo-colores.png"
                   alt="Casino Escolar"
@@ -433,7 +433,7 @@ export function Navbar({ onLogout }: NavbarProps) {
               {/* Información del usuario móvil */}
               <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="relative w-10 h-10 flex-shrink-0 p-1">
+                  <div className="relative w-12 h-12 flex-shrink-0 p-1">
                     <Image
                       src="/logo-colores.png"
                       alt="Casino Escolar"
