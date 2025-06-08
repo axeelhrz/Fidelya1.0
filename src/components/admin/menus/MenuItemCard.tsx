@@ -26,6 +26,7 @@ import { PRICES } from '@/types/panel'
 
 interface MenuItemCardProps {
   item: AdminMenuItem
+  optionNumber: number
   onEdit: (item: AdminMenuItem) => void
   onDelete: (item: AdminMenuItem) => void
   isLoading?: boolean
@@ -33,6 +34,7 @@ interface MenuItemCardProps {
 
 export function MenuItemCard({ 
   item, 
+  optionNumber,
   onEdit, 
   onDelete, 
   isLoading = false
@@ -164,7 +166,7 @@ export function MenuItemCard({
                   <TypeIcon className={`w-2.5 h-2.5 ${config.textColor}`} />
                 </div>
                 <Badge className={`text-xs font-bold ${config.badgeColor} flex-shrink-0 px-1.5 py-0.5`}>
-                  {item.code}
+                  Opción {optionNumber}
                 </Badge>
               </div>
               
@@ -284,7 +286,7 @@ export function MenuItemCard({
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar menú?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción eliminará permanentemente el menú &quot;{displayTitle}&quot; ({item.code}).
+              Esta acción eliminará permanentemente el menú &quot;{displayTitle}&quot; (Opción {optionNumber}).
               Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>

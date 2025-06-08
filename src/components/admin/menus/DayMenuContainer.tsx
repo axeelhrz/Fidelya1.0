@@ -101,6 +101,7 @@ export function DayMenuContainer({
                   <div key={item.id || index} className="w-full admin-card-container">
                     <MenuItemCard
                       item={item}
+                      optionNumber={index + 1}
                       onEdit={onEditItem}
                       onDelete={onDeleteItem}
                       isLoading={isLoading}
@@ -163,6 +164,7 @@ export function DayMenuContainer({
                   <div key={item.id || index} className="w-full admin-card-container">
                     <MenuItemCard
                       item={item}
+                      optionNumber={index + 1}
                       onEdit={onEditItem}
                       onDelete={onDeleteItem}
                       isLoading={isLoading}
