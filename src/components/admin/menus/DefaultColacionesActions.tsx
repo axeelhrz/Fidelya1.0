@@ -23,6 +23,7 @@ import {
 import { AdminMenuService } from '@/services/adminMenuService'
 import { DefaultColacionesService } from '@/services/defaultColacionesService'
 import { DefaultColacionesManager } from './DefaultColacionesManager'
+import { ColacionesDiagnostic } from './ColacionesDiagnostic'
 import { useToast } from '@/hooks/use-toast'
 
 interface DefaultColacion {
@@ -63,6 +64,8 @@ export function DefaultColacionesActions({
   const handleCreateWeekColaciones = async () => {
     setIsCreatingWeek(true)
     try {
+      console.log('🔄 Creating default colaciones for week:', weekStart)
+      
       const result = await AdminMenuService.createDefaultColacionesWeek(weekStart)
       
       if (result.success) {
@@ -111,6 +114,12 @@ export function DefaultColacionesActions({
           }}
         />
 
+        {/* NUEVO: Componente de diagnóstico */}
+        <ColacionesDiagnostic 
+          weekStart={weekStart}
+          onDiagnosticComplete={onMenuUpdated}
+        />
+
         <Dialog open={isDialogOpen} onOpenChange={handleDialogOpen}>
           <DialogTrigger asChild>
             <Button 
@@ -136,7 +145,7 @@ export function DefaultColacionesActions({
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   Este menú se aplicará automáticamente de <strong>lunes a viernes</strong> para la semana seleccionada. 
-                  Cada colación tendrá su precio personalizado y podrá ser editada o eliminada individualmente después de la creación.
+                  Cada colación tendrá su precio personalizado y será <strong>publicada automáticamente</strong> para que aparezca en los pedidos.
                 </AlertDescription>
               </Alert>
 
@@ -170,7 +179,7 @@ export function DefaultColacionesActions({
                               {colacion.description}
                             </p>
                             <p className="text-xs text-slate-600 dark:text-slate-400">
-                              {colacion.active ? 'Activo' : 'Inactivo'}
+                              Se publicará automáticamente
                             </p>
                           </div>
                         </div>
@@ -203,14 +212,14 @@ export function DefaultColacionesActions({
                       <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                       <div>
                         <h4 className="font-medium text-blue-800 dark:text-blue-200 text-sm">
-                          Después de crear el menú podrás:
+                          Después de crear el menú:
                         </h4>
                         <ul className="text-xs text-blue-700 dark:text-blue-300 mt-1 space-y-1">
-                          <li>• Editar precios y descripciones individualmente</li>
+                          <li>• Las colaciones estarán disponibles inmediatamente en los pedidos</li>
+                          <li>• Podrás editar precios y descripciones individualmente</li>
                           <li>• Activar o desactivar colaciones específicas</li>
                           <li>• Eliminar colaciones que no necesites</li>
                           <li>• Agregar nuevas colaciones personalizadas</li>
-                          <li>• Publicar o despublicar el menú completo</li>
                         </ul>
                       </div>
                     </div>
@@ -235,12 +244,12 @@ export function DefaultColacionesActions({
                   {isCreatingWeek ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Creando...</span>
+                      <span>Creando y Publicando...</span>
                     </>
                   ) : (
                     <>
                       <Calendar className="w-4 h-4" />
-                      <span>Crear Menú de Colaciones</span>
+                      <span>Crear y Publicar Menú</span>
                     </>
                   )}
                 </Button>
@@ -261,6 +270,7 @@ export function DefaultColacionesActions({
         <CardContent>
           <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-3">
             Aplica automáticamente un menú completo de colaciones con precios personalizados para toda la semana (lunes a viernes).
+            Las colaciones se publican automáticamente y aparecen inmediatamente en los pedidos.
           </p>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline" className="text-xs bg-white/50">
@@ -273,6 +283,9 @@ export function DefaultColacionesActions({
                 </Badge>
                 <Badge variant="outline" className="text-xs bg-white/50">
                   Lunes a Viernes
+                </Badge>
+                <Badge variant="outline" className="text-xs bg-white/50">
+                  Publicación automática
                 </Badge>
                 <Badge variant="outline" className="text-xs bg-white/50">
                   Totalmente editable

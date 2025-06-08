@@ -72,9 +72,11 @@ export class AdminMenuService {
     }
   }
 
-  // Crear menú de colaciones predeterminado para una semana
+  // CORREGIDO: Crear menú de colaciones predeterminado para una semana
   static async createDefaultColacionesWeek(weekStart: string): Promise<MenuOperationResult> {
     try {
+      console.log('🔄 Creating default colaciones for week:', weekStart)
+      
       // Verificar que no existan colaciones para esta semana
       const existingMenu = await this.getWeeklyMenu(weekStart)
       const hasColaciones = existingMenu?.days.some(day => day.colaciones.length > 0)
@@ -97,6 +99,8 @@ export class AdminMenuService {
         }
       }
 
+      console.log('📋 Active colaciones to create:', activeColaciones.length)
+
       const batch = writeBatch(db)
       const menusRef = collection(db, this.COLLECTION_NAME)
       const weekStartDate = this.createLocalDate(weekStart)
@@ -108,9 +112,13 @@ export class AdminMenuService {
         const dateStr = format(currentDate, 'yyyy-MM-dd')
         const dayName = format(currentDate, 'EEEE', { locale: es }).toLowerCase()
 
+        console.log(`📅 Creating colaciones for ${dayName} (${dateStr})`)
+
         // Crear cada colación predeterminada para este día
         for (const colacion of activeColaciones) {
           const newDocRef = doc(menusRef)
+          
+          // CORREGIDO: Asegurar que todos los campos requeridos estén presentes
           const itemData = {
             code: colacion.code,
             description: colacion.description,
@@ -118,26 +126,51 @@ export class AdminMenuService {
             date: dateStr,
             day: dayName,
             weekStart,
-            active: colacion.active,
-            published: true, // Auto-publicar colaciones predeterminadas
-            price: colacion.price, // Precio personalizado
+            active: true, // Forzar como activo
+            published: true, // CRÍTICO: Forzar como publicado
+            price: colacion.price,
             createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now()
+            updatedAt: Timestamp.now(),
+            // Campos adicionales para asegurar compatibilidad
+            available: true,
+            isDefaultColacion: true // Marcar como colación predeterminada
           }
+
+          console.log(`✅ Creating colacion ${colacion.code} for ${dateStr}:`, {
+            code: itemData.code,
+            description: itemData.description,
+            price: itemData.price,
+            published: itemData.published,
+            active: itemData.active
+          })
 
           batch.set(newDocRef, itemData)
           itemsCreated++
         }
       }
 
+      console.log('💾 Committing batch with', itemsCreated, 'items')
       await batch.commit()
+
+      // NUEVO: Verificar que las colaciones se crearon correctamente
+      const verificationResult = await this.verifyDefaultColacionesCreation(weekStart, activeColaciones.length)
+      
+      if (!verificationResult.success) {
+        console.error('❌ Verification failed:', verificationResult.message)
+        return {
+          success: false,
+          message: `Las colaciones se crearon pero hay problemas: ${verificationResult.message}`
+        }
+      }
+
+      console.log('✅ Default colaciones created and verified successfully')
 
       return {
         success: true,
-        message: `Menú de colaciones predeterminado creado exitosamente. ${itemsCreated} items creados para lunes a viernes. Recuerda publicar la semana para que sea visible a los usuarios.`
+        message: `Menú de colaciones predeterminado creado exitosamente. ${itemsCreated} items creados para lunes a viernes y publicados automáticamente.`
       }
     } catch (error) {
-      console.error('Error creating default colaciones week:', error)
+      console.error('❌ Error creating default colaciones week:', error)
       return {
         success: false,
         message: 'Error al crear el menú de colaciones predeterminado. Por favor, intenta nuevamente.'
@@ -145,9 +178,113 @@ export class AdminMenuService {
     }
   }
 
-  // Aplicar colaciones predeterminadas a un día específico
+  // NUEVO: Verificar que las colaciones predeterminadas se crearon correctamente
+  static async verifyDefaultColacionesCreation(weekStart: string, expectedCount: number): Promise<MenuOperationResult> {
+    try {
+      console.log('🔍 Verifying default colaciones creation for week:', weekStart)
+      
+      const menusRef = collection(db, this.COLLECTION_NAME)
+      const q = query(
+        menusRef,
+        where('weekStart', '==', weekStart),
+        where('type', '==', 'colacion'),
+        where('isDefaultColacion', '==', true)
+      )
+
+      const snapshot = await getDocs(q)
+      const createdItems = snapshot.docs.length
+      const expectedTotal = expectedCount * 5 // 5 días laborales
+
+      console.log('📊 Verification results:', {
+        created: createdItems,
+        expected: expectedTotal,
+        weekStart
+      })
+
+      if (createdItems !== expectedTotal) {
+        return {
+          success: false,
+          message: `Se esperaban ${expectedTotal} colaciones pero se encontraron ${createdItems}`
+        }
+      }
+
+      // Verificar que todas estén publicadas
+      const publishedItems = snapshot.docs.filter(doc => {
+        const data = doc.data()
+        return data.published === true && data.active === true
+      }).length
+
+      if (publishedItems !== createdItems) {
+        console.warn('⚠️ Some items are not published, attempting to fix...')
+        await this.fixUnpublishedDefaultColaciones(weekStart)
+      }
+
+      return {
+        success: true,
+        message: `Verificación exitosa: ${createdItems} colaciones creadas y publicadas`
+      }
+    } catch (error) {
+      console.error('❌ Error verifying default colaciones:', error)
+      return {
+        success: false,
+        message: 'Error al verificar las colaciones creadas'
+      }
+    }
+  }
+
+  // NUEVO: Corregir colaciones predeterminadas no publicadas
+  static async fixUnpublishedDefaultColaciones(weekStart: string): Promise<MenuOperationResult> {
+    try {
+      console.log('🔧 Fixing unpublished default colaciones for week:', weekStart)
+      
+      const menusRef = collection(db, this.COLLECTION_NAME)
+      const q = query(
+        menusRef,
+        where('weekStart', '==', weekStart),
+        where('type', '==', 'colacion'),
+        where('isDefaultColacion', '==', true)
+      )
+
+      const snapshot = await getDocs(q)
+      const batch = writeBatch(db)
+      let fixedCount = 0
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data()
+        if (!data.published || !data.active) {
+          console.log(`🔧 Fixing colacion ${data.code} - published: ${data.published}, active: ${data.active}`)
+          batch.update(doc.ref, {
+            published: true,
+            active: true,
+            updatedAt: Timestamp.now()
+          })
+          fixedCount++
+        }
+      })
+
+      if (fixedCount > 0) {
+        await batch.commit()
+        console.log(`✅ Fixed ${fixedCount} unpublished colaciones`)
+      }
+
+      return {
+        success: true,
+        message: `Se corrigieron ${fixedCount} colaciones no publicadas`
+      }
+    } catch (error) {
+      console.error('❌ Error fixing unpublished colaciones:', error)
+      return {
+        success: false,
+        message: 'Error al corregir las colaciones no publicadas'
+      }
+    }
+  }
+
+  // CORREGIDO: Aplicar colaciones predeterminadas a un día específico
   static async createDefaultColacionesDay(weekStart: string, date: string): Promise<MenuOperationResult> {
     try {
+      console.log('🔄 Creating default colaciones for day:', date)
+      
       // Verificar que no existan colaciones para este día
       const menusRef = collection(db, this.COLLECTION_NAME)
       const q = query(
@@ -184,6 +321,8 @@ export class AdminMenuService {
       // Crear cada colación predeterminada para este día
       for (const colacion of activeColaciones) {
         const newDocRef = doc(menusRef)
+        
+        // CORREGIDO: Asegurar que todos los campos requeridos estén presentes
         const itemData = {
           code: colacion.code,
           description: colacion.description,
@@ -191,12 +330,21 @@ export class AdminMenuService {
           date,
           day: dayName,
           weekStart,
-          active: colacion.active,
-          published: true, // Auto-publicar colaciones predeterminadas
-          price: colacion.price, // Precio personalizado
+          active: true, // Forzar como activo
+          published: true, // CRÍTICO: Forzar como publicado
+          price: colacion.price,
           createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now()
+          updatedAt: Timestamp.now(),
+          // Campos adicionales para asegurar compatibilidad
+          available: true,
+          isDefaultColacion: true // Marcar como colación predeterminada
         }
+
+        console.log(`✅ Creating colacion ${colacion.code} for ${date}:`, {
+          code: itemData.code,
+          published: itemData.published,
+          active: itemData.active
+        })
 
         batch.set(newDocRef, itemData)
         itemsCreated++
@@ -204,15 +352,96 @@ export class AdminMenuService {
 
       await batch.commit()
 
+      console.log('✅ Default colaciones for day created successfully')
+
       return {
         success: true,
-        message: `Colaciones predeterminadas creadas exitosamente. ${itemsCreated} items creados para ${dayName}.`
+        message: `Colaciones predeterminadas creadas exitosamente. ${itemsCreated} items creados para ${dayName} y publicados automáticamente.`
       }
     } catch (error) {
-      console.error('Error creating default colaciones day:', error)
+      console.error('❌ Error creating default colaciones day:', error)
       return {
         success: false,
         message: 'Error al crear las colaciones predeterminadas. Por favor, intenta nuevamente.'
+      }
+    }
+  }
+
+  // NUEVO: Método para diagnosticar problemas de publicación
+  static async diagnosePublicationIssues(weekStart: string): Promise<{
+    totalItems: number
+    publishedItems: number
+    activeItems: number
+    issues: string[]
+    recommendations: string[]
+  }> {
+    try {
+      console.log('🔍 Diagnosing publication issues for week:', weekStart)
+      
+      const menusRef = collection(db, this.COLLECTION_NAME)
+      const q = query(
+        menusRef,
+        where('weekStart', '==', weekStart),
+        where('type', '==', 'colacion')
+      )
+
+      const snapshot = await getDocs(q)
+      const issues: string[] = []
+      const recommendations: string[] = []
+      
+      let totalItems = 0
+      let publishedItems = 0
+      let activeItems = 0
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data()
+        totalItems++
+        
+        if (data.active) activeItems++
+        if (data.published) publishedItems++
+        
+        // Detectar problemas específicos
+        if (!data.published && data.active) {
+          issues.push(`Colación ${data.code} está activa pero no publicada`)
+        }
+        
+        if (!data.active) {
+          issues.push(`Colación ${data.code} está inactiva`)
+        }
+        
+        if (data.price === undefined || data.price <= 0) {
+          issues.push(`Colación ${data.code} no tiene precio válido`)
+        }
+      })
+
+      // Generar recomendaciones
+      if (publishedItems < activeItems) {
+        recommendations.push('Ejecutar corrección automática de publicación')
+      }
+      
+      if (totalItems === 0) {
+        recommendations.push('Crear colaciones predeterminadas para esta semana')
+      }
+      
+      if (activeItems < totalItems) {
+        recommendations.push('Revisar y activar colaciones inactivas')
+      }
+
+      return {
+        totalItems,
+        publishedItems,
+        activeItems,
+        issues,
+        recommendations
+      }
+    } catch (error) {
+      console.error('❌ Error diagnosing publication issues:', error)
+      return {
+        totalItems: 0,
+        publishedItems: 0,
+        activeItems: 0,
+        issues: ['Error al diagnosticar problemas'],
+        recommendations: ['Contactar soporte técnico']
       }
     }
   }
