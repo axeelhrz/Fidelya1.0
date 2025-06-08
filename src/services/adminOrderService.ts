@@ -63,7 +63,31 @@ export class AdminOrderService {
   }
 
   // Función helper para extraer información de productos desde description o name
-  private static parseProductInfo(orderData: any): {
+  private static parseProductInfo(orderData: {
+    description?: string;
+    name?: string;
+    selections?: Array<{
+      date: string;
+      almuerzo?: {
+        code?: string;
+        codigo?: string;
+        name?: string;
+        nombre?: string;
+        description?: string;
+        price?: number;
+        precio?: number;
+      };
+      colacion?: {
+        code?: string;
+        codigo?: string;
+        name?: string;
+        nombre?: string;
+        description?: string;
+        price?: number;
+        precio?: number;
+      };
+    }>;
+  }): {
     productsSummary: string
     itemsDetail: Array<{
       date: string
@@ -95,11 +119,36 @@ export class AdminOrderService {
 
     // Si tenemos selections, procesarlas
     if (orderData.selections && Array.isArray(orderData.selections)) {
-      orderData.selections.forEach((selection: any) => {
+      orderData.selections.forEach((selection: {
+        date: string;
+        almuerzo?: {
+          code?: string;
+          codigo?: string;
+          name?: string;
+          nombre?: string;
+          description?: string;
+          price?: number;
+          precio?: number;
+        };
+        colacion?: {
+          code?: string;
+          codigo?: string;
+          name?: string;
+          nombre?: string;
+          description?: string;
+          price?: number;
+          precio?: number;
+        };
+      }) => {
         try {
           const dayName = format(parseISO(selection.date), 'EEEE', { locale: es })
           
-          const dayDetail: any = {
+          const dayDetail: {
+            date: string;
+            dayName: string;
+            almuerzo?: { code: string; name: string; price: number };
+            colacion?: { code: string; name: string; price: number };
+          } = {
             date: selection.date,
             dayName: dayName
           }
@@ -134,7 +183,7 @@ export class AdminOrderService {
       // Intentar extraer información de productos desde el texto
       const lines = productsSummary.split('\n').filter(line => line.trim())
       
-      lines.forEach((line, index) => {
+      lines.forEach((line) => {
         // Buscar patrones como "Lunes: ALM001 - Almuerzo especial"
         const dayMatch = line.match(/(lunes|martes|miércoles|jueves|viernes)/i)
         if (dayMatch) {
@@ -146,7 +195,12 @@ export class AdminOrderService {
           const estimatedDate = new Date(today)
           estimatedDate.setDate(today.getDate() + dayIndex)
           
-          const dayDetail: any = {
+          const dayDetail: {
+            date: string;
+            dayName: string;
+            almuerzo?: { code: string; name: string; price: number };
+            colacion?: { code: string; name: string; price: number };
+          } = {
             date: format(estimatedDate, 'yyyy-MM-dd'),
             dayName: dayName
           }
@@ -180,7 +234,32 @@ export class AdminOrderService {
   }
 
   // Función helper para procesar selecciones y calcular resumen de items
-  private static processOrderSelections(orderData: any): {
+  private static processOrderSelections(orderData: {
+    description?: string;
+    name?: string;
+    total?: number | string;
+    selections?: Array<{
+      date: string;
+      almuerzo?: {
+        code?: string;
+        codigo?: string;
+        name?: string;
+        nombre?: string;
+        description?: string;
+        price?: number;
+        precio?: number;
+      };
+      colacion?: {
+        code?: string;
+        codigo?: string;
+        name?: string;
+        nombre?: string;
+        description?: string;
+        price?: number;
+        precio?: number;
+      };
+    }>;
+  }): {
     itemsCount: number
     hasColaciones: boolean
     itemsSummary: AdminOrderView['itemsSummary']
@@ -321,7 +400,7 @@ export class AdminOrderService {
             const cancelledAt = orderData.cancelledAt ? this.safeTimestampToDate(orderData.cancelledAt) : undefined
 
             // Procesar selecciones y calcular estadísticas
-            const { itemsCount, hasColaciones, itemsSummary, productsSummary } = this.processOrderSelections(orderData)
+            const { itemsCount, hasColaciones, itemsSummary } = this.processOrderSelections(orderData)
             const total = Number(orderData.total) || 0
 
             // Calcular días desde que está pendiente
@@ -682,7 +761,7 @@ export class AdminOrderService {
       const cancelledAt = orderData.cancelledAt ? this.safeTimestampToDate(orderData.cancelledAt) : undefined
 
       // Procesar información de productos
-      const { itemsSummary, productsSummary } = this.processOrderSelections(orderData)
+      const { itemsSummary } = this.processOrderSelections(orderData)
 
       // Usar itemsDetail del procesamiento mejorado
       const processedSelections = itemsSummary.itemsDetail.map(detail => ({
