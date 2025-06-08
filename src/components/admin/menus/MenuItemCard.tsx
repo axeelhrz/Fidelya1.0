@@ -66,17 +66,17 @@ export function MenuItemCard({
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2 }}
         whileHover={{ y: -2 }}
-        className="group"
+        className="group w-full"
       >
-        <Card className={`transition-all duration-300 hover:shadow-lg ${
+        <Card className={`transition-all duration-300 hover:shadow-lg w-full ${
           item.active 
             ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600' 
             : 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600 opacity-75'
         }`}>
-          <CardContent className="p-4">
+          <CardContent className="p-5">
             {/* Header con código y estado */}
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center space-x-2">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center space-x-2 flex-wrap">
                 <Badge 
                   variant={item.type === 'almuerzo' ? 'default' : 'secondary'}
                   className={`text-xs font-medium ${
@@ -112,15 +112,15 @@ export function MenuItemCard({
                 )}
               </div>
               
-              <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleEdit}
                   disabled={isLoading}
-                  className="h-7 w-7 p-0 hover:bg-blue-100 hover:text-blue-700"
+                  className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-700"
                 >
-                  <Edit className="w-3.5 h-3.5" />
+                  <Edit className="w-4 h-4" />
                 </Button>
                 
                 <Button
@@ -128,18 +128,18 @@ export function MenuItemCard({
                   size="sm"
                   onClick={handleDelete}
                   disabled={isLoading}
-                  className="h-7 w-7 p-0 hover:bg-red-100 hover:text-red-700"
+                  className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-700"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </div>
 
             {/* Contenido principal */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               {/* Título */}
               <div>
-                <h4 className={`font-semibold text-sm leading-tight ${
+                <h4 className={`font-semibold text-base leading-tight break-words ${
                   item.active 
                     ? 'text-slate-900 dark:text-slate-100' 
                     : 'text-slate-600 dark:text-slate-400'
@@ -151,7 +151,7 @@ export function MenuItemCard({
               {/* Descripción (si existe) */}
               {item.description && (
                 <div>
-                  <p className={`text-xs leading-relaxed ${
+                  <p className={`text-sm leading-relaxed break-words ${
                     item.active 
                       ? 'text-slate-600 dark:text-slate-400' 
                       : 'text-slate-500 dark:text-slate-500'
@@ -162,7 +162,7 @@ export function MenuItemCard({
               )}
 
               {/* Footer con precio y tipo */}
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700">
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700">
                 <div className="flex items-center space-x-2">
                   <Badge 
                     variant="outline" 
@@ -172,13 +172,13 @@ export function MenuItemCard({
                         : 'text-emerald-600 border-emerald-200 bg-emerald-50'
                     }`}
                   >
-                    <Clock className="w-2.5 h-2.5 mr-1" />
+                    <Clock className="w-3 h-3 mr-1" />
                     {item.type === 'almuerzo' ? 'Almuerzo' : 'Colación'}
                   </Badge>
                 </div>
                 
-                <div className="text-right">
-                  <p className={`font-bold text-sm ${
+                <div className="text-right flex-shrink-0">
+                  <p className={`font-bold text-base ${
                     item.active 
                       ? 'text-green-600 dark:text-green-400' 
                       : 'text-slate-500 dark:text-slate-500'

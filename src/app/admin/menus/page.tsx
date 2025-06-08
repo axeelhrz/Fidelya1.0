@@ -70,7 +70,7 @@ export default function AdminMenusPage() {
   if (error) {
     return (
       <AdminLayout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="flex items-center justify-between">
@@ -95,7 +95,7 @@ export default function AdminMenusPage() {
     <AdminLayout>
       {/* Header Simplificado */}
       <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
             {/* Información principal */}
             <div className="flex-1">
@@ -185,7 +185,7 @@ export default function AdminMenusPage() {
       </div>
 
       {/* Contenido principal */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="space-y-6">
           {/* Navegador de semanas */}
           <WeekNavigator
@@ -237,11 +237,11 @@ export default function AdminMenusPage() {
             </motion.div>
           )}
 
-          {/* Grid de días */}
+          {/* Grid de días - Más ancho para mejor visualización */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
               {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-80" />
+                <Skeleton key={i} className="h-96" />
               ))}
             </div>
           ) : weekMenu ? (
@@ -249,7 +249,7 @@ export default function AdminMenusPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
+              className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
             >
               {weekMenu.days.map((dayMenu, index) => (
                 <motion.div
@@ -257,6 +257,7 @@ export default function AdminMenusPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 * index }}
+                  className="min-w-0" // Permite que el contenido se ajuste
                 >
                   <DayMenuContainer
                     dayMenu={dayMenu}
