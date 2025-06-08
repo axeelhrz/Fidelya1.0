@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { Navbar } from '@/components/panel/Navbar'
 import { GreetingCard } from '@/components/panel/dashboard/GreetingCard'
-import { OrderStatusCard } from '@/components/panel/dashboard/OrderStatusCard'
 import { EconomicSummaryCard } from '@/components/panel/dashboard/EconomicSummaryCard'
 import { WeeklyMenuInfoCard } from '@/components/panel/dashboard/WeeklyMenuInfoCard'
 import { QuickActionsCard } from '@/components/panel/dashboard/QuickActionsCard'
@@ -306,9 +305,8 @@ export default function PanelPage() {
           {/* Saludo personalizado */}
           <GreetingCard user={dashboardData.user} />
 
-          {/* Grid de tarjetas principales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <OrderStatusCard orderStatus={dashboardData.orderStatus} />
+          {/* Grid de tarjetas principales - sin OrderStatusCard */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <EconomicSummaryCard economicSummary={dashboardData.economicSummary} />
             <WeeklyMenuInfoCard weeklyMenuInfo={dashboardData.weeklyMenuInfo} />
           </div>
