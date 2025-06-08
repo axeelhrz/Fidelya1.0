@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import { ShoppingCart, ArrowRight, Clock, CheckCircle, Edit, CreditCard, AlertTriangle } from 'lucide-react'
+import { ShoppingCart, ArrowRight, Clock, CheckCircle, Edit, CreditCard, AlertTriangle, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { OrderStatus } from '@/types/dashboard'
 import { getOrderStatusInfo, getProgressPercentage } from '@/lib/dashboardUtils'
@@ -19,7 +19,8 @@ const StatusIcon = ({ iconName, className }: { iconName: string; className?: str
     Edit: Edit,
     CheckCircle: CheckCircle,
     CreditCard: CreditCard,
-    AlertTriangle: AlertTriangle
+    AlertTriangle: AlertTriangle,
+    Calendar: Calendar
   }
   
   const IconComponent = icons[iconName as keyof typeof icons] || Clock
@@ -45,86 +46,127 @@ export function OrderStatusCard({ orderStatus }: OrderStatusCardProps) {
       className="panel-card"
     >
       <div className="panel-card-content">
-        {/* Header */}
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-lg flex items-center justify-center">
-            <ShoppingCart className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 text-clean">
-              Estado del Pedido
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 text-clean">
-              Semana actual
-            </p>
+        {/* Header mejorado */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+              <ShoppingCart className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 text-clean">
+                Estado del Pedido
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 text-clean">
+                Semana actual
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Estado actual */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+        {/* Estado actual mejorado */}
+        <div className="space-y-6">
+          <div className="flex items-start space-x-4">
+            <div className={`p-3 rounded-xl ${
+              isDeadlinePassed 
+                ? 'bg-red-100 dark:bg-red-900/30' 
+                : 'bg-slate-100 dark:bg-slate-700'
+            }`}>
               <StatusIcon 
                 iconName={isDeadlinePassed ? 'AlertTriangle' : statusInfo.iconName} 
-                className={`w-6 h-6 ${isDeadlinePassed ? 'text-red-500' : 'text-slate-600 dark:text-slate-400'}`} 
+                className={`w-6 h-6 ${
+                  isDeadlinePassed 
+                    ? 'text-red-600 dark:text-red-400' 
+                    : 'text-slate-600 dark:text-slate-400'
+                }`} 
               />
-              <div>
-                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                  isDeadlinePassed ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' : statusInfo.color
-                }`}>
-                  {isDeadlinePassed ? 'Fecha límite vencida' : statusInfo.label}
-                </div>
-                <p className="text-sm text-slate-600 dark:text-slate-400 text-clean mt-1">
-                  {isDeadlinePassed ? 'Contacta al administrador para cambios' : statusInfo.description}
-                </p>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold ${
+                isDeadlinePassed 
+                  ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800' 
+                  : statusInfo.color
+              }`}>
+                {isDeadlinePassed ? 'Fecha límite vencida' : statusInfo.label}
               </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400 text-clean mt-2 leading-relaxed">
+                {isDeadlinePassed 
+                  ? 'Contacta al administrador para realizar cambios en tu pedido' 
+                  : statusInfo.description
+                }
+              </p>
             </div>
           </div>
 
-          {/* Barra de progreso */}
+          {/* Barra de progreso mejorada */}
           {orderStatus.status !== 'not_started' && !isDeadlinePassed && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600 dark:text-slate-400 text-clean">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-slate-600 dark:text-slate-400 text-clean">
                   Progreso semanal
                 </span>
-                <span className="font-medium text-slate-800 dark:text-slate-100 text-clean">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100 text-clean">
                   {orderStatus.daysSelected}/{orderStatus.totalDays} días
                 </span>
               </div>
-              <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressPercentage}%` }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  className={`h-2 rounded-full ${
-                    orderStatus.status === 'paid' 
-                      ? 'bg-gradient-to-r from-emerald-500 to-green-500'
-                      : 'bg-gradient-to-r from-blue-500 to-emerald-500'
-                  }`}
-                />
+              <div className="relative">
+                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercentage}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className={`h-3 rounded-full ${
+                      orderStatus.status === 'paid' 
+                        ? 'bg-gradient-to-r from-emerald-500 to-green-500'
+                        : 'bg-gradient-to-r from-blue-500 to-emerald-500'
+                    }`}
+                  />
+                </div>
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-white/20 to-transparent pointer-events-none" />
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 text-clean">
-                {progressPercentage}% completado
-              </p>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500 dark:text-slate-400 text-clean">
+                  {progressPercentage}% completado
+                </span>
+                <span className="text-slate-500 dark:text-slate-400 text-clean">
+                  {orderStatus.totalDays - orderStatus.daysSelected} días restantes
+                </span>
+              </div>
             </div>
           )}
 
-          {/* Información de fecha límite */}
+          {/* Información de fecha límite mejorada */}
           {orderStatus.paymentDeadline && (
-            <div className={`flex items-center space-x-2 text-sm p-3 rounded-lg ${
+            <div className={`flex items-start space-x-3 p-4 rounded-xl border ${
               isDeadlinePassed 
-                ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                 : isNearDeadline
-                ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
-                : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+                : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
             }`}>
-              <Clock className="w-4 h-4" />
-              <div>
-                <p className="font-medium text-clean">
+              <Clock className={`w-5 h-5 mt-0.5 ${
+                isDeadlinePassed 
+                  ? 'text-red-600 dark:text-red-400'
+                  : isNearDeadline
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-blue-600 dark:text-blue-400'
+              }`} />
+              <div className="flex-1 min-w-0">
+                <p className={`font-semibold text-sm ${
+                  isDeadlinePassed 
+                    ? 'text-red-700 dark:text-red-300'
+                    : isNearDeadline
+                    ? 'text-amber-700 dark:text-amber-300'
+                    : 'text-blue-700 dark:text-blue-300'
+                } text-clean`}>
                   {isDeadlinePassed ? 'Fecha límite vencida' : 'Fecha límite para cambios'}
                 </p>
-                <p className="text-xs text-clean opacity-90">
+                <p className={`text-xs mt-1 ${
+                  isDeadlinePassed 
+                    ? 'text-red-600 dark:text-red-400'
+                    : isNearDeadline
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-blue-600 dark:text-blue-400'
+                } text-clean`}>
                   {format(orderStatus.paymentDeadline, "EEEE dd 'de' MMMM 'a las' HH:mm", { locale: es })}
                 </p>
               </div>
@@ -133,28 +175,28 @@ export function OrderStatusCard({ orderStatus }: OrderStatusCardProps) {
 
           {/* Información adicional */}
           {orderStatus.lastModified && (
-            <div className="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400">
-              <Clock className="w-4 h-4" />
+            <div className="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
+              <Calendar className="w-4 h-4" />
               <span className="text-clean">
                 Última modificación: {format(orderStatus.lastModified, "dd/MM/yyyy 'a las' HH:mm", { locale: es })}
               </span>
             </div>
           )}
 
-          {/* Botón de acción */}
+          {/* Botón de acción mejorado */}
           <motion.div
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             <Link href="/panel" className="block">
               <Button 
-                className={`w-full ${
+                className={`w-full h-12 text-base font-semibold rounded-xl ${
                   isDeadlinePassed 
                     ? 'bg-slate-400 hover:bg-slate-500 text-white cursor-not-allowed'
                     : orderStatus.status === 'paid'
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
+                } transition-all duration-300`}
                 disabled={isDeadlinePassed}
               >
                 <span>
@@ -165,7 +207,7 @@ export function OrderStatusCard({ orderStatus }: OrderStatusCardProps) {
                     : statusInfo.actionText
                   }
                 </span>
-                {!isDeadlinePassed && <ArrowRight className="w-4 h-4 ml-2" />}
+                {!isDeadlinePassed && <ArrowRight className="w-5 h-5 ml-2" />}
               </Button>
             </Link>
           </motion.div>
