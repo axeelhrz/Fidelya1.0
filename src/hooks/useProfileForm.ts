@@ -6,6 +6,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '@/app/lib/firebase'
 import { useAuth } from '@/hooks/useAuth'
 import { Child } from '@/types/panel'
+import { SchoolLevel, migrateCourseFormat, validateCourseFormat } from '@/lib/courseUtils'
 
 interface ProfileFormData {
   firstName: string
@@ -16,7 +17,7 @@ interface ProfileFormData {
 
 interface ExtendedChild extends Child {
   edad: number
-  level: 'basico' | 'medio'
+  level: SchoolLevel
 }
 
 interface UseProfileFormReturn {
@@ -32,7 +33,7 @@ interface UseProfileFormReturn {
   resendCooldownTime: number
   updateFormData: (field: keyof ProfileFormData, value: string) => void
   addChild: () => void
-  updateChild: (id: string, field: keyof ExtendedChild, value: string | number | boolean) => void
+  updateChild: (id: string, field: keyof ExtendedChild, value: string | number | boolean | SchoolLevel) => void
   removeChild: (id: string) => void
   saveChanges: () => Promise<boolean>
   resendEmailVerification: () => Promise<boolean>
@@ -107,17 +108,23 @@ export function useProfileForm(): UseProfileFormReturn {
         phone: user.phone || ''
       }
       
-      // Transform children to include edad and level properties with better mapping
+      // Transform children to include edad and level properties with migration
       const transformedChildren: ExtendedChild[] = (user.children || []).map(child => {
+        // Migrar curso y nivel si es necesario
+        const { curso: migratedCourse, level: migratedLevel } = migrateCourseFormat(
+          child.curso || '',
+          child.level as SchoolLevel
+        )
+        
         return {
           id: child.id || Date.now().toString(),
           name: child.name || '',
-          curso: child.curso || '',
+          curso: migratedCourse,
           rut: child.rut || undefined,
           active: child.active !== undefined ? child.active : true,
           edad: child.edad || child.age || 0,
           age: child.age || child.edad || 0,
-          level: child.level || 'basico'
+          level: migratedLevel
         }
       }).filter(child => child.name.trim() !== '') // Solo incluir hijos con nombre
       
@@ -174,22 +181,29 @@ export function useProfileForm(): UseProfileFormReturn {
       active: true,
       edad: 0,
       age: 0,
-      level: 'basico'
+      level: 'Lower School'
       // Note: rut is omitted instead of being undefined
     }
     setChildren(prev => [...prev, newChild])
   }
 
-  const updateChild = (id: string, field: keyof ExtendedChild, value: string | number | boolean) => {
+  const updateChild = (id: string, field: keyof ExtendedChild, value: string | number | boolean | SchoolLevel) => {
     setChildren(prev => prev.map(child => {
       if (child.id === id) {
         const updatedChild = { ...child, [field]: value }
+        
         // Sincronizar age y edad
         if (field === 'edad') {
           updatedChild.age = value as number
         } else if (field === 'age') {
           updatedChild.edad = value as number
         }
+        
+        // Si se cambia el nivel, limpiar el curso para que el usuario seleccione uno nuevo
+        if (field === 'level') {
+          updatedChild.curso = ''
+        }
+        
         return updatedChild
       }
       return child
@@ -254,6 +268,11 @@ export function useProfileForm(): UseProfileFormReturn {
         }
         if (!safeTrim(child.curso)) {
           newErrors[`child_${child.id}_curso`] = `Curso del hijo ${index + 1} es requerido`
+        } else if (!validateCourseFormat(child.curso, child.level)) {
+          newErrors[`child_${child.id}_curso`] = `Formato de curso inválido para hijo ${index + 1}. Debe seguir el formato del nivel seleccionado.`
+        }
+        if (!child.level) {
+          newErrors[`child_${child.id}_level`] = `Nivel educativo del hijo ${index + 1} es requerido`
         }
         // Validar RUT si se proporciona
         if (child.rut && safeTrim(child.rut)) {
@@ -313,7 +332,7 @@ export function useProfileForm(): UseProfileFormReturn {
           active: child.active !== undefined ? child.active : true,
           age: child.edad || child.age || 0,
           edad: child.edad || child.age || 0,
-          level: child.level || 'basico'
+          level: child.level
         }
         
         // Only include rut if it has a value

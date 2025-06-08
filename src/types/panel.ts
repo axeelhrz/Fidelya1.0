@@ -42,7 +42,7 @@ export interface Child {
   active: boolean
   age?: number
   edad?: number
-  level?: 'basico' | 'medio'
+  level?: 'Pre School' | 'Lower School' | 'Middle School' | 'High School'
 }
 
 export interface User {

@@ -20,7 +20,7 @@ export interface AdminUserChild {
   name: string
   age: number
   class: string
-  level: 'basico' | 'medio'
+  level: 'Pre School' | 'Lower School' | 'Middle School' | 'High School'
   rut?: string
 }
 
@@ -45,7 +45,7 @@ export interface Child {
   active: boolean
   age?: number
   edad?: number
-  level?: 'basico' | 'medio'
+  level?: 'Pre School' | 'Lower School' | 'Middle School' | 'High School'
 }
 
 export type UserType = 'apoderado' | 'funcionario'
