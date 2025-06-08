@@ -8,7 +8,6 @@ import {
   AlertCircle, 
   CheckCircle2,
   Loader2,
-  Settings
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -26,6 +25,13 @@ import { DefaultColacionesService } from '@/services/defaultColacionesService'
 import { DefaultColacionesManager } from './DefaultColacionesManager'
 import { useToast } from '@/hooks/use-toast'
 
+interface DefaultColacion {
+  code: string
+  description: string
+  price: number
+  active: boolean
+}
+
 interface DefaultColacionesActionsProps {
   weekStart: string
   onMenuUpdated: () => void
@@ -37,7 +43,7 @@ export function DefaultColacionesActions({
 }: DefaultColacionesActionsProps) {
   const [isCreatingWeek, setIsCreatingWeek] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [defaultColaciones, setDefaultColaciones] = useState<any[]>([])
+  const [defaultColaciones, setDefaultColaciones] = useState<DefaultColacion[]>([])
   const [isLoadingColaciones, setIsLoadingColaciones] = useState(false)
   const { toast } = useToast()
 

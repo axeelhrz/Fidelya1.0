@@ -4,6 +4,7 @@ import { AdminLayout } from '@/components/admin/AdminLayout'
 import { WeekNavigator } from '@/components/admin/menus/WeekNavigator'
 import { DayMenuContainer } from '@/components/admin/menus/DayMenuContainer'
 import { MenuItemModal } from '@/components/admin/menus/MenuItemModal'
+import { DefaultColacionesActions } from '@/components/admin/menus/DefaultColacionesActions'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -191,6 +192,12 @@ export default function AdminMenusPage() {
             navigation={navigation}
             onNavigate={navigateWeek}
             isLoading={isLoading}
+          />
+
+          {/* Acciones de colaciones predeterminadas */}
+          <DefaultColacionesActions
+            weekStart={currentWeek}
+            onMenuUpdated={refreshMenu}
           />
 
           {/* Resumen rápido */}

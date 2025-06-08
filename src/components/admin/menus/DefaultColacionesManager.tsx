@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Settings, 
@@ -63,7 +63,7 @@ export function DefaultColacionesManager({ onConfigUpdated }: DefaultColacionesM
   const { toast } = useToast()
 
   // Cargar colaciones predeterminadas
-  const loadColaciones = async () => {
+  const loadColaciones = useCallback(async () => {
     setIsLoading(true)
     try {
       const data = await DefaultColacionesService.getDefaultColaciones()
@@ -78,7 +78,7 @@ export function DefaultColacionesManager({ onConfigUpdated }: DefaultColacionesM
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [toast])
 
   // Guardar configuración
   const handleSave = async () => {
@@ -198,7 +198,7 @@ export function DefaultColacionesManager({ onConfigUpdated }: DefaultColacionesM
     if (isOpen) {
       loadColaciones()
     }
-  }, [isOpen])
+  }, [isOpen, loadColaciones])
 
   return (
     <>
