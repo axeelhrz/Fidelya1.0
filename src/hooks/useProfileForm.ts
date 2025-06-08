@@ -43,6 +43,29 @@ const RESEND_COOLDOWN_SECONDS = 60 // 1 minute cooldown
 const MAX_RETRY_ATTEMPTS = 3
 const RETRY_DELAYS = [1000, 3000, 5000] // Progressive delays in milliseconds
 
+// Helper function to clean data for Firestore (remove undefined values)
+function cleanDataForFirestore(obj: unknown): unknown {
+  if (obj === null || obj === undefined) {
+    return null
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanDataForFirestore(item))
+  }
+  
+  if (typeof obj === 'object') {
+    const cleaned: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        cleaned[key] = cleanDataForFirestore(value)
+      }
+    }
+    return cleaned
+  }
+  
+  return obj
+}
+
 export function useProfileForm(): UseProfileFormReturn {
   const { user } = useAuth()
   const [formData, setFormData] = useState<ProfileFormData>({
@@ -136,10 +159,10 @@ export function useProfileForm(): UseProfileFormReturn {
       id: Date.now().toString(),
       name: '',
       curso: '',
-      rut: undefined,
       active: true,
       edad: 0,
       level: 'basico'
+      // Note: rut is omitted instead of being undefined
     }
     setChildren(prev => [...prev, newChild])
   }
@@ -187,6 +210,15 @@ export function useProfileForm(): UseProfileFormReturn {
       newErrors.email = 'Formato de correo electrónico inválido'
     }
 
+    // Validar teléfono si se proporciona
+    if (formData.phone && formData.phone.trim()) {
+      // Basic phone validation - allow various formats
+      const phoneRegex = /^[\+]?[0-9\s\-\(\)]{8,15}$/
+      if (!phoneRegex.test(formData.phone.trim())) {
+        newErrors.phone = 'Formato de teléfono inválido'
+      }
+    }
+
     // Validar hijos si es apoderado
     if (user?.tipoUsuario === 'apoderado' && children.length > 0) {
       children.forEach((child, index) => {
@@ -231,27 +263,67 @@ export function useProfileForm(): UseProfileFormReturn {
       }
 
       // Transform children back to the format expected by the database
-      const transformedChildren = children.map(child => ({
-        id: child.id,
-        name: child.name,
-        curso: child.curso,
-        rut: child.rut,
-        active: child.active,
-        age: child.edad, // Map edad back to age
-        level: child.level
-      }))
+      const transformedChildren = children.map(child => {
+        const childData: {
+          id: string
+          name: string
+          curso: string
+          active: boolean
+          age: number
+          level: 'basico' | 'medio'
+          rut?: string
+        } = {
+          id: child.id,
+          name: child.name.trim(),
+          curso: child.curso.trim(),
+          active: child.active,
+          age: child.edad, // Map edad back to age
+          level: child.level
+        }
+        
+        // Only include rut if it has a value
+        if (child.rut && child.rut.trim()) {
+          childData.rut = child.rut.trim()
+        }
+        
+        return childData
+      })
 
-      // Actualizar documento en Firestore
-      const updateData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
+      // Prepare update data, ensuring no undefined values
+      const updateData: {
+        firstName: string
+        lastName: string
+        email: string
+        children: Array<{
+          id: string
+          name: string
+          curso: string
+          active: boolean
+          age: number
+          level: 'basico' | 'medio'
+          rut?: string
+        }>
+        updatedAt: Date
+        phone?: string
+      } = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
         children: transformedChildren,
         updatedAt: new Date()
       }
 
-      await updateDoc(userDocRef, updateData)
+      // Only include phone if it has a value
+      if (formData.phone && formData.phone.trim()) {
+        updateData.phone = formData.phone.trim()
+      }
+
+      // Clean the data to remove any undefined values
+      const cleanedUpdateData = cleanDataForFirestore(updateData) as typeof updateData
+
+      console.log('Saving data to Firestore:', cleanedUpdateData) // Debug log
+
+      await updateDoc(userDocRef, cleanedUpdateData)
 
       // Actualizar datos originales
       setOriginalData(formData)
@@ -271,6 +343,8 @@ export function useProfileForm(): UseProfileFormReturn {
         setErrors({ email: 'Formato de correo electrónico inválido' })
       } else if (firebaseError.code === 'auth/requires-recent-login') {
         setErrors({ email: 'Debes volver a iniciar sesión para cambiar tu correo' })
+      } else if (firebaseError.message?.includes('invalid data')) {
+        setErrors({ general: 'Error en los datos proporcionados. Verifica que todos los campos estén completos correctamente.' })
       } else {
         setErrors({ general: 'Error al guardar los cambios. Intenta nuevamente.' })
       }
