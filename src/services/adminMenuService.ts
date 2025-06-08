@@ -219,11 +219,24 @@ export class AdminMenuService {
       }
 
       const menusRef = collection(db, this.COLLECTION_NAME)
-      const docData = {
-        ...itemData,
+      
+      // Preparar datos para Firestore - CORREGIDO: No enviar campos undefined
+      const docData: Record<string, unknown> = {
+        code: itemData.code,
+        description: itemData.description,
+        type: itemData.type,
+        date: itemData.date,
+        day: itemData.day,
+        weekStart: itemData.weekStart,
+        active: itemData.active,
         published: false, // Por defecto no publicado - requiere publicación manual
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
+      }
+
+      // Solo agregar precio si tiene valor válido
+      if (itemData.price !== undefined && itemData.price > 0) {
+        docData.price = itemData.price
       }
 
       const docRef = await addDoc(menusRef, docData)
@@ -271,10 +284,27 @@ export class AdminMenuService {
         }
       }
 
-      const updateData = {
-        ...updates,
+      // Preparar datos de actualización - CORREGIDO: Manejar campos undefined
+      const updateData: { [key: string]: string | number | boolean | Timestamp } = {
         updatedAt: Timestamp.now()
       }
+
+      // Solo agregar campos que no sean undefined
+      Object.keys(updates).forEach(key => {
+        const value = updates[key as keyof Partial<AdminMenuItem>]
+        if (value !== undefined) {
+          if (key === 'price' && typeof value === 'number' && value <= 0) {
+            // Si el precio es 0 o negativo, no lo incluir (usar precio base)
+            return
+          }
+          // Convert Date objects to Timestamp for Firestore
+          if (value instanceof Date) {
+            updateData[key] = Timestamp.fromDate(value)
+          } else {
+            updateData[key] = value
+          }
+        }
+      })
 
       await updateDoc(docRef, updateData)
       
@@ -345,7 +375,7 @@ export class AdminMenuService {
           weekStart: data.weekStart,
           active: data.active,
           published: data.published ?? false, // Manejar menús antiguos sin campo published
-          price: data.price, // Incluir precio personalizado
+          price: data.price, // Incluir precio personalizado (puede ser undefined)
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate()
         })
@@ -375,7 +405,7 @@ export class AdminMenuService {
 
       const allItems = menu.days.flatMap(day => [...day.almuerzos, ...day.colaciones])
       const activeItems = allItems.filter(item => item.active)
-      const publishedItems = allItems.filter(item => (item as AdminMenuItem).published)
+      const publishedItems = activeItems.filter(item => (item as AdminMenuItem).published)
       const daysWithMenus = menu.days.filter(day => 
         day.almuerzos.length > 0 || day.colaciones.length > 0
       ).length
@@ -433,7 +463,9 @@ export class AdminMenuService {
         const newDay = format(newDate, 'EEEE', { locale: es }).toLowerCase()
 
         const newDocRef = doc(menusRef)
-        const newItemData = {
+        
+        // Preparar datos del nuevo item - CORREGIDO: No enviar campos undefined
+        const newItemData: Record<string, string | number | boolean | Timestamp> = {
           code: sourceItem.code,
           description: sourceItem.description,
           type: sourceItem.type,
@@ -442,9 +474,13 @@ export class AdminMenuService {
           weekStart: targetWeek,
           active: sourceItem.active,
           published: false, // Los menús duplicados no se publican automáticamente
-          price: sourceItem.price, // Incluir precio personalizado
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now()
+        }
+
+        // Solo incluir precio si tiene valor válido
+        if (sourceItem.price !== undefined && sourceItem.price > 0) {
+          newItemData.price = sourceItem.price
         }
 
         batch.set(newDocRef, newItemData)
@@ -629,7 +665,7 @@ export class AdminMenuService {
         weekStart: data.weekStart,
         active: data.active,
         published: data.published ?? false,
-        price: data.price, // Incluir precio personalizado
+        price: data.price, // Incluir precio personalizado (puede ser undefined)
         createdAt: data.createdAt?.toDate(),
         updatedAt: data.updatedAt?.toDate()
       }

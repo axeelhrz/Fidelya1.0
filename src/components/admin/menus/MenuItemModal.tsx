@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Save, AlertCircle, Eye, Users, Target } from 'lucide-react'
+import { Save, AlertCircle, Eye, Users, Target, DollarSign } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,12 +13,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AdminMenuItem, MenuFormData, MenuModalState, MenuOperationResult } from '@/types/adminMenu'
 import { generateMenuCode, validateMenuCode } from '@/lib/adminMenuUtils'
+import { PRICES } from '@/types/panel'
 
 interface MenuItemModalProps {
   modalState: MenuModalState
@@ -126,16 +128,33 @@ export function MenuItemModal({
       let result: MenuOperationResult
 
       if (modalState.mode === 'edit' && modalState.item?.id) {
-        result = await onUpdate(modalState.item.id, formData)
+        // Preparar datos del item para actualización
+        const itemData: Partial<AdminMenuItem> = {
+          code: formData.code,
+          description: formData.description,
+          type: formData.type,
+          active: formData.active
+        }
+
+        // Solo incluir precio si se usa precio personalizado y tiene valor válido
+        if (useCustomPrice && formData.price && formData.price > 0) {
+          itemData.price = formData.price
+        }
+
+        result = await onUpdate(modalState.item.id, itemData)
       } else {
-        const itemData: Omit<AdminMenuItem, 'id'> = {
-          ...formData,
+        const fullItemData: Omit<AdminMenuItem, 'id'> = {
+          code: formData.code,
+          description: formData.description,
+          type: formData.type,
+          active: formData.active,
+          published: true,
           date: modalState.date,
           day: modalState.day,
           weekStart,
-          published: true
+          ...(useCustomPrice && formData.price && formData.price > 0 && { price: formData.price })
         }
-        result = await onSave(itemData)
+        result = await onSave(fullItemData)
       }
 
       if (result.success) {
@@ -154,13 +173,26 @@ export function MenuItemModal({
     }
   }
 
-  const handleInputChange = (field: keyof MenuFormData, value: string | boolean) => {
+  const handleInputChange = (field: keyof MenuFormData, value: string | boolean | number) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     
     // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }))
     }
+  }
+
+  const getDisplayPrice = (): string => {
+    if (useCustomPrice && formData.price) {
+      return `$${formData.price.toLocaleString('es-CL')}`
+    }
+    
+    // Mostrar precio base según tipo
+    const basePrice = formData.type === 'almuerzo' 
+      ? PRICES.apoderado.almuerzo 
+      : PRICES.apoderado.colacion
+    
+    return `$${basePrice.toLocaleString('es-CL')} (precio base)`
   }
 
   const isEditMode = modalState.mode === 'edit'
@@ -178,6 +210,12 @@ export function MenuItemModal({
               </Badge>
             )}
           </DialogTitle>
+          <DialogDescription>
+            {isEditMode 
+              ? 'Modifica los detalles del menú. Los cambios se reflejarán inmediatamente para todos los usuarios.'
+              : 'Crea un nuevo elemento del menú con descripción y precio personalizable.'
+            }
+          </DialogDescription>
         </DialogHeader>
 
         <motion.form 
@@ -198,7 +236,7 @@ export function MenuItemModal({
             <CardContent>
               <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
                       <Badge 
                         variant={formData.type === 'almuerzo' ? 'default' : 'secondary'}
@@ -211,14 +249,22 @@ export function MenuItemModal({
                           Disponible
                         </Badge>
                       )}
+                      {useCustomPrice && (
+                        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700">
+                          Precio personalizado
+                        </Badge>
+                      )}
                     </div>
-                    <p className="font-medium text-slate-900 dark:text-white">
+                    <p className="font-medium text-slate-900 dark:text-white mb-1">
                       {formData.description || 'Descripción del menú...'}
+                    </p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      {formData.type === 'almuerzo' ? 'Almuerzo' : 'Colación'}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      {formData.type === 'almuerzo' ? 'Almuerzo' : 'Colación'}
+                    <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                      {getDisplayPrice()}
                     </p>
                   </div>
                 </div>
@@ -314,6 +360,55 @@ export function MenuItemModal({
             </div>
           </div>
 
+          {/* Precio personalizado */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+              <div className="space-y-1">
+                <Label className="text-sm font-medium flex items-center space-x-2">
+                  <DollarSign className="w-4 h-4" />
+                  <span>Precio personalizado</span>
+                </Label>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  {useCustomPrice 
+                    ? 'Este menú tendrá un precio específico diferente al precio base'
+                    : 'Se usará el precio base según el tipo de usuario'
+                  }
+                </p>
+              </div>
+              <Switch
+                checked={useCustomPrice}
+                onCheckedChange={setUseCustomPrice}
+              />
+            </div>
+
+            {useCustomPrice && (
+              <div className="space-y-2">
+                <Label htmlFor="price" className="text-sm font-medium">
+                  Precio (CLP) *
+                </Label>
+                <Input
+                  id="price"
+                  type="number"
+                  value={formData.price || ''}
+                  onChange={(e) => handleInputChange('price', parseInt(e.target.value) || 0)}
+                  placeholder="Ej: 3100"
+                  className={errors.price ? 'border-red-500' : ''}
+                  min="1"
+                  max="50000"
+                />
+                {errors.price && (
+                  <Alert variant="destructive" className="py-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">{errors.price}</AlertDescription>
+                  </Alert>
+                )}
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Este precio se aplicará a todos los tipos de usuario. Precio base: Almuerzo ${PRICES.apoderado.almuerzo.toLocaleString('es-CL')}, Colación ${PRICES.apoderado.colacion.toLocaleString('es-CL')}
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Estado activo */}
           <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
             <div className="space-y-1">
@@ -326,50 +421,6 @@ export function MenuItemModal({
               checked={formData.active}
               onCheckedChange={(checked) => handleInputChange('active', checked)}
             />
-          </div>
-
-          {/* Precio personalizado */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Precio personalizado</Label>
-            <Switch
-              checked={useCustomPrice}
-              onCheckedChange={(checked) => setUseCustomPrice(checked)}
-            />
-            {useCustomPrice && (
-              <div className="space-y-2">
-                <Label htmlFor="price" className="text-sm font-medium">
-                  Precio *
-                </Label>
-                <Input
-                  id="price"
-                  value={formData.price?.toFixed(2) || ''}
-                  onChange={(e) => {
-                    const value = e.target.value
-                    if (value === '') {
-                      setFormData(prev => ({ ...prev, price: undefined }))
-                    } else {
-                      const parsedValue = parseFloat(value)
-                      if (!isNaN(parsedValue) && parsedValue > 0) {
-                        setFormData(prev => ({ ...prev, price: parsedValue }))
-                      }
-                    }
-                  }}
-                  placeholder="Ej: 10.00"
-                  className={errors.price ? 'border-red-500' : ''}
-                  type="number"
-                  step="0.01"
-                />
-                {errors.price && (
-                  <Alert variant="destructive" className="py-2">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="text-sm">{errors.price}</AlertDescription>
-                  </Alert>
-                )}
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  El precio debe ser mayor a 0 y no puede superar $50.000
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Impact Information */}
@@ -386,6 +437,7 @@ export function MenuItemModal({
                       ? 'Los cambios se reflejarán inmediatamente en el menú público y en la sección "Mi Pedido" de todos los usuarios.'
                       : 'Este nuevo menú estará disponible inmediatamente para todos los usuarios una vez guardado.'
                     }
+                    {useCustomPrice && ' El precio personalizado se aplicará a todos los usuarios.'}
                   </p>
                 </div>
               </div>

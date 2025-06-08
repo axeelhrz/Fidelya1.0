@@ -103,13 +103,13 @@ export const DEFAULT_COLACIONES: DefaultColacionConfig[] = [
     active: true
   },
   {
-    code: 'C8',
+    code: 'C5',
     description: 'Barra Cereal Saludable + Jugo 200 cc',
     price: 1500,
     active: true
   },
   {
-    code: 'C9',
+    code: 'C6',
     description: 'Barra Cereal Saludable + Leche Semidescremada',
     price: 1800,
     active: true
