@@ -9,6 +9,7 @@ import { DayMenuDisplay, MenuItem } from '@/types/menu'
 import { User } from '@/types/panel'
 import { useOrderStore } from '@/store/orderStore'
 import { MenuService } from '@/services/menuService'
+import { MenuType } from './MenuTypeSelector'
 import { 
   Utensils, 
   Coffee, 
@@ -28,6 +29,7 @@ interface DaySelectorProps {
   dayMenu: DayMenuDisplay
   user: User
   isReadOnly: boolean
+  menuType: MenuType
 }
 
 interface MenuItemOptionProps {
@@ -37,7 +39,6 @@ interface MenuItemOptionProps {
   isPastDay: boolean
   isWeekend: boolean
 }
-
 
 function MenuItemOption({ item, isSelected, isReadOnly, isPastDay, isWeekend }: MenuItemOptionProps) {
   const isDisabled = isReadOnly || !item.available || isPastDay || isWeekend
@@ -88,7 +89,7 @@ function MenuItemOption({ item, isSelected, isReadOnly, isPastDay, isWeekend }: 
   )
 }
 
-export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
+export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelectorProps) {
   const { 
     selectionsByChild, 
     currentChild, 
@@ -101,18 +102,6 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
   const isWeekend = MenuService.isWeekend(dayMenu.date)
   const isCurrentDay = !isPastDay && !isWeekend && MenuService.formatToDateString(new Date()) === dayMenu.date
   const isFutureDay = !isPastDay && !isCurrentDay
-
-  // Debug logging mejorado
-  console.log(`DaySelector - ${dayMenu.dayLabel}:`, {
-    date: dayMenu.date,
-    dayDate: dayDate.toISOString(),
-    isPastDay,
-    isCurrentDay,
-    isFutureDay,
-    isWeekend,
-    dayOfWeek: dayDate.getDay(),
-    formattedDate: MenuService.getDayDisplayName(dayMenu.date)
-  })
 
   // Obtener selecciones actuales para este día y hijo
   const getCurrentSelection = () => {
@@ -129,46 +118,30 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
   const selectedAlmuerzo = currentSelection?.almuerzo?.id || ''
   const selectedColacion = currentSelection?.colacion?.id || ''
 
-  const handleAlmuerzoChange = (itemId: string) => {
+  // Filtrar items según el tipo de menú
+  const menuItems = menuType === 'almuerzo' ? dayMenu.almuerzos : dayMenu.colaciones
+  const selectedItemId = menuType === 'almuerzo' ? selectedAlmuerzo : selectedColacion
+  const hasItems = menuItems.length > 0
+
+  const handleItemChange = (itemId: string) => {
     if (isReadOnly || isPastDay || isWeekend) return
     
-    const selectedItem = dayMenu.almuerzos.find(item => item.id === itemId)
+    const selectedItem = menuItems.find(item => item.id === itemId)
     const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
     
     updateSelectionByChild(
       dayMenu.date,
-      'almuerzo',
+      menuType,
       selectedItem,
       targetChild
     )
   }
 
-  const handleColacionChange = (itemId: string) => {
-    if (isReadOnly || isPastDay || isWeekend) return
-    
-    const selectedItem = dayMenu.colaciones.find(item => item.id === itemId)
-    const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
-    
-    updateSelectionByChild(
-      dayMenu.date,
-      'colacion',
-      selectedItem,
-      targetChild
-    )
-  }
-
-  const removeAlmuerzo = () => {
+  const removeItem = () => {
     if (isReadOnly || isPastDay || isWeekend) return
     
     const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
-    updateSelectionByChild(dayMenu.date, 'almuerzo', undefined, targetChild)
-  }
-
-  const removeColacion = () => {
-    if (isReadOnly || isPastDay || isWeekend) return
-    
-    const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
-    updateSelectionByChild(dayMenu.date, 'colacion', undefined, targetChild)
+    updateSelectionByChild(dayMenu.date, menuType, undefined, targetChild)
   }
 
   // Para apoderados, verificar que haya un hijo seleccionado
@@ -185,7 +158,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
     if (isCurrentDay) {
       return "h-full border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 shadow-lg ring-2 ring-blue-200 dark:ring-blue-800"
     }
-    if (currentSelection) {
+    if (selectedItemId) {
       return "h-full border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20"
     }
     return "h-full hover:shadow-md transition-shadow duration-200"
@@ -225,7 +198,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
         </Badge>
       )
     }
-    if (isFutureDay && dayMenu.hasItems) {
+    if (isFutureDay && hasItems) {
       return (
         <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800">
           <CheckCircle2 className="w-3 h-3 mr-1" />
@@ -234,6 +207,17 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
       )
     }
     return null
+  }
+
+  // Obtener el icono del tipo de menú
+  const getMenuTypeIcon = () => {
+    return menuType === 'almuerzo' ? <Utensils className="w-4 h-4" /> : <Coffee className="w-4 h-4" />
+  }
+
+  // Obtener el precio del item seleccionado
+  const getSelectedItemPrice = () => {
+    const selectedItem = menuItems.find(item => item.id === selectedItemId)
+    return selectedItem?.price || 0
   }
 
   return (
@@ -249,7 +233,7 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
           </div>
           <div className="flex items-center gap-2">
             {getDayStatusBadge()}
-            {currentSelection && (
+            {selectedItemId && (
               <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
                 <CheckCircle2 className="w-3 h-3 mr-1" />
                 Seleccionado
@@ -297,39 +281,39 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
           <div className="text-center py-8 text-slate-500 dark:text-slate-400">
             <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>No se pueden hacer pedidos para días pasados</p>
-            {currentSelection && (
+            {selectedItemId && (
               <div className="mt-4 p-3 rounded-lg bg-slate-100 dark:bg-slate-800">
                 <p className="text-xs font-medium mb-2">Pedido existente:</p>
-                {currentSelection.almuerzo && (
-                  <p className="text-xs">• {currentSelection.almuerzo.name}</p>
-                )}
-                {currentSelection.colacion && (
-                  <p className="text-xs">• {currentSelection.colacion.name}</p>
-                )}
+                <div className="flex items-center gap-2 text-xs">
+                  {getMenuTypeIcon()}
+                  <span>{menuItems.find(item => item.id === selectedItemId)?.name}</span>
+                </div>
               </div>
             )}
           </div>
         ) : !dayMenu.isAvailable ? (
           <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-            <Utensils className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            {getMenuTypeIcon()}
+            <div className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>Menú no disponible para este día</p>
           </div>
         ) : (
           <>
-            {/* Sección de Almuerzos */}
+            {/* Sección del tipo de menú actual */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Utensils className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                  {getMenuTypeIcon()}
                   <h4 className="font-medium text-slate-900 dark:text-slate-100">
-                    Almuerzo <span className="text-red-500">*</span>
+                    {menuType === 'almuerzo' ? 'Almuerzo' : 'Colación'}
+                    {menuType === 'almuerzo' && <span className="text-red-500 ml-1">*</span>}
                   </h4>
                 </div>
-                {selectedAlmuerzo && !isReadOnly && !isPastDay && !isWeekend && (
+                {selectedItemId && !isReadOnly && !isPastDay && !isWeekend && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={removeAlmuerzo}
+                    onClick={removeItem}
                     className="text-red-500 hover:text-red-700 h-auto p-1"
                   >
                     Quitar
@@ -337,18 +321,18 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
                 )}
               </div>
               
-              {dayMenu.almuerzos.length > 0 ? (
+              {hasItems ? (
                 <RadioGroup
-                  value={selectedAlmuerzo || ''}
-                  onValueChange={handleAlmuerzoChange}
+                  value={selectedItemId || ''}
+                  onValueChange={handleItemChange}
                   disabled={isReadOnly || isPastDay || isWeekend}
                   className="space-y-2"
                 >
-                  {dayMenu.almuerzos.map((item) => (
+                  {menuItems.map((item) => (
                     <MenuItemOption
                       key={item.id}
                       item={item}
-                      isSelected={selectedAlmuerzo === item.id}
+                      isSelected={selectedItemId === item.id}
                       isReadOnly={isReadOnly}
                       isPastDay={isPastDay}
                       isWeekend={isWeekend}
@@ -357,59 +341,13 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
                 </RadioGroup>
               ) : (
                 <p className="text-sm text-slate-500 dark:text-slate-400 italic">
-                  No hay opciones de almuerzo disponibles
+                  No hay opciones de {menuType === 'almuerzo' ? 'almuerzo' : 'colación'} disponibles
                 </p>
               )}
             </div>
 
-            {/* Sección de Colaciones */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Coffee className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                  <h4 className="font-medium text-slate-900 dark:text-slate-100">
-                    Colación
-                  </h4>
-                </div>
-                {selectedColacion && !isReadOnly && !isPastDay && !isWeekend && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={removeColacion}
-                    className="text-red-500 hover:text-red-700 h-auto p-1"
-                  >
-                    Quitar
-                  </Button>
-                )}
-              </div>
-              
-              {dayMenu.colaciones.length > 0 ? (
-                <RadioGroup
-                  value={selectedColacion || ''}
-                  onValueChange={handleColacionChange}
-                  disabled={isReadOnly || isPastDay || isWeekend}
-                  className="space-y-2"
-                >
-                  {dayMenu.colaciones.map((item) => (
-                    <MenuItemOption
-                      key={item.id}
-                      item={item}
-                      isSelected={selectedColacion === item.id}
-                      isReadOnly={isReadOnly}
-                      isPastDay={isPastDay}
-                      isWeekend={isWeekend}
-                    />
-                  ))}
-                </RadioGroup>
-              ) : (
-                <p className="text-sm text-slate-500 dark:text-slate-400 italic">
-                  No hay opciones de colación disponibles
-                </p>
-              )}
-            </div>
-
-            {/* Resumen del día */}
-            {(selectedAlmuerzo || selectedColacion) && (
+            {/* Resumen del día para el tipo de menú actual */}
+            {selectedItemId && (
               <div className={cn(
                 "mt-4 p-4 rounded-lg border",
                 isPastDay 
@@ -427,67 +365,24 @@ export function DaySelector({ dayMenu, user, isReadOnly }: DaySelectorProps) {
                     : "text-emerald-900 dark:text-emerald-100"
                 )}>
                   <CheckCircle2 className="w-4 h-4" />
-                  Resumen del día
+                  Selección del día
                 </h5>
                 <div className="space-y-2 text-sm">
-                  {selectedAlmuerzo && (
-                    <div className={cn(
-                      "flex justify-between items-center",
-                      isPastDay 
-                        ? "text-slate-600 dark:text-slate-400"
-                        : isCurrentDay
-                        ? "text-blue-800 dark:text-blue-200"
-                        : "text-emerald-800 dark:text-emerald-200"
-                    )}>
-                      <div className="flex items-center gap-2">
-                        <Utensils className="w-3 h-3" />
-                        <span>Almuerzo</span>
-                      </div>
-                      <span className="font-medium">
-                        ${dayMenu.almuerzos.find(a => a.id === selectedAlmuerzo)?.price.toLocaleString('es-CL')}
-                      </span>
-                    </div>
-                  )}
-                  {selectedColacion && (
-                    <div className={cn(
-                      "flex justify-between items-center",
-                      isPastDay 
-                        ? "text-slate-600 dark:text-slate-400"
-                        : isCurrentDay
-                        ? "text-blue-800 dark:text-blue-200"
-                        : "text-emerald-800 dark:text-emerald-200"
-                    )}>
-                      <div className="flex items-center gap-2">
-                        <Coffee className="w-3 h-3" />
-                        <span>Colación</span>
-                      </div>
-                      <span className="font-medium">
-                        ${dayMenu.colaciones.find(c => c.id === selectedColacion)?.price.toLocaleString('es-CL')}
-                      </span>
-                    </div>
-                  )}
                   <div className={cn(
-                    "border-t pt-2 mt-3",
+                    "flex justify-between items-center",
                     isPastDay 
-                      ? "border-slate-200 dark:border-slate-700"
+                      ? "text-slate-600 dark:text-slate-400"
                       : isCurrentDay
-                      ? "border-blue-200 dark:border-blue-700"
-                      : "border-emerald-200 dark:border-emerald-700"
+                      ? "text-blue-800 dark:text-blue-200"
+                      : "text-emerald-800 dark:text-emerald-200"
                   )}>
-                    <div className={cn(
-                      "flex justify-between font-semibold",
-                      isPastDay 
-                        ? "text-slate-700 dark:text-slate-300"
-                        : isCurrentDay
-                        ? "text-blue-900 dark:text-blue-100"
-                        : "text-emerald-900 dark:text-emerald-100"
-                    )}>
-                      <span>Total día</span>
-                      <span>
-                        ${((dayMenu.almuerzos.find(a => a.id === selectedAlmuerzo)?.price || 0) + 
-                           (dayMenu.colaciones.find(c => c.id === selectedColacion)?.price || 0)).toLocaleString('es-CL')}
-                      </span>
+                    <div className="flex items-center gap-2">
+                      {getMenuTypeIcon()}
+                      <span>{menuType === 'almuerzo' ? 'Almuerzo' : 'Colación'}</span>
                     </div>
+                    <span className="font-medium">
+                      ${getSelectedItemPrice().toLocaleString('es-CL')}
+                    </span>
                   </div>
                 </div>
               </div>
