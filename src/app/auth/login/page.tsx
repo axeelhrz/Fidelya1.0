@@ -342,7 +342,7 @@ export default function LoginPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 1.2 }}
-          className="mt-6"
+          className="mt-8"
         >
           <Link href="/">
             <motion.button
@@ -355,7 +355,7 @@ export default function LoginPage() {
           </Link>
         </motion.div>
 
-        {/* Bottom accent */}
+        {/* Bottom accent - Más separado */}
         <motion.div
           className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center"
           initial={{ opacity: 0 }}

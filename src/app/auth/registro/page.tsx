@@ -34,7 +34,7 @@ export default function RegistroPage() {
       level: "basico"
     }
   ])
-  
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -685,7 +685,7 @@ export default function RegistroPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 1.5 }}
-          className="mt-4"
+          className="mt-8"
         >
           <Link href="/">
             <motion.button
@@ -698,9 +698,9 @@ export default function RegistroPage() {
           </Link>
         </motion.div>
 
-        {/* Bottom accent */}
+        {/* Bottom accent - Más separado */}
         <motion.div
-          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center"
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.7 }}
