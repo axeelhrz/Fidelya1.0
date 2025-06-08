@@ -25,7 +25,6 @@ import {
   Utensils,
   CreditCard,
   ExternalLink,
-  Wifi,
   Database,
   ArrowRight,
   Coffee
@@ -649,27 +648,6 @@ export default function MiPedidoPage() {
         </div>
 
         {/* Footer con información adicional */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="text-center pt-8 border-t border-slate-200 dark:border-slate-700"
-        >
-          <div className="flex items-center justify-center gap-6 text-sm text-slate-500 dark:text-slate-400 flex-wrap">
-            <div className="flex items-center gap-1">
-              <Database className="w-4 h-4 text-blue-500" />
-              <span>Firebase Real-time</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <CreditCard className="w-4 h-4 text-green-500" />
-              <span>GetNet Payments</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Wifi className="w-4 h-4 text-purple-500" />
-              <span>Webhooks Automáticos</span>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </div>
   )
