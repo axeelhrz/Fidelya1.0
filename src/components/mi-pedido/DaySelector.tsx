@@ -145,7 +145,14 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
     
     const targetChild = user.tipoUsuario === 'funcionario' ? null : currentChild
     
-    // Usar la función específica para remover solo el tipo de menú actual
+    console.log('Removing item:', {
+      date: dayMenu.date,
+      menuType,
+      targetChild: targetChild?.name || 'funcionario',
+      currentSelection
+    })
+    
+    // Llamar a updateSelectionByChild con undefined para remover el campo específico
     updateSelectionByChild(dayMenu.date, menuType, undefined, targetChild)
   }
 
@@ -154,6 +161,13 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
     if (isReadOnly || isPastDay || isWeekend) return
     
     const targetChildId = user.tipoUsuario === 'funcionario' ? undefined : currentChild?.id
+    
+    console.log('Removing entire selection:', {
+      date: dayMenu.date,
+      targetChildId,
+      currentSelection
+    })
+    
     removeSelectionByChild(dayMenu.date, targetChildId)
   }
 
@@ -348,7 +362,7 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
                     variant="ghost"
                     size="sm"
                     onClick={removeItem}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 h-auto px-3 py-1.5 flex-shrink-0"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 h-auto px-3 py-1.5 flex-shrink-0 transition-colors"
                     title={`Quitar ${menuType}`}
                   >
                     <span className="text-xs font-medium">Quitar</span>
