@@ -8,6 +8,8 @@ import {
   AlertCircle, 
   CheckCircle2,
   Loader2,
+  Clock,
+  DollarSign
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -74,7 +76,7 @@ export function DefaultColacionesActions({
       
       if (result.success) {
         toast({
-          title: "Colaciones creadas",
+          title: "¡Colaciones creadas!",
           description: result.message,
         })
         onMenuUpdated()
@@ -124,7 +126,7 @@ export function DefaultColacionesActions({
           onDiagnosticComplete={onMenuUpdated}
         />
 
-        {/* NUEVO: Componente de eliminación masiva */}
+        {/* Componente de eliminación masiva */}
         <BulkColacionesDelete 
           weekStart={weekStart}
           onMenuUpdated={onMenuUpdated}
@@ -141,70 +143,74 @@ export function DefaultColacionesActions({
             </Button>
           </DialogTrigger>
           
-          <DialogContent className="sm:max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center space-x-2">
-                <Coffee className="w-5 h-5" />
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader className="flex-shrink-0 pb-4">
+              <DialogTitle className="flex items-center space-x-2 text-lg">
+                <Coffee className="w-5 h-5 text-emerald-600" />
                 <span>Menú de Colaciones Predeterminado</span>
               </DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-6">
-              {/* Información del menú */}
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Este menú se aplicará automáticamente de <strong>lunes a viernes</strong> para la semana seleccionada. 
-                  Cada colación tendrá su precio personalizado y será <strong>publicada automáticamente</strong> para que aparezca en los pedidos.
+            <div className="flex-1 overflow-y-auto space-y-4">
+              {/* Información compacta */}
+              <Alert className="border-emerald-200 bg-emerald-50">
+                <AlertCircle className="h-4 w-4 text-emerald-600" />
+                <AlertDescription className="text-sm text-emerald-700">
+                  <strong>Se aplicará automáticamente de lunes a viernes</strong> para la semana seleccionada. 
+                  Las colaciones se publican automáticamente y aparecen inmediatamente en los pedidos.
                 </AlertDescription>
               </Alert>
 
-              {/* Vista previa de las colaciones */}
+              {/* Vista previa compacta de las colaciones */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-slate-900 dark:text-white">
-                    Colaciones que se crearán:
+                  <h4 className="font-semibold text-slate-900 dark:text-white text-sm">
+                    Colaciones que se crearán ({defaultColaciones.length} opciones):
                   </h4>
                   {isLoadingColaciones && (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
                   )}
                 </div>
                 
                 {defaultColaciones.length > 0 ? (
-                  <div className="grid gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
                     {defaultColaciones.map((colacion, index) => (
                       <motion.div
                         key={colacion.code}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border"
+                        transition={{ delay: index * 0.05 }}
+                        className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"
                       >
-                        <div className="flex items-center space-x-3">
-                          <Badge variant="secondary" className="font-mono">
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
+                          <Badge variant="secondary" className="font-mono text-xs flex-shrink-0">
                             {colacion.code}
                           </Badge>
-                          <div>
-                            <p className="font-medium text-sm text-slate-900 dark:text-white">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
                               {colacion.description}
                             </p>
-                            <p className="text-xs text-slate-600 dark:text-slate-400">
-                              Se publicará automáticamente
-                            </p>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <div className="flex items-center space-x-1">
+                                <DollarSign className="w-3 h-3 text-green-600" />
+                                <span className="text-xs font-bold text-green-600">
+                                  ${colacion.price.toLocaleString('es-CL')}
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Clock className="w-3 h-3 text-blue-600" />
+                                <span className="text-xs text-blue-600">5 días</span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-green-600 dark:text-green-400">
-                            ${colacion.price.toLocaleString('es-CL')}
-                          </p>
                         </div>
                       </motion.div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
+                  <div className="text-center py-8 bg-slate-50 dark:bg-slate-800 rounded-lg">
                     <Coffee className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                    <p className="text-slate-600 dark:text-slate-400 mb-2">
+                    <p className="text-slate-600 dark:text-slate-400 mb-2 font-medium">
                       No hay colaciones predeterminadas activas
                     </p>
                     <p className="text-sm text-slate-500 dark:text-slate-500">
@@ -214,56 +220,74 @@ export function DefaultColacionesActions({
                 )}
               </div>
 
-              {/* Información adicional */}
+              {/* Resumen de la operación */}
               {defaultColaciones.length > 0 && (
                 <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-3">
-                      <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-blue-800 dark:text-blue-200 text-sm">
-                          Después de crear el menú:
+                      <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-medium text-blue-800 dark:text-blue-200 text-sm mb-2">
+                          Resumen de la operación:
                         </h4>
-                        <ul className="text-xs text-blue-700 dark:text-blue-300 mt-1 space-y-1">
-                          <li>• Las colaciones estarán disponibles inmediatamente en los pedidos</li>
-                          <li>• Podrás editar precios y descripciones individualmente</li>
-                          <li>• Activar o desactivar colaciones específicas</li>
-                          <li>• Eliminar colaciones que no necesites</li>
-                          <li>• Agregar nuevas colaciones personalizadas</li>
-                        </ul>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                          <div className="text-center">
+                            <div className="font-bold text-blue-700 dark:text-blue-300 text-lg">
+                              {defaultColaciones.length}
+                            </div>
+                            <div className="text-blue-600 dark:text-blue-400">Opciones</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-bold text-blue-700 dark:text-blue-300 text-lg">5</div>
+                            <div className="text-blue-600 dark:text-blue-400">Días</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-bold text-blue-700 dark:text-blue-300 text-lg">
+                              {defaultColaciones.length * 5}
+                            </div>
+                            <div className="text-blue-600 dark:text-blue-400">Items totales</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-bold text-blue-700 dark:text-blue-300 text-lg">
+                              ${Math.min(...defaultColaciones.map(c => c.price)).toLocaleString('es-CL')} - ${Math.max(...defaultColaciones.map(c => c.price)).toLocaleString('es-CL')}
+                            </div>
+                            <div className="text-blue-600 dark:text-blue-400">Rango precios</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               )}
+            </div>
 
-              {/* Botones de acción */}
-              <div className="flex justify-end space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                  disabled={isCreatingWeek}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleCreateWeekColaciones}
-                  disabled={isCreatingWeek || defaultColaciones.length === 0}
-                  className="flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-                >
-                  {isCreatingWeek ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Creando y Publicando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Calendar className="w-4 h-4" />
-                      <span>Crear y Publicar Menú</span>
-                    </>
-                  )}
-                </Button>
-              </div>
+            {/* Botones de acción fijos */}
+            <div className="flex-shrink-0 flex justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <Button
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={isCreatingWeek}
+                className="px-6"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleCreateWeekColaciones}
+                disabled={isCreatingWeek || defaultColaciones.length === 0}
+                className="flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 px-6"
+              >
+                {isCreatingWeek ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Creando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Calendar className="w-4 h-4" />
+                    <span>Crear y Publicar Menú</span>
+                  </>
+                )}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
