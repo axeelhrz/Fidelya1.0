@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import { Calendar, Clock, AlertTriangle } from 'lucide-react'
+import { Calendar, Clock, AlertTriangle, Utensils, Coffee } from 'lucide-react'
 import { DayMenuDisplay } from '@/types/menu'
 import { MenuItemCard } from './MenuItemCard'
 
@@ -99,7 +99,7 @@ export function DayMenuCard({ dayMenu, userType, index }: DayMenuCardProps) {
               <div>
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                    <span className="text-lg">🍽️</span>
+                    <Utensils className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 text-clean">
@@ -139,7 +139,7 @@ export function DayMenuCard({ dayMenu, userType, index }: DayMenuCardProps) {
               <div>
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                    <span className="text-lg">🥪</span>
+                    <Coffee className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 text-clean">
