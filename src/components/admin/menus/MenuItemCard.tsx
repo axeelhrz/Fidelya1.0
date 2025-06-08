@@ -1,7 +1,7 @@
 "use client"
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Edit, Trash2, Eye, EyeOff, DollarSign, Utensils, Coffee, MoreVertical } from 'lucide-react'
+import { Edit, Trash2, Eye, EyeOff, DollarSign, Utensils, Coffee, MoreVertical, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -38,6 +38,7 @@ export function MenuItemCard({
   isLoading = false
 }: MenuItemCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const handleEdit = () => {
     onEdit(item)
@@ -65,11 +66,61 @@ export function MenuItemCard({
   const hasCustomPrice = item.price && item.price > 0
   const displayPrice = getDisplayPrice()
 
-  // Obtener título y descripción correctamente
-  const title = item.title || item.description || 'Sin título'
-  const description = item.title && item.description && item.title !== item.description 
-    ? item.description 
-    : undefined
+  // Lógica inteligente para título y descripción
+  const getSmartTitleAndDescription = () => {
+    const title = item.title || item.description || 'Sin título'
+    const description = item.description || ''
+    
+    // Si title y description son iguales, solo mostrar uno
+    if (title === description) {
+      return {
+        displayTitle: title,
+        displayDescription: null,
+        hasDescription: false
+      }
+    }
+    
+    // Si description contiene title, solo mostrar description
+    if (description.includes(title) && description.length > title.length) {
+      return {
+        displayTitle: description,
+        displayDescription: null,
+        hasDescription: false
+      }
+    }
+    
+    // Si title contiene description, solo mostrar title
+    if (title.includes(description) && title.length > description.length) {
+      return {
+        displayTitle: title,
+        displayDescription: null,
+        hasDescription: false
+      }
+    }
+    
+    // Si son diferentes y ambos tienen contenido útil
+    if (item.title && item.description && item.title !== item.description) {
+      return {
+        displayTitle: title,
+        displayDescription: description,
+        hasDescription: true
+      }
+    }
+    
+    // Por defecto, mostrar solo el título
+    return {
+      displayTitle: title,
+      displayDescription: null,
+      hasDescription: false
+    }
+  }
+
+  const { displayTitle, displayDescription, hasDescription } = getSmartTitleAndDescription()
+  
+  // Determinar si el texto es muy largo
+  const isLongTitle = displayTitle.length > 45
+  const isLongDescription = displayDescription && displayDescription.length > 60
+  const shouldShowExpandButton = isLongTitle || isLongDescription
 
   // Configuración de colores por tipo
   const typeConfig = {
@@ -106,103 +157,123 @@ export function MenuItemCard({
             : 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600 opacity-75'
         }`}>
           <CardContent className="p-3">
-            {/* Header compacto */}
-            <div className="flex items-start justify-between mb-2">
+            {/* Header ultra compacto */}
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2 min-w-0 flex-1">
-                <div className={`p-1.5 rounded-lg ${config.bgColor} ${config.borderColor} border flex-shrink-0`}>
+                <div className={`p-1 rounded ${config.bgColor} ${config.borderColor} border flex-shrink-0`}>
                   <TypeIcon className={`w-3 h-3 ${config.textColor}`} />
                 </div>
                 <Badge className={`text-xs font-bold ${config.badgeColor} flex-shrink-0`}>
                   {item.code}
                 </Badge>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <Badge className={`text-xs ${
+                    item.active 
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                  }`}>
+                    {item.active ? <Eye className="w-2 h-2" /> : <EyeOff className="w-2 h-2" />}
+                  </Badge>
+                  {hasCustomPrice && (
+                    <Badge className="text-xs bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                      <DollarSign className="w-2 h-2" />
+                    </Badge>
+                  )}
+                </div>
               </div>
               
-              {/* Menú de acciones */}
+              {/* Menú de acciones más pequeño */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                    className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                     disabled={isLoading}
                   >
                     <MoreVertical className="w-3 h-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32">
-                  <DropdownMenuItem onClick={handleEdit}>
-                    <Edit className="w-3 h-3 mr-2" />
+                <DropdownMenuContent align="end" className="w-28">
+                  <DropdownMenuItem onClick={handleEdit} className="text-xs">
+                    <Edit className="w-3 h-3 mr-1" />
                     Editar
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDelete} className="text-red-600">
-                    <Trash2 className="w-3 h-3 mr-2" />
+                  <DropdownMenuItem onClick={handleDelete} className="text-red-600 text-xs">
+                    <Trash2 className="w-3 h-3 mr-1" />
                     Eliminar
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
 
-            {/* Título compacto */}
-            <div className="mb-2">
-              <h4 className={`font-semibold text-sm leading-tight ${
-                item.active 
-                  ? 'text-slate-900 dark:text-slate-100' 
-                  : 'text-slate-600 dark:text-slate-400'
-              } text-truncate-2`} title={title}>
-                {title}
-              </h4>
-            </div>
-
-            {/* Descripción compacta (si existe y es diferente) */}
-            {description && (
-              <div className={`${config.bgColor} ${config.borderColor} border rounded-lg p-2 mb-2`}>
-                <p className={`text-xs leading-relaxed ${
+            {/* Contenido principal más compacto */}
+            <div className="space-y-2">
+              {/* Título inteligente */}
+              <div>
+                <h4 className={`font-semibold text-xs leading-tight admin-card-text ${
                   item.active 
-                    ? 'text-slate-700 dark:text-slate-300' 
-                    : 'text-slate-500 dark:text-slate-500'
-                } text-truncate-2`} title={description}>
-                  {description}
-                </p>
+                    ? 'text-slate-900 dark:text-slate-100' 
+                    : 'text-slate-600 dark:text-slate-400'
+                } ${!isExpanded && isLongTitle ? 'text-truncate-2' : ''}`} 
+                title={isLongTitle ? displayTitle : undefined}>
+                  {displayTitle}
+                </h4>
               </div>
-            )}
 
-            {/* Footer con estado y precio */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                <Badge className={`text-xs ${
-                  item.active 
-                    ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' 
-                    : 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600'
-                }`}>
-                  {item.active ? (
+              {/* Descripción adicional (solo si es diferente y útil) */}
+              {hasDescription && displayDescription && (
+                <div className={`${config.bgColor} ${config.borderColor} border rounded p-2`}>
+                  <p className={`text-xs leading-tight admin-card-text ${
+                    item.active 
+                      ? 'text-slate-700 dark:text-slate-300' 
+                      : 'text-slate-500 dark:text-slate-500'
+                  } ${!isExpanded && isLongDescription ? 'text-truncate-2' : ''}`} 
+                  title={isLongDescription ? displayDescription : undefined}>
+                    {displayDescription}
+                  </p>
+                </div>
+              )}
+
+              {/* Botón para expandir/contraer si es necesario */}
+              {shouldShowExpandButton && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                >
+                  {isExpanded ? (
                     <>
-                      <Eye className="w-2 h-2 mr-1" />
-                      Activo
+                      <ChevronUp size={10} />
+                      Menos
                     </>
                   ) : (
                     <>
-                      <EyeOff className="w-2 h-2 mr-1" />
-                      Inactivo
+                      <ChevronDown size={10} />
+                      Más
                     </>
                   )}
-                </Badge>
-                
-                {hasCustomPrice && (
-                  <Badge className="text-xs bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800">
-                    <DollarSign className="w-2 h-2 mr-1" />
-                    Especial
-                  </Badge>
-                )}
-              </div>
-              
-              <div className="text-right">
-                <span className={`text-sm font-bold ${
-                  item.active 
-                    ? 'text-green-600 dark:text-green-400' 
-                    : 'text-slate-500 dark:text-slate-500'
-                }`}>
-                  ${displayPrice.toLocaleString('es-CL')}
+                </button>
+              )}
+
+              {/* Footer con precio */}
+              <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-700">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Precio:
                 </span>
+                <div className="text-right">
+                  <span className={`text-sm font-bold ${
+                    item.active 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-slate-500 dark:text-slate-500'
+                  }`}>
+                    ${displayPrice.toLocaleString('es-CL')}
+                  </span>
+                  {hasCustomPrice && (
+                    <div className="text-xs text-orange-600 dark:text-orange-400">
+                      Especial
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -215,7 +286,7 @@ export function MenuItemCard({
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar menú?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción eliminará permanentemente el menú &quot;{title}&quot; ({item.code}).
+              Esta acción eliminará permanentemente el menú &quot;{displayTitle}&quot; ({item.code}).
               Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
