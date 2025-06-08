@@ -185,7 +185,7 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
     return <Calendar className="w-4 h-4" />
   }
 
-  // Obtener badge del estado
+  // Obtener badge del estado - CORREGIDO para evitar sobreposición
   const getDayStatusBadge = () => {
     if (isPastDay) {
       return (
@@ -211,7 +211,8 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
         </Badge>
       )
     }
-    if (isFutureDay && hasItems) {
+    // Solo mostrar "Disponible" si NO hay nada seleccionado
+    if (isFutureDay && hasItems && !selectedItemId) {
       return (
         <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800 text-xs">
           <CheckCircle2 className="w-3 h-3 mr-1" />
@@ -273,10 +274,12 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
           </div>
         </CardTitle>
         
-        {/* Mostrar fecha completa mejorada */}
-        <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
-          {MenuService.getDayDisplayName(dayMenu.date)}
-        </div>
+        {/* Mostrar fecha completa solo cuando NO hay selección */}
+        {!selectedItemId && (
+          <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+            {MenuService.getDayDisplayName(dayMenu.date)}
+          </div>
+        )}
         
         {/* Mostrar para qué hijo es la selección */}
         {user.tipoUsuario === 'apoderado' && currentChild && !isWeekend && (
