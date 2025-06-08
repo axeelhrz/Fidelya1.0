@@ -1,7 +1,7 @@
 "use client"
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { AdminService } from '@/services/adminService'
-import { AdminDashboardData, WeeklyOrderData, SystemAlert } from '@/types/admin'
+import { AdminDashboardData, SystemAlert, WeeklyOrderData } from '@/types/admin'
 import { generateSystemAlerts } from '@/lib/adminUtils'
 
 interface UseAdminDashboardReturn {
@@ -17,6 +17,14 @@ export function useAdminDashboard(): UseAdminDashboardReturn {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // Usar ref para evitar dependencias circulares
+  const dashboardDataRef = useRef<AdminDashboardData | null>(null)
+  
+  // Actualizar ref cuando cambie dashboardData
+  useEffect(() => {
+    dashboardDataRef.current = dashboardData
+  }, [dashboardData])
 
   const loadDashboardData = useCallback(async (isRefresh = false) => {
     try {
@@ -56,7 +64,7 @@ export function useAdminDashboard(): UseAdminDashboardReturn {
       }
 
       if (weeklyData.status === 'fulfilled') {
-        orderData = weeklyData.value as WeeklyOrderData[]
+        orderData = weeklyData.value
       } else {
         console.warn('Error loading weekly data:', weeklyData.reason)
         // No es crítico, continuar con array vacío
@@ -87,7 +95,7 @@ export function useAdminDashboard(): UseAdminDashboardReturn {
         // Continuar sin alertas
       }
 
-      const dashboardData: AdminDashboardData = {
+      const newDashboardData: AdminDashboardData = {
         stats: weeklyStats,
         weeklyData: orderData,
         userTypeStats,
@@ -97,16 +105,16 @@ export function useAdminDashboard(): UseAdminDashboardReturn {
         lastUpdated: new Date()
       }
 
-      setDashboardData(dashboardData)
+      setDashboardData(newDashboardData)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar datos del dashboard'
       setError(errorMessage)
       console.error('Error loading admin dashboard:', err)
       
       // En caso de error crítico, mantener datos anteriores si existen
-      if (!dashboardData) {
+      if (!dashboardDataRef.current) {
         // Solo establecer datos vacíos si no hay datos previos
-        setDashboardData({
+        const fallbackData: AdminDashboardData = {
           stats: {
             totalOrdersWeek: 0,
             totalStudentsWithOrder: 0,
@@ -131,13 +139,14 @@ export function useAdminDashboard(): UseAdminDashboardReturn {
           },
           isLoading: false,
           lastUpdated: new Date()
-        })
+        }
+        setDashboardData(fallbackData)
       }
     } finally {
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }, [dashboardData])
+  }, []) // Sin dependencias para evitar bucles infinitos
 
   const refreshData = useCallback(async () => {
     await loadDashboardData(true)
@@ -146,7 +155,7 @@ export function useAdminDashboard(): UseAdminDashboardReturn {
   useEffect(() => {
     loadDashboardData()
     
-    // Actualizar datos cada 3 minutos (reducido de 5 para mejor responsividad)
+    // Actualizar datos cada 3 minutos
     const interval = setInterval(() => loadDashboardData(true), 3 * 60 * 1000)
     
     return () => clearInterval(interval)
@@ -155,7 +164,6 @@ export function useAdminDashboard(): UseAdminDashboardReturn {
   // Limpiar cache cuando el componente se desmonte
   useEffect(() => {
     return () => {
-      // Limpiar cache al desmontar para evitar datos obsoletos
       AdminService.clearCache()
     }
   }, [])

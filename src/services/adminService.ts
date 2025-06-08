@@ -32,11 +32,11 @@ interface Order {
 }
 
 // Cache temporal para optimizar consultas frecuentes
-const cache = new Map<string, { data: any; timestamp: number }>()
+const cache = new Map<string, { data: unknown; timestamp: number }>()
 const CACHE_DURATION = 2 * 60 * 1000 // 2 minutos
 
 export class AdminService {
-  private static getCacheKey(operation: string, params: any): string {
+  private static getCacheKey(operation: string, params: Record<string, unknown>): string {
     return `${operation}_${JSON.stringify(params)}`
   }
 
@@ -49,7 +49,7 @@ export class AdminService {
     return null
   }
 
-  private static setCache(key: string, data: any): void {
+  private static setCache(key: string, data: unknown): void {
     cache.set(key, { data, timestamp: Date.now() })
   }
 
