@@ -22,27 +22,51 @@ export class MenuService {
   // Helper method to create a local date from YYYY-MM-DD string - CORREGIDO
   static createLocalDate(dateString: string): Date {
     try {
-      // Usar parseISO para manejar fechas ISO correctamente
-      const date = parseISO(dateString)
-      if (!isValid(date)) {
-        throw new Error(`Invalid date string: ${dateString}`)
+      // Crear fecha local directamente sin conversiones de zona horaria
+      const [year, month, day] = dateString.split('-').map(Number)
+      if (!year || !month || !day || month < 1 || month > 12 || day < 1 || day > 31) {
+        throw new Error(`Invalid date components: ${dateString}`)
       }
+      
+      // Crear fecha local (sin conversión de zona horaria)
+      const date = new Date(year, month - 1, day)
+      
+      // Verificar que la fecha creada es válida
+      if (isNaN(date.getTime())) {
+        throw new Error(`Invalid date created: ${dateString}`)
+      }
+      
       return date
     } catch (error) {
-      console.error('Error parsing date:', dateString, error)
-      // Fallback al método anterior si parseISO falla
-      const [year, month, day] = dateString.split('-').map(Number)
-      return new Date(year, month - 1, day)
+      console.error('Error creating local date:', dateString, error)
+      // Fallback: usar parseISO pero ajustar a medianoche local
+      try {
+        const isoDate = parseISO(dateString + 'T00:00:00')
+        if (isValid(isoDate)) {
+          return isoDate
+        }
+      } catch (fallbackError) {
+        console.error('Fallback date parsing also failed:', fallbackError)
+      }
+      
+      // Último recurso: fecha actual
+      return new Date()
     }
   }
 
   // Helper method to format date to YYYY-MM-DD - CORREGIDO
   static formatToDateString(date: Date): string {
-    // Asegurar que usamos la zona horaria local
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
+    try {
+      // Usar métodos locales para evitar problemas de zona horaria
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    } catch (error) {
+      console.error('Error formatting date to string:', error)
+      // Fallback usando format de date-fns
+      return format(date, 'yyyy-MM-dd')
+    }
   }
 
   // Helper method to determine user type from various possible field names
@@ -191,23 +215,24 @@ export class MenuService {
    * Obtiene información de la semana actual - CORREGIDO
    */
   static getCurrentWeekInfo(): WeekInfo {
+    // Crear fecha actual en zona horaria local
     const now = new Date()
-    console.log(`📅 Current date: ${now.toISOString()}`)
+    console.log(`📅 Current local date: ${now.toLocaleString()}`)
     
+    // Obtener inicio y fin de semana en zona horaria local
     const weekStart = startOfWeek(now, { weekStartsOn: 1 }) // Lunes
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 }) // Domingo
     
-    console.log(`📅 Week start: ${weekStart.toISOString()}`)
-    console.log(`📅 Week end: ${weekEnd.toISOString()}`)
+    console.log(`📅 Week start local: ${weekStart.toLocaleString()}`)
+    console.log(`📅 Week end local: ${weekEnd.toLocaleString()}`)
     
     // Calcular número de semana
     const startOfYear = new Date(now.getFullYear(), 0, 1)
     const weekNumber = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7)
     
-    // Deadline para pedidos: miércoles a las 13:00
+    // Deadline para pedidos: miércoles a las 13:00 (zona horaria local)
     const wednesday = addDays(weekStart, 2)
-    const orderDeadline = new Date(wednesday)
-    orderDeadline.setHours(13, 0, 0, 0)
+    const orderDeadline = new Date(wednesday.getFullYear(), wednesday.getMonth(), wednesday.getDate(), 13, 0, 0, 0)
     
     const isCurrentWeek = true
     const isOrderingAllowed = now <= orderDeadline
@@ -231,7 +256,7 @@ export class MenuService {
   }
 
   /**
-   * Obtiene información de una semana específica - NUEVO
+   * Obtiene información de una semana específica - CORREGIDO
    */
   static getWeekInfo(weekStart: string): WeekInfo {
     const now = new Date()
@@ -243,11 +268,10 @@ export class MenuService {
     const startOfYear = new Date(weekStartDate.getFullYear(), 0, 1)
     const weekNumber = Math.ceil(((weekStartDate.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7)
     
-    // Deadline para pedidos: miércoles a las 13:00 de la semana actual
+    // Deadline para pedidos: miércoles a las 13:00 de la semana actual (zona horaria local)
     const currentWeekStartDate = this.createLocalDate(currentWeekStart)
     const wednesday = addDays(currentWeekStartDate, 2)
-    const orderDeadline = new Date(wednesday)
-    orderDeadline.setHours(13, 0, 0, 0)
+    const orderDeadline = new Date(wednesday.getFullYear(), wednesday.getMonth(), wednesday.getDate(), 13, 0, 0, 0)
     
     const isCurrentWeek = weekStart === currentWeekStart
     const isOrderingAllowed = isCurrentWeek ? now <= orderDeadline : weekStart > currentWeekStart
@@ -269,10 +293,10 @@ export class MenuService {
    */
   static getCurrentWeekStart(): string {
     const now = new Date()
-    console.log(`📅 Getting current week start from: ${now.toISOString()}`)
+    console.log(`📅 Getting current week start from local date: ${now.toLocaleString()}`)
     
     const weekStart = startOfWeek(now, { weekStartsOn: 1 })
-    console.log(`📅 Week start date object: ${weekStart.toISOString()}`)
+    console.log(`📅 Week start date object: ${weekStart.toLocaleString()}`)
     
     const formatted = this.formatToDateString(weekStart)
     console.log(`📅 Formatted week start: ${formatted}`)
@@ -299,7 +323,7 @@ export class MenuService {
   }
 
   /**
-   * Obtiene el nombre del día para mostrar - MEJORADO
+   * Obtiene el nombre del día para mostrar - CORREGIDO
    */
   static getDayDisplayName(date: string): string {
     const dayDate = this.createLocalDate(date)
@@ -323,11 +347,10 @@ export class MenuService {
   }
 
   /**
-   * Verifica si se permite hacer pedidos para un día específico - MEJORADO
+   * Verifica si se permite hacer pedidos para un día específico - CORREGIDO
    */
   static isDayOrderingAllowed(date: string): boolean {
     try {
-      
       // No permitir pedidos para días pasados
       if (this.isPastDay(date)) {
         return false
@@ -346,14 +369,14 @@ export class MenuService {
   }
 
   /**
-   * Verifica si un día es pasado - NUEVO
+   * Verifica si un día es pasado - CORREGIDO
    */
   static isPastDay(date: string): boolean {
     try {
       const dayDate = this.createLocalDate(date)
       const today = new Date()
       
-      // Normalizar fechas para comparación (solo fecha, sin hora)
+      // Normalizar fechas para comparación (solo fecha, sin hora) en zona horaria local
       const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
       const dayDateNormalized = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate())
       
@@ -365,12 +388,12 @@ export class MenuService {
   }
 
   /**
-   * Verifica si un día es fin de semana - NUEVO
+   * Verifica si un día es fin de semana - CORREGIDO
    */
   static isWeekend(date: string): boolean {
     try {
       const dayDate = this.createLocalDate(date)
-      const dayOfWeek = getDay(dayDate) // 0 = domingo, 6 = sábado
+      const dayOfWeek = dayDate.getDay() // 0 = domingo, 6 = sábado (usando getDay() local)
       return dayOfWeek === 0 || dayOfWeek === 6
     } catch (error) {
       console.error('Error checking if day is weekend:', error)
@@ -379,7 +402,7 @@ export class MenuService {
   }
 
   /**
-   * Verifica si hay menús para una semana específica - NUEVO
+   * Verifica si hay menús para una semana específica
    */
   static async hasMenusForWeek(weekStart: string): Promise<boolean> {
     try {
@@ -414,7 +437,7 @@ export class MenuService {
   }
 
   /**
-   * Obtiene los días disponibles para una semana específica - NUEVO
+   * Obtiene los días disponibles para una semana específica
    */
   static async getAvailableDaysForWeek(weekStart: string): Promise<string[]> {
     try {
@@ -442,7 +465,7 @@ export class MenuService {
   }
 
   /**
-   * Genera las fechas de una semana específica - NUEVO
+   * Genera las fechas de una semana específica
    */
   static generateWeekDates(weekStart: string): string[] {
     try {
@@ -462,7 +485,7 @@ export class MenuService {
   }
 
   /**
-   * Obtiene las próximas N semanas - NUEVO
+   * Obtiene las próximas N semanas
    */
   static getNextWeeks(numberOfWeeks: number = 4): string[] {
     const now = new Date()
@@ -478,7 +501,7 @@ export class MenuService {
   }
 
   /**
-   * Construye la estructura del menú semanal - MEJORADO
+   * Construye la estructura del menú semanal - CORREGIDO
    */
   static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
     const startDate = this.createLocalDate(weekStart)

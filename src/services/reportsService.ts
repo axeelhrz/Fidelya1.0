@@ -18,7 +18,7 @@ import {
   DailyMetrics,
   ReportsData 
 } from '@/types/reports'
-import { format, parseISO, eachDayOfInterval } from 'date-fns'
+import { format, parseISO, eachDayOfInterval, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 interface OrderData {
@@ -51,7 +51,56 @@ interface UserData {
   [key: string]: string | number | boolean | Date | null | undefined
 }
 
-// Helper function to safely convert Firebase timestamp to Date
+// Helper function to create local date from YYYY-MM-DD string - CORREGIDO
+function createLocalDate(dateString: string): Date {
+  try {
+    const [year, month, day] = dateString.split('-').map(Number)
+    if (!year || !month || !day || month < 1 || month > 12 || day < 1 || day > 31) {
+      throw new Error(`Invalid date components: ${dateString}`)
+    }
+    
+    // Crear fecha local (sin conversión de zona horaria)
+    const date = new Date(year, month - 1, day)
+    
+    // Verificar que la fecha creada es válida
+    if (isNaN(date.getTime())) {
+      throw new Error(`Invalid date created: ${dateString}`)
+    }
+    
+    return date
+  } catch (error) {
+    console.error('Error creating local date:', dateString, error)
+    // Fallback: usar parseISO pero ajustar a medianoche local
+    try {
+      const isoDate = parseISO(dateString + 'T00:00:00')
+      if (!isNaN(isoDate.getTime())) {
+        return isoDate
+      }
+    } catch (fallbackError) {
+      console.error('Fallback date parsing also failed:', fallbackError)
+    }
+    
+    // Último recurso: fecha actual
+    return new Date()
+  }
+}
+
+// Helper function to format date to YYYY-MM-DD - CORREGIDO
+function formatToDateString(date: Date): string {
+  try {
+    // Usar métodos locales para evitar problemas de zona horaria
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  } catch (error) {
+    console.error('Error formatting date to string:', error)
+    // Fallback usando format de date-fns
+    return format(date, 'yyyy-MM-dd')
+  }
+}
+
+// Helper function to safely convert Firebase timestamp to Date - CORREGIDO
 function safeToDate(timestamp: any): Date | null {
   if (!timestamp) return null
   
@@ -154,9 +203,9 @@ export class ReportsService {
         const orderData = orderDoc.data()
         const orderDate = safeToDate(orderData.createdAt)
 
-        // Filtrar por rango de fechas
+        // Filtrar por rango de fechas usando fechas locales
         if (orderDate) {
-          const orderDateStr = format(orderDate, 'yyyy-MM-dd')
+          const orderDateStr = formatToDateString(orderDate)
           if (orderDateStr >= filters.dateRange.start && orderDateStr <= filters.dateRange.end) {
             // Obtener datos del usuario
             try {
@@ -263,15 +312,15 @@ export class ReportsService {
   }
 
   private static generateDailyData(orders: OrderData[], filters: ReportsFilters): ChartDataPoint[] {
-    const startDate = parseISO(filters.dateRange.start)
-    const endDate = parseISO(filters.dateRange.end)
+    const startDate = createLocalDate(filters.dateRange.start)
+    const endDate = createLocalDate(filters.dateRange.end)
     const days = eachDayOfInterval({ start: startDate, end: endDate })
 
     return days.map(day => {
-      const dayStr = format(day, 'yyyy-MM-dd')
+      const dayStr = formatToDateString(day)
       const dayOrders = orders.filter(order => {
         const orderDate = order.createdAt instanceof Date ? order.createdAt : safeToDate(order.createdAt)
-        return orderDate && format(orderDate, 'yyyy-MM-dd') === dayStr
+        return orderDate && formatToDateString(orderDate) === dayStr
       })
 
       const dayRevenue = dayOrders
@@ -373,15 +422,15 @@ export class ReportsService {
   }
 
   private static calculateDailyMetrics(orders: OrderData[], filters: ReportsFilters): DailyMetrics[] {
-    const startDate = parseISO(filters.dateRange.start)
-    const endDate = parseISO(filters.dateRange.end)
+    const startDate = createLocalDate(filters.dateRange.start)
+    const endDate = createLocalDate(filters.dateRange.end)
     const days = eachDayOfInterval({ start: startDate, end: endDate })
 
     return days.map(day => {
-      const dayStr = format(day, 'yyyy-MM-dd')
+      const dayStr = formatToDateString(day)
       const dayOrders = orders.filter(order => {
         const orderDate = order.createdAt instanceof Date ? order.createdAt : safeToDate(order.createdAt)
-        return orderDate && format(orderDate, 'yyyy-MM-dd') === dayStr
+        return orderDate && formatToDateString(orderDate) === dayStr
       })
 
       const totalRevenue = dayOrders
@@ -420,13 +469,14 @@ export class ReportsService {
   }
 
   static getDefaultFilters(): ReportsFilters {
+    // Usar fechas locales para evitar problemas de zona horaria
     const today = new Date()
-    const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+    const thirtyDaysAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30)
 
     return {
       dateRange: {
-        start: format(thirtyDaysAgo, 'yyyy-MM-dd'),
-        end: format(today, 'yyyy-MM-dd')
+        start: formatToDateString(thirtyDaysAgo),
+        end: formatToDateString(today)
       },
       userType: 'all',
       orderStatus: 'all',
