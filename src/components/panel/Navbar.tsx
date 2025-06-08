@@ -220,8 +220,8 @@ export function Navbar({ onLogout }: NavbarProps) {
                   fill
                   className={`object-contain transition-all duration-300 ${
                     theme === 'dark' 
-                      ? 'brightness-110 contrast-110 saturate-110' 
-                      : 'brightness-100 contrast-100 saturate-100'
+                      ? 'brightness-125 contrast-125 saturate-110' 
+                      : 'invert brightness-90 contrast-110 saturate-105'
                   }`}
                   priority
                 />
@@ -440,8 +440,8 @@ export function Navbar({ onLogout }: NavbarProps) {
                       fill
                       className={`object-contain rounded-lg transition-all duration-300 ${
                         theme === 'dark' 
-                          ? 'brightness-110 contrast-110 saturate-110' 
-                          : 'brightness-100 contrast-100 saturate-100'
+                          ? 'brightness-125 contrast-125 saturate-110' 
+                          : 'invert brightness-90 contrast-110 saturate-105'
                       }`}
                     />
                   </div>
