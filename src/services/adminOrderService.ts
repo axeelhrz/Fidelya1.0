@@ -19,7 +19,7 @@ import { es } from 'date-fns/locale'
 export class AdminOrderService {
   // Cache para mejorar rendimiento
   private static cache = new Map<string, { data: AdminOrderView[]; timestamp: number }>()
-  private static CACHE_DURATION = 1 * 60 * 1000 // 1 minuto para datos más frescos
+  private static CACHE_DURATION = 30 * 1000 // 30 segundos para datos más frescos
 
   private static getCacheKey(filters: OrderFilters): string {
     return JSON.stringify(filters)
@@ -62,11 +62,73 @@ export class AdminOrderService {
     return new Date()
   }
 
+  // Función helper para procesar selecciones y calcular resumen de items
+  private static processOrderSelections(selections: any[]): {
+    itemsCount: number
+    hasColaciones: boolean
+    itemsSummary: AdminOrderView['itemsSummary']
+  } {
+    let totalAlmuerzos = 0
+    let totalColaciones = 0
+    let almuerzosPrice = 0
+    let colacionesPrice = 0
+    const itemsDetail: AdminOrderView['itemsSummary']['itemsDetail'] = []
+
+    selections.forEach((selection: any) => {
+      try {
+        const dayName = format(parseISO(selection.date), 'EEEE', { locale: es })
+        
+        const dayDetail: AdminOrderView['itemsSummary']['itemsDetail'][0] = {
+          date: selection.date,
+          dayName: dayName
+        }
+
+        if (selection.almuerzo) {
+          totalAlmuerzos++
+          const price = Number(selection.almuerzo.price) || 0
+          almuerzosPrice += price
+          dayDetail.almuerzo = {
+            code: selection.almuerzo.code || '',
+            name: selection.almuerzo.name || selection.almuerzo.nombre || '',
+            price: price
+          }
+        }
+
+        if (selection.colacion) {
+          totalColaciones++
+          const price = Number(selection.colacion.price) || 0
+          colacionesPrice += price
+          dayDetail.colacion = {
+            code: selection.colacion.code || '',
+            name: selection.colacion.name || selection.colacion.nombre || '',
+            price: price
+          }
+        }
+
+        itemsDetail.push(dayDetail)
+      } catch (error) {
+        console.error('Error processing selection:', selection, error)
+      }
+    })
+
+    return {
+      itemsCount: totalAlmuerzos + totalColaciones,
+      hasColaciones: totalColaciones > 0,
+      itemsSummary: {
+        totalAlmuerzos,
+        totalColaciones,
+        almuerzosPrice,
+        colacionesPrice,
+        itemsDetail
+      }
+    }
+  }
+
   static async getOrdersWithFilters(filters: OrderFilters): Promise<AdminOrderView[]> {
     try {
       const cacheKey = this.getCacheKey(filters)
       
-      // Verificar cache solo si no es una consulta en tiempo real
+      // Verificar cache
       if (this.isValidCache(cacheKey)) {
         console.log('Using cached data for filters:', filters)
         return this.cache.get(cacheKey)!.data
@@ -89,7 +151,7 @@ export class AdminOrderService {
       console.log(`Processing ${ordersSnapshot.docs.length} orders from Firestore`)
 
       // Procesar pedidos en lotes para mejor rendimiento
-      const batchSize = 20
+      const batchSize = 15
       const orderDocs = ordersSnapshot.docs
       
       for (let i = 0; i < orderDocs.length; i += batchSize) {
@@ -112,15 +174,18 @@ export class AdminOrderService {
 
             const userData = userDoc.data()
 
+            // Normalizar userType
+            const userType = userData.userType || userData.tipoUsuario || 'estudiante'
+
             // Aplicar filtros del lado del cliente
-            if (filters.userType && filters.userType !== 'all' && userData.userType !== filters.userType) {
+            if (filters.userType && filters.userType !== 'all' && userType !== filters.userType) {
               return null
             }
 
             if (filters.searchTerm) {
               const searchLower = filters.searchTerm.toLowerCase()
-              const fullName = `${userData.firstName} ${userData.lastName}`.toLowerCase()
-              const email = userData.email.toLowerCase()
+              const fullName = `${userData.firstName || userData.nombre || ''} ${userData.lastName || userData.apellido || ''}`.toLowerCase()
+              const email = (userData.email || userData.correo || '').toLowerCase()
               
               if (!fullName.includes(searchLower) && !email.includes(searchLower)) {
                 return null
@@ -132,10 +197,9 @@ export class AdminOrderService {
             const paidAt = orderData.paidAt ? this.safeTimestampToDate(orderData.paidAt) : undefined
             const cancelledAt = orderData.cancelledAt ? this.safeTimestampToDate(orderData.cancelledAt) : undefined
 
-            // Calcular estadísticas del pedido
+            // Procesar selecciones y calcular estadísticas
             const selections = orderData.selections || []
-            const itemsCount = selections.length
-            const hasColaciones = selections.some((s: { colacion?: unknown }) => s.colacion)
+            const { itemsCount, hasColaciones, itemsSummary } = this.processOrderSelections(selections)
             const total = Number(orderData.total) || 0
 
             // Calcular días desde que está pendiente
@@ -157,15 +221,16 @@ export class AdminOrderService {
               paymentId: orderData.paymentId,
               user: {
                 id: userData.id || orderData.userId,
-                firstName: userData.firstName || '',
-                lastName: userData.lastName || '',
-                email: userData.email || '',
-                userType: userData.userType || 'estudiante'
+                firstName: userData.firstName || userData.nombre || '',
+                lastName: userData.lastName || userData.apellido || '',
+                email: userData.email || userData.correo || '',
+                userType: userType
               },
               dayName: format(createdAt, 'EEEE', { locale: es }),
               formattedDate: format(createdAt, 'dd/MM/yyyy HH:mm'),
               itemsCount: itemsCount,
-              hasColaciones: hasColaciones
+              hasColaciones: hasColaciones,
+              itemsSummary: itemsSummary
             }
 
             // Filtrar por día específico
@@ -231,8 +296,28 @@ export class AdminOrderService {
         cancelledOrders: 0,
         criticalPendingOrders: 0,
         totalByStatus: { pending: 0, paid: 0, cancelled: 0 },
-        revenueByStatus: { pending: 0, paid: 0, cancelled: 0 }
+        revenueByStatus: { pending: 0, paid: 0, cancelled: 0 },
+        itemsMetrics: {
+          totalAlmuerzos: 0,
+          totalColaciones: 0,
+          averageItemsPerOrder: 0,
+          mostPopularItems: []
+        },
+        weeklyTrends: {
+          ordersGrowth: 0,
+          revenueGrowth: 0,
+          conversionRate: 0
+        }
       }
+
+      // Mapas para tracking de items populares
+      const itemsTracker = new Map<string, {
+        code: string
+        name: string
+        type: 'almuerzo' | 'colacion'
+        count: number
+        revenue: number
+      }>()
 
       // Calcular métricas
       orders.forEach(order => {
@@ -272,6 +357,41 @@ export class AdminOrderService {
             break
         }
 
+        // Métricas de items
+        metrics.itemsMetrics.totalAlmuerzos += order.itemsSummary.totalAlmuerzos
+        metrics.itemsMetrics.totalColaciones += order.itemsSummary.totalColaciones
+
+        // Tracking de items populares
+        order.itemsSummary.itemsDetail.forEach(detail => {
+          if (detail.almuerzo) {
+            const key = `${detail.almuerzo.code}-almuerzo`
+            const existing = itemsTracker.get(key) || {
+              code: detail.almuerzo.code,
+              name: detail.almuerzo.name,
+              type: 'almuerzo' as const,
+              count: 0,
+              revenue: 0
+            }
+            existing.count++
+            existing.revenue += detail.almuerzo.price
+            itemsTracker.set(key, existing)
+          }
+
+          if (detail.colacion) {
+            const key = `${detail.colacion.code}-colacion`
+            const existing = itemsTracker.get(key) || {
+              code: detail.colacion.code,
+              name: detail.colacion.name,
+              type: 'colacion' as const,
+              count: 0,
+              revenue: 0
+            }
+            existing.count++
+            existing.revenue += detail.colacion.price
+            itemsTracker.set(key, existing)
+          }
+        })
+
         // Totales por día (contar todos los pedidos)
         order.selections.forEach(selection => {
           try {
@@ -285,9 +405,24 @@ export class AdminOrderService {
         })
       })
 
-      // Valor promedio (solo de pedidos pagados)
+      // Calcular promedios y tendencias
       metrics.averageOrderValue = metrics.paidOrders > 0 
         ? Math.round(metrics.totalRevenue / metrics.paidOrders)
+        : 0
+
+      const totalItems = metrics.itemsMetrics.totalAlmuerzos + metrics.itemsMetrics.totalColaciones
+      metrics.itemsMetrics.averageItemsPerOrder = orders.length > 0 
+        ? Math.round((totalItems / orders.length) * 100) / 100
+        : 0
+
+      // Items más populares (top 10)
+      metrics.itemsMetrics.mostPopularItems = Array.from(itemsTracker.values())
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10)
+
+      // Tasa de conversión
+      metrics.weeklyTrends.conversionRate = metrics.totalOrders > 0 
+        ? Math.round((metrics.paidOrders / metrics.totalOrders) * 100)
         : 0
 
       console.log('Calculated metrics:', {
@@ -297,7 +432,9 @@ export class AdminOrderService {
         cancelled: metrics.cancelledOrders,
         critical: metrics.criticalPendingOrders,
         revenue: metrics.totalRevenue,
-        averageValue: metrics.averageOrderValue
+        averageValue: metrics.averageOrderValue,
+        totalItems: totalItems,
+        conversionRate: metrics.weeklyTrends.conversionRate
       })
 
       return metrics
@@ -409,20 +546,22 @@ export class AdminOrderService {
       const cancelledAt = orderData.cancelledAt ? this.safeTimestampToDate(orderData.cancelledAt) : undefined
 
       // Procesar selecciones con manejo de errores
-      const processedSelections = (orderData.selections || []).map((s: { date: string; almuerzo?: { code: string; name: string; price: number }; colacion?: { code: string; name: string; price: number } }) => {
+      const processedSelections = (orderData.selections || []).map((s: any) => {
         try {
           return {
             date: s.date,
             dayName: format(parseISO(s.date), 'EEEE', { locale: es }),
             almuerzo: s.almuerzo ? {
               code: s.almuerzo.code,
-              name: s.almuerzo.name,
-              price: s.almuerzo.price
+              name: s.almuerzo.name || s.almuerzo.nombre,
+              price: s.almuerzo.price,
+              description: s.almuerzo.description || s.almuerzo.descripcion
             } : undefined,
             colacion: s.colacion ? {
               code: s.colacion.code,
-              name: s.colacion.name,
-              price: s.colacion.price
+              name: s.colacion.name || s.colacion.nombre,
+              price: s.colacion.price,
+              description: s.colacion.description || s.colacion.descripcion
             } : undefined
           }
         } catch (error) {
@@ -435,6 +574,24 @@ export class AdminOrderService {
           }
         }
       })
+
+      // Calcular resumen financiero
+      let subtotalAlmuerzos = 0
+      let subtotalColaciones = 0
+      let totalItems = 0
+
+      processedSelections.forEach(selection => {
+        if (selection.almuerzo) {
+          subtotalAlmuerzos += selection.almuerzo.price
+          totalItems++
+        }
+        if (selection.colacion) {
+          subtotalColaciones += selection.colacion.price
+          totalItems++
+        }
+      })
+
+      const averageItemPrice = totalItems > 0 ? (subtotalAlmuerzos + subtotalColaciones) / totalItems : 0
 
       // Construir historial de pagos
       const paymentHistory = [
@@ -461,6 +618,10 @@ export class AdminOrderService {
         })
       }
 
+      // Procesar información del usuario
+      const userType = userData.userType || userData.tipoUsuario || 'estudiante'
+      const { itemsCount, hasColaciones, itemsSummary } = this.processOrderSelections(orderData.selections || [])
+
       const detail: OrderDetailView = {
         id: orderDoc.id,
         userId: orderData.userId,
@@ -475,16 +636,23 @@ export class AdminOrderService {
         paymentId: orderData.paymentId,
         user: {
           id: userData.id || orderData.userId,
-          firstName: userData.firstName || '',
-          lastName: userData.lastName || '',
-          email: userData.email || '',
-          userType: userData.userType || 'estudiante'
+          firstName: userData.firstName || userData.nombre || '',
+          lastName: userData.lastName || userData.apellido || '',
+          email: userData.email || userData.correo || '',
+          userType: userType
         },
         dayName: format(createdAt, 'EEEE', { locale: es }),
         formattedDate: format(createdAt, 'dd/MM/yyyy HH:mm'),
-        itemsCount: processedSelections.length,
-        hasColaciones: processedSelections.some((s: { colacion?: { code: string; name: string; price: number } }) => s.colacion),
-        paymentHistory: paymentHistory
+        itemsCount: itemsCount,
+        hasColaciones: hasColaciones,
+        itemsSummary: itemsSummary,
+        paymentHistory: paymentHistory,
+        financialSummary: {
+          subtotalAlmuerzos,
+          subtotalColaciones,
+          totalItems,
+          averageItemPrice: Math.round(averageItemPrice)
+        }
       }
 
       return detail
