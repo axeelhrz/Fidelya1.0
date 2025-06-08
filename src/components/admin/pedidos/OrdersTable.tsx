@@ -10,9 +10,10 @@ import {
   Trash2,
   XCircle,
   AlertTriangle,
+  Timer,
   Package,
   ShoppingBag,
-  Coffee,
+  Coffee
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -137,282 +138,88 @@ export function OrdersTable({
     }
   }
 
-  const renderProductsSummary = (order: AdminOrderView) => {
+  const renderItemsSummary = (order: AdminOrderView) => {
     const { itemsSummary } = order
-    
-    if (!itemsSummary || itemsSummary.itemsDetail.length === 0) {
-      return (
-        <div className="flex items-center space-x-2 text-slate-500">
-          <Package className="w-4 h-4" />
-          <span className="text-sm">Sin detalles</span>
-        </div>
-      )
-    }
-
-    // Crear resumen de productos únicos
-    const uniqueProducts = new Map<string, { code: string; name: string; type: 'almuerzo' | 'colacion'; count: number }>()
-    
-    itemsSummary.itemsDetail.forEach(detail => {
-      if (detail.almuerzo) {
-        const key = detail.almuerzo.code
-        const existing = uniqueProducts.get(key) || {
-          code: detail.almuerzo.code,
-          name: detail.almuerzo.name,
-          type: 'almuerzo' as const,
-          count: 0
-        }
-        existing.count++
-        uniqueProducts.set(key, existing)
-      }
-      
-      if (detail.colacion) {
-        const key = detail.colacion.code
-        const existing = uniqueProducts.get(key) || {
-          code: detail.colacion.code,
-          name: detail.colacion.name,
-          type: 'colacion' as const,
-          count: 0
-        }
-        existing.count++
-        uniqueProducts.set(key, existing)
-      }
-    })
-
-    const products = Array.from(uniqueProducts.values())
     
     return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="cursor-help">
-              {/* Resumen compacto */}
-              <div className="flex items-center space-x-2 mb-2">
+            <div className="flex items-center space-x-2 cursor-help">
+              <div className="flex items-center space-x-1">
                 <Package className="w-4 h-4 text-slate-500" />
                 <span className="font-medium text-slate-900 dark:text-white">
-                  {order.itemsCount} productos
+                  {order.itemsCount}
                 </span>
-                <div className="flex items-center space-x-1">
-                  {itemsSummary.totalAlmuerzos > 0 && (
-                    <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                      <ShoppingBag className="w-3 h-3 mr-1" />
-                      {itemsSummary.totalAlmuerzos}A
-                    </Badge>
-                  )}
-                  
-                  {itemsSummary.totalColaciones > 0 && (
-                    <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                      <Coffee className="w-3 h-3 mr-1" />
-                      {itemsSummary.totalColaciones}C
-                    </Badge>
-                  )}
-                </div>
               </div>
-
-              {/* Lista de productos principales (máximo 3) */}
-              <div className="space-y-1">
-                {products.slice(0, 3).map((product) => (
-                  <div key={`${product.code}-${product.type}`} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center space-x-2">
-                      {product.type === 'almuerzo' ? (
-                        <ShoppingBag className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <Coffee className="w-3 h-3 text-emerald-600" />
-                      )}
-                      <span className={`font-mono font-semibold ${
-                        product.type === 'almuerzo' ? 'text-blue-700 dark:text-blue-300' : 'text-emerald-700 dark:text-emerald-300'
-                      }`}>
-                        {product.code}
-                      </span>
-                    </div>
-                    <span className="text-slate-600 dark:text-slate-400">
-                      {product.count > 1 ? `×${product.count}` : ''}
-                    </span>
-                  </div>
-                ))}
+              
+              <div className="flex items-center space-x-1">
+                {itemsSummary.totalAlmuerzos > 0 && (
+                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                    <ShoppingBag className="w-3 h-3 mr-1" />
+                    {itemsSummary.totalAlmuerzos}A
+                  </Badge>
+                )}
                 
-                {products.length > 3 && (
-                  <div className="text-xs text-slate-500 dark:text-slate-400 text-center pt-1 border-t">
-                    +{products.length - 3} productos más
-                  </div>
+                {itemsSummary.totalColaciones > 0 && (
+                  <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                    <Coffee className="w-3 h-3 mr-1" />
+                    {itemsSummary.totalColaciones}C
+                  </Badge>
                 )}
               </div>
             </div>
           </TooltipTrigger>
           <TooltipContent side="top" className="max-w-sm">
-            <div className="space-y-3">
-              <div className="font-semibold text-sm">Productos comprados:</div>
-              
-              {/* Resumen por tipo */}
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="space-y-1">
-                  <div className="font-medium text-blue-600 flex items-center space-x-1">
-                    <ShoppingBag className="w-3 h-3" />
-                    <span>Almuerzos ({itemsSummary.totalAlmuerzos})</span>
-                  </div>
-                  {products.filter(p => p.type === 'almuerzo').map(product => (
-                    <div key={product.code} className="ml-4 flex justify-between">
-                      <span className="font-mono">{product.code}</span>
-                      <span>{product.count > 1 ? `×${product.count}` : ''}</span>
-                    </div>
-                  ))}
+            <div className="space-y-2">
+              <div className="font-semibold text-sm">Resumen del pedido:</div>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span>Almuerzos:</span>
+                  <span>{itemsSummary.totalAlmuerzos} ({formatAdminCurrency(itemsSummary.almuerzosPrice)})</span>
                 </div>
-                
-                <div className="space-y-1">
-                  <div className="font-medium text-emerald-600 flex items-center space-x-1">
-                    <Coffee className="w-3 h-3" />
-                    <span>Colaciones ({itemsSummary.totalColaciones})</span>
-                  </div>
-                  {products.filter(p => p.type === 'colacion').map(product => (
-                    <div key={product.code} className="ml-4 flex justify-between">
-                      <span className="font-mono">{product.code}</span>
-                      <span>{product.count > 1 ? `×${product.count}` : ''}</span>
-                    </div>
-                  ))}
+                <div className="flex justify-between">
+                  <span>Colaciones:</span>
+                  <span>{itemsSummary.totalColaciones} ({formatAdminCurrency(itemsSummary.colacionesPrice)})</span>
                 </div>
-              </div>
-
-              {/* Detalles por día */}
-              <div className="border-t pt-2">
-                <div className="font-medium text-xs mb-2">Por día:</div>
-                <div className="space-y-1 text-xs max-h-32 overflow-y-auto">
-                  {itemsSummary.itemsDetail.map((detail, idx) => (
-                    <div key={idx} className="space-y-0.5">
-                      <div className="font-medium capitalize text-slate-700 dark:text-slate-300">
-                        {detail.dayName}:
-                      </div>
-                      <div className="ml-2 space-y-0.5">
-                        {detail.almuerzo && (
-                          <div className="flex justify-between">
-                            <span className="text-blue-600 font-mono">{detail.almuerzo.code}</span>
-                            <span>{formatAdminCurrency(detail.almuerzo.price)}</span>
-                          </div>
-                        )}
-                        {detail.colacion && (
-                          <div className="flex justify-between">
-                            <span className="text-emerald-600 font-mono">{detail.colacion.code}</span>
-                            <span>{formatAdminCurrency(detail.colacion.price)}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Total */}
-              <div className="border-t pt-2">
-                <div className="flex justify-between font-semibold text-sm">
+                <hr className="my-1" />
+                <div className="flex justify-between font-semibold">
                   <span>Total:</span>
                   <span>{formatAdminCurrency(order.total)}</span>
                 </div>
               </div>
+              
+              {itemsSummary.itemsDetail.length > 0 && (
+                <div className="mt-2 pt-2 border-t">
+                  <div className="font-semibold text-xs mb-1">Detalles por día:</div>
+                  <div className="space-y-1 text-xs max-h-32 overflow-y-auto">
+                    {itemsSummary.itemsDetail.map((detail, idx) => (
+                      <div key={idx} className="text-xs">
+                        <div className="font-medium capitalize">{detail.dayName}:</div>
+                        <div className="ml-2 space-y-0.5">
+                          {detail.almuerzo && (
+                            <div className="flex justify-between">
+                              <span className="text-blue-600">• {detail.almuerzo.code}</span>
+                              <span>{formatAdminCurrency(detail.almuerzo.price)}</span>
+                            </div>
+                          )}
+                          {detail.colacion && (
+                            <div className="flex justify-between">
+                              <span className="text-emerald-600">• {detail.colacion.code}</span>
+                              <span>{formatAdminCurrency(detail.colacion.price)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
     )
-  }
-
-  const renderPaymentDate = (order: AdminOrderView) => {
-    switch (order.status) {
-      case 'paid':
-        if (order.paidAt) {
-          return (
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-1">
-                <CheckCircle className="w-4 h-4 text-emerald-600 mr-1" />
-                <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                  Pagado
-                </span>
-              </div>
-              <div className="text-sm font-medium text-slate-900 dark:text-white">
-                {format(new Date(order.paidAt), 'dd/MM/yyyy', { locale: es })}
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">
-                {format(new Date(order.paidAt), 'HH:mm', { locale: es })}
-              </div>
-            </div>
-          )
-        } else {
-          return (
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-1">
-                <CheckCircle className="w-4 h-4 text-emerald-600 mr-1" />
-                <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                  Pagado
-                </span>
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">
-                Fecha no registrada
-              </div>
-            </div>
-          )
-        }
-
-      case 'cancelled':
-        if (order.cancelledAt) {
-          return (
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-1">
-                <XCircle className="w-4 h-4 text-red-600 mr-1" />
-                <span className="text-sm font-semibold text-red-700 dark:text-red-300">
-                  Cancelado
-                </span>
-              </div>
-              <div className="text-sm font-medium text-slate-900 dark:text-white">
-                {format(new Date(order.cancelledAt), 'dd/MM/yyyy', { locale: es })}
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">
-                {format(new Date(order.cancelledAt), 'HH:mm', { locale: es })}
-              </div>
-            </div>
-          )
-        } else {
-          return (
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-1">
-                <XCircle className="w-4 h-4 text-red-600 mr-1" />
-                <span className="text-sm font-semibold text-red-700 dark:text-red-300">
-                  Cancelado
-                </span>
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">
-                Fecha no registrada
-              </div>
-            </div>
-          )
-        }
-
-      case 'pending':
-      default:
-        const daysSincePending = getDaysSincePending(order)
-        return (
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-1">
-              {daysSincePending > 3 ? (
-                <AlertTriangle className="w-4 h-4 text-red-600 mr-1" />
-              ) : (
-                <Clock className="w-4 h-4 text-amber-600 mr-1" />
-              )}
-              <span className={`text-sm font-semibold ${
-                daysSincePending > 3 
-                  ? 'text-red-700 dark:text-red-300' 
-                  : 'text-amber-700 dark:text-amber-300'
-              }`}>
-                Pendiente
-              </span>
-            </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">
-              {daysSincePending > 0 ? `${daysSincePending} días` : 'Reciente'}
-            </div>
-            {daysSincePending > 3 && (
-              <Badge variant="destructive" className="text-xs mt-1 animate-pulse">
-                Crítico
-              </Badge>
-            )}
-          </div>
-        )
-    }
   }
 
   if (isLoading) {
@@ -424,7 +231,7 @@ export function OrdersTable({
         <CardContent>
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full" />
+              <Skeleton key={i} className="h-16 w-full" />
             ))}
           </div>
         </CardContent>
@@ -480,14 +287,14 @@ export function OrdersTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[200px]">Cliente</TableHead>
-                  <TableHead className="min-w-[100px]">Tipo</TableHead>
-                  <TableHead className="min-w-[140px]">Fecha del Pedido</TableHead>
-                  <TableHead className="min-w-[250px]">Productos Comprados</TableHead>
-                  <TableHead className="min-w-[120px]">Estado</TableHead>
-                  <TableHead className="min-w-[140px]">Fecha de Pago</TableHead>
-                  <TableHead className="min-w-[120px]">Total</TableHead>
-                  <TableHead className="text-right min-w-[100px]">Acciones</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Fecha del Pedido</TableHead>
+                  <TableHead>Productos Comprados</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Fecha de Pago</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -507,7 +314,7 @@ export function OrdersTable({
                     >
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          <div className={`w-10 h-10 bg-gradient-to-br ${
+                          <div className={`w-8 h-8 bg-gradient-to-br ${
                             order.user.userType === 'estudiante' 
                               ? 'from-blue-500 to-blue-600' 
                               : 'from-purple-500 to-purple-600'
@@ -543,11 +350,11 @@ export function OrdersTable({
                       </TableCell>
                       
                       <TableCell>
-                        {renderProductsSummary(order)}
+                        {renderItemsSummary(order)}
                       </TableCell>
                       
                       <TableCell>
-                        <div className="flex items-center justify-center">
+                        <div className="flex items-center space-x-2">
                           <Badge className={`border ${getStatusColor(order.status, daysSincePending)}`}>
                             <div className="flex items-center space-x-1">
                               {isCritical ? (
@@ -558,16 +365,44 @@ export function OrdersTable({
                               <span>{getStatusText(order.status)}</span>
                             </div>
                           </Badge>
+                          {order.status === 'pending' && daysSincePending > 0 && (
+                            <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
+                              <Timer className="w-3 h-3" />
+                              <span>{daysSincePending}d</span>
+                            </div>
+                          )}
                         </div>
                       </TableCell>
 
                       <TableCell>
-                        {renderPaymentDate(order)}
+                        {order.status === 'paid' && order.paidAt ? (
+                          <div>
+                            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                              {format(new Date(order.paidAt), 'dd/MM/yyyy', { locale: es })}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {format(new Date(order.paidAt), 'HH:mm', { locale: es })}
+                            </p>
+                          </div>
+                        ) : order.status === 'cancelled' && order.cancelledAt ? (
+                          <div>
+                            <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                              Cancelado
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {format(new Date(order.cancelledAt), 'dd/MM/yyyy', { locale: es })}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-slate-400 dark:text-slate-500">
+                            Pendiente
+                          </span>
+                        )}
                       </TableCell>
                       
                       <TableCell>
-                        <div className="text-center">
-                          <span className="font-bold text-slate-900 dark:text-white text-lg">
+                        <div className="text-right">
+                          <span className="font-semibold text-slate-900 dark:text-white text-lg">
                             {formatAdminCurrency(order.total)}
                           </span>
                           <div className="text-xs text-slate-500 dark:text-slate-400">
