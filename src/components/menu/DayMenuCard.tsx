@@ -27,10 +27,10 @@ export function DayMenuCard({ dayMenu, userType, index }: DayMenuCardProps) {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className={`bg-white dark:bg-slate-800 rounded-xl border shadow-sm overflow-hidden ${
+      className={`card-enhanced ${
         isToday()
           ? 'border-blue-300 dark:border-blue-600 ring-2 ring-blue-100 dark:ring-blue-900/30'
-          : 'border-slate-200 dark:border-slate-700'
+          : ''
       } ${isPastDay() ? 'opacity-75' : ''}`}
     >
       {/* Encabezado del día */}
@@ -52,60 +52,70 @@ export function DayMenuCard({ dayMenu, userType, index }: DayMenuCardProps) {
                   : 'text-slate-600 dark:text-slate-400'
               } />
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 text-clean">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 text-clean truncate">
                 {dayMenu.dayLabel}
               </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400 text-clean">
+              <p className="text-sm text-slate-600 dark:text-slate-400 text-clean truncate">
                 {dayMenu.dateFormatted}
               </p>
             </div>
           </div>
 
-          {isToday() && (
-            <div className="flex items-center space-x-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">
-              <Clock size={14} />
-              <span className="text-xs font-medium">Hoy</span>
-            </div>
-          )}
+          <div className="flex-shrink-0">
+            {isToday() && (
+              <div className="flex items-center space-x-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full">
+                <Clock size={14} />
+                <span className="text-xs font-medium">Hoy</span>
+              </div>
+            )}
 
-          {isPastDay() && (
-            <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded-full">
-              <span className="text-xs font-medium">Pasado</span>
-            </div>
-          )}
+            {isPastDay() && (
+              <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-3 py-1 rounded-full">
+                <span className="text-xs font-medium">Pasado</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Contenido del menú */}
       <div className="p-4">
         {!dayMenu.hasItems ? (
-          <div className="text-center py-8">
-            <AlertTriangle size={32} className="text-amber-500 mx-auto mb-3" />
-            <h3 className="text-lg font-medium text-slate-800 dark:text-slate-100 mb-2 text-clean">
+          <div className="text-center py-12">
+            <AlertTriangle size={48} className="text-amber-500 mx-auto mb-4" />
+            <h3 className="text-xl font-medium text-slate-800 dark:text-slate-100 mb-3 text-clean">
               Menú no disponible
             </h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 text-clean">
-              El menú para este día aún no ha sido publicado por la administración.
+            <p className="text-slate-600 dark:text-slate-400 text-clean max-w-md mx-auto leading-relaxed">
+              El menú para este día aún no ha sido publicado por la administración. 
+              Te notificaremos cuando esté disponible.
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Almuerzos */}
             {dayMenu.almuerzos.length > 0 && (
               <div>
-                <div className="flex items-center space-x-2 mb-3">
-                  <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                    <span className="text-sm">🍽️</span>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                    <span className="text-lg">🍽️</span>
                   </div>
-                  <h3 className="text-lg font-medium text-slate-800 dark:text-slate-100 text-clean">
-                    Almuerzos
-                  </h3>
-                  <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">
-                    12:00 - 14:00
-                  </span>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 text-clean">
+                      Almuerzos
+                    </h3>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full font-medium">
+                        12:00 - 14:00
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        {dayMenu.almuerzos.length} opción{dayMenu.almuerzos.length !== 1 ? 'es' : ''} disponible{dayMenu.almuerzos.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="grid gap-3">
+                <div className="grid gap-4">
                   {dayMenu.almuerzos.map((item, itemIndex) => (
                     <MenuItemCard
                       key={item.id}
@@ -118,21 +128,33 @@ export function DayMenuCard({ dayMenu, userType, index }: DayMenuCardProps) {
               </div>
             )}
 
+            {/* Separador entre almuerzos y colaciones */}
+            {dayMenu.almuerzos.length > 0 && dayMenu.colaciones.length > 0 && (
+              <div className="border-t border-slate-200 dark:border-slate-700"></div>
+            )}
+
             {/* Colaciones */}
             {dayMenu.colaciones.length > 0 && (
               <div>
-                <div className="flex items-center space-x-2 mb-3">
-                  <div className="w-6 h-6 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                    <span className="text-sm">🥪</span>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                    <span className="text-lg">🥪</span>
                   </div>
-                  <h3 className="text-lg font-medium text-slate-800 dark:text-slate-100 text-clean">
-                    Colaciones
-                  </h3>
-                  <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded-full">
-                    15:30 - 16:30
-                  </span>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 text-clean">
+                      Colaciones
+                    </h3>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded-full font-medium">
+                        15:30 - 16:30
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        {dayMenu.colaciones.length} opción{dayMenu.colaciones.length !== 1 ? 'es' : ''} disponible{dayMenu.colaciones.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="grid gap-3">
+                <div className="grid gap-4">
                   {dayMenu.colaciones.map((item, itemIndex) => (
                     <MenuItemCard
                       key={item.id}
