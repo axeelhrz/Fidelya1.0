@@ -96,6 +96,14 @@
     word-break: break-word;
   }
 
+  /* Utilidad para line-clamp */
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   /* Estilos para tarjetas mejoradas */
   .card-enhanced {
     @apply bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden;
@@ -168,7 +176,7 @@
   }
   
   .scroll-container::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
   }
   
   .scroll-container::-webkit-scrollbar-track {
@@ -177,11 +185,28 @@
   
   .scroll-container::-webkit-scrollbar-thumb {
     background-color: rgb(203 213 225);
-    border-radius: 2px;
+    border-radius: 3px;
   }
   
   .scroll-container::-webkit-scrollbar-thumb:hover {
     background-color: rgb(148 163 184);
+  }
+
+  /* Estilos para sidebar del menú */
+  .menu-sidebar {
+    @apply bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700;
+  }
+
+  .menu-sidebar-item {
+    @apply w-full p-4 rounded-lg border text-left transition-all duration-200 hover:shadow-md hover:bg-slate-50 dark:hover:bg-slate-600;
+  }
+
+  .menu-sidebar-item.active {
+    @apply bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700 shadow-sm;
+  }
+
+  .menu-sidebar-item.past {
+    @apply opacity-60;
   }
 
   /* Prevenir overflow en contenedores */
@@ -249,6 +274,32 @@
     letter-spacing: -0.02em;
     font-weight: 500;
   }
+
+  /* Estilos para gradientes suaves */
+  .gradient-blue-soft {
+    background: linear-gradient(135deg, rgb(239 246 255) 0%, rgb(219 234 254) 100%);
+  }
+
+  .gradient-emerald-soft {
+    background: linear-gradient(135deg, rgb(236 253 245) 0%, rgb(209 250 229) 100%);
+  }
+
+  .gradient-slate-soft {
+    background: linear-gradient(135deg, rgb(248 250 252) 0%, rgb(241 245 249) 100%);
+  }
+
+  /* Dark mode gradients */
+  .dark .gradient-blue-soft {
+    background: linear-gradient(135deg, rgb(30 58 138 / 0.2) 0%, rgb(29 78 216 / 0.1) 100%);
+  }
+
+  .dark .gradient-emerald-soft {
+    background: linear-gradient(135deg, rgb(6 78 59 / 0.2) 0%, rgb(5 150 105 / 0.1) 100%);
+  }
+
+  .dark .gradient-slate-soft {
+    background: linear-gradient(135deg, rgb(51 65 85 / 0.5) 0%, rgb(71 85 105 / 0.25) 100%);
+  }
 }
 
 @layer utilities {
@@ -280,6 +331,21 @@
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
   }
+
+  /* Utilidades para sombras suaves */
+  .shadow-soft {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .shadow-soft-lg {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  /* Utilidades para backdrop blur */
+  .backdrop-blur-soft {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
 }
 
 /* Animaciones suaves */
@@ -288,8 +354,26 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out;
 }
 
 /* Mejoras para accesibilidad */
@@ -321,28 +405,4 @@
   }
 }
 
-@media (min-width: 1280px) {
-  .admin-grid {
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  }
-}
-
-/* Mejoras específicas para textos largos en tarjetas pequeñas */
-@media (max-width: 1280px) {
-  .admin-card-text {
-    font-size: 0.7rem;
-    line-height: 1.2;
-  }
-  
-  .menu-card-compact {
-    min-height: auto;
-  }
-}
-
-/* Estilos para pantallas muy pequeñas */
-@media (max-width: 768px) {
-  .admin-card-text {
-    font-size: 0.65rem;
-    line-height: 1.1;
-  }
-}
+@media (min-width: 1280px)
