@@ -36,13 +36,14 @@ interface DaySelectorProps {
 
 interface MenuItemOptionProps {
   item: MenuItem
+  optionNumber: number
   isSelected: boolean
   isReadOnly: boolean
   isPastDay: boolean
   isWeekend: boolean
 }
 
-function MenuItemOption({ item, isSelected, isReadOnly, isPastDay, isWeekend }: MenuItemOptionProps) {
+function MenuItemOption({ item, optionNumber, isSelected, isReadOnly, isPastDay, isWeekend }: MenuItemOptionProps) {
   const isDisabled = isReadOnly || !item.available || isPastDay || isWeekend
 
   return (
@@ -63,8 +64,8 @@ function MenuItemOption({ item, isSelected, isReadOnly, isPastDay, isWeekend }: 
         {/* Header del item */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Badge variant="outline" className="text-xs font-mono flex-shrink-0 px-2 py-0.5">
-              {item.code}
+            <Badge variant="outline" className="text-xs font-medium flex-shrink-0 px-2 py-0.5">
+              Opción {optionNumber}
             </Badge>
             {isSelected && (
               <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
@@ -251,6 +252,12 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
     return selectedItem?.price || 0
   }
 
+  // Obtener el número de opción del item seleccionado
+  const getSelectedOptionNumber = () => {
+    const selectedIndex = menuItems.findIndex(item => item.id === selectedItemId)
+    return selectedIndex >= 0 ? selectedIndex + 1 : 0
+  }
+
   return (
     <Card className={getCardClassName()}>
       {/* Header compacto */}
@@ -320,7 +327,7 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
                 <p className="text-xs font-medium mb-1">Pedido existente:</p>
                 <div className="flex items-center gap-2 text-xs justify-center">
                   {getMenuTypeIcon()}
-                  <span className="truncate">{menuItems.find(item => item.id === selectedItemId)?.name}</span>
+                  <span className="truncate">Opción {getSelectedOptionNumber()}: {menuItems.find(item => item.id === selectedItemId)?.name}</span>
                 </div>
               </div>
             )}
@@ -367,10 +374,11 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
                   disabled={isReadOnly || isPastDay || isWeekend}
                   className="space-y-2"
                 >
-                  {menuItems.map((item) => (
+                  {menuItems.map((item, itemIndex) => (
                     <MenuItemOption
                       key={item.id}
                       item={item}
+                      optionNumber={itemIndex + 1}
                       isSelected={selectedItemId === item.id}
                       isReadOnly={isReadOnly}
                       isPastDay={isPastDay}
@@ -399,7 +407,7 @@ export function DaySelector({ dayMenu, user, isReadOnly, menuType }: DaySelector
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                     <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
-                      {menuItems.find(item => item.id === selectedItemId)?.name}
+                      Opción {getSelectedOptionNumber()}: {menuItems.find(item => item.id === selectedItemId)?.name}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">

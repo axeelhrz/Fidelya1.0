@@ -9,9 +9,10 @@ interface MenuItemCardProps {
   item: MenuItem
   userType: 'apoderado' | 'funcionario'
   index: number
+  optionNumber: number // Nuevo prop para el número de opción
 }
 
-export function MenuItemCard({ item, userType, index }: MenuItemCardProps) {
+export function MenuItemCard({ item, userType, index, optionNumber }: MenuItemCardProps) {
   const [showFullDescription, setShowFullDescription] = useState(false)
 
   const formatPrice = (price: number) => {
@@ -39,13 +40,13 @@ export function MenuItemCard({ item, userType, index }: MenuItemCardProps) {
       }`}
     >
       <div className="card-content-enhanced">
-        {/* Header con código y estado */}
+        {/* Header con número de opción y estado */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`badge-enhanced ${
               item.type === 'almuerzo' ? 'badge-almuerzo' : 'badge-colacion'
             }`}>
-              {item.code}
+              Opción {optionNumber}
             </span>
             <div className={`flex items-center gap-1 badge-enhanced ${
               item.available ? 'badge-available' : 'badge-unavailable'

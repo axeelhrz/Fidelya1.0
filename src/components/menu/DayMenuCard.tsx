@@ -122,6 +122,7 @@ export function DayMenuCard({ dayMenu, userType, index }: DayMenuCardProps) {
                       item={item}
                       userType={userType}
                       index={itemIndex}
+                      optionNumber={itemIndex + 1}
                     />
                   ))}
                 </div>
@@ -161,6 +162,7 @@ export function DayMenuCard({ dayMenu, userType, index }: DayMenuCardProps) {
                       item={item}
                       userType={userType}
                       index={itemIndex}
+                      optionNumber={itemIndex + 1}
                     />
                   ))}
                 </div>
