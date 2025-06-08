@@ -40,6 +40,9 @@ export interface Child {
   curso: string
   rut?: string
   active: boolean
+  age?: number
+  edad?: number
+  level?: 'basico' | 'medio'
 }
 
 export interface User {
@@ -59,6 +62,7 @@ export interface User {
   hijos?: Child[] // Compatibilidad con diferentes formatos
   active: boolean
   createdAt: Date
+  phone?: string
 }
 
 export interface OrderSelectionByChild {

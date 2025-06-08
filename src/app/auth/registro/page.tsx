@@ -31,7 +31,8 @@ export default function RegistroPage() {
       name: "",
       age: "",
       class: "",
-      level: "basico"
+      level: "basico",
+      rut: ""
     }
   ])
 
@@ -74,7 +75,8 @@ export default function RegistroPage() {
       name: "",
       age: "",
       class: "",
-      level: "basico"
+      level: "basico",
+      rut: ""
     }])
   }
 
@@ -130,16 +132,24 @@ export default function RegistroPage() {
       
       for (const child of validChildren) {
         if (!child.name.trim()) {
-          setError("El nombre del niño es requerido")
+          setError("El nombre del hijo es requerido")
           return false
         }
         if (!child.age || parseInt(child.age) < 3 || parseInt(child.age) > 18) {
-          setError("La edad del niño debe estar entre 3 y 18 años")
+          setError("La edad del hijo debe estar entre 3 y 18 años")
           return false
         }
         if (!child.class.trim()) {
-          setError("La clase del niño es requerida")
+          setError("El curso del hijo es requerido")
           return false
+        }
+        // Validar RUT si se proporciona
+        if (child.rut && child.rut.trim()) {
+          const rutRegex = /^[0-9]+-[0-9kK]$/
+          if (!rutRegex.test(child.rut.trim())) {
+            setError("El formato del RUT debe ser: 12345678-9")
+            return false
+          }
         }
       }
     }
@@ -177,8 +187,10 @@ export default function RegistroPage() {
             id: child.id.toString(),
             name: child.name.trim(),
             age: parseInt(child.age) || 0,
-            class: child.class.trim(),
-            level: child.level as 'basico' | 'medio'
+            curso: child.class.trim(),
+            level: child.level as 'basico' | 'medio',
+            rut: child.rut.trim() || undefined,
+            active: true
           }))
         : []
 
@@ -192,6 +204,7 @@ export default function RegistroPage() {
         tipoUsuario: formData.userType, // Mantener compatibilidad
         children: validChildren,
         isActive: true,
+        active: true,
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -556,7 +569,7 @@ export default function RegistroPage() {
                             />
                           </div>
                           
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 gap-2">
                             <Input
                               type="number"
                               value={child.age}
@@ -573,12 +586,14 @@ export default function RegistroPage() {
                               type="text"
                               value={child.class}
                               onChange={(e) => handleChildChange(child.id, 'class', e.target.value)}
-                              placeholder="Clase *"
+                              placeholder="Curso *"
                               disabled={isLoading}
                               required
                               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
                             />
-                            
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
                             <select
                               value={child.level}
                               onChange={(e) => handleChildChange(child.id, 'level', e.target.value)}
@@ -589,6 +604,15 @@ export default function RegistroPage() {
                               <option value="basico">Básica</option>
                               <option value="medio">Media</option>
                             </select>
+
+                            <Input
+                              type="text"
+                              value={child.rut}
+                              onChange={(e) => handleChildChange(child.id, 'rut', e.target.value)}
+                              placeholder="RUT (opcional)"
+                              disabled={isLoading}
+                              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
+                            />
                           </div>
                         </div>
                       </motion.div>

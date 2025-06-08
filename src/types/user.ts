@@ -3,8 +3,8 @@ export interface AdminUser {
   firstName: string
   lastName: string
   email: string
-  role: 'funcionario' | 'estudiante' | 'admin' | 'super_admin'
-  userType: 'funcionario' | 'estudiante'
+  role: 'funcionario' | 'apoderado' | 'admin' | 'super_admin'
+  userType: 'funcionario' | 'apoderado'
   emailVerified: boolean
   createdAt: Date
   lastLogin?: Date
@@ -21,6 +21,7 @@ export interface AdminUserChild {
   age: number
   class: string
   level: 'basico' | 'medio'
+  rut?: string
 }
 
 export interface User {
@@ -28,11 +29,12 @@ export interface User {
   email: string
   firstName: string
   lastName: string
-  userType: 'funcionario' | 'estudiante'
-  tipoUsuario: 'funcionario' | 'estudiante'
+  userType: 'funcionario' | 'apoderado'
+  tipoUsuario: 'funcionario' | 'apoderado'
   children?: Child[]
   isActive: boolean
   createdAt: Date
+  phone?: string
 }
 
 export interface Child {
@@ -41,6 +43,9 @@ export interface Child {
   curso: string
   rut?: string
   active: boolean
+  age?: number
+  edad?: number
+  level?: 'basico' | 'medio'
 }
 
 export type UserType = 'apoderado' | 'funcionario'
