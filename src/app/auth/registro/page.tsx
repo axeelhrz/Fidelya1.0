@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -20,7 +21,8 @@ export default function RegistroPage() {
     lastName: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    userType: "" as "funcionario" | "apoderado" | ""
   })
   
   const [children, setChildren] = useState([
@@ -33,8 +35,6 @@ export default function RegistroPage() {
     }
   ])
   
-  const [showChildrenSection, setShowChildrenSection] = useState(false)
-
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -49,6 +49,15 @@ export default function RegistroPage() {
       [e.target.name]: e.target.value
     })
     // Limpiar error cuando el usuario empiece a escribir
+    if (error) setError("")
+  }
+
+  const handleUserTypeChange = (value: string) => {
+    setFormData({
+      ...formData,
+      userType: value as "funcionario" | "apoderado"
+    })
+    // Limpiar error cuando el usuario seleccione un tipo
     if (error) setError("")
   }
 
@@ -105,9 +114,20 @@ export default function RegistroPage() {
       return false
     }
 
-    // Validar datos de hijos si la sección está visible
-    if (showChildrenSection) {
+    // Validar que se haya seleccionado un tipo de usuario
+    if (!formData.userType) {
+      setError("Debes seleccionar un tipo de usuario")
+      return false
+    }
+
+    // Validar datos de hijos si es apoderado
+    if (formData.userType === "apoderado") {
       const validChildren = children.filter(child => child.name.trim() !== "")
+      if (validChildren.length === 0) {
+        setError("Los apoderados deben agregar al menos un hijo")
+        return false
+      }
+      
       for (const child of validChildren) {
         if (!child.name.trim()) {
           setError("El nombre del niño es requerido")
@@ -151,8 +171,8 @@ export default function RegistroPage() {
         displayName: `${formData.firstName.trim()} ${formData.lastName.trim()}`
       })
 
-      // Preparar datos de los hijos (solo los que tienen nombre)
-      const validChildren = showChildrenSection 
+      // Preparar datos de los hijos (solo para apoderados)
+      const validChildren = formData.userType === "apoderado" 
         ? children.filter(child => child.name.trim() !== "").map(child => ({
             id: child.id.toString(),
             name: child.name.trim(),
@@ -162,17 +182,16 @@ export default function RegistroPage() {
           }))
         : []
 
-      // Determinar el tipo de usuario: si tiene hijos es funcionario/padre, si no es estudiante
-      const userType = validChildren.length > 0 ? 'funcionario' : 'estudiante'
-
       // Guardar datos adicionales en Firestore
       const userData = {
         id: user.uid,
         email: formData.email.trim().toLowerCase(),
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
-        userType,
+        userType: formData.userType,
+        tipoUsuario: formData.userType, // Mantener compatibilidad
         children: validChildren,
+        isActive: true,
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -376,6 +395,68 @@ export default function RegistroPage() {
                 />
               </motion.div>
 
+              {/* User Type Selection */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.85 }}
+                className="space-y-3"
+              >
+                <label className="label-educational">
+                  Tipo de Usuario *
+                </label>
+                <RadioGroup
+                  value={formData.userType}
+                  onValueChange={handleUserTypeChange}
+                  disabled={isLoading}
+                  className="space-y-3"
+                >
+                  <motion.div
+                    whileHover={!isLoading ? { scale: 1.02 } : {}}
+                    className={`flex items-start space-x-3 p-4 rounded-xl border-2 transition-all duration-300 ${
+                      formData.userType === "apoderado" 
+                        ? "border-emerald-500 bg-emerald-50/50" 
+                        : "border-slate-200 bg-white/60 hover:border-emerald-300"
+                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    <RadioGroupItem value="apoderado" id="apoderado" className="mt-1" />
+                    <div className="flex-1">
+                      <label 
+                        htmlFor="apoderado" 
+                        className={`text-sm font-medium text-slate-800 cursor-pointer ${isLoading ? 'cursor-not-allowed' : ''}`}
+                      >
+                        Apoderado
+                      </label>
+                      <p className="text-xs text-slate-600 mt-1">
+                        Padre, madre o tutor de estudiantes del colegio. Podrás gestionar los menús de tus hijos.
+                      </p>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    whileHover={!isLoading ? { scale: 1.02 } : {}}
+                    className={`flex items-start space-x-3 p-4 rounded-xl border-2 transition-all duration-300 ${
+                      formData.userType === "funcionario" 
+                        ? "border-emerald-500 bg-emerald-50/50" 
+                        : "border-slate-200 bg-white/60 hover:border-emerald-300"
+                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    <RadioGroupItem value="funcionario" id="funcionario" className="mt-1" />
+                    <div className="flex-1">
+                      <label 
+                        htmlFor="funcionario" 
+                        className={`text-sm font-medium text-slate-800 cursor-pointer ${isLoading ? 'cursor-not-allowed' : ''}`}
+                      >
+                        Funcionario
+                      </label>
+                      <p className="text-xs text-slate-600 mt-1">
+                        Trabajador del colegio (profesor, administrativo, etc.). Podrás gestionar tu propio menú.
+                      </p>
+                    </div>
+                  </motion.div>
+                </RadioGroup>
+              </motion.div>
+
               {/* Password Fields */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -417,41 +498,8 @@ export default function RegistroPage() {
                 />
               </motion.div>
 
-              {/* Children Section Toggle */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 1.1 }}
-                className="pt-4"
-              >
-                <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-200">
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-700 text-clean">
-                      ¿Tienes hijos en el colegio?
-                    </h3>
-                    <p className="text-xs text-slate-500 text-clean mt-1">
-                      Opcional: Agrega a tus hijos para gestionar sus menús
-                    </p>
-                  </div>
-                  <motion.button
-                    type="button"
-                    onClick={() => setShowChildrenSection(!showChildrenSection)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    disabled={isLoading}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                      showChildrenSection 
-                        ? 'bg-emerald-600 text-white' 
-                        : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-300'
-                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {showChildrenSection ? 'Ocultar' : 'Agregar'}
-                  </motion.button>
-                </div>
-              </motion.div>
-
-              {/* Children Section */}
-              {showChildrenSection && (
+              {/* Children Section - Solo para apoderados */}
+              {formData.userType === "apoderado" && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
@@ -461,7 +509,7 @@ export default function RegistroPage() {
                 >
                   <div className="border-t border-slate-200 pt-4">
                     <h3 className="text-lg font-medium text-slate-800 mb-4 text-clean">
-                      Información de tus hijos
+                      Información de tus hijos *
                     </h3>
                     
                     {children.map((child, index) => (
@@ -491,7 +539,7 @@ export default function RegistroPage() {
                         <div className="space-y-3">
                           <div>
                             <label className="label-educational">
-                              Nombre del niño/a
+                              Nombre del niño/a *
                             </label>
                             <Input
                               type="text"
@@ -499,13 +547,14 @@ export default function RegistroPage() {
                               onChange={(e) => handleChildChange(child.id, 'name', e.target.value)}
                               placeholder="Nombre completo"
                               disabled={isLoading}
+                              required
                             />
                           </div>
                           
                           <div className="grid grid-cols-2 gap-3">
                             <div>
                               <label className="label-educational">
-                                Edad
+                                Edad *
                               </label>
                               <Input
                                 type="number"
@@ -515,12 +564,13 @@ export default function RegistroPage() {
                                 min="3"
                                 max="18"
                                 disabled={isLoading}
+                                required
                               />
                             </div>
                             
                             <div>
                               <label className="label-educational">
-                                Clase
+                                Clase *
                               </label>
                               <Input
                                 type="text"
@@ -528,19 +578,21 @@ export default function RegistroPage() {
                                 onChange={(e) => handleChildChange(child.id, 'class', e.target.value)}
                                 placeholder="Ej: 3°A, 1°B"
                                 disabled={isLoading}
+                                required
                               />
                             </div>
                           </div>
                           
                           <div>
                             <label className="label-educational">
-                              Nivel Educativo
+                              Nivel Educativo *
                             </label>
                             <select
                               value={child.level}
                               onChange={(e) => handleChildChange(child.id, 'level', e.target.value)}
                               className="select-educational"
                               disabled={isLoading}
+                              required
                             >
                               <option value="basico">Educación Básica</option>
                               <option value="medio">Educación Media</option>
