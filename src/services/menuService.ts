@@ -65,6 +65,8 @@ export class MenuService {
     try {
       const targetWeek = weekStart || this.getCurrentWeekStart()
       
+      console.log(`🔍 MenuService.getWeeklyMenu: Querying for week ${targetWeek}`)
+      
       const menusRef = collection(db, this.COLLECTION_NAME)
       const q = query(
         menusRef,
@@ -78,8 +80,21 @@ export class MenuService {
       const snapshot = await getDocs(q)
       const items: MenuItem[] = []
 
+      console.log(`📊 MenuService.getWeeklyMenu: Found ${snapshot.size} documents in Firestore`)
+
       snapshot.forEach((doc) => {
         const data = doc.data()
+        
+        console.log(`📄 Document ${doc.id}:`, {
+          code: data.code,
+          description: data.description,
+          type: data.type,
+          date: data.date,
+          active: data.active,
+          published: data.published,
+          price: data.price,
+          weekStart: data.weekStart
+        })
         
         // Crear item con precio personalizado si existe
         const item: MenuItem = {
@@ -99,15 +114,19 @@ export class MenuService {
         items.push(item)
       })
 
-      console.log(`MenuService.getWeeklyMenu: Found ${items.length} published items for week ${targetWeek}`)
-      console.log('Items breakdown:', {
+      console.log(`✅ MenuService.getWeeklyMenu: Processed ${items.length} items`)
+      console.log('📈 Items breakdown:', {
         almuerzos: items.filter(i => i.type === 'almuerzo').length,
-        colaciones: items.filter(i => i.type === 'colacion').length
+        colaciones: items.filter(i => i.type === 'colacion').length,
+        byDate: items.reduce((acc, item) => {
+          acc[item.date] = (acc[item.date] || 0) + 1
+          return acc
+        }, {} as Record<string, number>)
       })
 
       return this.buildWeekMenuStructure(targetWeek, items)
     } catch (error) {
-      console.error('Error fetching weekly menu:', error)
+      console.error('❌ Error fetching weekly menu:', error)
       throw new Error('Error al cargar el menú semanal')
     }
   }
@@ -122,34 +141,44 @@ export class MenuService {
         ? userTypeOrUser 
         : this.getUserTypeFromUser(userTypeOrUser)
       
-      console.log(`MenuService.getWeeklyMenuForUser: Loading menu for user type ${userType}, week ${weekStart}`)
+      console.log(`🔍 MenuService.getWeeklyMenuForUser: Loading menu for user type ${userType}, week ${weekStart}`)
       
       const weekMenu = await this.getWeeklyMenu(weekStart)
       
-      console.log(`MenuService.getWeeklyMenuForUser: Loaded ${weekMenu.totalItems} items, ${weekMenu.days.length} days`)
+      console.log(`📊 MenuService.getWeeklyMenuForUser: Loaded ${weekMenu.totalItems} items, ${weekMenu.days.length} days`)
       
       // Aplicar precios según tipo de usuario
       const daysWithPrices = weekMenu.days.map(day => {
         const processedDay = {
           ...day,
-          almuerzos: day.almuerzos.map(item => ({
-            ...item,
-            price: getItemPrice(item, userType) // Usar función helper para obtener precio correcto
-          })),
-          colaciones: day.colaciones.map(item => ({
-            ...item,
-            price: getItemPrice(item, userType) // Usar función helper para obtener precio correcto
-          }))
+          almuerzos: day.almuerzos.map(item => {
+            const finalPrice = getItemPrice(item, userType)
+            console.log(`💰 Almuerzo ${item.code}: original price ${item.price}, final price ${finalPrice} for ${userType}`)
+            return {
+              ...item,
+              price: finalPrice
+            }
+          }),
+          colaciones: day.colaciones.map(item => {
+            const finalPrice = getItemPrice(item, userType)
+            console.log(`🥪 Colación ${item.code}: original price ${item.price}, final price ${finalPrice} for ${userType}`)
+            return {
+              ...item,
+              price: finalPrice
+            }
+          })
         }
         
-        console.log(`Day ${day.date}: ${processedDay.almuerzos.length} almuerzos, ${processedDay.colaciones.length} colaciones`)
+        console.log(`📅 Day ${day.date}: ${processedDay.almuerzos.length} almuerzos, ${processedDay.colaciones.length} colaciones`)
         
         return processedDay
       })
 
+      console.log(`✅ MenuService.getWeeklyMenuForUser: Returning ${daysWithPrices.length} days`)
+
       return daysWithPrices
     } catch (error) {
-      console.error('Error fetching weekly menu for user:', error)
+      console.error('❌ Error fetching weekly menu for user:', error)
       throw new Error('Error al cargar el menú para el usuario')
     }
   }
@@ -335,6 +364,8 @@ export class MenuService {
    */
   static async hasMenusForWeek(weekStart: string): Promise<boolean> {
     try {
+      console.log(`🔍 MenuService.hasMenusForWeek: Checking week ${weekStart}`)
+      
       const menusRef = collection(db, this.COLLECTION_NAME)
       const q = query(
         menusRef,
@@ -346,11 +377,19 @@ export class MenuService {
       const snapshot = await getDocs(q)
       const hasMenus = !snapshot.empty
       
-      console.log(`MenuService.hasMenusForWeek: Week ${weekStart} has ${snapshot.size} published items, hasMenus: ${hasMenus}`)
+      console.log(`📊 MenuService.hasMenusForWeek: Week ${weekStart} has ${snapshot.size} published items, hasMenus: ${hasMenus}`)
+      
+      if (snapshot.size > 0) {
+        console.log('📄 Sample documents:')
+        snapshot.docs.slice(0, 3).forEach(doc => {
+          const data = doc.data()
+          console.log(`  - ${data.code}: ${data.description} (${data.type}) - ${data.date}`)
+        })
+      }
       
       return hasMenus
     } catch (error) {
-      console.error('Error checking if week has menus:', error)
+      console.error('❌ Error checking if week has menus:', error)
       return false
     }
   }
@@ -452,6 +491,8 @@ export class MenuService {
       const hasItems = almuerzos.length > 0 || colaciones.length > 0
       const isAvailable = hasItems && this.isDayOrderingAllowed(dateStr)
 
+      console.log(`📅 Building day ${dateStr} (${dayName}): ${almuerzos.length} almuerzos, ${colaciones.length} colaciones, hasItems: ${hasItems}, isAvailable: ${isAvailable}`)
+
       days.push({
         date: dateStr,
         day: dayName,
@@ -463,6 +504,8 @@ export class MenuService {
         isAvailable
       })
     }
+
+    console.log(`✅ MenuService.buildWeekMenuStructure: Built ${days.length} days with ${items.length} total items`)
 
     return {
       weekStart: this.formatToDateString(startDate),
