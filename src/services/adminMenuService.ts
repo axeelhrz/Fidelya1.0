@@ -19,8 +19,8 @@ import {
   AdminDayMenu, 
   MenuOperationResult, 
   WeekNavigation,
-  DEFAULT_COLACIONES,
 } from '@/types/adminMenu'
+import { DefaultColacionesService } from './defaultColacionesService'
 import { format, startOfWeek, addDays, addWeeks, subWeeks } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -86,6 +86,17 @@ export class AdminMenuService {
         }
       }
 
+      // Obtener colaciones predeterminadas dinámicamente
+      const defaultColaciones = await DefaultColacionesService.getDefaultColaciones()
+      const activeColaciones = defaultColaciones.filter(c => c.active)
+
+      if (activeColaciones.length === 0) {
+        return {
+          success: false,
+          message: 'No hay colaciones predeterminadas activas configuradas. Configura las colaciones primero.'
+        }
+      }
+
       const batch = writeBatch(db)
       const menusRef = collection(db, this.COLLECTION_NAME)
       const weekStartDate = this.createLocalDate(weekStart)
@@ -98,7 +109,7 @@ export class AdminMenuService {
         const dayName = format(currentDate, 'EEEE', { locale: es }).toLowerCase()
 
         // Crear cada colación predeterminada para este día
-        for (const colacion of DEFAULT_COLACIONES) {
+        for (const colacion of activeColaciones) {
           const newDocRef = doc(menusRef)
           const itemData = {
             code: colacion.code,
@@ -154,13 +165,24 @@ export class AdminMenuService {
         }
       }
 
+      // Obtener colaciones predeterminadas dinámicamente
+      const defaultColaciones = await DefaultColacionesService.getDefaultColaciones()
+      const activeColaciones = defaultColaciones.filter(c => c.active)
+
+      if (activeColaciones.length === 0) {
+        return {
+          success: false,
+          message: 'No hay colaciones predeterminadas activas configuradas. Configura las colaciones primero.'
+        }
+      }
+
       const batch = writeBatch(db)
       const currentDate = this.createLocalDate(date)
       const dayName = format(currentDate, 'EEEE', { locale: es }).toLowerCase()
       let itemsCreated = 0
 
       // Crear cada colación predeterminada para este día
-      for (const colacion of DEFAULT_COLACIONES) {
+      for (const colacion of activeColaciones) {
         const newDocRef = doc(menusRef)
         const itemData = {
           code: colacion.code,
