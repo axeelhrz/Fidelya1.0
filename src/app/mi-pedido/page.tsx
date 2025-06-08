@@ -609,41 +609,6 @@ export default function MiPedidoPage() {
                 </CardContent>
               </Card>
             )}
-
-            {/* Información de contacto y soporte */}
-            <Card className="border-slate-200 bg-slate-50/50 dark:bg-slate-800/50 dark:border-slate-700">
-              <CardContent className="p-4">
-                <h4 className="font-medium text-slate-900 dark:text-slate-100 mb-2">
-                  Sistema Integrado
-                </h4>
-                <div className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                  <p>• Menús sincronizados desde Firebase</p>
-                  <p>• Pedidos guardados en tiempo real</p>
-                  <p>• Pagos procesados con GetNet</p>
-                  <p>• Confirmaciones automáticas por webhook</p>
-                </div>
-                <div className="flex gap-2 mt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open('/admin', '_blank')}
-                    className="gap-2 flex-1"
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                    Admin
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={refreshMenu}
-                    className="gap-2 flex-1"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    Sync
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
           </motion.div>
         </div>
 
