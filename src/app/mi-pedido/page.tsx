@@ -199,17 +199,16 @@ export default function MiPedidoPage() {
           )}
         </motion.div>
 
-        {/* Información sobre integración con Firebase */}
+        {/* Información sobre integración con GetNet */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
           <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
-            <Wifi className="h-4 w-4 text-blue-600" />
+            <CreditCard className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-blue-800 dark:text-blue-200">
-              <strong>Sistema integrado:</strong> Los menús se obtienen en tiempo real desde Firebase. 
-              Los pagos se procesan de forma segura con GetNet. Todos los datos se sincronizan automáticamente.
+              <strong>Sistema integrado:</strong> Los pagos se procesan de forma segura con GetNet.
             </AlertDescription>
           </Alert>
         </motion.div>
