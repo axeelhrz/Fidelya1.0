@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
+import Image from 'next/image'
 import { 
   User, 
   LogOut, 
@@ -217,8 +218,14 @@ export function Navbar({ onLogout }: NavbarProps) {
             className="flex items-center space-x-3 cursor-pointer"
           >
             <Link href="/panel" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg text-clean">CE</span>
+              <div className="relative w-12 h-12 flex-shrink-0">
+                <Image
+                  src="/logo-colores.png"
+                  alt="Casino Escolar Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-semibold text-slate-800 dark:text-slate-100 text-elegant">
@@ -435,10 +442,13 @@ export function Navbar({ onLogout }: NavbarProps) {
               {/* Información del usuario móvil */}
               <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-medium text-sm text-clean">
-                      {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-                    </span>
+                  <div className="relative w-10 h-10 flex-shrink-0">
+                    <Image
+                      src="/logo-colores.png"
+                      alt="Casino Escolar Logo"
+                      fill
+                      className="object-contain rounded-lg"
+                    />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-slate-800 dark:text-slate-100 text-clean">
