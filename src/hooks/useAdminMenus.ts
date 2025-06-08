@@ -50,11 +50,11 @@ export function useAdminMenus() {
       if (statsData) {
         setWeekStats({
           totalItems: statsData.totalItems,
-          activeItems: statsData.activeItems,
+          activeItems: statsData.activeDays,
           publishedItems: statsData.publishedItems,
-          daysWithMenus: statsData.daysWithMenus,
-          almuerzoCount: statsData.almuerzoCount,
-          colacionCount: statsData.colacionCount
+          daysWithMenus: statsData.activeDays,
+          almuerzoCount: statsData.almuerzos,
+          colacionCount: statsData.colaciones
         })
       }
     } catch (err) {
@@ -132,7 +132,17 @@ export function useAdminMenus() {
   // Crear item de menú
   const createMenuItem = useCallback(async (itemData: Omit<AdminMenuItem, 'id'>): Promise<MenuOperationResult> => {
     try {
-      const result = await AdminMenuService.createMenuItem(itemData)
+      const result = await AdminMenuService.createMenuItem(
+        itemData.weekStart,
+        itemData.date,
+        itemData.day,
+        itemData.type,
+        itemData.code,
+        itemData.title,
+        itemData.description || '',
+        itemData.active,
+        itemData.price
+      )
       
       if (result.success) {
         await loadWeekMenu(currentWeek)
@@ -315,9 +325,9 @@ export function useAdminMenus() {
   }, [currentWeek, loadWeekMenu, toast])
 
   // Crear colaciones predeterminadas para un día
-  const createDefaultColacionesDay = useCallback(async (date: string): Promise<MenuOperationResult> => {
+  const createDefaultColacionesDay = useCallback(async (date: string, day: string): Promise<MenuOperationResult> => {
     try {
-      const result = await AdminMenuService.createDefaultColacionesDay(currentWeek, date)
+      const result = await AdminMenuService.createDefaultColacionesDay(currentWeek, date, day)
       
       if (result.success) {
         await loadWeekMenu(currentWeek)
@@ -354,7 +364,7 @@ export function useAdminMenus() {
   // Alternar publicación de semana
   const toggleWeekPublication = useCallback(async (publish: boolean): Promise<MenuOperationResult> => {
     try {
-      const result = await AdminMenuService.toggleWeekMenuPublication(currentWeek, publish)
+      const result = await AdminMenuService.toggleWeekPublication(currentWeek, publish)
       
       if (result.success) {
         await loadWeekMenu(currentWeek)
