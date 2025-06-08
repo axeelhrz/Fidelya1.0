@@ -104,22 +104,22 @@ export function useProfileForm(): UseProfileFormReturn {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
-        phone: (user as { phone?: string }).phone || ''
+        phone: user.phone || ''
       }
       
-      // Transform children to include edad and level properties
+      // Transform children to include edad and level properties with better mapping
       const transformedChildren: ExtendedChild[] = (user.children || []).map(child => {
-        const childWithAge = child as Child & { edad?: number; age?: number; level?: 'basico' | 'medio' }
         return {
           id: child.id || Date.now().toString(),
           name: child.name || '',
           curso: child.curso || '',
-          rut: child.rut,
+          rut: child.rut || undefined,
           active: child.active !== undefined ? child.active : true,
-          edad: childWithAge.edad || childWithAge.age || 0,
-          level: childWithAge.level || 'basico'
+          edad: child.edad || child.age || 0,
+          age: child.age || child.edad || 0,
+          level: child.level || 'basico'
         }
-      })
+      }).filter(child => child.name.trim() !== '') // Solo incluir hijos con nombre
       
       setFormData(userData)
       setOriginalData(userData)
@@ -173,6 +173,7 @@ export function useProfileForm(): UseProfileFormReturn {
       curso: '',
       active: true,
       edad: 0,
+      age: 0,
       level: 'basico'
       // Note: rut is omitted instead of being undefined
     }
@@ -180,9 +181,19 @@ export function useProfileForm(): UseProfileFormReturn {
   }
 
   const updateChild = (id: string, field: keyof ExtendedChild, value: string | number | boolean) => {
-    setChildren(prev => prev.map(child => 
-      child.id === id ? { ...child, [field]: value } : child
-    ))
+    setChildren(prev => prev.map(child => {
+      if (child.id === id) {
+        const updatedChild = { ...child, [field]: value }
+        // Sincronizar age y edad
+        if (field === 'edad') {
+          updatedChild.age = value as number
+        } else if (field === 'age') {
+          updatedChild.edad = value as number
+        }
+        return updatedChild
+      }
+      return child
+    }))
     
     // Clear error for this field
     const errorKey = `child_${id}_${field}`
@@ -244,6 +255,13 @@ export function useProfileForm(): UseProfileFormReturn {
         if (!safeTrim(child.curso)) {
           newErrors[`child_${child.id}_curso`] = `Curso del hijo ${index + 1} es requerido`
         }
+        // Validar RUT si se proporciona
+        if (child.rut && safeTrim(child.rut)) {
+          const rutRegex = /^[0-9]+-[0-9kK]$/
+          if (!rutRegex.test(safeTrim(child.rut))) {
+            newErrors[`child_${child.id}_rut`] = `Formato de RUT inválido para hijo ${index + 1}. Debe ser: 12345678-9`
+          }
+        }
       })
     }
 
@@ -286,14 +304,15 @@ export function useProfileForm(): UseProfileFormReturn {
       const transformedChildren = children.map(child => {
         const childName = safeTrim(child.name)
         const childCurso = safeTrim(child.curso)
-        const childRut = safeTrim(child.rut)
+        const childRut = child.rut ? safeTrim(child.rut) : undefined
         
         const childData: any = {
           id: child.id,
           name: childName,
           curso: childCurso,
           active: child.active !== undefined ? child.active : true,
-          age: child.edad || 0, // Map edad back to age
+          age: child.edad || child.age || 0,
+          edad: child.edad || child.age || 0,
           level: child.level || 'basico'
         }
         
@@ -303,7 +322,7 @@ export function useProfileForm(): UseProfileFormReturn {
         }
         
         return childData
-      })
+      }).filter(child => child.name.trim() !== '') // Solo guardar hijos con nombre
 
       // Prepare update data, ensuring no undefined values
       const updateData: any = {
