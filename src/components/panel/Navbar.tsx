@@ -183,11 +183,6 @@ export function Navbar({ onLogout }: NavbarProps) {
     return pathname === href
   }
 
-  // Obtener el título de la página actual
-  const getCurrentPageTitle = () => {
-    const currentItem = navigationItems.find(item => isActiveRoute(item.href))
-    return currentItem ? currentItem.name : 'Casino Escolar'
-  }
 
   if (!mounted || isLoading) {
     return (
@@ -212,28 +207,24 @@ export function Navbar({ onLogout }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
-          {/* Logo y título */}
+          {/* Logo */}
           <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="flex items-center space-x-3 cursor-pointer"
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center cursor-pointer"
           >
-            <Link href="/panel" className="flex items-center space-x-3">
-              <div className="relative w-12 h-12 flex-shrink-0">
+            <Link href="/panel" className="flex items-center">
+              <div className="relative w-14 h-14 flex-shrink-0 p-1">
                 <Image
                   src="/logo-colores.png"
-                  alt="Casino Escolar Logo"
+                  alt="Casino Escolar"
                   fill
-                  className="object-contain"
+                  className={`object-contain transition-all duration-300 ${
+                    theme === 'dark' 
+                      ? 'brightness-110 contrast-110 saturate-110' 
+                      : 'brightness-100 contrast-100 saturate-100'
+                  }`}
                   priority
                 />
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-semibold text-slate-800 dark:text-slate-100 text-elegant">
-                  Casino Escolar
-                </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 text-clean">
-                  {getCurrentPageTitle()}
-                </p>
               </div>
             </Link>
           </motion.div>
@@ -442,12 +433,16 @@ export function Navbar({ onLogout }: NavbarProps) {
               {/* Información del usuario móvil */}
               <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="relative w-10 h-10 flex-shrink-0">
+                  <div className="relative w-10 h-10 flex-shrink-0 p-1">
                     <Image
                       src="/logo-colores.png"
-                      alt="Casino Escolar Logo"
+                      alt="Casino Escolar"
                       fill
-                      className="object-contain rounded-lg"
+                      className={`object-contain rounded-lg transition-all duration-300 ${
+                        theme === 'dark' 
+                          ? 'brightness-110 contrast-110 saturate-110' 
+                          : 'brightness-100 contrast-100 saturate-100'
+                      }`}
                     />
                   </div>
                   <div className="flex-1">
