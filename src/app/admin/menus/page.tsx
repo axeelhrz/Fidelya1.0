@@ -63,7 +63,7 @@ export default function AdminMenusPage() {
     nextWeek.setDate(nextWeek.getDate() + 7)
     const targetWeek = nextWeek.toISOString().split('T')[0]
     
-    await duplicateWeek(targetWeek)
+    await duplicateWeek(currentWeek, targetWeek)
   }
 
   if (error) {
@@ -255,7 +255,7 @@ export default function AdminMenusPage() {
                     dayMenu={dayMenu}
                     onAddItem={(type: 'almuerzo' | 'colacion') => handleAddItem(dayMenu.date, dayMenu.day, type)}
                     onEditItem={handleEditItem}
-                    onDeleteItem={deleteMenuItem}
+                    onDeleteItem={(item: AdminMenuItem) => item.id && deleteMenuItem(item.id)}
                     isLoading={isLoading}
                   />
                 </motion.div>

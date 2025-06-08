@@ -1,6 +1,6 @@
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
-import { MenuItem, PRICES, UserType } from '@/types/panel'
+import { MenuItem, UserType, getItemPrice } from '@/types/panel'
 import { DayMenuDisplay, WeekMenuDisplay } from '@/types/menu'
 import { format, startOfWeek, endOfWeek, addDays, parseISO, isValid, getDay } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -60,92 +60,81 @@ export class MenuService {
     return 'apoderado'
   }
 
-  /**
-   * Obtiene el menú semanal para un tipo de usuario específico
-   */
+  // Obtener menú semanal con precios aplicados según tipo de usuario
   static async getWeeklyMenu(weekStart?: string): Promise<WeekMenuDisplay> {
     try {
-      const actualWeekStart = weekStart || this.getCurrentWeekStart()
+      const targetWeek = weekStart || this.getCurrentWeekStart()
       
       const menusRef = collection(db, this.COLLECTION_NAME)
       const q = query(
         menusRef,
-        where('weekStart', '==', actualWeekStart),
+        where('weekStart', '==', targetWeek),
         where('active', '==', true),
-        where('published', '==', true),
-        orderBy('date', 'asc')
+        where('published', '==', true), // Solo menús publicados
+        orderBy('date', 'asc'),
+        orderBy('type', 'asc')
       )
-      
+
       const snapshot = await getDocs(q)
       const items: MenuItem[] = []
-      
+
       snapshot.forEach((doc) => {
         const data = doc.data()
-        items.push({
+        
+        // Crear item con precio personalizado si existe
+        const item: MenuItem = {
           id: doc.id,
           code: data.code,
-          name: data.description,
+          name: data.description, // Usar description como name
           description: data.description,
           type: data.type,
-          price: 0, // Se asignará según el tipo de usuario
+          price: data.price || 0, // Usar precio personalizado o 0 como fallback
           available: data.active,
           date: data.date,
           dia: data.day,
-          active: data.active
-        })
+          active: data.active,
+          customPrice: data.price !== undefined && data.price > 0 // Marcar si tiene precio personalizado
+        }
+
+        items.push(item)
       })
-      
-      return this.buildWeekMenuStructure(actualWeekStart, items)
+
+      return this.buildWeekMenuStructure(targetWeek, items)
     } catch (error) {
       console.error('Error fetching weekly menu:', error)
-      throw new Error('No se pudo cargar el menú semanal')
+      throw new Error('Error al cargar el menú semanal')
     }
   }
 
-  /**
-   * Obtiene el menú semanal para un usuario específico con precios
-   */
-  static async getWeeklyMenuForUser(userTypeOrUser: UserType | { tipoUsuario?: string; userType?: string; tipo_usuario?: string; type?: string } | null | undefined, weekStart?: string): Promise<DayMenuDisplay[]> {
+  // Obtener menú semanal para un usuario específico con precios aplicados
+  static async getWeeklyMenuForUser(
+    userTypeOrUser: UserType | { tipoUsuario?: string; userType?: string; tipo_usuario?: string; type?: string } | null | undefined,
+    weekStart?: string
+  ): Promise<DayMenuDisplay[]> {
     try {
       const userType = typeof userTypeOrUser === 'string' 
         ? userTypeOrUser 
         : this.getUserTypeFromUser(userTypeOrUser)
       
       const weekMenu = await this.getWeeklyMenu(weekStart)
-      const prices = PRICES[userType]
       
-      if (!prices) {
-        throw new Error(`Precios no definidos para el tipo de usuario: ${userType}`)
-      }
-      
-      // Aplicar precios y filtrar días disponibles
-      
-      return weekMenu.days.map(day => {
-        const isPastDay = this.isPastDay(day.date)
-        const isWeekend = this.isWeekend(day.date)
-        
-        // Aplicar precios a los items
-        const almuerzos = day.almuerzos.map(item => ({
+      // Aplicar precios según tipo de usuario
+      const daysWithPrices = weekMenu.days.map(day => ({
+        ...day,
+        almuerzos: day.almuerzos.map(item => ({
           ...item,
-          price: prices.almuerzo
-        }))
-        
-        const colaciones = day.colaciones.map(item => ({
+          price: getItemPrice(item, userType) // Usar función helper para obtener precio correcto
+        })),
+        colaciones: day.colaciones.map(item => ({
           ...item,
-          price: prices.colacion
+          price: getItemPrice(item, userType) // Usar función helper para obtener precio correcto
         }))
-        
-        return {
-          ...day,
-          almuerzos,
-          colaciones,
-          hasItems: almuerzos.length > 0 || colaciones.length > 0,
-          isAvailable: !isPastDay && !isWeekend && (almuerzos.length > 0 || colaciones.length > 0)
-        }
-      }).filter(day => day.hasItems) // Solo devolver días con items
+      }))
+
+      return daysWithPrices
     } catch (error) {
       console.error('Error fetching weekly menu for user:', error)
-      throw new Error('No se pudo cargar el menú para el usuario')
+      throw new Error('Error al cargar el menú para el usuario')
     }
   }
 
@@ -337,7 +326,7 @@ export class MenuService {
         where('active', '==', true),
         where('published', '==', true)
       )
-      
+
       const snapshot = await getDocs(q)
       return !snapshot.empty
     } catch (error) {
@@ -358,17 +347,15 @@ export class MenuService {
         where('active', '==', true),
         where('published', '==', true)
       )
-      
+
       const snapshot = await getDocs(q)
       const availableDays = new Set<string>()
-      
+
       snapshot.forEach((doc) => {
         const data = doc.data()
-        if (data.date) {
-          availableDays.add(data.date)
-        }
+        availableDays.add(data.date)
       })
-      
+
       return Array.from(availableDays).sort()
     } catch (error) {
       console.error('Error getting available days for week:', error)
@@ -416,38 +403,51 @@ export class MenuService {
    * Construye la estructura del menú semanal - MEJORADO
    */
   static buildWeekMenuStructure(weekStart: string, items: MenuItem[]): WeekMenuDisplay {
-    const weekStartDate = this.createLocalDate(weekStart)
-    const weekEndDate = addDays(weekStartDate, 6)
+    const startDate = this.createLocalDate(weekStart)
     
-    // Crear estructura de días (lunes a domingo)
+    // Asegurar que sea lunes
+    if (startDate.getDay() !== 1) {
+      const daysToSubtract = startDate.getDay() === 0 ? 6 : startDate.getDay() - 1
+      startDate.setDate(startDate.getDate() - daysToSubtract)
+    }
+
+    const endDate = addDays(startDate, 6)
+    const weekLabel = this.getWeekDisplayText(
+      this.formatToDateString(startDate),
+      this.formatToDateString(endDate)
+    )
+
     const days: DayMenuDisplay[] = []
-    
+    const dayNames = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
+
     for (let i = 0; i < 7; i++) {
-      const date = addDays(weekStartDate, i)
-      const dateString = this.formatToDateString(date)
-      const dayName = format(date, 'EEEE', { locale: es }).toLowerCase()
-      
-      // Filtrar items para este día
-      const dayItems = items.filter(item => item.date === dateString)
+      const currentDate = addDays(startDate, i)
+      const dateStr = this.formatToDateString(currentDate)
+      const dayName = dayNames[i]
+
+      const dayItems = items.filter(item => item.date === dateStr)
       const almuerzos = dayItems.filter(item => item.type === 'almuerzo')
       const colaciones = dayItems.filter(item => item.type === 'colacion')
-      
+
+      const hasItems = almuerzos.length > 0 || colaciones.length > 0
+      const isAvailable = hasItems && this.isDayOrderingAllowed(dateStr)
+
       days.push({
-        date: dateString,
+        date: dateStr,
         day: dayName,
-        dayLabel: this.getDayDisplayName(dateString),
-        dateFormatted: format(date, 'dd/MM/yyyy'),
+        dayLabel: this.getDayDisplayName(dateStr),
+        dateFormatted: this.getFormattedDate(dateStr),
         almuerzos,
         colaciones,
-        hasItems: almuerzos.length > 0 || colaciones.length > 0,
-        isAvailable: !this.isPastDay(dateString) && !this.isWeekend(dateString)
+        hasItems,
+        isAvailable
       })
     }
-    
+
     return {
-      weekStart,
-      weekEnd: this.formatToDateString(weekEndDate),
-      weekLabel: this.getWeekDisplayText(weekStart, this.formatToDateString(weekEndDate)),
+      weekStart: this.formatToDateString(startDate),
+      weekEnd: this.formatToDateString(endDate),
+      weekLabel,
       days,
       totalItems: items.length
     }

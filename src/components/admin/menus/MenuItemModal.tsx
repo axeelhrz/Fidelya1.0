@@ -41,21 +41,26 @@ export function MenuItemModal({
     type: 'almuerzo',
     code: '',
     description: '',
-    active: true
+    active: true,
+    price: undefined
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [useCustomPrice, setUseCustomPrice] = useState(false)
 
   // Inicializar formulario cuando se abre el modal
   useEffect(() => {
     if (modalState.isOpen) {
       if (modalState.mode === 'edit' && modalState.item) {
+        const hasCustomPrice = modalState.item.price !== undefined && modalState.item.price > 0
         setFormData({
           type: modalState.item.type,
           code: modalState.item.code,
           description: modalState.item.description,
-          active: modalState.item.active
+          active: modalState.item.active,
+          price: modalState.item.price
         })
+        setUseCustomPrice(hasCustomPrice)
       } else {
         // Modo crear
         const suggestedCode = generateMenuCode(
@@ -66,8 +71,10 @@ export function MenuItemModal({
           type: modalState.type || 'almuerzo',
           code: suggestedCode,
           description: '',
-          active: true
+          active: true,
+          price: undefined
         })
+        setUseCustomPrice(false)
       }
       setErrors({})
     }
@@ -95,6 +102,15 @@ export function MenuItemModal({
       newErrors.description = 'La descripción no puede tener más de 200 caracteres'
     }
 
+    // Validar precio personalizado si está habilitado
+    if (useCustomPrice) {
+      if (!formData.price || formData.price <= 0) {
+        newErrors.price = 'El precio debe ser mayor a 0'
+      } else if (formData.price > 50000) {
+        newErrors.price = 'El precio no puede ser mayor a $50.000'
+      }
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -116,7 +132,8 @@ export function MenuItemModal({
           ...formData,
           date: modalState.date,
           day: modalState.day,
-          weekStart
+          weekStart,
+          published: true
         }
         result = await onSave(itemData)
       }
@@ -309,6 +326,50 @@ export function MenuItemModal({
               checked={formData.active}
               onCheckedChange={(checked) => handleInputChange('active', checked)}
             />
+          </div>
+
+          {/* Precio personalizado */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Precio personalizado</Label>
+            <Switch
+              checked={useCustomPrice}
+              onCheckedChange={(checked) => setUseCustomPrice(checked)}
+            />
+            {useCustomPrice && (
+              <div className="space-y-2">
+                <Label htmlFor="price" className="text-sm font-medium">
+                  Precio *
+                </Label>
+                <Input
+                  id="price"
+                  value={formData.price?.toFixed(2) || ''}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (value === '') {
+                      setFormData(prev => ({ ...prev, price: undefined }))
+                    } else {
+                      const parsedValue = parseFloat(value)
+                      if (!isNaN(parsedValue) && parsedValue > 0) {
+                        setFormData(prev => ({ ...prev, price: parsedValue }))
+                      }
+                    }
+                  }}
+                  placeholder="Ej: 10.00"
+                  className={errors.price ? 'border-red-500' : ''}
+                  type="number"
+                  step="0.01"
+                />
+                {errors.price && (
+                  <Alert variant="destructive" className="py-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">{errors.price}</AlertDescription>
+                  </Alert>
+                )}
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  El precio debe ser mayor a 0 y no puede superar $50.000
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Impact Information */}

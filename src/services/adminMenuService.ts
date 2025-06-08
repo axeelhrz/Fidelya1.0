@@ -13,7 +13,14 @@ import {
   getDoc
 } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
-import { AdminMenuItem, AdminWeekMenu, AdminDayMenu, MenuOperationResult, WeekNavigation } from '@/types/adminMenu'
+import { 
+  AdminMenuItem, 
+  AdminWeekMenu, 
+  AdminDayMenu, 
+  MenuOperationResult, 
+  WeekNavigation,
+  DEFAULT_COLACIONES,
+} from '@/types/adminMenu'
 import { format, startOfWeek, addDays, addWeeks, subWeeks } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -62,6 +69,129 @@ export class AdminMenuService {
       canGoBack: current > minWeek,
       canGoForward: current < maxWeek,
       weekLabel
+    }
+  }
+
+  // Crear menú de colaciones predeterminado para una semana
+  static async createDefaultColacionesWeek(weekStart: string): Promise<MenuOperationResult> {
+    try {
+      // Verificar que no existan colaciones para esta semana
+      const existingMenu = await this.getWeeklyMenu(weekStart)
+      const hasColaciones = existingMenu?.days.some(day => day.colaciones.length > 0)
+      
+      if (hasColaciones) {
+        return {
+          success: false,
+          message: 'Ya existen colaciones para esta semana. Elimínalas primero si quieres aplicar el menú predeterminado.'
+        }
+      }
+
+      const batch = writeBatch(db)
+      const menusRef = collection(db, this.COLLECTION_NAME)
+      const weekStartDate = this.createLocalDate(weekStart)
+      let itemsCreated = 0
+
+      // Crear colaciones para lunes a viernes (días 0-4)
+      for (let dayIndex = 0; dayIndex < 5; dayIndex++) {
+        const currentDate = addDays(weekStartDate, dayIndex)
+        const dateStr = format(currentDate, 'yyyy-MM-dd')
+        const dayName = format(currentDate, 'EEEE', { locale: es }).toLowerCase()
+
+        // Crear cada colación predeterminada para este día
+        for (const colacion of DEFAULT_COLACIONES) {
+          const newDocRef = doc(menusRef)
+          const itemData = {
+            code: colacion.code,
+            description: colacion.description,
+            type: 'colacion' as const,
+            date: dateStr,
+            day: dayName,
+            weekStart,
+            active: colacion.active,
+            published: false, // Por defecto no publicado
+            price: colacion.price, // Precio personalizado
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now()
+          }
+
+          batch.set(newDocRef, itemData)
+          itemsCreated++
+        }
+      }
+
+      await batch.commit()
+
+      return {
+        success: true,
+        message: `Menú de colaciones predeterminado creado exitosamente. ${itemsCreated} items creados para lunes a viernes. Recuerda publicar la semana para que sea visible a los usuarios.`
+      }
+    } catch (error) {
+      console.error('Error creating default colaciones week:', error)
+      return {
+        success: false,
+        message: 'Error al crear el menú de colaciones predeterminado. Por favor, intenta nuevamente.'
+      }
+    }
+  }
+
+  // Aplicar colaciones predeterminadas a un día específico
+  static async createDefaultColacionesDay(weekStart: string, date: string): Promise<MenuOperationResult> {
+    try {
+      // Verificar que no existan colaciones para este día
+      const menusRef = collection(db, this.COLLECTION_NAME)
+      const q = query(
+        menusRef,
+        where('weekStart', '==', weekStart),
+        where('date', '==', date),
+        where('type', '==', 'colacion')
+      )
+
+      const snapshot = await getDocs(q)
+      if (!snapshot.empty) {
+        return {
+          success: false,
+          message: 'Ya existen colaciones para este día. Elimínalas primero si quieres aplicar el menú predeterminado.'
+        }
+      }
+
+      const batch = writeBatch(db)
+      const currentDate = this.createLocalDate(date)
+      const dayName = format(currentDate, 'EEEE', { locale: es }).toLowerCase()
+      let itemsCreated = 0
+
+      // Crear cada colación predeterminada para este día
+      for (const colacion of DEFAULT_COLACIONES) {
+        const newDocRef = doc(menusRef)
+        const itemData = {
+          code: colacion.code,
+          description: colacion.description,
+          type: 'colacion' as const,
+          date,
+          day: dayName,
+          weekStart,
+          active: colacion.active,
+          published: false, // Por defecto no publicado
+          price: colacion.price, // Precio personalizado
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now()
+        }
+
+        batch.set(newDocRef, itemData)
+        itemsCreated++
+      }
+
+      await batch.commit()
+
+      return {
+        success: true,
+        message: `Colaciones predeterminadas creadas exitosamente. ${itemsCreated} items creados para ${dayName}.`
+      }
+    } catch (error) {
+      console.error('Error creating default colaciones day:', error)
+      return {
+        success: false,
+        message: 'Error al crear las colaciones predeterminadas. Por favor, intenta nuevamente.'
+      }
     }
   }
 
@@ -215,6 +345,7 @@ export class AdminMenuService {
           weekStart: data.weekStart,
           active: data.active,
           published: data.published ?? false, // Manejar menús antiguos sin campo published
+          price: data.price, // Incluir precio personalizado
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate()
         })
@@ -311,6 +442,7 @@ export class AdminMenuService {
           weekStart: targetWeek,
           active: sourceItem.active,
           published: false, // Los menús duplicados no se publican automáticamente
+          price: sourceItem.price, // Incluir precio personalizado
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now()
         }
@@ -497,6 +629,7 @@ export class AdminMenuService {
         weekStart: data.weekStart,
         active: data.active,
         published: data.published ?? false,
+        price: data.price, // Incluir precio personalizado
         createdAt: data.createdAt?.toDate(),
         updatedAt: data.updatedAt?.toDate()
       }
@@ -528,6 +661,11 @@ export class AdminMenuService {
 
     if (!item.weekStart || !item.weekStart.match(/^\d{4}-\d{2}-\d{2}$/)) {
       errors.push('La fecha de inicio de semana debe tener formato YYYY-MM-DD')
+    }
+
+    // Validar precio si está presente
+    if (item.price !== undefined && (item.price < 0 || isNaN(item.price))) {
+      errors.push('El precio debe ser un número válido mayor o igual a 0')
     }
 
     return {
