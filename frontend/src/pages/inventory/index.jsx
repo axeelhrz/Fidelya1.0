@@ -33,6 +33,7 @@ import ModernInventoryTable from '../../components/inventory/ModernInventoryTabl
 import InventoryFormDialog from '../../components/inventory/InventoryFormDialog';
 import StockMovementDialog from '../../components/inventory/StockMovementDialog';
 import DeleteProductDialog from '../../components/inventory/DeleteProductDialog';
+import ProductDetailsDialog from '../../components/inventory/ProductDetailsDialog';
 import ModernInventoryFilters from '../../components/inventory/ModernInventoryFilters';
 import ModernStockSummary from '../../components/inventory/ModernStockSummary';
 import ModernLowStockAlert from '../../components/inventory/ModernLowStockAlert';
@@ -58,6 +59,7 @@ const ModernInventoryPage = () => {
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [stockDialogOpen, setStockDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editMode, setEditMode] = useState(false);
   
@@ -189,12 +191,17 @@ const ModernInventoryPage = () => {
     setSelectedProduct(producto);
     setEditMode(true);
     setFormDialogOpen(true);
-};
+  };
 
   const handleEliminarProducto = (id) => {
     const producto = productos.find(p => p.id === id);
     setSelectedProduct(producto);
     setDeleteDialogOpen(true);
+  };
+
+  const handleVerDetalles = (producto) => {
+    setSelectedProduct(producto);
+    setDetailsDialogOpen(true);
   };
 
   const handleConfirmarEliminacion = async (id) => {
@@ -212,6 +219,7 @@ const ModernInventoryPage = () => {
 
   const handleAjustarStock = async (producto) => {
     try {
+      // Cargar historial de movimientos para el producto
       const historial = await inventoryServiceEnhanced.obtenerHistorialProducto(
         producto.id, 
         { limite: 10 }
@@ -220,6 +228,7 @@ const ModernInventoryPage = () => {
       setStockDialogOpen(true);
     } catch (error) {
       console.error('Error cargando historial:', error);
+      // Abrir diálogo sin historial si hay error
       setSelectedProduct(producto);
       setStockDialogOpen(true);
     }
@@ -529,6 +538,7 @@ const ModernInventoryPage = () => {
               onEditarProducto={handleEditarProducto}
               onEliminarProducto={handleEliminarProducto}
               onAjustarStock={handleAjustarStock}
+              onVerDetalles={handleVerDetalles}
               onPaginaChange={handlePaginaChange}
               onSelectionChange={handleSelectionChange}
               selectedProducts={selectedProducts}
@@ -592,6 +602,14 @@ const ModernInventoryPage = () => {
           onClose={() => setStockDialogOpen(false)}
           onSubmit={handleStockSubmit}
           producto={selectedProduct}
+        />
+
+        <ProductDetailsDialog
+          open={detailsDialogOpen}
+          onClose={() => setDetailsDialogOpen(false)}
+          producto={selectedProduct}
+          onEditProduct={handleEditarProducto}
+          onAdjustStock={handleAjustarStock}
         />
 
         <DeleteProductDialog

@@ -42,6 +42,7 @@ const ModernInventoryTable = ({
   onEditarProducto,
   onEliminarProducto,
   onAjustarStock,
+  onVerDetalles,
   onPaginaChange,
   onSelectionChange,
   selectedProducts = [],
@@ -152,6 +153,22 @@ const ModernInventoryTable = ({
   const handleChangeRowsPerPage = (event) => {
     // Implementar cambio de límite por página
     console.log('Cambiar límite:', event.target.value);
+  };
+
+  // Función para manejar ver detalles
+  const handleVerDetalles = (producto) => {
+    if (onVerDetalles) {
+      onVerDetalles(producto);
+    }
+    handleMenuClose();
+  };
+
+  // Función mejorada para ajustar stock
+  const handleAjustarStock = (producto) => {
+    if (onAjustarStock) {
+      onAjustarStock(producto);
+    }
+    handleMenuClose();
   };
 
   if (loading) {
@@ -414,14 +431,29 @@ const ModernInventoryTable = ({
                     
                     <TableCell align="center">
                       <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        <Tooltip title="Ajustar Stock">
+                        <Tooltip title="Ver Detalles">
                           <IconButton
                             size="small"
-                            onClick={() => onAjustarStock(producto)}
+                            onClick={() => handleVerDetalles(producto)}
                             sx={{
                               color: theme.palette.info.main,
                               '&:hover': {
                                 bgcolor: alpha(theme.palette.info.main, 0.1),
+                              },
+                            }}
+                          >
+                            <ViewIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        
+                        <Tooltip title="Ajustar Stock">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleAjustarStock(producto)}
+                            sx={{
+                              color: theme.palette.success.main,
+                              '&:hover': {
+                                bgcolor: alpha(theme.palette.success.main, 0.1),
                               },
                             }}
                           >
@@ -506,6 +538,15 @@ const ModernInventoryTable = ({
         }}
       >
         <MenuItem 
+          onClick={() => handleVerDetalles(selectedProductForMenu)}
+        >
+          <ListItemIcon>
+            <ViewIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Ver Detalles</ListItemText>
+        </MenuItem>
+        
+        <MenuItem 
           onClick={() => {
             onEditarProducto(selectedProductForMenu);
             handleMenuClose();
@@ -518,27 +559,12 @@ const ModernInventoryTable = ({
         </MenuItem>
         
         <MenuItem 
-          onClick={() => {
-            onAjustarStock(selectedProductForMenu);
-            handleMenuClose();
-          }}
+          onClick={() => handleAjustarStock(selectedProductForMenu)}
         >
           <ListItemIcon>
             <InventoryIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Ajustar Stock</ListItemText>
-        </MenuItem>
-        
-        <MenuItem 
-          onClick={() => {
-            // Implementar vista detallada
-            handleMenuClose();
-          }}
-        >
-          <ListItemIcon>
-            <ViewIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Ver Detalles</ListItemText>
         </MenuItem>
         
         <MenuItem 
