@@ -79,10 +79,21 @@ api.interceptors.response.use(
 export const login = async (correo, contraseña) => {
   try {
     console.log('🔐 Intentando login...');
+    
+    // Validar parámetros
+    if (!correo || !contraseña) {
+      throw new Error('Correo y contraseña son requeridos');
+    }
+    
+    // Asegurar que correo es string
+    const emailStr = String(correo).trim().toLowerCase();
+    const passwordStr = String(contraseña);
+    
     const response = await api.post('/login', {
-      correo: correo.trim().toLowerCase(),
-      contraseña,
+      correo: emailStr,
+      contraseña: passwordStr,
     });
+    
     console.log('✅ Respuesta de login:', response.data);
     
     if (!response.data.token || !response.data.user) {

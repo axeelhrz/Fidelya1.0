@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { authService } from '../services/authService';
+import { useAuth } from './AuthContext';
 
 const InventoryContext = createContext();
 
@@ -12,6 +13,7 @@ export const useInventory = () => {
 };
 
 export const InventoryProvider = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   const [dashboardData, setDashboardData] = useState({
     resumen: null,
     stockBajo: null,
@@ -28,6 +30,12 @@ export const InventoryProvider = ({ children }) => {
 
   // Función para actualizar todos los datos del dashboard
   const refreshDashboardData = useCallback(async (showLoading = true) => {
+    // No hacer peticiones si no está autenticado
+    if (!isAuthenticated) {
+      console.log('⚠️ Usuario no autenticado, omitiendo actualización de dashboard');
+      return null;
+    }
+
     try {
       if (showLoading) {
         setIsUpdating(true);
@@ -81,11 +89,16 @@ export const InventoryProvider = ({ children }) => {
         setIsUpdating(false);
       }
     }
-  }, []);
+  }, [isAuthenticated]);
 
   // Función para notificar cambios en el inventario
   const notifyInventoryChange = useCallback((changeType, productData = null) => {
     console.log('📦 Cambio en inventario detectado:', changeType, productData);
+    
+    // Solo actualizar si está autenticado
+    if (!isAuthenticated) {
+      return;
+    }
     
     // Incrementar trigger para forzar actualización
     setUpdateTrigger(prev => prev + 1);
@@ -96,10 +109,15 @@ export const InventoryProvider = ({ children }) => {
         console.error('Error en actualización automática:', error);
       });
     }, 500);
-  }, [refreshDashboardData]);
+  }, [refreshDashboardData, isAuthenticated]);
 
   // Función para obtener datos específicos
   const getSpecificData = useCallback(async (dataType) => {
+    if (!isAuthenticated) {
+      console.log('⚠️ Usuario no autenticado, no se pueden obtener datos específicos');
+      return null;
+    }
+
     try {
       switch (dataType) {
         case 'resumen':
@@ -134,12 +152,12 @@ export const InventoryProvider = ({ children }) => {
           return null;
       }
     }
-  }, []);
+  }, [isAuthenticated]);
 
-  // Polling automático cada 30 segundos como respaldo (solo si no hay error de conexión)
+  // Polling automático cada 30 segundos como respaldo (solo si está autenticado y no hay error de conexión)
   useEffect(() => {
-    if (connectionError) {
-      return; // No hacer polling si hay error de conexión
+    if (!isAuthenticated || connectionError) {
+      return; // No hacer polling si no está autenticado o hay error de conexión
     }
 
     const interval = setInterval(() => {
@@ -149,7 +167,23 @@ export const InventoryProvider = ({ children }) => {
     }, 30000); // 30 segundos
 
     return () => clearInterval(interval);
-  }, [refreshDashboardData, connectionError]);
+  }, [refreshDashboardData, connectionError, isAuthenticated]);
+
+  // Limpiar datos cuando el usuario no está autenticado
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setDashboardData({
+        resumen: null,
+        stockBajo: null,
+        comprasRecientes: null,
+        ventasMensuales: null,
+        stockDistribucion: null,
+        ultimosMovimientos: null
+      });
+      setConnectionError(false);
+      setLastUpdate(null);
+    }
+  }, [isAuthenticated]);
 
   const value = {
     dashboardData,

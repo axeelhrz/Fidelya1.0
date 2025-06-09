@@ -24,7 +24,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import authService from '../../services/authService';
+import { useAuth } from '../../context/AuthContext';
 
 // Esquema de validación
 const schema = yup.object({
@@ -40,6 +40,7 @@ const schema = yup.object({
 
 const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
   const theme = useTheme();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -59,7 +60,13 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
     setError('');
 
     try {
-      const response = await authService.login(data);
+      console.log('🔐 Datos del formulario:', data);
+      
+      // Usar el contexto de autenticación en lugar del servicio directamente
+      const response = await login({
+        correo: data.correo,
+        contraseña: data.contraseña
+      });
       
       if (response.success) {
         reset();
@@ -69,7 +76,7 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
       }
     } catch (error) {
       console.error('Error en login:', error);
-      setError('Error de conexión. Verifica tu conexión a internet.');
+      setError(error.message || 'Error de conexión. Verifica tu conexión a internet.');
     } finally {
       setIsLoading(false);
     }
