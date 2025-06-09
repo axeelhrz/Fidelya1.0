@@ -10,7 +10,12 @@ export const SCHOOL_LEVELS: SchoolLevel[] = [
 ]
 
 // Configuración de cursos por nivel
-export const COURSE_CONFIG = {
+export const COURSE_CONFIG: Record<SchoolLevel, {
+  label: string
+  description: string
+  grades: string[]
+  sections: string[]
+}> = {
   'Pre School': {
     label: 'Pre School',
     description: 'Educación Preescolar',
@@ -35,16 +40,26 @@ export const COURSE_CONFIG = {
     grades: ['1°', '2°', '3°', '4°'],
     sections: ['A', 'B', 'C']
   }
-} as const
+}
 
 // Función para obtener información de un nivel
 export function getSchoolLevelInfo(level: SchoolLevel) {
-  return COURSE_CONFIG[level]
+  const config = COURSE_CONFIG[level]
+  if (!config) {
+    console.warn(`School level not found: ${level}`)
+    return COURSE_CONFIG['Lower School'] // Fallback
+  }
+  return config
 }
 
 // Función para obtener todos los cursos posibles de un nivel
 export function getCoursesForLevel(level: SchoolLevel): string[] {
   const config = COURSE_CONFIG[level]
+  if (!config) {
+    console.warn(`School level not found: ${level}`)
+    return ['1° A'] // Fallback
+  }
+  
   const courses: string[] = []
   
   config.grades.forEach(grade => {
@@ -170,10 +185,12 @@ export function migrateCourseFormat(oldCourse: string, currentLevel?: SchoolLeve
 
 // Función para obtener el label amigable de un nivel
 export function getSchoolLevelLabel(level: SchoolLevel): string {
-  return COURSE_CONFIG[level].label
+  const config = getSchoolLevelInfo(level)
+  return config.label
 }
 
 // Función para obtener la descripción de un nivel
 export function getSchoolLevelDescription(level: SchoolLevel): string {
-  return COURSE_CONFIG[level].description
+  const config = getSchoolLevelInfo(level)
+  return config.description
 }
