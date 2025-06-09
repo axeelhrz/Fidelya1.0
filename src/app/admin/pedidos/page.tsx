@@ -6,10 +6,12 @@ import { OrdersFilters } from '@/components/admin/pedidos/OrdersFilters'
 import { OrdersMetrics } from '@/components/admin/pedidos/OrdersMetrics'
 import { OrdersTable } from '@/components/admin/pedidos/OrdersTable'
 import { OrderDetailModal } from '@/components/admin/pedidos/OrderDetailModal'
+import { DailyMenuSummary } from '@/components/admin/pedidos/DailyMenuSummary'
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 import { useAdminOrders } from '@/hooks/useAdminOrders'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertTriangle, RefreshCw, Download, FileText, Calendar, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AlertTriangle, RefreshCw, Download, FileText, Calendar, Clock, CheckCircle, XCircle, AlertCircle, ChefHat, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -35,6 +37,7 @@ export default function AdminPedidosPage() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [activeTab, setActiveTab] = useState('overview')
 
   // Actualizar datos cada 30 segundos
   useEffect(() => {
@@ -475,6 +478,43 @@ export default function AdminPedidosPage() {
               onClose={handleCloseDetail}
               onStatusUpdate={handleStatusUpdate}
             />
+
+            {/* Tabla de menú diario */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <DailyMenuSummary
+                orders={orders}
+                isLoading={isLoading}
+              />
+            </motion.div>
+
+            {/* Tabs */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <Tabs
+                defaultValue={activeTab}
+                onValueChange={setActiveTab}
+              >
+                <TabsList className="flex space-x-2">
+                  <TabsTrigger value="overview">Resumen</TabsTrigger>
+                  <TabsTrigger value="menu">Menú Diario</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="overview">
+                  {/* Contenido del resumen */}
+                </TabsContent>
+
+                <TabsContent value="menu">
+                  {/* Contenido del menú diario */}
+                </TabsContent>
+              </Tabs>
+            </motion.div>
           </div>
         </div>
       </div>
