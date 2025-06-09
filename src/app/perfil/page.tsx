@@ -18,7 +18,8 @@ import {
   Users,
   RefreshCw,
   Clock,
-  Info
+  Info,
+  GraduationCap
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,6 +30,7 @@ import { Navbar } from '@/components/panel/Navbar'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfileForm } from '@/hooks/useProfileForm'
 import { useToast } from '@/hooks/use-toast'
+import { getSchoolLevelLabel } from '@/lib/courseUtils'
 import Link from 'next/link'
 
 export default function PerfilPage() {
@@ -324,7 +326,11 @@ export default function PerfilPage() {
                       value={formData.phone}
                       onChange={(e) => updateFormData('phone', e.target.value)}
                       placeholder="+56 9 1234 5678"
+                      className={errors.phone ? 'border-red-500 focus:border-red-500' : ''}
                     />
+                    {errors.phone && (
+                      <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                    )}
                   </div>
 
                   <div>
@@ -384,9 +390,17 @@ export default function PerfilPage() {
                             className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-800/50"
                           >
                             <div className="flex items-center justify-between mb-3">
-                              <h4 className="font-medium text-slate-800 dark:text-slate-200">
-                                Hijo {index + 1}
-                              </h4>
+                              <div className="flex items-center space-x-2">
+                                <h4 className="font-medium text-slate-800 dark:text-slate-200">
+                                  Hijo {index + 1}
+                                </h4>
+                                {child.level && (
+                                  <Badge variant="outline" className="text-xs">
+                                    <GraduationCap className="w-3 h-3 mr-1" />
+                                    {getSchoolLevelLabel(child.level)}
+                                  </Badge>
+                                )}
+                              </div>
                               <Button
                                 onClick={() => removeChild(child.id)}
                                 variant="ghost"
@@ -398,7 +412,7 @@ export default function PerfilPage() {
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <div>
+                              <div className="md:col-span-2">
                                 <label className="label-educational">
                                   Nombre completo *
                                 </label>
