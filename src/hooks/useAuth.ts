@@ -44,11 +44,11 @@ export default function useAuth(): UseAuthReturn {
               id: child.id || Date.now().toString(),
               name: child.name || child.nombre || '',
               curso: child.curso || child.class || '',
-              rut: child.rut || undefined,
+              rut: child.rut || null, // Usar null en lugar de undefined
               active: child.active !== undefined ? child.active : true,
               age: child.age || child.edad || 0,
               edad: child.edad || child.age || 0,
-              level: child.level || 'basico'
+              level: child.level || 'Lower School'
             })).filter((child: ChildData & { name: string }) => child.name.trim() !== '')
             
             // Mapear los datos del usuario al formato esperado
@@ -61,7 +61,7 @@ export default function useAuth(): UseAuthReturn {
               children: children,
               active: userData.active !== false,
               createdAt: userData.createdAt?.toDate() || new Date(),
-              phone: userData.phone || undefined
+              phone: userData.phone || null // Usar null en lugar de undefined
             }
             
             setUser(mappedUser)

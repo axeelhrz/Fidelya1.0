@@ -201,7 +201,7 @@ export default function RegistroPage() {
         displayName: `${formData.firstName.trim()} ${formData.lastName.trim()}`
       })
 
-      // Preparar datos de los hijos (solo para apoderados)
+      // Preparar datos de los hijos (solo para apoderados) - CORREGIDO para evitar undefined
       const validChildren = formData.userType === "apoderado" 
         ? children.filter(child => child.name.trim() !== "").map(child => ({
             id: child.id.toString(),
@@ -210,12 +210,12 @@ export default function RegistroPage() {
             edad: parseInt(child.age) || 0,
             curso: child.class.trim(),
             level: child.level,
-            rut: child.rut.trim() || undefined,
+            rut: child.rut.trim() || null, // Usar null en lugar de undefined
             active: true
           }))
         : []
 
-      // Guardar datos adicionales en Firestore
+      // Guardar datos adicionales en Firestore - CORREGIDO para evitar undefined
       const userData = {
         id: user.uid,
         email: formData.email.trim().toLowerCase(),
@@ -227,10 +227,16 @@ export default function RegistroPage() {
         isActive: true,
         active: true,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        phone: null // Usar null en lugar de undefined
       }
 
-      await setDoc(doc(db, 'users', user.uid), userData)
+      // Filtrar cualquier valor undefined antes de guardar
+      const cleanUserData = Object.fromEntries(
+        Object.entries(userData).filter(([, value]) => value !== undefined)
+      )
+
+      await setDoc(doc(db, 'users', user.uid), cleanUserData)
 
       // Registro exitoso, redirigir al panel
       router.push('/panel')
