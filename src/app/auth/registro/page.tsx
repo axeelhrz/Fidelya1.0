@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { auth, db } from "@/app/lib/firebase"
-import { SchoolLevel, validateCourseFormat } from "@/lib/courseUtils"
+import { SchoolLevel } from "@/lib/courseUtils"
 import { GraduationCap, Plus, Trash2 } from "lucide-react"
 
 interface ChildData {
@@ -160,10 +160,9 @@ export default function RegistroPage() {
           setError("El nivel educativo del hijo es requerido")
           return false
         }
-        if (!validateCourseFormat(child.class.trim(), child.level)) {
-          setError(`El formato del curso "${child.class}" no es válido para el nivel ${child.level}`)
-          return false
-        }
+        // Eliminamos la validación restrictiva del formato del curso
+        // Ahora solo validamos que no esté vacío
+        
         // Validar RUT si se proporciona
         if (child.rut && child.rut.trim()) {
           const rutRegex = /^[0-9]+-[0-9kK]$/
@@ -650,10 +649,13 @@ export default function RegistroPage() {
                               level={child.level}
                               value={child.class}
                               onValueChange={(value) => handleChildChange(child.id, 'class', value)}
-                              placeholder="Selecciona un curso"
+                              placeholder="Selecciona un curso o escribe uno personalizado"
                               allowCustom={true}
                               disabled={isLoading}
                             />
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              Puedes escribir cualquier curso personalizado
+                            </p>
                           </div>
                         </div>
                       </motion.div>
