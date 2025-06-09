@@ -78,16 +78,25 @@ api.interceptors.response.use(
  */
 export const login = async (correo, contraseña) => {
   try {
-    console.log('🔐 Intentando login...');
+    console.log('🔐 Intentando login con parámetros:', { correo: typeof correo, contraseña: typeof contraseña });
     
-    // Validar parámetros
+    // Validar que los parámetros existen y son del tipo correcto
     if (!correo || !contraseña) {
       throw new Error('Correo y contraseña son requeridos');
     }
     
-    // Asegurar que correo es string
-    const emailStr = String(correo).trim().toLowerCase();
-    const passwordStr = String(contraseña);
+    // Convertir a string de forma segura
+    let emailStr, passwordStr;
+    
+    try {
+      emailStr = String(correo).trim().toLowerCase();
+      passwordStr = String(contraseña);
+    } catch (conversionError) {
+      console.error('Error convirtiendo parámetros:', conversionError);
+      throw new Error('Formato de credenciales inválido');
+    }
+    
+    console.log('📧 Email procesado:', emailStr);
     
     const response = await api.post('/login', {
       correo: emailStr,
