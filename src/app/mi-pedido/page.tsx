@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { useAuth } from '@/hooks/useAuth'
+import useAuth from '@/hooks/useAuth'
 import { useOrderStore } from '@/store/orderStore'
 import { useOrderManagement } from '@/hooks/useOrderManagement'
 import { Navbar } from '@/components/panel/Navbar'

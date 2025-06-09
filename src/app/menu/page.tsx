@@ -6,10 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   AlertTriangle, 
   RefreshCw, 
-  Calendar, 
-  Clock, 
   CheckCircle, 
-  DollarSign, 
   Zap, 
   CalendarX,
   Menu as MenuIcon,
@@ -18,7 +15,7 @@ import {
   Utensils,
   Coffee
 } from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
+import useAuth from '@/hooks/useAuth'
 import { useWeeklyMenuData } from '@/hooks/useWeeklyMenuData'
 import { Navbar } from '@/components/panel/Navbar'
 import { DayMenuCard } from '@/components/menu/DayMenuCard'
@@ -72,7 +69,7 @@ export default function MenuPage() {
     }
   }
 
-  const getDayStatus = (dayMenu: any) => {
+  const getDayStatus = (dayMenu: { date: string }) => {
     const today = new Date().toISOString().split('T')[0]
     if (dayMenu.date === today) return 'today'
     if (dayMenu.date < today) return 'past'

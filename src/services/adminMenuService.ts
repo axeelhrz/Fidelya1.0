@@ -310,7 +310,13 @@ export class AdminMenuService {
         }
       }
 
-      const updateData: any = {
+      const updateData: {
+        updatedAt: Timestamp;
+        description?: string;
+        active?: boolean;
+        published?: boolean;
+        price?: number;
+      } = {
         updatedAt: Timestamp.fromDate(new Date())
       }
 
@@ -711,7 +717,7 @@ export class AdminMenuService {
           createdItems.push({
             id: newDocRef.id,
             code: colacion.code,
-            title: colacion.description,
+            title: colacion.description || colacion.code,
             description: colacion.description,
             type: 'colacion',
             date,

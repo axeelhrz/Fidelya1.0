@@ -2,7 +2,7 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { MenuItem, UserType, getItemPrice } from '@/types/panel'
 import { DayMenuDisplay, WeekMenuDisplay } from '@/types/menu'
-import { format, startOfWeek, endOfWeek, addDays, parseISO, isValid, getDay } from 'date-fns'
+import { format, startOfWeek, endOfWeek, addDays, parseISO, isValid } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export interface WeekInfo {

@@ -18,7 +18,7 @@ import {
   DailyMetrics,
   ReportsData 
 } from '@/types/reports'
-import { format, parseISO, eachDayOfInterval, startOfWeek, endOfWeek, addDays } from 'date-fns'
+import { format, parseISO, eachDayOfInterval } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 interface OrderData {
@@ -26,7 +26,7 @@ interface OrderData {
   userId: string
   status: string
   total?: number
-  createdAt?: Timestamp | Date | any
+  createdAt?: Timestamp | Date | string | number | { seconds: number; nanoseconds?: number }
   selections?: Array<{
     almuerzo?: {
       code: string
@@ -101,7 +101,7 @@ function formatToDateString(date: Date): string {
 }
 
 // Helper function to safely convert Firebase timestamp to Date - CORREGIDO
-function safeToDate(timestamp: any): Date | null {
+function safeToDate(timestamp: Timestamp | Date | string | number | { seconds: number; nanoseconds?: number } | null | undefined): Date | null {
   if (!timestamp) return null
   
   // If it's already a Date object
@@ -110,7 +110,7 @@ function safeToDate(timestamp: any): Date | null {
   }
   
   // If it's a Firebase Timestamp
-  if (timestamp && typeof timestamp.toDate === 'function') {
+  if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp && typeof timestamp.toDate === 'function') {
     try {
       return timestamp.toDate()
     } catch (error) {
@@ -120,7 +120,7 @@ function safeToDate(timestamp: any): Date | null {
   }
   
   // If it's a timestamp object with seconds
-  if (timestamp && typeof timestamp.seconds === 'number') {
+  if (timestamp && typeof timestamp === 'object' && 'seconds' in timestamp && typeof timestamp.seconds === 'number') {
     try {
       return new Date(timestamp.seconds * 1000)
     } catch (error) {

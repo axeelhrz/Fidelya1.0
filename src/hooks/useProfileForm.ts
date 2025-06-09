@@ -53,26 +53,28 @@ function safeTrim(value: string | number | null | undefined): string {
 }
 
 // Helper function to clean data for Firestore (remove undefined values)
-function cleanDataForFirestore(obj: unknown): unknown {
+function cleanDataForFirestore<T extends Record<string, unknown>>(obj: T): Partial<T> {
   if (obj === null || obj === undefined) {
-    return null
+    return {}
   }
   
-  if (Array.isArray(obj)) {
-    return obj.map(item => cleanDataForFirestore(item))
-  }
-  
-  if (typeof obj === 'object') {
-    const cleaned: Record<string, unknown> = {}
-    for (const [key, value] of Object.entries(obj)) {
-      if (value !== undefined) {
-        cleaned[key] = cleanDataForFirestore(value)
+  const cleaned: Partial<T> = {}
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      if (Array.isArray(value)) {
+        cleaned[key as keyof T] = value.map(item => 
+          typeof item === 'object' && item !== null 
+            ? cleanDataForFirestore(item as Record<string, unknown>)
+            : item
+        ) as T[keyof T]
+      } else if (typeof value === 'object' && value !== null) {
+        cleaned[key as keyof T] = cleanDataForFirestore(value as Record<string, unknown>) as T[keyof T]
+      } else {
+        cleaned[key as keyof T] = value as T[keyof T]
       }
     }
-    return cleaned
   }
-  
-  return obj
+  return cleaned
 }
 
 export function useProfileForm(): UseProfileFormReturn {
@@ -373,8 +375,8 @@ export function useProfileForm(): UseProfileFormReturn {
         updateData.phone = trimmedPhone
       }
 
-      // Clean the data to remove any undefined values
-      const cleanedUpdateData = cleanDataForFirestore(updateData) as Record<string, unknown>
+      // Clean the data to remove any undefined values and ensure proper typing
+      const cleanedUpdateData = cleanDataForFirestore(updateData)
 
       console.log('Saving data to Firestore:', cleanedUpdateData) // Debug log
 

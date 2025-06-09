@@ -13,7 +13,7 @@ interface DayMenuCardProps {
   index: number
 }
 
-export function DayMenuCard({ dayMenu, userType, index }: DayMenuCardProps) {
+export function DayMenuCard({ dayMenu, userType }: DayMenuCardProps) {
   const isToday = () => {
     const today = new Date().toISOString().split('T')[0]
     return dayMenu.date === today
@@ -232,7 +232,7 @@ export function DayMenuCard({ dayMenu, userType, index }: DayMenuCardProps) {
                     • Los precios mostrados corresponden a tu tipo de usuario ({userType === 'funcionario' ? 'funcionario' : 'apoderado'}).
                   </p>
                   <p>
-                    • Para realizar pedidos, dirígete a la sección "Mi Pedido" desde el panel principal.
+                    • Para realizar pedidos, dirígete a la sección &quot;Mi Pedido&quot; desde el panel principal.
                   </p>
                   <p>
                     • Los pedidos deben realizarse hasta el día anterior al servicio.
