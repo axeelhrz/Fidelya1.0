@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { updateProfile, updateEmail, sendEmailVerification } from 'firebase/auth'
 import { doc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '@/app/lib/firebase'
-import { useAuth } from '@/hooks/useAuth'
+import useAuth from '@/hooks/useAuth'
 import { Child } from '@/types/panel'
 import { SchoolLevel, migrateCourseFormat, validateCourseFormat } from '@/lib/courseUtils'
 
@@ -45,7 +45,7 @@ const MAX_RETRY_ATTEMPTS = 3
 const RETRY_DELAYS = [1000, 3000, 5000] // Progressive delays in milliseconds
 
 // Helper function to safely trim strings
-function safeTrim(value: any): string {
+function safeTrim(value: string | number | null | undefined): string {
   if (typeof value === 'string') {
     return value.trim()
   }
@@ -53,7 +53,7 @@ function safeTrim(value: any): string {
 }
 
 // Helper function to clean data for Firestore (remove undefined values)
-function cleanDataForFirestore(obj: any): any {
+function cleanDataForFirestore(obj: unknown): unknown {
   if (obj === null || obj === undefined) {
     return null
   }
@@ -63,7 +63,7 @@ function cleanDataForFirestore(obj: any): any {
   }
   
   if (typeof obj === 'object') {
-    const cleaned: any = {}
+    const cleaned: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(obj)) {
       if (value !== undefined) {
         cleaned[key] = cleanDataForFirestore(value)
@@ -325,7 +325,16 @@ export function useProfileForm(): UseProfileFormReturn {
         const childCurso = safeTrim(child.curso)
         const childRut = child.rut ? safeTrim(child.rut) : undefined
         
-        const childData: any = {
+        const childData: {
+          id: string
+          name: string
+          curso: string
+          active: boolean
+          age: number
+          edad: number
+          level: SchoolLevel
+          rut?: string
+        } = {
           id: child.id,
           name: childName,
           curso: childCurso,
@@ -344,7 +353,14 @@ export function useProfileForm(): UseProfileFormReturn {
       }).filter(child => child.name.trim() !== '') // Solo guardar hijos con nombre
 
       // Prepare update data, ensuring no undefined values
-      const updateData: any = {
+      const updateData: {
+        firstName: string
+        lastName: string
+        email: string
+        children: typeof transformedChildren
+        updatedAt: Date
+        phone?: string
+      } = {
         firstName: trimmedFirstName,
         lastName: trimmedLastName,
         email: trimmedEmail,
@@ -358,7 +374,7 @@ export function useProfileForm(): UseProfileFormReturn {
       }
 
       // Clean the data to remove any undefined values
-      const cleanedUpdateData = cleanDataForFirestore(updateData)
+      const cleanedUpdateData = cleanDataForFirestore(updateData) as Record<string, unknown>
 
       console.log('Saving data to Firestore:', cleanedUpdateData) // Debug log
 

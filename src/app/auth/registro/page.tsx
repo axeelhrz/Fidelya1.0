@@ -4,12 +4,25 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { SchoolLevelSelector } from "@/components/ui/school-level-selector"
+import { CourseSelector } from "@/components/ui/course-selector"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { auth, db } from "@/app/lib/firebase"
+import { SchoolLevel, validateCourseFormat } from "@/lib/courseUtils"
+import { GraduationCap, Plus, Trash2 } from "lucide-react"
+
+interface ChildData {
+  id: number
+  name: string
+  age: string
+  class: string
+  level: SchoolLevel
+  rut: string
+}
 
 export default function RegistroPage() {
   const router = useRouter()
@@ -25,13 +38,13 @@ export default function RegistroPage() {
     userType: "" as "funcionario" | "apoderado" | ""
   })
   
-  const [children, setChildren] = useState([
+  const [children, setChildren] = useState<ChildData[]>([
     {
       id: 1,
       name: "",
       age: "",
       class: "",
-      level: "basico",
+      level: "Lower School",
       rut: ""
     }
   ])
@@ -62,7 +75,7 @@ export default function RegistroPage() {
     if (error) setError("")
   }
 
-  const handleChildChange = (id: number, field: string, value: string) => {
+  const handleChildChange = (id: number, field: keyof ChildData, value: string | SchoolLevel) => {
     setChildren(children.map(child => 
       child.id === id ? { ...child, [field]: value } : child
     ))
@@ -75,7 +88,7 @@ export default function RegistroPage() {
       name: "",
       age: "",
       class: "",
-      level: "basico",
+      level: "Lower School",
       rut: ""
     }])
   }
@@ -143,6 +156,14 @@ export default function RegistroPage() {
           setError("El curso del hijo es requerido")
           return false
         }
+        if (!child.level) {
+          setError("El nivel educativo del hijo es requerido")
+          return false
+        }
+        if (!validateCourseFormat(child.class.trim(), child.level)) {
+          setError(`El formato del curso "${child.class}" no es válido para el nivel ${child.level}`)
+          return false
+        }
         // Validar RUT si se proporciona
         if (child.rut && child.rut.trim()) {
           const rutRegex = /^[0-9]+-[0-9kK]$/
@@ -187,8 +208,9 @@ export default function RegistroPage() {
             id: child.id.toString(),
             name: child.name.trim(),
             age: parseInt(child.age) || 0,
+            edad: parseInt(child.age) || 0,
             curso: child.class.trim(),
-            level: child.level as 'basico' | 'medio',
+            level: child.level,
             rut: child.rut.trim() || undefined,
             active: true
           }))
@@ -518,7 +540,7 @@ export default function RegistroPage() {
                 </motion.div>
               </div>
 
-              {/* Children Section - Solo para apoderados - Más compacto */}
+              {/* Children Section - Solo para apoderados - Actualizado con nuevos niveles */}
               {formData.userType === "apoderado" && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -528,9 +550,12 @@ export default function RegistroPage() {
                   className="space-y-3"
                 >
                   <div className="border-t border-slate-200 dark:border-slate-600 pt-3">
-                    <h3 className="text-base font-medium text-slate-800 dark:text-slate-200 mb-3 text-clean">
-                      Información de tus hijos *
-                    </h3>
+                    <div className="flex items-center space-x-2 mb-3">
+                      <GraduationCap className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      <h3 className="text-base font-medium text-slate-800 dark:text-slate-200 text-clean">
+                        Información de tus hijos *
+                      </h3>
+                    </div>
                     
                     {children.map((child, index) => (
                       <motion.div
@@ -538,9 +563,9 @@ export default function RegistroPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: index * 0.1 }}
-                        className="p-3 bg-white/60 dark:bg-slate-700/60 rounded-lg border border-slate-200 dark:border-slate-600 mb-3"
+                        className="p-4 bg-white/60 dark:bg-slate-700/60 rounded-lg border border-slate-200 dark:border-slate-600 mb-3"
                       >
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-3">
                           <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 text-clean">
                             Hijo {index + 1}
                           </h4>
@@ -549,69 +574,85 @@ export default function RegistroPage() {
                               type="button"
                               onClick={() => removeChild(child.id)}
                               disabled={isLoading}
-                              className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              Eliminar
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           )}
                         </div>
                         
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <div>
+                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                              Nombre completo *
+                            </label>
                             <Input
                               type="text"
                               value={child.name}
                               onChange={(e) => handleChildChange(child.id, 'name', e.target.value)}
-                              placeholder="Nombre completo *"
+                              placeholder="Nombre completo del hijo/a"
                               disabled={isLoading}
                               required
                               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
                             />
                           </div>
                           
-                          <div className="grid grid-cols-2 gap-2">
-                            <Input
-                              type="number"
-                              value={child.age}
-                              onChange={(e) => handleChildChange(child.id, 'age', e.target.value)}
-                              placeholder="Edad *"
-                              min="3"
-                              max="18"
-                              disabled={isLoading}
-                              required
-                              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
-                            />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                                Edad *
+                              </label>
+                              <Input
+                                type="number"
+                                value={child.age}
+                                onChange={(e) => handleChildChange(child.id, 'age', e.target.value)}
+                                placeholder="Edad"
+                                min="3"
+                                max="18"
+                                disabled={isLoading}
+                                required
+                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
+                              />
+                            </div>
                             
-                            <Input
-                              type="text"
-                              value={child.class}
-                              onChange={(e) => handleChildChange(child.id, 'class', e.target.value)}
-                              placeholder="Curso *"
-                              disabled={isLoading}
-                              required
-                              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
-                            />
+                            <div>
+                              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                                RUT (opcional)
+                              </label>
+                              <Input
+                                type="text"
+                                value={child.rut}
+                                onChange={(e) => handleChildChange(child.id, 'rut', e.target.value)}
+                                placeholder="12345678-9"
+                                disabled={isLoading}
+                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
+                              />
+                            </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2">
-                            <select
+                          <div>
+                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                              Nivel educativo *
+                            </label>
+                            <SchoolLevelSelector
                               value={child.level}
-                              onChange={(e) => handleChildChange(child.id, 'level', e.target.value)}
-                              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
+                              onValueChange={(value) => handleChildChange(child.id, 'level', value)}
+                              placeholder="Selecciona un nivel"
                               disabled={isLoading}
-                              required
-                            >
-                              <option value="basico">Básica</option>
-                              <option value="medio">Media</option>
-                            </select>
-
-                            <Input
-                              type="text"
-                              value={child.rut}
-                              onChange={(e) => handleChildChange(child.id, 'rut', e.target.value)}
-                              placeholder="RUT (opcional)"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                              Curso *
+                            </label>
+                            <CourseSelector
+                              level={child.level}
+                              value={child.class}
+                              onValueChange={(value) => handleChildChange(child.id, 'class', value)}
+                              placeholder="Selecciona un curso"
+                              allowCustom={true}
                               disabled={isLoading}
-                              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300"
                             />
                           </div>
                         </div>
@@ -624,9 +665,10 @@ export default function RegistroPage() {
                       whileHover={!isLoading ? { y: -1 } : {}}
                       whileTap={!isLoading ? { scale: 0.98 } : {}}
                       disabled={isLoading}
-                      className="w-full p-2 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-600 dark:text-slate-400 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-300 text-sm font-medium text-clean disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full p-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-600 dark:text-slate-400 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-300 text-sm font-medium text-clean disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                     >
-                      + Agregar otro hijo
+                      <Plus className="w-4 h-4" />
+                      <span>Agregar otro hijo</span>
                     </motion.button>
                   </div>
                 </motion.div>
