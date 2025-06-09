@@ -304,7 +304,7 @@ export const obtenerCompra = async (id) => {
 };
 
 /**
- * Crea una nueva compra - OPTIMIZADO
+ * Crea una nueva compra - OPTIMIZADO Y CORREGIDO
  * @param {object} compra - Datos de la compra
  * @returns {object} - Respuesta del servidor transformada
  */
@@ -313,10 +313,11 @@ export const crearCompra = async (compra) => {
     // Validación mejorada antes de enviar
     const validacion = validarCompra(compra);
     if (!validacion.valido) {
-      throw new Error(`Datos inválidos: ${Object.values(validacion.errores).join(', ')}`);
+      const errores = Object.values(validacion.errores).join(', ');
+      throw new Error(`Datos inválidos: ${errores}`);
     }
     
-    // Preparar datos optimizados para el backend
+    // Preparar datos optimizados para el backend - FORMATO CORRECTO
     const compraData = {
       proveedor_id: parseInt(compra.proveedor_id),
       fecha: compra.fecha || new Date().toISOString().split('T')[0],
@@ -336,7 +337,9 @@ export const crearCompra = async (compra) => {
     
     console.log('🛒 Creando compra:', compraData);
     const response = await api.post('/compras', compraData);
-    const compraCreada = transformarCompra(response.data);
+    
+    // Extraer la compra del response (puede venir en response.data.compra o response.data)
+    const compraCreada = transformarCompra(response.data.compra || response.data);
     
     // Limpiar cache relacionado
     cache.clear();
@@ -348,13 +351,13 @@ export const crearCompra = async (compra) => {
     
     // Manejo mejorado de errores específicos
     if (error.response?.status === 400) {
-      throw { message: error.response.data?.message || 'Datos de compra inválidos' };
+      throw new Error(error.response.data?.message || 'Datos de compra inválidos');
     }
     if (error.response?.status === 409) {
-      throw { message: 'Conflicto: La compra ya existe o hay un problema de concurrencia' };
+      throw new Error('Conflicto: La compra ya existe o hay un problema de concurrencia');
     }
     
-    throw error.response?.data || { message: error.message || 'Error creando compra' };
+    throw new Error(error.response?.data?.message || error.message || 'Error creando compra');
   }
 };
 
@@ -369,7 +372,8 @@ export const actualizarCompra = async (id, compra) => {
     // Validación mejorada antes de enviar
     const validacion = validarCompra(compra);
     if (!validacion.valido) {
-      throw new Error(`Datos inválidos: ${Object.values(validacion.errores).join(', ')}`);
+      const errores = Object.values(validacion.errores).join(', ');
+      throw new Error(`Datos inválidos: ${errores}`);
     }
     
     // Preparar datos optimizados para el backend
@@ -392,7 +396,7 @@ export const actualizarCompra = async (id, compra) => {
     
     console.log('🛒 Actualizando compra:', id);
     const response = await api.put(`/compras/${id}`, compraData);
-    const compraActualizada = transformarCompra(response.data);
+    const compraActualizada = transformarCompra(response.data.compra || response.data);
     
     // Limpiar cache relacionado
     cache.clear();
@@ -404,13 +408,13 @@ export const actualizarCompra = async (id, compra) => {
     
     // Manejo mejorado de errores específicos
     if (error.response?.status === 404) {
-      throw { message: 'La compra no existe o fue eliminada' };
+      throw new Error('La compra no existe o fue eliminada');
     }
     if (error.response?.status === 400) {
-      throw { message: error.response.data?.message || 'Datos de compra inválidos' };
+      throw new Error(error.response.data?.message || 'Datos de compra inválidos');
     }
     
-    throw error.response?.data || { message: error.message || 'Error actualizando compra' };
+    throw new Error(error.response?.data?.message || error.message || 'Error actualizando compra');
   }
 };
 
@@ -433,10 +437,10 @@ export const eliminarCompra = async (id) => {
     console.error('❌ Error eliminando compra:', error);
     
     if (error.response?.status === 404) {
-      throw { message: 'La compra no existe o ya fue eliminada' };
+      throw new Error('La compra no existe o ya fue eliminada');
     }
     
-    throw error.response?.data || { message: 'Error eliminando compra' };
+    throw new Error(error.response?.data?.message || 'Error eliminando compra');
   }
 };
 
