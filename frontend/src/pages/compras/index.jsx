@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -17,6 +17,7 @@ import {
   Breadcrumbs,
   Link,
   Chip,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -26,6 +27,7 @@ import {
   Home as HomeIcon,
   TrendingUp as TrendingUpIcon,
   Assessment as AssessmentIcon,
+  ErrorOutline as ErrorIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -43,10 +45,12 @@ import SuppliersManager from './components/SuppliersManager';
 const ComprasPage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  
   // Estados para datos
   const [compras, setCompras] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   
@@ -63,93 +67,164 @@ const ComprasPage = () => {
     proveedor_id: '',
     fecha_inicio: '',
     fecha_fin: '',
-    producto: ''
+    producto: '',
+    metodo_pago: ''
   });
 
   // Estado para SpeedDial
   const [speedDialOpen, setSpeedDialOpen] = useState(false);
 
-  useEffect(() => {
-    cargarDatos();
-  }, [filtros]);
-
-  const cargarDatos = async () => {
+  // Cargar datos con useCallback para evitar re-renders innecesarios
+  const cargarCompras = useCallback(async (filtrosActuales = filtros) => {
     setLoading(true);
     setError(null);
     
     try {
-      const [comprasData, statsData] = await Promise.all([
-        purchaseService.obtenerCompras(filtros),
-        purchaseService.obtenerEstadisticasCompras()
-      ]);
+      console.log('🔄 Cargando compras con filtros:', filtrosActuales);
+      const comprasData = await purchaseService.obtenerCompras(filtrosActuales);
       
-      setCompras(comprasData);
-      setEstadisticas(statsData);
+      if (Array.isArray(comprasData)) {
+        setCompras(comprasData);
+        console.log('✅ Compras cargadas exitosamente:', comprasData.length);
+      } else {
+        console.warn('⚠️ Datos de compras no válidos:', comprasData);
+        setCompras([]);
+      }
     } catch (error) {
-      console.error('Error cargando datos de compras:', error);
-      setError('Error al cargar los datos de compras. Por favor, intenta nuevamente.');
+      console.error('❌ Error cargando compras:', error);
+      setError('Error al cargar las compras. Por favor, intenta nuevamente.');
+      setCompras([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtros]);
 
-  const handleCreateCompra = () => {
+  const cargarEstadisticas = useCallback(async () => {
+    setLoadingStats(true);
+    
+    try {
+      console.log('📊 Cargando estadísticas de compras');
+      const statsData = await purchaseService.obtenerEstadisticasCompras();
+      setEstadisticas(statsData);
+      console.log('✅ Estadísticas cargadas exitosamente');
+    } catch (error) {
+      console.error('❌ Error cargando estadísticas:', error);
+      // No mostrar error para estadísticas, usar datos por defecto
+      setEstadisticas({
+        total_invertido_mes: 0,
+        compras_mes: 0,
+        gasto_promedio: 0,
+        top_proveedores: [],
+        productos_mas_comprados: [],
+        total_compras: 0,
+        gasto_total: 0
+      });
+    } finally {
+      setLoadingStats(false);
+    }
+  }, []);
+
+  // Cargar todos los datos
+  const cargarDatos = useCallback(async () => {
+    await Promise.all([
+      cargarCompras(),
+      cargarEstadisticas()
+    ]);
+  }, [cargarCompras, cargarEstadisticas]);
+
+  // Efecto para cargar datos iniciales
+  useEffect(() => {
+    cargarDatos();
+  }, [cargarDatos]);
+
+  // Efecto para recargar compras cuando cambian los filtros
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      cargarCompras(filtros);
+    }, 300); // Debounce de 300ms
+
+    return () => clearTimeout(timeoutId);
+  }, [filtros, cargarCompras]);
+
+  // Memoizar estadísticas calculadas
+  const statsCalculadas = useMemo(() => {
+    if (!Array.isArray(compras)) return { total: 0, sinFiltros: 0 };
+    
+    return {
+      total: compras.length,
+      sinFiltros: compras.length, // En un caso real, esto vendría del backend
+      totalInvertido: compras.reduce((sum, compra) => sum + (parseFloat(compra.total) || 0), 0),
+    };
+  }, [compras]);
+
+  // Handlers para diálogos
+  const handleCreateCompra = useCallback(() => {
     setSelectedCompra(null);
     setOpenCreateDialog(true);
     setSpeedDialOpen(false);
-  };
+  }, []);
 
-  const handleEditCompra = (compra) => {
+  const handleEditCompra = useCallback((compra) => {
     setSelectedCompra(compra);
     setOpenEditDialog(true);
-  };
+  }, []);
 
-  const handleViewCompra = (compra) => {
+  const handleViewCompra = useCallback((compra) => {
     setSelectedCompra(compra);
     setOpenViewDialog(true);
-  };
+  }, []);
 
-  const handleDeleteCompra = (compra) => {
+  const handleDeleteCompra = useCallback((compra) => {
     setSelectedCompra(compra);
     setOpenDeleteDialog(true);
-  };
+  }, []);
 
-  const handleOpenSuppliersManager = () => {
+  const handleOpenSuppliersManager = useCallback(() => {
     setOpenSuppliersManager(true);
     setSpeedDialOpen(false);
-  };
+  }, []);
 
-  const handleCompraCreated = async () => {
+  // Handlers para eventos de éxito
+  const handleCompraCreated = useCallback(async () => {
     setOpenCreateDialog(false);
     setSuccess('Compra registrada exitosamente');
     await cargarDatos();
-  };
+  }, [cargarDatos]);
 
-  const handleCompraUpdated = async () => {
+  const handleCompraUpdated = useCallback(async () => {
     setOpenEditDialog(false);
     setSuccess('Compra actualizada exitosamente');
     await cargarDatos();
-  };
+  }, [cargarDatos]);
 
-  const handleCompraDeleted = async () => {
+  const handleCompraDeleted = useCallback(async () => {
     setOpenDeleteDialog(false);
     setSuccess('Compra eliminada exitosamente');
     await cargarDatos();
-  };
+  }, [cargarDatos]);
 
-  const handleFiltrosChange = (nuevosFiltros) => {
+  // Handler para cambios de filtros
+  const handleFiltrosChange = useCallback((nuevosFiltros) => {
     setFiltros(nuevosFiltros);
-  };
+  }, []);
 
-  const handleCloseError = () => {
+  // Handlers para cerrar notificaciones
+  const handleCloseError = useCallback(() => {
     setError(null);
-};
+  }, []);
 
-  const handleCloseSuccess = () => {
+  const handleCloseSuccess = useCallback(() => {
     setSuccess(null);
-  };
+  }, []);
 
-  const speedDialActions = [
+  // Handler para refrescar datos
+  const handleRefreshData = useCallback(async () => {
+    setSpeedDialOpen(false);
+    await cargarDatos();
+  }, [cargarDatos]);
+
+  // Configuración del SpeedDial
+  const speedDialActions = useMemo(() => [
     {
       icon: <AddIcon />,
       name: 'Nueva Compra',
@@ -163,10 +238,11 @@ const ComprasPage = () => {
     {
       icon: <RefreshIcon />,
       name: 'Actualizar Datos',
-      onClick: cargarDatos,
-          },
-  ];
+      onClick: handleRefreshData,
+    },
+  ], [handleCreateCompra, handleOpenSuppliersManager, handleRefreshData]);
 
+  // Variantes de animación
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -176,7 +252,7 @@ const ComprasPage = () => {
         staggerChildren: 0.1
       }
     }
-};
+  };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -277,14 +353,23 @@ const ComprasPage = () => {
                   </Typography>
                 </Box>
 
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                   <Chip
                     icon={<TrendingUpIcon />}
-                    label={`${compras?.length || 0} Compras`}
+                    label={`${statsCalculadas.total} Compras`}
                     color="primary"
                     variant="outlined"
                     sx={{ fontWeight: 600 }}
                   />
+                  {statsCalculadas.totalInvertido > 0 && (
+                    <Chip
+                      icon={<AssessmentIcon />}
+                      label={`$${statsCalculadas.totalInvertido.toFixed(2)} Invertido`}
+                      color="success"
+                      variant="outlined"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  )}
                   <Button
                     variant="contained"
                     startIcon={<AddIcon />}
@@ -315,7 +400,7 @@ const ComprasPage = () => {
           <motion.div variants={itemVariants}>
             <ComprasStats 
               estadisticas={estadisticas} 
-              loading={loading} 
+              loading={loadingStats} 
             />
           </motion.div>
 
@@ -335,9 +420,27 @@ const ComprasPage = () => {
               <ComprasFilters 
                 filtros={filtros}
                 onFiltrosChange={handleFiltrosChange}
+                loading={loading}
               />
             </Paper>
           </motion.div>
+
+          {/* Indicador de carga global */}
+          {(loading || loadingStats) && (
+            <motion.div 
+              variants={itemVariants}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+                <CircularProgress size={40} sx={{ mr: 2 }} />
+                <Typography variant="body1" color="text.secondary">
+                  Cargando datos de compras...
+                </Typography>
+              </Box>
+            </motion.div>
+          )}
 
           {/* Tabla de compras */}
           <motion.div variants={itemVariants}>
@@ -360,6 +463,65 @@ const ComprasPage = () => {
               />
             </Paper>
           </motion.div>
+
+          {/* Mensaje de estado cuando no hay datos */}
+          {!loading && !loadingStats && compras.length === 0 && !error && (
+            <motion.div 
+              variants={itemVariants}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <Paper 
+                sx={{ 
+                  p: 6, 
+                  textAlign: 'center',
+                  borderRadius: 4,
+                  background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)} 0%, ${alpha(theme.palette.background.paper, 0.95)} 100%)`,
+                  backdropFilter: 'blur(10px)',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.08)}`,
+                  mt: 3
+                }}
+              >
+                <ShoppingCartIcon 
+                  sx={{ 
+                    fontSize: 80, 
+                    color: alpha(theme.palette.primary.main, 0.3),
+                    mb: 2 
+                  }} 
+                />
+                <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}>
+                  ¡Comienza a registrar compras!
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 3, maxWidth: 500, mx: 'auto' }}>
+                  No tienes compras registradas aún. Haz clic en "Nueva Compra" para comenzar a gestionar tus compras a proveedores.
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<AddIcon />}
+                  onClick={handleCreateCompra}
+                  sx={{
+                    borderRadius: 3,
+                    px: 4,
+                    py: 1.5,
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                    boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  Registrar Primera Compra
+                </Button>
+              </Paper>
+            </motion.div>
+          )}
         </motion.div>
       </Container>
 
@@ -439,6 +601,7 @@ const ComprasPage = () => {
         open={openViewDialog}
         onClose={() => setOpenViewDialog(false)}
         compra={selectedCompra}
+        onEdit={handleEditCompra}
       />
 
       <DeleteCompraDialog
@@ -451,6 +614,7 @@ const ComprasPage = () => {
       <SuppliersManager
         open={openSuppliersManager}
         onClose={() => setOpenSuppliersManager(false)}
+        onProveedorUpdated={cargarEstadisticas}
       />
 
       {/* Snackbars para notificaciones */}
@@ -471,10 +635,14 @@ const ComprasPage = () => {
               <Alert 
                 onClose={handleCloseError} 
                 severity="error" 
+                icon={<ErrorIcon />}
                 sx={{ 
                   width: '100%',
                   borderRadius: 3,
-                  boxShadow: theme.shadows[8]
+                  boxShadow: theme.shadows[8],
+                  '& .MuiAlert-message': {
+                    fontWeight: 500,
+                  }
                 }}
               >
                 {error}
@@ -504,7 +672,10 @@ const ComprasPage = () => {
                 sx={{ 
                   width: '100%',
                   borderRadius: 3,
-                  boxShadow: theme.shadows[8]
+                  boxShadow: theme.shadows[8],
+                  '& .MuiAlert-message': {
+                    fontWeight: 500,
+                  }
                 }}
               >
                 {success}
