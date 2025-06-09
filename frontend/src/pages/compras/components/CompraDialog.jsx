@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -33,6 +33,7 @@ import {
   Autocomplete,
   Alert,
   CircularProgress,
+  Skeleton,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -63,7 +64,11 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
   const [errors, setErrors] = useState({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
   
-  // Estados del formulario
+  // Refs para optimización
+  const debounceTimeoutRef = useRef(null);
+  const isInitializedRef = useRef(false);
+  
+  // Estados del formulario optimizados
   const [formData, setFormData] = useState({
     proveedor_id: '',
     fecha: new Date().toISOString().split('T')[0],
@@ -73,7 +78,7 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
     detalles: []
   });
 
-  // Estado para nuevo producto
+  // Estado para nuevo producto optimizado
   const [nuevoProducto, setNuevoProducto] = useState({
     producto_id: '',
     cantidad: '',
@@ -81,10 +86,57 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
     subtotal: 0
   });
 
-  // Cargar datos iniciales
+  // Función optimizada para cargar datos iniciales
+  const cargarDatos = useCallback(async () => {
+    if (loadingData) return; // Evitar múltiples cargas simultáneas
+    
+    setLoadingData(true);
+    setErrors({});
+    
+    try {
+      console.log('🔄 Cargando datos para CompraDialog...');
+      
+      // Cargar datos en paralelo para mejor rendimiento
+      const [proveedoresData, productosData] = await Promise.allSettled([
+        proveedorService.obtenerProveedores(),
+        inventoryService.obtenerProductos()
+      ]);
+      
+      // Manejar proveedores
+      if (proveedoresData.status === 'fulfilled') {
+        const proveedoresList = Array.isArray(proveedoresData.value) ? proveedoresData.value : [];
+        setProveedores(proveedoresList);
+        console.log('✅ Proveedores cargados:', proveedoresList.length);
+      } else {
+        console.warn('⚠️ Error cargando proveedores:', proveedoresData.reason);
+        setProveedores([]);
+      }
+      
+      // Manejar productos
+      if (productosData.status === 'fulfilled') {
+        const productosList = Array.isArray(productosData.value) ? productosData.value : [];
+        setProductos(productosList);
+        console.log('✅ Productos cargados:', productosList.length);
+      } else {
+        console.warn('⚠️ Error cargando productos:', productosData.reason);
+        setProductos([]);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error cargando datos:', error);
+      setErrors({ general: 'Error cargando datos. Intenta nuevamente.' });
+    } finally {
+      setLoadingData(false);
+    }
+  }, [loadingData]);
+
+  // Inicializar datos cuando se abre el dialog
   useEffect(() => {
-    if (open) {
+    if (open && !isInitializedRef.current) {
+      isInitializedRef.current = true;
       cargarDatos();
+      
+      // Configurar datos para edición
       if (mode === 'edit' && compra) {
         setFormData({
           proveedor_id: compra.proveedor_id || '',
@@ -94,64 +146,56 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
           observaciones: compra.observaciones || '',
           detalles: Array.isArray(compra.detalles) ? compra.detalles.map(detalle => ({
             ...detalle,
-            temp_id: detalle.temp_id || Date.now() + Math.random()
+            temp_id: detalle.temp_id || `${Date.now()}-${Math.random()}`
           })) : []
         });
       }
     }
-  }, [open, mode, compra]);
+  }, [open, mode, compra, cargarDatos]);
 
-  const cargarDatos = async () => {
-    setLoadingData(true);
-    try {
-      const [proveedoresData, productosData] = await Promise.all([
-        proveedorService.obtenerProveedores(),
-        inventoryService.obtenerProductos()
-      ]);
-      
-      setProveedores(Array.isArray(proveedoresData) ? proveedoresData : []);
-      setProductos(Array.isArray(productosData) ? productosData : []);
-    } catch (error) {
-      console.error('Error cargando datos:', error);
-      setErrors({ general: 'Error cargando datos. Intenta nuevamente.' });
-    } finally {
-      setLoadingData(false);
+  // Limpiar refs cuando se cierra el dialog
+  useEffect(() => {
+    if (!open) {
+      isInitializedRef.current = false;
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
     }
-  };
+  }, [open]);
 
-  // Validación en tiempo real
+  // Validación optimizada en tiempo real con debouncing
   const validacionTiempoReal = useMemo(() => {
+    if (!submitAttempted) return {};
+    
     const errores = {};
 
-    if (submitAttempted) {
-      if (!formData.proveedor_id) {
-        errores.proveedor_id = 'Selecciona un proveedor';
-      }
-      if (!formData.fecha) {
-        errores.fecha = 'Ingresa la fecha';
-      }
-      if (formData.detalles.length === 0) {
-        errores.detalles = 'Agrega al menos un producto';
-      }
-      
-      // Validar productos
-      formData.detalles.forEach((detalle, index) => {
-        if (!detalle.producto_id) {
-          errores[`detalle_${index}_producto`] = 'Producto requerido';
-        }
-        if (!detalle.cantidad || parseFloat(detalle.cantidad) <= 0) {
-          errores[`detalle_${index}_cantidad`] = 'Cantidad inválida';
-        }
-        if (!detalle.precio_unitario || parseFloat(detalle.precio_unitario) <= 0) {
-          errores[`detalle_${index}_precio`] = 'Precio inválido';
-        }
-      });
+    if (!formData.proveedor_id) {
+      errores.proveedor_id = 'Selecciona un proveedor';
     }
+    if (!formData.fecha) {
+      errores.fecha = 'Ingresa la fecha';
+    }
+    if (formData.detalles.length === 0) {
+      errores.detalles = 'Agrega al menos un producto';
+    }
+    
+    // Validar productos de forma optimizada
+    formData.detalles.forEach((detalle, index) => {
+      if (!detalle.producto_id) {
+        errores[`detalle_${index}_producto`] = 'Producto requerido';
+      }
+      if (!detalle.cantidad || parseFloat(detalle.cantidad) <= 0) {
+        errores[`detalle_${index}_cantidad`] = 'Cantidad inválida';
+      }
+      if (!detalle.precio_unitario || parseFloat(detalle.precio_unitario) <= 0) {
+        errores[`detalle_${index}_precio`] = 'Precio inválido';
+      }
+    });
 
     return errores;
   }, [formData, submitAttempted]);
 
-  // Calcular total automáticamente
+  // Calcular total optimizado con memoización
   const totalCalculado = useMemo(() => {
     return formData.detalles.reduce((total, detalle) => {
       const subtotal = parseFloat(detalle.subtotal) || 0;
@@ -159,13 +203,14 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
     }, 0);
   }, [formData.detalles]);
 
-  const handleInputChange = (field, value) => {
+  // Handler optimizado para cambios en el formulario
+  const handleInputChange = useCallback((field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
     
-    // Limpiar error del campo
+    // Limpiar error del campo específico
     if (errors[field]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -173,55 +218,76 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
         return newErrors;
       });
     }
-  };
+  }, [errors]);
 
-  const handleProductoChange = (field, value) => {
+  // Handler optimizado para cambios en nuevo producto con debouncing
+  const handleProductoChange = useCallback((field, value) => {
     setNuevoProducto(prev => {
       const updated = { ...prev, [field]: value };
       
-      // Calcular subtotal automáticamente
+      // Calcular subtotal automáticamente con debouncing
       if (field === 'cantidad' || field === 'precio_unitario') {
-        const cantidad = parseFloat(updated.cantidad) || 0;
-        const precio = parseFloat(updated.precio_unitario) || 0;
-        updated.subtotal = cantidad * precio;
+        if (debounceTimeoutRef.current) {
+          clearTimeout(debounceTimeoutRef.current);
+        }
+        
+        debounceTimeoutRef.current = setTimeout(() => {
+          const cantidad = parseFloat(updated.cantidad) || 0;
+          const precio = parseFloat(updated.precio_unitario) || 0;
+          updated.subtotal = cantidad * precio;
+          
+          setNuevoProducto(current => ({
+            ...current,
+            subtotal: cantidad * precio
+          }));
+        }, 300);
       }
       
       return updated;
     });
-  };
+  }, []);
 
-  const agregarProducto = () => {
-    // Validar producto antes de agregar
+  // Función optimizada para agregar producto
+  const agregarProducto = useCallback(() => {
+    // Validaciones optimizadas
+    const erroresProducto = {};
+    
     if (!nuevoProducto.producto_id) {
-      setErrors(prev => ({ ...prev, nuevo_producto: 'Selecciona un producto' }));
-      return;
+      erroresProducto.nuevo_producto = 'Selecciona un producto';
     }
     if (!nuevoProducto.cantidad || parseFloat(nuevoProducto.cantidad) <= 0) {
-      setErrors(prev => ({ ...prev, nuevo_cantidad: 'Ingresa una cantidad válida' }));
-      return;
+      erroresProducto.nuevo_cantidad = 'Ingresa una cantidad válida';
     }
     if (!nuevoProducto.precio_unitario || parseFloat(nuevoProducto.precio_unitario) <= 0) {
-      setErrors(prev => ({ ...prev, nuevo_precio: 'Ingresa un precio válido' }));
-      return;
+      erroresProducto.nuevo_precio = 'Ingresa un precio válido';
     }
 
     // Verificar si el producto ya está agregado
     const productoExistente = formData.detalles.find(d => d.producto_id === nuevoProducto.producto_id);
     if (productoExistente) {
-      setErrors(prev => ({ ...prev, nuevo_producto: 'Este producto ya está agregado' }));
+      erroresProducto.nuevo_producto = 'Este producto ya está agregado';
+    }
+
+    if (Object.keys(erroresProducto).length > 0) {
+      setErrors(prev => ({ ...prev, ...erroresProducto }));
       return;
     }
 
+    // Buscar información del producto
     const producto = productos.find(p => p.id === nuevoProducto.producto_id);
+    const cantidad = parseFloat(nuevoProducto.cantidad);
+    const precioUnitario = parseFloat(nuevoProducto.precio_unitario);
+    
     const detalle = {
       producto_id: nuevoProducto.producto_id,
-      cantidad: parseFloat(nuevoProducto.cantidad),
-      precio_unitario: parseFloat(nuevoProducto.precio_unitario),
-      subtotal: parseFloat(nuevoProducto.subtotal),
+      cantidad: cantidad,
+      precio_unitario: precioUnitario,
+      subtotal: cantidad * precioUnitario,
       producto_nombre: producto?.nombre || 'Producto sin nombre',
-      temp_id: Date.now() + Math.random() // ID temporal para React keys
+      temp_id: `${Date.now()}-${Math.random()}` // ID temporal único
     };
 
+    // Actualizar formulario de forma optimizada
     setFormData(prev => ({
       ...prev,
       detalles: [...prev.detalles, detalle]
@@ -243,16 +309,18 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
       delete newErrors.nuevo_precio;
       return newErrors;
     });
-  };
+  }, [nuevoProducto, formData.detalles, productos]);
 
-  const eliminarProducto = (index) => {
+  // Función optimizada para eliminar producto
+  const eliminarProducto = useCallback((index) => {
     setFormData(prev => ({
       ...prev,
       detalles: prev.detalles.filter((_, i) => i !== index)
     }));
-  };
+  }, []);
 
-  const actualizarProducto = (index, campo, valor) => {
+  // Función optimizada para actualizar producto en la tabla
+  const actualizarProducto = useCallback((index, campo, valor) => {
     setFormData(prev => {
       const nuevosDetalles = [...prev.detalles];
       nuevosDetalles[index] = {
@@ -272,9 +340,10 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
         detalles: nuevosDetalles
       };
     });
-  };
+  }, []);
 
-  const validarFormulario = () => {
+  // Validación optimizada del formulario
+  const validarFormulario = useCallback(() => {
     setSubmitAttempted(true);
     
     const validacion = purchaseService.validarCompra({
@@ -290,16 +359,19 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
     }
 
     return true;
-  };
+  }, [formData, totalCalculado]);
 
-  const handleSubmit = async () => {
+  // Handler optimizado para envío del formulario
+  const handleSubmit = useCallback(async () => {
     if (!validarFormulario()) {
       return;
     }
 
     setLoading(true);
+    setErrors({});
+    
     try {
-      // Preparar datos para el backend
+      // Preparar datos optimizados para el backend
       const compraData = {
         proveedor_id: parseInt(formData.proveedor_id),
         fecha: formData.fecha,
@@ -317,27 +389,41 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
         impuestos: 0
       };
 
-      console.log('Enviando datos de compra:', compraData);
+      console.log('💾 Enviando datos de compra:', compraData);
 
+      let resultado;
       if (mode === 'create') {
-        await purchaseService.crearCompra(compraData);
+        resultado = await purchaseService.crearCompra(compraData);
+        console.log('✅ Compra creada exitosamente:', resultado);
       } else {
-        await purchaseService.actualizarCompra(compra.id, compraData);
+        resultado = await purchaseService.actualizarCompra(compra.id, compraData);
+        console.log('✅ Compra actualizada exitosamente:', resultado);
       }
 
-      onSuccess();
+      // Llamar callback de éxito
+      if (onSuccess) {
+        onSuccess(resultado);
+      }
+      
       handleClose();
     } catch (error) {
-      console.error('Error guardando compra:', error);
+      console.error('❌ Error guardando compra:', error);
       setErrors({ 
         general: error.message || 'Error al guardar la compra. Intenta nuevamente.' 
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [formData, totalCalculado, mode, compra, validarFormulario, onSuccess]);
 
-  const handleClose = () => {
+  // Handler optimizado para cerrar dialog
+  const handleClose = useCallback(() => {
+    // Limpiar timeouts
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    
+    // Resetear estados
     setFormData({
       proveedor_id: '',
       fecha: new Date().toISOString().split('T')[0],
@@ -354,18 +440,22 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
     });
     setErrors({});
     setSubmitAttempted(false);
+    isInitializedRef.current = false;
+    
     onClose();
-  };
+  }, [onClose]);
 
-  const formatCurrency = (amount) => {
+  // Función optimizada para formatear moneda
+  const formatCurrency = useCallback((amount) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2
     }).format(amount || 0);
-  };
+  }, []);
 
-  const dialogVariants = {
+  // Variantes de animación optimizadas
+  const dialogVariants = useMemo(() => ({
     hidden: { opacity: 0, scale: 0.8, y: 50 },
     visible: { 
       opacity: 1, 
@@ -382,7 +472,7 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
       y: 50,
       transition: { duration: 0.2 }
     }
-  };
+  }), []);
 
   return (
     <AnimatePresence>
@@ -413,7 +503,7 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
             }
           }}
         >
-          {/* Header del diálogo */}
+          {/* Header del diálogo optimizado */}
           <DialogTitle
             sx={{
               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
@@ -489,15 +579,36 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
             )}
 
             {loadingData ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 6 }}>
-                <CircularProgress size={40} />
-                <Typography variant="body2" sx={{ ml: 2 }}>
-                  Cargando datos...
-                </Typography>
+              <Box sx={{ p: 3 }}>
+                {/* Skeleton loading optimizado */}
+                <Card sx={{ mb: 3, borderRadius: 3 }}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Skeleton variant="text" width={200} height={32} sx={{ mb: 3 }} />
+                    <Grid container spacing={3}>
+                      {[...Array(4)].map((_, index) => (
+                        <Grid item xs={12} md={6} key={index}>
+                          <Skeleton variant="rectangular" height={56} sx={{ borderRadius: 2 }} />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </CardContent>
+                </Card>
+                <Card sx={{ mb: 3, borderRadius: 3 }}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Skeleton variant="text" width={200} height={32} sx={{ mb: 3 }} />
+                    <Grid container spacing={2}>
+                      {[...Array(5)].map((_, index) => (
+                        <Grid item xs={12} md={2.4} key={index}>
+                          <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 2 }} />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </CardContent>
+                </Card>
               </Box>
             ) : (
               <Box sx={{ p: 3 }}>
-                {/* Información general */}
+                {/* Información general optimizada */}
                 <Card 
                   sx={{ 
                     mb: 3,
@@ -671,7 +782,7 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
                   </CardContent>
                 </Card>
 
-                {/* Agregar productos */}
+                {/* Agregar productos optimizado */}
                 <Card 
                   sx={{ 
                     mb: 3,
@@ -824,7 +935,7 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
                   </CardContent>
                 </Card>
 
-                {/* Lista de productos */}
+                {/* Lista de productos optimizada */}
                 {formData.detalles.length > 0 && (
                   <Card 
                     sx={{ 
@@ -937,7 +1048,7 @@ const CompraDialog = ({ open, onClose, onSuccess, mode = 'create', compra = null
                         </Table>
                       </TableContainer>
 
-                      {/* Total */}
+                      {/* Total optimizado */}
                       <Box sx={{ p: 3, pt: 2, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Typography variant="h6" sx={{ fontWeight: 600 }}>

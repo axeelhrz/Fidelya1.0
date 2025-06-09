@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -18,6 +18,7 @@ import {
   Link,
   Chip,
   CircularProgress,
+  Backdrop,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -28,6 +29,7 @@ import {
   TrendingUp as TrendingUpIcon,
   Assessment as AssessmentIcon,
   ErrorOutline as ErrorIcon,
+  CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -46,23 +48,31 @@ const ComprasPage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   
-  // Estados para datos
+  // Refs para optimización
+  const isLoadingRef = useRef(false);
+  const lastUpdateRef = useRef(Date.now());
+  const filterTimeoutRef = useRef(null);
+  
+  // Estados para datos optimizados
   const [compras, setCompras] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   
-  // Estados para diálogos
-  const [openCreateDialog, setOpenCreateDialog] = useState(false);
-  const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [openViewDialog, setOpenViewDialog] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [openSuppliersManager, setOpenSuppliersManager] = useState(false);
+  // Estados para diálogos optimizados
+  const [dialogs, setDialogs] = useState({
+    create: false,
+    edit: false,
+    view: false,
+    delete: false,
+    suppliers: false,
+  });
   const [selectedCompra, setSelectedCompra] = useState(null);
   
-  // Estados para filtros
+  // Estados para filtros optimizados
   const [filtros, setFiltros] = useState({
     proveedor_id: '',
     fecha_inicio: '',
@@ -74,8 +84,15 @@ const ComprasPage = () => {
   // Estado para SpeedDial
   const [speedDialOpen, setSpeedDialOpen] = useState(false);
 
-  // Cargar datos con useCallback para evitar re-renders innecesarios
-  const cargarCompras = useCallback(async (filtrosActuales = filtros) => {
+  // Función optimizada para cargar compras con debouncing
+  const cargarCompras = useCallback(async (filtrosActuales = filtros, force = false) => {
+    // Evitar múltiples cargas simultáneas
+    if (isLoadingRef.current && !force) {
+      console.log('🔄 Carga ya en progreso, omitiendo...');
+      return;
+    }
+    
+    isLoadingRef.current = true;
     setLoading(true);
     setError(null);
     
@@ -85,6 +102,7 @@ const ComprasPage = () => {
       
       if (Array.isArray(comprasData)) {
         setCompras(comprasData);
+        lastUpdateRef.current = Date.now();
         console.log('✅ Compras cargadas exitosamente:', comprasData.length);
       } else {
         console.warn('⚠️ Datos de compras no válidos:', comprasData);
@@ -96,9 +114,11 @@ const ComprasPage = () => {
       setCompras([]);
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
   }, [filtros]);
 
+  // Función optimizada para cargar estadísticas
   const cargarEstadisticas = useCallback(async () => {
     setLoadingStats(true);
     
@@ -124,106 +144,138 @@ const ComprasPage = () => {
     }
   }, []);
 
-  // Cargar todos los datos
-  const cargarDatos = useCallback(async () => {
-    await Promise.all([
-      cargarCompras(),
+  // Función optimizada para cargar todos los datos
+  const cargarDatos = useCallback(async (force = false) => {
+    const promises = [
+      cargarCompras(filtros, force),
       cargarEstadisticas()
-    ]);
-  }, [cargarCompras, cargarEstadisticas]);
+    ];
+    
+    await Promise.allSettled(promises);
+  }, [cargarCompras, cargarEstadisticas, filtros]);
+
+  // Función optimizada para refrescar datos
+  const refrescarDatos = useCallback(async () => {
+    setRefreshing(true);
+    
+    try {
+      // Limpiar cache antes de refrescar
+      purchaseService.limpiarCache();
+      await cargarDatos(true);
+      setSuccess('Datos actualizados correctamente');
+    } catch (error) {
+      console.error('❌ Error refrescando datos:', error);
+      setError('Error al actualizar los datos');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [cargarDatos]);
 
   // Efecto para cargar datos iniciales
   useEffect(() => {
     cargarDatos();
   }, [cargarDatos]);
 
-  // Efecto para recargar compras cuando cambian los filtros
+  // Efecto optimizado para recargar compras cuando cambian los filtros con debouncing
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      cargarCompras(filtros);
-    }, 300); // Debounce de 300ms
+    if (filterTimeoutRef.current) {
+      clearTimeout(filterTimeoutRef.current);
+    }
 
-    return () => clearTimeout(timeoutId);
+    filterTimeoutRef.current = setTimeout(() => {
+      cargarCompras(filtros);
+    }, 500); // Debounce de 500ms
+
+    return () => {
+      if (filterTimeoutRef.current) {
+        clearTimeout(filterTimeoutRef.current);
+      }
+    };
   }, [filtros, cargarCompras]);
+
+  // Limpiar timeouts al desmontar
+  useEffect(() => {
+    return () => {
+      if (filterTimeoutRef.current) {
+        clearTimeout(filterTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Memoizar estadísticas calculadas
   const statsCalculadas = useMemo(() => {
-    if (!Array.isArray(compras)) return { total: 0, sinFiltros: 0 };
+    if (!Array.isArray(compras)) return { total: 0, sinFiltros: 0, totalInvertido: 0 };
     
     return {
       total: compras.length,
-      sinFiltros: compras.length, // En un caso real, esto vendría del backend
+      sinFiltros: compras.length,
       totalInvertido: compras.reduce((sum, compra) => sum + (parseFloat(compra.total) || 0), 0),
     };
   }, [compras]);
 
-  // Handlers para diálogos
-  const handleCreateCompra = useCallback(() => {
+  // Handlers optimizados para diálogos
+  const openDialog = useCallback((dialogType, compra = null) => {
+    setSelectedCompra(compra);
+    setDialogs(prev => ({ ...prev, [dialogType]: true }));
+    setSpeedDialOpen(false);
+  }, []);
+
+  const closeDialog = useCallback((dialogType) => {
+    setDialogs(prev => ({ ...prev, [dialogType]: false }));
     setSelectedCompra(null);
-    setOpenCreateDialog(true);
-    setSpeedDialOpen(false);
   }, []);
 
-  const handleEditCompra = useCallback((compra) => {
-    setSelectedCompra(compra);
-    setOpenEditDialog(true);
-  }, []);
+  // Handlers específicos para cada acción
+  const handleCreateCompra = useCallback(() => openDialog('create'), [openDialog]);
+  const handleEditCompra = useCallback((compra) => openDialog('edit', compra), [openDialog]);
+  const handleViewCompra = useCallback((compra) => openDialog('view', compra), [openDialog]);
+  const handleDeleteCompra = useCallback((compra) => openDialog('delete', compra), [openDialog]);
+  const handleOpenSuppliersManager = useCallback(() => openDialog('suppliers'), [openDialog]);
 
-  const handleViewCompra = useCallback((compra) => {
-    setSelectedCompra(compra);
-    setOpenViewDialog(true);
-  }, []);
-
-  const handleDeleteCompra = useCallback((compra) => {
-    setSelectedCompra(compra);
-    setOpenDeleteDialog(true);
-  }, []);
-
-  const handleOpenSuppliersManager = useCallback(() => {
-    setOpenSuppliersManager(true);
-    setSpeedDialOpen(false);
-  }, []);
-
-  // Handlers para eventos de éxito
-  const handleCompraCreated = useCallback(async () => {
-    setOpenCreateDialog(false);
+  // Handlers optimizados para eventos de éxito
+  const handleCompraCreated = useCallback(async (nuevaCompra) => {
+    closeDialog('create');
     setSuccess('Compra registrada exitosamente');
-    await cargarDatos();
-  }, [cargarDatos]);
+    
+    // Actualizar datos de forma optimizada
+    await Promise.allSettled([
+      cargarCompras(filtros, true),
+      cargarEstadisticas()
+    ]);
+  }, [closeDialog, cargarCompras, cargarEstadisticas, filtros]);
 
-  const handleCompraUpdated = useCallback(async () => {
-    setOpenEditDialog(false);
+  const handleCompraUpdated = useCallback(async (compraActualizada) => {
+    closeDialog('edit');
     setSuccess('Compra actualizada exitosamente');
-    await cargarDatos();
-  }, [cargarDatos]);
+    
+    // Actualizar datos de forma optimizada
+    await Promise.allSettled([
+      cargarCompras(filtros, true),
+      cargarEstadisticas()
+    ]);
+  }, [closeDialog, cargarCompras, cargarEstadisticas, filtros]);
 
   const handleCompraDeleted = useCallback(async () => {
-    setOpenDeleteDialog(false);
+    closeDialog('delete');
     setSuccess('Compra eliminada exitosamente');
-    await cargarDatos();
-  }, [cargarDatos]);
+    
+    // Actualizar datos de forma optimizada
+    await Promise.allSettled([
+      cargarCompras(filtros, true),
+      cargarEstadisticas()
+    ]);
+  }, [closeDialog, cargarCompras, cargarEstadisticas, filtros]);
 
-  // Handler para cambios de filtros
+  // Handler optimizado para cambios de filtros
   const handleFiltrosChange = useCallback((nuevosFiltros) => {
     setFiltros(nuevosFiltros);
   }, []);
 
   // Handlers para cerrar notificaciones
-  const handleCloseError = useCallback(() => {
-    setError(null);
-  }, []);
+  const handleCloseError = useCallback(() => setError(null), []);
+  const handleCloseSuccess = useCallback(() => setSuccess(null), []);
 
-  const handleCloseSuccess = useCallback(() => {
-    setSuccess(null);
-  }, []);
-
-  // Handler para refrescar datos
-  const handleRefreshData = useCallback(async () => {
-    setSpeedDialOpen(false);
-    await cargarDatos();
-  }, [cargarDatos]);
-
-  // Configuración del SpeedDial
+  // Configuración optimizada del SpeedDial
   const speedDialActions = useMemo(() => [
     {
       icon: <AddIcon />,
@@ -238,12 +290,12 @@ const ComprasPage = () => {
     {
       icon: <RefreshIcon />,
       name: 'Actualizar Datos',
-      onClick: handleRefreshData,
+      onClick: refrescarDatos,
     },
-  ], [handleCreateCompra, handleOpenSuppliersManager, handleRefreshData]);
+  ], [handleCreateCompra, handleOpenSuppliersManager, refrescarDatos]);
 
-  // Variantes de animación
-  const containerVariants = {
+  // Variantes de animación optimizadas
+  const containerVariants = useMemo(() => ({
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -252,9 +304,9 @@ const ComprasPage = () => {
         staggerChildren: 0.1
       }
     }
-  };
+  }), []);
 
-  const itemVariants = {
+  const itemVariants = useMemo(() => ({
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
@@ -264,7 +316,7 @@ const ComprasPage = () => {
         ease: [0.4, 0, 0.2, 1]
       }
     }
-  };
+  }), []);
 
   return (
     <Box 
@@ -284,13 +336,30 @@ const ComprasPage = () => {
         }
       }}
     >
+      {/* Backdrop para operaciones de carga */}
+      <Backdrop
+        sx={{ 
+          color: '#fff', 
+          zIndex: theme.zIndex.drawer + 1,
+          backdropFilter: 'blur(4px)',
+        }}
+        open={refreshing}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <CircularProgress color="inherit" size={60} />
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Actualizando datos...
+          </Typography>
+        </Box>
+      </Backdrop>
+
       <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1, py: 3 }}>
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          {/* Header con Breadcrumbs */}
+          {/* Header optimizado con Breadcrumbs */}
           <motion.div variants={itemVariants}>
             <Box sx={{ mb: 4 }}>
               <Breadcrumbs 
@@ -374,6 +443,7 @@ const ComprasPage = () => {
                     variant="contained"
                     startIcon={<AddIcon />}
                     onClick={handleCreateCompra}
+                    disabled={loading || refreshing}
                     sx={{
                       borderRadius: 3,
                       px: 3,
@@ -386,6 +456,10 @@ const ComprasPage = () => {
                         transform: 'translateY(-2px)',
                         boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
                       },
+                      '&:disabled': {
+                        background: alpha(theme.palette.grey[400], 0.3),
+                        transform: 'none',
+                      },
                       transition: 'all 0.3s ease',
                     }}
                   >
@@ -396,7 +470,7 @@ const ComprasPage = () => {
             </Box>
           </motion.div>
 
-          {/* Estadísticas */}
+          {/* Estadísticas optimizadas */}
           <motion.div variants={itemVariants}>
             <ComprasStats 
               estadisticas={estadisticas} 
@@ -404,7 +478,7 @@ const ComprasPage = () => {
             />
           </motion.div>
 
-          {/* Filtros */}
+          {/* Filtros optimizados */}
           <motion.div variants={itemVariants}>
             <Paper 
               sx={{ 
@@ -420,29 +494,12 @@ const ComprasPage = () => {
               <ComprasFilters 
                 filtros={filtros}
                 onFiltrosChange={handleFiltrosChange}
-                loading={loading}
+                loading={loading || refreshing}
               />
             </Paper>
           </motion.div>
 
-          {/* Indicador de carga global */}
-          {(loading || loadingStats) && (
-            <motion.div 
-              variants={itemVariants}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
-                <CircularProgress size={40} sx={{ mr: 2 }} />
-                <Typography variant="body1" color="text.secondary">
-                  Cargando datos de compras...
-                </Typography>
-              </Box>
-            </motion.div>
-          )}
-
-          {/* Tabla de compras */}
+          {/* Tabla de compras optimizada */}
           <motion.div variants={itemVariants}>
             <Paper 
               sx={{ 
@@ -464,7 +521,7 @@ const ComprasPage = () => {
             </Paper>
           </motion.div>
 
-          {/* Mensaje de estado cuando no hay datos */}
+          {/* Mensaje optimizado cuando no hay datos */}
           {!loading && !loadingStats && compras.length === 0 && !error && (
             <motion.div 
               variants={itemVariants}
@@ -525,7 +582,7 @@ const ComprasPage = () => {
         </motion.div>
       </Container>
 
-      {/* SpeedDial para acciones rápidas */}
+      {/* SpeedDial optimizado para acciones rápidas */}
       <SpeedDial
         ariaLabel="Acciones de compras"
         sx={{ 
@@ -545,6 +602,7 @@ const ComprasPage = () => {
         open={speedDialOpen}
         onOpen={() => setSpeedDialOpen(true)}
         onClose={() => setSpeedDialOpen(false)}
+        hidden={loading || refreshing}
       >
         {speedDialActions.map((action) => (
           <SpeedDialAction
@@ -581,43 +639,43 @@ const ComprasPage = () => {
         <AddIcon />
       </Fab>
 
-      {/* Diálogos */}
+      {/* Diálogos optimizados */}
       <CompraDialog
-        open={openCreateDialog}
-        onClose={() => setOpenCreateDialog(false)}
+        open={dialogs.create}
+        onClose={() => closeDialog('create')}
         onSuccess={handleCompraCreated}
         mode="create"
       />
 
       <CompraDialog
-        open={openEditDialog}
-        onClose={() => setOpenEditDialog(false)}
+        open={dialogs.edit}
+        onClose={() => closeDialog('edit')}
         onSuccess={handleCompraUpdated}
         mode="edit"
         compra={selectedCompra}
       />
 
       <CompraViewDialog
-        open={openViewDialog}
-        onClose={() => setOpenViewDialog(false)}
+        open={dialogs.view}
+        onClose={() => closeDialog('view')}
         compra={selectedCompra}
         onEdit={handleEditCompra}
       />
 
       <DeleteCompraDialog
-        open={openDeleteDialog}
-        onClose={() => setOpenDeleteDialog(false)}
+        open={dialogs.delete}
+        onClose={() => closeDialog('delete')}
         onSuccess={handleCompraDeleted}
         compra={selectedCompra}
       />
 
       <SuppliersManager
-        open={openSuppliersManager}
-        onClose={() => setOpenSuppliersManager(false)}
+        open={dialogs.suppliers}
+        onClose={() => closeDialog('suppliers')}
         onProveedorUpdated={cargarEstadisticas}
       />
 
-      {/* Snackbars para notificaciones */}
+      {/* Snackbars optimizados para notificaciones */}
       <AnimatePresence>
         {error && (
           <Snackbar
@@ -669,6 +727,7 @@ const ComprasPage = () => {
               <Alert 
                 onClose={handleCloseSuccess} 
                 severity="success" 
+                icon={<CheckCircleIcon />}
                 sx={{ 
                   width: '100%',
                   borderRadius: 3,
