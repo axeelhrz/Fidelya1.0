@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   ChefHat, 
-  Download, 
   Calendar, 
   ShoppingBag, 
   Coffee, 
@@ -25,7 +24,7 @@ import {
 } from '@/components/ui/select'
 import { AdminOrderView } from '@/types/adminOrder'
 import { KitchenPdfUtils } from '@/lib/kitchenPdfUtils'
-import { format, parseISO, addDays, startOfWeek } from 'date-fns'
+import { format, parseISO, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useToast } from '@/hooks/use-toast'
 
