@@ -26,6 +26,15 @@ import { DefaultColacionesService } from './defaultColacionesService'
 import { format, startOfWeek, addDays, addWeeks, subWeeks } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+// Interface for diagnostic results
+interface DiagnosticResult {
+  totalItems: number
+  publishedItems: number
+  activeItems: number
+  issues: string[]
+  recommendations: string[]
+}
+
 export class AdminMenuService {
   private static readonly COLLECTION_NAME = 'menus'
 
@@ -199,6 +208,217 @@ export class AdminMenuService {
       days,
       isPublished,
       totalItems: items.length
+    }
+  }
+
+  // Diagnosticar problemas de publicación de colaciones
+  static async diagnosePublicationIssues(weekStart: string): Promise<DiagnosticResult> {
+    try {
+      console.log(`🔍 Diagnosing publication issues for week ${weekStart}`)
+
+      const menu = await this.getWeeklyMenu(weekStart)
+      const issues: string[] = []
+      const recommendations: string[] = []
+
+      if (!menu) {
+        issues.push('No se encontraron menús para esta semana')
+        recommendations.push('Crear colaciones predeterminadas para la semana')
+        return {
+          totalItems: 0,
+          publishedItems: 0,
+          activeItems: 0,
+          issues,
+          recommendations
+        }
+      }
+
+      const allItems = menu.days.flatMap(day => [...day.almuerzos, ...day.colaciones])
+      const colaciones = allItems.filter(item => item.type === 'colacion')
+      const publishedColaciones = colaciones.filter(item => item.published)
+      const activeColaciones = colaciones.filter(item => item.active)
+
+      // Verificar si hay colaciones
+      if (colaciones.length === 0) {
+        issues.push('No hay colaciones configuradas para esta semana')
+        recommendations.push('Crear colaciones predeterminadas')
+      } else {
+        // Verificar publicación
+        if (publishedColaciones.length === 0) {
+          issues.push('Ninguna colación está publicada')
+          recommendations.push('Publicar las colaciones para que estén disponibles para los usuarios')
+        } else if (publishedColaciones.length < colaciones.length) {
+          issues.push(`Solo ${publishedColaciones.length} de ${colaciones.length} colaciones están publicadas`)
+          recommendations.push('Revisar y publicar todas las colaciones necesarias')
+        }
+
+        // Verificar estado activo
+        if (activeColaciones.length < colaciones.length) {
+          const inactiveCount = colaciones.length - activeColaciones.length
+          issues.push(`${inactiveCount} colaciones están marcadas como inactivas`)
+          recommendations.push('Activar las colaciones que deben estar disponibles')
+        }
+
+        // Verificar cobertura de días
+        const daysWithColaciones = menu.days.filter(day => day.colaciones.length > 0).length
+        if (daysWithColaciones < 5) { // Lunes a viernes
+          issues.push(`Solo ${daysWithColaciones} de 5 días laborales tienen colaciones`)
+          recommendations.push('Asegurar que todos los días laborales tengan colaciones disponibles')
+        }
+
+        // Verificar consistencia de colaciones por día
+        const defaultColaciones = await DefaultColacionesService.getDefaultColaciones()
+        const activeDefaults = defaultColaciones.filter(col => col.active)
+        
+        for (const day of menu.days.slice(0, 5)) { // Solo días laborales
+          if (day.colaciones.length > 0 && day.colaciones.length < activeDefaults.length) {
+            issues.push(`${day.dayName} tiene menos colaciones de las esperadas (${day.colaciones.length}/${activeDefaults.length})`)
+            recommendations.push(`Completar las colaciones faltantes para ${day.dayName}`)
+          }
+        }
+      }
+
+      // Si no hay problemas, agregar recomendaciones positivas
+      if (issues.length === 0) {
+        recommendations.push('Las colaciones están correctamente configuradas y publicadas')
+        recommendations.push('Verificar periódicamente que las colaciones sigan activas')
+      }
+
+      return {
+        totalItems: allItems.length,
+        publishedItems: allItems.filter(item => item.published).length,
+        activeItems: allItems.filter(item => item.active).length,
+        issues,
+        recommendations
+      }
+    } catch (error) {
+      console.error('Error diagnosing publication issues:', error)
+      return {
+        totalItems: 0,
+        publishedItems: 0,
+        activeItems: 0,
+        issues: ['Error al ejecutar el diagnóstico'],
+        recommendations: ['Intentar nuevamente o contactar al administrador del sistema']
+      }
+    }
+  }
+
+  // Corregir colaciones predeterminadas no publicadas
+  static async fixUnpublishedDefaultColaciones(weekStart: string): Promise<MenuOperationResult<void>> {
+    try {
+      console.log(`🔧 Fixing unpublished default colaciones for week ${weekStart}`)
+
+      const menu = await this.getWeeklyMenu(weekStart)
+      
+      if (!menu) {
+        // Si no hay menú, crear colaciones predeterminadas
+        const createResult = await this.createDefaultColacionesWeek(weekStart)
+        if (!createResult.success) {
+          return {
+            success: false,
+            message: createResult.message,
+            errors: createResult.errors
+          }
+        }
+        
+        // Publicar las colaciones recién creadas
+        const publishResult = await this.publishColacionesForWeek(weekStart)
+        if (!publishResult.success) {
+          return publishResult
+        }
+
+        return {
+          success: true,
+          message: 'Colaciones predeterminadas creadas y publicadas exitosamente'
+        }
+      }
+
+      const colaciones = menu.days.flatMap(day => day.colaciones)
+      const unpublishedColaciones = colaciones.filter(item => !item.published)
+
+      if (unpublishedColaciones.length === 0) {
+        return {
+          success: true,
+          message: 'Todas las colaciones ya están publicadas'
+        }
+      }
+
+      // Publicar colaciones no publicadas
+      const batch = writeBatch(db)
+      const now = new Date()
+
+      for (const colacion of unpublishedColaciones) {
+        if (!colacion.id) {
+          console.warn('Skipping colacion without ID:', colacion)
+          continue
+        }
+        const itemRef = doc(db, this.COLLECTION_NAME, colacion.id)
+        batch.update(itemRef, {
+          published: true,
+          active: true, // También activar si no está activo
+          updatedAt: Timestamp.fromDate(now)
+        })
+      }
+
+      await batch.commit()
+
+      return {
+        success: true,
+        message: `${unpublishedColaciones.length} colaciones publicadas exitosamente`
+      }
+    } catch (error) {
+      console.error('Error fixing unpublished default colaciones:', error)
+      return {
+        success: false,
+        message: 'Error al corregir las colaciones no publicadas',
+        errors: [{ field: 'general', message: 'Error interno del servidor' }]
+      }
+    }
+  }
+
+  // Helper method to publish all colaciones for a week
+  private static async publishColacionesForWeek(weekStart: string): Promise<MenuOperationResult<void>> {
+    try {
+      const menusRef = collection(db, this.COLLECTION_NAME)
+      const colacionesQuery = query(
+        menusRef,
+        where('weekStart', '==', weekStart),
+        where('type', '==', 'colacion')
+      )
+
+      const snapshot = await getDocs(colacionesQuery)
+      
+      if (snapshot.empty) {
+        return {
+          success: false,
+          message: 'No se encontraron colaciones para publicar',
+          errors: [{ field: 'weekStart', message: 'Sin colaciones' }]
+        }
+      }
+
+      const batch = writeBatch(db)
+      const now = new Date()
+
+      snapshot.forEach((doc) => {
+        batch.update(doc.ref, {
+          published: true,
+          active: true,
+          updatedAt: Timestamp.fromDate(now)
+        })
+      })
+
+      await batch.commit()
+
+      return {
+        success: true,
+        message: `${snapshot.size} colaciones publicadas exitosamente`
+      }
+    } catch (error) {
+      console.error('Error publishing colaciones for week:', error)
+      return {
+        success: false,
+        message: 'Error al publicar las colaciones',
+        errors: [{ field: 'general', message: 'Error interno del servidor' }]
+      }
     }
   }
 
