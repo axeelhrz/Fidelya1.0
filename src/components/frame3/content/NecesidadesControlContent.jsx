@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import styles from "./NecesidadesControlContent.module.css";
 
 function NecesidadesControlContent() {
 	const [selectedItems, setSelectedItems] = useState([]);
+	const [activeModal, setActiveModal] = useState(null);
+	const [modalData, setModalData] = useState({
+		selectedOptions: [],
+		selectedPEC: null,
+		image: null,
+		comments: ""
+	});
+	const fileInputRef = useRef(null);
 
 	const categories = [
 		{
@@ -13,11 +21,65 @@ function NecesidadesControlContent() {
 			subtitle: 'Técnica de Análisis Sistemático de las Causas',
 			color: '#dc2626',
 			items: [
-				{ id: 1, text: 'Capacidad Física / Fisiológica Inadecuada' },
-				{ id: 2, text: 'Capacidad Mental / Psicológica Inadecuada' },
-				{ id: 3, text: 'Tensión Física o Fisiológica' },
-				{ id: 4, text: 'Tensión Mental o Psicológica' },
-				{ id: 5, text: 'Falta de Conocimiento' },
+				{ 
+					id: 1, 
+					text: 'Capacidad Física / Fisiológica Inadecuada',
+					options: [
+						"Altura, peso, talla, fuerza, alcance, etc. inadecuados",
+						"Capacidad de movimiento corporal limitada",
+						"Capacidad limitada para mantenerse en determinadas posiciones corporales",
+						"Limitaciones sensoriales (vista, oído, tacto, gusto, olfato, equilibrio)",
+						"Incapacidad respiratoria o circulatoria",
+						"Otras deficiencias físicas permanentes",
+						"Deficiencias temporales"
+					]
+				},
+				{ 
+					id: 2, 
+					text: 'Capacidad Mental / Psicológica Inadecuada',
+					options: [
+						"Temores y fobias",
+						"Problemas emocionales",
+						"Enfermedad mental",
+						"Nivel de inteligencia",
+						"Incapacidad de comprensión",
+						"Falta de juicio",
+						"Deficiencias de coordinación"
+					]
+				},
+				{ 
+					id: 3, 
+					text: 'Tensión Física o Fisiológica',
+					options: [
+						"Lesión o enfermedad",
+						"Fatiga debido a la carga o duración de las tareas",
+						"Fatiga debido a la falta de descanso",
+						"Fatiga debido a sobrecarga sensorial",
+						"Exposición a riesgos contra la salud"
+					]
+				},
+				{ 
+					id: 4, 
+					text: 'Tensión Mental o Psicológica',
+					options: [
+						"Sobrecarga emocional",
+						"Fatiga debido a la carga o las exigencias mentales de la tarea",
+						"Preocupaciones debido a problemas",
+						"Frustración",
+						"Enfermedad mental"
+					]
+				},
+				{ 
+					id: 5, 
+					text: 'Falta de Conocimiento',
+					options: [
+						"Falta de experiencia",
+						"Orientación deficiente",
+						"Entrenamiento inicial inadecuado",
+						"Reentrenamiento insuficiente",
+						"Órdenes mal interpretadas"
+					]
+				},
 			]
 		},
 		{
@@ -26,11 +88,61 @@ function NecesidadesControlContent() {
 			subtitle: '',
 			color: '#eab308',
 			items: [
-				{ id: 6, text: 'Golpeada Contra (chocar contra algo)' },
-				{ id: 7, text: 'Golpeado por (Impactado por objeto en movimiento)' },
-				{ id: 8, text: 'Caída a un nivel más bajo' },
-				{ id: 9, text: 'Caída en el mismo nivel' },
-				{ id: 10, text: 'Atrapado (Puntos de Pellizco y Mordida)' },
+				{ 
+					id: 6, 
+					text: 'Golpeada Contra (chocar contra algo)',
+					options: [
+						"Golpeado contra objeto estacionario",
+						"Golpeado contra objeto en movimiento",
+						"Golpeado contra superficie áspera",
+						"Golpeado contra objeto punzante",
+						"Golpeado contra objeto caliente"
+					]
+				},
+				{ 
+					id: 7, 
+					text: 'Golpeado por (Impactado por objeto en movimiento)',
+					options: [
+						"Objeto volador",
+						"Objeto que cae",
+						"Objeto lanzado",
+						"Partícula en el ojo",
+						"Objeto oscilante"
+					]
+				},
+				{ 
+					id: 8, 
+					text: 'Caída a un nivel más bajo',
+					options: [
+						"Caída desde escalera",
+						"Caída desde andamio",
+						"Caída desde techo",
+						"Caída en excavación",
+						"Caída desde vehículo"
+					]
+				},
+				{ 
+					id: 9, 
+					text: 'Caída en el mismo nivel',
+					options: [
+						"Resbalón y caída",
+						"Tropezón y caída",
+						"Caída por pérdida de equilibrio",
+						"Caída por superficie irregular",
+						"Caída por obstáculo"
+					]
+				},
+				{ 
+					id: 10, 
+					text: 'Atrapado (Puntos de Pellizco y Mordida)',
+					options: [
+						"Atrapado entre objetos",
+						"Atrapado bajo objeto",
+						"Atrapado en maquinaria",
+						"Pellizco en punto de operación",
+						"Mordida de equipo"
+					]
+				},
 			]
 		},
 		{
@@ -39,11 +151,61 @@ function NecesidadesControlContent() {
 			subtitle: '',
 			color: '#eab308',
 			items: [
-				{ id: 11, text: 'Operar equipos sin autorización' },
-				{ id: 12, text: 'Omitir el uso de equipos de seguridad personal' },
-				{ id: 13, text: 'Omitir el uso de dispositivos de seguridad' },
-				{ id: 14, text: 'Operar a velocidad inadecuada' },
-				{ id: 15, text: 'Poner fuera de servicio los dispositivos de seguridad' },
+				{ 
+					id: 11, 
+					text: 'Operar equipos sin autorización',
+					options: [
+						"Operar sin permiso",
+						"Operar sin capacitación",
+						"Operar fuera del horario autorizado",
+						"Operar equipo restringido",
+						"Operar sin supervisión requerida"
+					]
+				},
+				{ 
+					id: 12, 
+					text: 'Omitir el uso de equipos de seguridad personal',
+					options: [
+						"No usar casco",
+						"No usar guantes",
+						"No usar gafas de seguridad",
+						"No usar calzado de seguridad",
+						"No usar arnés de seguridad"
+					]
+				},
+				{ 
+					id: 13, 
+					text: 'Omitir el uso de dispositivos de seguridad',
+					options: [
+						"Remover guardas de seguridad",
+						"Desactivar sistemas de seguridad",
+						"No usar dispositivos de bloqueo",
+						"Omitir procedimientos de seguridad",
+						"No usar señalización requerida"
+					]
+				},
+				{ 
+					id: 14, 
+					text: 'Operar a velocidad inadecuada',
+					options: [
+						"Operar muy rápido",
+						"Operar muy lento",
+						"No respetar límites de velocidad",
+						"Acelerar inadecuadamente",
+						"Frenar inadecuadamente"
+					]
+				},
+				{ 
+					id: 15, 
+					text: 'Poner fuera de servicio los dispositivos de seguridad',
+					options: [
+						"Desconectar alarmas",
+						"Anular sistemas de protección",
+						"Remover etiquetas de seguridad",
+						"Desactivar interruptores de emergencia",
+						"Modificar dispositivos de seguridad"
+					]
+				},
 			]
 		},
 		{
@@ -52,11 +214,61 @@ function NecesidadesControlContent() {
 			subtitle: '',
 			color: '#eab308',
 			items: [
-				{ id: 16, text: 'Liderazgo y/o Supervisión Deficiente' },
-				{ id: 17, text: 'Ingeniería Inadecuada' },
-				{ id: 18, text: 'Adquisiciones Deficientes' },
-				{ id: 19, text: 'Mantenimiento Deficiente' },
-				{ id: 20, text: 'Herramientas y Equipos Inadecuados' },
+				{ 
+					id: 16, 
+					text: 'Liderazgo y/o Supervisión Deficiente',
+					options: [
+						"Relaciones jerárquicas poco claras",
+						"Asignación de responsabilidades poco clara",
+						"Delegación inadecuada o insuficiente",
+						"Definición inadecuada de políticas",
+						"Programación inadecuada del trabajo"
+					]
+				},
+				{ 
+					id: 17, 
+					text: 'Ingeniería Inadecuada',
+					options: [
+						"Evaluación inadecuada de exposiciones",
+						"Preocupación inadecuada por factores humanos",
+						"Normas de diseño inadecuadas",
+						"Control de construcciones inadecuado",
+						"Evaluación inadecuada para uso operacional"
+					]
+				},
+				{ 
+					id: 18, 
+					text: 'Adquisiciones Deficientes',
+					options: [
+						"Especificaciones deficientes de requerimientos",
+						"Investigación inadecuada de materiales",
+						"Especificaciones deficientes para vendedores",
+						"Inspecciones de recepción inadecuadas",
+						"Comunicación inadecuada de aspectos de seguridad"
+					]
+				},
+				{ 
+					id: 19, 
+					text: 'Mantenimiento Deficiente',
+					options: [
+						"Aspectos preventivos inadecuados",
+						"Lubricación y servicio inadecuados",
+						"Ajuste/ensamblaje inadecuados",
+						"Limpieza inadecuada",
+						"Comunicación de necesidades inadecuada"
+					]
+				},
+				{ 
+					id: 20, 
+					text: 'Herramientas y Equipos Inadecuados',
+					options: [
+						"Evaluación inadecuada de necesidades",
+						"Preocupación inadecuada por factores humanos",
+						"Normas o especificaciones inadecuadas",
+						"Disponibilidad inadecuada",
+						"Ajustes/reparación/mantenimiento deficientes"
+					]
+				},
 			]
 		},
 		{
@@ -65,22 +277,149 @@ function NecesidadesControlContent() {
 			subtitle: 'Falta de Control',
 			color: '#10b981',
 			items: [
-				{ id: 21, text: 'Programa inadecuado de mantenimiento preventivo' },
-				{ id: 22, text: 'Normas inadecuadas de trabajo' },
-				{ id: 23, text: 'Diseño o mantenimiento inadecuado de las instalaciones' },
-				{ id: 24, text: 'Compras inadecuadas' },
-				{ id: 25, text: 'Mantenimiento inadecuado' },
+				{ 
+					id: 21, 
+					text: 'Programa inadecuado de mantenimiento preventivo',
+					options: [
+						"Falta de programa de mantenimiento",
+						"Frecuencia inadecuada de mantenimiento",
+						"Procedimientos de mantenimiento deficientes",
+						"Personal no calificado para mantenimiento",
+						"Falta de repuestos y herramientas"
+					]
+				},
+				{ 
+					id: 22, 
+					text: 'Normas inadecuadas de trabajo',
+					options: [
+						"Procedimientos de trabajo inexistentes",
+						"Procedimientos desactualizados",
+						"Procedimientos no comunicados",
+						"Falta de entrenamiento en procedimientos",
+						"Procedimientos no aplicados"
+					]
+				},
+				{ 
+					id: 23, 
+					text: 'Diseño o mantenimiento inadecuado de las instalaciones',
+					options: [
+						"Diseño deficiente de instalaciones",
+						"Mantenimiento inadecuado de estructuras",
+						"Falta de señalización",
+						"Iluminación inadecuada",
+						"Ventilación deficiente"
+					]
+				},
+				{ 
+					id: 24, 
+					text: 'Compras inadecuadas',
+					options: [
+						"Especificaciones de compra deficientes",
+						"Evaluación inadecuada de proveedores",
+						"Control de calidad deficiente",
+						"Recepción inadecuada de materiales",
+						"Almacenamiento inadecuado"
+					]
+				},
+				{ 
+					id: 25, 
+					text: 'Mantenimiento inadecuado',
+					options: [
+						"Mantenimiento correctivo deficiente",
+						"Falta de personal de mantenimiento",
+						"Herramientas de mantenimiento inadecuadas",
+						"Repuestos de baja calidad",
+						"Documentación de mantenimiento deficiente"
+					]
+				},
 			]
 		}
 	];
 
-	const handleItemToggle = (itemId) => {
-		setSelectedItems((prev) => {
-			if (prev.includes(itemId)) {
-				return prev.filter((id) => id !== itemId);
-			} else {
-				return [...prev, itemId];
-			}
+	const handleItemClick = (item) => {
+		setActiveModal(item);
+		setModalData({
+			selectedOptions: [],
+			selectedPEC: null,
+			image: null,
+			comments: ""
+		});
+	};
+
+	const handleOptionToggle = (optionIndex) => {
+		setModalData(prev => ({
+			...prev,
+			selectedOptions: prev.selectedOptions.includes(optionIndex)
+				? prev.selectedOptions.filter(i => i !== optionIndex)
+				: [...prev.selectedOptions, optionIndex]
+		}));
+	};
+
+	const handlePECSelect = (pec) => {
+		setModalData(prev => ({
+			...prev,
+			selectedPEC: prev.selectedPEC === pec ? null : pec
+		}));
+	};
+
+	const handleImageUpload = (e) => {
+		const file = e.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				setModalData(prev => ({
+					...prev,
+					image: e.target.result
+				}));
+			};
+			reader.readAsDataURL(file);
+		}
+	};
+
+	const triggerFileInput = () => {
+		fileInputRef.current.click();
+	};
+
+	const removeImage = () => {
+		setModalData(prev => ({
+			...prev,
+			image: null
+		}));
+		fileInputRef.current.value = "";
+	};
+
+	const handleCommentsChange = (e) => {
+		setModalData(prev => ({
+			...prev,
+			comments: e.target.value
+		}));
+	};
+
+	const handleModalConfirm = () => {
+		if (modalData.selectedOptions.length > 0 || modalData.selectedPEC || modalData.image || modalData.comments) {
+			setSelectedItems(prev => {
+				if (!prev.includes(activeModal.id)) {
+					return [...prev, activeModal.id];
+				}
+				return prev;
+			});
+		}
+		setActiveModal(null);
+		setModalData({
+			selectedOptions: [],
+			selectedPEC: null,
+			image: null,
+			comments: ""
+		});
+	};
+
+	const handleModalCancel = () => {
+		setActiveModal(null);
+		setModalData({
+			selectedOptions: [],
+			selectedPEC: null,
+			image: null,
+			comments: ""
 		});
 	};
 
@@ -130,12 +469,12 @@ function NecesidadesControlContent() {
 									className={`${styles.itemButton} ${
 										selectedItems.includes(item.id) ? styles.selected : ""
 									}`}
-									onClick={() => handleItemToggle(item.id)}
+									onClick={() => handleItemClick(item)}
 								>
 									<div className={styles.itemNumber}>{item.id}</div>
 									<div className={styles.itemText}>{item.text}</div>
 									<div className={styles.itemIcon}>
-										{selectedItems.includes(item.id) ? "✓" : "○"}
+										{selectedItems.includes(item.id) ? "✓" : "→"}
 									</div>
 								</button>
 							))}
@@ -143,43 +482,6 @@ function NecesidadesControlContent() {
 					</div>
 				))}
 			</div>
-
-			{selectedItems.length > 0 && (
-				<div className={styles.selectedSummary}>
-					<h3>Elementos Seleccionados ({selectedItems.length})</h3>
-					<div className={styles.selectedGrid}>
-						{selectedItems.map((id) => {
-							// Find the item across all categories
-							let foundItem = null;
-							let foundCategory = null;
-							
-							for (const category of categories) {
-								const item = category.items.find(item => item.id === id);
-								if (item) {
-									foundItem = item;
-									foundCategory = category;
-									break;
-								}
-							}
-							
-							if (!foundItem) return null;
-							
-							return (
-								<div key={id} className={styles.selectedItem}>
-									<div 
-										className={styles.selectedItemHeader}
-										style={{ backgroundColor: foundCategory.color }}
-									>
-										<span className={styles.selectedItemNumber}>{foundItem.id}</span>
-										<span className={styles.selectedItemCategory}>{foundCategory.title}</span>
-									</div>
-									<div className={styles.selectedItemText}>{foundItem.text}</div>
-								</div>
-							);
-						})}
-					</div>
-				</div>
-			)}
 
 			<div className={styles.footer}>
 				<div className={styles.footerContent}>
@@ -199,6 +501,152 @@ function NecesidadesControlContent() {
 					</div>
 				</div>
 			</div>
+
+			{/* Modal */}
+			{activeModal && (
+				<div className={styles.modalOverlay}>
+					<div className={styles.modalContent}>
+						<div className={styles.modalHeader}>
+							<h3 className={styles.modalTitle}>
+								{activeModal.id}. {activeModal.text}
+							</h3>
+							<button 
+								className={styles.modalCloseBtn}
+								onClick={handleModalCancel}
+							>
+								×
+							</button>
+						</div>
+						
+						<div className={styles.modalBody}>
+							{/* P-E-C Selection */}
+							<div className={styles.pecSection}>
+								<h4 className={styles.pecTitle}>Clasificación P-E-C</h4>
+								<div className={styles.pecButtons}>
+									<button
+										className={`${styles.pecButton} ${styles.pecP} ${
+											modalData.selectedPEC === 'P' ? styles.pecSelected : ""
+										}`}
+										onClick={() => handlePECSelect('P')}
+									>
+										P
+									</button>
+									<button
+										className={`${styles.pecButton} ${styles.pecE} ${
+											modalData.selectedPEC === 'E' ? styles.pecSelected : ""
+										}`}
+										onClick={() => handlePECSelect('E')}
+									>
+										E
+									</button>
+									<button
+										className={`${styles.pecButton} ${styles.pecC} ${
+											modalData.selectedPEC === 'C' ? styles.pecSelected : ""
+										}`}
+										onClick={() => handlePECSelect('C')}
+									>
+										C
+									</button>
+								</div>
+							</div>
+
+							{/* Options Selection */}
+							<div className={styles.optionsSection}>
+								<h4 className={styles.optionsTitle}>Seleccione las opciones que aplican:</h4>
+								<div className={styles.modalOptions}>
+									{activeModal.options.map((option, index) => (
+										<button
+											key={index}
+											className={`${styles.modalOption} ${
+												modalData.selectedOptions.includes(index) ? styles.modalOptionSelected : ""
+											}`}
+											onClick={() => handleOptionToggle(index)}
+										>
+											<div className={styles.modalOptionIcon}>
+												{modalData.selectedOptions.includes(index) ? "✓" : "○"}
+											</div>
+											<span className={styles.modalOptionText}>{option}</span>
+										</button>
+									))}
+								</div>
+							</div>
+
+							{/* Image Upload */}
+							<div className={styles.imageSection}>
+								<h4 className={styles.imageTitle}>Imagen (opcional)</h4>
+								<input
+									type="file"
+									ref={fileInputRef}
+									onChange={handleImageUpload}
+									accept="image/*"
+									className={styles.fileInput}
+								/>
+
+								{modalData.image ? (
+									<div className={styles.imagePreviewContainer}>
+										<img
+											src={modalData.image}
+											alt="Preview"
+											className={styles.imagePreview}
+										/>
+										<button className={styles.removeImageBtn} onClick={removeImage}>
+											×
+										</button>
+									</div>
+								) : (
+									<div
+										className={styles.uploadPlaceholder}
+										onClick={triggerFileInput}
+									>
+										<div className={styles.cameraIcon}>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="2"
+												strokeLinecap="round"
+												strokeLinejoin="round"
+											>
+												<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+												<circle cx="12" cy="13" r="4"></circle>
+											</svg>
+										</div>
+										<p>Haga clic para agregar imagen</p>
+									</div>
+								)}
+							</div>
+
+							{/* Comments */}
+							<div className={styles.commentsSection}>
+								<h4 className={styles.commentsTitle}>Comentarios</h4>
+								<textarea
+									className={styles.commentsTextarea}
+									value={modalData.comments}
+									onChange={handleCommentsChange}
+									placeholder="Escriba sus comentarios aquí..."
+									rows={4}
+								></textarea>
+							</div>
+						</div>
+						
+						<div className={styles.modalFooter}>
+							<button 
+								className={styles.modalCancelBtn}
+								onClick={handleModalCancel}
+							>
+								Cancelar
+							</button>
+							<button 
+								className={styles.modalConfirmBtn}
+								onClick={handleModalConfirm}
+							>
+								Confirmar
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
