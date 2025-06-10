@@ -2748,7 +2748,7 @@ if __name__ == '__main__':
         logger.error("❌ Error configurando base de datos")
     
     # Ejecutar servidor
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))
     debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     
     logger.info(f"🌐 Servidor ejecutándose en puerto {port}")
