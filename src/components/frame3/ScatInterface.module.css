@@ -1,0 +1,119 @@
+.container {
+    min-height: 100vh;
+    background-color: #4b5563;
+    position: relative;
+  }
+  
+  .header {
+    background-color: #1f2937;
+    padding: 1.5rem 2rem;
+  }
+  
+  .headerContent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .title {
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  
+  .subtitle {
+    color: #eab308;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  
+  .navigationContainer {
+    padding: 1.5rem 2rem;
+  }
+  
+  .navigationButtons {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1rem;
+  }
+  
+  @media (min-width: 768px) {
+    .navigationButtons {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .navigationButtons {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+  
+  .navButton {
+    height: auto;
+    padding: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+    white-space: normal;
+    line-height: 1.25;
+    background-color: #4b5563;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .navButton:hover {
+    background-color: #374151;
+  }
+  
+  .activeButton {
+    background-color: #eab308;
+    color: black;
+  }
+  
+  .activeButton:hover {
+    background-color: #ca8a04;
+  }
+  
+  .contentArea {
+    padding: 2rem;
+  }
+  
+  .bottomNav {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+  }
+  
+  .iconButton {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    background-color: white;
+    transition: background-color 0.2s;
+  }
+  
+  .iconButton:hover {
+    background-color: #f3f4f6;
+  }
+  
+  .darkButton {
+    background-color: #4b5563;
+    color: white;
+  }
+  
+  .darkButton:hover {
+    background-color: #374151;
+  }
+  

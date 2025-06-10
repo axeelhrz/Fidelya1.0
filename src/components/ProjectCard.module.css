@@ -1,0 +1,100 @@
+.card {
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    background-color: #374151;
+    min-height: 100px;
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  
+  .card.highlighted {
+    background-color: #d97706;
+  }
+  
+  .content {
+    color: white;
+    font-weight: 600;
+  }
+  
+  .title,
+  .subtitle {
+    font-size: 0.75rem;
+  }
+  
+  .projectName {
+    font-size: 0.75rem;
+    color: #d1d5db;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 150px;
+  }
+  
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+    align-self: flex-end;
+  }
+  
+  .actionButton {
+    padding: 0.375rem;
+    background-color: #4b5563;
+    border: none;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+    cursor: pointer;
+    color: white;
+  }
+  
+  .actionButton:hover {
+    background-color: #6b7280;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Responsive styles */
+  @media (min-width: 640px) {
+    .card {
+      padding: 1rem;
+      flex-direction: row;
+      align-items: center;
+      gap: 0;
+      min-height: 80px;
+    }
+  
+    .title,
+    .subtitle {
+      font-size: 0.875rem;
+    }
+  
+    .projectName {
+      max-width: 200px;
+    }
+  
+    .actions {
+      align-self: auto;
+    }
+  
+    .actionButton {
+      padding: 0.5rem;
+    }
+  
+    .actionButton svg {
+      width: 1rem;
+      height: 1rem;
+    }
+  }
