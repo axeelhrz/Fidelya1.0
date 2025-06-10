@@ -153,8 +153,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       onClick={onClick}
     >
       {/* Content */}
-      <div className="flex items-center justify-between h-full">
-        <div className="flex-1">
+      <div className="flex items-center h-full">
+        <div className="flex-1 pr-4">
           <h3 className={`font-bold text-sm ${isHighlighted ? 'text-black' : 'text-white'}`}>
             {title}
           </h3>
@@ -163,8 +163,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </p>
         </div>
         
-        {/* Action Buttons */}
-        <div className="flex gap-1">
+        {/* Action Buttons - Positioned more to the right but not at the extreme */}
+        <div className="flex gap-1 ml-auto mr-2">
           <button 
             className={`
               w-8 h-8 rounded-md flex items-center justify-center transition-all duration-200
@@ -176,7 +176,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             `}
             onClick={(e) => {
               e.stopPropagation();
-              onAnalytics?.();
+              console.log('Análisis clicked');
             }}
             title="Análisis"
           >
