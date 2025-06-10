@@ -83,8 +83,8 @@ const NuevoProyecto: React.FC = () => {
   };
 
   const handleContinue = () => {
-    // Aquí puedes agregar la lógica para continuar al siguiente paso
-    console.log('Continuar al siguiente paso');
+    // Navegar a la tabla SCAT
+    router.push('/tabla-scat');
   };
 
   return (
