@@ -16,6 +16,12 @@ const ArrowRightIcon = () => (
   </svg>
 );
 
+const InfoIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+  </svg>
+);
+
 // Componente para las etiquetas de cabecera
 const HeaderTag: React.FC<{ 
   text: string; 
@@ -24,7 +30,7 @@ const HeaderTag: React.FC<{
   isUnderlined?: boolean;
 }> = ({ text, bgColor, textColor = 'black', isUnderlined = false }) => (
   <div 
-    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 hover:scale-105 ${isUnderlined ? 'underline' : ''}`}
+    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200 hover:scale-105 ${isUnderlined ? 'underline' : ''}`}
     style={{ backgroundColor: bgColor, color: textColor }}
   >
     {text}
@@ -43,15 +49,15 @@ const EvaluationButton: React.FC<{
     <button 
       onClick={onClick}
       className={`
-        w-16 h-16 rounded-xl font-bold text-white text-lg transition-all duration-300 
+        w-12 h-12 rounded-lg font-bold text-white text-lg transition-all duration-300 
         hover:scale-110 active:scale-95 shadow-lg hover:shadow-xl
-        ${isSelected ? 'ring-4 ring-white ring-opacity-80 scale-110' : 'hover:ring-2 hover:ring-white hover:ring-opacity-50'}
+        ${isSelected ? 'ring-2 ring-white ring-opacity-80 scale-105' : 'hover:ring-1 hover:ring-white hover:ring-opacity-50'}
       `}
       style={{ backgroundColor: color }}
     >
       {letter}
     </button>
-    <span className="text-sm text-gray-300 font-medium">{label}</span>
+    <span className="text-xs text-gray-300 font-medium">{label}</span>
   </div>
 );
 
@@ -61,28 +67,28 @@ const EvaluationRow: React.FC<{
   selectedOption?: string;
   onOptionSelect?: (option: string) => void;
 }> = ({ title, selectedOption, onOptionSelect }) => (
-  <div className="bg-[#2E2E2E] rounded-xl p-8 hover:bg-[#353535] transition-all duration-300 shadow-lg hover:shadow-xl">
+  <div className="bg-[#2E2E2E] rounded-xl p-6 hover:bg-[#353535] transition-all duration-300 shadow-lg hover:shadow-xl">
     <div className="flex items-center justify-between">
-      <h3 className="text-[#1F7ED0] font-bold text-xl flex-1 pr-8">{title}</h3>
-      <div className="flex gap-8">
+      <h3 className="text-[#4A90E2] font-bold text-lg flex-1 pr-8">{title}</h3>
+      <div className="flex gap-6">
         <EvaluationButton 
           letter="A" 
-          label="Mayor" 
+          label="Grave" 
           color="#DC2626" 
           isSelected={selectedOption === 'A'}
           onClick={() => onOptionSelect?.('A')}
         />
         <EvaluationButton 
           letter="B" 
-          label="Grave" 
-          color="#16A34A" 
+          label="Moderada" 
+          color="#F59E0B" 
           isSelected={selectedOption === 'B'}
           onClick={() => onOptionSelect?.('B')}
         />
         <EvaluationButton 
           letter="C" 
-          label="Menor" 
-          color="#22C55E" 
+          label="Leve" 
+          color="#10B981" 
           isSelected={selectedOption === 'C'}
           onClick={() => onOptionSelect?.('C')}
         />
@@ -94,7 +100,7 @@ const EvaluationRow: React.FC<{
 const TablaSCAT: React.FC = () => {
   const router = useRouter();
   const [evaluations, setEvaluations] = useState({
-    severidad: 'B',
+    severidad: 'A',
     probabilidad: 'B',
     frecuencia: 'C'
   });
@@ -113,19 +119,24 @@ const TablaSCAT: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#3C3C3C]">
       {/* Cabecera */}
-      <div className="bg-black px-12 py-6 shadow-xl">
+      <div className="bg-black px-8 py-4 shadow-xl">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <h1 className="text-white font-bold text-3xl tracking-wide">TABLA SCAT</h1>
-          <h2 className="text-[#FFC107] font-bold text-xl">
+          <h1 className="text-white font-bold text-2xl tracking-wide">TABLA SCAT</h1>
+          <h2 className="text-[#FFC107] font-bold text-lg">
             Técnica de Análisis Sistemático de las Causas
           </h2>
+          <div className="flex gap-2">
+            <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 hover:scale-110 transition-all duration-200">
+              <InfoIcon />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Etiquetas de cabecera */}
-      <div className="px-12 py-6 bg-[#2A2A2A]">
+      <div className="px-8 py-4 bg-[#2A2A2A]">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-3">
             <HeaderTag 
               text="EVALUACIÓN POTENCIAL DE PÉRDIDA SI NO ES CONTROLADO" 
               bgColor="#FFC107" 
