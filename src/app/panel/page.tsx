@@ -10,7 +10,7 @@ import { useDashboardData } from '@/hooks/useDashboardData'
 import { useOrderStore } from '@/store/orderStore'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Clock, Phone, Mail } from 'lucide-react'
+import { Clock, Phone, Mail, MapPin, Calendar, Users } from 'lucide-react'
 
 export default function PanelPage() {
   const router = useRouter()
@@ -99,84 +99,200 @@ export default function PanelPage() {
           <MyOrdersSection user={dashboardData.user} />
         </motion.div>
 
-        {/* Información adicional */}
+        {/* Información adicional - Tarjetas mejoradas */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-8"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
         >
-          {/* Horarios */}
-          <Card className="border-0 bg-gradient-to-br from-emerald-50 to-emerald-25 dark:from-emerald-900/20 dark:to-emerald-800/10 shadow-soft-lg hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
-                  <Clock className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          {/* Horarios de Servicio - Diseño mejorado */}
+          <motion.div
+            whileHover={{ y: -4, scale: 1.02 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="group"
+          >
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-50 via-emerald-25 to-teal-50 dark:from-emerald-950/40 dark:via-emerald-900/30 dark:to-teal-950/40 shadow-xl hover:shadow-2xl transition-all duration-500 backdrop-blur-sm">
+              {/* Decorative background elements */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-200/30 to-teal-200/30 dark:from-emerald-800/20 dark:to-teal-800/20 rounded-full blur-2xl transform translate-x-16 -translate-y-16 group-hover:scale-110 transition-transform duration-700"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-300/20 to-teal-300/20 dark:from-emerald-700/15 dark:to-teal-700/15 rounded-full blur-xl transform -translate-x-12 translate-y-12 group-hover:scale-110 transition-transform duration-700"></div>
+              
+              <CardContent className="relative p-8 lg:p-10">
+                {/* Header con icono animado */}
+                <div className="flex items-center gap-4 mb-8">
+                  <motion.div 
+                    className="relative p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg group-hover:shadow-xl transition-all duration-300"
+                    whileHover={{ rotate: 5, scale: 1.1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Clock className="w-6 h-6 text-white" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  </motion.div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                      Horarios de Servicio
+                    </h3>
+                    <p className="text-emerald-600 dark:text-emerald-400 text-sm font-medium">
+                      Servicios disponibles
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 text-elegant">
-                  Horarios de Servicio
-                </h3>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-800/50 rounded-lg">
-                  <span className="text-slate-600 dark:text-slate-400 text-clean font-medium">Almuerzo:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-100 text-clean text-lg">
-                    12:00 - 14:00
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-800/50 rounded-lg">
-                  <span className="text-slate-600 dark:text-slate-400 text-clean font-medium">Colación:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-100 text-clean text-lg">
-                    15:30 - 16:30
-                  </span>
-                </div>
-              </div>
-              <div className="mt-6 p-4 bg-emerald-100 dark:bg-emerald-900/20 rounded-xl">
-                <p className="text-sm text-emerald-800 dark:text-emerald-300 text-clean text-center">
-                  Horarios de lunes a viernes
-                </p>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Contacto */}
-          <Card className="border-0 bg-gradient-to-br from-purple-50 to-purple-25 dark:from-purple-900/20 dark:to-purple-800/10 shadow-soft-lg hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                  <Phone className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                {/* Horarios con diseño mejorado */}
+                <div className="space-y-4 mb-8">
+                  <motion.div 
+                    className="group/item flex justify-between items-center p-5 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-emerald-100/50 dark:border-emerald-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300 hover:shadow-lg"
+                    whileHover={{ x: 4 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full group-hover/item:scale-125 transition-transform duration-200"></div>
+                      <span className="text-slate-700 dark:text-slate-300 font-semibold">Almuerzo</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-bold text-xl text-slate-800 dark:text-slate-100 block">
+                        12:00 - 14:00
+                      </span>
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                        Lunes a Viernes
+                      </span>
+                    </div>
+                  </motion.div>
+
+                  <motion.div 
+                    className="group/item flex justify-between items-center p-5 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-emerald-100/50 dark:border-emerald-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300 hover:shadow-lg"
+                    whileHover={{ x: 4 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full group-hover/item:scale-125 transition-transform duration-200"></div>
+                      <span className="text-slate-700 dark:text-slate-300 font-semibold">Colación</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-bold text-xl text-slate-800 dark:text-slate-100 block">
+                        15:30 - 16:30
+                      </span>
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                        Lunes a Viernes
+                      </span>
+                    </div>
+                  </motion.div>
                 </div>
-                <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 text-elegant">
-                  Contacto
-                </h3>
-              </div>
-              <div className="space-y-4">
-                <div className="p-3 bg-white dark:bg-slate-800/50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Phone className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                    <span className="text-slate-600 dark:text-slate-400 text-clean font-medium">Teléfono:</span>
+
+                {/* Footer informativo */}
+                <div className="relative p-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/5 dark:to-teal-500/5 rounded-2xl border border-emerald-200/30 dark:border-emerald-700/30">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">
+                      Horarios de atención de lunes a viernes
+                    </p>
                   </div>
-                  <p className="font-bold text-slate-800 dark:text-slate-100 text-clean">
-                    +56 2 2345 6789
-                  </p>
                 </div>
-                <div className="p-3 bg-white dark:bg-slate-800/50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Mail className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                    <span className="text-slate-600 dark:text-slate-400 text-clean font-medium">Email:</span>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Contacto - Diseño mejorado */}
+          <motion.div
+            whileHover={{ y: -4, scale: 1.02 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="group"
+          >
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-purple-50 via-violet-25 to-indigo-50 dark:from-purple-950/40 dark:via-violet-900/30 dark:to-indigo-950/40 shadow-xl hover:shadow-2xl transition-all duration-500 backdrop-blur-sm">
+              {/* Decorative background elements */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-200/30 to-indigo-200/30 dark:from-purple-800/20 dark:to-indigo-800/20 rounded-full blur-2xl transform translate-x-16 -translate-y-16 group-hover:scale-110 transition-transform duration-700"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-violet-300/20 to-purple-300/20 dark:from-violet-700/15 dark:to-purple-700/15 rounded-full blur-xl transform -translate-x-12 translate-y-12 group-hover:scale-110 transition-transform duration-700"></div>
+              
+              <CardContent className="relative p-8 lg:p-10">
+                {/* Header con icono animado */}
+                <div className="flex items-center gap-4 mb-8">
+                  <motion.div 
+                    className="relative p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 shadow-lg group-hover:shadow-xl transition-all duration-300"
+                    whileHover={{ rotate: -5, scale: 1.1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Phone className="w-6 h-6 text-white" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-indigo-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  </motion.div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                      Contacto
+                    </h3>
+                    <p className="text-purple-600 dark:text-purple-400 text-sm font-medium">
+                      Estamos aquí para ayudarte
+                    </p>
                   </div>
-                  <p className="font-bold text-slate-800 dark:text-slate-100 text-clean">
-                    casino@colegio.cl
-                  </p>
                 </div>
-              </div>
-              <div className="mt-6 p-4 bg-purple-100 dark:bg-purple-900/20 rounded-xl">
-                <p className="text-sm text-purple-800 dark:text-purple-300 text-clean text-center">
-                  Estamos aquí para ayudarte
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+
+                {/* Información de contacto con diseño mejorado */}
+                <div className="space-y-4 mb-8">
+                  <motion.div 
+                    className="group/item p-5 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-purple-100/50 dark:border-purple-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300 hover:shadow-lg"
+                    whileHover={{ x: 4 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5 rounded-xl group-hover/item:scale-110 transition-transform duration-200">
+                        <Phone className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium mb-1">Teléfono</p>
+                        <p className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                          +56 2 2345 6789
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div 
+                    className="group/item p-5 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-purple-100/50 dark:border-purple-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300 hover:shadow-lg"
+                    whileHover={{ x: 4 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5 rounded-xl group-hover/item:scale-110 transition-transform duration-200">
+                        <Mail className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium mb-1">Email</p>
+                        <p className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                          casino@colegio.cl
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div 
+                    className="group/item p-5 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-purple-100/50 dark:border-purple-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300 hover:shadow-lg"
+                    whileHover={{ x: 4 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5 rounded-xl group-hover/item:scale-110 transition-transform duration-200">
+                        <MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium mb-1">Ubicación</p>
+                        <p className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                          Casino Escolar - Edificio Principal
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Footer informativo */}
+                <div className="relative p-5 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5 rounded-2xl border border-purple-200/30 dark:border-purple-700/30">
+                  <div className="flex items-center gap-3">
+                    <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    <p className="text-sm text-purple-800 dark:text-purple-300 font-medium">
+                      Nuestro equipo está disponible para resolver tus consultas
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </motion.div>
       </div>
     </div>
