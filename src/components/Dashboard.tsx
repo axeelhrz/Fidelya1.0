@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 // Iconos optimizados y más compactos
 const HomeIcon = () => (
@@ -35,6 +36,12 @@ const DeleteIcon = () => (
   </svg>
 );
 
+const FolderIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+  </svg>
+);
+
 const InfoIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
@@ -66,19 +73,25 @@ const ImageIcon = () => (
 );
 
 // Componente de botón de sidebar optimizado
-const SidebarButton: React.FC<{ children: React.ReactNode; isActive?: boolean }> = ({ 
-  children, 
-  isActive = false 
-}) => (
-  <button className={`
-    w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-200
-    ${isActive 
-      ? 'bg-gray-700 shadow-lg' 
-      : 'hover:bg-gray-800 hover:scale-105'
-    }
-  `}>
-    {children}
-  </button>
+const SidebarButton: React.FC<{ 
+  children: React.ReactNode; 
+  isActive?: boolean;
+  hasIndicator?: boolean;
+}> = ({ children, isActive = false, hasIndicator = false }) => (
+  <div className="relative">
+    <button className={`
+      w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-200
+      ${isActive 
+        ? 'bg-gray-700 shadow-lg' 
+        : 'hover:bg-gray-800 hover:scale-105'
+      }
+    `}>
+      {children}
+    </button>
+    {hasIndicator && (
+      <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white rounded-l-full"></div>
+    )}
+  </div>
 );
 
 // Componente de tarjeta de proyecto más compacto
@@ -127,6 +140,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
 // Componente principal del dashboard optimizado
 const Dashboard: React.FC = () => {
+  const router = useRouter();
+
+  const handleCreateProject = () => {
+    router.push('/nuevo-proyecto');
+  };
+
   return (
     <div className="h-screen bg-[#3C3C3C] flex overflow-hidden">
       {/* Sidebar más compacto */}
@@ -140,7 +159,7 @@ const Dashboard: React.FC = () => {
         <SidebarButton>
           <LayersIcon />
         </SidebarButton>
-        <SidebarButton>
+        <SidebarButton hasIndicator={true}>
           <CalendarIcon />
         </SidebarButton>
       </div>
@@ -157,6 +176,9 @@ const Dashboard: React.FC = () => {
               <DeleteIcon />
             </button>
             <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 hover:scale-110 transition-all">
+              <FolderIcon />
+            </button>
+            <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 hover:scale-110 transition-all">
               <InfoIcon />
             </button>
           </div>
@@ -166,12 +188,15 @@ const Dashboard: React.FC = () => {
         <div className="flex-1 p-6 overflow-auto">
           {/* Botón de crear proyecto más compacto */}
           <div className="mb-6">
-            <button className="
-              bg-gradient-to-r from-[#FFC107] to-[#FFB300] text-black font-bold 
-              py-2 px-4 rounded-lg flex items-center gap-2 
-              hover:from-[#FFB300] hover:to-[#FFA000] hover:scale-105 
-              transition-all duration-200 shadow-md hover:shadow-lg
-            ">
+            <button 
+              onClick={handleCreateProject}
+              className="
+                bg-gradient-to-r from-[#FFC107] to-[#FFB300] text-black font-bold 
+                py-2 px-4 rounded-lg flex items-center gap-2 
+                hover:from-[#FFB300] hover:to-[#FFA000] hover:scale-105 
+                transition-all duration-200 shadow-md hover:shadow-lg
+              "
+            >
               <FolderPlusIcon />
               <span className="text-sm">Create New Proyect</span>
             </button>
@@ -214,3 +239,4 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+
