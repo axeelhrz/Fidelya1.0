@@ -556,17 +556,45 @@ export default function MiPedidoPage() {
             })}
           </motion.div>
 
-          {/* Botón de pago con GetNet */}
-          {currentWeekMenu.length > 0 && (
-            <Card className="border-green-200 bg-green-50/50 dark:bg-green-900/10 dark:border-green-800">
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
-                      <CreditCard className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 dark:text-slate-100">
-                        Pago
-
-</edits_to_apply>
+                    {/* Botón de pago con GetNet */}
+                    {currentWeekMenu.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.8 }}
+                      >
+                        <Card className="border-green-200 bg-green-50/50 dark:bg-green-900/10 dark:border-green-800">
+                          <CardContent className="p-6">
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
+                                  <CreditCard className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                                    Pago Seguro con GetNet
+                                  </h3>
+                                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                                    Completa tu pedido con un pago seguro
+                                  </p>
+                                </div>
+                              </div>
+                              <PaymentButton
+                                user={user}
+                                summary={summary}
+                                weekDays={currentWeekMenu.map(day => day.date)}
+                                isOrderingAllowed={true}
+                                isReadOnly={false}
+                                onProceedToPayment={processPayment}
+                                isProcessingPayment={isProcessingPayment}
+                              />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          }
