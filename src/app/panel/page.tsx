@@ -99,92 +99,85 @@ export default function PanelPage() {
           <MyOrdersSection user={dashboardData.user} />
         </motion.div>
 
-        {/* Información adicional - Tarjetas mejoradas */}
+        {/* Información adicional - Tarjetas organizadas y compactas */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
         >
-          {/* Horarios de Servicio - Diseño mejorado */}
+          {/* Horarios de Servicio - Versión compacta */}
           <motion.div
-            whileHover={{ y: -4, scale: 1.02 }}
+            whileHover={{ y: -2, scale: 1.01 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="group"
+            className="group h-full"
           >
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-50 via-emerald-25 to-teal-50 dark:from-emerald-950/40 dark:via-emerald-900/30 dark:to-teal-950/40 shadow-xl hover:shadow-2xl transition-all duration-500 backdrop-blur-sm">
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-50 via-emerald-25 to-teal-50 dark:from-emerald-950/40 dark:via-emerald-900/30 dark:to-teal-950/40 shadow-xl hover:shadow-2xl transition-all duration-500 backdrop-blur-sm h-full">
               {/* Decorative background elements */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-200/30 to-teal-200/30 dark:from-emerald-800/20 dark:to-teal-800/20 rounded-full blur-2xl transform translate-x-16 -translate-y-16 group-hover:scale-110 transition-transform duration-700"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-300/20 to-teal-300/20 dark:from-emerald-700/15 dark:to-teal-700/15 rounded-full blur-xl transform -translate-x-12 translate-y-12 group-hover:scale-110 transition-transform duration-700"></div>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-200/30 to-teal-200/30 dark:from-emerald-800/20 dark:to-teal-800/20 rounded-full blur-xl transform translate-x-12 -translate-y-12 group-hover:scale-110 transition-transform duration-700"></div>
+              <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-emerald-300/20 to-teal-300/20 dark:from-emerald-700/15 dark:to-teal-700/15 rounded-full blur-lg transform -translate-x-10 translate-y-10 group-hover:scale-110 transition-transform duration-700"></div>
               
-              <CardContent className="relative p-8 lg:p-10">
-                {/* Header con icono animado */}
-                <div className="flex items-center gap-4 mb-8">
+              <CardContent className="relative p-6 h-full flex flex-col">
+                {/* Header compacto */}
+                <div className="flex items-center gap-3 mb-6">
                   <motion.div 
-                    className="relative p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg group-hover:shadow-xl transition-all duration-300"
-                    whileHover={{ rotate: 5, scale: 1.1 }}
+                    className="relative p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg group-hover:shadow-xl transition-all duration-300"
+                    whileHover={{ rotate: 5, scale: 1.05 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Clock className="w-6 h-6 text-white" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                    <Clock className="w-5 h-5 text-white" />
                   </motion.div>
                   <div>
-                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">
                       Horarios de Servicio
                     </h3>
-                    <p className="text-emerald-600 dark:text-emerald-400 text-sm font-medium">
+                    <p className="text-emerald-600 dark:text-emerald-400 text-xs font-medium">
                       Servicios disponibles
                     </p>
                   </div>
                 </div>
 
-                {/* Horarios con diseño mejorado */}
-                <div className="space-y-4 mb-8">
+                {/* Horarios compactos */}
+                <div className="space-y-3 flex-1">
                   <motion.div 
-                    className="group/item flex justify-between items-center p-5 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-emerald-100/50 dark:border-emerald-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300 hover:shadow-lg"
-                    whileHover={{ x: 4 }}
+                    className="group/item flex justify-between items-center p-4 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-emerald-100/50 dark:border-emerald-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300"
+                    whileHover={{ x: 2 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full group-hover/item:scale-125 transition-transform duration-200"></div>
-                      <span className="text-slate-700 dark:text-slate-300 font-semibold">Almuerzo</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"></div>
+                      <span className="text-slate-700 dark:text-slate-300 font-semibold text-sm">Almuerzo</span>
                     </div>
                     <div className="text-right">
-                      <span className="font-bold text-xl text-slate-800 dark:text-slate-100 block">
+                      <span className="font-bold text-lg text-slate-800 dark:text-slate-100">
                         12:00 - 14:00
-                      </span>
-                      <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                        Lunes a Viernes
                       </span>
                     </div>
                   </motion.div>
 
                   <motion.div 
-                    className="group/item flex justify-between items-center p-5 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-emerald-100/50 dark:border-emerald-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300 hover:shadow-lg"
-                    whileHover={{ x: 4 }}
+                    className="group/item flex justify-between items-center p-4 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-emerald-100/50 dark:border-emerald-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300"
+                    whileHover={{ x: 2 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full group-hover/item:scale-125 transition-transform duration-200"></div>
-                      <span className="text-slate-700 dark:text-slate-300 font-semibold">Colación</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full"></div>
+                      <span className="text-slate-700 dark:text-slate-300 font-semibold text-sm">Colación</span>
                     </div>
                     <div className="text-right">
-                      <span className="font-bold text-xl text-slate-800 dark:text-slate-100 block">
+                      <span className="font-bold text-lg text-slate-800 dark:text-slate-100">
                         15:30 - 16:30
-                      </span>
-                      <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                        Lunes a Viernes
                       </span>
                     </div>
                   </motion.div>
                 </div>
 
-                {/* Footer informativo */}
-                <div className="relative p-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/5 dark:to-teal-500/5 rounded-2xl border border-emerald-200/30 dark:border-emerald-700/30">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                    <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">
-                      Horarios de atención de lunes a viernes
+                {/* Footer compacto */}
+                <div className="mt-4 p-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/5 dark:to-teal-500/5 rounded-xl border border-emerald-200/30 dark:border-emerald-700/30">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <p className="text-xs text-emerald-800 dark:text-emerald-300 font-medium">
+                      Lunes a viernes
                     </p>
                   </div>
                 </div>
@@ -192,52 +185,51 @@ export default function PanelPage() {
             </Card>
           </motion.div>
 
-          {/* Contacto - Diseño mejorado */}
+          {/* Contacto - Versión compacta */}
           <motion.div
-            whileHover={{ y: -4, scale: 1.02 }}
+            whileHover={{ y: -2, scale: 1.01 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="group"
+            className="group h-full"
           >
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-purple-50 via-violet-25 to-indigo-50 dark:from-purple-950/40 dark:via-violet-900/30 dark:to-indigo-950/40 shadow-xl hover:shadow-2xl transition-all duration-500 backdrop-blur-sm">
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-purple-50 via-violet-25 to-indigo-50 dark:from-purple-950/40 dark:via-violet-900/30 dark:to-indigo-950/40 shadow-xl hover:shadow-2xl transition-all duration-500 backdrop-blur-sm h-full">
               {/* Decorative background elements */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-200/30 to-indigo-200/30 dark:from-purple-800/20 dark:to-indigo-800/20 rounded-full blur-2xl transform translate-x-16 -translate-y-16 group-hover:scale-110 transition-transform duration-700"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-violet-300/20 to-purple-300/20 dark:from-violet-700/15 dark:to-purple-700/15 rounded-full blur-xl transform -translate-x-12 translate-y-12 group-hover:scale-110 transition-transform duration-700"></div>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-200/30 to-indigo-200/30 dark:from-purple-800/20 dark:to-indigo-800/20 rounded-full blur-xl transform translate-x-12 -translate-y-12 group-hover:scale-110 transition-transform duration-700"></div>
+              <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-violet-300/20 to-purple-300/20 dark:from-violet-700/15 dark:to-purple-700/15 rounded-full blur-lg transform -translate-x-10 translate-y-10 group-hover:scale-110 transition-transform duration-700"></div>
               
-              <CardContent className="relative p-8 lg:p-10">
-                {/* Header con icono animado */}
-                <div className="flex items-center gap-4 mb-8">
+              <CardContent className="relative p-6 h-full flex flex-col">
+                {/* Header compacto */}
+                <div className="flex items-center gap-3 mb-6">
                   <motion.div 
-                    className="relative p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 shadow-lg group-hover:shadow-xl transition-all duration-300"
-                    whileHover={{ rotate: -5, scale: 1.1 }}
+                    className="relative p-3 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 shadow-lg group-hover:shadow-xl transition-all duration-300"
+                    whileHover={{ rotate: -5, scale: 1.05 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Phone className="w-6 h-6 text-white" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-indigo-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                    <Phone className="w-5 h-5 text-white" />
                   </motion.div>
                   <div>
-                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">
                       Contacto
                     </h3>
-                    <p className="text-purple-600 dark:text-purple-400 text-sm font-medium">
+                    <p className="text-purple-600 dark:text-purple-400 text-xs font-medium">
                       Estamos aquí para ayudarte
                     </p>
                   </div>
                 </div>
 
-                {/* Información de contacto con diseño mejorado */}
-                <div className="space-y-4 mb-8">
+                {/* Información de contacto compacta */}
+                <div className="space-y-3 flex-1">
                   <motion.div 
-                    className="group/item p-5 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-purple-100/50 dark:border-purple-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300 hover:shadow-lg"
-                    whileHover={{ x: 4 }}
+                    className="group/item p-4 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-purple-100/50 dark:border-purple-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300"
+                    whileHover={{ x: 2 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5 rounded-xl group-hover/item:scale-110 transition-transform duration-200">
-                        <Phone className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5 rounded-lg">
+                        <Phone className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium mb-1">Teléfono</p>
-                        <p className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-slate-600 dark:text-slate-400 text-xs font-medium">Teléfono</p>
+                        <p className="font-bold text-slate-800 dark:text-slate-100 truncate">
                           +56 2 2345 6789
                         </p>
                       </div>
@@ -245,17 +237,17 @@ export default function PanelPage() {
                   </motion.div>
 
                   <motion.div 
-                    className="group/item p-5 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-purple-100/50 dark:border-purple-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300 hover:shadow-lg"
-                    whileHover={{ x: 4 }}
+                    className="group/item p-4 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-purple-100/50 dark:border-purple-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300"
+                    whileHover={{ x: 2 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5 rounded-xl group-hover/item:scale-110 transition-transform duration-200">
-                        <Mail className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5 rounded-lg">
+                        <Mail className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium mb-1">Email</p>
-                        <p className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-slate-600 dark:text-slate-400 text-xs font-medium">Email</p>
+                        <p className="font-bold text-slate-800 dark:text-slate-100 truncate">
                           casino@colegio.cl
                         </p>
                       </div>
@@ -263,30 +255,30 @@ export default function PanelPage() {
                   </motion.div>
 
                   <motion.div 
-                    className="group/item p-5 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-purple-100/50 dark:border-purple-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300 hover:shadow-lg"
-                    whileHover={{ x: 4 }}
+                    className="group/item p-4 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-purple-100/50 dark:border-purple-800/30 hover:bg-white/90 dark:hover:bg-slate-800/80 transition-all duration-300"
+                    whileHover={{ x: 2 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5 rounded-xl group-hover/item:scale-110 transition-transform duration-200">
-                        <MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5 rounded-lg">
+                        <MapPin className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium mb-1">Ubicación</p>
-                        <p className="font-bold text-lg text-slate-800 dark:text-slate-100">
-                          Casino Escolar - Edificio Principal
+                      <div className="flex-1 min-w-0">
+                        <p className="text-slate-600 dark:text-slate-400 text-xs font-medium">Ubicación</p>
+                        <p className="font-bold text-slate-800 dark:text-slate-100 truncate">
+                          Casino Escolar
                         </p>
                       </div>
                     </div>
                   </motion.div>
                 </div>
 
-                {/* Footer informativo */}
-                <div className="relative p-5 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5 rounded-2xl border border-purple-200/30 dark:border-purple-700/30">
-                  <div className="flex items-center gap-3">
-                    <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    <p className="text-sm text-purple-800 dark:text-purple-300 font-medium">
-                      Nuestro equipo está disponible para resolver tus consultas
+                {/* Footer compacto */}
+                <div className="mt-4 p-3 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5 rounded-xl border border-purple-200/30 dark:border-purple-700/30">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <p className="text-xs text-purple-800 dark:text-purple-300 font-medium">
+                      Equipo disponible para consultas
                     </p>
                   </div>
                 </div>
