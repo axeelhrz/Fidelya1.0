@@ -36,7 +36,7 @@ const InspectorIcon = () => (
 
 const MenuIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-    <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+    <path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
   </svg>
 );
 
@@ -52,13 +52,7 @@ const ArrowRightIcon = () => (
   </svg>
 );
 
-const BackIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-  </svg>
-);
-
-// Componente de campo de formulario mejorado
+// Componente de campo de formulario
 interface FormFieldProps {
   label: string;
   icon: React.ReactNode;
@@ -70,16 +64,16 @@ const FormField: React.FC<FormFieldProps> = ({ label, icon, isActive = false, on
   return (
     <div 
       className={`
-        rounded-xl h-18 px-6 flex items-center justify-between transition-all duration-300 cursor-pointer
+        rounded-xl h-16 px-6 flex items-center justify-between transition-all duration-300 cursor-pointer
         ${isActive 
-          ? 'bg-[#353535] ring-2 ring-[#FFC107] shadow-lg scale-105' 
-          : 'bg-[#2E2E2E] hover:bg-[#353535] hover:scale-102 hover:shadow-md'
+          ? 'bg-[#353535] ring-2 ring-[#FFC107] shadow-lg' 
+          : 'bg-[#2E2E2E] hover:bg-[#353535] hover:shadow-md'
         }
       `}
       onClick={onClick}
     >
-      <span className="text-gray-300 font-semibold text-base">{label}</span>
-      <div className="w-12 h-12 flex items-center justify-center bg-[#404040] rounded-lg">
+      <span className="text-gray-300 font-medium text-base">{label}</span>
+      <div className="w-10 h-10 flex items-center justify-center bg-[#404040] rounded-lg">
         {icon}
       </div>
     </div>
@@ -108,34 +102,24 @@ const NuevoProyecto: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0074D9] flex items-center justify-center p-8">
-      {/* Contenedor principal del formulario centrado */}
+    <div className="min-h-screen bg-[#3C3C3C] flex items-center justify-center p-8">
+      {/* Contenedor principal del formulario */}
       <div className="w-full max-w-md mx-auto">
-        <div className="bg-[#3C3C3C] rounded-3xl p-10 shadow-2xl">
-          {/* Botón de regreso */}
-          <div className="mb-10">
-            <button 
-              onClick={handleBack}
-              className="w-12 h-12 bg-[#2E2E2E] rounded-full flex items-center justify-center hover:bg-[#404040] transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg"
-            >
-              <BackIcon />
-            </button>
-          </div>
-
-          {/* Header del formulario centrado */}
-          <div className="mb-12 text-center">
-            <div className="bg-[#FFD600] rounded-xl py-4 px-6 mb-4 shadow-lg">
-              <h1 className="text-black font-bold text-xl tracking-wide">
+        <div className="bg-[#2E2E2E] rounded-2xl p-8 shadow-2xl">
+          {/* Header del formulario */}
+          <div className="mb-8 text-center">
+            <div className="bg-[#FFD600] rounded-xl py-3 px-6 mb-2 shadow-lg">
+              <h1 className="text-black font-bold text-lg tracking-wide">
                 DATOS
               </h1>
             </div>
-            <h2 className="text-white font-bold text-lg">
+            <h2 className="text-white font-bold text-base">
               ACCIDENTE / INCIDENTE
             </h2>
           </div>
 
-          {/* Campos del formulario con mejor espaciado */}
-          <div className="space-y-6 mb-12">
+          {/* Campos del formulario */}
+          <div className="space-y-4 mb-8">
             {formFields.map((field, index) => (
               <FormField
                 key={index}
@@ -147,20 +131,23 @@ const NuevoProyecto: React.FC = () => {
             ))}
           </div>
 
-          {/* Botón continuar centrado con flechas */}
-          <div className="flex items-center justify-center gap-8">
-            <button className="w-14 h-14 bg-[#2E2E2E] rounded-full flex items-center justify-center hover:bg-[#404040] transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg">
+          {/* Navegación inferior */}
+          <div className="flex items-center justify-center gap-6">
+            <button 
+              onClick={handleBack}
+              className="w-12 h-12 bg-[#404040] rounded-full flex items-center justify-center hover:bg-[#4A4A4A] transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg"
+            >
               <ArrowLeftIcon />
             </button>
             
             <button 
               onClick={handleContinue}
-              className="bg-[#FFD600] text-black font-bold py-4 px-12 rounded-xl hover:bg-[#FFC107] transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95"
+              className="bg-[#FFD600] text-black font-bold py-3 px-8 rounded-xl hover:bg-[#FFC107] transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95"
             >
               CONTINUAR
             </button>
             
-            <button className="w-14 h-14 bg-[#2E2E2E] rounded-full flex items-center justify-center hover:bg-[#404040] transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg">
+            <button className="w-12 h-12 bg-[#404040] rounded-full flex items-center justify-center hover:bg-[#4A4A4A] transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg">
               <ArrowRightIcon />
             </button>
           </div>
@@ -171,4 +158,3 @@ const NuevoProyecto: React.FC = () => {
 };
 
 export default NuevoProyecto;
-
