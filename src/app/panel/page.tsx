@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { Navbar } from '@/components/panel/Navbar'
 import { GreetingCard } from '@/components/panel/dashboard/GreetingCard'
+import { MyOrdersSection } from '@/components/panel/MyOrdersSection'
 import { useDashboardData } from '@/hooks/useDashboardData'
 import { useOrderStore } from '@/store/orderStore'
 import { Button } from '@/components/ui/button'
@@ -94,6 +94,9 @@ export default function PanelPage() {
         >
           {/* Saludo personalizado */}
           <GreetingCard user={dashboardData.user} />
+
+          {/* Sección de Mis Pedidos */}
+          <MyOrdersSection user={dashboardData.user} />
         </motion.div>
 
         {/* Información adicional */}
