@@ -72,33 +72,27 @@ const ImageIcon = () => (
   </svg>
 );
 
-// Componente de botón de sidebar mejorado
+// Componente de botón de sidebar
 const SidebarButton: React.FC<{ 
   children: React.ReactNode; 
   isActive?: boolean;
-  hasIndicator?: boolean;
   onClick?: () => void;
-}> = ({ children, isActive = false, hasIndicator = false, onClick }) => (
-  <div className="relative">
-    <button 
-      onClick={onClick}
-      className={`
-        w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-300
-        ${isActive 
-          ? 'bg-gray-700 shadow-xl scale-105' 
-          : 'hover:bg-gray-800 hover:scale-110 active:scale-95'
-        }
-      `}
-    >
-      {children}
-    </button>
-    {hasIndicator && (
-      <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-1 h-10 bg-white rounded-l-full shadow-lg"></div>
-    )}
-  </div>
+}> = ({ children, isActive = false, onClick }) => (
+  <button 
+    onClick={onClick}
+    className={`
+      w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-300
+      ${isActive 
+        ? 'bg-gray-700 shadow-xl' 
+        : 'hover:bg-gray-800 hover:scale-110 active:scale-95'
+      }
+    `}
+  >
+    {children}
+  </button>
 );
 
-// Componente de tarjeta de proyecto mejorado
+// Componente de tarjeta de proyecto
 interface ProjectCardProps {
   isHighlighted?: boolean;
   projectNumber?: number;
@@ -107,23 +101,17 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ 
   isHighlighted = false, 
-  projectNumber = 1,
   onClick
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
     <div 
       className={`
         w-full h-24 rounded-xl p-4 flex items-center justify-between transition-all duration-300 cursor-pointer
         ${isHighlighted 
-          ? 'bg-[#FFD600] shadow-xl transform scale-105' 
+          ? 'bg-[#FFD600] shadow-xl' 
           : 'bg-[#2E2E2E] hover:bg-[#353535] hover:scale-105 hover:shadow-lg'
         }
-        ${isHovered ? 'ring-2 ring-[#FFC107] ring-opacity-50' : ''}
       `}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
     >
       <div className="flex flex-col">
@@ -131,13 +119,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           font-bold text-sm tracking-wider uppercase
           ${isHighlighted ? 'text-black' : 'text-white'}
         `}>
-          PROYECTO CREADO
+          PROYECTO
         </span>
         <span className={`
-          text-xs opacity-70 mt-1 font-medium
-          ${isHighlighted ? 'text-black' : 'text-gray-400'}
+          font-bold text-sm tracking-wider uppercase
+          ${isHighlighted ? 'text-black' : 'text-white'}
         `}>
-          #{projectNumber.toString().padStart(3, '0')}
+          CREADO
         </span>
       </div>
       <div className="flex gap-2">
@@ -164,7 +152,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   );
 };
 
-// Componente principal del dashboard optimizado
+// Componente principal del dashboard
 const Dashboard: React.FC = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(0);
@@ -180,7 +168,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="h-screen bg-[#3C3C3C] flex overflow-hidden">
-      {/* Sidebar optimizado */}
+      {/* Sidebar */}
       <div className="w-24 bg-black flex flex-col items-center py-8 gap-6 shadow-2xl">
         <SidebarButton 
           isActive={activeTab === 0}
@@ -202,7 +190,6 @@ const Dashboard: React.FC = () => {
         </SidebarButton>
         <SidebarButton 
           isActive={activeTab === 3}
-          hasIndicator={true}
           onClick={() => setActiveTab(3)}
         >
           <CalendarIcon />
@@ -211,7 +198,7 @@ const Dashboard: React.FC = () => {
 
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col">
-        {/* Header mejorado */}
+        {/* Header */}
         <div className="bg-[#2F766F] h-20 flex items-center justify-between px-12 shadow-xl">
           <h1 className="text-[#FFC107] font-bold text-xl tracking-wide">
             Técnica de Análisis Sistemático de las Causas
