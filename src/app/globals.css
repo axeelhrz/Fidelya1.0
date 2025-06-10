@@ -21,7 +21,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overflow-x: hidden;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 html {
@@ -30,4 +32,34 @@ html {
 
 #__next {
   height: 100%;
+}
+
+/* Scrollbar personalizado para mejor apariencia */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #2E2E2E;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Optimizaciones para mejor rendimiento */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Mejoras de accesibilidad */
+button:focus-visible {
+  outline: 2px solid #FFC107;
+  outline-offset: 2px;
 }
