@@ -93,8 +93,8 @@ const ContactoSCAT: React.FC = () => {
   };
 
   const handleNext = () => {
-    console.log('Continuar al siguiente paso');
-    // Aquí puedes agregar la lógica para el siguiente paso
+    // Navegar a la primera pantalla de causas inmediatas
+    router.push('/tabla-scat/actos');
   };
 
   const contactItems = [
