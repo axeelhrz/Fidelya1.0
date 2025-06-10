@@ -2660,5 +2660,98 @@ def obtener_ventas(current_user_id):
         
         if fecha_fin:
             query += " AND DATE(v.fecha) <= %s"
-     
-</initial_code>
+            params.append(fecha_fin)
+        
+        if estado:
+            query += " AND v.estado = %s"
+            params.append(estado)
+        
+        if cliente_id:
+            query += " AND v.cliente_id = %s"
+            params.append(cliente_id)
+        
+        query += " ORDER BY v.fecha DESC LIMIT %s"
+        params.append(limite)
+        
+        cursor.execute(query, params)
+        
+        ventas = []
+        for row in cursor.fetchall():
+            venta = {
+                'id': row[0],
+                'numero_venta': row[1] or '',
+                'fecha': row[2].isoformat() if row[2] else None,
+                'forma_pago': row[3],
+                'subtotal': float(row[4]),
+                'descuento': float(row[5]),
+                'impuestos': float(row[6]),
+                'total': float(row[7]),
+                'estado': row[8],
+                'observaciones': row[9] or '',
+                'cliente_nombre': row[10],
+                'usuario_nombre': row[11] or ''
+            }
+            ventas.append(venta)
+        
+        response = jsonify(ventas)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 200
+
+    except Exception as e:
+        logger.error(f"Error obteniendo ventas: {e}")
+        return jsonify([]), 200
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+
+# ==================== ENDPOINT PARA INICIALIZAR APLICACIÓN ====================
+
+@app.route('/api/init', methods=['POST'])
+def init_database():
+    """Inicializar base de datos y crear datos por defecto"""
+    try:
+        # Crear las tablas
+        if create_tables():
+            logger.info("✅ Base de datos inicializada correctamente")
+            return jsonify({'message': 'Base de datos inicializada correctamente'}), 200
+        else:
+            logger.error("❌ Error inicializando la base de datos")
+            return jsonify({'message': 'Error inicializando la base de datos'}), 500
+    except Exception as e:
+        logger.error(f"❌ Error en inicialización: {e}")
+        return jsonify({'message': 'Error interno del servidor'}), 500
+
+
+# ==================== HANDLER DE ERRORES ====================
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'message': 'Endpoint no encontrado'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'message': 'Error interno del servidor'}), 500
+
+
+# ==================== INICIALIZACIÓN ====================
+
+if __name__ == '__main__':
+    logger.info("🚀 Iniciando servidor de Frutería Nina...")
+    
+    # Inicializar base de datos
+    if create_tables():
+        logger.info("✅ Base de datos lista")
+    else:
+        logger.error("❌ Error configurando base de datos")
+    
+    # Ejecutar servidor
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    
+    logger.info(f"🌐 Servidor ejecutándose en puerto {port}")
+    logger.info(f"🔧 Modo debug: {debug}")
+    
+    app.run(host='0.0.0.0', port=port, debug=debug)
