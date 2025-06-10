@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Enhanced SVG Icons with consistent sizing
+// SVG Icons
 const HomeIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
@@ -54,38 +54,32 @@ const PlusIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   </svg>
 );
 
-// Action Icons for Project Cards
-const DeleteIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+// Action Icons
+const DeleteIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
   </svg>
 );
 
-const EditIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+const EditIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
   </svg>
 );
 
-const DownloadIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+const DownloadIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
   </svg>
 );
 
-const AnalyticsIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+const AnalyticsIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
   </svg>
 );
 
-const FolderIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
-  </svg>
-);
-
-// Enhanced Sidebar Button Component
+// Sidebar Button Component
 interface SidebarButtonProps {
   children: React.ReactNode;
   isActive?: boolean;
@@ -128,13 +122,11 @@ const SidebarButton: React.FC<SidebarButtonProps> = ({
   </div>
 );
 
-// Enhanced Project Card Component with Large Action Buttons
+// Project Card Component
 interface ProjectCardProps {
   isHighlighted?: boolean;
   onClick?: () => void;
   title?: string;
-  status?: 'active' | 'completed' | 'pending';
-  lastModified?: string;
   onDelete?: () => void;
   onEdit?: () => void;
   onDownload?: () => void;
@@ -143,101 +135,80 @@ interface ProjectCardProps {
 const ProjectCard: React.FC<ProjectCardProps> = ({ 
   isHighlighted = false, 
   onClick,
-  title = "Proyecto",
-  status = 'active',
-  lastModified = "Hace 2 días",
+  title = "PROYECTO",
   onDelete,
   onEdit,
   onDownload
 }) => {
-  const statusColors = {
-    active: 'bg-green-500/20 text-green-400 border-green-500/30',
-    completed: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    pending: 'bg-orange-500/20 text-orange-400 border-orange-500/30'
-  };
-
-  const statusLabels = {
-    active: 'Activo',
-    completed: 'Completado',
-    pending: 'Pendiente'
-  };
-
   return (
     <div 
       className={`
-        group relative card card-interactive p-6 h-48
+        group relative p-4 h-20 rounded-lg cursor-pointer transition-all duration-300
         ${isHighlighted 
           ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-black shadow-xl shadow-yellow-500/25' 
-          : 'bg-zinc-900/50 hover:bg-zinc-800/50'
+          : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-white'
         }
-        animate-fadeInUp cursor-pointer
+        animate-fadeInUp
       `}
       onClick={onClick}
     >
-      {/* Status Badge */}
-      <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium border ${statusColors[status]}`}>
-        {statusLabels[status]}
-      </div>
-      
       {/* Content */}
-      <div className="flex flex-col justify-between h-full">
-        <div>
-          <h3 className={`font-bold text-xl mb-2 ${isHighlighted ? 'text-black' : 'text-white'}`}>
+      <div className="flex items-center justify-between h-full">
+        <div className="flex-1">
+          <h3 className={`font-bold text-sm ${isHighlighted ? 'text-black' : 'text-white'}`}>
             {title}
           </h3>
-          <p className={`text-sm ${isHighlighted ? 'text-black/70' : 'text-white/60'}`}>
-            {lastModified}
+          <p className={`text-xs ${isHighlighted ? 'text-black/70' : 'text-white/60'}`}>
+            CREADO
           </p>
         </div>
         
-        {/* Large Action Buttons */}
-        <div className="flex gap-3 mt-6">
+        {/* Action Buttons */}
+        <div className="flex gap-1">
           <button 
             className={`
-              flex-1 h-12 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 font-medium text-sm
+              w-8 h-8 rounded-md flex items-center justify-center transition-all duration-200
               ${isHighlighted 
                 ? 'bg-black/20 hover:bg-black/30 text-black' 
                 : 'bg-white/10 hover:bg-white/20 text-white'
               }
-              hover:scale-105 focus-ring
+              hover:scale-110 focus-ring
             `}
             onClick={(e) => {
               e.stopPropagation();
-              onDelete?.();
+              onAnalytics?.();
             }}
-            title="Eliminar proyecto"
+            title="Análisis"
           >
-            <DeleteIcon className="w-5 h-5" />
-            <span className="hidden sm:inline">Eliminar</span>
+            <AnalyticsIcon />
           </button>
           
           <button 
             className={`
-              flex-1 h-12 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 font-medium text-sm
+              w-8 h-8 rounded-md flex items-center justify-center transition-all duration-200
               ${isHighlighted 
                 ? 'bg-black/20 hover:bg-black/30 text-black' 
                 : 'bg-white/10 hover:bg-white/20 text-white'
               }
-              hover:scale-105 focus-ring
+              hover:scale-110 focus-ring
             `}
             onClick={(e) => {
               e.stopPropagation();
               onEdit?.();
             }}
-            title="Editar proyecto"
+            title="Editar"
           >
-            <EditIcon className="w-5 h-5" />
-            <span className="hidden sm:inline">Editar</span>
+            <EditIcon />
           </button>
           
           <button 
             className={`
-              flex-1 h-12 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 font-medium text-sm
+              w-8 h-8 rounded-md flex items-center justify-center transition-all duration-200
               ${isHighlighted 
                 ? 'bg-black/20 hover:bg-black/30 text-black' 
                 : 'bg-white/10 hover:bg-white/20 text-white'
               }
-              hover:scale-105 focus-ring
+              hover:scale-110 focus-ring
             `}
             onClick={(e) => {
               e.stopPropagation();
@@ -245,8 +216,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             }}
             title="Descargar PDF"
           >
-            <DownloadIcon className="w-5 h-5" />
-            <span className="hidden sm:inline">PDF</span>
+            <DownloadIcon />
           </button>
         </div>
       </div>
@@ -258,37 +228,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   );
 };
 
-// Enhanced Stats Card Component
-interface StatsCardProps {
-  title: string;
-  value: number;
-  color: string;
-  icon: React.ReactNode;
-  trend?: number;
-}
-
-const StatsCard: React.FC<StatsCardProps> = ({ title, value, color, icon, trend }) => (
-  <div className="card p-6 bg-zinc-900/50 hover:bg-zinc-800/50 animate-fadeInUp group">
-    <div className="flex items-center justify-between mb-4">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color} group-hover:scale-110 transition-transform duration-300`}>
-        {icon}
-      </div>
-      {trend && (
-        <div className={`text-xs font-medium px-2 py-1 rounded-full ${trend > 0 ? 'text-green-400 bg-green-500/20' : 'text-red-400 bg-red-500/20'}`}>
-          {trend > 0 ? '+' : ''}{trend}%
-        </div>
-      )}
-    </div>
-    <div className="text-3xl font-bold text-white mb-1">{value}</div>
-    <div className="text-sm text-white/60">{title}</div>
-  </div>
-);
-
 // Main Dashboard Component
 const Dashboard: React.FC = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -306,19 +249,16 @@ const Dashboard: React.FC = () => {
 
   const handleDeleteProject = (projectIndex: number) => {
     console.log(`Eliminando proyecto ${projectIndex + 1}`);
-    // Aquí implementarías la lógica de eliminación
     alert(`Eliminando proyecto ${projectIndex + 1}`);
   };
 
   const handleEditProject = (projectIndex: number) => {
     console.log(`Editando proyecto ${projectIndex + 1}`);
-    // Aquí implementarías la lógica de edición
     router.push(`/nuevo-proyecto?edit=${projectIndex + 1}`);
   };
 
   const handleDownloadPDF = (projectIndex: number) => {
     console.log(`Descargando PDF del proyecto ${projectIndex + 1}`);
-    // Aquí implementarías la lógica de descarga de PDF
     alert(`Descargando PDF del proyecto ${projectIndex + 1}`);
   };
 
@@ -330,19 +270,15 @@ const Dashboard: React.FC = () => {
   ];
 
   const projects = [
-    { title: "Análisis Seguridad Industrial", status: 'active' as const, lastModified: "Hace 2 horas" },
-    { title: "Evaluación Riesgos Laborales", status: 'completed' as const, lastModified: "Hace 1 día" },
-    { title: "Inspección Equipos", status: 'pending' as const, lastModified: "Hace 3 días" },
-    { title: "Capacitación Personal", status: 'active' as const, lastModified: "Hace 5 días" },
-    { title: "Auditoría Procesos", status: 'completed' as const, lastModified: "Hace 1 semana" },
-    { title: "Mejora Continua", status: 'pending' as const, lastModified: "Hace 2 semanas" }
-  ];
-
-  const stats = [
-    { title: "Total Proyectos", value: 24, color: "bg-blue-500/20 text-blue-400", icon: <FolderIcon />, trend: 12 },
-    { title: "Activos", value: 18, color: "bg-green-500/20 text-green-400", icon: <AnalyticsIcon />, trend: 8 },
-    { title: "Completados", value: 15, color: "bg-purple-500/20 text-purple-400", icon: <ChartIcon />, trend: 5 },
-    { title: "En Revisión", value: 6, color: "bg-orange-500/20 text-orange-400", icon: <EditIcon />, trend: -2 }
+    { title: "PROYECTO CREADO", isHighlighted: true },
+    { title: "PROYECTO CREADO" },
+    { title: "PROYECTO CREADO" },
+    { title: "PROYECTO CREADO" },
+    { title: "PROYECTO CREADO" },
+    { title: "PROYECTO CREADO" },
+    { title: "PROYECTO CREADO" },
+    { title: "PROYECTO CREADO" },
+    { title: "PROYECTO CREADO" }
   ];
 
   if (!isLoaded) {
@@ -355,7 +291,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-black via-zinc-900 to-black flex overflow-hidden">
-      {/* Enhanced Sidebar */}
+      {/* Sidebar */}
       <div className="w-20 bg-black/50 backdrop-blur-xl border-r border-white/10 flex flex-col items-center py-8 gap-6">
         {/* Logo */}
         <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center mb-8">
@@ -384,60 +320,40 @@ const Dashboard: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Enhanced Header */}
-        <div className="bg-black/30 backdrop-blur-xl border-b border-white/10 px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white mb-1">
-                Técnica de Análisis Sistemático de las Causas
-              </h1>
-              <p className="text-white/60">
-                Dashboard de Gestión de Proyectos SCAT
-              </p>
-            </div>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-8 py-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">
+              Técnica de Análisis Sistemático de las Causas
+            </h1>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            {/* Delete Icon */}
+            <button className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center text-white transition-all duration-200">
+              <DeleteIcon className="w-5 h-5" />
+            </button>
             
-            <div className="flex items-center gap-4">
-              {/* Search */}
-              <div className="relative">
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-                <input
-                  type="text"
-                  placeholder="Buscar proyectos..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="input pl-10 pr-4 py-2 w-64 bg-white/5 border-white/10 focus:border-yellow-400"
-                />
-              </div>
-              
-              {/* Notifications */}
-              <button className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-white/70 hover:text-white transition-all duration-200 focus-ring">
-                <NotificationIcon />
-              </button>
-              
-              {/* Profile */}
-              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center">
-                <span className="text-black font-semibold text-sm">JD</span>
-              </div>
+            {/* Notification Icon */}
+            <button className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center text-white transition-all duration-200">
+              <NotificationIcon />
+            </button>
+            
+            {/* Profile */}
+            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+              <span className="text-white font-semibold text-sm">U</span>
             </div>
           </div>
         </div>
 
         {/* Content Area */}
         <div className="flex-1 p-8 overflow-auto">
-          <div className="max-w-7xl mx-auto space-y-8">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {stats.map((stat, index) => (
-                <StatsCard key={index} {...stat} />
-              ))}
-            </div>
-            
+          <div className="max-w-6xl mx-auto space-y-8">
             {/* Create Project Button */}
             <div className="flex justify-center">
               <button 
                 onClick={handleCreateProject}
-                className="btn btn-primary px-8 py-4 text-lg hover-lift animate-fadeInUp"
-                style={{ animationDelay: '200ms' }}
+                className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-bold px-8 py-4 rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all duration-300 hover:scale-105 shadow-lg flex items-center gap-2"
               >
                 <PlusIcon />
                 Create New proyecto
@@ -445,27 +361,18 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Projects Grid */}
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white">Proyectos Recientes</h2>
-                <button className="text-yellow-400 hover:text-yellow-300 text-sm font-medium">
-                  Ver todos
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projects.map((project, index) => (
-                  <ProjectCard 
-                    key={index}
-                    isHighlighted={index === 0}
-                    onClick={() => handleProjectClick(index + 1)}
-                    onDelete={() => handleDeleteProject(index)}
-                    onEdit={() => handleEditProject(index)}
-                    onDownload={() => handleDownloadPDF(index)}
-                    {...project}
-                  />
-                ))}
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {projects.map((project, index) => (
+                <ProjectCard 
+                  key={index}
+                  isHighlighted={project.isHighlighted}
+                  onClick={() => handleProjectClick(index + 1)}
+                  onDelete={() => handleDeleteProject(index)}
+                  onEdit={() => handleEditProject(index)}
+                  onDownload={() => handleDownloadPDF(index)}
+                  title={project.title}
+                />
+              ))}
             </div>
           </div>
         </div>
