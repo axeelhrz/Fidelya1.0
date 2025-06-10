@@ -22,7 +22,7 @@ const InfoIcon = () => (
   </svg>
 );
 
-// Componente para las etiquetas de cabecera
+// Componente para las etiquetas de cabecera mejorado
 const HeaderTag: React.FC<{ 
   text: string; 
   bgColor: string; 
@@ -30,10 +30,15 @@ const HeaderTag: React.FC<{
   isUnderlined?: boolean;
 }> = ({ text, bgColor, textColor = 'black', isUnderlined = false }) => (
   <div 
-    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200 hover:scale-105 ${isUnderlined ? 'underline' : ''}`}
+    className={`
+      flex-1 min-w-0 h-16 px-4 py-3 rounded-lg text-center font-bold text-sm 
+      transition-all duration-200 hover:scale-105 shadow-lg
+      flex items-center justify-center
+      ${isUnderlined ? 'underline' : ''}
+    `}
     style={{ backgroundColor: bgColor, color: textColor }}
   >
-    {text}
+    <span className="leading-tight">{text}</span>
   </div>
 );
 
@@ -133,10 +138,10 @@ const TablaSCAT: React.FC = () => {
         </div>
       </div>
 
-      {/* Etiquetas de cabecera */}
-      <div className="px-8 py-4 bg-[#2A2A2A]">
+      {/* Etiquetas de cabecera mejoradas - Cuadrados uno al lado del otro */}
+      <div className="px-8 py-6 bg-[#2A2A2A]">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex gap-4">
             <HeaderTag 
               text="EVALUACIÓN POTENCIAL DE PÉRDIDA SI NO ES CONTROLADO" 
               bgColor="#FFC107" 
