@@ -22,6 +22,12 @@ const InfoIcon = () => (
   </svg>
 );
 
+const PlayIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+    <path d="M8 5v14l11-7z"/>
+  </svg>
+);
+
 // Componente para las etiquetas de cabecera mejorado
 const HeaderTag: React.FC<{ 
   text: string; 
@@ -114,6 +120,10 @@ const TablaSCAT: React.FC = () => {
     router.push('/tabla-scat/contacto');
   };
 
+  const handleInteractiveForm = () => {
+    router.push('/tabla-scat/formulario-interactivo');
+  };
+
   const handleOptionSelect = (category: string, option: string) => {
     setEvaluations(prev => ({
       ...prev,
@@ -188,6 +198,19 @@ const TablaSCAT: React.FC = () => {
             selectedOption={evaluations.frecuencia}
             onOptionSelect={(option) => handleOptionSelect('frecuencia', option)}
           />
+
+          {/* Nuevo botón para formulario interactivo */}
+          <div className="flex justify-center pt-8">
+            <button
+              onClick={handleInteractiveForm}
+              className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 
+                         text-black font-bold rounded-xl hover:scale-105 transition-all duration-300 
+                         shadow-lg hover:shadow-xl"
+            >
+              <PlayIcon />
+              <span>Iniciar Formulario Interactivo</span>
+            </button>
+          </div>
         </div>
       </div>
 
