@@ -6,10 +6,6 @@ import { motion } from 'framer-motion'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { Navbar } from '@/components/panel/Navbar'
 import { GreetingCard } from '@/components/panel/dashboard/GreetingCard'
-import { EconomicSummaryCard } from '@/components/panel/dashboard/EconomicSummaryCard'
-import { WeeklyMenuInfoCard } from '@/components/panel/dashboard/WeeklyMenuInfoCard'
-import { QuickActionsCard } from '@/components/panel/dashboard/QuickActionsCard'
-import { AlertsCard } from '@/components/panel/dashboard/AlertsCard'
 import { WeeklyMenu } from '@/components/panel/WeeklyMenu'
 import { OrderSummary } from '@/components/panel/OrderSummary'
 import { useDashboardData } from '@/hooks/useDashboardData'
@@ -304,18 +300,6 @@ export default function PanelPage() {
         >
           {/* Saludo personalizado */}
           <GreetingCard user={dashboardData.user} />
-
-          {/* Grid de tarjetas principales - sin OrderStatusCard */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <EconomicSummaryCard economicSummary={dashboardData.economicSummary} />
-            <WeeklyMenuInfoCard weeklyMenuInfo={dashboardData.weeklyMenuInfo} />
-          </div>
-
-          {/* Acciones rápidas y alertas */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <QuickActionsCard />
-            <AlertsCard alerts={dashboardData.alerts} />
-          </div>
         </motion.div>
 
         {/* Toggle para mostrar menú completo */}
