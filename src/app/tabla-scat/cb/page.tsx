@@ -136,6 +136,11 @@ const CBIndexPage: React.FC = () => {
     router.push('/tabla-scat');
   };
 
+  const handleCBClick = (cbNumber: number) => {
+    // Handle CB card click
+    console.log(`CB ${cbNumber} clicked`);
+  };
+
   const cbData = [
     {
       number: 1,
@@ -1110,4 +1115,138 @@ const CBIndexPage: React.FC = () => {
         { number: "9.835", text: "Incapacidades temporales" },
         { number: "9.836", text: "Frustración" },
         { number: "9.837", text: "Conflictos de personalidad" },
-        { number: "9.838", text: "Enfermedad mental"
+                { number: "9.838", text: "Enfermedad mental" }
+              ]
+            },
+            {
+              number: 10,
+              title: "Adquisiciones Inadecuadas",
+              subcauses: [
+                { number: "10.1", text: "Especificaciones inadecuadas del artículo" },
+                { number: "10.2", text: "Investigación inadecuada de materiales y equipos" },
+                { number: "10.3", text: "Especificaciones inadecuadas para el vendedor" },
+                { number: "10.4", text: "Modalidad o ruta de embarque inadecuada" },
+                { number: "10.5", text: "Inspecciones inadecuadas y aceptación de artículos" },
+                { number: "10.6", text: "Comunicación inadecuada de las necesidades de seguridad y salud" },
+                { number: "10.7", text: "Manejo inadecuado de materiales" },
+                { number: "10.8", text: "Almacenamiento inadecuado de materiales" },
+                { number: "10.9", text: "Transporte inadecuado de materiales" },
+                { number: "10.10", text: "Identificación inadecuada de artículos riesgosos" },
+                { number: "10.11", text: "Sistemas inadecuados de eliminación y desecho" }
+              ]
+            },
+            {
+              number: 11,
+              title: "Mantenimiento Inadecuado",
+              subcauses: [
+                { number: "11.1", text: "Aspectos preventivos inadecuados del programa de mantenimiento" },
+                { number: "11.2", text: "Aspectos predictivos inadecuados del programa de mantenimiento" },
+                { number: "11.3", text: "Lubricación y servicio inadecuados" },
+                { number: "11.4", text: "Ajuste/ensamblaje inadecuado" },
+                { number: "11.5", text: "Limpieza o pulimiento inadecuados" },
+                { number: "11.6", text: "Reemplazo inadecuado de partes" },
+                { number: "11.7", text: "Reparación inadecuada" },
+                { number: "11.8", text: "Remoción inadecuada de materiales de desecho" },
+                { number: "11.9", text: "Programación inadecuada del mantenimiento" },
+                { number: "11.10", text: "Examen inadecuado de partes críticas" },
+                { number: "11.11", text: "Reparación inadecuada por problemas de mantenimiento" }
+              ]
+            },
+            {
+              number: 12,
+              title: "Herramientas y Equipos Inadecuados",
+              subcauses: [
+                { number: "12.1", text: "Evaluación inadecuada de necesidades y riesgos" },
+                { number: "12.2", text: "Preocupación inadecuada por los factores humanos/ergonómicos" },
+                { number: "12.3", text: "Estándares o especificaciones inadecuadas" },
+                { number: "12.4", text: "Disponibilidad inadecuada" },
+                { number: "12.5", text: "Ajustes/reparación/mantenimiento inadecuados" },
+                { number: "12.6", text: "Sistema inadecuado de reparación y recuperación" },
+                { number: "12.7", text: "Remoción y reemplazo inadecuados" }
+              ]
+            },
+            {
+              number: 13,
+              title: "Estándares Inadecuados del Trabajo",
+              subcauses: [
+                { number: "13.1", text: "Desarrollo inadecuado de estándares para:" },
+                { number: "13.2", text: "Inventario y evaluación inadecuados de exposiciones y necesidades" },
+                { number: "13.3", text: "Coordinación inadecuada con quienes diseñan el proceso" },
+                { number: "13.4", text: "Compromiso inadecuado del trabajador" },
+                { number: "13.5", text: "Estándares incompletos o inadecuados para:" },
+                { number: "13.6", text: "Comunicación inadecuada de los estándares existentes" },
+                { number: "13.7", text: "Mantenimiento inadecuado de los estándares" }
+              ]
+            },
+            {
+              number: 14,
+              title: "Uso y Desgaste",
+              subcauses: [
+                { number: "14.1", text: "Planificación inadecuada del uso" },
+                { number: "14.2", text: "Prolongación inadecuada de la vida útil de los artículos" },
+                { number: "14.3", text: "Inspección inadecuada" },
+                { number: "14.4", text: "Carga o proporción de uso inadecuado" },
+                { number: "14.5", text: "Mantenimiento inadecuado" },
+                { number: "14.6", text: "Empleo inadecuado para otros propósitos" },
+                { number: "14.7", text: "Eliminación y reemplazo inadecuado de artículos gastados" }
+              ]
+            },
+            {
+              number: 15,
+              title: "Abuso o Mal Uso",
+              subcauses: [
+                { number: "15.1", text: "Permitido por la supervisión" },
+                { number: "15.2", text: "Intencional" },
+                { number: "15.3", text: "No intencional" }
+              ]
+            }
+          ];
+        
+          return (
+            <div className="min-h-screen bg-[#1A1A1A] relative">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 bg-[#2C2C2C] shadow-lg">
+                <button
+                  onClick={handleBack}
+                  className="w-10 h-10 bg-[#404040] rounded-full flex items-center justify-center hover:bg-[#505050] transition-colors"
+                >
+                  <ArrowLeftIcon />
+                </button>
+                
+                <h1 className="text-white text-xl font-bold">
+                  Causas Básicas (CB)
+                </h1>
+                
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleMenu}
+                    className="w-10 h-10 bg-[#404040] rounded-full flex items-center justify-center hover:bg-[#505050] transition-colors"
+                  >
+                    <MenuIcon />
+                  </button>
+                  <button
+                    onClick={handleNext}
+                    className="w-10 h-10 bg-[#FFD600] rounded-full flex items-center justify-center hover:bg-[#E6C100] transition-colors"
+                  >
+                    <ArrowRightIcon />
+                  </button>
+                </div>
+              </div>
+        
+              {/* CB Grid */}
+              <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {cbData.map((cb) => (
+                  <CBMiniCard
+                    key={cb.number}
+                    number={cb.number}
+                    title={cb.title}
+                    subcauses={cb.subcauses}
+                    onClick={() => handleCBClick(cb.number)}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        };
+        
+        export default CBIndexPage;

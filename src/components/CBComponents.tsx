@@ -3318,4 +3318,12 @@ export const CBScreenLayout77: React.FC<{
       </div>
       
       {/* Action icons */}
-      <
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
