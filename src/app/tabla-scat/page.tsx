@@ -61,10 +61,10 @@ const EvaluationRow: React.FC<{
   selectedOption?: string;
   onOptionSelect?: (option: string) => void;
 }> = ({ title, selectedOption, onOptionSelect }) => (
-  <div className="bg-[#2E2E2E] rounded-xl p-6 hover:bg-[#353535] transition-all duration-300 shadow-lg hover:shadow-xl">
+  <div className="bg-[#2E2E2E] rounded-xl p-8 hover:bg-[#353535] transition-all duration-300 shadow-lg hover:shadow-xl">
     <div className="flex items-center justify-between">
-      <h3 className="text-[#1F7ED0] font-bold text-lg flex-1 pr-8">{title}</h3>
-      <div className="flex gap-6">
+      <h3 className="text-[#1F7ED0] font-bold text-xl flex-1 pr-8">{title}</h3>
+      <div className="flex gap-8">
         <EvaluationButton 
           letter="A" 
           label="Mayor" 
@@ -113,7 +113,7 @@ const TablaSCAT: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#3C3C3C]">
       {/* Cabecera */}
-      <div className="bg-black px-8 py-6 shadow-xl">
+      <div className="bg-black px-12 py-6 shadow-xl">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <h1 className="text-white font-bold text-3xl tracking-wide">TABLA SCAT</h1>
           <h2 className="text-[#FFC107] font-bold text-xl">
@@ -123,9 +123,9 @@ const TablaSCAT: React.FC = () => {
       </div>
 
       {/* Etiquetas de cabecera */}
-      <div className="px-8 py-6 bg-[#2A2A2A]">
+      <div className="px-12 py-6 bg-[#2A2A2A]">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap justify-center gap-4">
             <HeaderTag 
               text="EVALUACIÓN POTENCIAL DE PÉRDIDA SI NO ES CONTROLADO" 
               bgColor="#FFC107" 
@@ -154,9 +154,9 @@ const TablaSCAT: React.FC = () => {
         </div>
       </div>
 
-      {/* Contenido principal */}
-      <div className="px-8 py-8 pb-24">
-        <div className="max-w-7xl mx-auto space-y-6">
+      {/* Contenido principal centrado */}
+      <div className="flex items-center justify-center min-h-[60vh] px-12 py-12">
+        <div className="w-full max-w-5xl mx-auto space-y-8">
           <EvaluationRow 
             title="Potencial de Severidad de Pérdida"
             selectedOption={evaluations.severidad}

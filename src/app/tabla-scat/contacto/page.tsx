@@ -60,7 +60,7 @@ const ContactItem: React.FC<{
 }> = ({ number, title, subtitle, hasClip = false, isSelected = false, onClick }) => (
   <div 
     className={`
-      flex items-center gap-4 p-4 rounded-xl transition-all duration-300 cursor-pointer
+      flex items-center gap-4 p-5 rounded-xl transition-all duration-300 cursor-pointer
       ${isSelected 
         ? 'bg-[#404040] ring-2 ring-[#FFC107] shadow-xl scale-105' 
         : 'bg-[#2E2E2E] hover:bg-[#353535] hover:scale-102 hover:shadow-lg'
@@ -157,7 +157,7 @@ const ContactoSCAT: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#3C3C3C]">
       {/* Cabecera */}
-      <div className="bg-black px-8 py-6 shadow-xl">
+      <div className="bg-black px-12 py-6 shadow-xl">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <h1 className="text-white font-bold text-3xl tracking-wide">TABLA SCAT</h1>
           <h2 className="text-[#FFC107] font-bold text-xl">
@@ -167,9 +167,9 @@ const ContactoSCAT: React.FC = () => {
       </div>
 
       {/* Etiquetas de cabecera */}
-      <div className="px-8 py-6 bg-[#2A2A2A]">
+      <div className="px-12 py-6 bg-[#2A2A2A]">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap justify-center gap-4">
             <HeaderTag 
               text="EVALUACIÓN POTENCIAL DE PÉRDIDA SI NO ES CONTROLADO" 
               bgColor="#FFC107" 
@@ -198,10 +198,10 @@ const ContactoSCAT: React.FC = () => {
         </div>
       </div>
 
-      {/* Contenido principal */}
-      <div className="px-8 py-8 pb-24">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Contenido principal centrado */}
+      <div className="flex items-center justify-center min-h-[60vh] px-12 py-12">
+        <div className="w-full max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Lista de contactos */}
             <div className="lg:col-span-2">
               <div className="space-y-4">
@@ -221,8 +221,8 @@ const ContactoSCAT: React.FC = () => {
 
             {/* Área derecha - Cámara y comentarios */}
             <div className="lg:col-span-1">
-              <div className="bg-[#2E2E2E] rounded-xl p-6 h-full shadow-xl">
-                <div className="flex flex-col h-full space-y-6">
+              <div className="bg-[#2E2E2E] rounded-xl p-8 h-full shadow-xl">
+                <div className="flex flex-col h-full space-y-8">
                   <div className="flex-1 flex flex-col items-center justify-center">
                     <div className="w-32 h-32 bg-[#404040] rounded-xl flex items-center justify-center hover:bg-[#4A4A4A] transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl hover:scale-105">
                       <CameraIcon />
@@ -233,7 +233,7 @@ const ContactoSCAT: React.FC = () => {
                   </div>
                   
                   <div className="flex-1">
-                    <label className="block text-gray-300 text-sm font-semibold mb-3">
+                    <label className="block text-gray-300 text-sm font-semibold mb-4">
                       Comentarios / Adjuntos
                     </label>
                     <textarea 

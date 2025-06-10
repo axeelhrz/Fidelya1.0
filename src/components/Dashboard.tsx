@@ -212,7 +212,7 @@ const Dashboard: React.FC = () => {
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col">
         {/* Header mejorado */}
-        <div className="bg-[#2F766F] h-20 flex items-center justify-between px-8 shadow-xl">
+        <div className="bg-[#2F766F] h-20 flex items-center justify-between px-12 shadow-xl">
           <h1 className="text-[#FFC107] font-bold text-xl tracking-wide">
             Técnica de Análisis Sistemático de las Causas
           </h1>
@@ -229,54 +229,58 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Área de contenido optimizada */}
-        <div className="flex-1 p-8 overflow-auto">
-          {/* Botón de crear proyecto mejorado */}
-          <div className="mb-8">
-            <button 
-              onClick={handleCreateProject}
-              className="
-                bg-gradient-to-r from-[#FFC107] to-[#FFB300] text-black font-bold 
-                py-3 px-6 rounded-xl flex items-center gap-3 
-                hover:from-[#FFB300] hover:to-[#FFA000] hover:scale-105 
-                transition-all duration-300 shadow-xl hover:shadow-2xl
-                active:scale-95
-              "
-            >
-              <FolderPlusIcon />
-              <span className="text-base">Create New Proyect</span>
-            </button>
-          </div>
+        {/* Área de contenido centrada y con mejor espaciado */}
+        <div className="flex-1 flex items-center justify-center p-12">
+          <div className="w-full max-w-7xl mx-auto">
+            {/* Botón de crear proyecto centrado */}
+            <div className="flex justify-center mb-12">
+              <button 
+                onClick={handleCreateProject}
+                className="
+                  bg-gradient-to-r from-[#FFC107] to-[#FFB300] text-black font-bold 
+                  py-3 px-8 rounded-xl flex items-center gap-3 
+                  hover:from-[#FFB300] hover:to-[#FFA000] hover:scale-105 
+                  transition-all duration-300 shadow-xl hover:shadow-2xl
+                  active:scale-95
+                "
+              >
+                <FolderPlusIcon />
+                <span className="text-base">Create New Proyect</span>
+              </button>
+            </div>
 
-          {/* Grid de proyectos mejorado */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {Array.from({ length: 12 }, (_, index) => (
-              <ProjectCard 
-                key={index}
-                isHighlighted={index === 0}
-                projectNumber={index + 1}
-                onClick={() => handleProjectClick(index + 1)}
-              />
-            ))}
-          </div>
+            {/* Grid de proyectos centrado con mejor espaciado */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8 mb-12">
+              {Array.from({ length: 12 }, (_, index) => (
+                <ProjectCard 
+                  key={index}
+                  isHighlighted={index === 0}
+                  projectNumber={index + 1}
+                  onClick={() => handleProjectClick(index + 1)}
+                />
+              ))}
+            </div>
 
-          {/* Estadísticas mejoradas */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="bg-[#2E2E2E] rounded-xl p-4 text-center hover:bg-[#353535] transition-all duration-300 hover:scale-105 shadow-lg">
-              <div className="text-[#FFC107] font-bold text-2xl mb-1">12</div>
-              <div className="text-gray-400 text-sm font-medium">Total Proyectos</div>
-            </div>
-            <div className="bg-[#2E2E2E] rounded-xl p-4 text-center hover:bg-[#353535] transition-all duration-300 hover:scale-105 shadow-lg">
-              <div className="text-[#4CAF50] font-bold text-2xl mb-1">8</div>
-              <div className="text-gray-400 text-sm font-medium">Activos</div>
-            </div>
-            <div className="bg-[#2E2E2E] rounded-xl p-4 text-center hover:bg-[#353535] transition-all duration-300 hover:scale-105 shadow-lg">
-              <div className="text-[#FF9800] font-bold text-2xl mb-1">3</div>
-              <div className="text-gray-400 text-sm font-medium">En Progreso</div>
-            </div>
-            <div className="bg-[#2E2E2E] rounded-xl p-4 text-center hover:bg-[#353535] transition-all duration-300 hover:scale-105 shadow-lg">
-              <div className="text-[#F44336] font-bold text-2xl mb-1">1</div>
-              <div className="text-gray-400 text-sm font-medium">Pendientes</div>
+            {/* Estadísticas centradas */}
+            <div className="flex justify-center">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl">
+                <div className="bg-[#2E2E2E] rounded-xl p-6 text-center hover:bg-[#353535] transition-all duration-300 hover:scale-105 shadow-lg min-w-[140px]">
+                  <div className="text-[#FFC107] font-bold text-2xl mb-2">12</div>
+                  <div className="text-gray-400 text-sm font-medium">Total Proyectos</div>
+                </div>
+                <div className="bg-[#2E2E2E] rounded-xl p-6 text-center hover:bg-[#353535] transition-all duration-300 hover:scale-105 shadow-lg min-w-[140px]">
+                  <div className="text-[#4CAF50] font-bold text-2xl mb-2">8</div>
+                  <div className="text-gray-400 text-sm font-medium">Activos</div>
+                </div>
+                <div className="bg-[#2E2E2E] rounded-xl p-6 text-center hover:bg-[#353535] transition-all duration-300 hover:scale-105 shadow-lg min-w-[140px]">
+                  <div className="text-[#FF9800] font-bold text-2xl mb-2">3</div>
+                  <div className="text-gray-400 text-sm font-medium">En Progreso</div>
+                </div>
+                <div className="bg-[#2E2E2E] rounded-xl p-6 text-center hover:bg-[#353535] transition-all duration-300 hover:scale-105 shadow-lg min-w-[140px]">
+                  <div className="text-[#F44336] font-bold text-2xl mb-2">1</div>
+                  <div className="text-gray-400 text-sm font-medium">Pendientes</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
