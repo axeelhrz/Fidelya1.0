@@ -315,3 +315,5 @@ const CBIndexPage: React.FC = () => {
 };
 
 export default CBIndexPage;
+
+}

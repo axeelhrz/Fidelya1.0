@@ -114,7 +114,7 @@ export const CBActionIcons: React.FC = () => (
   </div>
 );
 
-// Navigation component
+// Navigation component - Updated for 15 screens
 export const CBNavigation: React.FC<{
   currentScreen: number;
   onPrevious?: () => void;
@@ -132,7 +132,7 @@ export const CBNavigation: React.FC<{
   };
 
   const handleNext = () => {
-    if (currentScreen < 7) {
+    if (currentScreen < 15) {
       router.push(`/tabla-scat/cb/${currentScreen + 1}`);
     } else {
       router.push('/tabla-scat/actos');
@@ -140,7 +140,7 @@ export const CBNavigation: React.FC<{
   };
 
   const handleGrid = () => {
-    router.push('/tabla-scat');
+    router.push('/tabla-scat/cb');
   };
 
   return (
@@ -163,7 +163,7 @@ export const CBNavigation: React.FC<{
       <button 
         onClick={onNext || handleNext}
         className="w-16 h-16 bg-[#404040] rounded-lg flex items-center justify-center hover:bg-[#4A4A4A] transition-all duration-200 hover:scale-110"
-        disabled={currentScreen === 7}
+        disabled={currentScreen === 15}
       >
         <ArrowRightIcon />
       </button>
@@ -211,3 +211,3111 @@ export const CBScreenLayout: React.FC<{
     </div>
   );
 };
+
+// Main CB screen layout component
+export const CBScreenLayout2: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout3: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout4: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout5: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout6: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout7: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout8: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout9: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout10: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout11: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout12: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout13: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout14: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout15: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout16: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout17: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout18: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout19: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout20: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout21: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout22: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout23: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout24: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout25: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout26: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout27: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout28: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout29: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout30: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout31: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout32: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout33: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout34: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout35: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout36: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout37: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout38: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout39: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout40: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout41: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout42: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout43: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout44: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout45: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout46: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout47: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout48: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout49: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout50: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout51: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout52: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout53: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout54: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout55: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout56: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout57: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout58: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout59: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout60: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout61: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout62: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout63: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout64: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout65: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout66: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout67: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout68: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout69: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout70: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout71: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout72: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout73: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout74: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout75: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout76: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <CBActionIcons />
+      
+      {/* Navigation */}
+      <CBNavigation currentScreen={number} />
+      
+      {children}
+    </div>
+  );
+};
+
+// Main CB screen layout component
+export const CBScreenLayout77: React.FC<{
+  number: number;
+  title: string;
+  nacReferences: string;
+  subcauses: Array<{ number: string; text: string; }>;
+  children?: React.ReactNode;
+}> = ({ number, title, nacReferences, subcauses, children }) => {
+  const [selectedSubcause, setSelectedSubcause] = React.useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#2E2E2E] flex flex-col">
+      {/* Header */}
+      <CBHeader number={number} title={title} nacReferences={nacReferences} />
+      
+      {/* Main content */}
+      <div className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {subcauses.map((subcause, index) => (
+            <CBSubcauseItem
+              key={index}
+              number={subcause.number}
+              text={subcause.text}
+              isSelected={selectedSubcause === subcause.number}
+              onClick={() => setSelectedSubcause(subcause.number)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Action icons */}
+      <
