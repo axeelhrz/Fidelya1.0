@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Modern SVG Icons with enhanced styling
+// Enhanced SVG Icons with consistent sizing
 const HomeIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
@@ -54,27 +54,34 @@ const PlusIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   </svg>
 );
 
-const FolderIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+// Action Icons for Project Cards
+const DeleteIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
   </svg>
 );
 
-const EditIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+const EditIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
   </svg>
 );
 
-const AnalyticsIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+const DownloadIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+  </svg>
+);
+
+const AnalyticsIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
   </svg>
 );
 
-const ImageIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+const FolderIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+    <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
   </svg>
 );
 
@@ -121,14 +128,16 @@ const SidebarButton: React.FC<SidebarButtonProps> = ({
   </div>
 );
 
-// Enhanced Project Card Component
+// Enhanced Project Card Component with Large Action Buttons
 interface ProjectCardProps {
   isHighlighted?: boolean;
-  projectNumber?: number;
   onClick?: () => void;
   title?: string;
   status?: 'active' | 'completed' | 'pending';
   lastModified?: string;
+  onDelete?: () => void;
+  onEdit?: () => void;
+  onDownload?: () => void;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ 
@@ -136,7 +145,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   onClick,
   title = "Proyecto",
   status = 'active',
-  lastModified = "Hace 2 días"
+  lastModified = "Hace 2 días",
+  onDelete,
+  onEdit,
+  onDownload
 }) => {
   const statusColors = {
     active: 'bg-green-500/20 text-green-400 border-green-500/30',
@@ -153,24 +165,24 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   return (
     <div 
       className={`
-        group relative card card-interactive p-6 h-32
+        group relative card card-interactive p-6 h-48
         ${isHighlighted 
           ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-black shadow-xl shadow-yellow-500/25' 
           : 'bg-zinc-900/50 hover:bg-zinc-800/50'
         }
-        animate-fadeInUp
+        animate-fadeInUp cursor-pointer
       `}
       onClick={onClick}
     >
       {/* Status Badge */}
-      <div className={`absolute top-4 right-4 px-2 py-1 rounded-full text-xs font-medium border ${statusColors[status]}`}>
+      <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium border ${statusColors[status]}`}>
         {statusLabels[status]}
       </div>
       
       {/* Content */}
       <div className="flex flex-col justify-between h-full">
         <div>
-          <h3 className={`font-bold text-lg mb-1 ${isHighlighted ? 'text-black' : 'text-white'}`}>
+          <h3 className={`font-bold text-xl mb-2 ${isHighlighted ? 'text-black' : 'text-white'}`}>
             {title}
           </h3>
           <p className={`text-sm ${isHighlighted ? 'text-black/70' : 'text-white/60'}`}>
@@ -178,46 +190,63 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </p>
         </div>
         
-        {/* Action Buttons */}
-        <div className="flex gap-2 mt-4">
+        {/* Large Action Buttons */}
+        <div className="flex gap-3 mt-6">
           <button 
             className={`
-              w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200
+              flex-1 h-12 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 font-medium text-sm
               ${isHighlighted 
                 ? 'bg-black/20 hover:bg-black/30 text-black' 
                 : 'bg-white/10 hover:bg-white/20 text-white'
               }
-              hover:scale-110 focus-ring
+              hover:scale-105 focus-ring
             `}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.();
+            }}
+            title="Eliminar proyecto"
           >
-            <AnalyticsIcon />
+            <DeleteIcon className="w-5 h-5" />
+            <span className="hidden sm:inline">Eliminar</span>
           </button>
+          
           <button 
             className={`
-              w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200
+              flex-1 h-12 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 font-medium text-sm
               ${isHighlighted 
                 ? 'bg-black/20 hover:bg-black/30 text-black' 
                 : 'bg-white/10 hover:bg-white/20 text-white'
               }
-              hover:scale-110 focus-ring
+              hover:scale-105 focus-ring
             `}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit?.();
+            }}
+            title="Editar proyecto"
           >
-            <EditIcon />
+            <EditIcon className="w-5 h-5" />
+            <span className="hidden sm:inline">Editar</span>
           </button>
+          
           <button 
             className={`
-              w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200
+              flex-1 h-12 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 font-medium text-sm
               ${isHighlighted 
                 ? 'bg-black/20 hover:bg-black/30 text-black' 
                 : 'bg-white/10 hover:bg-white/20 text-white'
               }
-              hover:scale-110 focus-ring
+              hover:scale-105 focus-ring
             `}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownload?.();
+            }}
+            title="Descargar PDF"
           >
-            <ImageIcon />
+            <DownloadIcon className="w-5 h-5" />
+            <span className="hidden sm:inline">PDF</span>
           </button>
         </div>
       </div>
@@ -273,6 +302,24 @@ const Dashboard: React.FC = () => {
   const handleProjectClick = (projectNumber: number) => {
     console.log(`Abriendo proyecto ${projectNumber}`);
     router.push('/tabla-scat');
+  };
+
+  const handleDeleteProject = (projectIndex: number) => {
+    console.log(`Eliminando proyecto ${projectIndex + 1}`);
+    // Aquí implementarías la lógica de eliminación
+    alert(`Eliminando proyecto ${projectIndex + 1}`);
+  };
+
+  const handleEditProject = (projectIndex: number) => {
+    console.log(`Editando proyecto ${projectIndex + 1}`);
+    // Aquí implementarías la lógica de edición
+    router.push(`/nuevo-proyecto?edit=${projectIndex + 1}`);
+  };
+
+  const handleDownloadPDF = (projectIndex: number) => {
+    console.log(`Descargando PDF del proyecto ${projectIndex + 1}`);
+    // Aquí implementarías la lógica de descarga de PDF
+    alert(`Descargando PDF del proyecto ${projectIndex + 1}`);
   };
 
   const sidebarItems = [
@@ -342,10 +389,10 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-white mb-1">
-                Dashboard SCAT
+                Técnica de Análisis Sistemático de las Causas
               </h1>
               <p className="text-white/60">
-                Técnica de Análisis Sistemático de las Causas
+                Dashboard de Gestión de Proyectos SCAT
               </p>
             </div>
             
@@ -393,7 +440,7 @@ const Dashboard: React.FC = () => {
                 style={{ animationDelay: '200ms' }}
               >
                 <PlusIcon />
-                Crear Nuevo Proyecto
+                Create New proyecto
               </button>
             </div>
 
@@ -412,6 +459,9 @@ const Dashboard: React.FC = () => {
                     key={index}
                     isHighlighted={index === 0}
                     onClick={() => handleProjectClick(index + 1)}
+                    onDelete={() => handleDeleteProject(index)}
+                    onEdit={() => handleEditProject(index)}
+                    onDownload={() => handleDownloadPDF(index)}
                     {...project}
                   />
                 ))}
