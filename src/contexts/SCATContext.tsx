@@ -1,7 +1,7 @@
 'use client';
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 
-// Tipos de datos
+// Tipos de datos actualizados
 export interface Project {
   id: string;
   name: string;
@@ -21,13 +21,19 @@ export interface Project {
   };
   validations: {
     [key: string]: {
-      P: boolean | null; // Potencial
-      E: boolean | null; // Exposición
-      C: boolean | null; // Control
+      selected: boolean;
+      observation: string;
+      attachments: string[];
+      P?: boolean | null; // Solo para NAC
+      E?: boolean | null; // Solo para NAC
+      C?: boolean | null; // Solo para NAC
+      completedAt?: Date;
     };
   };
-  observations: {
-    [key: string]: string;
+  formProgress?: {
+    currentSection: 'ci' | 'cb' | 'nac';
+    currentCause: number;
+    lastSaved: Date;
   };
 }
 
@@ -40,9 +46,10 @@ export interface SCATState {
   filterStatus: 'all' | 'completed' | 'incomplete' | 'pending';
   isLoading: boolean;
   sidebarOpen: boolean;
+  formMode: 'wizard' | 'traditional';
 }
 
-// Acciones
+// Acciones actualizadas
 type SCATAction =
   | { type: 'SET_CURRENT_PROJECT'; payload: Project }
   | { type: 'ADD_PROJECT'; payload: Project }
@@ -55,11 +62,12 @@ type SCATAction =
   | { type: 'SET_FILTER_STATUS'; payload: 'all' | 'completed' | 'incomplete' | 'pending' }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'TOGGLE_SIDEBAR' }
-  | { type: 'UPDATE_VALIDATION'; payload: { causeId: string; type: 'P' | 'E' | 'C'; value: boolean } }
-  | { type: 'UPDATE_OBSERVATION'; payload: { causeId: string; observation: string } }
+  | { type: 'SET_FORM_MODE'; payload: 'wizard' | 'traditional' }
+  | { type: 'UPDATE_VALIDATION'; payload: { causeId: string; validation: any } }
+  | { type: 'UPDATE_FORM_PROGRESS'; payload: { section: 'ci' | 'cb' | 'nac'; cause: number } }
   | { type: 'MARK_CAUSE_COMPLETE'; payload: { section: 'ci' | 'cb' | 'nac'; causeId: string } };
 
-// Estado inicial
+// Estado inicial actualizado
 const initialState: SCATState = {
   currentProject: null,
   projects: [],
@@ -69,9 +77,10 @@ const initialState: SCATState = {
   filterStatus: 'all',
   isLoading: false,
   sidebarOpen: false,
+  formMode: 'wizard',
 };
 
-// Reducer
+// Reducer actualizado
 function scatReducer(state: SCATState, action: SCATAction): SCATState {
   switch (action.type) {
     case 'SET_CURRENT_PROJECT':
@@ -136,6 +145,9 @@ function scatReducer(state: SCATState, action: SCATAction): SCATState {
     case 'TOGGLE_SIDEBAR':
       return { ...state, sidebarOpen: !state.sidebarOpen };
     
+    case 'SET_FORM_MODE':
+      return { ...state, formMode: action.payload };
+    
     case 'UPDATE_VALIDATION':
       if (!state.currentProject) return state;
       return {
@@ -146,21 +158,22 @@ function scatReducer(state: SCATState, action: SCATAction): SCATState {
             ...state.currentProject.validations,
             [action.payload.causeId]: {
               ...state.currentProject.validations[action.payload.causeId],
-              [action.payload.type]: action.payload.value
+              ...action.payload.validation
             }
           }
         }
       };
     
-    case 'UPDATE_OBSERVATION':
+    case 'UPDATE_FORM_PROGRESS':
       if (!state.currentProject) return state;
       return {
         ...state,
         currentProject: {
           ...state.currentProject,
-          observations: {
-            ...state.currentProject.observations,
-            [action.payload.causeId]: action.payload.observation
+          formProgress: {
+            currentSection: action.payload.section,
+            currentCause: action.payload.cause,
+            lastSaved: new Date()
           }
         }
       };
@@ -212,7 +225,7 @@ export function useSCAT() {
   return context;
 }
 
-// Utilidades
+// Utilidades actualizadas
 export function generateProjectId(): string {
   return `proj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
@@ -239,4 +252,17 @@ export function calculateProgress(project: Project): {
     nac: Math.round((nacCompleted / nacTotal) * 100),
     total: Math.round((totalCompleted / totalCauses) * 100)
   };
+}
+
+export function isProjectComplete(project: Project): boolean {
+  const progress = calculateProgress(project);
+  return progress.total === 100;
+}
+
+export function getProjectStatusText(project: Project): string {
+  const progress = calculateProgress(project);
+  
+  if (progress.total === 100) return 'Completado';
+  if (progress.total > 0) return 'En progreso';
+  return 'Pendiente';
 }
