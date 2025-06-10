@@ -28,7 +28,7 @@ const PlayIcon = () => (
   </svg>
 );
 
-// Componente para las etiquetas de cabecera mejorado
+// Componente para las etiquetas de cabecera
 const HeaderTag: React.FC<{ 
   text: string; 
   bgColor: string; 
@@ -148,7 +148,7 @@ const TablaSCAT: React.FC = () => {
         </div>
       </div>
 
-      {/* Etiquetas de cabecera mejoradas - Cuadrados uno al lado del otro */}
+      {/* Etiquetas de cabecera */}
       <div className="px-8 py-6 bg-[#2A2A2A]">
         <div className="max-w-7xl mx-auto">
           <div className="flex gap-4">
@@ -199,22 +199,22 @@ const TablaSCAT: React.FC = () => {
             onOptionSelect={(option) => handleOptionSelect('frecuencia', option)}
           />
 
-          {/* Nuevo botón para formulario interactivo */}
+          {/* Botón para formulario interactivo */}
           <div className="flex justify-center pt-8">
             <button
               onClick={handleInteractiveForm}
-              className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 
-                         text-black font-bold rounded-xl hover:scale-105 transition-all duration-300 
+              className="flex items-center gap-3 px-12 py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 
+                         text-black font-bold text-lg rounded-xl hover:scale-105 transition-all duration-300 
                          shadow-lg hover:shadow-xl"
             >
               <PlayIcon />
-              <span>Iniciar Formulario Interactivo</span>
+              <span>Crear Nuevo Proyecto</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Botón flotante inferior mejorado */}
+      {/* Botón flotante inferior */}
       <div className="fixed bottom-8 right-8">
         <div className="bg-black rounded-2xl p-4 flex items-center gap-4 shadow-2xl">
           <button className="w-12 h-12 flex items-center justify-center hover:bg-gray-800 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95">
