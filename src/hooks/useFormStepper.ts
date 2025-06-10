@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { FormProgress, FormStep, CauseValidation, SCATSection } from '../types/scatForm';
+import { FormProgress, FormStep, SCATSection } from '../types/scatForm';
+import { CauseValidation } from '../types/validation';
 import { SCAT_SECTIONS } from '../data/scatData';
 
 export interface UseFormStepperReturn {
@@ -13,7 +14,7 @@ export interface UseFormStepperReturn {
   
   // Datos de la sección actual
   currentSectionData: SCATSection;
-  currentCauseData: any;
+  currentCauseData: SCATSection['causes'][0] | undefined;
   
   // Progreso
   progress: FormProgress;
@@ -233,20 +234,26 @@ export function useFormStepper(): UseFormStepperReturn {
 
   // Actualizar validación
   const updateValidation = useCallback((causeId: string, validation: Partial<CauseValidation>) => {
-    setValidations(prev => ({
-      ...prev,
-      [causeId]: {
+    setValidations(prev => {
+      const defaultValidation = {
         selected: false,
         observation: '',
         attachments: [],
         P: null,
         E: null,
-        C: null,
-        ...prev[causeId],
-        ...validation,
-        completedAt: validation.selected ? new Date() : prev[causeId]?.completedAt
-      }
-    }));
+        C: null
+      };
+      
+      return {
+        ...prev,
+        [causeId]: {
+          ...defaultValidation,
+          ...prev[causeId],
+          ...validation,
+          completedAt: validation.selected ? new Date() : prev[causeId]?.completedAt
+        }
+      };
+    });
   }, []);
 
   // Marcar causa como completa

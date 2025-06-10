@@ -1,4 +1,6 @@
 // Tipos para el formulario SCAT interactivo
+import { CauseValidation } from './validation';
+
 export interface SCATCause {
   id: string;
   number: string;
@@ -23,16 +25,6 @@ export interface SCATSection {
   totalCauses: number;
 }
 
-export interface CauseValidation {
-  selected: boolean;
-  observation: string;
-  attachments: string[];
-  P?: boolean | null; // Solo para NAC
-  E?: boolean | null; // Solo para NAC
-  C?: boolean | null; // Solo para NAC
-  completedAt?: Date;
-}
-
 export interface FormProgress {
   currentSection: 'ci' | 'cb' | 'nac';
   currentCause: number;
@@ -52,3 +44,6 @@ export interface FormStep {
   status: 'pending' | 'active' | 'completed' | 'locked';
   progress: number;
 }
+
+// Re-exportar CauseValidation para compatibilidad
+export type { CauseValidation };

@@ -5,6 +5,7 @@ import { StepHeader } from './StepHeader';
 import { SCATStepPanel } from './SCATStepPanel';
 import { NavigationControls } from './NavigationControls';
 import { useFormStepper } from '../hooks/useFormStepper';
+import { CauseValidation } from '../types/validation';
 
 interface FormStepperProps {
   onComplete?: () => void;
@@ -89,9 +90,9 @@ export const FormStepper: React.FC<FormStepperProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [canGoPrevious, canGoNext, goPrevious, goNext, onExit]);
 
-  const handleStepClick = (step: any) => {
-    if (step.status !== 'locked') {
-      goToSection(step.section);
+  const handleStepClick = (step: { status: string; section: string }) => {
+    if (step.status !== 'locked' && (step.section === 'ci' || step.section === 'cb' || step.section === 'nac')) {
+      goToSection(step.section as 'ci' | 'cb' | 'nac');
     }
   };
 
@@ -122,7 +123,7 @@ export const FormStepper: React.FC<FormStepperProps> = ({
     goNext();
   };
 
-  const handleValidationChange = (causeId: string, validation: any) => {
+  const handleValidationChange = (causeId: string, validation: Partial<CauseValidation>) => {
     updateValidation(causeId, validation);
   };
 
@@ -130,7 +131,7 @@ export const FormStepper: React.FC<FormStepperProps> = ({
     markCauseComplete(causeId);
   };
 
-  const showValidationWarning = !isCurrentCauseComplete && currentCauseData;
+  const showValidationWarning = !isCurrentCauseComplete && !!currentCauseData;
   const incompleteValidations = getIncompleteValidations();
 
   return (
