@@ -18,7 +18,8 @@ import {
   User as UserIcon,
   Users,
   CheckCircle,
-  Info
+  Info,
+  Sparkles
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -71,8 +72,8 @@ export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: 
   }, {} as Record<string, typeof summary.selections>)
 
   return (
-    <div className="sticky top-6 z-10">
-      <Card className="w-full shadow-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+    <div className="fixed top-6 right-6 w-80 z-50 max-h-[calc(100vh-3rem)] overflow-hidden">
+      <Card className="w-full shadow-2xl border-2 border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
             <ShoppingCart className="w-5 h-5 flex-shrink-0" />
@@ -80,7 +81,7 @@ export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: 
           </CardTitle>
         </CardHeader>
 
-        <CardContent className="space-y-4 p-4">
+        <CardContent className="space-y-4 p-4 max-h-[calc(100vh-12rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent">
           {!hasSelections ? (
             <div className="text-center py-6 text-slate-500 dark:text-slate-400">
               <ShoppingCart className="w-8 h-8 mx-auto mb-3 opacity-50" />
@@ -104,7 +105,7 @@ export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: 
               </Alert>
 
               {/* Selecciones agrupadas por hijo - Layout mejorado con altura máxima fija */}
-              <div className="space-y-4 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent">
+              <div className="space-y-4 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent">
                 {Object.entries(selectionsByChildGroup).map(([childKey, selections]) => {
                   const child = selections[0]?.hijo
                   const isPersonal = childKey === 'funcionario'
@@ -274,10 +275,15 @@ export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: 
                   </Alert>
                 )}
 
+                {/* Botón de pago con estilo mejorado */}
                 <Button
                   onClick={onProceedToPayment}
                   disabled={!hasAlmuerzos || isProcessingPayment}
-                  className="w-full"
+                  className={`w-full relative overflow-hidden transition-all duration-300 ${
+                    hasAlmuerzos 
+                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transform hover:scale-[1.02] border-0' 
+                      : 'bg-slate-300 dark:bg-slate-700'
+                  }`}
                   size="lg"
                 >
                   {isProcessingPayment ? (
@@ -285,14 +291,20 @@ export function OrderSummary({ user, onProceedToPayment, isProcessingPayment }: 
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2 flex-shrink-0" />
                       <span className="truncate">Procesando...</span>
                     </>
+                  ) : hasAlmuerzos ? (
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-emerald-600/20 animate-pulse" />
+                      <Sparkles className="w-4 h-4 mr-2 flex-shrink-0 animate-pulse" />
+                      <span className="truncate font-semibold">
+                        Pagar {formatPrice(summary.total)}
+                      </span>
+                      <CreditCard className="w-4 h-4 ml-2 flex-shrink-0" />
+                    </>
                   ) : (
                     <>
-                      <CreditCard className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
                       <span className="truncate">
-                        {hasAlmuerzos 
-                          ? `Pagar ${formatPrice(summary.total)}`
-                          : 'Selecciona menús para continuar'
-                        }
+                        Selecciona menús para continuar
                       </span>
                     </>
                   )}

@@ -93,19 +93,14 @@ export default function MiPedidoPage() {
   if (authLoading || isLoadingMenu || isLoadingOrder) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-        <div className="container mx-auto px-4 py-8 space-y-6">
+        <div className="container mx-auto px-4 py-8 space-y-6 pr-96">
           <Skeleton className="h-16 w-full" />
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-3 space-y-6">
-              <Skeleton className="h-32 w-full" />
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6, 7].map(i => (
-                  <Skeleton key={i} className="h-96 w-full" />
-                ))}
-              </div>
-            </div>
-            <div className="space-y-6">
-              <Skeleton className="h-64 w-full" />
+          <div className="space-y-6">
+            <Skeleton className="h-32 w-full" />
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                <Skeleton key={i} className="h-96 w-full" />
+              ))}
             </div>
           </div>
         </div>
@@ -136,7 +131,7 @@ export default function MiPedidoPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
         <Navbar onLogout={handleLogout} />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 pr-96">
           <Card className="w-full max-w-2xl mx-auto">
             <CardContent className="p-6 text-center">
               <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
@@ -162,7 +157,14 @@ export default function MiPedidoPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
       <Navbar onLogout={handleLogout} />
       
-      <div className="container mx-auto px-4 py-8 space-y-8">
+      {/* Sidebar fijo - Resumen del pedido */}
+      <OrderSummary
+        user={user}
+        onProceedToPayment={processPayment}
+        isProcessingPayment={isProcessingPayment}
+      />
+      
+      <div className="container mx-auto px-4 py-8 space-y-8 pr-96">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -235,184 +237,205 @@ export default function MiPedidoPage() {
           </motion.div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Contenido principal */}
-          <div className="lg:col-span-3 space-y-8">
-            {/* Selector de hijo (solo para apoderados) */}
-            {user.tipoUsuario === 'apoderado' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <ChildSelector user={user} isReadOnly={false} />
-              </motion.div>
-            )}
-
-            {/* Información del usuario funcionario */}
-            {user.tipoUsuario === 'funcionario' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-900/10 dark:border-blue-800">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
-                        <UserIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <span className="font-semibold text-slate-900 dark:text-slate-100 text-lg">
-                          Pedido Personal
-                        </span>
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 ml-2">
-                          Funcionario
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* Selector de tipo de menú */}
+        {/* Contenido principal */}
+        <div className="space-y-8">
+          {/* Selector de hijo (solo para apoderados) */}
+          {user.tipoUsuario === 'apoderado' && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.2 }}
             >
-              <Card className="border-slate-200 bg-white/50 dark:bg-slate-800/50 dark:border-slate-700">
+              <ChildSelector user={user} isReadOnly={false} />
+            </motion.div>
+          )}
+
+          {/* Información del usuario funcionario */}
+          {user.tipoUsuario === 'funcionario' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-900/10 dark:border-blue-800">
                 <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-800">
-                        {activeMenuType === 'almuerzo' ? (
-                          <Utensils className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                        ) : (
-                          <Coffee className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                        )}
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                          Seleccionar Tipo de Menú
-                        </h2>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          Elige entre almuerzos y colaciones para ver las opciones disponibles
-                        </p>
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                      <UserIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
-                    
-                    <MenuTypeSelector
-                      activeType={activeMenuType}
-                      onTypeChange={setActiveMenuType}
-                      almuerzoCount={almuerzoCount}
-                      colacionCount={colacionCount}
-                    />
+                    <div>
+                      <span className="font-semibold text-slate-900 dark:text-slate-100 text-lg">
+                        Pedido Personal
+                      </span>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 ml-2">
+                        Funcionario
+                      </Badge>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
+          )}
 
-            {/* Mostrar todas las semanas */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="space-y-12"
-            >
-              {allWeeks.map((week, weekIndex) => {
-                const weekDays = week.weekMenu.filter((_, index) => index < 5)
-                const weekendDays = week.weekMenu.filter((_, index) => index >= 5)
-                const isCurrentWeek = week.weekInfo.isCurrentWeek
-
-                return (
-                  <div key={week.weekInfo.weekStart} className="space-y-6">
-                    {/* Header de la semana */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-full ${
-                          isCurrentWeek 
-                            ? 'bg-emerald-100 dark:bg-emerald-900/30' 
-                            : 'bg-slate-100 dark:bg-slate-800'
-                        }`}>
-                          <CalendarDays className={`w-6 h-6 ${
-                            isCurrentWeek 
-                              ? 'text-emerald-600 dark:text-emerald-400' 
-                              : 'text-slate-600 dark:text-slate-400'
-                          }`} />
-                        </div>
-                        <div>
-                          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                            {week.weekInfo.weekLabel}
-                          </h2>
-                          <div className="flex items-center gap-2 mt-1">
-                            {isCurrentWeek && (
-                              <Badge variant="default" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                                Semana Actual
-                              </Badge>
-                            )}
-                            {!isCurrentWeek && (
-                              <Badge variant="outline" className="text-slate-600 dark:text-slate-400">
-                                Próxima Semana
-                              </Badge>
-                            )}
-                            {week.hasMenus && (
-                              <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                Menú Disponible
-                              </Badge>
-                            )}
-                            <Badge variant="outline" className={
-                              activeMenuType === 'almuerzo' 
-                                ? "bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300"
-                                : "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                            }>
-                              {activeMenuType === 'almuerzo' ? (
-                                <>
-                                  <Utensils className="w-3 h-3 mr-1" />
-                                  Almuerzos
-                                </>
-                              ) : (
-                                <>
-                                  <Coffee className="w-3 h-3 mr-1" />
-                                  Colaciones
-                                </>
-                              )}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Botón de refresh para la semana */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => refreshWeek(week.weekInfo.weekStart)}
-                        disabled={week.isLoading}
-                        className="gap-2"
-                      >
-                        <RefreshCw className={`w-4 h-4 ${week.isLoading ? 'animate-spin' : ''}`} />
-                        Actualizar
-                      </Button>
+          {/* Selector de tipo de menú */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="border-slate-200 bg-white/50 dark:bg-slate-800/50 dark:border-slate-700">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-800">
+                      {activeMenuType === 'almuerzo' ? (
+                        <Utensils className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                      ) : (
+                        <Coffee className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                      )}
                     </div>
+                    <div>
+                      <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                        Seleccionar Tipo de Menú
+                      </h2>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Elige entre almuerzos y colaciones para ver las opciones disponibles
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <MenuTypeSelector
+                    activeType={activeMenuType}
+                    onTypeChange={setActiveMenuType}
+                    almuerzoCount={almuerzoCount}
+                    colacionCount={colacionCount}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-                    {/* Contenido de la semana */}
-                    {week.isLoading ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {[1, 2, 3, 4, 5].map(i => (
-                          <Skeleton key={i} className="h-96 w-full" />
-                        ))}
+          {/* Mostrar todas las semanas */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="space-y-12"
+          >
+            {allWeeks.map((week, weekIndex) => {
+              const weekDays = week.weekMenu.filter((_, index) => index < 5)
+              const weekendDays = week.weekMenu.filter((_, index) => index >= 5)
+              const isCurrentWeek = week.weekInfo.isCurrentWeek
+
+              return (
+                <div key={week.weekInfo.weekStart} className="space-y-6">
+                  {/* Header de la semana */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-full ${
+                        isCurrentWeek 
+                          ? 'bg-emerald-100 dark:bg-emerald-900/30' 
+                          : 'bg-slate-100 dark:bg-slate-800'
+                      }`}>
+                        <CalendarDays className={`w-6 h-6 ${
+                          isCurrentWeek 
+                            ? 'text-emerald-600 dark:text-emerald-400' 
+                            : 'text-slate-600 dark:text-slate-400'
+                        }`} />
                       </div>
-                    ) : week.error ? (
-                      <Card className="border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800">
-                        <CardContent className="p-6 text-center">
-                          <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-3" />
-                          <h3 className="font-medium text-red-900 dark:text-red-100 mb-2">
-                            Error al cargar esta semana
-                          </h3>
-                          <p className="text-red-700 dark:text-red-300 text-sm mb-4">
-                            {week.error}
-                          </p>
+                      <div>
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                          {week.weekInfo.weekLabel}
+                        </h2>
+                        <div className="flex items-center gap-2 mt-1">
+                          {isCurrentWeek && (
+                            <Badge variant="default" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                              Semana Actual
+                            </Badge>
+                          )}
+                          {!isCurrentWeek && (
+                            <Badge variant="outline" className="text-slate-600 dark:text-slate-400">
+                              Próxima Semana
+                            </Badge>
+                          )}
+                          {week.hasMenus && (
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                              Menú Disponible
+                            </Badge>
+                          )}
+                          <Badge variant="outline" className={
+                            activeMenuType === 'almuerzo' 
+                              ? "bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300"
+                              : "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
+                          }>
+                            {activeMenuType === 'almuerzo' ? (
+                              <>
+                                <Utensils className="w-3 h-3 mr-1" />
+                                Almuerzos
+                              </>
+                            ) : (
+                              <>
+                                <Coffee className="w-3 h-3 mr-1" />
+                                Colaciones
+                              </>
+                            )}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Botón de refresh para la semana */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => refreshWeek(week.weekInfo.weekStart)}
+                      disabled={week.isLoading}
+                      className="gap-2"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${week.isLoading ? 'animate-spin' : ''}`} />
+                      Actualizar
+                    </Button>
+                  </div>
+
+                  {/* Contenido de la semana */}
+                  {week.isLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <Skeleton key={i} className="h-96 w-full" />
+                      ))}
+                    </div>
+                  ) : week.error ? (
+                    <Card className="border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800">
+                      <CardContent className="p-6 text-center">
+                        <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-3" />
+                        <h3 className="font-medium text-red-900 dark:text-red-100 mb-2">
+                          Error al cargar esta semana
+                        </h3>
+                        <p className="text-red-700 dark:text-red-300 text-sm mb-4">
+                          {week.error}
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => refreshWeek(week.weekInfo.weekStart)}
+                          className="gap-2"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          Reintentar
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : !week.hasMenus ? (
+                    <Card className="border-slate-200 bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700">
+                      <CardContent className="p-8 text-center">
+                        <Calendar className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                          Menú no disponible
+                        </h3>
+                        <p className="text-slate-600 dark:text-slate-400 mb-4">
+                          El menú para esta semana aún no ha sido publicado.
+                        </p>
+                        <div className="flex gap-3 justify-center">
                           <Button
                             variant="outline"
                             size="sm"
@@ -420,200 +443,130 @@ export default function MiPedidoPage() {
                             className="gap-2"
                           >
                             <RefreshCw className="w-4 h-4" />
-                            Reintentar
+                            Verificar
                           </Button>
-                        </CardContent>
-                      </Card>
-                    ) : !week.hasMenus ? (
-                      <Card className="border-slate-200 bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700">
-                        <CardContent className="p-8 text-center">
-                          <Calendar className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                          <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
-                            Menú no disponible
-                          </h3>
-                          <p className="text-slate-600 dark:text-slate-400 mb-4">
-                            El menú para esta semana aún no ha sido publicado.
-                          </p>
-                          <div className="flex gap-3 justify-center">
+                          {isCurrentWeek && (
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => refreshWeek(week.weekInfo.weekStart)}
+                              onClick={() => window.open('/admin/menus', '_blank')}
                               className="gap-2"
                             >
-                              <RefreshCw className="w-4 h-4" />
-                              Verificar
+                              <ExternalLink className="w-4 h-4" />
+                              Panel Admin
                             </Button>
-                            {isCurrentWeek && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => window.open('/admin/menus', '_blank')}
-                                className="gap-2"
-                              >
-                                <ExternalLink className="w-4 h-4" />
-                                Panel Admin
-                              </Button>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <div className="space-y-6">
-                        {/* Días laborales */}
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-                              {activeMenuType === 'almuerzo' ? (
-                                <Utensils className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                              ) : (
-                                <Coffee className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                              )}
-                            </div>
-                            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                              Días Laborales - {activeMenuType === 'almuerzo' ? 'Almuerzos' : 'Colaciones'}
-                            </h3>
-                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                              Lunes a Viernes
-                            </Badge>
-                          </div>
-                          
-                          {weekDays.length === 0 ? (
-                            <p className="text-slate-600 dark:text-slate-400 text-center py-8">
-                              No hay menús disponibles para los días laborales
-                            </p>
-                          ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                              {weekDays.map((dayMenu, index) => (
-                                <motion.div
-                                  key={`${dayMenu.date}-${activeMenuType}`}
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: 0.5 + weekIndex * 0.1 + index * 0.05 }}
-                                >
-                                  <DaySelector
-                                    dayMenu={dayMenu}
-                                    user={user}
-                                    isReadOnly={false}
-                                    menuType={activeMenuType}
-                                  />
-                                </motion.div>
-                              ))}
-                            </div>
                           )}
                         </div>
-
-                        {/* Fines de semana */}
-                        {weekendDays.length > 0 && weekendDays.some(day => day.hasItems) && (
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 rounded-full bg-purple-100 dark:bg-purple-900/30">
-                                <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                              </div>
-                              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                                Fin de Semana - {activeMenuType === 'almuerzo' ? 'Almuerzos' : 'Colaciones'}
-                              </h3>
-                              <Badge variant="outline" className="bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-                                Sábado y Domingo
-                              </Badge>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {weekendDays.filter(day => day.hasItems).map((dayMenu, index) => (
-                                <motion.div
-                                  key={`${dayMenu.date}-${activeMenuType}`}
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: 0.7 + weekIndex * 0.1 + index * 0.05 }}
-                                >
-                                  <DaySelector
-                                    dayMenu={dayMenu}
-                                    user={user}
-                                    isReadOnly={false}
-                                    menuType={activeMenuType}
-                                  />
-                                </motion.div>
-                              ))}
-                            </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Días laborales */}
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+                            {activeMenuType === 'almuerzo' ? (
+                              <Utensils className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                            ) : (
+                              <Coffee className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                            )}
+                          </div>
+                          <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                            Días Laborales - {activeMenuType === 'almuerzo' ? 'Almuerzos' : 'Colaciones'}
+                          </h3>
+                          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                            Lunes a Viernes
+                          </Badge>
+                        </div>
+                        
+                        {weekDays.length === 0 ? (
+                          <p className="text-slate-600 dark:text-slate-400 text-center py-8">
+                            No hay menús disponibles para los días laborales
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {weekDays.map((dayMenu, index) => (
+                              <motion.div
+                                key={`${dayMenu.date}-${activeMenuType}`}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5 + weekIndex * 0.1 + index * 0.05 }}
+                              >
+                                <DaySelector
+                                  dayMenu={dayMenu}
+                                  user={user}
+                                  isReadOnly={false}
+                                  menuType={activeMenuType}
+                                />
+                              </motion.div>
+                            ))}
                           </div>
                         )}
                       </div>
-                    )}
 
-                    {/* Separador entre semanas */}
-                    {weekIndex < allWeeks.length - 1 && (
-                      <div className="flex items-center justify-center py-6">
-                        <div className="flex items-center gap-3 text-slate-400 dark:text-slate-600">
-                          <div className="h-px bg-slate-200 dark:bg-slate-700 w-16"></div>
-                          <ArrowRight className="w-5 h-5" />
-                          <div className="h-px bg-slate-200 dark:bg-slate-700 w-16"></div>
+                      {/* Fines de semana */}
+                      {weekendDays.length > 0 && weekendDays.some(day => day.hasItems) && (
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                              <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                              Fin de Semana - {activeMenuType === 'almuerzo' ? 'Almuerzos' : 'Colaciones'}
+                            </h3>
+                            <Badge variant="outline" className="bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                              Sábado y Domingo
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {weekendDays.filter(day => day.hasItems).map((dayMenu, index) => (
+                              <motion.div
+                                key={`${dayMenu.date}-${activeMenuType}`}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.7 + weekIndex * 0.1 + index * 0.05 }}
+                              >
+                                <DaySelector
+                                  dayMenu={dayMenu}
+                                  user={user}
+                                  isReadOnly={false}
+                                  menuType={activeMenuType}
+                                />
+                              </motion.div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </motion.div>
-          </div>
+                      )}
+                    </div>
+                  )}
 
-          {/* Sidebar - Resumen del pedido */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 }}
-            className="space-y-6"
-          >
-            <OrderSummary
-              user={user}
-              onProceedToPayment={processPayment}
-              isProcessingPayment={isProcessingPayment}
-            />
-
-            {/* Botón de pago con GetNet */}
-            {currentWeekMenu.length > 0 && (
-              <Card className="border-green-200 bg-green-50/50 dark:bg-green-900/10 dark:border-green-800">
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
-                        <CreditCard className="w-5 h-5 text-green-600 dark:text-green-400" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900 dark:text-slate-100">
-                          Pago Seguro con GetNet
-                        </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          Integrado con Firebase
-                        </p>
+                  {/* Separador entre semanas */}
+                  {weekIndex < allWeeks.length - 1 && (
+                    <div className="flex items-center justify-center py-6">
+                      <div className="flex items-center gap-3 text-slate-400 dark:text-slate-600">
+                        <div className="h-px bg-slate-200 dark:bg-slate-700 w-16"></div>
+                        <ArrowRight className="w-5 h-5" />
+                        <div className="h-px bg-slate-200 dark:bg-slate-700 w-16"></div>
                       </div>
                     </div>
-
-                    <PaymentButton
-                      summary={summary}
-                      weekDays={currentWeekMenu.map(day => day.date)}
-                      isOrderingAllowed={true}
-                      onProceedToPayment={processPayment}
-                      isProcessingPayment={isProcessingPayment}
-                      isReadOnly={false}
-                      user={user}
-                    />
-
-                    {/* Información adicional sobre el pago */}
-                    <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1">
-                      <p>• Datos sincronizados con Firebase en tiempo real</p>
-                      <p>• Pago procesado de forma segura con GetNet</p>
-                      <p>• Confirmación automática por webhook</p>
-                      <p>• Soporte para tarjetas de crédito y débito</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                  )}
+                </div>
+              )
+            })}
           </motion.div>
-        </div>
 
-        {/* Footer con información adicional */}
-      </div>
-    </div>
-  )
-}
+          {/* Botón de pago con GetNet */}
+          {currentWeekMenu.length > 0 && (
+            <Card className="border-green-200 bg-green-50/50 dark:bg-green-900/10 dark:border-green-800">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
+                      <CreditCard className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                        Pago
+
+</edits_to_apply>
