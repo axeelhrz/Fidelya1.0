@@ -9,7 +9,7 @@ function NecesidadesControlContent() {
 	const [activeModal, setActiveModal] = useState(null);
 	const [modalData, setModalData] = useState({
 		selectedOptions: [],
-		selectedPEC: null,
+		optionsPEC: {},
 		image: null,
 		comments: ""
 	});
@@ -347,7 +347,7 @@ function NecesidadesControlContent() {
 		} else {
 			setModalData({
 				selectedOptions: [],
-				selectedPEC: null,
+				optionsPEC: {},
 				image: null,
 				comments: ""
 			});
@@ -363,11 +363,22 @@ function NecesidadesControlContent() {
 		}));
 	};
 
-	const handlePECSelect = (pec) => {
-		setModalData(prev => ({
-			...prev,
-			selectedPEC: prev.selectedPEC === pec ? null : pec
-		}));
+	// Nueva función para manejar la selección de P E C por opción
+	const handleOptionPECToggle = (optionIndex, pec) => {
+		setModalData(prev => {
+			const currentPECs = prev.optionsPEC[optionIndex] || [];
+			const newPECs = currentPECs.includes(pec)
+				? currentPECs.filter(p => p !== pec)
+				: [...currentPECs, pec];
+			
+			return {
+				...prev,
+				optionsPEC: {
+					...prev.optionsPEC,
+					[optionIndex]: newPECs
+				}
+			};
+		});
 	};
 
 	const handleImageUpload = (e) => {
@@ -405,9 +416,9 @@ function NecesidadesControlContent() {
 
 	const handleModalConfirm = () => {
 		const hasData = modalData.selectedOptions.length > 0 || 
-						modalData.selectedPEC || 
 						modalData.image || 
-						modalData.comments.trim() !== "";
+						modalData.comments.trim() !== "" ||
+						Object.keys(modalData.optionsPEC).length > 0;
 
 		if (hasData) {
 			// Agregar el item a selectedItems si no está
@@ -442,7 +453,7 @@ function NecesidadesControlContent() {
 		setActiveModal(null);
 		setModalData({
 			selectedOptions: [],
-			selectedPEC: null,
+			optionsPEC: {},
 			image: null,
 			comments: ""
 		});
@@ -452,7 +463,7 @@ function NecesidadesControlContent() {
 		setActiveModal(null);
 		setModalData({
 			selectedOptions: [],
-			selectedPEC: null,
+			optionsPEC: {},
 			image: null,
 			comments: ""
 		});
@@ -534,9 +545,9 @@ function NecesidadesControlContent() {
 														{hasDetailedData.selectedOptions.length} opciones
 													</span>
 												}
-												{hasDetailedData.selectedPEC && 
+												{hasDetailedData.optionsPEC && Object.keys(hasDetailedData.optionsPEC).length > 0 && 
 													<span className={styles.pecIndicator}>
-														{hasDetailedData.selectedPEC}
+														PEC: {Object.values(hasDetailedData.optionsPEC).flat().length}
 													</span>
 												}
 											</div>
@@ -597,54 +608,55 @@ function NecesidadesControlContent() {
 						</div>
 						
 						<div className={styles.modalBody}>
-							{/* P-E-C Selection */}
-							<div className={styles.pecSection}>
-								<h4 className={styles.pecTitle}>Clasificación P-E-C</h4>
-								<div className={styles.pecButtons}>
-									<button
-										className={`${styles.pecButton} ${styles.pecP} ${
-											modalData.selectedPEC === 'P' ? styles.pecSelected : ""
-										}`}
-										onClick={() => handlePECSelect('P')}
-									>
-										P
-									</button>
-									<button
-										className={`${styles.pecButton} ${styles.pecE} ${
-											modalData.selectedPEC === 'E' ? styles.pecSelected : ""
-										}`}
-										onClick={() => handlePECSelect('E')}
-									>
-										E
-									</button>
-									<button
-										className={`${styles.pecButton} ${styles.pecC} ${
-											modalData.selectedPEC === 'C' ? styles.pecSelected : ""
-										}`}
-										onClick={() => handlePECSelect('C')}
-									>
-										C
-									</button>
-								</div>
-							</div>
-
-							{/* Options Selection */}
+							{/* Options Selection with P-E-C buttons */}
 							<div className={styles.optionsSection}>
 								<h4 className={styles.optionsTitle}>Seleccione las opciones que aplican:</h4>
 								<div className={styles.modalOptions}>
 									{activeModal.options.map((option, index) => (
-										<button
-											key={index}
-											className={`${styles.modalOption} ${
-												modalData.selectedOptions.includes(index) ? styles.modalOptionSelected : ""
-											}`}
-											onClick={() => handleOptionToggle(index)}
-										>
-											<div className={styles.modalOptionIcon}>
-												{modalData.selectedOptions.includes(index) ? "✓" : "○"}
+										<div key={index} className={styles.optionContainer}>
+											<button
+												className={`${styles.modalOption} ${
+													modalData.selectedOptions.includes(index) ? styles.modalOptionSelected : ""
+												}`}
+												onClick={() => handleOptionToggle(index)}
+											>
+												<div className={styles.modalOptionIcon}>
+													{modalData.selectedOptions.includes(index) ? "✓" : "○"}
+												</div>
+												<span className={styles.modalOptionText}>{option}</span>
+											</button>
+											
+											{/* Botones P E C al costado de cada opción */}
+											<div className={styles.optionPECButtons}>
+												<button
+													className={`${styles.optionPECButton} ${styles.optionPECP} ${
+														modalData.optionsPEC[index]?.includes('P') ? styles.optionPECSelected : ""
+													}`}
+													onClick={() => handleOptionPECToggle(index, 'P')}
+													title="Potencial"
+												>
+													P
+												</button>
+												<button
+													className={`${styles.optionPECButton} ${styles.optionPECE} ${
+														modalData.optionsPEC[index]?.includes('E') ? styles.optionPECSelected : ""
+													}`}
+													onClick={() => handleOptionPECToggle(index, 'E')}
+													title="Eventos"
+												>
+													E
+												</button>
+												<button
+													className={`${styles.optionPECButton} ${styles.optionPECC} ${
+														modalData.optionsPEC[index]?.includes('C') ? styles.optionPECSelected : ""
+													}`}
+													onClick={() => handleOptionPECToggle(index, 'C')}
+													title="Control"
+												>
+													C
+												</button>
 											</div>
-											<span className={styles.modalOptionText}>{option}</span>
-										</button>
+										</div>
 									))}
 								</div>
 							</div>
