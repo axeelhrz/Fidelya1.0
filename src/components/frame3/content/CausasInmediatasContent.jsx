@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import styles from "./CausasInmediatasContent.module.css";
 import { useScatData } from "../../../contexts/ScatContext";
 
 function CausasInmediatasContent() {
 	const { causasInmediatasData, setCausasInmediatasData } = useScatData();
 	const [activeSection, setActiveSection] = useState(null);
+	const [searchTerm, setSearchTerm] = useState("");
+	const [isSelectedCollapsed, setIsSelectedCollapsed] = useState(false);
 	const fileInputRef = useRef(null);
 
 	const actosSubestandar = [
@@ -45,6 +47,7 @@ function CausasInmediatasContent() {
 
 	const handleSectionSelect = (section) => {
 		setActiveSection(section);
+		setSearchTerm("");
 	};
 
 	const handleItemToggle = (itemId) => {
@@ -348,3 +351,4 @@ function CausasInmediatasContent() {
 }
 
 export default CausasInmediatasContent;
+```
