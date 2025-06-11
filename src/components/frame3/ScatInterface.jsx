@@ -65,7 +65,7 @@ function ScatInterface({
 
 	// Cargar datos del proyecto cuando se reciban
 	useEffect(() => {
-		console.log('=== EFECTO DE CARGA DE DATOS ===');
+		console.log('=== EFECTO DE CARGA DE DATOS EN SCAT INTERFACE ===');
 		console.log('FormData:', formData);
 		console.log('IsEditing:', isEditing);
 		console.log('EditingProject:', editingProject);
@@ -79,7 +79,7 @@ function ScatInterface({
 				// Modo nuevo proyecto: solo cargar datos básicos
 				console.log('Cargando datos para nuevo proyecto...');
 				setProjectData(formData);
-				setEditingState(false);
+				setEditingState(false, null);
 			}
 		}
 	}, [formData, isEditing, editingProject, setProjectData, setEditingState, loadProjectForEditing]);
@@ -123,9 +123,8 @@ function ScatInterface({
 			handleSaveProgress(true, true); // true para isExiting, true para silent
 		}
 		
-		// Limpiar el estado de edición y resetear datos
-		console.log('Limpiando estado de edición...');
-		setEditingState(false, null);
+		// Limpiar COMPLETAMENTE el contexto
+		console.log('Reseteando contexto completamente...');
 		resetAllData();
 		
 		if (onNavigateToBase) {
@@ -175,18 +174,8 @@ function ScatInterface({
 					onSaveProject(updatedProject);
 				}
 
-				if (isExiting) {
-					// Limpiar contexto al salir del modo edición
-					console.log('Limpiando contexto al salir...');
-					setEditingState(false, null);
-					// Solo mostrar mensaje si no es silencioso
-					if (!silent) {
-						alert("Cambios guardados exitosamente");
-					}
-				} else {
-					if (!silent) {
-						alert("Progreso guardado exitosamente");
-					}
+				if (!silent) {
+					alert(isExiting ? "Cambios guardados exitosamente" : "Progreso guardado exitosamente");
 				}
 			} else {
 				// Nuevo proyecto o modo visualización
@@ -217,9 +206,8 @@ function ScatInterface({
 			handleSaveProgress(true, true); // Guardar silenciosamente
 		}
 		
-		// Limpiar el estado de edición y resetear datos
-		console.log('Limpiando estado antes de navegar...');
-		setEditingState(false, null);
+		// Limpiar COMPLETAMENTE el contexto
+		console.log('Reseteando contexto completamente...');
 		resetAllData();
 		
 		if (onNavigateToProjects) {
@@ -236,10 +224,6 @@ function ScatInterface({
 				console.log('Guardando antes de finalizar...');
 				handleSaveProgress(true, true); // Guardar silenciosamente
 			}
-			
-			// Limpiar el estado de edición
-			console.log('Limpiando estado de edición...');
-			setEditingState(false, null);
 			
 			if (onNavigateToDescription) {
 				onNavigateToDescription();

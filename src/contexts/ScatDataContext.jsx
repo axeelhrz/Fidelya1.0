@@ -1,4 +1,4 @@
-import { useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useRef } from 'react';
 import { ACTIONS } from './useScatData';
 import { ScatDataContext } from './ScatContext';
 
@@ -116,6 +116,10 @@ function scatDataReducer(state, action) {
       };
     
     case ACTIONS.SET_EDITING_STATE:
+      console.log(`=== CAMBIANDO ESTADO DE EDICIÓN: ${action.payload.isEditing ? 'EDITANDO' : 'NO EDITANDO'} ===`);
+      if (action.payload.projectId) {
+        console.log(`Proyecto ID: ${action.payload.projectId}`);
+      }
       return {
         ...state,
         isEditing: action.payload.isEditing,
@@ -123,18 +127,18 @@ function scatDataReducer(state, action) {
       };
     
     case ACTIONS.LOAD_DATA:
+      console.log('=== CARGANDO DATOS EN REDUCER ===');
       return action.payload;
     
     case ACTIONS.RESET_DATA:
-      console.log('=== RESETEANDO TODOS LOS DATOS ===');
+      console.log('=== RESETEANDO TODOS LOS DATOS EN REDUCER ===');
       return getCleanInitialState();
     
     case ACTIONS.CLEAR_EDITING_DATA:
-      console.log('=== LIMPIANDO DATOS DE EDICIÓN ===');
+      console.log('=== LIMPIANDO DATOS DE EDICIÓN EN REDUCER ===');
       const cleanState = getCleanInitialState();
       return {
         ...cleanState,
-        // Mantener solo los datos básicos si no estamos editando
         projectData: action.keepProjectData ? state.projectData : cleanState.projectData
       };
     
@@ -146,33 +150,45 @@ function scatDataReducer(state, action) {
 // Provider del contexto
 export function ScatDataProvider({ children }) {
   const [state, dispatch] = useReducer(scatDataReducer, getCleanInitialState());
+  const isInitialized = useRef(false);
+  const skipLocalStorageLoad = useRef(false);
 
-  // Cargar datos del localStorage al inicializar (solo si no estamos editando)
+  // Cargar datos del localStorage al inicializar (SOLO UNA VEZ)
   useEffect(() => {
-    const savedData = localStorage.getItem('scatData');
-    if (savedData && !state.isEditing) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        // Solo cargar si no hay un proyecto específico siendo editado
-        if (!parsedData.isEditing) {
-          dispatch({ type: ACTIONS.LOAD_DATA, payload: parsedData });
+    if (!isInitialized.current && !skipLocalStorageLoad.current) {
+      console.log('=== INICIALIZANDO CONTEXTO ===');
+      const savedData = localStorage.getItem('scatData');
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          console.log('Datos encontrados en localStorage:', parsedData);
+          // Solo cargar si no hay un proyecto específico siendo editado
+          if (!parsedData.isEditing) {
+            console.log('Cargando datos del localStorage...');
+            dispatch({ type: ACTIONS.LOAD_DATA, payload: parsedData });
+          } else {
+            console.log('Datos en modo edición encontrados, ignorando...');
+          }
+        } catch (error) {
+          console.error('Error loading saved data:', error);
         }
-      } catch (error) {
-        console.error('Error loading saved data:', error);
       }
+      isInitialized.current = true;
     }
   }, []);
 
   // Guardar datos en localStorage cuando el estado cambie (pero no durante edición)
   useEffect(() => {
-    // Solo guardar en localStorage si no estamos editando un proyecto específico
-    if (!state.isEditing) {
+    if (isInitialized.current && !state.isEditing && !skipLocalStorageLoad.current) {
+      console.log('=== GUARDANDO EN LOCALSTORAGE ===');
+      console.log('Estado actual:', state);
       localStorage.setItem('scatData', JSON.stringify(state));
     }
   }, [state]);
 
   // Funciones para actualizar datos
   const setProjectData = (data) => {
+    console.log('=== SET PROJECT DATA ===', data);
     dispatch({ type: ACTIONS.SET_PROJECT_DATA, payload: data });
   };
 
@@ -205,10 +221,7 @@ export function ScatDataProvider({ children }) {
   };
 
   const setEditingState = (isEditing, projectId = null) => {
-    console.log(`=== CAMBIANDO ESTADO DE EDICIÓN: ${isEditing ? 'EDITANDO' : 'NO EDITANDO'} ===`);
-    if (projectId) {
-      console.log(`Proyecto ID: ${projectId}`);
-    }
+    console.log(`=== SETTING EDITING STATE: ${isEditing} ===`);
     dispatch({ 
       type: ACTIONS.SET_EDITING_STATE, 
       payload: { isEditing, projectId } 
@@ -216,26 +229,48 @@ export function ScatDataProvider({ children }) {
   };
 
   const resetAllData = () => {
-    console.log('=== LIMPIANDO TODOS LOS DATOS DEL CONTEXTO ===');
+    console.log('=== RESET ALL DATA LLAMADO ===');
+    // Evitar que se cargue del localStorage después del reset
+    skipLocalStorageLoad.current = true;
+    
     dispatch({ type: ACTIONS.RESET_DATA });
+    
     // Limpiar localStorage completamente
     localStorage.removeItem('scatData');
+    
+    // Permitir localStorage después de un breve delay
+    setTimeout(() => {
+      skipLocalStorageLoad.current = false;
+    }, 100);
   };
 
   const clearEditingData = (keepProjectData = false) => {
-    console.log('=== LIMPIANDO DATOS DE EDICIÓN ===');
+    console.log('=== CLEAR EDITING DATA LLAMADO ===');
     console.log(`Mantener datos del proyecto: ${keepProjectData}`);
+    
+    // Evitar que se cargue del localStorage después de limpiar
+    skipLocalStorageLoad.current = true;
+    
     dispatch({ type: ACTIONS.CLEAR_EDITING_DATA, keepProjectData });
+    
     // Limpiar localStorage para evitar conflictos
     localStorage.removeItem('scatData');
+    
+    // Permitir localStorage después de un breve delay
+    setTimeout(() => {
+      skipLocalStorageLoad.current = false;
+    }, 100);
   };
 
   // Función para cargar datos completos de un proyecto (para edición)
   const loadProjectForEditing = (projectData) => {
-    console.log('=== CARGANDO PROYECTO PARA EDICIÓN ===');
+    console.log('=== LOAD PROJECT FOR EDITING ===');
     console.log('Datos del proyecto:', projectData);
 
-    // Marcar como modo edición
+    // Evitar interferencia del localStorage durante la carga
+    skipLocalStorageLoad.current = true;
+
+    // Marcar como modo edición PRIMERO
     setEditingState(true, projectData.id);
 
     // Cargar datos básicos del proyecto
