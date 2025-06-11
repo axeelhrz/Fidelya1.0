@@ -1,7 +1,7 @@
 "use client";
 
 import "./description.css";
-import { useScatData } from "../contexts/ScatDataContext";
+import { useScatData } from "../contexts/ScatContext";
 import pdfService from "../services/pdfService";
 
 export default function NextPage({ onGoBack, onStartNew }) {
