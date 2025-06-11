@@ -59,6 +59,11 @@ const initialState = {
   editingProjectId: null
 };
 
+// Función para crear una copia profunda del estado inicial
+const getCleanInitialState = () => {
+  return JSON.parse(JSON.stringify(initialState));
+};
+
 // Reducer para manejar las acciones
 function scatDataReducer(state, action) {
   switch (action.type) {
@@ -121,13 +126,14 @@ function scatDataReducer(state, action) {
       return action.payload;
     
     case ACTIONS.RESET_DATA:
-      return initialState;
+      console.log('=== RESETEANDO TODOS LOS DATOS ===');
+      return getCleanInitialState();
     
     case ACTIONS.CLEAR_EDITING_DATA:
       return {
-        ...initialState,
+        ...getCleanInitialState(),
         // Mantener solo los datos básicos si no estamos editando
-        projectData: action.keepProjectData ? state.projectData : initialState.projectData
+        projectData: action.keepProjectData ? state.projectData : getCleanInitialState().projectData
       };
     
     default:
@@ -137,7 +143,7 @@ function scatDataReducer(state, action) {
 
 // Provider del contexto
 export function ScatDataProvider({ children }) {
-  const [state, dispatch] = useReducer(scatDataReducer, initialState);
+  const [state, dispatch] = useReducer(scatDataReducer, getCleanInitialState());
 
   // Cargar datos del localStorage al inicializar (solo si no estamos editando)
   useEffect(() => {
@@ -204,7 +210,9 @@ export function ScatDataProvider({ children }) {
   };
 
   const resetAllData = () => {
+    console.log('=== LIMPIANDO TODOS LOS DATOS DEL CONTEXTO ===');
     dispatch({ type: ACTIONS.RESET_DATA });
+    // Limpiar localStorage completamente
     localStorage.removeItem('scatData');
   };
 

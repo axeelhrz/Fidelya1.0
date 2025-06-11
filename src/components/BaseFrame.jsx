@@ -8,8 +8,10 @@ import ProjectCard from "./ProjectCard";
 import AccidentFormModal from "./accident-form-modal";
 import TrashModal from "./TrashModal";
 import styles from "./Baseframe.module.css";
+import { useScatData } from "../contexts/ScatContext";
 
 function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
+	const { resetAllData } = useScatData();
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
 	const [projects, setProjects] = useState([]);
@@ -81,6 +83,14 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 			localStorage.setItem('scatDeletedProjects', JSON.stringify(deletedProjects));
 		}
 	}, [deletedProjects, isInitialized]);
+
+	// Función para abrir el modal de nuevo proyecto
+	const handleOpenNewProjectModal = () => {
+		console.log('=== ABRIENDO MODAL PARA NUEVO PROYECTO ===');
+		// Limpiar todos los datos del contexto SCAT antes de abrir el modal
+		resetAllData();
+		setIsModalOpen(true);
+	};
 
 	// Función para manejar la continuación al SCAT
 	const handleContinue = (formData) => {
@@ -216,7 +226,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 						<div className={styles.actionButtonsContainer}>
 							{/* Create New Project Button */}
 							<button
-								onClick={() => setIsModalOpen(true)}
+								onClick={handleOpenNewProjectModal}
 								className={styles.createButton}
 							>
 								<Plus size={20} />
@@ -276,7 +286,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 									Comienza creando tu primer proyecto de análisis SCAT
 								</p>
 								<button
-									onClick={() => setIsModalOpen(true)}
+									onClick={handleOpenNewProjectModal}
 									className={styles.emptyStateButton}
 								>
 									<Plus size={20} />
