@@ -6,12 +6,15 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import ProjectCard from "./ProjectCard";
 import AccidentFormModal from "./accident-form-modal";
+import EditProjectModal from "./EditProjectModal";
 import TrashModal from "./TrashModal";
 import styles from "./Baseframe.module.css";
 
 function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
+	const [selectedProject, setSelectedProject] = useState(null);
 	const [projects, setProjects] = useState([]);
 	const [deletedProjects, setDeletedProjects] = useState([]);
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -140,6 +143,34 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		console.log('=== FIN CREACIÓN PROYECTO EN BASEFRAME ===');
 	};
 
+	const handleEditProject = (project) => {
+		console.log('Editando proyecto:', project);
+		setSelectedProject(project);
+		setIsEditModalOpen(true);
+	};
+
+	const handleSaveEditedProject = (updatedProject) => {
+		console.log('Guardando proyecto editado:', updatedProject);
+		
+		setProjects((prev) => 
+			prev.map(p => p.id === updatedProject.id ? updatedProject : p)
+		);
+		
+		setSelectedProject(null);
+		alert('Proyecto actualizado exitosamente.');
+	};
+
+	const handleViewProject = (project) => {
+		console.log('Viendo/Continuando proyecto:', project);
+		
+		// Cargar los datos del proyecto en el contexto y navegar al SCAT
+		if (project.formData && typeof onNavigateToScat === 'function') {
+			onNavigateToScat(project.formData);
+		} else {
+			alert('No se encontraron datos del proyecto para continuar en SCAT.');
+		}
+	};
+
 	const handleDeleteProject = (projectId) => {
 		const projectToDelete = projects.find(p => p.id === projectId);
 		if (projectToDelete) {
@@ -260,6 +291,8 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 											project={project}
 											isHighlighted={index === 0}
 											onDelete={() => handleDeleteProject(project.id)}
+											onEdit={() => handleEditProject(project)}
+											onView={() => handleViewProject(project)}
 										/>
 									))}
 								</div>
@@ -297,7 +330,26 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 							</div>
 						)}
 
-
+						{/* Debug info (solo en desarrollo) */}
+						{process.env.NODE_ENV === 'development' && (
+							<div style={{ 
+								position: 'fixed', 
+								bottom: '10px', 
+								left: '10px', 
+								background: 'rgba(0,0,0,0.8)', 
+								color: 'white', 
+								padding: '10px', 
+								borderRadius: '5px',
+								fontSize: '12px',
+								zIndex: 1000
+							}}>
+								<div>Total proyectos: {projects.length}</div>
+								<div>Proyectos mostrados: {displayedProjects.length}</div>
+								<div>En papelera: {deletedProjects.length}</div>
+								<div>Inicializado: {isInitialized ? 'Sí' : 'No'}</div>
+								<div>Modal abierto: {isModalOpen ? 'Sí' : 'No'}</div>
+							</div>
+						)}
 					</div>
 				</main>
 			</div>
@@ -308,6 +360,17 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 				onClose={() => setIsModalOpen(false)}
 				onCreateProject={handleCreateProject}
 				onContinue={handleContinue}
+			/>
+
+			{/* Edit Project Modal */}
+			<EditProjectModal
+				isOpen={isEditModalOpen}
+				onClose={() => {
+					setIsEditModalOpen(false);
+					setSelectedProject(null);
+				}}
+				project={selectedProject}
+				onSave={handleSaveEditedProject}
 			/>
 
 			{/* Trash Modal */}

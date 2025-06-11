@@ -2,7 +2,7 @@ import { FileText, Edit, FileDown, Trash2 } from "lucide-react";
 import styles from "./ProjectCard.module.css";
 import pdfService from "../services/pdfService";
 
-export default function ProjectCard({ project, isHighlighted = false, onDelete }) {
+export default function ProjectCard({ project, isHighlighted = false, onDelete, onEdit, onView }) {
 	const handleDelete = (e) => {
 		e.stopPropagation();
 		if (onDelete) {
@@ -85,21 +85,21 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete }
 
 	const handleView = (e) => {
 		e.stopPropagation();
-		// Aquí podrías implementar la funcionalidad de ver el proyecto
-		console.log('Ver proyecto:', project);
-		alert('Funcionalidad de visualización en desarrollo');
+		if (onView) {
+			onView(project);
+		}
 	};
 
 	const handleEdit = (e) => {
 		e.stopPropagation();
-		// Aquí podrías implementar la funcionalidad de editar el proyecto
-		console.log('Editar proyecto:', project);
-		alert('Funcionalidad de edición en desarrollo');
+		if (onEdit) {
+			onEdit(project);
+		}
 	};
 
 	return (
 		<div
-			className={`${styles.card}${isHighlighted ? ` ${styles.highlighted}` : ""}`}
+			className={`${styles.card} ${isHighlighted ? styles.highlighted : ""}`}
 		>
 			<div className={styles.content}>
 				<div className={styles.title}>PROYECTO</div>
@@ -118,14 +118,14 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete }
 				<button 
 					className={styles.actionButton} 
 					onClick={handleView}
-					title="Ver proyecto"
+					title="Ver/Continuar proyecto en SCAT"
 				>
 					<FileText size={14} />
 				</button>
 				<button 
 					className={styles.actionButton} 
 					onClick={handleEdit}
-					title="Editar proyecto"
+					title="Editar información del proyecto"
 				>
 					<Edit size={14} />
 				</button>
