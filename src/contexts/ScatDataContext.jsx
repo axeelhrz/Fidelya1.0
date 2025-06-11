@@ -1,18 +1,6 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
-
-const ScatDataContext = createContext();
-
-// Tipos de acciones para el reducer
-const ACTIONS = {
-  SET_PROJECT_DATA: 'SET_PROJECT_DATA',
-  SET_EVALUACION_DATA: 'SET_EVALUACION_DATA',
-  SET_CONTACTO_DATA: 'SET_CONTACTO_DATA',
-  SET_CAUSAS_INMEDIATAS_DATA: 'SET_CAUSAS_INMEDIATAS_DATA',
-  SET_CAUSAS_BASICAS_DATA: 'SET_CAUSAS_BASICAS_DATA',
-  SET_NECESIDADES_CONTROL_DATA: 'SET_NECESIDADES_CONTROL_DATA',
-  LOAD_DATA: 'LOAD_DATA',
-  RESET_DATA: 'RESET_DATA'
-};
+import { useReducer, useEffect } from 'react';
+import { ACTIONS } from './scatDataUtils';
+import { ScatDataContext } from './ScatDataContextDefinition';
 
 // Estado inicial
 const initialState = {
@@ -243,13 +231,3 @@ export function ScatDataProvider({ children }) {
   );
 }
 
-// Hook personalizado para usar el contexto
-export function useScatData() {
-  const context = useContext(ScatDataContext);
-  if (!context) {
-    throw new Error('useScatData must be used within a ScatDataProvider');
-  }
-  return context;
-}
-
-export { ACTIONS };

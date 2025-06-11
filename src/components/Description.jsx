@@ -87,294 +87,445 @@ Otros Datos: ${formatFieldValue(scatData.project?.otrosDatos)}
 	// Obtener resumen completo de datos
 	const scatData = getCompleteSummary();
 
-	// Función para obtener texto de evaluación
-	const getEvaluationText = () => {
-		const { evaluacion } = scatData;
-		if (!evaluacion?.severity && !evaluacion?.probability && !evaluacion?.frequency) {
-			return "No especificado";
-		}
+	// Mapas de traducción para evaluación
+	const severityMap = { A: 'Mayor', B: 'Grave', C: 'Menor' };
+	const probabilityMap = { A: 'Alta', B: 'Moderada', C: 'Rara' };
+	const frequencyMap = { A: 'Grande', B: 'Moderada', C: 'Baja' };
 
-		const severityMap = { A: 'Mayor', B: 'Grave', C: 'Menor' };
-		const probabilityMap = { A: 'Alta', B: 'Moderada', C: 'Rara' };
-		const frequencyMap = { A: 'Grande', B: 'Moderada', C: 'Baja' };
+	// Datos de referencia para mostrar textos completos
+	const tiposContacto = [
+		"Golpeado por (objeto en movimiento)",
+		"Golpeado contra (persona en movimiento)",
+		"Caída a distinto nivel",
+		"Caída al mismo nivel",
+		"Atrapado por (puntos de operación)",
+		"Atrapado en (puntos de pellizco)",
+		"Atrapado bajo (derrumbes)",
+		"Contacto con (electricidad, calor, frío, radiación, cáusticos, tóxicos, ruido)",
+		"Inhalación, absorción, ingestión",
+		"Sobreesfuerzo"
+	];
 
-		let text = [];
-		if (evaluacion.severity) text.push(`Severidad: ${severityMap[evaluacion.severity]}`);
-		if (evaluacion.probability) text.push(`Probabilidad: ${probabilityMap[evaluacion.probability]}`);
-		if (evaluacion.frequency) text.push(`Frecuencia: ${frequencyMap[evaluacion.frequency]}`);
+	const actosSubestandar = [
+		"Operar equipos sin autorización",
+		"Omitir el uso de equipos de seguridad personal",
+		"Omitir el uso de dispositivos de seguridad",
+		"Operar a velocidad inadecuada",
+		"Poner fuera de servicio los dispositivos de seguridad",
+		"Usar equipos defectuosos",
+		"No usar o usar inadecuadamente el equipo de protección personal",
+		"Cargar incorrectamente",
+		"Colocar, mezclar, combinar, etc., de manera insegura",
+		"Levantar objetos en forma incorrecta",
+		"Adoptar una posición insegura para hacer el trabajo",
+		"Trabajar en equipos en movimiento o peligrosos",
+		"Distraerse, bromear, jugar, etc.",
+		"Omitir el uso de equipos de protección personal disponibles",
+		"Usar equipos inseguros o usarlos inseguramente"
+	];
 
-		return text.join(', ');
-	};
+	const condicionesSubestandar = [
+		"Guardas inadecuadas",
+		"Equipos de protección inadecuados o insuficientes",
+		"Herramientas, equipos o materiales defectuosos",
+		"Espacio limitado para desenvolverse",
+		"Sistemas de advertencia inadecuados",
+		"Peligros de incendio y explosión",
+		"Orden y limpieza deficientes en el lugar de trabajo",
+		"Condiciones ambientales peligrosas",
+		"Iluminación deficiente",
+		"Ventilación deficiente",
+		"Ropa o vestimenta insegura",
+		"Congestión o acción restringida",
+		"Ubicación peligrosa de equipos y materiales"
+	];
 
-	// Función para obtener texto de contacto
-	const getContactText = () => {
-		const { contacto } = scatData;
-		if (!contacto?.selectedIncidents?.length) {
-			return "No especificado";
-		}
-		return `${contacto.selectedIncidents.length} tipo(s) de contacto seleccionado(s)`;
-	};
+	const factoresPersonales = [
+		"Capacidad Física / Fisiológica Inadecuada",
+		"Capacidad Mental / Psicológica Inadecuada",
+		"Tensión Física o Fisiológica",
+		"Tensión Mental o Psicológica",
+		"Falta de Conocimiento",
+		"Falta de Habilidad",
+		"Motivación Incorrecta"
+	];
 
-	// Función para obtener texto de causas inmediatas
-	const getCausasInmediatasText = () => {
-		const { causasInmediatas } = scatData;
-		const actosCount = causasInmediatas?.actos?.selectedItems?.length || 0;
-		const condicionesCount = causasInmediatas?.condiciones?.selectedItems?.length || 0;
-		
-		if (actosCount === 0 && condicionesCount === 0) {
-			return "No especificado";
-		}
+	const factoresLaborales = [
+		"Liderazgo y/o Supervisión Deficiente",
+		"Ingeniería Inadecuada",
+		"Adquisiciones Deficientes",
+		"Mantenimiento Deficiente",
+		"Herramientas y Equipos Inadecuados",
+		"Estándares de Trabajo Inadecuados",
+		"Uso y Desgaste",
+		"Abuso o Mal Uso"
+	];
 
-		let text = [];
-		if (actosCount > 0) text.push(`${actosCount} acto(s) subestándar`);
-		if (condicionesCount > 0) text.push(`${condicionesCount} condición(es) subestándar`);
+	const necesidadesControl = [
+		"Controles de Ingeniería",
+		"Controles Administrativos",
+		"Equipos de Protección Personal"
+	];
 
-		return text.join(', ');
-	};
-
-	// Función para obtener texto de causas básicas
-	const getCausasBasicasText = () => {
-		const { causasBasicas } = scatData;
-		const personalesCount = causasBasicas?.personales?.selectedItems?.length || 0;
-		const laboralesCount = causasBasicas?.laborales?.selectedItems?.length || 0;
-		
-		if (personalesCount === 0 && laboralesCount === 0) {
-			return "No especificado";
-		}
-
-		let text = [];
-		if (personalesCount > 0) text.push(`${personalesCount} factor(es) personal(es)`);
-		if (laboralesCount > 0) text.push(`${laboralesCount} factor(es) laboral(es)`);
-
-		return text.join(', ');
-	};
-
-	// Función para obtener texto de necesidades de control
-	const getNecesidadesControlText = () => {
-		const { necesidadesControl } = scatData;
-		const count = necesidadesControl?.selectedItems?.length || 0;
-		
-		if (count === 0) {
-			return "No especificado";
-		}
-
-		return `${count} necesidad(es) de control identificada(s)`;
+	// Función para obtener texto de elemento por ID
+	const getItemText = (items, id) => {
+		const index = id - 1;
+		return items[index] || `Elemento ${id}`;
 	};
 
 	return (
-		<div className="next-page-container-wrapper">
-			<div className="next-page-content">
-				<div className="next-page-container">
-					{/* Status Badge */}
-					<div className="status-badge">
-						<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M5 13l4 4L19 7"
-							/>
-						</svg>
-						Análisis SCAT Completado
+		<div className="next-page-container-wrapper full-screen">
+			<div className="next-page-content full-width">
+				<div className="next-page-container full-container">
+					{/* Header compacto */}
+					<div className="compact-header">
+						<div className="status-badge">
+							<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M5 13l4 4L19 7"
+								/>
+							</svg>
+							Análisis SCAT Completado
+						</div>
+						<h1 className="compact-title">Reporte Completo del Análisis SCAT</h1>
 					</div>
 
-					{/* Success Icon */}
-					<div className="success-icon">
-						<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M5 13l4 4L19 7"
-							/>
-						</svg>
-					</div>
-
-					<h1 className="next-page-title">¡Análisis SCAT Completado!</h1>
-					<h2 className="next-page-subtitle">
-						Resumen del Análisis Sistemático de Causas
-					</h2>
-
-					<p className="next-page-description">
-						El análisis SCAT ha sido completado exitosamente. A continuación se muestra 
-						un resumen de toda la información recopilada durante el proceso de análisis.
-					</p>
-
-					{/* Form Summary */}
-					<div className="form-summary">
-						<h3>Resumen Completo del Análisis SCAT</h3>
-
+					{/* Información completa del formulario */}
+					<div className="complete-form-data">
 						{/* Información del Proyecto */}
-						<div className="form-summary-section">
-							<h4>Información del Proyecto</h4>
-							<div className="form-summary-item">
-								<span className="form-summary-label">Evento:</span>
-								<span className="form-summary-value">
-									{formatFieldValue(scatData.project?.evento)}
-								</span>
-							</div>
-							<div className="form-summary-item">
-								<span className="form-summary-label">Involucrado:</span>
-								<span className="form-summary-value">
-									{formatFieldValue(scatData.project?.involucrado)}
-								</span>
-							</div>
-							<div className="form-summary-item">
-								<span className="form-summary-label">Área:</span>
-								<span className="form-summary-value">
-									{formatFieldValue(scatData.project?.area)}
-								</span>
-							</div>
-							<div className="form-summary-item">
-								<span className="form-summary-label">Fecha y Hora:</span>
-								<span className="form-summary-value">
-									{formatFieldValue(scatData.project?.fechaHora)}
-								</span>
-							</div>
-							<div className="form-summary-item">
-								<span className="form-summary-label">Investigador:</span>
-								<span className="form-summary-value">
-									{formatFieldValue(scatData.project?.investigador)}
-								</span>
+						<div className="data-section">
+							<h2 className="section-title">
+								<span className="section-icon">📋</span>
+								Información del Proyecto
+							</h2>
+							<div className="data-grid">
+								<div className="data-item">
+									<span className="data-label">Evento:</span>
+									<span className="data-value">{formatFieldValue(scatData.project?.evento)}</span>
+								</div>
+								<div className="data-item">
+									<span className="data-label">Involucrado:</span>
+									<span className="data-value">{formatFieldValue(scatData.project?.involucrado)}</span>
+								</div>
+								<div className="data-item">
+									<span className="data-label">Área:</span>
+									<span className="data-value">{formatFieldValue(scatData.project?.area)}</span>
+								</div>
+								<div className="data-item">
+									<span className="data-label">Fecha y Hora:</span>
+									<span className="data-value">{formatFieldValue(scatData.project?.fechaHora)}</span>
+								</div>
+								<div className="data-item">
+									<span className="data-label">Investigador:</span>
+									<span className="data-value">{formatFieldValue(scatData.project?.investigador)}</span>
+								</div>
+								<div className="data-item full-width">
+									<span className="data-label">Otros Datos:</span>
+									<span className="data-value">{formatFieldValue(scatData.project?.otrosDatos)}</span>
+								</div>
 							</div>
 						</div>
 
 						{/* Evaluación Potencial de Pérdida */}
-						<div className="form-summary-section">
-							<h4>Evaluación Potencial de Pérdida</h4>
-							<div className="form-summary-item">
-								<span className="form-summary-label">Evaluación:</span>
-								<span className="form-summary-value">
-									{getEvaluationText()}
-								</span>
+						<div className="data-section">
+							<h2 className="section-title">
+								<span className="section-icon">⚠️</span>
+								Evaluación Potencial de Pérdida
+							</h2>
+							<div className="evaluation-grid">
+								<div className="evaluation-item">
+									<span className="eval-label">Severidad:</span>
+									<span className={`eval-value ${scatData.evaluacion?.severity?.toLowerCase()}`}>
+										{scatData.evaluacion?.severity ? 
+											`${scatData.evaluacion.severity} - ${severityMap[scatData.evaluacion.severity]}` : 
+											"No especificado"
+										}
+									</span>
+								</div>
+								<div className="evaluation-item">
+									<span className="eval-label">Probabilidad:</span>
+									<span className={`eval-value ${scatData.evaluacion?.probability?.toLowerCase()}`}>
+										{scatData.evaluacion?.probability ? 
+											`${scatData.evaluacion.probability} - ${probabilityMap[scatData.evaluacion.probability]}` : 
+											"No especificado"
+										}
+									</span>
+								</div>
+								<div className="evaluation-item">
+									<span className="eval-label">Frecuencia:</span>
+									<span className={`eval-value ${scatData.evaluacion?.frequency?.toLowerCase()}`}>
+										{scatData.evaluacion?.frequency ? 
+											`${scatData.evaluacion.frequency} - ${frequencyMap[scatData.evaluacion.frequency]}` : 
+											"No especificado"
+										}
+									</span>
+								</div>
 							</div>
 						</div>
 
-						{/* Tipo de Contacto */}
-						<div className="form-summary-section">
-							<h4>Tipo de Contacto</h4>
-							<div className="form-summary-item">
-								<span className="form-summary-label">Contactos:</span>
-								<span className="form-summary-value">
-									{getContactText()}
-								</span>
-							</div>
+						{/* Tipos de Contacto */}
+						<div className="data-section">
+							<h2 className="section-title">
+								<span className="section-icon">🤝</span>
+								Tipos de Contacto
+							</h2>
+							{scatData.contacto?.selectedIncidents?.length > 0 ? (
+								<div className="items-list">
+									{scatData.contacto.selectedIncidents.map((id, index) => (
+										<div key={index} className="list-item">
+											<span className="item-number">{id}</span>
+											<span className="item-text">{getItemText(tiposContacto, id)}</span>
+										</div>
+									))}
+								</div>
+							) : (
+								<p className="no-data">No se seleccionaron tipos de contacto</p>
+							)}
+							{scatData.contacto?.observation && (
+								<div className="observation-box">
+									<h4>Observaciones:</h4>
+									<p>{scatData.contacto.observation}</p>
+								</div>
+							)}
 						</div>
 
 						{/* Causas Inmediatas */}
-						<div className="form-summary-section">
-							<h4>Causas Inmediatas</h4>
-							<div className="form-summary-item">
-								<span className="form-summary-label">Causas:</span>
-								<span className="form-summary-value">
-									{getCausasInmediatasText()}
-								</span>
+						<div className="data-section">
+							<h2 className="section-title">
+								<span className="section-icon">⚡</span>
+								Causas Inmediatas
+							</h2>
+							
+							{/* Actos Subestándar */}
+							<div className="subsection">
+								<h3 className="subsection-title">Actos Subestándar / Inseguros</h3>
+								{scatData.causasInmediatas?.actos?.selectedItems?.length > 0 ? (
+									<div className="items-list">
+										{scatData.causasInmediatas.actos.selectedItems.map((id, index) => (
+											<div key={index} className="list-item">
+												<span className="item-number">{id}</span>
+												<span className="item-text">{getItemText(actosSubestandar, id)}</span>
+											</div>
+										))}
+									</div>
+								) : (
+									<p className="no-data">No se seleccionaron actos subestándar</p>
+								)}
+								{scatData.causasInmediatas?.actos?.observation && (
+									<div className="observation-box">
+										<h4>Observaciones:</h4>
+										<p>{scatData.causasInmediatas.actos.observation}</p>
+									</div>
+								)}
+							</div>
+
+							{/* Condiciones Subestándar */}
+							<div className="subsection">
+								<h3 className="subsection-title">Condiciones Subestándar / Inseguras</h3>
+								{scatData.causasInmediatas?.condiciones?.selectedItems?.length > 0 ? (
+									<div className="items-list">
+										{scatData.causasInmediatas.condiciones.selectedItems.map((id, index) => (
+											<div key={index} className="list-item">
+												<span className="item-number">{id}</span>
+												<span className="item-text">{getItemText(condicionesSubestandar, id - 15)}</span>
+											</div>
+										))}
+									</div>
+								) : (
+									<p className="no-data">No se seleccionaron condiciones subestándar</p>
+								)}
+								{scatData.causasInmediatas?.condiciones?.observation && (
+									<div className="observation-box">
+										<h4>Observaciones:</h4>
+										<p>{scatData.causasInmediatas.condiciones.observation}</p>
+									</div>
+								)}
 							</div>
 						</div>
 
 						{/* Causas Básicas */}
-						<div className="form-summary-section">
-							<h4>Causas Básicas</h4>
-							<div className="form-summary-item">
-								<span className="form-summary-label">Factores:</span>
-								<span className="form-summary-value">
-									{getCausasBasicasText()}
-								</span>
+						<div className="data-section">
+							<h2 className="section-title">
+								<span className="section-icon">🔍</span>
+								Causas Básicas / Subyacentes
+							</h2>
+							
+							{/* Factores Personales */}
+							<div className="subsection">
+								<h3 className="subsection-title">Factores Personales</h3>
+								{scatData.causasBasicas?.personales?.selectedItems?.length > 0 ? (
+									<div className="items-list">
+										{scatData.causasBasicas.personales.selectedItems.map((id, index) => (
+											<div key={index} className="list-item">
+												<span className="item-number">{id}</span>
+												<span className="item-text">{getItemText(factoresPersonales, id)}</span>
+												{scatData.causasBasicas.personales.detailedSelections?.[id]?.length > 0 && (
+													<div className="detailed-items">
+														{scatData.causasBasicas.personales.detailedSelections[id].map((detailIndex, idx) => (
+															<span key={idx} className="detail-item">• Detalle {detailIndex + 1}</span>
+														))}
+													</div>
+												)}
+											</div>
+										))}
+									</div>
+								) : (
+									<p className="no-data">No se seleccionaron factores personales</p>
+								)}
+								{scatData.causasBasicas?.personales?.observation && (
+									<div className="observation-box">
+										<h4>Observaciones:</h4>
+										<p>{scatData.causasBasicas.personales.observation}</p>
+									</div>
+								)}
+							</div>
+
+							{/* Factores Laborales */}
+							<div className="subsection">
+								<h3 className="subsection-title">Factores Laborales</h3>
+								{scatData.causasBasicas?.laborales?.selectedItems?.length > 0 ? (
+									<div className="items-list">
+										{scatData.causasBasicas.laborales.selectedItems.map((id, index) => (
+											<div key={index} className="list-item">
+												<span className="item-number">{id}</span>
+												<span className="item-text">{getItemText(factoresLaborales, id - 7)}</span>
+												{scatData.causasBasicas.laborales.detailedSelections?.[id]?.length > 0 && (
+													<div className="detailed-items">
+														{scatData.causasBasicas.laborales.detailedSelections[id].map((detailIndex, idx) => (
+															<span key={idx} className="detail-item">• Detalle {detailIndex + 1}</span>
+														))}
+													</div>
+												)}
+											</div>
+										))}
+									</div>
+								) : (
+									<p className="no-data">No se seleccionaron factores laborales</p>
+								)}
+								{scatData.causasBasicas?.laborales?.observation && (
+									<div className="observation-box">
+										<h4>Observaciones:</h4>
+										<p>{scatData.causasBasicas.laborales.observation}</p>
+									</div>
+								)}
 							</div>
 						</div>
 
 						{/* Necesidades de Control */}
-						<div className="form-summary-section">
-							<h4>Necesidades de Acción de Control</h4>
-							<div className="form-summary-item">
-								<span className="form-summary-label">Controles:</span>
-								<span className="form-summary-value">
-									{getNecesidadesControlText()}
-								</span>
-							</div>
+						<div className="data-section">
+							<h2 className="section-title">
+								<span className="section-icon">🛡️</span>
+								Necesidades de Acción de Control
+							</h2>
+							{scatData.necesidadesControl?.selectedItems?.length > 0 ? (
+								<div className="items-list">
+									{scatData.necesidadesControl.selectedItems.map((id, index) => (
+										<div key={index} className="list-item">
+											<span className="item-number">{id}</span>
+											<span className="item-text">{getItemText(necesidadesControl, id)}</span>
+											{scatData.necesidadesControl.detailedData?.[id] && (
+												<div className="detailed-data">
+													{scatData.necesidadesControl.detailedData[id].description && (
+														<p><strong>Descripción:</strong> {scatData.necesidadesControl.detailedData[id].description}</p>
+													)}
+													{scatData.necesidadesControl.detailedData[id].responsible && (
+														<p><strong>Responsable:</strong> {scatData.necesidadesControl.detailedData[id].responsible}</p>
+													)}
+													{scatData.necesidadesControl.detailedData[id].deadline && (
+														<p><strong>Fecha límite:</strong> {scatData.necesidadesControl.detailedData[id].deadline}</p>
+													)}
+												</div>
+											)}
+										</div>
+									))}
+								</div>
+							) : (
+								<p className="no-data">No se identificaron necesidades de control</p>
+							)}
+							{scatData.necesidadesControl?.globalObservation && (
+								<div className="observation-box">
+									<h4>Observaciones Generales:</h4>
+									<p>{scatData.necesidadesControl.globalObservation}</p>
+								</div>
+							)}
 						</div>
 					</div>
 
-					{/* Primary Action Buttons */}
-					<div className="button-group primary-actions">
-						<button onClick={handleStartNewReport} className="next-page-primary-button">
-							<span className="action-button-with-icon">
-								<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M12 4v16m8-8H4"
-									/>
-								</svg>
-								Nuevo Análisis
-							</span>
-						</button>
-						<button onClick={onGoBack} className="next-page-secondary-button">
-							<span className="action-button-with-icon">
-								<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M10 19l-7-7m0 0l7-7m-7 7h18"
-									/>
-								</svg>
-								Volver al Inicio
-							</span>
-						</button>
-					</div>
+					{/* Botones de acción */}
+					<div className="action-buttons-container">
+						<div className="button-group primary-actions">
+							<button onClick={handleStartNewReport} className="next-page-primary-button">
+								<span className="action-button-with-icon">
+									<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M12 4v16m8-8H4"
+										/>
+									</svg>
+									Nuevo Análisis
+								</span>
+							</button>
+							<button onClick={onGoBack} className="next-page-secondary-button">
+								<span className="action-button-with-icon">
+									<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M10 19l-7-7m0 0l7-7m-7 7h18"
+										/>
+									</svg>
+									Volver al Inicio
+								</span>
+							</button>
+						</div>
 
-					{/* Secondary Action Buttons */}
-					<div className="button-group secondary-actions">
-						<button
-							onClick={handlePrint}
-							className="next-page-secondary-button"
-						>
-							<span className="action-button-with-icon">
-								<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-									/>
-								</svg>
-								Imprimir Reporte
-							</span>
-						</button>
-						<button
-							onClick={handleEmail}
-							className="next-page-secondary-button"
-						>
-							<span className="action-button-with-icon">
-								<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-									/>
-								</svg>
-								Enviar por Email
-							</span>
-						</button>
-						<button
-							onClick={handleExportPDF}
-							className="next-page-secondary-button"
-						>
-							<span className="action-button-with-icon">
-								<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-									/>
-								</svg>
-								Exportar PDF
-							</span>
-						</button>
+						<div className="button-group secondary-actions">
+							<button onClick={handlePrint} className="next-page-secondary-button">
+								<span className="action-button-with-icon">
+									<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+										/>
+									</svg>
+									Imprimir Reporte
+								</span>
+							</button>
+							<button onClick={handleEmail} className="next-page-secondary-button">
+								<span className="action-button-with-icon">
+									<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+										/>
+									</svg>
+									Enviar por Email
+								</span>
+							</button>
+							<button onClick={handleExportPDF} className="next-page-secondary-button">
+								<span className="action-button-with-icon">
+									<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+										/>
+									</svg>
+									Exportar PDF
+								</span>
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>

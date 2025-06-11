@@ -207,8 +207,8 @@ function ProjectsPageStandalone() {
     return (
       <ScatInterface 
         onNavigateToBase={handleNavigateToProjects}
-        onNavigateToHome={handleNavigateToProjects}
         onNavigateToProjects={handleNavigateToProjects}
+        onNavigateToDescription={handleNavigateToProjects}
         formData={formData}
       />
     );

@@ -32,19 +32,24 @@ function ProjectsPage() {
 		localStorage.removeItem('scatProgress');
 	};
 
+	const handleNavigateToDescription = () => {
+		console.log("Navigating to description - staying in projects for this page");
+		setCurrentView("projects");
+	};
+
 	return (
 		<div style={{ height: "100vh", width: "100vw" }}>
 			{currentView === "projects" && (
 				<ProjectsView 
-					onNavigateToBase={handleNavigateToBase}
 					onNavigateToScat={handleNavigateToScat}
+					onNavigateToBase={handleNavigateToProjects}
 				/>
 			)}
 			{currentView === "scat" && (
 				<ScatInterface 
 					onNavigateToBase={handleNavigateToProjects}
-					onNavigateToHome={handleNavigateToHome}
 					onNavigateToProjects={handleNavigateToProjects}
+					onNavigateToDescription={handleNavigateToDescription}
 					formData={formData}
 				/>
 			)}

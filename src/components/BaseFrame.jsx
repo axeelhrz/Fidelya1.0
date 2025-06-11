@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, ChevronDown, Trash2 } from "lucide-react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
@@ -100,10 +100,10 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	// Initialize displayed projects
 	useEffect(() => {
 		loadMoreProjects(true);
-	}, [projects]);
+	}, [projects, loadMoreProjects]);
 
 	// Load more projects function
-	const loadMoreProjects = (reset = false) => {
+	const loadMoreProjects = useCallback((reset = false) => {
 		const page = reset ? 1 : currentPage + 1;
 		const startIndex = 0;
 		const endIndex = page * projectsPerPage;
@@ -112,7 +112,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		setDisplayedProjects(newDisplayedProjects);
 		setCurrentPage(page);
 		setHasMore(endIndex < projects.length);
-	};
+	}, [projects, currentPage, projectsPerPage]);
 
 	const handleCreateProject = (newProject) => {
 		setProjects((prev) => [newProject, ...prev]);
@@ -137,7 +137,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 
 	const handleRestoreProject = (project) => {
 		// Remover fecha de eliminación
-		const { deletedAt, ...restoredProject } = project;
+		const { deletedAt: _deletedAt, ...restoredProject } = project;
 		
 		// Restaurar a proyectos activos
 		setProjects(prev => [restoredProject, ...prev]);
