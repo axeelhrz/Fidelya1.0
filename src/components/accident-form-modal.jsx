@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import styles from "./AccidentForm.module.css";
 import { useScatData } from "../contexts/ScatContext";
 
 export default function AccidentFormModal({ isOpen, onClose, onCreateProject, onContinue }) {
-	const { setProjectData, resetAllData } = useScatData();
+	const { setProjectData } = useScatData();
 	const [formData, setFormData] = useState({
 		evento: "",
 		involucrado: "",
@@ -16,17 +16,19 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 	});
 
 	const [errors, setErrors] = useState({});
+	const hasInitialized = useRef(false);
 
-	// Limpiar datos cuando se abre el modal
+	// Limpiar formulario cuando se abre el modal (solo una vez)
 	useEffect(() => {
-		if (isOpen) {
-			console.log('=== MODAL ABIERTO - LIMPIANDO DATOS ===');
-			// Limpiar todos los datos del contexto SCAT
-			resetAllData();
-			// Limpiar el formulario
+		if (isOpen && !hasInitialized.current) {
+			console.log('=== MODAL ABIERTO - INICIALIZANDO FORMULARIO LIMPIO ===');
 			resetForm();
+			hasInitialized.current = true;
+		} else if (!isOpen) {
+			// Resetear la bandera cuando se cierra el modal
+			hasInitialized.current = false;
 		}
-	}, [isOpen, resetAllData]);
+	}, [isOpen]);
 
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;
