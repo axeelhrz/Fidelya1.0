@@ -51,8 +51,7 @@ function ScatInterface({
 	onSaveProject,
 	formData, 
 	editingProject, 
-	isEditing = false,
-	isReadOnly = false
+	isEditing = false
 }) {
 	const [activeSection, setActiveSection] = useState("evaluacion");
 	const { 
@@ -70,17 +69,13 @@ function ScatInterface({
 			if (isEditing && editingProject) {
 				// Modo edición: cargar datos completos del proyecto
 				loadProjectForEditing(editingProject);
-			} else if (isReadOnly && formData.projectData) {
-				// Modo solo lectura: cargar datos completos del proyecto
-				loadProjectForEditing(formData.projectData);
-				setEditingState(false);
 			} else {
 				// Modo nuevo proyecto: solo cargar datos básicos
 				setProjectData(formData);
 				setEditingState(false);
 			}
 		}
-	}, [formData, isEditing, isReadOnly, editingProject, setProjectData, setEditingState, loadProjectForEditing]);
+	}, [formData, isEditing, editingProject, setProjectData, setEditingState, loadProjectForEditing]);
 
 	const handleSectionClick = (sectionId) => {
 		setActiveSection(sectionId);
@@ -117,7 +112,7 @@ function ScatInterface({
 		if (isEditing && editingProject) {
 			handleSaveProgress(true, true); // true para isExiting, true para silent
 		} else {
-			// Si no estamos editando o estamos en modo solo lectura, limpiar datos del contexto
+			// Si no estamos editando, limpiar datos del contexto
 			clearEditingData(false);
 		}
 		
@@ -127,14 +122,6 @@ function ScatInterface({
 	};
 
 	const handleSaveProgress = (isExiting = false, silent = false) => {
-		// No permitir guardar en modo solo lectura
-		if (isReadOnly) {
-			if (!silent) {
-				alert("Este proyecto está en modo solo lectura. No se pueden guardar cambios.");
-			}
-			return;
-		}
-
 		try {
 			// Obtener todos los datos actuales del contexto
 			const completeSummary = getCompleteSummary();
@@ -206,7 +193,7 @@ function ScatInterface({
 		if (isEditing && editingProject) {
 			handleSaveProgress(true, true); // Guardar silenciosamente
 		} else {
-			// Si no estamos editando o estamos en modo solo lectura, limpiar datos del contexto
+			// Si no estamos editando, limpiar datos del contexto
 			clearEditingData(false);
 		}
 		
@@ -234,19 +221,6 @@ function ScatInterface({
 		scatSections.find((section) => section.id === activeSection)?.component ||
 		EvaluacionContent;
 
-	// Determinar el modo de visualización
-	const getDisplayMode = () => {
-		if (isReadOnly) return "VISUALIZACIÓN";
-		if (isEditing) return "EDITANDO";
-		return "NUEVO";
-	};
-
-	const getProjectName = () => {
-		if (isReadOnly && formData.projectData) return formData.projectData.name;
-		if (isEditing && editingProject) return editingProject.name;
-		return "Proyecto";
-	};
-
 	return (
 		<div className={styles.container}>
 			<div className={styles.header}>
@@ -259,13 +233,11 @@ function ScatInterface({
 						>
 							← Menú Principal
 						</button>
-						{(isEditing || isReadOnly) && (
+						{isEditing && (
 							<div className={styles.editingIndicator}>
-								<span className={`${styles.editingBadge} ${isReadOnly ? styles.readOnlyBadge : ''}`}>
-									{getDisplayMode()}
-								</span>
+								<span className={styles.editingBadge}>EDITANDO</span>
 								<span className={styles.editingText}>
-									{getProjectName()}
+									{editingProject?.name || 'Proyecto'}
 								</span>
 							</div>
 						)}
@@ -280,15 +252,13 @@ function ScatInterface({
 						<div className={styles.sectionCounter}>
 							{getCurrentSectionIndex() + 1} de {scatSections.length}
 						</div>
-						{!isReadOnly && (
-							<button 
-								className={styles.completeButton}
-								onClick={handleCompleteAnalysis}
-								title="Finalizar análisis y ver resumen"
-							>
-								{isEditing ? 'Guardar y Finalizar' : 'Finalizar Análisis'}
-							</button>
-						)}
+						<button 
+							className={styles.completeButton}
+							onClick={handleCompleteAnalysis}
+							title="Finalizar análisis y ver resumen"
+						>
+							{isEditing ? 'Guardar y Finalizar' : 'Finalizar Análisis'}
+						</button>
 					</div>
 				</div>
 			</div>
@@ -334,7 +304,7 @@ function ScatInterface({
 			</div>
 
 			<div className={styles.contentArea}>
-				<ActiveComponent isReadOnly={isReadOnly} />
+				<ActiveComponent />
 			</div>
 
 			<div className={styles.bottomNav}>
@@ -345,15 +315,13 @@ function ScatInterface({
 				>
 					<InfoIcon />
 				</button>
-				{!isReadOnly && (
-					<button 
-						className={styles.iconButton}
-						onClick={() => handleSaveProgress(false)}
-						title="Guardar progreso"
-					>
-						<SaveIcon />
-					</button>
-				)}
+				<button 
+					className={styles.iconButton}
+					onClick={() => handleSaveProgress(false)}
+					title="Guardar progreso"
+				>
+					<SaveIcon />
+				</button>
 				<button 
 					className={`${styles.iconButton} ${styles.darkButton}`}
 					onClick={handleShowGrid}
@@ -389,7 +357,6 @@ function ScatInterface({
 				</div>
 				<div className={styles.progressText}>
 					Progreso: {getCurrentSectionIndex() + 1}/{scatSections.length}
-					{isReadOnly && <span className={styles.readOnlyProgress}> (Solo lectura)</span>}
 					{isEditing && <span className={styles.editingProgress}> (Editando)</span>}
 				</div>
 			</div>
