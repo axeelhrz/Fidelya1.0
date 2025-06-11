@@ -6,6 +6,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  max-height: 100vh;
 }
 
 .contentHeader {
@@ -54,6 +55,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .description {
@@ -136,6 +139,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  padding: 1.5rem;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .header {
@@ -145,6 +151,7 @@
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #4b5563;
+  flex-shrink: 0;
 }
 
 .header h3 {
@@ -180,12 +187,14 @@
   gap: 1.5rem;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 @media (max-width: 1024px) {
   .contentWrapper {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr auto;
+    overflow-y: auto;
   }
 }
 
@@ -193,6 +202,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 
 .itemsGrid {
@@ -202,6 +212,12 @@
   overflow-y: auto;
   padding-right: 0.5rem;
   flex: 1;
+  min-height: 0;
+  max-height: 100%;
+  
+  /* Mejorar el scroll */
+  scrollbar-width: thin;
+  scrollbar-color: #6b7280 #374151;
 }
 
 .itemCard {
@@ -215,6 +231,7 @@
   align-items: flex-start;
   gap: 0.75rem;
   text-align: left;
+  height: fit-content;
 }
 
 .itemCard:hover {
@@ -252,6 +269,7 @@
   color: #e5e7eb;
   font-size: 0.9rem;
   line-height: 1.4;
+  word-wrap: break-word;
 }
 
 .selectedSummary {
@@ -260,6 +278,9 @@
   background: #1f2937;
   border-radius: 0.5rem;
   border: 1px solid #374151;
+  flex-shrink: 0;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .selectedSummary h4 {
@@ -282,6 +303,7 @@
   border-radius: 1rem;
   font-size: 0.8rem;
   border: 1px solid #4b5563;
+  word-break: break-word;
 }
 
 /* Right Panel Styles */
@@ -289,12 +311,16 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-height: 0;
+  overflow-y: auto;
+  padding-left: 0.5rem;
 }
 
 .imageSection {
   background: #4b5563;
   border-radius: 0.5rem;
   padding: 1rem;
+  flex-shrink: 0;
 }
 
 .fileInput {
@@ -386,6 +412,9 @@
   border-radius: 0.5rem;
   padding: 1rem;
   flex: 1;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
 }
 
 .observationHeader {
@@ -395,6 +424,7 @@
   margin-bottom: 0.75rem;
   color: #eab308;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .editIcon {
@@ -413,6 +443,8 @@
   line-height: 1.4;
   resize: vertical;
   min-height: 120px;
+  flex: 1;
+  box-sizing: border-box;
 }
 
 .observationTextarea:focus {
@@ -448,6 +480,7 @@
   display: flex;
   flex-direction: column;
   border: 2px solid #4b5563;
+  overflow: hidden;
 }
 
 .modalHeader {
@@ -458,6 +491,7 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #4b5563;
+  flex-shrink: 0;
 }
 
 .modalTitle {
@@ -487,6 +521,7 @@
   padding: 1.5rem;
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .modalDescription {
@@ -549,6 +584,7 @@
   color: #e5e7eb;
   font-size: 0.9rem;
   line-height: 1.4;
+  word-wrap: break-word;
 }
 
 .modalFooter {
@@ -559,6 +595,7 @@
   justify-content: flex-end;
   gap: 1rem;
   border-top: 1px solid #4b5563;
+  flex-shrink: 0;
 }
 
 .modalCancelBtn {
@@ -597,24 +634,37 @@
   cursor: not-allowed;
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling mejorado */
 .itemsGrid::-webkit-scrollbar,
+.selectedSummary::-webkit-scrollbar,
+.rightPanel::-webkit-scrollbar,
+.contentBody::-webkit-scrollbar,
 .modalBody::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .itemsGrid::-webkit-scrollbar-track,
+.selectedSummary::-webkit-scrollbar-track,
+.rightPanel::-webkit-scrollbar-track,
+.contentBody::-webkit-scrollbar-track,
 .modalBody::-webkit-scrollbar-track {
   background: #374151;
+  border-radius: 4px;
 }
 
 .itemsGrid::-webkit-scrollbar-thumb,
+.selectedSummary::-webkit-scrollbar-thumb,
+.rightPanel::-webkit-scrollbar-thumb,
+.contentBody::-webkit-scrollbar-thumb,
 .modalBody::-webkit-scrollbar-thumb {
   background: #6b7280;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .itemsGrid::-webkit-scrollbar-thumb:hover,
+.selectedSummary::-webkit-scrollbar-thumb:hover,
+.rightPanel::-webkit-scrollbar-thumb:hover,
+.contentBody::-webkit-scrollbar-thumb:hover,
 .modalBody::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
@@ -644,6 +694,13 @@
   
   .contentWrapper {
     gap: 1rem;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+  
+  .rightPanel {
+    padding-left: 0;
+    max-height: 400px;
   }
   
   .backButton {
@@ -656,9 +713,18 @@
     text-align: left;
   }
 
+  .detailView {
+    padding: 1rem;
+  }
+
+  .contentBody {
+    padding: 1rem;
+  }
+
   .modalContent {
     margin: 0.5rem;
     max-width: calc(100vw - 1rem);
+    max-height: 90vh;
   }
 
   .modalHeader {
@@ -676,6 +742,90 @@
 
   .modalTitle {
     font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .contentBody {
+    padding: 0.75rem;
+  }
+  
+  .detailView {
+    padding: 0.75rem;
+  }
+  
+  .itemCard {
+    padding: 0.75rem;
+  }
+  
+  .itemText {
+    font-size: 0.8rem;
+  }
+  
+  .contentWrapper {
+    gap: 0.75rem;
+  }
+
+  .rightPanel {
+    gap: 1rem;
+  }
+
+  .observationSection {
+    min-height: 150px;
+  }
+
+  .observationTextarea {
+    min-height: 100px;
+  }
+
+  .modalContent {
+    max-height: 95vh;
+  }
+
+  .modalBody {
+    padding: 0.75rem;
+  }
+
+  .modalFooter {
+    padding: 0.75rem;
+  }
+}
+
+/* Mejoras para pantallas muy altas */
+@media (min-height: 800px) {
+  .itemsGrid {
+    max-height: 60vh;
+  }
+  
+  .rightPanel {
+    max-height: 60vh;
+  }
+}
+
+/* Mejoras para pantallas muy bajas */
+@media (max-height: 600px) {
+  .contentHeader {
+    padding: 1rem;
+  }
+  
+  .detailView {
+    padding: 1rem;
+  }
+  
+  .itemsGrid {
+    max-height: 40vh;
+  }
+  
+  .rightPanel {
+    max-height: 40vh;
+  }
+  
+  .observationSection {
+    min-height: 120px;
+  }
+
+  .modalContent {
+    max-height: 85vh;
   }
 }
 
