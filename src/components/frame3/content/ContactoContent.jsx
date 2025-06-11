@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import styles from "./ContactoContent.module.css";
+import { useScatData } from "../../../contexts/ScatDataContext";
 
 function ContactoContent() {
-	const [selectedIncidents, setSelectedIncidents] = useState([]);
-	const [imagePreview, setImagePreview] = useState(null);
-	const [observation, setObservation] = useState("");
+	const { contactoData, setContactoData } = useScatData();
 	const fileInputRef = useRef(null);
 
 	const incidents = [
@@ -68,17 +67,21 @@ function ContactoContent() {
 	];
 
 	const handleIncidentToggle = (incidentId) => {
-		setSelectedIncidents((prev) => {
-			if (prev.includes(incidentId)) {
-				return prev.filter((id) => id !== incidentId);
-			} else {
-				return [...prev, incidentId];
-			}
+		const newSelectedIncidents = contactoData.selectedIncidents.includes(incidentId)
+			? contactoData.selectedIncidents.filter((id) => id !== incidentId)
+			: [...contactoData.selectedIncidents, incidentId];
+
+		setContactoData({
+			...contactoData,
+			selectedIncidents: newSelectedIncidents
 		});
 	};
 
 	const clearAllSelections = () => {
-		setSelectedIncidents([]);
+		setContactoData({
+			...contactoData,
+			selectedIncidents: []
+		});
 	};
 
 	const handleImageUpload = (e) => {
@@ -86,7 +89,10 @@ function ContactoContent() {
 		if (file) {
 			const reader = new FileReader();
 			reader.onload = (e) => {
-				setImagePreview(e.target.result);
+				setContactoData({
+					...contactoData,
+					image: e.target.result
+				});
 			};
 			reader.readAsDataURL(file);
 		}
@@ -97,8 +103,18 @@ function ContactoContent() {
 	};
 
 	const removeImage = () => {
-		setImagePreview(null);
+		setContactoData({
+			...contactoData,
+			image: null
+		});
 		fileInputRef.current.value = "";
+	};
+
+	const handleObservationChange = (e) => {
+		setContactoData({
+			...contactoData,
+			observation: e.target.value
+		});
 	};
 
 	return (
@@ -108,7 +124,7 @@ function ContactoContent() {
 				<button
 					className={styles.clearButton}
 					onClick={clearAllSelections}
-					disabled={selectedIncidents.length === 0}
+					disabled={contactoData.selectedIncidents.length === 0}
 				>
 					Limpiar Selección
 				</button>
@@ -121,7 +137,7 @@ function ContactoContent() {
 							<button
 								key={incident.id}
 								className={`${styles.incidentItem} ${
-									selectedIncidents.includes(incident.id) ? styles.selected : ""
+									contactoData.selectedIncidents.includes(incident.id) ? styles.selected : ""
 								}`}
 								onClick={() => handleIncidentToggle(incident.id)}
 							>
@@ -136,11 +152,11 @@ function ContactoContent() {
 						))}
 					</div>
 
-					{selectedIncidents.length > 0 && (
+					{contactoData.selectedIncidents.length > 0 && (
 						<div className={styles.selectedSummary}>
-							<h4>Incidentes Seleccionados ({selectedIncidents.length}):</h4>
+							<h4>Incidentes Seleccionados ({contactoData.selectedIncidents.length}):</h4>
 							<div className={styles.selectedList}>
-								{selectedIncidents.map((id) => {
+								{contactoData.selectedIncidents.map((id) => {
 									const incident = incidents.find((inc) => inc.id === id);
 									return (
 										<span key={id} className={styles.selectedTag}>
@@ -163,10 +179,10 @@ function ContactoContent() {
 							className={styles.fileInput}
 						/>
 
-						{imagePreview ? (
+						{contactoData.image ? (
 							<div className={styles.imagePreviewContainer}>
 								<img
-									src={imagePreview || "/placeholder.svg"}
+									src={contactoData.image || "/placeholder.svg"}
 									alt="Preview"
 									className={styles.imagePreview}
 								/>
@@ -231,8 +247,8 @@ function ContactoContent() {
 						</div>
 						<textarea
 							className={styles.observationTextarea}
-							value={observation}
-							onChange={(e) => setObservation(e.target.value)}
+							value={contactoData.observation || ''}
+							onChange={handleObservationChange}
 							placeholder="Escriba sus observaciones aquí..."
 							rows={6}
 						></textarea>

@@ -7,6 +7,7 @@ import ContactoContent from "./content/ContactoContent";
 import CausasInmediatasContent from "./content/CausasInmediatasContent";
 import CausasBasicasContent from "./content/CausasBasicasContent";
 import NecesidadesControlContent from "./content/NecesidadesControlContent";
+import { useScatData } from "../../contexts/ScatDataContext";
 import {
 	InfoIcon,
 	SaveIcon,
@@ -43,8 +44,16 @@ const scatSections = [
 	},
 ];
 
-function ScatInterface({ onNavigateToBase, onNavigateToProjects, onNavigateToHome, formData }) {
+function ScatInterface({ onNavigateToBase, onNavigateToProjects, onNavigateToHome, onNavigateToDescription, formData }) {
 	const [activeSection, setActiveSection] = useState("evaluacion");
+	const { setProjectData, hasData, getCompleteSummary } = useScatData();
+
+	// Guardar datos del proyecto cuando se reciban
+	useState(() => {
+		if (formData) {
+			setProjectData(formData);
+		}
+	}, [formData, setProjectData]);
 
 	const handleSectionClick = (sectionId) => {
 		setActiveSection(sectionId);
@@ -84,13 +93,12 @@ function ScatInterface({ onNavigateToBase, onNavigateToProjects, onNavigateToHom
 	};
 
 	const handleSaveProgress = () => {
-		// Implementar lógica de guardado
-		console.log("Guardando progreso...");
+		// Los datos se guardan automáticamente en el contexto
+		console.log("Progreso guardado automáticamente");
 		alert("Progreso guardado exitosamente");
 	};
 
 	const handleShowInfo = () => {
-		// Implementar lógica de información
 		const currentSection = scatSections.find(section => section.id === activeSection);
 		alert(`Información sobre: ${currentSection?.title}`);
 	};
@@ -98,12 +106,21 @@ function ScatInterface({ onNavigateToBase, onNavigateToProjects, onNavigateToHom
 	const handleShowGrid = () => {
 		console.log("handleShowGrid called");
 		console.log("onNavigateToProjects function:", onNavigateToProjects);
-		// Navegar a la vista de proyectos
 		if (onNavigateToProjects) {
 			console.log("Calling onNavigateToProjects");
 			onNavigateToProjects();
 		} else {
 			console.error("onNavigateToProjects is not available");
+		}
+	};
+
+	const handleCompleteAnalysis = () => {
+		if (hasData()) {
+			if (onNavigateToDescription) {
+				onNavigateToDescription();
+			}
+		} else {
+			alert("Por favor, complete al menos una sección antes de finalizar el análisis.");
 		}
 	};
 
@@ -134,6 +151,13 @@ function ScatInterface({ onNavigateToBase, onNavigateToProjects, onNavigateToHom
 						<div className={styles.sectionCounter}>
 							{getCurrentSectionIndex() + 1} de {scatSections.length}
 						</div>
+						<button 
+							className={styles.completeButton}
+							onClick={handleCompleteAnalysis}
+							title="Finalizar análisis y ver resumen"
+						>
+							Finalizar Análisis
+						</button>
 					</div>
 				</div>
 			</div>

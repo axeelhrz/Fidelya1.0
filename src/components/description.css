@@ -80,32 +80,52 @@
     text-align: center;
   }
   
+  .form-summary-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+  }
+  
+  .form-summary-section h4 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
   .form-summary-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    margin-bottom: 8px;
     padding: 8px 0;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e9ecef;
   }
   
   .form-summary-item:last-child {
     border-bottom: none;
+    margin-bottom: 0;
   }
   
   .form-summary-label {
     font-weight: 600;
-    color: #374151;
-    flex: 1;
+    color: #495057;
+    min-width: 120px;
+    margin-right: 15px;
   }
   
   .form-summary-value {
-    color: #6b7280;
-    flex: 2;
+    flex: 1;
+    color: #6c757d;
     text-align: right;
   }
   
   .form-summary-value.empty {
-    color: #9ca3af;
+    color: #adb5bd;
     font-style: italic;
   }
   
@@ -136,14 +156,14 @@
     border-radius: 8px;
     cursor: pointer;
     font-size: 16px;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
     box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
   }
   
   .next-page-primary-button:hover {
     background-color: #f59e0b;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
   }
   
   /* Secondary Buttons */
@@ -155,13 +175,15 @@
     border-radius: 8px;
     cursor: pointer;
     font-size: 16px;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
   }
   
   .next-page-secondary-button:hover {
     background-color: #f9fafb;
     border-color: #9ca3af;
     color: #374151;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
   
   /* Action Buttons with Icons */
@@ -231,3 +253,19 @@
     }
   }
   
+  @media (max-width: 768px) {
+    .form-summary-item {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .form-summary-label {
+      min-width: auto;
+      margin-right: 0;
+      margin-bottom: 4px;
+    }
+  
+    .form-summary-value {
+      text-align: left;
+    }
+  }
