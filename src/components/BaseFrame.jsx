@@ -23,73 +23,10 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	const [hasMore, setHasMore] = useState(true);
 	const projectsPerPage = 6;
 
-	// Función para obtener proyectos iniciales (solo para demostración)
-	const getInitialProjects = () => {
-		return [
-			{
-				id: 1,
-				name: "Proyecto Inicial",
-				description: "Primer proyecto de ejemplo",
-				createdAt: new Date().toISOString(),
-				isExample: true
-			},
-			{
-				id: 2,
-				name: "Análisis de Fallas",
-				description: "Análisis sistemático de fallas",
-				createdAt: new Date().toISOString(),
-				isExample: true
-			},
-			{
-				id: 3,
-				name: "Mejora Continua",
-				description: "Proyecto de mejora continua",
-				createdAt: new Date().toISOString(),
-				isExample: true
-			},
-			{
-				id: 4,
-				name: "Evaluación de Riesgos",
-				description: "Evaluación de riesgos operativos",
-				createdAt: new Date().toISOString(),
-				isExample: true
-			},
-			{
-				id: 5,
-				name: "Optimización de Procesos",
-				description: "Optimización de procesos industriales",
-				createdAt: new Date().toISOString(),
-				isExample: true
-			},
-			{
-				id: 6,
-				name: "Control de Calidad",
-				description: "Sistema de control de calidad",
-				createdAt: new Date().toISOString(),
-				isExample: true
-			},
-			{
-				id: 7,
-				name: "Mantenimiento Preventivo",
-				description: "Plan de mantenimiento preventivo",
-				createdAt: new Date().toISOString(),
-				isExample: true
-			},
-			{
-				id: 8,
-				name: "Seguridad Industrial",
-				description: "Protocolos de seguridad industrial",
-				createdAt: new Date().toISOString(),
-				isExample: true
-			},
-			{
-				id: 9,
-				name: "Gestión Ambiental",
-				description: "Sistema de gestión ambiental",
-				createdAt: new Date().toISOString(),
-				isExample: true
-			},
-		];
+	// Función para limpiar proyectos simulados
+	const cleanSimulatedProjects = (projectsList) => {
+		// Filtrar solo proyectos que NO sean de ejemplo
+		return projectsList.filter(project => !project.isExample);
 	};
 
 	// Cargar proyectos desde localStorage al inicializar
@@ -98,30 +35,31 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 			try {
 				const savedProjects = localStorage.getItem('scatProjects');
 				const savedDeletedProjects = localStorage.getItem('scatDeletedProjects');
-				const hasInitialized = localStorage.getItem('scatInitialized');
 				
+				// Solo cargar proyectos reales del usuario
 				let loadedProjects = [];
-				
 				if (savedProjects) {
-					loadedProjects = JSON.parse(savedProjects);
-				} else if (!hasInitialized) {
-					// Solo cargar proyectos iniciales si es la primera vez
-					loadedProjects = getInitialProjects();
-					localStorage.setItem('scatInitialized', 'true');
+					const parsedProjects = JSON.parse(savedProjects);
+					// Limpiar proyectos simulados si existen
+					loadedProjects = cleanSimulatedProjects(parsedProjects);
 				}
 				
 				setProjects(loadedProjects);
 				
+				let loadedDeletedProjects = [];
 				if (savedDeletedProjects) {
-					setDeletedProjects(JSON.parse(savedDeletedProjects));
+					const parsedDeletedProjects = JSON.parse(savedDeletedProjects);
+					// Limpiar proyectos simulados de la papelera también
+					loadedDeletedProjects = cleanSimulatedProjects(parsedDeletedProjects);
 				}
+				
+				setDeletedProjects(loadedDeletedProjects);
 				
 			} catch (error) {
 				console.error('Error loading saved projects:', error);
-				// En caso de error, usar proyectos iniciales
-				const initialProjects = getInitialProjects();
-				setProjects(initialProjects);
-				localStorage.setItem('scatInitialized', 'true');
+				// En caso de error, empezar con arrays vacíos
+				setProjects([]);
+				setDeletedProjects([]);
 			}
 			
 			setIsInitialized(true);
@@ -132,7 +70,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 
 	// Guardar proyectos en localStorage cuando cambien (solo después de la inicialización)
 	useEffect(() => {
-		if (isInitialized && projects.length >= 0) {
+		if (isInitialized) {
 			localStorage.setItem('scatProjects', JSON.stringify(projects));
 			console.log('Proyectos guardados en localStorage:', projects.length);
 		}
@@ -279,73 +217,68 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 								<span>Create New Project</span>
 							</button>
 
-							{/* Trash Button */}
-							<button
-								onClick={() => setIsTrashModalOpen(true)}
-								className={styles.trashButton}
-								title={`Papelera (${deletedProjects.length})`}
-							>
-								<Trash2 size={20} />
-								<span>Papelera</span>
-								{deletedProjects.length > 0 && (
+							{/* Trash Button - Solo mostrar si hay proyectos eliminados */}
+							{deletedProjects.length > 0 && (
+								<button
+									onClick={() => setIsTrashModalOpen(true)}
+									className={styles.trashButton}
+									title={`Papelera (${deletedProjects.length})`}
+								>
+									<Trash2 size={20} />
+									<span>Papelera</span>
 									<span className={styles.trashCount}>{deletedProjects.length}</span>
-								)}
-							</button>
+								</button>
+							)}
 						</div>
 
 						{/* Projects Grid */}
-						<div className={styles.projectsGrid}>
-							{displayedProjects.map((project, index) => (
-								<ProjectCard
-									key={project.id}
-									project={project}
-									isHighlighted={index === 0 && !project.isExample}
-									onDelete={() => handleDeleteProject(project.id)}
-								/>
-							))}
-						</div>
+						{projects.length > 0 ? (
+							<>
+								<div className={styles.projectsGrid}>
+									{displayedProjects.map((project, index) => (
+										<ProjectCard
+											key={project.id}
+											project={project}
+											isHighlighted={index === 0}
+											onDelete={() => handleDeleteProject(project.id)}
+										/>
+									))}
+								</div>
 
-						{/* Load More Button */}
-						{hasMore && (
-							<div className={styles.loadMoreContainer}>
+								{/* Load More Button */}
+								{hasMore && (
+									<div className={styles.loadMoreContainer}>
+										<button
+											onClick={() => loadMoreProjects()}
+											className={styles.loadMoreButton}
+										>
+											<span>Cargar más proyectos</span>
+											<ChevronDown size={18} />
+										</button>
+									</div>
+								)}
+							</>
+						) : (
+							/* Empty state - Mostrar cuando no hay proyectos */
+							<div className={styles.emptyState}>
+								<div className={styles.emptyIcon}>
+									<Plus size={64} />
+								</div>
+								<p className={styles.emptyTitle}>No tienes proyectos creados</p>
+								<p className={styles.emptyDescription}>
+									Comienza creando tu primer proyecto de análisis SCAT
+								</p>
 								<button
-									onClick={() => loadMoreProjects()}
-									className={styles.loadMoreButton}
+									onClick={() => setIsModalOpen(true)}
+									className={styles.emptyStateButton}
 								>
-									<span>Cargar más proyectos</span>
-									<ChevronDown size={18} />
+									<Plus size={20} />
+									<span>Crear mi primer proyecto</span>
 								</button>
 							</div>
 						)}
 
-						{/* Empty state */}
-						{projects.length === 0 && (
-							<div className={styles.emptyState}>
-								<p className={styles.emptyTitle}>No hay proyectos creados</p>
-								<p className={styles.emptyDescription}>
-									Haz clic en "Create New Project" para comenzar
-								</p>
-							</div>
-						)}
-
 						{/* Debug info (solo en desarrollo) */}
-						{typeof window !== 'undefined' && window.location.hostname === 'localhost' && (
-							<div style={{ 
-								position: 'fixed', 
-								bottom: '10px', 
-								left: '10px', 
-								background: 'rgba(0,0,0,0.8)', 
-								color: 'white', 
-								padding: '10px', 
-								borderRadius: '5px',
-								fontSize: '12px',
-								zIndex: 1000
-							}}>
-								<div>Total proyectos: {projects.length}</div>
-								<div>Proyectos mostrados: {displayedProjects.length}</div>
-								<div>En papelera: {deletedProjects.length}</div>
-							</div>
-						)}
 					</div>
 				</main>
 			</div>
@@ -372,3 +305,4 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 }
 
 export default BaseFrame;
+
