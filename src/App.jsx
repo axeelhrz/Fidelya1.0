@@ -49,39 +49,9 @@ function App() {
 
 	console.log("Current frame:", currentFrame);
 
-	// Componente de prueba simple
-	if (currentFrame === "test") {
-		return (
-			<div style={{ padding: '20px', color: 'white', backgroundColor: '#111827', minHeight: '100vh' }}>
-				<h1>Test Component</h1>
-				<p>Si puedes ver esto, la aplicación está funcionando.</p>
-				<button onClick={() => setCurrentFrame("base")}>Ir a BaseFrame</button>
-			</div>
-		);
-	}
-
 	return (
 		<ScatDataProvider>
 			<div className={styles.app}>
-				{/* Botón de prueba temporal */}
-				<button 
-					onClick={() => setCurrentFrame("test")}
-					style={{
-						position: 'fixed',
-						top: '10px',
-						right: '10px',
-						zIndex: 9999,
-						padding: '10px',
-						backgroundColor: '#d97706',
-						color: 'white',
-						border: 'none',
-						borderRadius: '5px',
-						cursor: 'pointer'
-					}}
-				>
-					Test
-				</button>
-
 				{currentFrame === "base" && (
 					<BaseFrame 
 						onNavigateToScat={handleNavigateToScat}

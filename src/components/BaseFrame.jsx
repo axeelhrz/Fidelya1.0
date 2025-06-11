@@ -10,9 +10,118 @@ import TrashModal from "./TrashModal";
 import styles from "./Baseframe.module.css";
 
 function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
-	// Sample projects for demonstration
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
+	const [projects, setProjects] = useState([]);
+	const [deletedProjects, setDeletedProjects] = useState([]);
+	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+	// Pagination state
+	const [displayedProjects, setDisplayedProjects] = useState([]);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [hasMore, setHasMore] = useState(true);
+	const projectsPerPage = 6;
+
+	// Cargar proyectos desde localStorage al inicializar
+	useEffect(() => {
+		const savedProjects = localStorage.getItem('scatProjects');
+		const savedDeletedProjects = localStorage.getItem('scatDeletedProjects');
+		
+		if (savedProjects) {
+			try {
+				const parsedProjects = JSON.parse(savedProjects);
+				setProjects(parsedProjects);
+			} catch (error) {
+				console.error('Error loading saved projects:', error);
+				// Si hay error, usar proyectos iniciales
+				setProjects(getInitialProjects());
+			}
+		} else {
+			// Si no hay proyectos guardados, usar proyectos iniciales
+			setProjects(getInitialProjects());
+		}
+
+		if (savedDeletedProjects) {
+			try {
+				const parsedDeletedProjects = JSON.parse(savedDeletedProjects);
+				setDeletedProjects(parsedDeletedProjects);
+			} catch (error) {
+				console.error('Error loading deleted projects:', error);
+			}
+		}
+	}, []);
+
+	// Guardar proyectos en localStorage cuando cambien
+	useEffect(() => {
+		if (projects.length > 0) {
+			localStorage.setItem('scatProjects', JSON.stringify(projects));
+		}
+	}, [projects]);
+
+	// Guardar proyectos eliminados en localStorage cuando cambien
+	useEffect(() => {
+		localStorage.setItem('scatDeletedProjects', JSON.stringify(deletedProjects));
+	}, [deletedProjects]);
+
+	// Función para obtener proyectos iniciales
+	const getInitialProjects = () => {
+		return [
+			{
+				id: 1,
+				name: "Proyecto Inicial",
+				description: "Primer proyecto de ejemplo",
+				createdAt: new Date().toISOString(),
+			},
+			{
+				id: 2,
+				name: "Análisis de Fallas",
+				description: "Análisis sistemático de fallas",
+				createdAt: new Date().toISOString(),
+			},
+			{
+				id: 3,
+				name: "Mejora Continua",
+				description: "Proyecto de mejora continua",
+				createdAt: new Date().toISOString(),
+			},
+			{
+				id: 4,
+				name: "Evaluación de Riesgos",
+				description: "Evaluación de riesgos operativos",
+				createdAt: new Date().toISOString(),
+			},
+			{
+				id: 5,
+				name: "Optimización de Procesos",
+				description: "Optimización de procesos industriales",
+				createdAt: new Date().toISOString(),
+			},
+			{
+				id: 6,
+				name: "Control de Calidad",
+				description: "Sistema de control de calidad",
+				createdAt: new Date().toISOString(),
+			},
+			{
+				id: 7,
+				name: "Mantenimiento Preventivo",
+				description: "Plan de mantenimiento preventivo",
+				createdAt: new Date().toISOString(),
+			},
+			{
+				id: 8,
+				name: "Seguridad Industrial",
+				description: "Protocolos de seguridad industrial",
+				createdAt: new Date().toISOString(),
+			},
+			{
+				id: 9,
+				name: "Gestión Ambiental",
+				description: "Sistema de gestión ambiental",
+				createdAt: new Date().toISOString(),
+			},
+		];
+	};
 
 	// Función para manejar la continuación al SCAT
 	const handleContinue = (formData) => {
@@ -29,73 +138,6 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 			alert("Error: No se puede navegar al SCAT. Función no encontrada.");
 		}
 	};
-
-	const initialProjects = [
-		{
-			id: 1,
-			name: "Proyecto Inicial",
-			description: "Primer proyecto de ejemplo",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 2,
-			name: "Análisis de Fallas",
-			description: "Análisis sistemático de fallas",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 3,
-			name: "Mejora Continua",
-			description: "Proyecto de mejora continua",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 4,
-			name: "Evaluación de Riesgos",
-			description: "Evaluación de riesgos operativos",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 5,
-			name: "Optimización de Procesos",
-			description: "Optimización de procesos industriales",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 6,
-			name: "Control de Calidad",
-			description: "Sistema de control de calidad",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 7,
-			name: "Mantenimiento Preventivo",
-			description: "Plan de mantenimiento preventivo",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 8,
-			name: "Seguridad Industrial",
-			description: "Protocolos de seguridad industrial",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 9,
-			name: "Gestión Ambiental",
-			description: "Sistema de gestión ambiental",
-			createdAt: new Date().toISOString(),
-		},
-	];
-
-	const [projects, setProjects] = useState(initialProjects);
-	const [deletedProjects, setDeletedProjects] = useState([]);
-	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-	// Pagination state
-	const [displayedProjects, setDisplayedProjects] = useState([]);
-	const [currentPage, setCurrentPage] = useState(1);
-	const [hasMore, setHasMore] = useState(true);
-	const projectsPerPage = 6;
 
 	// Load more projects function - moved before useEffect
 	const loadMoreProjects = useCallback((reset = false) => {

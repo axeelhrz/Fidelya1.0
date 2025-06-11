@@ -64,19 +64,23 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 		e.preventDefault();
 
 		if (validateForm()) {
-			// Crear un nuevo proyecto con ID único
+			// Crear un nuevo proyecto con ID único y todos los datos necesarios
 			const newProject = {
-				id: Date.now(),
+				id: Date.now(), // Usar timestamp como ID único
 				name: formData.evento,
 				description: `Involucrado: ${formData.involucrado} - Área: ${formData.area}`,
 				createdAt: new Date().toISOString(),
-				formData: formData
+				formData: { ...formData }, // Guardar todos los datos del formulario
+				// Metadatos adicionales
+				status: 'active',
+				lastModified: new Date().toISOString(),
+				version: 1
 			};
 
-			// Guardar en el contexto
+			// Guardar en el contexto para uso inmediato en SCAT
 			setProjectData(formData);
 			
-			// Llamar al callback para crear el proyecto
+			// Llamar al callback para crear el proyecto en el dashboard
 			if (onCreateProject) {
 				onCreateProject(newProject);
 			}
@@ -87,19 +91,11 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 			}
 			
 			// Limpiar formulario
-			setFormData({
-				evento: "",
-				involucrado: "",
-				area: "",
-				fechaHora: "",
-				investigador: "",
-				otrosDatos: "",
-			});
-			setErrors({});
+			resetForm();
 		}
 	};
 
-	const handleCancel = () => {
+	const resetForm = () => {
 		setFormData({
 			evento: "",
 			involucrado: "",
@@ -109,6 +105,10 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 			otrosDatos: "",
 		});
 		setErrors({});
+	};
+
+	const handleCancel = () => {
+		resetForm();
 		onClose();
 	};
 
