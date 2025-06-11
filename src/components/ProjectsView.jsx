@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Trash2, Archive, Info, Edit, Download, Eye, Layers } from "lucide-react";
+import TrashModal from "./TrashModal";
 import styles from "./ProjectsView.module.css";
 
 function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
@@ -105,9 +106,11 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 	];
 
 	const [projects, setProjects] = useState(initialProjects);
+	const [deletedProjects, setDeletedProjects] = useState([]);
 	const [selectedProjects, setSelectedProjects] = useState(new Set());
 	const [currentPage, setCurrentPage] = useState(1);
-	const projectsPerPage = 16; // Aumenté el número para aprovechar mejor el espacio
+	const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
+	const projectsPerPage = 16;
 
 	// Calcular proyectos para la página actual
 	const indexOfLastProject = currentPage * projectsPerPage;
@@ -137,6 +140,14 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 		if (selectedProjects.size > 0) {
 			const confirmed = window.confirm(`¿Estás seguro de que quieres eliminar ${selectedProjects.size} proyecto(s)?`);
 			if (confirmed) {
+				// Mover proyectos seleccionados a papelera
+				const projectsToDelete = projects.filter(p => selectedProjects.has(p.id));
+				const deletedProjectsWithDate = projectsToDelete.map(project => ({
+					...project,
+					deletedAt: new Date().toISOString()
+				}));
+				
+				setDeletedProjects(prev => [...deletedProjectsWithDate, ...prev]);
 				setProjects(projects.filter(p => !selectedProjects.has(p.id)));
 				setSelectedProjects(new Set());
 			}
@@ -148,6 +159,28 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 			alert(`${selectedProjects.size} proyecto(s) archivado(s)`);
 			setSelectedProjects(new Set());
 		}
+	};
+
+	const handleRestoreProject = (project) => {
+		// Remover fecha de eliminación
+		const { deletedAt, ...restoredProject } = project;
+		
+		// Restaurar a proyectos activos
+		setProjects(prev => [restoredProject, ...prev]);
+		
+		// Remover de papelera
+		setDeletedProjects(prev => prev.filter(p => p.id !== project.id));
+	};
+
+	const handlePermanentDelete = (projectId) => {
+		const confirmed = window.confirm('¿Estás seguro de que quieres eliminar permanentemente este proyecto? Esta acción no se puede deshacer.');
+		if (confirmed) {
+			setDeletedProjects(prev => prev.filter(p => p.id !== projectId));
+		}
+	};
+
+	const handleEmptyTrash = () => {
+		setDeletedProjects([]);
 	};
 
 	const handleViewProject = (project) => {
@@ -209,6 +242,16 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 						title="Archivar seleccionados"
 					>
 						<Archive size={16} />
+					</button>
+					<button 
+						className={`${styles.actionButton} ${styles.trashButton}`}
+						onClick={() => setIsTrashModalOpen(true)}
+						title={`Papelera (${deletedProjects.length})`}
+					>
+						<Trash2 size={16} />
+						{deletedProjects.length > 0 && (
+							<span className={styles.trashCount}>{deletedProjects.length}</span>
+						)}
 					</button>
 					<button 
 						className={styles.actionButton}
@@ -295,6 +338,16 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 					</div>
 				)}
 			</div>
+
+			{/* Trash Modal */}
+			<TrashModal
+				isOpen={isTrashModalOpen}
+				onClose={() => setIsTrashModalOpen(false)}
+				deletedProjects={deletedProjects}
+				onRestoreProject={handleRestoreProject}
+				onPermanentDelete={handlePermanentDelete}
+				onEmptyTrash={handleEmptyTrash}
+			/>
 		</div>
 	);
 }

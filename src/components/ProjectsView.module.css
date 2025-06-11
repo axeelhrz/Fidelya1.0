@@ -75,6 +75,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	position: relative;
 }
 
 .actionButton:hover:not(:disabled) {
@@ -84,6 +85,32 @@
 .actionButton:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+.trashButton {
+	background-color: #7f1d1d;
+}
+
+.trashButton:hover {
+	background-color: #991b1b;
+}
+
+.trashCount {
+	background-color: #ef4444;
+	color: white;
+	font-size: 0.625rem;
+	font-weight: 700;
+	padding: 0.125rem 0.25rem;
+	border-radius: 9999px;
+	min-width: 1rem;
+	height: 1rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: absolute;
+	top: -0.25rem;
+	right: -0.25rem;
+	border: 1px solid #374151;
 }
 
 .createButtonContainer {
