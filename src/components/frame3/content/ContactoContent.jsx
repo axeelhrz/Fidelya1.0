@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import styles from "./ContactoContent.module.css";
-import { useScatData } from "../../../contexts/ScatDataContext";
+import { useScatData } from "../../../contexts/ScatContext";
 
 function ContactoContent() {
 	const { contactoData, setContactoData } = useScatData();
