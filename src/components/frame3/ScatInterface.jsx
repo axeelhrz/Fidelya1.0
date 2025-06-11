@@ -43,7 +43,7 @@ const scatSections = [
 	},
 ];
 
-function ScatInterface({ onNavigateToBase, onNavigateToProjects }) {
+function ScatInterface({ onNavigateToBase, onNavigateToProjects, onNavigateToHome, formData }) {
 	const [activeSection, setActiveSection] = useState("evaluacion");
 
 	const handleSectionClick = (sectionId) => {
@@ -77,6 +77,7 @@ function ScatInterface({ onNavigateToBase, onNavigateToProjects }) {
 	};
 
 	const handleBackToMenu = () => {
+		console.log("handleBackToMenu called");
 		if (onNavigateToBase) {
 			onNavigateToBase();
 		}
@@ -95,9 +96,14 @@ function ScatInterface({ onNavigateToBase, onNavigateToProjects }) {
 	};
 
 	const handleShowGrid = () => {
+		console.log("handleShowGrid called");
+		console.log("onNavigateToProjects function:", onNavigateToProjects);
 		// Navegar a la vista de proyectos
 		if (onNavigateToProjects) {
+			console.log("Calling onNavigateToProjects");
 			onNavigateToProjects();
+		} else {
+			console.error("onNavigateToProjects is not available");
 		}
 	};
 
