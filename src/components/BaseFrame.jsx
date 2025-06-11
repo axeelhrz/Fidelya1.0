@@ -126,18 +126,18 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	}, [projects, loadMoreProjects, isInitialized]);
 
 	const handleCreateProject = (newProject) => {
-		console.log('=== CREANDO NUEVO PROYECTO ===');
+		console.log('=== CREANDO NUEVO PROYECTO EN BASEFRAME ===');
 		console.log('Proyecto recibido:', newProject);
 		console.log('Proyectos actuales antes de agregar:', projects.length);
 		
 		setProjects((prev) => {
 			const updatedProjects = [newProject, ...prev];
 			console.log('Proyectos después de agregar:', updatedProjects.length);
-			console.log('Lista actualizada:', updatedProjects);
+			console.log('Lista actualizada:', updatedProjects.map(p => ({ id: p.id, name: p.name })));
 			return updatedProjects;
 		});
 		
-		console.log('=== FIN CREACIÓN PROYECTO ===');
+		console.log('=== FIN CREACIÓN PROYECTO EN BASEFRAME ===');
 	};
 
 	const handleDeleteProject = (projectId) => {
@@ -297,26 +297,28 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 							</div>
 						)}
 
-						{/* Accident Form Modal */}
-						<AccidentFormModal
-							isOpen={isModalOpen}
-							onClose={() => setIsModalOpen(false)}
-							onCreateProject={handleCreateProject}
-							onContinue={handleContinue}
-						/>
 
-						{/* Trash Modal */}
-						<TrashModal
-							isOpen={isTrashModalOpen}
-							onClose={() => setIsTrashModalOpen(false)}
-							deletedProjects={deletedProjects}
-							onRestoreProject={handleRestoreProject}
-							onPermanentDelete={handlePermanentDelete}
-							onEmptyTrash={handleEmptyTrash}
-						/>
 					</div>
 				</main>
 			</div>
+
+			{/* Accident Form Modal */}
+			<AccidentFormModal
+				isOpen={isModalOpen}
+				onClose={() => setIsModalOpen(false)}
+				onCreateProject={handleCreateProject}
+				onContinue={handleContinue}
+			/>
+
+			{/* Trash Modal */}
+			<TrashModal
+				isOpen={isTrashModalOpen}
+				onClose={() => setIsTrashModalOpen(false)}
+				deletedProjects={deletedProjects}
+				onRestoreProject={handleRestoreProject}
+				onPermanentDelete={handlePermanentDelete}
+				onEmptyTrash={handleEmptyTrash}
+			/>
 		</div>
 	);
 }

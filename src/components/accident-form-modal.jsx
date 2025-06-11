@@ -60,22 +60,24 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const createProject = () => {
+	const createProject = (dataToSave) => {
 		// Crear un nuevo proyecto con ID único y todos los datos necesarios
 		const newProject = {
 			id: Date.now(), // Usar timestamp como ID único
-			name: formData.evento,
-			description: `Involucrado: ${formData.involucrado} - Área: ${formData.area}`,
+			name: dataToSave.evento,
+			description: `Involucrado: ${dataToSave.involucrado} - Área: ${dataToSave.area}`,
 			createdAt: new Date().toISOString(),
-			formData: { ...formData }, // Guardar todos los datos del formulario
+			formData: { ...dataToSave }, // Guardar todos los datos del formulario
 			// Metadatos adicionales
 			status: 'active',
 			lastModified: new Date().toISOString(),
 			version: 1
 		};
 
+		console.log('Creando proyecto con datos:', newProject);
+
 		// Guardar en el contexto para uso inmediato en SCAT
-		setProjectData(formData);
+		setProjectData(dataToSave);
 		
 		// Llamar al callback para crear el proyecto en el dashboard
 		if (onCreateProject) {
@@ -89,8 +91,11 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 		e.preventDefault();
 
 		if (validateForm()) {
+			console.log('=== GUARDAR SOLO ===');
+			console.log('Datos del formulario:', formData);
+			
 			// Crear el proyecto
-			createProject();
+			createProject(formData);
 			
 			// Limpiar formulario y cerrar modal
 			resetForm();
@@ -105,16 +110,28 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 		e.preventDefault();
 
 		if (validateForm()) {
-			// Crear el proyecto
-			createProject();
+			console.log('=== GUARDAR Y CONTINUAR ===');
+			console.log('Datos del formulario antes de crear:', formData);
 			
-			// Limpiar formulario
-			resetForm();
+			// Hacer una copia de los datos antes de limpiar el formulario
+			const dataToSave = { ...formData };
 			
-			// Navegar al SCAT
-			if (onContinue) {
-				onContinue(formData);
-			}
+			// Crear el proyecto con los datos guardados
+			const newProject = createProject(dataToSave);
+			
+			console.log('Proyecto creado:', newProject);
+			
+			// Usar setTimeout para asegurar que el estado se actualice antes de navegar
+			setTimeout(() => {
+				// Limpiar formulario
+				resetForm();
+				
+				// Navegar al SCAT con los datos originales
+				if (onContinue) {
+					console.log('Navegando al SCAT con datos:', dataToSave);
+					onContinue(dataToSave);
+				}
+			}, 100); // Pequeño delay para asegurar que el estado se actualice
 		}
 	};
 
