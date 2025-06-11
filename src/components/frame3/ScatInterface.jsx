@@ -7,7 +7,7 @@ import ContactoContent from "./content/ContactoContent";
 import CausasInmediatasContent from "./content/CausasInmediatasContent";
 import CausasBasicasContent from "./content/CausasBasicasContent";
 import NecesidadesControlContent from "./content/NecesidadesControlContent";
-import { useScatData } from "../../contexts/ScatDataContext";
+import { useScatData } from "../../contexts/ScatContext";
 import {
 	InfoIcon,
 	SaveIcon,
