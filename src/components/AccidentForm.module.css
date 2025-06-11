@@ -1,4 +1,4 @@
-.modalSingle {
+.modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -12,235 +12,293 @@
   padding: 1rem;
 }
 
-.modalBody {
+.modalContent {
   background: #374151;
   border-radius: 1rem;
   width: 100%;
-  max-width: 500px;
+  max-width: 800px;
   max-height: 90vh;
   overflow-y: auto;
   border: 2px solid #4b5563;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-/* Header */
+/* Modal Header */
 .modalHeader {
   background: #1f2937;
-  padding: 2rem;
-  text-align: center;
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   border-radius: 1rem 1rem 0 0;
+  border-bottom: 1px solid #4b5563;
 }
 
 .modalTitle {
   color: white;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  letter-spacing: 0.1em;
+  margin: 0;
+  letter-spacing: 0.05em;
 }
 
-.modalSubtitle {
-  color: #eab308;
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0;
+.closeButton {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  color: white;
+  background: #4b5563;
 }
 
 /* Form */
-.formContainer {
+.form {
   padding: 2rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.formGroup {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.5rem;
 }
 
-.formField {
-  width: 100%;
+.label {
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.025em;
 }
 
-.inputContainer {
-  position: relative;
-  width: 100%;
-}
-
-.formInput {
-  width: 100%;
+.input {
   background: #4b5563;
   border: 2px solid #6b7280;
   border-radius: 0.5rem;
-  padding: 1rem 1rem 1rem 3rem;
+  padding: 0.75rem 1rem;
   color: white;
   font-size: 1rem;
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
 
-.formInput:focus {
+.input:focus {
   outline: none;
   border-color: #eab308;
   background: #374151;
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.1);
 }
 
-.formInput::placeholder {
+.input::placeholder {
   color: #9ca3af;
 }
 
-.formTextarea {
+.inputError {
+  border-color: #ef4444;
+}
+
+.inputError:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.textarea {
+  background: #4b5563;
+  border: 2px solid #6b7280;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: white;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
   resize: vertical;
   min-height: 80px;
   font-family: inherit;
 }
 
-.inputIcon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
+.textarea:focus {
+  outline: none;
+  border-color: #eab308;
+  background: #374151;
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.1);
+}
+
+.textarea::placeholder {
   color: #9ca3af;
-  width: 1.25rem;
-  height: 1.25rem;
-  pointer-events: none;
 }
 
-/* Navigation */
-.navigationContainer {
-  padding: 2rem;
+.errorMessage {
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+/* Form Actions */
+.formActions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #1f2937;
-  border-radius: 0 0 1rem 1rem;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding-top: 1.5rem;
+  border-top: 1px solid #4b5563;
 }
 
-.navButton {
-  background: #4b5563;
+.cancelButton {
+  background: #6b7280;
+  color: white;
   border: none;
-  border-radius: 50%;
-  width: 3rem;
-  height: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: white;
+  letter-spacing: 0.025em;
 }
 
-.navButton:hover {
-  background: #374151;
-  transform: scale(1.1);
+.cancelButton:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
 }
 
-.navButton svg {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-.continueButton {
+.submitButton {
   background: #eab308;
   color: #1f2937;
   border: none;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.025em;
 }
 
-.continueButton:hover {
+.submitButton:hover {
   background: #f59e0b;
   transform: translateY(-1px);
 }
 
+.submitButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
-  .modalSingle {
+  .modalOverlay {
     padding: 0.5rem;
   }
 
-  .modalBody {
+  .modalContent {
     max-width: 100%;
     margin: 0.5rem;
   }
 
   .modalHeader {
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
   }
 
-  .modalTitle {
-    font-size: 1.5rem;
-  }
-
-  .modalSubtitle {
-    font-size: 1rem;
-  }
-
-  .formContainer {
-    padding: 1.5rem;
-    gap: 1rem;
-  }
-
-  .navigationContainer {
-    padding: 1.5rem;
-  }
-
-  .continueButton {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.9rem;
-  }
-
-  .navButton {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-
-  .navButton svg {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
-}
-
-@media (max-width: 480px) {
   .modalTitle {
     font-size: 1.25rem;
   }
 
-  .modalSubtitle {
+  .form {
+    padding: 1.5rem;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .formActions {
+    flex-direction: column-reverse;
+  }
+
+  .cancelButton,
+  .submitButton {
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modalOverlay {
+    padding: 0.25rem;
+  }
+
+  .modalHeader {
+    padding: 1rem;
+  }
+
+  .modalTitle {
+    font-size: 1.1rem;
+  }
+
+  .form {
+    padding: 1rem;
+  }
+
+  .input,
+  .textarea {
+    padding: 0.75rem;
     font-size: 0.9rem;
   }
 
-  .formInput {
-    padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-    font-size: 0.9rem;
-  }
-
-  .inputIcon {
-    left: 0.75rem;
-    width: 1rem;
-    height: 1rem;
-  }
-
-  .continueButton {
-    padding: 0.75rem 1rem;
+  .label {
     font-size: 0.85rem;
   }
 }
 
 /* Scrollbar styling */
-.modalBody::-webkit-scrollbar {
+.modalContent::-webkit-scrollbar {
   width: 6px;
 }
 
-.modalBody::-webkit-scrollbar-track {
+.modalContent::-webkit-scrollbar-track {
   background: #374151;
 }
 
-.modalBody::-webkit-scrollbar-thumb {
+.modalContent::-webkit-scrollbar-thumb {
   background: #6b7280;
   border-radius: 3px;
 }
 
-.modalBody::-webkit-scrollbar-thumb:hover {
+.modalContent::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* Animation */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modalContent {
+  animation: modalFadeIn 0.2s ease-out;
 }

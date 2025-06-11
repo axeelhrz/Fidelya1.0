@@ -141,6 +141,15 @@
     font-size: 1rem;
   }
   
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    color: white;
+    font-size: 1.2rem;
+  }
+  
   /* Responsive Design */
   @media (min-width: 640px) {
     .main {

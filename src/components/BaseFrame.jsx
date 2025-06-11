@@ -15,6 +15,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	const [projects, setProjects] = useState([]);
 	const [deletedProjects, setDeletedProjects] = useState([]);
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+	const [isInitialized, setIsInitialized] = useState(false);
 
 	// Pagination state
 	const [displayedProjects, setDisplayedProjects] = useState([]);
@@ -22,48 +23,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	const [hasMore, setHasMore] = useState(true);
 	const projectsPerPage = 6;
 
-	// Cargar proyectos desde localStorage al inicializar
-	useEffect(() => {
-		const savedProjects = localStorage.getItem('scatProjects');
-		const savedDeletedProjects = localStorage.getItem('scatDeletedProjects');
-		
-		if (savedProjects) {
-			try {
-				const parsedProjects = JSON.parse(savedProjects);
-				setProjects(parsedProjects);
-			} catch (error) {
-				console.error('Error loading saved projects:', error);
-				// Si hay error, usar proyectos iniciales
-				setProjects(getInitialProjects());
-			}
-		} else {
-			// Si no hay proyectos guardados, usar proyectos iniciales
-			setProjects(getInitialProjects());
-		}
-
-		if (savedDeletedProjects) {
-			try {
-				const parsedDeletedProjects = JSON.parse(savedDeletedProjects);
-				setDeletedProjects(parsedDeletedProjects);
-			} catch (error) {
-				console.error('Error loading deleted projects:', error);
-			}
-		}
-	}, []);
-
-	// Guardar proyectos en localStorage cuando cambien
-	useEffect(() => {
-		if (projects.length > 0) {
-			localStorage.setItem('scatProjects', JSON.stringify(projects));
-		}
-	}, [projects]);
-
-	// Guardar proyectos eliminados en localStorage cuando cambien
-	useEffect(() => {
-		localStorage.setItem('scatDeletedProjects', JSON.stringify(deletedProjects));
-	}, [deletedProjects]);
-
-	// Función para obtener proyectos iniciales
+	// Función para obtener proyectos iniciales (solo para demostración)
 	const getInitialProjects = () => {
 		return [
 			{
@@ -71,57 +31,119 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 				name: "Proyecto Inicial",
 				description: "Primer proyecto de ejemplo",
 				createdAt: new Date().toISOString(),
+				isExample: true
 			},
 			{
 				id: 2,
 				name: "Análisis de Fallas",
 				description: "Análisis sistemático de fallas",
 				createdAt: new Date().toISOString(),
+				isExample: true
 			},
 			{
 				id: 3,
 				name: "Mejora Continua",
 				description: "Proyecto de mejora continua",
 				createdAt: new Date().toISOString(),
+				isExample: true
 			},
 			{
 				id: 4,
 				name: "Evaluación de Riesgos",
 				description: "Evaluación de riesgos operativos",
 				createdAt: new Date().toISOString(),
+				isExample: true
 			},
 			{
 				id: 5,
 				name: "Optimización de Procesos",
 				description: "Optimización de procesos industriales",
 				createdAt: new Date().toISOString(),
+				isExample: true
 			},
 			{
 				id: 6,
 				name: "Control de Calidad",
 				description: "Sistema de control de calidad",
 				createdAt: new Date().toISOString(),
+				isExample: true
 			},
 			{
 				id: 7,
 				name: "Mantenimiento Preventivo",
 				description: "Plan de mantenimiento preventivo",
 				createdAt: new Date().toISOString(),
+				isExample: true
 			},
 			{
 				id: 8,
 				name: "Seguridad Industrial",
 				description: "Protocolos de seguridad industrial",
 				createdAt: new Date().toISOString(),
+				isExample: true
 			},
 			{
 				id: 9,
 				name: "Gestión Ambiental",
 				description: "Sistema de gestión ambiental",
 				createdAt: new Date().toISOString(),
+				isExample: true
 			},
 		];
 	};
+
+	// Cargar proyectos desde localStorage al inicializar
+	useEffect(() => {
+		const loadProjects = () => {
+			try {
+				const savedProjects = localStorage.getItem('scatProjects');
+				const savedDeletedProjects = localStorage.getItem('scatDeletedProjects');
+				const hasInitialized = localStorage.getItem('scatInitialized');
+				
+				let loadedProjects = [];
+				
+				if (savedProjects) {
+					loadedProjects = JSON.parse(savedProjects);
+				} else if (!hasInitialized) {
+					// Solo cargar proyectos iniciales si es la primera vez
+					loadedProjects = getInitialProjects();
+					localStorage.setItem('scatInitialized', 'true');
+				}
+				
+				setProjects(loadedProjects);
+				
+				if (savedDeletedProjects) {
+					setDeletedProjects(JSON.parse(savedDeletedProjects));
+				}
+				
+			} catch (error) {
+				console.error('Error loading saved projects:', error);
+				// En caso de error, usar proyectos iniciales
+				const initialProjects = getInitialProjects();
+				setProjects(initialProjects);
+				localStorage.setItem('scatInitialized', 'true');
+			}
+			
+			setIsInitialized(true);
+		};
+
+		loadProjects();
+	}, []);
+
+	// Guardar proyectos en localStorage cuando cambien (solo después de la inicialización)
+	useEffect(() => {
+		if (isInitialized && projects.length >= 0) {
+			localStorage.setItem('scatProjects', JSON.stringify(projects));
+			console.log('Proyectos guardados en localStorage:', projects.length);
+		}
+	}, [projects, isInitialized]);
+
+	// Guardar proyectos eliminados en localStorage cuando cambien
+	useEffect(() => {
+		if (isInitialized) {
+			localStorage.setItem('scatDeletedProjects', JSON.stringify(deletedProjects));
+		}
+	}, [deletedProjects, isInitialized]);
 
 	// Función para manejar la continuación al SCAT
 	const handleContinue = (formData) => {
@@ -139,7 +161,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		}
 	};
 
-	// Load more projects function - moved before useEffect
+	// Load more projects function
 	const loadMoreProjects = useCallback((reset = false) => {
 		const page = reset ? 1 : currentPage + 1;
 		const startIndex = 0;
@@ -151,13 +173,20 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		setHasMore(endIndex < projects.length);
 	}, [projects, currentPage, projectsPerPage]);
 
-	// Initialize displayed projects - moved after loadMoreProjects definition
+	// Initialize displayed projects
 	useEffect(() => {
-		loadMoreProjects(true);
-	}, [projects, loadMoreProjects]);
+		if (isInitialized) {
+			loadMoreProjects(true);
+		}
+	}, [projects, loadMoreProjects, isInitialized]);
 
 	const handleCreateProject = (newProject) => {
-		setProjects((prev) => [newProject, ...prev]);
+		console.log('Creando nuevo proyecto:', newProject);
+		setProjects((prev) => {
+			const updatedProjects = [newProject, ...prev];
+			console.log('Proyectos actualizados:', updatedProjects.length);
+			return updatedProjects;
+		});
 	};
 
 	const handleDeleteProject = (projectId) => {
@@ -174,6 +203,8 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 			
 			// Remover de proyectos activos
 			setProjects(prev => prev.filter(p => p.id !== projectId));
+			
+			console.log('Proyecto movido a papelera:', projectToDelete.name);
 		}
 	};
 
@@ -186,17 +217,24 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		
 		// Remover de papelera
 		setDeletedProjects(prev => prev.filter(p => p.id !== project.id));
+		
+		console.log('Proyecto restaurado:', project.name);
 	};
 
 	const handlePermanentDelete = (projectId) => {
 		const confirmed = window.confirm('¿Estás seguro de que quieres eliminar permanentemente este proyecto? Esta acción no se puede deshacer.');
 		if (confirmed) {
 			setDeletedProjects(prev => prev.filter(p => p.id !== projectId));
+			console.log('Proyecto eliminado permanentemente');
 		}
 	};
 
 	const handleEmptyTrash = () => {
-		setDeletedProjects([]);
+		const confirmed = window.confirm('¿Estás seguro de que quieres vaciar la papelera? Esta acción no se puede deshacer.');
+		if (confirmed) {
+			setDeletedProjects([]);
+			console.log('Papelera vaciada');
+		}
 	};
 
 	const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -205,6 +243,17 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	useEffect(() => {
 		console.log("BaseFrame mounted with props:", { onNavigateToScat, onNavigateToProjects });
 	}, [onNavigateToScat, onNavigateToProjects]);
+
+	// Mostrar loading mientras se inicializa
+	if (!isInitialized) {
+		return (
+			<div className={styles.container}>
+				<div className={styles.loading}>
+					<p>Cargando proyectos...</p>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className={styles.container}>
@@ -250,7 +299,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 								<ProjectCard
 									key={project.id}
 									project={project}
-									isHighlighted={index === 0}
+									isHighlighted={index === 0 && !project.isExample}
 									onDelete={() => handleDeleteProject(project.id)}
 								/>
 							))}
@@ -276,6 +325,25 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 								<p className={styles.emptyDescription}>
 									Haz clic en "Create New Project" para comenzar
 								</p>
+							</div>
+						)}
+
+						{/* Debug info (solo en desarrollo) */}
+						{process.env.NODE_ENV === 'development' && (
+							<div style={{ 
+								position: 'fixed', 
+								bottom: '10px', 
+								left: '10px', 
+								background: 'rgba(0,0,0,0.8)', 
+								color: 'white', 
+								padding: '10px', 
+								borderRadius: '5px',
+								fontSize: '12px',
+								zIndex: 1000
+							}}>
+								<div>Total proyectos: {projects.length}</div>
+								<div>Proyectos mostrados: {displayedProjects.length}</div>
+								<div>En papelera: {deletedProjects.length}</div>
 							</div>
 						)}
 					</div>
@@ -304,3 +372,5 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 }
 
 export default BaseFrame;
+
+}
