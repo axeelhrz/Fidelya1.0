@@ -8,7 +8,7 @@ import ProjectCard from "./ProjectCard";
 import AccidentFormModal from "./accident-form-modal";
 import styles from "./Baseframe.module.css";
 
-function BaseFrame({ onNavigateToScat }) {
+function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	// Sample projects for demonstration
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -119,12 +119,16 @@ function BaseFrame({ onNavigateToScat }) {
 
 	// Debug: Log props on component mount
 	useEffect(() => {
-		console.log("BaseFrame mounted with props:", { onNavigateToScat });
-	}, [onNavigateToScat]);
+		console.log("BaseFrame mounted with props:", { onNavigateToScat, onNavigateToProjects });
+	}, [onNavigateToScat, onNavigateToProjects]);
 
 	return (
 		<div className={styles.container}>
-			<Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
+			<Sidebar 
+				isOpen={isSidebarOpen} 
+				onToggle={toggleSidebar}
+				onNavigateToProjects={onNavigateToProjects}
+			/>
 
 			<div className={styles.mainContent}>
 				<Header onMenuToggle={toggleSidebar} />

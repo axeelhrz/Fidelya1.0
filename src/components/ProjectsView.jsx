@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Archive, Info, Edit, Download, Eye, Layers } from "lucide-react";
+import { Trash2, Archive, Info, Edit, Download, Eye, Layers } from "lucide-react";
 import styles from "./ProjectsView.module.css";
 
 function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
@@ -195,15 +195,7 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 				</div>
 			</div>
 
-			{/* Create New Project Button */}
-			<div className={styles.createButtonContainer}>
-				<button className={styles.createButton}>
-					<Plus size={20} />
-					<span>CREAR NUEVO PROYECTO</span>
-				</button>
-			</div>
-
-			{/* Projects Grid */}
+			{/* Projects Grid - SIN BOTÓN DE CREAR */}
 			<div className={styles.projectsContainer}>
 				<div className={styles.projectsGrid}>
 					{currentProjects.map((project) => (

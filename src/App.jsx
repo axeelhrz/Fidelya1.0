@@ -40,7 +40,10 @@ function App() {
 	return (
 		<div className={styles.app}>
 			{currentFrame === "base" && (
-				<BaseFrame onNavigateToScat={handleNavigateToScat} />
+				<BaseFrame 
+					onNavigateToScat={handleNavigateToScat}
+					onNavigateToProjects={handleNavigateToProjects}
+				/>
 			)}
 			{currentFrame === "scat" && (
 				<ScatInterface 
