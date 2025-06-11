@@ -21,6 +21,10 @@ export default function AccidentFormModal({ isOpen, onClose, onContinue, onCreat
 	};
 
 	const handleContinue = () => {
+		console.log("Modal handleContinue called");
+		console.log("Form data:", formData);
+		console.log("onContinue function:", onContinue);
+		
 		// Validar que al menos algunos campos estén llenos
 		const hasData = Object.values(formData).some(value => value.trim() !== "");
 		
@@ -30,7 +34,7 @@ export default function AccidentFormModal({ isOpen, onClose, onContinue, onCreat
 		}
 
 		// Crear un proyecto si se proporciona la función
-		if (onCreateProject) {
+		if (onCreateProject && typeof onCreateProject === 'function') {
 			const newProject = {
 				id: Date.now(),
 				name: formData.evento || "Nuevo Proyecto",
@@ -38,12 +42,17 @@ export default function AccidentFormModal({ isOpen, onClose, onContinue, onCreat
 				createdAt: new Date().toISOString(),
 				formData: formData
 			};
+			console.log("Creating project:", newProject);
 			onCreateProject(newProject);
 		}
 
 		// Continuar al SCAT
-		if (onContinue) {
+		if (onContinue && typeof onContinue === 'function') {
+			console.log("Calling onContinue with form data");
 			onContinue(formData);
+		} else {
+			console.error("onContinue is not a function:", onContinue);
+			alert("Error: No se puede continuar. Función no encontrada.");
 		}
 	};
 

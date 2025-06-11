@@ -12,9 +12,20 @@ function BaseFrame({ onNavigateToScat }) {
 	// Sample projects for demonstration
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
+	// Función para manejar la continuación al SCAT
 	const handleContinue = (formData) => {
+		console.log("handleContinue called with:", formData);
+		console.log("onNavigateToScat function:", onNavigateToScat);
+		
 		setIsModalOpen(false);
-		onNavigateToScat(formData);
+		
+		// Verificar que la función existe antes de llamarla
+		if (typeof onNavigateToScat === 'function') {
+			onNavigateToScat(formData);
+		} else {
+			console.error("onNavigateToScat is not a function:", onNavigateToScat);
+			alert("Error: No se puede navegar al SCAT. Función no encontrada.");
+		}
 	};
 
 	const initialProjects = [
@@ -106,6 +117,11 @@ function BaseFrame({ onNavigateToScat }) {
 
 	const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
+	// Debug: Log props on component mount
+	useEffect(() => {
+		console.log("BaseFrame mounted with props:", { onNavigateToScat });
+	}, [onNavigateToScat]);
+
 	return (
 		<div className={styles.container}>
 			<Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
@@ -122,7 +138,7 @@ function BaseFrame({ onNavigateToScat }) {
 								className={styles.createButton}
 							>
 								<Plus size={20} />
-								<span>Create New proyect</span>
+								<span>Create New Project</span>
 							</button>
 						</div>
 
@@ -155,7 +171,7 @@ function BaseFrame({ onNavigateToScat }) {
 							<div className={styles.emptyState}>
 								<p className={styles.emptyTitle}>No hay proyectos creados</p>
 								<p className={styles.emptyDescription}>
-									Haz clic en "Create New proyect" para comenzar
+									Haz clic en "Create New Project" para comenzar
 								</p>
 							</div>
 						)}
