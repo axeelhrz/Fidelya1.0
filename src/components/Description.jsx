@@ -4,7 +4,7 @@ import "./description.css";
 import { useScatData } from "../contexts/ScatDataContext";
 import pdfService from "../services/pdfService";
 
-export default function NextPage({ formData, onGoBack, onStartNew }) {
+export default function NextPage({ onGoBack, onStartNew }) {
 	const { getCompleteSummary, resetAllData } = useScatData();
 
 	const formatFieldValue = (value) => {

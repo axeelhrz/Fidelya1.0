@@ -7,9 +7,6 @@ import { useScatData } from "../../../contexts/ScatDataContext";
 function CausasInmediatasContent() {
 	const { causasInmediatasData, setCausasInmediatasData } = useScatData();
 	const [activeSection, setActiveSection] = useState(null);
-	const [selectedItems, setSelectedItems] = useState([]);
-	const [imagePreview, setImagePreview] = useState(null);
-	const [observation, setObservation] = useState("");
 	const fileInputRef = useRef(null);
 
 	const actosSubestandar = [
@@ -48,9 +45,6 @@ function CausasInmediatasContent() {
 
 	const handleSectionSelect = (section) => {
 		setActiveSection(section);
-		setSelectedItems([]);
-		setImagePreview(null);
-		setObservation("");
 	};
 
 	const handleItemToggle = (itemId) => {

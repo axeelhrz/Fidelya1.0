@@ -163,7 +163,7 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 
 	const handleRestoreProject = (project) => {
 		// Remover fecha de eliminación
-		const { deletedAt, ...restoredProject } = project;
+		const { deletedAt: _deletedAt, ...restoredProject } = project;
 		
 		// Restaurar a proyectos activos
 		setProjects(prev => [restoredProject, ...prev]);

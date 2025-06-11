@@ -2,9 +2,10 @@
 
 import { useState, useRef } from "react";
 import styles from "./NecesidadesControlContent.module.css";
+import { useScatData } from "../../../contexts/ScatDataContext";
 
 function NecesidadesControlContent() {
-	const [selectedItems, setSelectedItems] = useState([]);
+	const { necesidadesControlData, setNecesidadesControlData } = useScatData();
 	const [activeModal, setActiveModal] = useState(null);
 	const [modalData, setModalData] = useState({
 		selectedOptions: [],
@@ -338,12 +339,19 @@ function NecesidadesControlContent() {
 
 	const handleItemClick = (item) => {
 		setActiveModal(item);
-		setModalData({
-			selectedOptions: [],
-			selectedPEC: null,
-			image: null,
-			comments: ""
-		});
+		
+		// Cargar datos existentes si los hay
+		const existingData = necesidadesControlData.detailedData[item.id];
+		if (existingData) {
+			setModalData(existingData);
+		} else {
+			setModalData({
+				selectedOptions: [],
+				selectedPEC: null,
+				image: null,
+				comments: ""
+			});
+		}
 	};
 
 	const handleOptionToggle = (optionIndex) => {
@@ -396,14 +404,41 @@ function NecesidadesControlContent() {
 	};
 
 	const handleModalConfirm = () => {
-		if (modalData.selectedOptions.length > 0 || modalData.selectedPEC || modalData.image || modalData.comments) {
-			setSelectedItems(prev => {
-				if (!prev.includes(activeModal.id)) {
-					return [...prev, activeModal.id];
-				}
-				return prev;
+		const hasData = modalData.selectedOptions.length > 0 || 
+						modalData.selectedPEC || 
+						modalData.image || 
+						modalData.comments.trim() !== "";
+
+		if (hasData) {
+			// Agregar el item a selectedItems si no está
+			const newSelectedItems = necesidadesControlData.selectedItems.includes(activeModal.id)
+				? necesidadesControlData.selectedItems
+				: [...necesidadesControlData.selectedItems, activeModal.id];
+			
+			// Guardar los datos detallados
+			const newDetailedData = {
+				...necesidadesControlData.detailedData,
+				[activeModal.id]: modalData
+			};
+
+			setNecesidadesControlData({
+				...necesidadesControlData,
+				selectedItems: newSelectedItems,
+				detailedData: newDetailedData
+			});
+		} else {
+			// Si no hay datos, remover el item
+			const newSelectedItems = necesidadesControlData.selectedItems.filter(id => id !== activeModal.id);
+			const newDetailedData = { ...necesidadesControlData.detailedData };
+			delete newDetailedData[activeModal.id];
+
+			setNecesidadesControlData({
+				...necesidadesControlData,
+				selectedItems: newSelectedItems,
+				detailedData: newDetailedData
 			});
 		}
+		
 		setActiveModal(null);
 		setModalData({
 			selectedOptions: [],
@@ -424,11 +459,23 @@ function NecesidadesControlContent() {
 	};
 
 	const clearAllSelections = () => {
-		setSelectedItems([]);
+		setNecesidadesControlData({
+			selectedItems: [],
+			detailedData: {},
+			globalImage: null,
+			globalObservation: ''
+		});
+	};
+
+	const handleGlobalObservationChange = (e) => {
+		setNecesidadesControlData({
+			...necesidadesControlData,
+			globalObservation: e.target.value
+		});
 	};
 
 	const getSelectedCount = () => {
-		return selectedItems.length;
+		return necesidadesControlData.selectedItems.length;
 	};
 
 	return (
@@ -442,7 +489,7 @@ function NecesidadesControlContent() {
 					<button 
 						className={styles.clearButton}
 						onClick={clearAllSelections}
-						disabled={selectedItems.length === 0}
+						disabled={necesidadesControlData.selectedItems.length === 0}
 					>
 						Limpiar Todo ({getSelectedCount()})
 					</button>
@@ -463,24 +510,55 @@ function NecesidadesControlContent() {
 						</div>
 						
 						<div className={styles.categoryBody}>
-							{category.items.map((item) => (
-								<button
-									key={item.id}
-									className={`${styles.itemButton} ${
-										selectedItems.includes(item.id) ? styles.selected : ""
-									}`}
-									onClick={() => handleItemClick(item)}
-								>
-									<div className={styles.itemNumber}>{item.id}</div>
-									<div className={styles.itemText}>{item.text}</div>
-									<div className={styles.itemIcon}>
-										{selectedItems.includes(item.id) ? "✓" : "→"}
-									</div>
-								</button>
-							))}
+							{category.items.map((item) => {
+								const isSelected = necesidadesControlData.selectedItems.includes(item.id);
+								const hasDetailedData = necesidadesControlData.detailedData[item.id];
+								
+								return (
+									<button
+										key={item.id}
+										className={`${styles.itemButton} ${
+											isSelected ? styles.selected : ""
+										}`}
+										onClick={() => handleItemClick(item)}
+									>
+										<div className={styles.itemNumber}>{item.id}</div>
+										<div className={styles.itemText}>{item.text}</div>
+										<div className={styles.itemIcon}>
+											{isSelected ? "✓" : "→"}
+										</div>
+										{hasDetailedData && (
+											<div className={styles.dataIndicator}>
+												{hasDetailedData.selectedOptions?.length > 0 && 
+													<span className={styles.optionsCount}>
+														{hasDetailedData.selectedOptions.length} opciones
+													</span>
+												}
+												{hasDetailedData.selectedPEC && 
+													<span className={styles.pecIndicator}>
+														{hasDetailedData.selectedPEC}
+													</span>
+												}
+											</div>
+										)}
+									</button>
+								);
+							})}
 						</div>
 					</div>
 				))}
+			</div>
+
+			{/* Global Observation Section */}
+			<div className={styles.globalObservationSection}>
+				<h3 className={styles.globalObservationTitle}>Observaciones Generales</h3>
+				<textarea
+					className={styles.globalObservationTextarea}
+					value={necesidadesControlData.globalObservation || ''}
+					onChange={handleGlobalObservationChange}
+					placeholder="Escriba observaciones generales sobre las necesidades de control identificadas..."
+					rows={4}
+				></textarea>
 			</div>
 
 			<div className={styles.footer}>

@@ -89,7 +89,7 @@
 .sectionCard:hover {
   border-color: #eab308;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .sectionNumber {
@@ -497,4 +497,25 @@
   .columnTitle {
     font-size: 0.9rem;
   }
+}
+
+.hasData {
+  border-color: #28a745 !important;
+  background-color: #f8fff9 !important;
+}
+
+.dataIndicator {
+  color: #28a745;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+.sectionCard {
+  transition: all 0.3s ease;
+}
+
+.sectionCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }

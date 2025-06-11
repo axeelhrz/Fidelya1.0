@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./ScatInterface.module.css";
 import EvaluacionContent from "./content/EvaluacionContent";
 import ContactoContent from "./content/ContactoContent";
@@ -44,12 +44,12 @@ const scatSections = [
 	},
 ];
 
-function ScatInterface({ onNavigateToBase, onNavigateToProjects, onNavigateToHome, onNavigateToDescription, formData }) {
+function ScatInterface({ onNavigateToBase, onNavigateToProjects, onNavigateToDescription, formData }) {
 	const [activeSection, setActiveSection] = useState("evaluacion");
-	const { setProjectData, hasData, getCompleteSummary } = useScatData();
+	const { setProjectData, hasData } = useScatData();
 
 	// Guardar datos del proyecto cuando se reciban
-	useState(() => {
+	useEffect(() => {
 		if (formData) {
 			setProjectData(formData);
 		}
