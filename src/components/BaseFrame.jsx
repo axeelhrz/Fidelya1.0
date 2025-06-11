@@ -6,15 +6,12 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import ProjectCard from "./ProjectCard";
 import AccidentFormModal from "./accident-form-modal";
-import EditProjectModal from "./EditProjectModal";
 import TrashModal from "./TrashModal";
 import styles from "./Baseframe.module.css";
 
 function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
-	const [selectedProject, setSelectedProject] = useState(null);
 	const [projects, setProjects] = useState([]);
 	const [deletedProjects, setDeletedProjects] = useState([]);
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -144,20 +141,24 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	};
 
 	const handleEditProject = (project) => {
-		console.log('Editando proyecto:', project);
-		setSelectedProject(project);
-		setIsEditModalOpen(true);
-	};
-
-	const handleSaveEditedProject = (updatedProject) => {
-		console.log('Guardando proyecto editado:', updatedProject);
+		console.log('=== EDITANDO PROYECTO COMPLETO ===');
+		console.log('Proyecto a editar:', project);
 		
-		setProjects((prev) => 
-			prev.map(p => p.id === updatedProject.id ? updatedProject : p)
-		);
-		
-		setSelectedProject(null);
-		alert('Proyecto actualizado exitosamente.');
+		// Cargar todos los datos del proyecto en el contexto y navegar al SCAT en modo edición
+		if (project.formData && typeof onNavigateToScat === 'function') {
+			// Marcar que estamos en modo edición
+			const editData = {
+				...project.formData,
+				isEditing: true,
+				projectId: project.id,
+				projectData: project
+			};
+			
+			console.log('Navegando al SCAT en modo edición con datos:', editData);
+			onNavigateToScat(editData);
+		} else {
+			alert('No se encontraron datos del proyecto para editar.');
+		}
 	};
 
 	const handleViewProject = (project) => {
@@ -165,10 +166,29 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		
 		// Cargar los datos del proyecto en el contexto y navegar al SCAT
 		if (project.formData && typeof onNavigateToScat === 'function') {
-			onNavigateToScat(project.formData);
+			const viewData = {
+				...project.formData,
+				isViewing: true,
+				projectId: project.id,
+				projectData: project
+			};
+			
+			console.log('Navegando al SCAT en modo visualización con datos:', viewData);
+			onNavigateToScat(viewData);
 		} else {
 			alert('No se encontraron datos del proyecto para continuar en SCAT.');
 		}
+	};
+
+	const handleUpdateProject = (updatedProject) => {
+		console.log('=== ACTUALIZANDO PROYECTO DESDE SCAT ===');
+		console.log('Proyecto actualizado:', updatedProject);
+		
+		setProjects((prev) => 
+			prev.map(p => p.id === updatedProject.id ? updatedProject : p)
+		);
+		
+		console.log('Proyecto actualizado en la lista');
 	};
 
 	const handleDeleteProject = (projectId) => {
@@ -360,17 +380,6 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 				onClose={() => setIsModalOpen(false)}
 				onCreateProject={handleCreateProject}
 				onContinue={handleContinue}
-			/>
-
-			{/* Edit Project Modal */}
-			<EditProjectModal
-				isOpen={isEditModalOpen}
-				onClose={() => {
-					setIsEditModalOpen(false);
-					setSelectedProject(null);
-				}}
-				project={selectedProject}
-				onSave={handleSaveEditedProject}
 			/>
 
 			{/* Trash Modal */}
