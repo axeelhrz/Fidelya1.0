@@ -1,41 +1,44 @@
 "use client";
 
 import { useState } from "react";
-import InitialPage from "./components/BaseFrame.jsx";
-import Frame3 from "./components/frame3/ScatInterface.jsx";
+import BaseFrame from "./components/BaseFrame";
+import ScatInterface from "./components/frame3/ScatInterface";
+import styles from "./App.module.css";
 
 function App() {
-	const [currentPage, setCurrentPage] = useState("initial");
+	const [currentFrame, setCurrentFrame] = useState("base");
 	const [formData, setFormData] = useState(null);
 
-	const handleNavigateToNext = (data) => {
+	const handleNavigateToScat = (data) => {
 		setFormData(data);
-		setCurrentPage("next");
+		setCurrentFrame("scat");
 	};
 
-	const handleGoBack = () => {
-		setCurrentPage("initial");
+	const handleNavigateToBase = () => {
+		setCurrentFrame("base");
 	};
 
-	const handleStartNew = () => {
+	const handleNavigateToHome = () => {
+		// Resetear todo y volver al dashboard principal
 		setFormData(null);
-		setCurrentPage("initial");
+		setCurrentFrame("base");
+		// Aquí podrías agregar lógica adicional como limpiar localStorage, etc.
+		localStorage.removeItem('scatProgress');
 	};
 
 	return (
-		<>
-			{currentPage === "initial" && (
-				<InitialPage onNavigateToNext={handleNavigateToNext} />
+		<div className={styles.app}>
+			{currentFrame === "base" && (
+				<BaseFrame onNavigateToScat={handleNavigateToScat} />
 			)}
-
-			{currentPage === "next" && (
-				<Frame3
+			{currentFrame === "scat" && (
+				<ScatInterface 
+					onNavigateToBase={handleNavigateToBase}
+					onNavigateToHome={handleNavigateToHome}
 					formData={formData}
-					onGoBack={handleGoBack}
-					onStartNew={handleStartNew}
 				/>
 			)}
-		</>
+		</div>
 	);
 }
 

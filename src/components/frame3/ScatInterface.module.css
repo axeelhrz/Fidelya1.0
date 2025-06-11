@@ -217,6 +217,120 @@
   margin: 0 auto;
 }
 
+/* Grid View Styles */
+.gridView {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.gridHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #374151;
+  border-radius: 0.75rem;
+  border: 2px solid #4b5563;
+}
+
+.gridHeader h3 {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.closeGridButton {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeGridButton:hover {
+  background: #b91c1c;
+}
+
+.gridContent {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.gridCard {
+  background: #374151;
+  border: 2px solid #4b5563;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.gridCard:hover {
+  border-color: #eab308;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.gridCardActive {
+  border-color: #eab308;
+  background: #1f2937;
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+}
+
+.gridCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.gridCardNumber {
+  background: #eab308;
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 1.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gridCardStatus {
+  color: #10b981;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.gridCardTitle {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+.gridCardDescription {
+  color: #d1d5db;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  margin-bottom: 1rem;
+}
+
+.gridCardProgress {
+  color: #eab308;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .bottomNav {
   position: fixed;
   bottom: 1.5rem;
@@ -266,6 +380,12 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.activeGridButton {
+  background-color: #eab308 !important;
+  color: #1f2937 !important;
+  border-color: #f59e0b !important;
+}
+
 /* Progress Indicator */
 .progressIndicator {
   position: fixed;
@@ -300,6 +420,157 @@
   text-align: center;
 }
 
+/* Info Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.infoModal {
+  background: #374151;
+  border-radius: 0.75rem;
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #4b5563;
+}
+
+.infoModalHeader {
+  padding: 1.5rem;
+  background: #1f2937;
+  border-radius: 0.75rem 0.75rem 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #4b5563;
+}
+
+.infoModalHeader h3 {
+  color: #eab308;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.infoModalClose {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: color 0.2s ease;
+}
+
+.infoModalClose:hover {
+  color: white;
+}
+
+.infoModalBody {
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.infoModalBody h4 {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  line-height: 1.3;
+}
+
+.infoDescription {
+  color: #d1d5db;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.infoDetails {
+  background: #4b5563;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.infoDetails h5 {
+  color: #eab308;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+}
+
+.infoDetails p {
+  color: #e5e7eb;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.infoStats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.infoStat {
+  background: #4b5563;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+.infoStatLabel {
+  display: block;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.infoStatValue {
+  display: block;
+  color: #eab308;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.infoModalFooter {
+  padding: 1.5rem;
+  background: #1f2937;
+  border-radius: 0 0 0.75rem 0.75rem;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid #4b5563;
+}
+
+.infoModalButton {
+  background: #eab308;
+  color: #1f2937;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.infoModalButton:hover {
+  background: #f59e0b;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .headerContent {
@@ -328,6 +599,10 @@
     flex-wrap: wrap;
     max-width: calc(100vw - 3rem);
   }
+
+  .gridContent {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
@@ -351,7 +626,8 @@
     padding: 1rem;
   }
 
-  .contentArea {
+  .contentArea,
+  .gridView {
     padding: 1rem;
   }
 
@@ -381,6 +657,14 @@
     left: 1rem;
     justify-content: center;
   }
+
+  .gridContent {
+    grid-template-columns: 1fr;
+  }
+
+  .infoStats {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
@@ -405,6 +689,11 @@
     width: 2.5rem;
     height: 2.5rem;
   }
+
+  .infoModal {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+  }
 }
 
 /* Animation for section transitions */
@@ -421,6 +710,24 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Scrollbar styling */
+.infoModalBody::-webkit-scrollbar {
+  width: 6px;
+}
+
+.infoModalBody::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.infoModalBody::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 3px;
+}
+
+.infoModalBody::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 
 /* Tooltip styles */
