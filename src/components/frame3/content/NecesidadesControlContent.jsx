@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import styles from "./NecesidadesControlContent.module.css";
 import { useScatData } from "../../../contexts/ScatContext";
 
 function NecesidadesControlContent() {
-	const { necesidadesControlData, setNecesidadesControlData } = useScatData();
+	const { necesidadesControlData, setNecesidadesControlData, causasBasicasData } = useScatData();
 	const [activeModal, setActiveModal] = useState(null);
 	const [modalData, setModalData] = useState({
 		selectedOptions: [],
@@ -15,7 +15,29 @@ function NecesidadesControlContent() {
 	});
 	const fileInputRef = useRef(null);
 
-	const categories = [
+	// Mapeo de Causas Básicas a NAC
+	const causasBasicasToNAC = {
+		// Factores Personales (1-7)
+		1: [4, 5, 6], // Capacidad Física -> NAC 4, 5, 6
+		2: [4, 5, 6], // Capacidad Mental -> NAC 4, 5, 6
+		3: [4, 5, 6], // Tensión Física -> NAC 4, 5, 6
+		4: [4, 5, 6], // Tensión Mental -> NAC 4, 5, 6
+		5: [4, 5, 6], // Falta de Conocimiento -> NAC 4, 5, 6
+		6: [4, 5, 6], // Falta de Habilidad -> NAC 4, 5, 6
+		7: [4, 5, 6], // Motivación Incorrecta -> NAC 4, 5, 6
+		
+		// Factores Laborales (8-15)
+		8: [1, 2, 3], // Liderazgo y/o Supervisión Deficiente -> NAC 1, 2, 3
+		9: [1, 2, 3], // Ingeniería Inadecuada -> NAC 1, 2, 3
+		10: [1, 2, 3], // Adquisiciones Deficientes -> NAC 1, 2, 3
+		11: [1, 2, 3], // Mantenimiento Deficiente -> NAC 1, 2, 3
+		12: [1, 2, 3], // Herramientas y Equipos Inadecuados -> NAC 1, 2, 3
+		13: [1, 2, 3], // Estándares de Trabajo Inadecuados -> NAC 1, 2, 3
+		14: [1, 2, 3], // Uso y Desgaste -> NAC 1, 2, 3
+		15: [1, 2, 3], // Abuso o Mal Uso -> NAC 1, 2, 3
+	};
+
+	const allCategories = [
 		{
 			id: 'potencial',
 			title: 'EVALUACIÓN POTENCIAL DE PÉRDIDA SIN CONTROLES',
@@ -24,61 +46,35 @@ function NecesidadesControlContent() {
 			items: [
 				{ 
 					id: 1, 
-					text: 'Capacidad Física / Fisiológica Inadecuada',
+					text: 'Programa inadecuado de mantenimiento preventivo',
 					options: [
-						"Altura, peso, talla, fuerza, alcance, etc. inadecuados",
-						"Capacidad de movimiento corporal limitada",
-						"Capacidad limitada para mantenerse en determinadas posiciones corporales",
-						"Limitaciones sensoriales (vista, oído, tacto, gusto, olfato, equilibrio)",
-						"Incapacidad respiratoria o circulatoria",
-						"Otras deficiencias físicas permanentes",
-						"Deficiencias temporales"
+						"Falta de programa de mantenimiento",
+						"Frecuencia inadecuada de mantenimiento",
+						"Procedimientos de mantenimiento deficientes",
+						"Personal no calificado para mantenimiento",
+						"Falta de repuestos y herramientas"
 					]
 				},
 				{ 
 					id: 2, 
-					text: 'Capacidad Mental / Psicológica Inadecuada',
+					text: 'Normas inadecuadas de trabajo',
 					options: [
-						"Temores y fobias",
-						"Problemas emocionales",
-						"Enfermedad mental",
-						"Nivel de inteligencia",
-						"Incapacidad de comprensión",
-						"Falta de juicio",
-						"Deficiencias de coordinación"
+						"Procedimientos de trabajo inexistentes",
+						"Procedimientos desactualizados",
+						"Procedimientos no comunicados",
+						"Falta de entrenamiento en procedimientos",
+						"Procedimientos no aplicados"
 					]
 				},
 				{ 
 					id: 3, 
-					text: 'Tensión Física o Fisiológica',
+					text: 'Diseño o mantenimiento inadecuado de las instalaciones',
 					options: [
-						"Lesión o enfermedad",
-						"Fatiga debido a la carga o duración de las tareas",
-						"Fatiga debido a la falta de descanso",
-						"Fatiga debido a sobrecarga sensorial",
-						"Exposición a riesgos contra la salud"
-					]
-				},
-				{ 
-					id: 4, 
-					text: 'Tensión Mental o Psicológica',
-					options: [
-						"Sobrecarga emocional",
-						"Fatiga debido a la carga o las exigencias mentales de la tarea",
-						"Preocupaciones debido a problemas",
-						"Frustración",
-						"Enfermedad mental"
-					]
-				},
-				{ 
-					id: 5, 
-					text: 'Falta de Conocimiento',
-					options: [
-						"Falta de experiencia",
-						"Orientación deficiente",
-						"Entrenamiento inicial inadecuado",
-						"Reentrenamiento insuficiente",
-						"Órdenes mal interpretadas"
+						"Diseño deficiente de instalaciones",
+						"Mantenimiento inadecuado de estructuras",
+						"Falta de señalización",
+						"Iluminación inadecuada",
+						"Ventilación deficiente"
 					]
 				},
 			]
@@ -90,229 +86,7 @@ function NecesidadesControlContent() {
 			color: '#eab308',
 			items: [
 				{ 
-					id: 6, 
-					text: 'Golpeada Contra (chocar contra algo)',
-					options: [
-						"Golpeado contra objeto estacionario",
-						"Golpeado contra objeto en movimiento",
-						"Golpeado contra superficie áspera",
-						"Golpeado contra objeto punzante",
-						"Golpeado contra objeto caliente"
-					]
-				},
-				{ 
-					id: 7, 
-					text: 'Golpeado por (Impactado por objeto en movimiento)',
-					options: [
-						"Objeto volador",
-						"Objeto que cae",
-						"Objeto lanzado",
-						"Partícula en el ojo",
-						"Objeto oscilante"
-					]
-				},
-				{ 
-					id: 8, 
-					text: 'Caída a un nivel más bajo',
-					options: [
-						"Caída desde escalera",
-						"Caída desde andamio",
-						"Caída desde techo",
-						"Caída en excavación",
-						"Caída desde vehículo"
-					]
-				},
-				{ 
-					id: 9, 
-					text: 'Caída en el mismo nivel',
-					options: [
-						"Resbalón y caída",
-						"Tropezón y caída",
-						"Caída por pérdida de equilibrio",
-						"Caída por superficie irregular",
-						"Caída por obstáculo"
-					]
-				},
-				{ 
-					id: 10, 
-					text: 'Atrapado (Puntos de Pellizco y Mordida)',
-					options: [
-						"Atrapado entre objetos",
-						"Atrapado bajo objeto",
-						"Atrapado en maquinaria",
-						"Pellizco en punto de operación",
-						"Mordida de equipo"
-					]
-				},
-			]
-		},
-		{
-			id: 'causas_inmediatas',
-			title: '(CI) Causas Inmediatas / Directas',
-			subtitle: '',
-			color: '#eab308',
-			items: [
-				{ 
-					id: 11, 
-					text: 'Operar equipos sin autorización',
-					options: [
-						"Operar sin permiso",
-						"Operar sin capacitación",
-						"Operar fuera del horario autorizado",
-						"Operar equipo restringido",
-						"Operar sin supervisión requerida"
-					]
-				},
-				{ 
-					id: 12, 
-					text: 'Omitir el uso de equipos de seguridad personal',
-					options: [
-						"No usar casco",
-						"No usar guantes",
-						"No usar gafas de seguridad",
-						"No usar calzado de seguridad",
-						"No usar arnés de seguridad"
-					]
-				},
-				{ 
-					id: 13, 
-					text: 'Omitir el uso de dispositivos de seguridad',
-					options: [
-						"Remover guardas de seguridad",
-						"Desactivar sistemas de seguridad",
-						"No usar dispositivos de bloqueo",
-						"Omitir procedimientos de seguridad",
-						"No usar señalización requerida"
-					]
-				},
-				{ 
-					id: 14, 
-					text: 'Operar a velocidad inadecuada',
-					options: [
-						"Operar muy rápido",
-						"Operar muy lento",
-						"No respetar límites de velocidad",
-						"Acelerar inadecuadamente",
-						"Frenar inadecuadamente"
-					]
-				},
-				{ 
-					id: 15, 
-					text: 'Poner fuera de servicio los dispositivos de seguridad',
-					options: [
-						"Desconectar alarmas",
-						"Anular sistemas de protección",
-						"Remover etiquetas de seguridad",
-						"Desactivar interruptores de emergencia",
-						"Modificar dispositivos de seguridad"
-					]
-				},
-			]
-		},
-		{
-			id: 'causas_basicas',
-			title: '(CB) Causas Básicas / Subyacentes',
-			subtitle: '',
-			color: '#eab308',
-			items: [
-				{ 
-					id: 16, 
-					text: 'Liderazgo y/o Supervisión Deficiente',
-					options: [
-						"Relaciones jerárquicas poco claras",
-						"Asignación de responsabilidades poco clara",
-						"Delegación inadecuada o insuficiente",
-						"Definición inadecuada de políticas",
-						"Programación inadecuada del trabajo"
-					]
-				},
-				{ 
-					id: 17, 
-					text: 'Ingeniería Inadecuada',
-					options: [
-						"Evaluación inadecuada de exposiciones",
-						"Preocupación inadecuada por factores humanos",
-						"Normas de diseño inadecuadas",
-						"Control de construcciones inadecuado",
-						"Evaluación inadecuada para uso operacional"
-					]
-				},
-				{ 
-					id: 18, 
-					text: 'Adquisiciones Deficientes',
-					options: [
-						"Especificaciones deficientes de requerimientos",
-						"Investigación inadecuada de materiales",
-						"Especificaciones deficientes para vendedores",
-						"Inspecciones de recepción inadecuadas",
-						"Comunicación inadecuada de aspectos de seguridad"
-					]
-				},
-				{ 
-					id: 19, 
-					text: 'Mantenimiento Deficiente',
-					options: [
-						"Aspectos preventivos inadecuados",
-						"Lubricación y servicio inadecuados",
-						"Ajuste/ensamblaje inadecuados",
-						"Limpieza inadecuada",
-						"Comunicación de necesidades inadecuada"
-					]
-				},
-				{ 
-					id: 20, 
-					text: 'Herramientas y Equipos Inadecuados',
-					options: [
-						"Evaluación inadecuada de necesidades",
-						"Preocupación inadecuada por factores humanos",
-						"Normas o especificaciones inadecuadas",
-						"Disponibilidad inadecuada",
-						"Ajustes/reparación/mantenimiento deficientes"
-					]
-				},
-			]
-		},
-		{
-			id: 'necesidades',
-			title: '(NAC) Necesidades de Acción de Control (NAC)',
-			subtitle: 'Falta de Control',
-			color: '#10b981',
-			items: [
-				{ 
-					id: 21, 
-					text: 'Programa inadecuado de mantenimiento preventivo',
-					options: [
-						"Falta de programa de mantenimiento",
-						"Frecuencia inadecuada de mantenimiento",
-						"Procedimientos de mantenimiento deficientes",
-						"Personal no calificado para mantenimiento",
-						"Falta de repuestos y herramientas"
-					]
-				},
-				{ 
-					id: 22, 
-					text: 'Normas inadecuadas de trabajo',
-					options: [
-						"Procedimientos de trabajo inexistentes",
-						"Procedimientos desactualizados",
-						"Procedimientos no comunicados",
-						"Falta de entrenamiento en procedimientos",
-						"Procedimientos no aplicados"
-					]
-				},
-				{ 
-					id: 23, 
-					text: 'Diseño o mantenimiento inadecuado de las instalaciones',
-					options: [
-						"Diseño deficiente de instalaciones",
-						"Mantenimiento inadecuado de estructuras",
-						"Falta de señalización",
-						"Iluminación inadecuada",
-						"Ventilación deficiente"
-					]
-				},
-				{ 
-					id: 24, 
+					id: 4, 
 					text: 'Compras inadecuadas',
 					options: [
 						"Especificaciones de compra deficientes",
@@ -323,7 +97,7 @@ function NecesidadesControlContent() {
 					]
 				},
 				{ 
-					id: 25, 
+					id: 5, 
 					text: 'Mantenimiento inadecuado',
 					options: [
 						"Mantenimiento correctivo deficiente",
@@ -333,9 +107,50 @@ function NecesidadesControlContent() {
 						"Documentación de mantenimiento deficiente"
 					]
 				},
+				{ 
+					id: 6, 
+					text: 'Uso y desgaste',
+					options: [
+						"Planificación inadecuada del uso",
+						"Prolongación excesiva de la vida útil",
+						"Inspección y control inadecuados",
+						"Sobrecarga o sobreutilización",
+						"Mantenimiento preventivo deficiente"
+					]
+				},
 			]
 		}
 	];
+
+	// Función para obtener las categorías filtradas según las selecciones de Causas Básicas
+	const getFilteredCategories = useMemo(() => {
+		// Obtener todas las causas básicas seleccionadas
+		const selectedCausasBasicas = [
+			...causasBasicasData.personales.selectedItems,
+			...causasBasicasData.laborales.selectedItems
+		];
+
+		if (selectedCausasBasicas.length === 0) {
+			// Si no hay causas básicas seleccionadas, mostrar todas las categorías
+			return allCategories;
+		}
+
+		// Obtener los NAC permitidos basados en las causas básicas seleccionadas
+		const allowedNACIds = new Set();
+		selectedCausasBasicas.forEach(causaId => {
+			const nacIds = causasBasicasToNAC[causaId];
+			if (nacIds) {
+				nacIds.forEach(nacId => allowedNACIds.add(nacId));
+			}
+		});
+
+		// Filtrar las categorías para mostrar solo los items permitidos
+		return allCategories.map(category => ({
+			...category,
+			items: category.items.filter(item => allowedNACIds.has(item.id))
+		})).filter(category => category.items.length > 0); // Solo mostrar categorías que tengan items
+
+	}, [causasBasicasData.personales.selectedItems, causasBasicasData.laborales.selectedItems]);
 
 	const handleItemClick = (item) => {
 		setActiveModal(item);
@@ -489,6 +304,17 @@ function NecesidadesControlContent() {
 		return necesidadesControlData.selectedItems.length;
 	};
 
+	// Obtener las causas básicas seleccionadas para mostrar información
+	const getSelectedCausasBasicas = () => {
+		return [
+			...causasBasicasData.personales.selectedItems,
+			...causasBasicasData.laborales.selectedItems
+		];
+	};
+
+	const selectedCausasBasicas = getSelectedCausasBasicas();
+	const filteredCategories = getFilteredCategories;
+
 	return (
 		<div className={styles.scatContainer}>
 			<div className={styles.header}>
@@ -507,58 +333,74 @@ function NecesidadesControlContent() {
 				</div>
 			</div>
 
-			<div className={styles.categoriesGrid}>
-				{categories.map((category) => (
-					<div key={category.id} className={styles.categoryCard}>
-						<div 
-							className={styles.categoryHeader}
-							style={{ backgroundColor: category.color }}
-						>
-							<h3 className={styles.categoryTitle}>{category.title}</h3>
-							{category.subtitle && (
-								<p className={styles.categorySubtitle}>{category.subtitle}</p>
-							)}
-						</div>
-						
-						<div className={styles.categoryBody}>
-							{category.items.map((item) => {
-								const isSelected = necesidadesControlData.selectedItems.includes(item.id);
-								const hasDetailedData = necesidadesControlData.detailedData[item.id];
-								
-								return (
-									<button
-										key={item.id}
-										className={`${styles.itemButton} ${
-											isSelected ? styles.selected : ""
-										}`}
-										onClick={() => handleItemClick(item)}
-									>
-										<div className={styles.itemNumber}>{item.id}</div>
-										<div className={styles.itemText}>{item.text}</div>
-										<div className={styles.itemIcon}>
-											{isSelected ? "✓" : "→"}
-										</div>
-										{hasDetailedData && (
-											<div className={styles.dataIndicator}>
-												{hasDetailedData.selectedOptions?.length > 0 && 
-													<span className={styles.optionsCount}>
-														{hasDetailedData.selectedOptions.length} opciones
-													</span>
-												}
-												{hasDetailedData.optionsPEC && Object.keys(hasDetailedData.optionsPEC).length > 0 && 
-													<span className={styles.pecIndicator}>
-														PEC: {Object.values(hasDetailedData.optionsPEC).flat().length}
-													</span>
-												}
+			{/* Información sobre el filtrado */}
+			{selectedCausasBasicas.length > 0 && (
+				<div className={styles.filterInfo}>
+					<h3>Opciones filtradas según Causas Básicas seleccionadas:</h3>
+					<p>Causas Básicas: {selectedCausasBasicas.join(', ')}</p>
+					<p>Se muestran solo las NAC relacionadas con estas causas básicas.</p>
+				</div>
+			)}
+
+			{filteredCategories.length === 0 ? (
+				<div className={styles.noOptionsMessage}>
+					<h3>No hay opciones disponibles</h3>
+					<p>Primero debe seleccionar causas básicas en la sección anterior (Botón 4) para ver las opciones de control correspondientes.</p>
+				</div>
+			) : (
+				<div className={styles.categoriesGrid}>
+					{filteredCategories.map((category) => (
+						<div key={category.id} className={styles.categoryCard}>
+							<div 
+								className={styles.categoryHeader}
+								style={{ backgroundColor: category.color }}
+							>
+								<h3 className={styles.categoryTitle}>{category.title}</h3>
+								{category.subtitle && (
+									<p className={styles.categorySubtitle}>{category.subtitle}</p>
+								)}
+							</div>
+							
+							<div className={styles.categoryBody}>
+								{category.items.map((item) => {
+									const isSelected = necesidadesControlData.selectedItems.includes(item.id);
+									const hasDetailedData = necesidadesControlData.detailedData[item.id];
+									
+									return (
+										<button
+											key={item.id}
+											className={`${styles.itemButton} ${
+												isSelected ? styles.selected : ""
+											}`}
+											onClick={() => handleItemClick(item)}
+										>
+											<div className={styles.itemNumber}>{item.id}</div>
+											<div className={styles.itemText}>{item.text}</div>
+											<div className={styles.itemIcon}>
+												{isSelected ? "✓" : "→"}
 											</div>
-										)}
-									</button>
-								);
-							})}
+											{hasDetailedData && (
+												<div className={styles.dataIndicator}>
+													{hasDetailedData.selectedOptions?.length > 0 && 
+														<span className={styles.optionsCount}>
+															{hasDetailedData.selectedOptions.length} opciones
+														</span>
+													}
+													{hasDetailedData.optionsPEC && Object.keys(hasDetailedData.optionsPEC).length > 0 && 
+														<span className={styles.pecIndicator}>
+															PEC: {Object.values(hasDetailedData.optionsPEC).flat().length}
+														</span>
+													}
+												</div>
+											)}
+										</button>
+									);
+								})}
+							</div>
 						</div>
-					</div>
-				))}
-			</div>
+					))}
+				</div>
+			)}
 
 			{/* Global Observation Section */}
 			<div className={styles.globalObservationSection}>

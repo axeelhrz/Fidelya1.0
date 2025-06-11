@@ -259,10 +259,7 @@ function ScatInterface({
 						)}
 					</div>
 					<div className={styles.headerCenter}>
-						<h1 className={styles.title}>TABLA SCAT</h1>
-						<h2 className={styles.subtitle}>
-							Técnica de Análisis Sistemático de las Causas
-						</h2>
+						{/* Título y subtítulo eliminados */}
 					</div>
 					<div className={styles.headerRight}>
 						<div className={styles.sectionCounter}>
