@@ -178,6 +178,24 @@
   transform: translateY(-1px);
 }
 
+.saveButton {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.025em;
+}
+
+.saveButton:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
 .submitButton {
   background: #eab308;
   color: #1f2937;
@@ -196,7 +214,8 @@
   transform: translateY(-1px);
 }
 
-.submitButton:disabled {
+.submitButton:disabled,
+.saveButton:disabled {
   background: #9ca3af;
   cursor: not-allowed;
   transform: none;
@@ -235,6 +254,7 @@
   }
 
   .cancelButton,
+  .saveButton,
   .submitButton {
     width: 100%;
     padding: 1rem;

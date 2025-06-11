@@ -60,38 +60,61 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const handleSubmit = (e) => {
+	const createProject = () => {
+		// Crear un nuevo proyecto con ID único y todos los datos necesarios
+		const newProject = {
+			id: Date.now(), // Usar timestamp como ID único
+			name: formData.evento,
+			description: `Involucrado: ${formData.involucrado} - Área: ${formData.area}`,
+			createdAt: new Date().toISOString(),
+			formData: { ...formData }, // Guardar todos los datos del formulario
+			// Metadatos adicionales
+			status: 'active',
+			lastModified: new Date().toISOString(),
+			version: 1
+		};
+
+		// Guardar en el contexto para uso inmediato en SCAT
+		setProjectData(formData);
+		
+		// Llamar al callback para crear el proyecto en el dashboard
+		if (onCreateProject) {
+			onCreateProject(newProject);
+		}
+
+		return newProject;
+	};
+
+	const handleSaveOnly = (e) => {
 		e.preventDefault();
 
 		if (validateForm()) {
-			// Crear un nuevo proyecto con ID único y todos los datos necesarios
-			const newProject = {
-				id: Date.now(), // Usar timestamp como ID único
-				name: formData.evento,
-				description: `Involucrado: ${formData.involucrado} - Área: ${formData.area}`,
-				createdAt: new Date().toISOString(),
-				formData: { ...formData }, // Guardar todos los datos del formulario
-				// Metadatos adicionales
-				status: 'active',
-				lastModified: new Date().toISOString(),
-				version: 1
-			};
+			// Crear el proyecto
+			createProject();
+			
+			// Limpiar formulario y cerrar modal
+			resetForm();
+			onClose();
+			
+			// Mostrar mensaje de confirmación
+			alert('Proyecto creado exitosamente y guardado en el dashboard.');
+		}
+	};
 
-			// Guardar en el contexto para uso inmediato en SCAT
-			setProjectData(formData);
-			
-			// Llamar al callback para crear el proyecto en el dashboard
-			if (onCreateProject) {
-				onCreateProject(newProject);
-			}
-			
-			// Llamar al callback para continuar al SCAT
-			if (onContinue) {
-				onContinue(formData);
-			}
+	const handleSaveAndContinue = (e) => {
+		e.preventDefault();
+
+		if (validateForm()) {
+			// Crear el proyecto
+			createProject();
 			
 			// Limpiar formulario
 			resetForm();
+			
+			// Navegar al SCAT
+			if (onContinue) {
+				onContinue(formData);
+			}
 		}
 	};
 
@@ -124,7 +147,7 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 					</button>
 				</div>
 
-				<form onSubmit={handleSubmit} className={styles.form}>
+				<form className={styles.form}>
 					<div className={styles.formGrid}>
 						<div className={styles.formGroup}>
 							<label htmlFor="evento" className={styles.label}>
@@ -239,8 +262,19 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 						>
 							Cancelar
 						</button>
-						<button type="submit" className={styles.submitButton}>
-							Crear Reporte
+						<button 
+							type="button"
+							onClick={handleSaveOnly}
+							className={styles.saveButton}
+						>
+							Guardar Proyecto
+						</button>
+						<button 
+							type="button"
+							onClick={handleSaveAndContinue}
+							className={styles.submitButton}
+						>
+							Guardar y Continuar
 						</button>
 					</div>
 				</form>

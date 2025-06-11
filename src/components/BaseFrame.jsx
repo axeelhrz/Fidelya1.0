@@ -36,12 +36,16 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 				const savedProjects = localStorage.getItem('scatProjects');
 				const savedDeletedProjects = localStorage.getItem('scatDeletedProjects');
 				
+				console.log('Cargando proyectos desde localStorage...');
+				console.log('savedProjects:', savedProjects);
+				
 				// Solo cargar proyectos reales del usuario
 				let loadedProjects = [];
 				if (savedProjects) {
 					const parsedProjects = JSON.parse(savedProjects);
 					// Limpiar proyectos simulados si existen
 					loadedProjects = cleanSimulatedProjects(parsedProjects);
+					console.log('Proyectos cargados después de limpiar:', loadedProjects);
 				}
 				
 				setProjects(loadedProjects);
@@ -71,6 +75,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	// Guardar proyectos en localStorage cuando cambien (solo después de la inicialización)
 	useEffect(() => {
 		if (isInitialized) {
+			console.log('Guardando proyectos en localStorage:', projects);
 			localStorage.setItem('scatProjects', JSON.stringify(projects));
 			console.log('Proyectos guardados en localStorage:', projects.length);
 		}
@@ -109,6 +114,8 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		setDisplayedProjects(newDisplayedProjects);
 		setCurrentPage(page);
 		setHasMore(endIndex < projects.length);
+		
+		console.log('Proyectos mostrados actualizados:', newDisplayedProjects.length);
 	}, [projects, currentPage, projectsPerPage]);
 
 	// Initialize displayed projects
@@ -119,12 +126,18 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	}, [projects, loadMoreProjects, isInitialized]);
 
 	const handleCreateProject = (newProject) => {
-		console.log('Creando nuevo proyecto:', newProject);
+		console.log('=== CREANDO NUEVO PROYECTO ===');
+		console.log('Proyecto recibido:', newProject);
+		console.log('Proyectos actuales antes de agregar:', projects.length);
+		
 		setProjects((prev) => {
 			const updatedProjects = [newProject, ...prev];
-			console.log('Proyectos actualizados:', updatedProjects.length);
+			console.log('Proyectos después de agregar:', updatedProjects.length);
+			console.log('Lista actualizada:', updatedProjects);
 			return updatedProjects;
 		});
+		
+		console.log('=== FIN CREACIÓN PROYECTO ===');
 	};
 
 	const handleDeleteProject = (projectId) => {
@@ -192,6 +205,12 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 			</div>
 		);
 	}
+
+	console.log('Renderizando BaseFrame con:', {
+		totalProjects: projects.length,
+		displayedProjects: displayedProjects.length,
+		deletedProjects: deletedProjects.length
+	});
 
 	return (
 		<div className={styles.container}>
@@ -278,31 +297,28 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 							</div>
 						)}
 
-						{/* Debug info (solo en desarrollo) */}
+						{/* Accident Form Modal */}
+						<AccidentFormModal
+							isOpen={isModalOpen}
+							onClose={() => setIsModalOpen(false)}
+							onCreateProject={handleCreateProject}
+							onContinue={handleContinue}
+						/>
+
+						{/* Trash Modal */}
+						<TrashModal
+							isOpen={isTrashModalOpen}
+							onClose={() => setIsTrashModalOpen(false)}
+							deletedProjects={deletedProjects}
+							onRestoreProject={handleRestoreProject}
+							onPermanentDelete={handlePermanentDelete}
+							onEmptyTrash={handleEmptyTrash}
+						/>
 					</div>
 				</main>
 			</div>
-
-			{/* Accident Form Modal */}
-			<AccidentFormModal
-				isOpen={isModalOpen}
-				onClose={() => setIsModalOpen(false)}
-				onCreateProject={handleCreateProject}
-				onContinue={handleContinue}
-			/>
-
-			{/* Trash Modal */}
-			<TrashModal
-				isOpen={isTrashModalOpen}
-				onClose={() => setIsTrashModalOpen(false)}
-				deletedProjects={deletedProjects}
-				onRestoreProject={handleRestoreProject}
-				onPermanentDelete={handlePermanentDelete}
-				onEmptyTrash={handleEmptyTrash}
-			/>
 		</div>
 	);
 }
 
 export default BaseFrame;
-
