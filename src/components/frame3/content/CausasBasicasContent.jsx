@@ -351,8 +351,8 @@ function CausasBasicasContent() {
 
 	const getSectionSubtitle = () => {
 		return activeSection === 'personales' 
-			? 'Factores relacionados con la persona'
-			: 'Factores relacionados con el trabajo';
+			? 'FACTORES RELACIONADOS CON LA PERSONA'
+			: 'FACTORES RELACIONADOS CON EL TRABAJO';
 	};
 
 	const getModalItem = () => {
@@ -405,71 +405,61 @@ function CausasBasicasContent() {
 
 	if (!activeSection) {
 		return (
-			<div className={styles.container}>
-				<div className={styles.header}>
-					<div className={styles.headerContent}>
-						<h1 className={styles.title}>Causas Básicas</h1>
-						<p className={styles.subtitle}>
-							Identifique los factores subyacentes del incidente
-						</p>
-					</div>
+			<div className={styles.contentCard}>
+				<div className={styles.contentHeader}>
+					<h2 className={styles.contentTitle}>CAUSAS BÁSICAS / SUBYACENTES</h2>
+					<p className={styles.contentSubtitle}>
+						Técnica de Análisis Sistemático de las Causas
+					</p>
 				</div>
 
-				<div className={styles.sectionGrid}>
-					<div
-						className={`${styles.sectionCard} ${
-							causasBasicasData.personales.selectedItems.length > 0 ? styles.hasData : ''
-						}`}
-						onClick={() => handleSectionSelect('personales')}
-					>
-						<div className={styles.cardIcon}>
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-								<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-								<circle cx="12" cy="7" r="4"/>
-							</svg>
-						</div>
-						<div className={styles.cardContent}>
-							<h3 className={styles.cardTitle}>Factores Personales</h3>
-							<p className={styles.cardDescription}>
-								Factores relacionados con la persona
-							</p>
-							<div className={styles.cardMeta}>
-								<span className={styles.itemCount}>7 factores</span>
-								{causasBasicasData.personales.selectedItems.length > 0 && (
-									<span className={styles.selectedCount}>
-										{causasBasicasData.personales.selectedItems.length} seleccionados
-									</span>
-								)}
-							</div>
-						</div>
-					</div>
+				<div className={styles.contentBody}>
+					<p className={styles.description}>
+						Seleccione el tipo de causa básica que desea analizar:
+					</p>
 
-					<div
-						className={`${styles.sectionCard} ${
-							causasBasicasData.laborales.selectedItems.length > 0 ? styles.hasData : ''
-						}`}
-						onClick={() => handleSectionSelect('laborales')}
-					>
-						<div className={styles.cardIcon}>
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-								<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-								<polyline points="9,22 9,12 15,12 15,22"/>
-							</svg>
-						</div>
-						<div className={styles.cardContent}>
-							<h3 className={styles.cardTitle}>Factores Laborales</h3>
-							<p className={styles.cardDescription}>
-								Factores relacionados con el trabajo
-							</p>
-							<div className={styles.cardMeta}>
-								<span className={styles.itemCount}>8 factores</span>
-								{causasBasicasData.laborales.selectedItems.length > 0 && (
-									<span className={styles.selectedCount}>
-										{causasBasicasData.laborales.selectedItems.length} seleccionados
-									</span>
+					<div className={styles.sectionSelector}>
+						<button
+							className={`${styles.sectionCard} ${
+								causasBasicasData.personales.selectedItems.length > 0 ? styles.hasData : ''
+							}`}
+							onClick={() => handleSectionSelect('personales')}
+						>
+							<div className={styles.sectionNumber}>1</div>
+							<div className={styles.sectionContent}>
+								<h3 className={styles.sectionTitle}>FACTORES PERSONALES</h3>
+								<p className={styles.sectionDescription}>
+									Factores relacionados con la persona
+								</p>
+								<p className={styles.sectionRange}>Opciones 1-7</p>
+								{causasBasicasData.personales.selectedItems.length > 0 && (
+									<p className={styles.dataIndicator}>
+										{causasBasicasData.personales.selectedItems.length} factor(es) seleccionado(s)
+									</p>
 								)}
 							</div>
-						</div>
+						</button>
+
+						<button
+							className={`${styles.sectionCard} ${
+								causasBasicasData.laborales.selectedItems.length > 0 ? styles.hasData : ''
+							}`}
+							onClick={() => handleSectionSelect('laborales')}
+						>
+							<div className={styles.sectionNumber}>2</div>
+							<div className={styles.sectionContent}>
+								<h3 className={styles.sectionTitle}>FACTORES LABORALES</h3>
+								<p className={styles.sectionDescription}>
+									Factores relacionados con el trabajo
+								</p>
+								<p className={styles.sectionRange}>Opciones 8-15</p>
+								{causasBasicasData.laborales.selectedItems.length > 0 && (
+									<p className={styles.dataIndicator}>
+										{causasBasicasData.laborales.selectedItems.length} factor(es) seleccionado(s)
+									</p>
+								)}
+							</div>
+						</button>
 					</div>
 				</div>
 			</div>
@@ -479,185 +469,210 @@ function CausasBasicasContent() {
 	const currentSectionData = getCurrentSectionData();
 
 	return (
-		<div className={styles.container}>
-			<div className={styles.header}>
+		<div className={styles.contentCard}>
+			<div className={styles.contentHeader}>
 				<button 
 					className={styles.backButton}
 					onClick={() => setActiveSection(null)}
 				>
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-						<path d="M19 12H5M12 19l-7-7 7-7"/>
-					</svg>
-					Volver
+					← Volver
 				</button>
-				<div className={styles.headerContent}>
-					<h1 className={styles.title}>{getSectionTitle()}</h1>
-					<p className={styles.subtitle}>{getSectionSubtitle()}</p>
-				</div>
+				<h2 className={styles.contentTitle}>{getSectionTitle()}</h2>
+				<p className={styles.contentSubtitle}>{getSectionSubtitle()}</p>
 			</div>
 
-			<div className={styles.content}>
-				<div className={styles.mainPanel}>
-					<div className={styles.toolbar}>
-						<div className={styles.searchContainer}>
-							<svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-								<circle cx="11" cy="11" r="8"/>
-								<path d="M21 21l-4.35-4.35"/>
-							</svg>
+			<div className={styles.detailView}>
+				<div className={styles.header}>
+					<h3>Seleccionar Elementos</h3>
+					<div className={styles.headerActions}>
+						{currentSectionData.selectedItems.length > 0 && (
+							<button
+								className={styles.toggleSelectedButton}
+								onClick={toggleSelectedCollapse}
+							>
+								{isSelectedCollapsed ? '👁️ Mostrar' : '👁️‍🗨️ Ocultar'} Selecciones
+							</button>
+						)}
+						<button
+							className={styles.clearButton}
+							onClick={clearAllSelections}
+							disabled={currentSectionData.selectedItems.length === 0}
+						>
+							Limpiar Selección
+						</button>
+					</div>
+				</div>
+
+				<div className={styles.contentWrapper}>
+					<div className={styles.itemsGridContainer}>
+						{/* Barra de búsqueda */}
+						<div className={styles.searchSection}>
 							<input
 								type="text"
-								placeholder="Buscar factores..."
+								placeholder="Buscar elementos..."
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
 								className={styles.searchInput}
 							/>
 						</div>
-						<div className={styles.toolbarActions}>
-							{currentSectionData.selectedItems.length > 0 && (
+
+						<div className={styles.itemsGrid}>
+							{filteredItems.map((item) => (
 								<button
-									className={styles.toggleButton}
-									onClick={toggleSelectedCollapse}
+									key={item.id}
+									className={`${styles.itemCard} ${
+										currentSectionData.selectedItems.includes(item.id) ? styles.selected : ""
+									} ${hasDetails(item.id) ? styles.hasDetails : ""}`}
+									onClick={() => handleItemClick(item.id)}
 								>
-									{isSelectedCollapsed ? 'Mostrar' : 'Ocultar'} selecciones
+									<div className={styles.itemNumber}>{item.id}</div>
+									<div className={styles.itemContent}>
+										<div className={styles.itemText}>{item.text}</div>
+									</div>
+									{currentSectionData.selectedItems.includes(item.id) && (
+										<div className={styles.selectedIndicator}>✓</div>
+									)}
+									{hasDetails(item.id) && (
+										<div className={styles.detailsIndicator}>
+											{currentSectionData.detailedSelections[item.id].length} detalles
+										</div>
+									)}
 								</button>
-							)}
-							<button
-								className={styles.clearButton}
-								onClick={clearAllSelections}
-								disabled={currentSectionData.selectedItems.length === 0}
-							>
-								Limpiar todo
-							</button>
+							))}
 						</div>
-					</div>
 
-					<div className={styles.itemsGrid}>
-						{filteredItems.map((item) => (
-							<div
-								key={item.id}
-								className={`${styles.itemCard} ${
-									currentSectionData.selectedItems.includes(item.id) ? styles.selected : ""
-								} ${hasDetails(item.id) ? styles.hasDetails : ""}`}
-								onClick={() => handleItemClick(item.id)}
-							>
-								<div className={styles.itemNumber}>{item.id}</div>
-								<div className={styles.itemText}>{item.text}</div>
-								{currentSectionData.selectedItems.includes(item.id) && (
-									<div className={styles.checkmark}>
-										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-											<polyline points="20,6 9,17 4,12"/>
-										</svg>
+						{currentSectionData.selectedItems.length > 0 && (
+							<div className={`${styles.selectedSummary} ${isSelectedCollapsed ? styles.collapsed : ''}`}>
+								<h4>
+									Elementos Seleccionados 
+									<span className={styles.selectedCount}>
+										{currentSectionData.selectedItems.length}
+									</span>
+								</h4>
+								{!isSelectedCollapsed && (
+									<div className={styles.selectedList}>
+										{currentSectionData.selectedItems.map((id) => {
+											const item = getCurrentItems().find((item) => item.id === id);
+											const detailCount = currentSectionData.detailedSelections[id]?.length || 0;
+											return (
+												<span 
+													key={id} 
+													className={`${styles.selectedTag} ${detailCount > 0 ? styles.hasDetails : ''}`}
+													onClick={() => handleRemoveSelectedItem(id)}
+													title="Click para deseleccionar"
+												>
+													{id}. {item?.text || 'Elemento no encontrado'} 
+													{detailCount > 0 && ` (${detailCount} detalles)`}
+												</span>
+											);
+										})}
 									</div>
 								)}
-								{hasDetails(item.id) && (
-									<div className={styles.detailsBadge}>
-										{currentSectionData.detailedSelections[item.id].length}
-									</div>
-								)}
-							</div>
-						))}
-					</div>
-
-					{currentSectionData.selectedItems.length > 0 && !isSelectedCollapsed && (
-						<div className={styles.selectedSummary}>
-							<div className={styles.summaryHeader}>
-								<h4>Factores seleccionados</h4>
-								<span className={styles.badge}>
-									{currentSectionData.selectedItems.length}
-								</span>
-							</div>
-							<div className={styles.selectedTags}>
-								{currentSectionData.selectedItems.map((id) => {
-									const item = getCurrentItems().find((item) => item.id === id);
-									const detailCount = currentSectionData.detailedSelections[id]?.length || 0;
-									return (
-										<span 
-											key={id} 
-											className={`${styles.tag} ${detailCount > 0 ? styles.hasDetails : ''}`}
-											onClick={(e) => {
-												e.stopPropagation();
-												handleRemoveSelectedItem(id);
-											}}
-										>
-											{id}. {item?.text || 'Factor no encontrado'} 
-											{detailCount > 0 && <span className={styles.detailCount}>({detailCount})</span>}
-											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-												<line x1="18" y1="6" x2="6" y2="18"/>
-												<line x1="6" y1="6" x2="18" y2="18"/>
-											</svg>
-										</span>
-									);
-								})}
-							</div>
-						</div>
-					)}
-				</div>
-
-				<div className={styles.sidePanel}>
-					<div className={styles.imageUpload}>
-						<h4>Imagen de referencia</h4>
-						<input
-							type="file"
-							ref={fileInputRef}
-							onChange={handleImageUpload}
-							accept="image/*"
-							className={styles.fileInput}
-						/>
-
-						{currentSectionData.image ? (
-							<div className={styles.imagePreview}>
-								<img
-									src={currentSectionData.image}
-									alt="Preview"
-									className={styles.image}
-								/>
-								<button className={styles.removeButton} onClick={removeImage}>
-									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-										<line x1="18" y1="6" x2="6" y2="18"/>
-										<line x1="6" y1="6" x2="18" y2="18"/>
-									</svg>
-								</button>
-							</div>
-						) : (
-							<div className={styles.uploadArea} onClick={triggerFileInput}>
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-									<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-									<circle cx="12" cy="13" r="4"/>
-								</svg>
-								<p>Agregar imagen</p>
 							</div>
 						)}
 					</div>
 
-					<div className={styles.observations}>
-						<h4>Observaciones</h4>
-						<textarea
-							className={styles.textarea}
-							value={currentSectionData.observation || ''}
-							onChange={handleObservationChange}
-							placeholder="Escriba sus observaciones aquí..."
-							rows={6}
-						/>
+					<div className={styles.rightPanel}>
+						<div className={styles.imageSection}>
+							<input
+								type="file"
+								ref={fileInputRef}
+								onChange={handleImageUpload}
+								accept="image/*"
+								className={styles.fileInput}
+							/>
+
+							{currentSectionData.image ? (
+								<div className={styles.imagePreviewContainer}>
+									<img
+										src={currentSectionData.image || "/placeholder.svg"}
+										alt="Preview"
+										className={styles.imagePreview}
+									/>
+									<button className={styles.removeImageBtn} onClick={removeImage}>
+										×
+									</button>
+								</div>
+							) : (
+								<div
+									className={styles.uploadPlaceholder}
+									onClick={triggerFileInput}
+								>
+									<div className={styles.cameraIcon}>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+										>
+											<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+											<circle cx="12" cy="13" r="4"></circle>
+										</svg>
+										<div className={styles.magnifyingGlass}>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="2"
+												strokeLinecap="round"
+												strokeLinejoin="round"
+											>
+												<circle cx="11" cy="11" r="8"></circle>
+												<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+											</svg>
+										</div>
+									</div>
+									<p>Haga clic para agregar imagen</p>
+								</div>
+							)}
+						</div>
+
+						<div className={styles.observationSection}>
+							<div className={styles.observationHeader}>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									className={styles.editIcon}
+								>
+									<path d="M12 20h9"></path>
+									<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+								</svg>
+								<span>Observación</span>
+							</div>
+							<textarea
+								className={styles.observationTextarea}
+								value={currentSectionData.observation || ''}
+								onChange={handleObservationChange}
+								placeholder="Escriba sus observaciones aquí..."
+								rows={6}
+							></textarea>
+						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* Modal */}
 			{activeModal && (
-				<div className={styles.modal}>
+				<div className={styles.modalOverlay}>
 					<div className={styles.modalContent}>
 						<div className={styles.modalHeader}>
 							<h3 className={styles.modalTitle}>
-								{getModalItem()?.text}
+								{getModalItem()?.id}. {getModalItem()?.text}
 							</h3>
 							<button 
-								className={styles.modalClose}
+								className={styles.modalCloseBtn}
 								onClick={handleModalCancel}
 							>
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-									<line x1="18" y1="6" x2="6" y2="18"/>
-									<line x1="6" y1="6" x2="18" y2="18"/>
-								</svg>
+								×
 							</button>
 						</div>
 						
@@ -666,42 +681,33 @@ function CausasBasicasContent() {
 								Seleccione las opciones específicas que aplican:
 							</p>
 							
-							<div className={styles.optionsList}>
+							<div className={styles.modalOptions}>
 								{getModalItem()?.options.map((option, index) => (
-									<label
+									<button
 										key={index}
-										className={`${styles.option} ${
-											modalSelectedItems.includes(index) ? styles.selected : ""
+										className={`${styles.modalOption} ${
+											modalSelectedItems.includes(index) ? styles.modalOptionSelected : ""
 										}`}
+										onClick={() => handleModalItemToggle(index)}
 									>
-										<input
-											type="checkbox"
-											checked={modalSelectedItems.includes(index)}
-											onChange={() => handleModalItemToggle(index)}
-											className={styles.checkbox}
-										/>
-										<div className={styles.checkboxCustom}>
-											{modalSelectedItems.includes(index) && (
-												<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-													<polyline points="20,6 9,17 4,12"/>
-												</svg>
-											)}
+										<div className={styles.modalOptionIcon}>
+											{modalSelectedItems.includes(index) ? "✓" : "○"}
 										</div>
-										<span className={styles.optionText}>{option}</span>
-									</label>
+										<span className={styles.modalOptionText}>{option}</span>
+									</button>
 								))}
 							</div>
 						</div>
 						
 						<div className={styles.modalFooter}>
 							<button 
-								className={styles.cancelButton}
+								className={styles.modalCancelBtn}
 								onClick={handleModalCancel}
 							>
 								Cancelar
 							</button>
 							<button 
-								className={styles.confirmButton}
+								className={styles.modalConfirmBtn}
 								onClick={handleModalConfirm}
 							>
 								Confirmar ({modalSelectedItems.length})
