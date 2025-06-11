@@ -97,12 +97,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	const [hasMore, setHasMore] = useState(true);
 	const projectsPerPage = 6;
 
-	// Initialize displayed projects
-	useEffect(() => {
-		loadMoreProjects(true);
-	}, [projects, loadMoreProjects]);
-
-	// Load more projects function
+	// Load more projects function - moved before useEffect
 	const loadMoreProjects = useCallback((reset = false) => {
 		const page = reset ? 1 : currentPage + 1;
 		const startIndex = 0;
@@ -113,6 +108,11 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		setCurrentPage(page);
 		setHasMore(endIndex < projects.length);
 	}, [projects, currentPage, projectsPerPage]);
+
+	// Initialize displayed projects - moved after loadMoreProjects definition
+	useEffect(() => {
+		loadMoreProjects(true);
+	}, [projects, loadMoreProjects]);
 
 	const handleCreateProject = (newProject) => {
 		setProjects((prev) => [newProject, ...prev]);
