@@ -1,19 +1,15 @@
 import styles from "./EvaluacionContent.module.css";
-
-import { useState } from "react";
+import { useScatData } from "../../../contexts/ScatContext";
 
 function EvaluacionContent() {
-	const [selections, setSelections] = useState({
-		severity: null,
-		probability: null,
-		frequency: null,
-	});
+	const { evaluacionData, setEvaluacionData } = useScatData();
 
 	const handleSelection = (category, value) => {
-		setSelections((prev) => ({
-			...prev,
-			[category]: prev[category] === value ? null : value,
-		}));
+		const newData = {
+			...evaluacionData,
+			[category]: evaluacionData[category] === value ? null : value,
+		};
+		setEvaluacionData(newData);
 	};
 
 	return (
@@ -25,7 +21,7 @@ function EvaluacionContent() {
 				<div className={styles.optionsContainer}>
 					<button
 						className={`${styles.optionButton} ${
-							selections.severity === "A" ? styles.selected : ""
+							evaluacionData.severity === "A" ? styles.selected : ""
 						}`}
 						onClick={() => handleSelection("severity", "A")}
 					>
@@ -34,7 +30,7 @@ function EvaluacionContent() {
 					</button>
 					<button
 						className={`${styles.optionButton} ${
-							selections.severity === "B" ? styles.selected : ""
+							evaluacionData.severity === "B" ? styles.selected : ""
 						}`}
 						onClick={() => handleSelection("severity", "B")}
 					>
@@ -43,7 +39,7 @@ function EvaluacionContent() {
 					</button>
 					<button
 						className={`${styles.optionButton} ${
-							selections.severity === "C" ? styles.selected : ""
+							evaluacionData.severity === "C" ? styles.selected : ""
 						}`}
 						onClick={() => handleSelection("severity", "C")}
 					>
@@ -60,7 +56,7 @@ function EvaluacionContent() {
 				<div className={styles.optionsContainer}>
 					<button
 						className={`${styles.optionButton} ${
-							selections.probability === "A" ? styles.selected : ""
+							evaluacionData.probability === "A" ? styles.selected : ""
 						}`}
 						onClick={() => handleSelection("probability", "A")}
 					>
@@ -69,7 +65,7 @@ function EvaluacionContent() {
 					</button>
 					<button
 						className={`${styles.optionButton} ${
-							selections.probability === "B" ? styles.selected : ""
+							evaluacionData.probability === "B" ? styles.selected : ""
 						}`}
 						onClick={() => handleSelection("probability", "B")}
 					>
@@ -80,7 +76,7 @@ function EvaluacionContent() {
 					</button>
 					<button
 						className={`${styles.optionButton} ${
-							selections.probability === "C" ? styles.selected : ""
+							evaluacionData.probability === "C" ? styles.selected : ""
 						}`}
 						onClick={() => handleSelection("probability", "C")}
 					>
@@ -97,7 +93,7 @@ function EvaluacionContent() {
 				<div className={styles.optionsContainer}>
 					<button
 						className={`${styles.optionButton} ${
-							selections.frequency === "A" ? styles.selected : ""
+							evaluacionData.frequency === "A" ? styles.selected : ""
 						}`}
 						onClick={() => handleSelection("frequency", "A")}
 					>
@@ -106,7 +102,7 @@ function EvaluacionContent() {
 					</button>
 					<button
 						className={`${styles.optionButton} ${
-							selections.frequency === "B" ? styles.selected : ""
+							evaluacionData.frequency === "B" ? styles.selected : ""
 						}`}
 						onClick={() => handleSelection("frequency", "B")}
 					>
@@ -117,7 +113,7 @@ function EvaluacionContent() {
 					</button>
 					<button
 						className={`${styles.optionButton} ${
-							selections.frequency === "C" ? styles.selected : ""
+							evaluacionData.frequency === "C" ? styles.selected : ""
 						}`}
 						onClick={() => handleSelection("frequency", "C")}
 					>

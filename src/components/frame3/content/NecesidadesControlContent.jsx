@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import styles from "./NecesidadesControlContent.module.css";
-import { useScatData } from "../../../contexts/ScatDataContext";
+import { useScatData } from "../../../contexts/ScatContext";
 
 function NecesidadesControlContent() {
 	const { necesidadesControlData, setNecesidadesControlData } = useScatData();

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import styles from "./CausasInmediatasContent.module.css";
-import { useScatData } from "../../../contexts/ScatDataContext";
+import { useScatData } from "../../../contexts/ScatContext";
 
 function CausasInmediatasContent() {
 	const { causasInmediatasData, setCausasInmediatasData } = useScatData();
