@@ -1,8 +1,8 @@
-import { FileText, Edit, FileDown, Trash2 } from "lucide-react";
+import { Edit, FileDown, Trash2 } from "lucide-react";
 import styles from "./ProjectCard.module.css";
 import pdfService from "../services/pdfService";
 
-export default function ProjectCard({ project, isHighlighted = false, onDelete }) {
+export default function ProjectCard({ project, isHighlighted = false, onDelete, onEdit }) {
 	const handleDelete = (e) => {
 		e.stopPropagation();
 		if (onDelete) {
@@ -27,17 +27,17 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete }
 					investigador: 'No especificado',
 					otrosDatos: ''
 				},
-				evaluacion: {
+				evaluacion: project.scatData?.evaluacion || {
 					severity: null,
 					probability: null,
 					frequency: null
 				},
-				contacto: {
+				contacto: project.scatData?.contacto || {
 					selectedIncidents: [],
 					image: null,
 					observation: ''
 				},
-				causasInmediatas: {
+				causasInmediatas: project.scatData?.causasInmediatas || {
 					actos: {
 						selectedItems: [],
 						image: null,
@@ -49,7 +49,7 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete }
 						observation: ''
 					}
 				},
-				causasBasicas: {
+				causasBasicas: project.scatData?.causasBasicas || {
 					personales: {
 						selectedItems: [],
 						detailedSelections: {},
@@ -63,7 +63,7 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete }
 						observation: ''
 					}
 				},
-				necesidadesControl: {
+				necesidadesControl: project.scatData?.necesidadesControl || {
 					selectedItems: [],
 					detailedData: {},
 					globalImage: null,
@@ -83,23 +83,16 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete }
 		}
 	};
 
-	const handleView = (e) => {
-		e.stopPropagation();
-		// Aquí podrías implementar la funcionalidad de ver el proyecto
-		console.log('Ver proyecto:', project);
-		alert('Funcionalidad de visualización en desarrollo');
-	};
-
 	const handleEdit = (e) => {
 		e.stopPropagation();
-		// Aquí podrías implementar la funcionalidad de editar el proyecto
-		console.log('Editar proyecto:', project);
-		alert('Funcionalidad de edición en desarrollo');
+		if (onEdit) {
+			onEdit(project);
+		}
 	};
 
 	return (
 		<div
-			className={`${styles.card}${isHighlighted ? ` ${styles.highlighted}` : ""}`}
+			className={`${styles.card} ${isHighlighted ? styles.highlighted : ""}`}
 		>
 			<div className={styles.content}>
 				<div className={styles.title}>PROYECTO</div>
@@ -112,27 +105,25 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete }
 						{new Date(project.createdAt).toLocaleDateString('es-ES')}
 					</div>
 				)}
+				{project.version && project.version > 1 && (
+					<div className={styles.versionBadge}>
+						v{project.version}
+					</div>
+				)}
 			</div>
 
 			<div className={styles.actions}>
 				<button 
 					className={styles.actionButton} 
-					onClick={handleView}
-					title="Ver proyecto"
-				>
-					<FileText size={14} />
-				</button>
-				<button 
-					className={styles.actionButton} 
 					onClick={handleEdit}
-					title="Editar proyecto"
+					title="Editar proyecto completo (todas las pestañas)"
 				>
 					<Edit size={14} />
 				</button>
 				<button 
 					className={styles.actionButton} 
 					onClick={handleDownloadPDF}
-					title="Descargar proyecto como PDF"
+					title="Descargar reporte PDF completo"
 				>
 					<FileDown size={14} />
 				</button>

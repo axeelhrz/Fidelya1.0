@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import styles from "./AccidentForm.module.css";
-import { useScatData } from "../contexts/ScatContext";
 
-export default function AccidentFormModal({ isOpen, onClose, onCreateProject, onContinue }) {
-	const { setProjectData } = useScatData();
+export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 	const [formData, setFormData] = useState({
 		evento: "",
 		involucrado: "",
@@ -16,19 +14,20 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 	});
 
 	const [errors, setErrors] = useState({});
-	const hasInitialized = useRef(false);
 
-	// Limpiar formulario cuando se abre el modal (solo una vez)
+	// Cargar datos del proyecto cuando se abre el modal
 	useEffect(() => {
-		if (isOpen && !hasInitialized.current) {
-			console.log('=== MODAL ABIERTO - INICIALIZANDO FORMULARIO LIMPIO ===');
-			resetForm();
-			hasInitialized.current = true;
-		} else if (!isOpen) {
-			// Resetear la bandera cuando se cierra el modal
-			hasInitialized.current = false;
+		if (isOpen && project && project.formData) {
+			setFormData({
+				evento: project.formData.evento || "",
+				involucrado: project.formData.involucrado || "",
+				area: project.formData.area || "",
+				fechaHora: project.formData.fechaHora || "",
+				investigador: project.formData.investigador || "",
+				otrosDatos: project.formData.otrosDatos || "",
+			});
 		}
-	}, [isOpen]);
+	}, [isOpen, project]);
 
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;
@@ -73,95 +72,41 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const createProject = (dataToSave) => {
-		// Crear un nuevo proyecto con ID único y todos los datos necesarios
-		const newProject = {
-			id: Date.now(), // Usar timestamp como ID único
-			name: dataToSave.evento,
-			description: `Involucrado: ${dataToSave.involucrado} - Área: ${dataToSave.area}`,
-			createdAt: new Date().toISOString(),
-			formData: { ...dataToSave }, // Guardar todos los datos del formulario
-			// Metadatos adicionales
-			status: 'active',
-			lastModified: new Date().toISOString(),
-			version: 1
-		};
-
-		console.log('Creando proyecto con datos:', newProject);
-
-		// Guardar en el contexto para uso inmediato en SCAT
-		setProjectData(dataToSave);
-		
-		// Llamar al callback para crear el proyecto en el dashboard
-		if (onCreateProject) {
-			onCreateProject(newProject);
-		}
-
-		return newProject;
-	};
-
-	const handleSaveOnly = (e) => {
+	const handleSave = (e) => {
 		e.preventDefault();
 
 		if (validateForm()) {
-			console.log('=== GUARDAR SOLO ===');
-			console.log('Datos del formulario:', formData);
-			
-			// Crear el proyecto
-			createProject(formData);
-			
-			// Limpiar formulario y cerrar modal
-			resetForm();
+			// Crear proyecto actualizado
+			const updatedProject = {
+				...project,
+				name: formData.evento,
+				description: `Involucrado: ${formData.involucrado} - Área: ${formData.area}`,
+				formData: { ...formData },
+				lastModified: new Date().toISOString(),
+				version: (project.version || 1) + 1
+			};
+
+			if (onSave) {
+				onSave(updatedProject);
+			}
+
 			onClose();
-			
-			// Mostrar mensaje de confirmación
-			alert('Proyecto creado exitosamente y guardado en el dashboard.');
 		}
-	};
-
-	const handleSaveAndContinue = (e) => {
-		e.preventDefault();
-
-		if (validateForm()) {
-			console.log('=== GUARDAR Y CONTINUAR ===');
-			console.log('Datos del formulario antes de crear:', formData);
-			
-			// Hacer una copia de los datos antes de limpiar el formulario
-			const dataToSave = { ...formData };
-			
-			// Crear el proyecto con los datos guardados
-			const newProject = createProject(dataToSave);
-			
-			console.log('Proyecto creado:', newProject);
-			
-			// Usar setTimeout para asegurar que el estado se actualice antes de navegar
-			setTimeout(() => {
-				// Limpiar formulario
-				resetForm();
-				
-				// Navegar al SCAT con los datos originales
-				if (onContinue) {
-					console.log('Navegando al SCAT con datos:', dataToSave);
-					onContinue(dataToSave);
-				}
-			}, 100); // Pequeño delay para asegurar que el estado se actualice
-		}
-	};
-
-	const resetForm = () => {
-		setFormData({
-			evento: "",
-			involucrado: "",
-			area: "",
-			fechaHora: "",
-			investigador: "",
-			otrosDatos: "",
-		});
-		setErrors({});
 	};
 
 	const handleCancel = () => {
-		resetForm();
+		// Resetear a los datos originales
+		if (project && project.formData) {
+			setFormData({
+				evento: project.formData.evento || "",
+				involucrado: project.formData.involucrado || "",
+				area: project.formData.area || "",
+				fechaHora: project.formData.fechaHora || "",
+				investigador: project.formData.investigador || "",
+				otrosDatos: project.formData.otrosDatos || "",
+			});
+		}
+		setErrors({});
 		onClose();
 	};
 
@@ -171,7 +116,7 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 		<div className={styles.modalOverlay}>
 			<div className={styles.modalContent}>
 				<div className={styles.modalHeader}>
-					<h2 className={styles.modalTitle}>Nuevo Reporte de Accidente/Incidente</h2>
+					<h2 className={styles.modalTitle}>Editar Proyecto</h2>
 					<button className={styles.closeButton} onClick={handleCancel}>
 						×
 					</button>
@@ -294,17 +239,10 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 						</button>
 						<button 
 							type="button"
-							onClick={handleSaveOnly}
-							className={styles.saveButton}
-						>
-							Guardar Proyecto
-						</button>
-						<button 
-							type="button"
-							onClick={handleSaveAndContinue}
+							onClick={handleSave}
 							className={styles.submitButton}
 						>
-							Guardar y Continuar
+							Guardar Cambios
 						</button>
 					</div>
 				</form>

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import styles from "./CausasInmediatasContent.module.css";
 import { useScatData } from "../../../contexts/ScatContext";
 
 function CausasInmediatasContent() {
 	const { causasInmediatasData, setCausasInmediatasData } = useScatData();
 	const [activeSection, setActiveSection] = useState(null);
+	const [searchTerm, setSearchTerm] = useState("");
+	const [isSelectedCollapsed, setIsSelectedCollapsed] = useState(false);
 	const fileInputRef = useRef(null);
 
 	const actosSubestandar = [
@@ -45,6 +47,7 @@ function CausasInmediatasContent() {
 
 	const handleSectionSelect = (section) => {
 		setActiveSection(section);
+		setSearchTerm("");
 	};
 
 	const handleItemToggle = (itemId) => {
@@ -68,6 +71,10 @@ function CausasInmediatasContent() {
 			...currentData,
 			selectedItems: []
 		});
+	};
+
+	const toggleSelectedCollapse = () => {
+		setIsSelectedCollapsed(!isSelectedCollapsed);
 	};
 
 	const handleImageUpload = (e) => {
@@ -128,6 +135,21 @@ function CausasInmediatasContent() {
 
 	const getCurrentSectionData = () => {
 		return causasInmediatasData[activeSection] || { selectedItems: [], image: null, observation: '' };
+	};
+
+	// Filtrar items basado en búsqueda
+	const filteredItems = useMemo(() => {
+		const items = getCurrentItems();
+		if (!searchTerm.trim()) return items;
+		
+		return items.filter(item => 
+			item.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			item.id.toString().includes(searchTerm)
+		);
+	}, [searchTerm, activeSection]);
+
+	const handleRemoveSelectedItem = (itemId) => {
+		handleItemToggle(itemId);
 	};
 
 	if (!activeSection) {
@@ -211,19 +233,40 @@ function CausasInmediatasContent() {
 			<div className={styles.detailView}>
 				<div className={styles.header}>
 					<h3>Seleccionar Elementos</h3>
-					<button
-						className={styles.clearButton}
-						onClick={clearAllSelections}
-						disabled={currentSectionData.selectedItems.length === 0}
-					>
-						Limpiar Selección
-					</button>
+					<div className={styles.headerActions}>
+						{currentSectionData.selectedItems.length > 0 && (
+							<button
+								className={styles.toggleSelectedButton}
+								onClick={toggleSelectedCollapse}
+							>
+								{isSelectedCollapsed ? '👁️ Mostrar' : '👁️‍🗨️ Ocultar'} Selecciones
+							</button>
+						)}
+						<button
+							className={styles.clearButton}
+							onClick={clearAllSelections}
+							disabled={currentSectionData.selectedItems.length === 0}
+						>
+							Limpiar Selección
+						</button>
+					</div>
 				</div>
 
 				<div className={styles.contentWrapper}>
 					<div className={styles.itemsGridContainer}>
+						{/* Barra de búsqueda */}
+						<div className={styles.searchSection}>
+							<input
+								type="text"
+								placeholder="Buscar elementos..."
+								value={searchTerm}
+								onChange={(e) => setSearchTerm(e.target.value)}
+								className={styles.searchInput}
+							/>
+						</div>
+
 						<div className={styles.itemsGrid}>
-							{getCurrentItems().map((item) => (
+							{filteredItems.map((item) => (
 								<button
 									key={item.id}
 									className={`${styles.itemCard} ${
@@ -235,23 +278,38 @@ function CausasInmediatasContent() {
 									<div className={styles.itemContent}>
 										<div className={styles.itemText}>{item.text}</div>
 									</div>
+									{currentSectionData.selectedItems.includes(item.id) && (
+										<div className={styles.selectedIndicator}>✓</div>
+									)}
 								</button>
 							))}
 						</div>
 
 						{currentSectionData.selectedItems.length > 0 && (
-							<div className={styles.selectedSummary}>
-								<h4>Elementos Seleccionados ({currentSectionData.selectedItems.length}):</h4>
-								<div className={styles.selectedList}>
-									{currentSectionData.selectedItems.map((id) => {
-										const item = getCurrentItems().find((item) => item.id === id);
-										return (
-											<span key={id} className={styles.selectedTag}>
-												{id}. {item.text}
-											</span>
-										);
-									})}
-								</div>
+							<div className={`${styles.selectedSummary} ${isSelectedCollapsed ? styles.collapsed : ''}`}>
+								<h4>
+									Elementos Seleccionados 
+									<span className={styles.selectedCount}>
+										{currentSectionData.selectedItems.length}
+									</span>
+								</h4>
+								{!isSelectedCollapsed && (
+									<div className={styles.selectedList}>
+										{currentSectionData.selectedItems.map((id) => {
+											const item = getCurrentItems().find((item) => item.id === id);
+											return (
+												<span 
+													key={id} 
+													className={styles.selectedTag}
+													onClick={() => handleRemoveSelectedItem(id)}
+													title="Click para deseleccionar"
+												>
+													{id}. {item?.text || 'Elemento no encontrado'}
+												</span>
+											);
+										})}
+									</div>
+								)}
 							</div>
 						)}
 					</div>
