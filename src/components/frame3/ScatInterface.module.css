@@ -369,6 +369,16 @@
   font-weight: 600;
 }
 
+.readOnlyBadge {
+  background-color: #6b7280 !important;
+  color: white !important;
+}
+
+.readOnlyProgress {
+  color: #6b7280;
+  font-weight: 500;
+}
+
 @media (max-width: 1024px) {
   .headerContent {
     flex-direction: column;

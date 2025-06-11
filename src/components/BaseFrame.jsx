@@ -36,16 +36,12 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 				const savedProjects = localStorage.getItem('scatProjects');
 				const savedDeletedProjects = localStorage.getItem('scatDeletedProjects');
 				
-				console.log('Cargando proyectos desde localStorage...');
-				console.log('savedProjects:', savedProjects);
-				
 				// Solo cargar proyectos reales del usuario
 				let loadedProjects = [];
 				if (savedProjects) {
 					const parsedProjects = JSON.parse(savedProjects);
 					// Limpiar proyectos simulados si existen
 					loadedProjects = cleanSimulatedProjects(parsedProjects);
-					console.log('Proyectos cargados después de limpiar:', loadedProjects);
 				}
 				
 				setProjects(loadedProjects);
@@ -75,9 +71,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	// Guardar proyectos en localStorage cuando cambien (solo después de la inicialización)
 	useEffect(() => {
 		if (isInitialized) {
-			console.log('Guardando proyectos en localStorage:', projects);
 			localStorage.setItem('scatProjects', JSON.stringify(projects));
-			console.log('Proyectos guardados en localStorage:', projects.length);
 		}
 	}, [projects, isInitialized]);
 
@@ -90,9 +84,6 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 
 	// Función para manejar la continuación al SCAT
 	const handleContinue = (formData) => {
-		console.log("handleContinue called with:", formData);
-		console.log("onNavigateToScat function:", onNavigateToScat);
-		
 		setIsModalOpen(false);
 		
 		// Verificar que la función existe antes de llamarla
@@ -114,8 +105,6 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		setDisplayedProjects(newDisplayedProjects);
 		setCurrentPage(page);
 		setHasMore(endIndex < projects.length);
-		
-		console.log('Proyectos mostrados actualizados:', newDisplayedProjects.length);
 	}, [projects, currentPage, projectsPerPage]);
 
 	// Initialize displayed projects
@@ -126,24 +115,13 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	}, [projects, loadMoreProjects, isInitialized]);
 
 	const handleCreateProject = (newProject) => {
-		console.log('=== CREANDO NUEVO PROYECTO EN BASEFRAME ===');
-		console.log('Proyecto recibido:', newProject);
-		console.log('Proyectos actuales antes de agregar:', projects.length);
-		
 		setProjects((prev) => {
 			const updatedProjects = [newProject, ...prev];
-			console.log('Proyectos después de agregar:', updatedProjects.length);
-			console.log('Lista actualizada:', updatedProjects.map(p => ({ id: p.id, name: p.name })));
 			return updatedProjects;
 		});
-		
-		console.log('=== FIN CREACIÓN PROYECTO EN BASEFRAME ===');
 	};
 
 	const handleEditProject = (project) => {
-		console.log('=== EDITANDO PROYECTO COMPLETO ===');
-		console.log('Proyecto a editar:', project);
-		
 		// Cargar todos los datos del proyecto en el contexto y navegar al SCAT en modo edición
 		if (project.formData && typeof onNavigateToScat === 'function') {
 			// Marcar que estamos en modo edición
@@ -154,41 +132,16 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 				projectData: project
 			};
 			
-			console.log('Navegando al SCAT en modo edición con datos:', editData);
 			onNavigateToScat(editData);
 		} else {
 			alert('No se encontraron datos del proyecto para editar.');
 		}
 	};
 
-	const handleViewProject = (project) => {
-		console.log('Viendo/Continuando proyecto:', project);
-		
-		// Cargar los datos del proyecto en el contexto y navegar al SCAT
-		if (project.formData && typeof onNavigateToScat === 'function') {
-			const viewData = {
-				...project.formData,
-				isViewing: true,
-				projectId: project.id,
-				projectData: project
-			};
-			
-			console.log('Navegando al SCAT en modo visualización con datos:', viewData);
-			onNavigateToScat(viewData);
-		} else {
-			alert('No se encontraron datos del proyecto para continuar en SCAT.');
-		}
-	};
-
 	const handleUpdateProject = (updatedProject) => {
-		console.log('=== ACTUALIZANDO PROYECTO DESDE SCAT ===');
-		console.log('Proyecto actualizado:', updatedProject);
-		
 		setProjects((prev) => 
 			prev.map(p => p.id === updatedProject.id ? updatedProject : p)
 		);
-		
-		console.log('Proyecto actualizado en la lista');
 	};
 
 	const handleDeleteProject = (projectId) => {
@@ -205,8 +158,6 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 			
 			// Remover de proyectos activos
 			setProjects(prev => prev.filter(p => p.id !== projectId));
-			
-			console.log('Proyecto movido a papelera:', projectToDelete.name);
 		}
 	};
 
@@ -219,15 +170,12 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		
 		// Remover de papelera
 		setDeletedProjects(prev => prev.filter(p => p.id !== project.id));
-		
-		console.log('Proyecto restaurado:', project.name);
 	};
 
 	const handlePermanentDelete = (projectId) => {
 		const confirmed = window.confirm('¿Estás seguro de que quieres eliminar permanentemente este proyecto? Esta acción no se puede deshacer.');
 		if (confirmed) {
 			setDeletedProjects(prev => prev.filter(p => p.id !== projectId));
-			console.log('Proyecto eliminado permanentemente');
 		}
 	};
 
@@ -235,16 +183,10 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		const confirmed = window.confirm('¿Estás seguro de que quieres vaciar la papelera? Esta acción no se puede deshacer.');
 		if (confirmed) {
 			setDeletedProjects([]);
-			console.log('Papelera vaciada');
 		}
 	};
 
 	const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
-	// Debug: Log props on component mount
-	useEffect(() => {
-		console.log("BaseFrame mounted with props:", { onNavigateToScat, onNavigateToProjects });
-	}, [onNavigateToScat, onNavigateToProjects]);
 
 	// Mostrar loading mientras se inicializa
 	if (!isInitialized) {
@@ -256,12 +198,6 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 			</div>
 		);
 	}
-
-	console.log('Renderizando BaseFrame con:', {
-		totalProjects: projects.length,
-		displayedProjects: displayedProjects.length,
-		deletedProjects: deletedProjects.length
-	});
 
 	return (
 		<div className={styles.container}>
@@ -312,7 +248,6 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 											isHighlighted={index === 0}
 											onDelete={() => handleDeleteProject(project.id)}
 											onEdit={() => handleEditProject(project)}
-											onView={() => handleViewProject(project)}
 										/>
 									))}
 								</div>

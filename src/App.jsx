@@ -14,7 +14,6 @@ function App() {
 	const [editingProject, setEditingProject] = useState(null);
 
 	const handleNavigateToScat = (data) => {
-		console.log("Navigating to SCAT with data:", data);
 		setFormData(data);
 		
 		// Si estamos editando, guardar la referencia del proyecto
@@ -28,8 +27,6 @@ function App() {
 	};
 
 	const handleNavigateToBase = () => {
-		console.log("Navigating to base");
-		
 		// Limpiar estados al volver al menú principal
 		setFormData(null);
 		setEditingProject(null);
@@ -37,8 +34,6 @@ function App() {
 	};
 
 	const handleNavigateToProjects = () => {
-		console.log("Navigating to projects");
-		
 		// Limpiar estados al navegar a proyectos
 		setFormData(null);
 		setEditingProject(null);
@@ -46,13 +41,10 @@ function App() {
 	};
 
 	const handleNavigateToDescription = () => {
-		console.log("Navigating to description");
 		setCurrentFrame("description");
 	};
 
 	const handleNavigateToHome = () => {
-		console.log("Navigating to home");
-		
 		// Resetear todo y volver al dashboard principal
 		setFormData(null);
 		setEditingProject(null);
@@ -74,8 +66,6 @@ function App() {
 	};
 
 	const handleSaveProject = (projectData) => {
-		console.log("Saving project from SCAT:", projectData);
-		
 		if (editingProject) {
 			// Estamos editando un proyecto existente
 			const updatedProject = {
@@ -94,12 +84,8 @@ function App() {
 				);
 				localStorage.setItem('scatProjects', JSON.stringify(updatedProjects));
 			}
-			
-			console.log("Project updated:", updatedProject);
 		}
 	};
-
-	console.log("Current frame:", currentFrame);
 
 	return (
 		<ScatDataProvider>

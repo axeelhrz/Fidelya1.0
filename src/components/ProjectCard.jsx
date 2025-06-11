@@ -1,4 +1,4 @@
-import { FileText, Edit, FileDown, Trash2 } from "lucide-react";
+import { Edit, FileDown, Trash2 } from "lucide-react";
 import styles from "./ProjectCard.module.css";
 import pdfService from "../services/pdfService";
 
@@ -83,13 +83,6 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete, 
 		}
 	};
 
-	const handleView = (e) => {
-		e.stopPropagation();
-		if (onView) {
-			onView(project);
-		}
-	};
-
 	const handleEdit = (e) => {
 		e.stopPropagation();
 		if (onEdit) {
@@ -120,13 +113,6 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete, 
 			</div>
 
 			<div className={styles.actions}>
-				<button 
-					className={styles.actionButton} 
-					onClick={handleView}
-					title="Ver/Continuar análisis SCAT"
-				>
-					<FileText size={14} />
-				</button>
 				<button 
 					className={styles.actionButton} 
 					onClick={handleEdit}
