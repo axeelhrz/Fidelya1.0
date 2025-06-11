@@ -52,7 +52,8 @@ const initialState = {
     selectedItems: [],
     detailedData: {},
     globalImage: null,
-    globalObservation: ''
+    globalObservation: '',
+    medidasCorrectivas: '' // Nuevo campo para medidas correctivas
   },
   // Agregar estado para tracking de edición
   isEditing: false,

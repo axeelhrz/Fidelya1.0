@@ -13,6 +13,8 @@ function NecesidadesControlContent() {
 		image: null,
 		comments: ""
 	});
+	const [showCorrectiveModal, setShowCorrectiveModal] = useState(false);
+	const [correctiveText, setCorrectiveText] = useState("");
 	const fileInputRef = useRef(null);
 
 	// Mapeo de Causas Básicas a NAC
@@ -121,6 +123,13 @@ function NecesidadesControlContent() {
 			]
 		}
 	];
+
+	// Cargar medidas correctivas existentes al inicializar
+	useState(() => {
+		if (necesidadesControlData.medidasCorrectivas) {
+			setCorrectiveText(necesidadesControlData.medidasCorrectivas);
+		}
+	}, []);
 
 	// Función para obtener las categorías filtradas según las selecciones de Causas Básicas
 	const getFilteredCategories = useMemo(() => {
@@ -289,8 +298,10 @@ function NecesidadesControlContent() {
 			selectedItems: [],
 			detailedData: {},
 			globalImage: null,
-			globalObservation: ''
+			globalObservation: '',
+			medidasCorrectivas: ''
 		});
+		setCorrectiveText("");
 	};
 
 	const handleGlobalObservationChange = (e) => {
@@ -298,6 +309,28 @@ function NecesidadesControlContent() {
 			...necesidadesControlData,
 			globalObservation: e.target.value
 		});
+	};
+
+	// Funciones para el modal de medidas correctivas
+	const handleOpenCorrectiveModal = () => {
+		setCorrectiveText(necesidadesControlData.medidasCorrectivas || "");
+		setShowCorrectiveModal(true);
+	};
+
+	const handleCloseCorrectiveModal = () => {
+		setShowCorrectiveModal(false);
+	};
+
+	const handleSaveCorrectiveMeasures = () => {
+		setNecesidadesControlData({
+			...necesidadesControlData,
+			medidasCorrectivas: correctiveText
+		});
+		setShowCorrectiveModal(false);
+	};
+
+	const handleCorrectiveTextChange = (e) => {
+		setCorrectiveText(e.target.value);
 	};
 
 	const getSelectedCount = () => {
@@ -412,6 +445,35 @@ function NecesidadesControlContent() {
 					placeholder="Escriba observaciones generales sobre las necesidades de control identificadas..."
 					rows={4}
 				></textarea>
+			</div>
+
+			{/* Botón de Medidas Correctivas */}
+			<div className={styles.correctiveMeasuresSection}>
+				<button 
+					className={styles.correctiveMeasuresButton}
+					onClick={handleOpenCorrectiveModal}
+				>
+					<div className={styles.correctiveMeasuresIcon}>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M12 20h9"></path>
+							<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+						</svg>
+					</div>
+					<span>Aplicar Medidas Correctivas</span>
+					{necesidadesControlData.medidasCorrectivas && (
+						<div className={styles.correctiveMeasuresIndicator}>
+							✓ Completado
+						</div>
+					)}
+				</button>
 			</div>
 
 			<div className={styles.footer}>
@@ -574,6 +636,59 @@ function NecesidadesControlContent() {
 								onClick={handleModalConfirm}
 							>
 								Confirmar
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Modal para Medidas Correctivas */}
+			{showCorrectiveModal && (
+				<div className={styles.modalOverlay}>
+					<div className={styles.correctiveModalContent}>
+						<div className={styles.modalHeader}>
+							<h3 className={styles.modalTitle}>
+								Medidas Correctivas
+							</h3>
+							<button 
+								className={styles.modalCloseBtn}
+								onClick={handleCloseCorrectiveModal}
+							>
+								×
+							</button>
+						</div>
+						
+						<div className={styles.correctiveModalBody}>
+							<div className={styles.correctiveInstructions}>
+								<p>Describa las medidas correctivas que se implementarán para abordar las necesidades de control identificadas:</p>
+							</div>
+							
+							<textarea
+								className={styles.correctiveTextarea}
+								value={correctiveText}
+								onChange={handleCorrectiveTextChange}
+								placeholder="Escriba aquí las medidas correctivas detalladas, incluyendo:
+- Acciones específicas a implementar
+- Responsables de cada acción
+- Plazos de implementación
+- Recursos necesarios
+- Indicadores de seguimiento"
+								rows={15}
+							></textarea>
+						</div>
+						
+						<div className={styles.modalFooter}>
+							<button 
+								className={styles.modalCancelBtn}
+								onClick={handleCloseCorrectiveModal}
+							>
+								Cancelar
+							</button>
+							<button 
+								className={styles.modalConfirmBtn}
+								onClick={handleSaveCorrectiveMeasures}
+							>
+								Guardar Medidas Correctivas
 							</button>
 						</div>
 					</div>
