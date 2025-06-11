@@ -654,25 +654,44 @@
 .contentBody::-webkit-scrollbar-track,
 .modalBody::-webkit-scrollbar-track {
   background: #374151;
-  border-radius
+  border-radius: 5px;
+}
+
+.itemsGrid::-webkit-scrollbar-thumb,
+.selectedSummary::-webkit-scrollbar-thumb,
+.rightPanel::-webkit-scrollbar-thumb,
+.contentBody::-webkit-scrollbar-thumb,
+.modalBody::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 5px;
+}
+
+.itemsGrid::-webkit-scrollbar-thumb:hover,
+.selectedSummary::-webkit-scrollbar-thumb:hover,
+.rightPanel::-webkit-scrollbar-thumb:hover,
+.contentBody::-webkit-scrollbar-thumb:hover,
+.modalBody::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .sectionSelector {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 1.5rem;
   }
   
   .sectionCard {
-    padding: 1.5rem;
+    padding: 2rem;
     flex-direction: column;
     text-align: center;
+    min-height: 120px;
   }
   
   .sectionNumber {
-    width: 3rem;
-    height: 3rem;
-    font-size: 1.5rem;
+    width: 4rem;
+    height: 4rem;
+    font-size: 2rem;
   }
   
   .itemsGrid {
@@ -680,14 +699,14 @@
   }
   
   .contentWrapper {
-    gap: 1rem;
+    gap: 1.5rem;
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
   }
   
   .rightPanel {
     padding-left: 0;
-    max-height: 400px;
+    max-height: 500px;
   }
   
   .backButton {
@@ -701,11 +720,11 @@
   }
 
   .detailView {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .contentBody {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .modalContent {
@@ -715,15 +734,15 @@
   }
 
   .modalHeader {
-    padding: 1rem;
+    padding: 1.25rem;
   }
 
   .modalBody {
-    padding: 1rem;
+    padding: 1.25rem;
   }
 
   .modalFooter {
-    padding: 1rem;
+    padding: 1.25rem;
     flex-direction: column;
   }
 
