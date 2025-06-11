@@ -95,8 +95,10 @@ function ScatInterface({ onNavigateToBase }) {
 	};
 
 	const handleShowGrid = () => {
-		// Implementar vista de cuadrícula o resumen
-		console.log("Mostrando vista de cuadrícula...");
+		// Navegar de vuelta a la sección de proyectos
+		if (onNavigateToBase) {
+			onNavigateToBase();
+		}
 	};
 
 	const ActiveComponent =
@@ -192,7 +194,7 @@ function ScatInterface({ onNavigateToBase }) {
 				<button 
 					className={`${styles.iconButton} ${styles.darkButton}`}
 					onClick={handleShowGrid}
-					title="Vista de cuadrícula"
+					title="Ver proyectos"
 				>
 					<GridIcon />
 				</button>
