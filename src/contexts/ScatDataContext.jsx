@@ -53,7 +53,10 @@ const initialState = {
     detailedData: {},
     globalImage: null,
     globalObservation: ''
-  }
+  },
+  // Agregar estado para tracking de edición
+  isEditing: false,
+  editingProjectId: null
 };
 
 // Reducer para manejar las acciones
@@ -107,11 +110,25 @@ function scatDataReducer(state, action) {
         necesidadesControlData: { ...state.necesidadesControlData, ...action.payload }
       };
     
+    case ACTIONS.SET_EDITING_STATE:
+      return {
+        ...state,
+        isEditing: action.payload.isEditing,
+        editingProjectId: action.payload.projectId || null
+      };
+    
     case ACTIONS.LOAD_DATA:
       return action.payload;
     
     case ACTIONS.RESET_DATA:
       return initialState;
+    
+    case ACTIONS.CLEAR_EDITING_DATA:
+      return {
+        ...initialState,
+        // Mantener solo los datos básicos si no estamos editando
+        projectData: action.keepProjectData ? state.projectData : initialState.projectData
+      };
     
     default:
       return state;
@@ -122,22 +139,28 @@ function scatDataReducer(state, action) {
 export function ScatDataProvider({ children }) {
   const [state, dispatch] = useReducer(scatDataReducer, initialState);
 
-  // Cargar datos del localStorage al inicializar
+  // Cargar datos del localStorage al inicializar (solo si no estamos editando)
   useEffect(() => {
     const savedData = localStorage.getItem('scatData');
-    if (savedData) {
+    if (savedData && !state.isEditing) {
       try {
         const parsedData = JSON.parse(savedData);
-        dispatch({ type: ACTIONS.LOAD_DATA, payload: parsedData });
+        // Solo cargar si no hay un proyecto específico siendo editado
+        if (!parsedData.isEditing) {
+          dispatch({ type: ACTIONS.LOAD_DATA, payload: parsedData });
+        }
       } catch (error) {
         console.error('Error loading saved data:', error);
       }
     }
   }, []);
 
-  // Guardar datos en localStorage cuando el estado cambie
+  // Guardar datos en localStorage cuando el estado cambie (pero no durante edición)
   useEffect(() => {
-    localStorage.setItem('scatData', JSON.stringify(state));
+    // Solo guardar en localStorage si no estamos editando un proyecto específico
+    if (!state.isEditing) {
+      localStorage.setItem('scatData', JSON.stringify(state));
+    }
   }, [state]);
 
   // Funciones para actualizar datos
@@ -173,9 +196,67 @@ export function ScatDataProvider({ children }) {
     dispatch({ type: ACTIONS.SET_NECESIDADES_CONTROL_DATA, payload: data });
   };
 
+  const setEditingState = (isEditing, projectId = null) => {
+    dispatch({ 
+      type: ACTIONS.SET_EDITING_STATE, 
+      payload: { isEditing, projectId } 
+    });
+  };
+
   const resetAllData = () => {
     dispatch({ type: ACTIONS.RESET_DATA });
     localStorage.removeItem('scatData');
+  };
+
+  const clearEditingData = (keepProjectData = false) => {
+    dispatch({ type: ACTIONS.CLEAR_EDITING_DATA, keepProjectData });
+    // Limpiar localStorage para evitar conflictos
+    localStorage.removeItem('scatData');
+  };
+
+  // Función para cargar datos completos de un proyecto (para edición)
+  const loadProjectForEditing = (projectData) => {
+    console.log('=== CARGANDO PROYECTO PARA EDICIÓN ===');
+    console.log('Datos del proyecto:', projectData);
+
+    // Marcar como modo edición
+    setEditingState(true, projectData.id);
+
+    // Cargar datos básicos del proyecto
+    if (projectData.formData) {
+      setProjectData(projectData.formData);
+    }
+
+    // Cargar datos SCAT si existen
+    if (projectData.scatData) {
+      if (projectData.scatData.evaluacion) {
+        setEvaluacionData(projectData.scatData.evaluacion);
+      }
+      if (projectData.scatData.contacto) {
+        setContactoData(projectData.scatData.contacto);
+      }
+      if (projectData.scatData.causasInmediatas) {
+        if (projectData.scatData.causasInmediatas.actos) {
+          setCausasInmediatasData('actos', projectData.scatData.causasInmediatas.actos);
+        }
+        if (projectData.scatData.causasInmediatas.condiciones) {
+          setCausasInmediatasData('condiciones', projectData.scatData.causasInmediatas.condiciones);
+        }
+      }
+      if (projectData.scatData.causasBasicas) {
+        if (projectData.scatData.causasBasicas.personales) {
+          setCausasBasicasData('personales', projectData.scatData.causasBasicas.personales);
+        }
+        if (projectData.scatData.causasBasicas.laborales) {
+          setCausasBasicasData('laborales', projectData.scatData.causasBasicas.laborales);
+        }
+      }
+      if (projectData.scatData.necesidadesControl) {
+        setNecesidadesControlData(projectData.scatData.necesidadesControl);
+      }
+    }
+
+    console.log('=== PROYECTO CARGADO PARA EDICIÓN ===');
   };
 
   // Función para obtener un resumen completo de los datos
@@ -217,7 +298,10 @@ export function ScatDataProvider({ children }) {
     setCausasInmediatasData,
     setCausasBasicasData,
     setNecesidadesControlData,
+    setEditingState,
     resetAllData,
+    clearEditingData,
+    loadProjectForEditing,
     
     // Funciones de utilidad
     getCompleteSummary,
@@ -230,4 +314,3 @@ export function ScatDataProvider({ children }) {
     </ScatDataContext.Provider>
   );
 }
-

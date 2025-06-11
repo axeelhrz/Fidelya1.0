@@ -29,12 +29,19 @@ function App() {
 
 	const handleNavigateToBase = () => {
 		console.log("Navigating to base");
-		setCurrentFrame("base");
+		
+		// Limpiar estados al volver al menú principal
+		setFormData(null);
 		setEditingProject(null);
+		setCurrentFrame("base");
 	};
 
 	const handleNavigateToProjects = () => {
 		console.log("Navigating to projects");
+		
+		// Limpiar estados al navegar a proyectos
+		setFormData(null);
+		setEditingProject(null);
 		setCurrentFrame("projects");
 	};
 
@@ -45,18 +52,25 @@ function App() {
 
 	const handleNavigateToHome = () => {
 		console.log("Navigating to home");
+		
 		// Resetear todo y volver al dashboard principal
 		setFormData(null);
 		setEditingProject(null);
 		setCurrentFrame("base");
-		// Aquí podrías agregar lógica adicional como limpiar localStorage, etc.
+		
+		// Limpiar datos temporales del localStorage
 		localStorage.removeItem('scatProgress');
+		localStorage.removeItem('scatData');
 	};
 
 	const handleStartNew = () => {
+		// Limpiar todo para empezar nuevo proyecto
 		setFormData(null);
 		setEditingProject(null);
 		setCurrentFrame("base");
+		
+		// Limpiar datos temporales
+		localStorage.removeItem('scatData');
 	};
 
 	const handleSaveProject = (projectData) => {

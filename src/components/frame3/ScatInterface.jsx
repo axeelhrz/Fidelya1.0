@@ -58,11 +58,9 @@ function ScatInterface({
 		setProjectData, 
 		hasData, 
 		getCompleteSummary,
-		setEvaluacionData,
-		setContactoData,
-		setCausasInmediatasData,
-		setCausasBasicasData,
-		setNecesidadesControlData
+		setEditingState,
+		clearEditingData,
+		loadProjectForEditing
 	} = useScatData();
 
 	// Cargar datos del proyecto cuando se reciban
@@ -73,66 +71,16 @@ function ScatInterface({
 			console.log('Es edición:', isEditing);
 			console.log('Proyecto en edición:', editingProject);
 
-			// Cargar datos básicos del proyecto
-			setProjectData(formData);
-
-			// Si estamos editando, cargar todos los datos guardados del proyecto
 			if (isEditing && editingProject) {
-				loadProjectData(editingProject);
+				// Modo edición: cargar datos completos del proyecto
+				loadProjectForEditing(editingProject);
+			} else {
+				// Modo nuevo proyecto: solo cargar datos básicos
+				setProjectData(formData);
+				setEditingState(false);
 			}
 		}
-	}, [formData, isEditing, editingProject, setProjectData]);
-
-	const loadProjectData = (project) => {
-		console.log('=== CARGANDO DATOS COMPLETOS DEL PROYECTO ===');
-		console.log('Proyecto completo:', project);
-
-		try {
-			// Cargar datos de evaluación si existen
-			if (project.scatData?.evaluacion) {
-				console.log('Cargando datos de evaluación:', project.scatData.evaluacion);
-				setEvaluacionData(project.scatData.evaluacion);
-			}
-
-			// Cargar datos de contacto si existen
-			if (project.scatData?.contacto) {
-				console.log('Cargando datos de contacto:', project.scatData.contacto);
-				setContactoData(project.scatData.contacto);
-			}
-
-			// Cargar datos de causas inmediatas si existen
-			if (project.scatData?.causasInmediatas) {
-				console.log('Cargando datos de causas inmediatas:', project.scatData.causasInmediatas);
-				if (project.scatData.causasInmediatas.actos) {
-					setCausasInmediatasData('actos', project.scatData.causasInmediatas.actos);
-				}
-				if (project.scatData.causasInmediatas.condiciones) {
-					setCausasInmediatasData('condiciones', project.scatData.causasInmediatas.condiciones);
-				}
-			}
-
-			// Cargar datos de causas básicas si existen
-			if (project.scatData?.causasBasicas) {
-				console.log('Cargando datos de causas básicas:', project.scatData.causasBasicas);
-				if (project.scatData.causasBasicas.personales) {
-					setCausasBasicasData('personales', project.scatData.causasBasicas.personales);
-				}
-				if (project.scatData.causasBasicas.laborales) {
-					setCausasBasicasData('laborales', project.scatData.causasBasicas.laborales);
-				}
-			}
-
-			// Cargar datos de necesidades de control si existen
-			if (project.scatData?.necesidadesControl) {
-				console.log('Cargando datos de necesidades de control:', project.scatData.necesidadesControl);
-				setNecesidadesControlData(project.scatData.necesidadesControl);
-			}
-
-			console.log('=== DATOS CARGADOS EXITOSAMENTE ===');
-		} catch (error) {
-			console.error('Error cargando datos del proyecto:', error);
-		}
-	};
+	}, [formData, isEditing, editingProject, setProjectData, setEditingState, loadProjectForEditing]);
 
 	const handleSectionClick = (sectionId) => {
 		setActiveSection(sectionId);
@@ -170,6 +118,9 @@ function ScatInterface({
 		// Si estamos editando, guardar los cambios antes de salir
 		if (isEditing && editingProject) {
 			handleSaveProgress(true); // true indica que es al salir
+		} else {
+			// Si no estamos editando, limpiar datos del contexto
+			clearEditingData(false);
 		}
 		
 		if (onNavigateToBase) {
@@ -223,6 +174,8 @@ function ScatInterface({
 				}
 
 				if (isExiting) {
+					// Limpiar contexto al salir del modo edición
+					clearEditingData(false);
 					alert("Cambios guardados exitosamente");
 				} else {
 					alert("Progreso guardado exitosamente");
@@ -252,6 +205,9 @@ function ScatInterface({
 		// Si estamos editando, guardar antes de navegar
 		if (isEditing && editingProject) {
 			handleSaveProgress(true);
+		} else {
+			// Si no estamos editando, limpiar datos del contexto
+			clearEditingData(false);
 		}
 		
 		if (onNavigateToProjects) {
