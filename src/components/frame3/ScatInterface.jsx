@@ -66,11 +66,6 @@ function ScatInterface({
 	// Cargar datos del proyecto cuando se reciban
 	useEffect(() => {
 		if (formData) {
-			console.log('=== CARGANDO DATOS EN SCAT INTERFACE ===');
-			console.log('FormData recibido:', formData);
-			console.log('Es edición:', isEditing);
-			console.log('Proyecto en edición:', editingProject);
-
 			if (isEditing && editingProject) {
 				// Modo edición: cargar datos completos del proyecto
 				loadProjectForEditing(editingProject);
@@ -113,11 +108,9 @@ function ScatInterface({
 	};
 
 	const handleBackToMenu = () => {
-		console.log("handleBackToMenu called");
-		
-		// Si estamos editando, guardar los cambios antes de salir
+		// Si estamos editando, guardar los cambios silenciosamente antes de salir
 		if (isEditing && editingProject) {
-			handleSaveProgress(true); // true indica que es al salir
+			handleSaveProgress(true, true); // true para isExiting, true para silent
 		} else {
 			// Si no estamos editando, limpiar datos del contexto
 			clearEditingData(false);
@@ -128,16 +121,10 @@ function ScatInterface({
 		}
 	};
 
-	const handleSaveProgress = (isExiting = false) => {
-		console.log('=== GUARDANDO PROGRESO ===');
-		console.log('Es al salir:', isExiting);
-		console.log('Es edición:', isEditing);
-		console.log('Proyecto en edición:', editingProject);
-
+	const handleSaveProgress = (isExiting = false, silent = false) => {
 		try {
 			// Obtener todos los datos actuales del contexto
 			const completeSummary = getCompleteSummary();
-			console.log('Resumen completo de datos:', completeSummary);
 
 			if (isEditing && editingProject) {
 				// Estamos editando un proyecto existente
@@ -155,8 +142,6 @@ function ScatInterface({
 					version: (editingProject.version || 1) + 1
 				};
 
-				console.log('Proyecto actualizado:', updatedProject);
-
 				// Actualizar en localStorage
 				const savedProjects = localStorage.getItem('scatProjects');
 				if (savedProjects) {
@@ -165,7 +150,6 @@ function ScatInterface({
 						p.id === editingProject.id ? updatedProject : p
 					);
 					localStorage.setItem('scatProjects', JSON.stringify(updatedProjects));
-					console.log('Proyecto guardado en localStorage');
 				}
 
 				// Llamar callback si existe
@@ -176,20 +160,26 @@ function ScatInterface({
 				if (isExiting) {
 					// Limpiar contexto al salir del modo edición
 					clearEditingData(false);
-					alert("Cambios guardados exitosamente");
+					// Solo mostrar mensaje si no es silencioso
+					if (!silent) {
+						alert("Cambios guardados exitosamente");
+					}
 				} else {
-					alert("Progreso guardado exitosamente");
+					if (!silent) {
+						alert("Progreso guardado exitosamente");
+					}
 				}
 			} else {
 				// Nuevo proyecto o modo visualización
-				console.log("Progreso guardado automáticamente en contexto");
-				if (!isExiting) {
+				if (!isExiting && !silent) {
 					alert("Progreso guardado exitosamente");
 				}
 			}
 		} catch (error) {
 			console.error('Error guardando progreso:', error);
-			alert("Error al guardar el progreso");
+			if (!silent) {
+				alert("Error al guardar el progreso");
+			}
 		}
 	};
 
@@ -199,22 +189,16 @@ function ScatInterface({
 	};
 
 	const handleShowGrid = () => {
-		console.log("handleShowGrid called");
-		console.log("onNavigateToProjects function:", onNavigateToProjects);
-		
 		// Si estamos editando, guardar antes de navegar
 		if (isEditing && editingProject) {
-			handleSaveProgress(true);
+			handleSaveProgress(true, true); // Guardar silenciosamente
 		} else {
 			// Si no estamos editando, limpiar datos del contexto
 			clearEditingData(false);
 		}
 		
 		if (onNavigateToProjects) {
-			console.log("Calling onNavigateToProjects");
 			onNavigateToProjects();
-		} else {
-			console.error("onNavigateToProjects is not available");
 		}
 	};
 
@@ -222,7 +206,7 @@ function ScatInterface({
 		if (hasData()) {
 			// Si estamos editando, guardar antes de finalizar
 			if (isEditing && editingProject) {
-				handleSaveProgress(true);
+				handleSaveProgress(true, true); // Guardar silenciosamente
 			}
 			
 			if (onNavigateToDescription) {

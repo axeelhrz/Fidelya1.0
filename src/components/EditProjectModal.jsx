@@ -86,8 +86,6 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 				version: (project.version || 1) + 1
 			};
 
-			console.log('Guardando proyecto editado:', updatedProject);
-
 			if (onSave) {
 				onSave(updatedProject);
 			}
