@@ -124,13 +124,13 @@ function CausasInmediatasContent() {
 	};
 
 	const getSectionTitle = () => {
-		return activeSection === 'actos' ? 'ACTOS SUBESTÁNDAR / INSEGUROS' : 'CONDICIONES SUBESTÁNDAR / INSEGURAS';
+		return activeSection === 'actos' ? 'ACTOS SUBESTÁNDAR' : 'CONDICIONES SUBESTÁNDAR';
 	};
 
 	const getSectionSubtitle = () => {
 		return activeSection === 'actos' 
-			? 'VIOLACIÓN DE UN PROCEDIMIENTO ACEPTADO COMO SEGURO'
-			: 'CONDICIÓN O CIRCUNSTANCIA FÍSICA PELIGROSA';
+			? 'Violación de un procedimiento aceptado como seguro'
+			: 'Condición o circunstancia física peligrosa';
 	};
 
 	const getCurrentSectionData = () => {
@@ -154,61 +154,73 @@ function CausasInmediatasContent() {
 
 	if (!activeSection) {
 		return (
-			<div className={styles.contentCard}>
-				<div className={styles.contentHeader}>
-					<h2 className={styles.contentTitle}>CAUSAS INMEDIATAS O DIRECTAS</h2>
-					<p className={styles.contentSubtitle}>
-						Técnica de Análisis Sistemático de las Causas
-					</p>
+			<div className={styles.container}>
+				<div className={styles.header}>
+					<div className={styles.headerContent}>
+						<h1 className={styles.title}>Causas Inmediatas</h1>
+						<p className={styles.subtitle}>
+							Identifique las causas directas del incidente
+						</p>
+					</div>
 				</div>
 
-				<div className={styles.contentBody}>
-					<p className={styles.description}>
-						Seleccione el tipo de causa inmediata que desea analizar:
-					</p>
-
-					<div className={styles.sectionSelector}>
-						<button
-							className={`${styles.sectionCard} ${
-								causasInmediatasData.actos.selectedItems.length > 0 ? styles.hasData : ''
-							}`}
-							onClick={() => handleSectionSelect('actos')}
-						>
-							<div className={styles.sectionNumber}>1</div>
-							<div className={styles.sectionContent}>
-								<h3 className={styles.sectionTitle}>ACTOS SUBESTÁNDAR / INSEGUROS</h3>
-								<p className={styles.sectionDescription}>
-									Violación de un procedimiento aceptado como seguro
-								</p>
-								<p className={styles.sectionRange}>Opciones 1-15</p>
+				<div className={styles.sectionGrid}>
+					<div
+						className={`${styles.sectionCard} ${
+							causasInmediatasData.actos.selectedItems.length > 0 ? styles.hasData : ''
+						}`}
+						onClick={() => handleSectionSelect('actos')}
+					>
+						<div className={styles.cardIcon}>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+								<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+								<circle cx="8.5" cy="7" r="4"/>
+								<path d="M20 8v6M23 11h-6"/>
+							</svg>
+						</div>
+						<div className={styles.cardContent}>
+							<h3 className={styles.cardTitle}>Actos Subestándar</h3>
+							<p className={styles.cardDescription}>
+								Violaciones de procedimientos seguros
+							</p>
+							<div className={styles.cardMeta}>
+								<span className={styles.itemCount}>15 elementos</span>
 								{causasInmediatasData.actos.selectedItems.length > 0 && (
-									<p className={styles.dataIndicator}>
-										{causasInmediatasData.actos.selectedItems.length} elemento(s) seleccionado(s)
-									</p>
+									<span className={styles.selectedCount}>
+										{causasInmediatasData.actos.selectedItems.length} seleccionados
+									</span>
 								)}
 							</div>
-						</button>
+						</div>
+					</div>
 
-						<button
-							className={`${styles.sectionCard} ${
-								causasInmediatasData.condiciones.selectedItems.length > 0 ? styles.hasData : ''
-							}`}
-							onClick={() => handleSectionSelect('condiciones')}
-						>
-							<div className={styles.sectionNumber}>2</div>
-							<div className={styles.sectionContent}>
-								<h3 className={styles.sectionTitle}>CONDICIONES SUBESTÁNDAR / INSEGURAS</h3>
-								<p className={styles.sectionDescription}>
-									Condición o circunstancia física peligrosa
-								</p>
-								<p className={styles.sectionRange}>Opciones 16-28</p>
+					<div
+						className={`${styles.sectionCard} ${
+							causasInmediatasData.condiciones.selectedItems.length > 0 ? styles.hasData : ''
+						}`}
+						onClick={() => handleSectionSelect('condiciones')}
+					>
+						<div className={styles.cardIcon}>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+								<path d="M12 2L2 7l10 5 10-5-10-5z"/>
+								<path d="M2 17l10 5 10-5"/>
+								<path d="M2 12l10 5 10-5"/>
+							</svg>
+						</div>
+						<div className={styles.cardContent}>
+							<h3 className={styles.cardTitle}>Condiciones Subestándar</h3>
+							<p className={styles.cardDescription}>
+								Circunstancias físicas peligrosas
+							</p>
+							<div className={styles.cardMeta}>
+								<span className={styles.itemCount}>13 elementos</span>
 								{causasInmediatasData.condiciones.selectedItems.length > 0 && (
-									<p className={styles.dataIndicator}>
-										{causasInmediatasData.condiciones.selectedItems.length} elemento(s) seleccionado(s)
-									</p>
+									<span className={styles.selectedCount}>
+										{causasInmediatasData.condiciones.selectedItems.length} seleccionados
+									</span>
 								)}
 							</div>
-						</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -218,44 +230,31 @@ function CausasInmediatasContent() {
 	const currentSectionData = getCurrentSectionData();
 
 	return (
-		<div className={styles.contentCard}>
-			<div className={styles.contentHeader}>
+		<div className={styles.container}>
+			<div className={styles.header}>
 				<button 
 					className={styles.backButton}
 					onClick={() => setActiveSection(null)}
 				>
-					← Volver
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+						<path d="M19 12H5M12 19l-7-7 7-7"/>
+					</svg>
+					Volver
 				</button>
-				<h2 className={styles.contentTitle}>{getSectionTitle()}</h2>
-				<p className={styles.contentSubtitle}>{getSectionSubtitle()}</p>
+				<div className={styles.headerContent}>
+					<h1 className={styles.title}>{getSectionTitle()}</h1>
+					<p className={styles.subtitle}>{getSectionSubtitle()}</p>
+				</div>
 			</div>
 
-			<div className={styles.detailView}>
-				<div className={styles.header}>
-					<h3>Seleccionar Elementos</h3>
-					<div className={styles.headerActions}>
-						{currentSectionData.selectedItems.length > 0 && (
-							<button
-								className={styles.toggleSelectedButton}
-								onClick={toggleSelectedCollapse}
-							>
-								{isSelectedCollapsed ? '👁️ Mostrar' : '👁️‍🗨️ Ocultar'} Selecciones
-							</button>
-						)}
-						<button
-							className={styles.clearButton}
-							onClick={clearAllSelections}
-							disabled={currentSectionData.selectedItems.length === 0}
-						>
-							Limpiar Selección
-						</button>
-					</div>
-				</div>
-
-				<div className={styles.contentWrapper}>
-					<div className={styles.itemsGridContainer}>
-						{/* Barra de búsqueda */}
-						<div className={styles.searchSection}>
+			<div className={styles.content}>
+				<div className={styles.mainPanel}>
+					<div className={styles.toolbar}>
+						<div className={styles.searchContainer}>
+							<svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+								<circle cx="11" cy="11" r="8"/>
+								<path d="M21 21l-4.35-4.35"/>
+							</svg>
 							<input
 								type="text"
 								placeholder="Buscar elementos..."
@@ -264,140 +263,125 @@ function CausasInmediatasContent() {
 								className={styles.searchInput}
 							/>
 						</div>
-
-						<div className={styles.itemsGrid}>
-							{filteredItems.map((item) => (
+						<div className={styles.toolbarActions}>
+							{currentSectionData.selectedItems.length > 0 && (
 								<button
-									key={item.id}
-									className={`${styles.itemCard} ${
-										currentSectionData.selectedItems.includes(item.id) ? styles.selected : ""
-									}`}
-									onClick={() => handleItemToggle(item.id)}
+									className={styles.toggleButton}
+									onClick={toggleSelectedCollapse}
 								>
-									<div className={styles.itemNumber}>{item.id}</div>
-									<div className={styles.itemContent}>
-										<div className={styles.itemText}>{item.text}</div>
-									</div>
-									{currentSectionData.selectedItems.includes(item.id) && (
-										<div className={styles.selectedIndicator}>✓</div>
-									)}
+									{isSelectedCollapsed ? 'Mostrar' : 'Ocultar'} selecciones
 								</button>
-							))}
+							)}
+							<button
+								className={styles.clearButton}
+								onClick={clearAllSelections}
+								disabled={currentSectionData.selectedItems.length === 0}
+							>
+								Limpiar todo
+							</button>
 						</div>
+					</div>
 
-						{currentSectionData.selectedItems.length > 0 && (
-							<div className={`${styles.selectedSummary} ${isSelectedCollapsed ? styles.collapsed : ''}`}>
-								<h4>
-									Elementos Seleccionados 
-									<span className={styles.selectedCount}>
-										{currentSectionData.selectedItems.length}
-									</span>
-								</h4>
-								{!isSelectedCollapsed && (
-									<div className={styles.selectedList}>
-										{currentSectionData.selectedItems.map((id) => {
-											const item = getCurrentItems().find((item) => item.id === id);
-											return (
-												<span 
-													key={id} 
-													className={styles.selectedTag}
-													onClick={() => handleRemoveSelectedItem(id)}
-													title="Click para deseleccionar"
-												>
-													{id}. {item?.text || 'Elemento no encontrado'}
-												</span>
-											);
-										})}
+					<div className={styles.itemsGrid}>
+						{filteredItems.map((item) => (
+							<div
+								key={item.id}
+								className={`${styles.itemCard} ${
+									currentSectionData.selectedItems.includes(item.id) ? styles.selected : ""
+								}`}
+								onClick={() => handleItemToggle(item.id)}
+							>
+								<div className={styles.itemNumber}>{item.id}</div>
+								<div className={styles.itemText}>{item.text}</div>
+								{currentSectionData.selectedItems.includes(item.id) && (
+									<div className={styles.checkmark}>
+										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+											<polyline points="20,6 9,17 4,12"/>
+										</svg>
 									</div>
 								)}
+							</div>
+						))}
+					</div>
+
+					{currentSectionData.selectedItems.length > 0 && !isSelectedCollapsed && (
+						<div className={styles.selectedSummary}>
+							<div className={styles.summaryHeader}>
+								<h4>Elementos seleccionados</h4>
+								<span className={styles.badge}>
+									{currentSectionData.selectedItems.length}
+								</span>
+							</div>
+							<div className={styles.selectedTags}>
+								{currentSectionData.selectedItems.map((id) => {
+									const item = getCurrentItems().find((item) => item.id === id);
+									return (
+										<span 
+											key={id} 
+											className={styles.tag}
+											onClick={(e) => {
+												e.stopPropagation();
+												handleRemoveSelectedItem(id);
+											}}
+										>
+											{id}. {item?.text || 'Elemento no encontrado'}
+											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+												<line x1="18" y1="6" x2="6" y2="18"/>
+												<line x1="6" y1="6" x2="18" y2="18"/>
+											</svg>
+										</span>
+									);
+								})}
+							</div>
+						</div>
+					)}
+				</div>
+
+				<div className={styles.sidePanel}>
+					<div className={styles.imageUpload}>
+						<h4>Imagen de referencia</h4>
+						<input
+							type="file"
+							ref={fileInputRef}
+							onChange={handleImageUpload}
+							accept="image/*"
+							className={styles.fileInput}
+						/>
+
+						{currentSectionData.image ? (
+							<div className={styles.imagePreview}>
+								<img
+									src={currentSectionData.image}
+									alt="Preview"
+									className={styles.image}
+								/>
+								<button className={styles.removeButton} onClick={removeImage}>
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+										<line x1="18" y1="6" x2="6" y2="18"/>
+										<line x1="6" y1="6" x2="18" y2="18"/>
+									</svg>
+								</button>
+							</div>
+						) : (
+							<div className={styles.uploadArea} onClick={triggerFileInput}>
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+									<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+									<circle cx="12" cy="13" r="4"/>
+								</svg>
+								<p>Agregar imagen</p>
 							</div>
 						)}
 					</div>
 
-					<div className={styles.rightPanel}>
-						<div className={styles.imageSection}>
-							<input
-								type="file"
-								ref={fileInputRef}
-								onChange={handleImageUpload}
-								accept="image/*"
-								className={styles.fileInput}
-							/>
-
-							{currentSectionData.image ? (
-								<div className={styles.imagePreviewContainer}>
-									<img
-										src={currentSectionData.image || "/placeholder.svg"}
-										alt="Preview"
-										className={styles.imagePreview}
-									/>
-									<button className={styles.removeImageBtn} onClick={removeImage}>
-										×
-									</button>
-								</div>
-							) : (
-								<div
-									className={styles.uploadPlaceholder}
-									onClick={triggerFileInput}
-								>
-									<div className={styles.cameraIcon}>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="2"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										>
-											<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-											<circle cx="12" cy="13" r="4"></circle>
-										</svg>
-										<div className={styles.magnifyingGlass}>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-											>
-												<circle cx="11" cy="11" r="8"></circle>
-												<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-											</svg>
-										</div>
-									</div>
-									<p>Haga clic para agregar imagen</p>
-								</div>
-							)}
-						</div>
-
-						<div className={styles.observationSection}>
-							<div className={styles.observationHeader}>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									className={styles.editIcon}
-								>
-									<path d="M12 20h9"></path>
-									<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-								</svg>
-								<span>Observación</span>
-							</div>
-							<textarea
-								className={styles.observationTextarea}
-								value={currentSectionData.observation || ''}
-								onChange={handleObservationChange}
-								placeholder="Escriba sus observaciones aquí..."
-								rows={6}
-							></textarea>
-						</div>
+					<div className={styles.observations}>
+						<h4>Observaciones</h4>
+						<textarea
+							className={styles.textarea}
+							value={currentSectionData.observation || ''}
+							onChange={handleObservationChange}
+							placeholder="Escriba sus observaciones aquí..."
+							rows={6}
+						/>
 					</div>
 				</div>
 			</div>
