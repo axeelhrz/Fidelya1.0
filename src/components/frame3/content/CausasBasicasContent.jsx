@@ -2,12 +2,11 @@
 
 import { useState, useRef } from "react";
 import styles from "./CausasBasicasContent.module.css";
+import { useScatData } from "../../../contexts/ScatDataContext";
 
 function CausasBasicasContent() {
+	const { causasBasicasData, setCausasBasicasData } = useScatData();
 	const [activeSection, setActiveSection] = useState(null);
-	const [selectedItems, setSelectedItems] = useState([]);
-	const [imagePreview, setImagePreview] = useState(null);
-	const [observation, setObservation] = useState("");
 	const [activeModal, setActiveModal] = useState(null);
 	const [modalSelectedItems, setModalSelectedItems] = useState([]);
 	const fileInputRef = useRef(null);
@@ -221,14 +220,13 @@ function CausasBasicasContent() {
 
 	const handleSectionSelect = (section) => {
 		setActiveSection(section);
-		setSelectedItems([]);
-		setImagePreview(null);
-		setObservation("");
 	};
 
 	const handleItemClick = (itemId) => {
 		setActiveModal(itemId);
-		setModalSelectedItems([]);
+		const currentSection = activeSection;
+		const currentData = causasBasicasData[currentSection];
+		setModalSelectedItems(currentData.detailedSelections[itemId] || []);
 	};
 
 	const handleModalItemToggle = (optionIndex) => {
@@ -242,14 +240,39 @@ function CausasBasicasContent() {
 	};
 
 	const handleModalConfirm = () => {
+		const currentSection = activeSection;
+		const currentData = causasBasicasData[currentSection];
+		
 		if (modalSelectedItems.length > 0) {
-			setSelectedItems((prev) => {
-				if (!prev.includes(activeModal)) {
-					return [...prev, activeModal];
-				}
-				return prev;
+			// Agregar el item a selectedItems si no está
+			const newSelectedItems = currentData.selectedItems.includes(activeModal)
+				? currentData.selectedItems
+				: [...currentData.selectedItems, activeModal];
+			
+			// Guardar las selecciones detalladas
+			const newDetailedSelections = {
+				...currentData.detailedSelections,
+				[activeModal]: modalSelectedItems
+			};
+
+			setCausasBasicasData(currentSection, {
+				...currentData,
+				selectedItems: newSelectedItems,
+				detailedSelections: newDetailedSelections
+			});
+		} else {
+			// Si no hay selecciones, remover el item
+			const newSelectedItems = currentData.selectedItems.filter(id => id !== activeModal);
+			const newDetailedSelections = { ...currentData.detailedSelections };
+			delete newDetailedSelections[activeModal];
+
+			setCausasBasicasData(currentSection, {
+				...currentData,
+				selectedItems: newSelectedItems,
+				detailedSelections: newDetailedSelections
 			});
 		}
+		
 		setActiveModal(null);
 		setModalSelectedItems([]);
 	};
@@ -260,7 +283,13 @@ function CausasBasicasContent() {
 	};
 
 	const clearAllSelections = () => {
-		setSelectedItems([]);
+		const currentSection = activeSection;
+		setCausasBasicasData(currentSection, {
+			selectedItems: [],
+			detailedSelections: {},
+			image: null,
+			observation: ''
+		});
 	};
 
 	const handleImageUpload = (e) => {
@@ -268,7 +297,13 @@ function CausasBasicasContent() {
 		if (file) {
 			const reader = new FileReader();
 			reader.onload = (e) => {
-				setImagePreview(e.target.result);
+				const currentSection = activeSection;
+				const currentData = causasBasicasData[currentSection];
+				
+				setCausasBasicasData(currentSection, {
+					...currentData,
+					image: e.target.result
+				});
 			};
 			reader.readAsDataURL(file);
 		}
@@ -279,8 +314,24 @@ function CausasBasicasContent() {
 	};
 
 	const removeImage = () => {
-		setImagePreview(null);
+		const currentSection = activeSection;
+		const currentData = causasBasicasData[currentSection];
+		
+		setCausasBasicasData(currentSection, {
+			...currentData,
+			image: null
+		});
 		fileInputRef.current.value = "";
+	};
+
+	const handleObservationChange = (e) => {
+		const currentSection = activeSection;
+		const currentData = causasBasicasData[currentSection];
+		
+		setCausasBasicasData(currentSection, {
+			...currentData,
+			observation: e.target.value
+		});
 	};
 
 	const getCurrentItems = () => {
@@ -302,6 +353,15 @@ function CausasBasicasContent() {
 		return items.find(item => item.id === activeModal);
 	};
 
+	const getCurrentSectionData = () => {
+		return causasBasicasData[activeSection] || { 
+			selectedItems: [], 
+			detailedSelections: {},
+			image: null, 
+			observation: '' 
+		};
+	};
+
 	if (!activeSection) {
 		return (
 			<div className={styles.contentCard}>
@@ -319,7 +379,9 @@ function CausasBasicasContent() {
 
 					<div className={styles.sectionSelector}>
 						<button
-							className={styles.sectionCard}
+							className={`${styles.sectionCard} ${
+								causasBasicasData.personales.selectedItems.length > 0 ? styles.hasData : ''
+							}`}
 							onClick={() => handleSectionSelect('personales')}
 						>
 							<div className={styles.sectionNumber}>1</div>
@@ -329,11 +391,18 @@ function CausasBasicasContent() {
 									Factores relacionados con la persona
 								</p>
 								<p className={styles.sectionRange}>Opciones 1-7</p>
+								{causasBasicasData.personales.selectedItems.length > 0 && (
+									<p className={styles.dataIndicator}>
+										{causasBasicasData.personales.selectedItems.length} factor(es) seleccionado(s)
+									</p>
+								)}
 							</div>
 						</button>
 
 						<button
-							className={styles.sectionCard}
+							className={`${styles.sectionCard} ${
+								causasBasicasData.laborales.selectedItems.length > 0 ? styles.hasData : ''
+							}`}
 							onClick={() => handleSectionSelect('laborales')}
 						>
 							<div className={styles.sectionNumber}>2</div>
@@ -343,6 +412,11 @@ function CausasBasicasContent() {
 									Factores relacionados con el trabajo
 								</p>
 								<p className={styles.sectionRange}>Opciones 8-15</p>
+								{causasBasicasData.laborales.selectedItems.length > 0 && (
+									<p className={styles.dataIndicator}>
+										{causasBasicasData.laborales.selectedItems.length} factor(es) seleccionado(s)
+									</p>
+								)}
 							</div>
 						</button>
 					</div>
@@ -350,6 +424,8 @@ function CausasBasicasContent() {
 			</div>
 		);
 	}
+
+	const currentSectionData = getCurrentSectionData();
 
 	return (
 		<div className={styles.contentCard}>
@@ -370,7 +446,7 @@ function CausasBasicasContent() {
 					<button
 						className={styles.clearButton}
 						onClick={clearAllSelections}
-						disabled={selectedItems.length === 0}
+						disabled={currentSectionData.selectedItems.length === 0}
 					>
 						Limpiar Selección
 					</button>
@@ -383,7 +459,7 @@ function CausasBasicasContent() {
 								<button
 									key={item.id}
 									className={`${styles.itemCard} ${
-										selectedItems.includes(item.id) ? styles.selected : ""
+										currentSectionData.selectedItems.includes(item.id) ? styles.selected : ""
 									}`}
 									onClick={() => handleItemClick(item.id)}
 								>
@@ -395,15 +471,16 @@ function CausasBasicasContent() {
 							))}
 						</div>
 
-						{selectedItems.length > 0 && (
+						{currentSectionData.selectedItems.length > 0 && (
 							<div className={styles.selectedSummary}>
-								<h4>Elementos Seleccionados ({selectedItems.length}):</h4>
+								<h4>Elementos Seleccionados ({currentSectionData.selectedItems.length}):</h4>
 								<div className={styles.selectedList}>
-									{selectedItems.map((id) => {
+									{currentSectionData.selectedItems.map((id) => {
 										const item = getCurrentItems().find((item) => item.id === id);
+										const detailCount = currentSectionData.detailedSelections[id]?.length || 0;
 										return (
 											<span key={id} className={styles.selectedTag}>
-												{id}. {item.text}
+												{id}. {item.text} {detailCount > 0 && `(${detailCount} detalles)`}
 											</span>
 										);
 									})}
@@ -422,10 +499,10 @@ function CausasBasicasContent() {
 								className={styles.fileInput}
 							/>
 
-							{imagePreview ? (
+							{currentSectionData.image ? (
 								<div className={styles.imagePreviewContainer}>
 									<img
-										src={imagePreview || "/placeholder.svg"}
+										src={currentSectionData.image || "/placeholder.svg"}
 										alt="Preview"
 										className={styles.imagePreview}
 									/>
@@ -490,8 +567,8 @@ function CausasBasicasContent() {
 							</div>
 							<textarea
 								className={styles.observationTextarea}
-								value={observation}
-								onChange={(e) => setObservation(e.target.value)}
+								value={currentSectionData.observation || ''}
+								onChange={handleObservationChange}
 								placeholder="Escriba sus observaciones aquí..."
 								rows={6}
 							></textarea>
@@ -549,7 +626,6 @@ function CausasBasicasContent() {
 							<button 
 								className={styles.modalConfirmBtn}
 								onClick={handleModalConfirm}
-								disabled={modalSelectedItems.length === 0}
 							>
 								Confirmar ({modalSelectedItems.length})
 							</button>

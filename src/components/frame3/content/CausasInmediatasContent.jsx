@@ -2,8 +2,10 @@
 
 import { useState, useRef } from "react";
 import styles from "./CausasInmediatasContent.module.css";
+import { useScatData } from "../../../contexts/ScatDataContext";
 
 function CausasInmediatasContent() {
+	const { causasInmediatasData, setCausasInmediatasData } = useScatData();
 	const [activeSection, setActiveSection] = useState(null);
 	const [selectedItems, setSelectedItems] = useState([]);
 	const [imagePreview, setImagePreview] = useState(null);
@@ -52,17 +54,26 @@ function CausasInmediatasContent() {
 	};
 
 	const handleItemToggle = (itemId) => {
-		setSelectedItems((prev) => {
-			if (prev.includes(itemId)) {
-				return prev.filter((id) => id !== itemId);
-			} else {
-				return [...prev, itemId];
-			}
+		const currentSection = activeSection;
+		const currentData = causasInmediatasData[currentSection];
+		const newSelectedItems = currentData.selectedItems.includes(itemId)
+			? currentData.selectedItems.filter((id) => id !== itemId)
+			: [...currentData.selectedItems, itemId];
+
+		setCausasInmediatasData(currentSection, {
+			...currentData,
+			selectedItems: newSelectedItems
 		});
 	};
 
 	const clearAllSelections = () => {
-		setSelectedItems([]);
+		const currentSection = activeSection;
+		const currentData = causasInmediatasData[currentSection];
+		
+		setCausasInmediatasData(currentSection, {
+			...currentData,
+			selectedItems: []
+		});
 	};
 
 	const handleImageUpload = (e) => {
@@ -70,7 +81,13 @@ function CausasInmediatasContent() {
 		if (file) {
 			const reader = new FileReader();
 			reader.onload = (e) => {
-				setImagePreview(e.target.result);
+				const currentSection = activeSection;
+				const currentData = causasInmediatasData[currentSection];
+				
+				setCausasInmediatasData(currentSection, {
+					...currentData,
+					image: e.target.result
+				});
 			};
 			reader.readAsDataURL(file);
 		}
@@ -81,8 +98,24 @@ function CausasInmediatasContent() {
 	};
 
 	const removeImage = () => {
-		setImagePreview(null);
+		const currentSection = activeSection;
+		const currentData = causasInmediatasData[currentSection];
+		
+		setCausasInmediatasData(currentSection, {
+			...currentData,
+			image: null
+		});
 		fileInputRef.current.value = "";
+	};
+
+	const handleObservationChange = (e) => {
+		const currentSection = activeSection;
+		const currentData = causasInmediatasData[currentSection];
+		
+		setCausasInmediatasData(currentSection, {
+			...currentData,
+			observation: e.target.value
+		});
 	};
 
 	const getCurrentItems = () => {
@@ -97,6 +130,10 @@ function CausasInmediatasContent() {
 		return activeSection === 'actos' 
 			? 'VIOLACIÓN DE UN PROCEDIMIENTO ACEPTADO COMO SEGURO'
 			: 'CONDICIÓN O CIRCUNSTANCIA FÍSICA PELIGROSA';
+	};
+
+	const getCurrentSectionData = () => {
+		return causasInmediatasData[activeSection] || { selectedItems: [], image: null, observation: '' };
 	};
 
 	if (!activeSection) {
@@ -116,7 +153,9 @@ function CausasInmediatasContent() {
 
 					<div className={styles.sectionSelector}>
 						<button
-							className={styles.sectionCard}
+							className={`${styles.sectionCard} ${
+								causasInmediatasData.actos.selectedItems.length > 0 ? styles.hasData : ''
+							}`}
 							onClick={() => handleSectionSelect('actos')}
 						>
 							<div className={styles.sectionNumber}>1</div>
@@ -126,11 +165,18 @@ function CausasInmediatasContent() {
 									Violación de un procedimiento aceptado como seguro
 								</p>
 								<p className={styles.sectionRange}>Opciones 1-15</p>
+								{causasInmediatasData.actos.selectedItems.length > 0 && (
+									<p className={styles.dataIndicator}>
+										{causasInmediatasData.actos.selectedItems.length} elemento(s) seleccionado(s)
+									</p>
+								)}
 							</div>
 						</button>
 
 						<button
-							className={styles.sectionCard}
+							className={`${styles.sectionCard} ${
+								causasInmediatasData.condiciones.selectedItems.length > 0 ? styles.hasData : ''
+							}`}
 							onClick={() => handleSectionSelect('condiciones')}
 						>
 							<div className={styles.sectionNumber}>2</div>
@@ -140,6 +186,11 @@ function CausasInmediatasContent() {
 									Condición o circunstancia física peligrosa
 								</p>
 								<p className={styles.sectionRange}>Opciones 16-28</p>
+								{causasInmediatasData.condiciones.selectedItems.length > 0 && (
+									<p className={styles.dataIndicator}>
+										{causasInmediatasData.condiciones.selectedItems.length} elemento(s) seleccionado(s)
+									</p>
+								)}
 							</div>
 						</button>
 					</div>
@@ -147,6 +198,8 @@ function CausasInmediatasContent() {
 			</div>
 		);
 	}
+
+	const currentSectionData = getCurrentSectionData();
 
 	return (
 		<div className={styles.contentCard}>
@@ -167,7 +220,7 @@ function CausasInmediatasContent() {
 					<button
 						className={styles.clearButton}
 						onClick={clearAllSelections}
-						disabled={selectedItems.length === 0}
+						disabled={currentSectionData.selectedItems.length === 0}
 					>
 						Limpiar Selección
 					</button>
@@ -180,7 +233,7 @@ function CausasInmediatasContent() {
 								<button
 									key={item.id}
 									className={`${styles.itemCard} ${
-										selectedItems.includes(item.id) ? styles.selected : ""
+										currentSectionData.selectedItems.includes(item.id) ? styles.selected : ""
 									}`}
 									onClick={() => handleItemToggle(item.id)}
 								>
@@ -192,11 +245,11 @@ function CausasInmediatasContent() {
 							))}
 						</div>
 
-						{selectedItems.length > 0 && (
+						{currentSectionData.selectedItems.length > 0 && (
 							<div className={styles.selectedSummary}>
-								<h4>Elementos Seleccionados ({selectedItems.length}):</h4>
+								<h4>Elementos Seleccionados ({currentSectionData.selectedItems.length}):</h4>
 								<div className={styles.selectedList}>
-									{selectedItems.map((id) => {
+									{currentSectionData.selectedItems.map((id) => {
 										const item = getCurrentItems().find((item) => item.id === id);
 										return (
 											<span key={id} className={styles.selectedTag}>
@@ -219,10 +272,10 @@ function CausasInmediatasContent() {
 								className={styles.fileInput}
 							/>
 
-							{imagePreview ? (
+							{currentSectionData.image ? (
 								<div className={styles.imagePreviewContainer}>
 									<img
-										src={imagePreview || "/placeholder.svg"}
+										src={currentSectionData.image || "/placeholder.svg"}
 										alt="Preview"
 										className={styles.imagePreview}
 									/>
@@ -287,8 +340,8 @@ function CausasInmediatasContent() {
 							</div>
 							<textarea
 								className={styles.observationTextarea}
-								value={observation}
-								onChange={(e) => setObservation(e.target.value)}
+								value={currentSectionData.observation || ''}
+								onChange={handleObservationChange}
 								placeholder="Escriba sus observaciones aquí..."
 								rows={6}
 							></textarea>
