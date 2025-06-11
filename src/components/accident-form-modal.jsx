@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import styles from "./AccidentForm.module.css";
-import { useScatData } from "../contexts/ScatDataContext";
+import { useScatData } from "../contexts/ScatContext";
 
-export default function AccidentFormModal({ isOpen, onClose, onSubmit }) {
+export default function AccidentFormModal({ isOpen, onClose, onCreateProject, onContinue }) {
 	const { setProjectData } = useScatData();
 	const [formData, setFormData] = useState({
 		evento: "",
@@ -64,11 +64,27 @@ export default function AccidentFormModal({ isOpen, onClose, onSubmit }) {
 		e.preventDefault();
 
 		if (validateForm()) {
+			// Crear un nuevo proyecto con ID único
+			const newProject = {
+				id: Date.now(),
+				name: formData.evento,
+				description: `Involucrado: ${formData.involucrado} - Área: ${formData.area}`,
+				createdAt: new Date().toISOString(),
+				formData: formData
+			};
+
 			// Guardar en el contexto
 			setProjectData(formData);
 			
-			// Llamar al callback del componente padre
-			onSubmit(formData);
+			// Llamar al callback para crear el proyecto
+			if (onCreateProject) {
+				onCreateProject(newProject);
+			}
+			
+			// Llamar al callback para continuar al SCAT
+			if (onContinue) {
+				onContinue(formData);
+			}
 			
 			// Limpiar formulario
 			setFormData({
