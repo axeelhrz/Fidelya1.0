@@ -135,13 +135,14 @@ function scatDataReducer(state, action) {
       console.log('=== RESETEANDO TODOS LOS DATOS EN REDUCER ===');
       return getCleanInitialState();
     
-    case ACTIONS.CLEAR_EDITING_DATA:
+    case ACTIONS.CLEAR_EDITING_DATA: {
       console.log('=== LIMPIANDO DATOS DE EDICIÓN EN REDUCER ===');
       const cleanState = getCleanInitialState();
       return {
         ...cleanState,
         projectData: action.keepProjectData ? state.projectData : cleanState.projectData
       };
+    }
     
     default:
       return state;

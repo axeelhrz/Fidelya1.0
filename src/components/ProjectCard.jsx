@@ -2,7 +2,7 @@ import { Edit, FileDown, Trash2 } from "lucide-react";
 import styles from "./ProjectCard.module.css";
 import pdfService from "../services/pdfService";
 
-export default function ProjectCard({ project, isHighlighted = false, onDelete, onEdit, onView }) {
+export default function ProjectCard({ project, isHighlighted = false, onDelete, onEdit }) {
 	const handleDelete = (e) => {
 		e.stopPropagation();
 		if (onDelete) {

@@ -18,7 +18,7 @@ function NecesidadesControlContent() {
 	const fileInputRef = useRef(null);
 
 	// Mapeo de Causas Básicas a NAC
-	const causasBasicasToNAC = {
+	const causasBasicasToNAC = useMemo(() => ({
 		// Factores Personales (1-7)
 		1: [4, 5, 6], // Capacidad Física -> NAC 4, 5, 6
 		2: [4, 5, 6], // Capacidad Mental -> NAC 4, 5, 6
@@ -37,9 +37,9 @@ function NecesidadesControlContent() {
 		13: [1, 2, 3], // Estándares de Trabajo Inadecuados -> NAC 1, 2, 3
 		14: [1, 2, 3], // Uso y Desgaste -> NAC 1, 2, 3
 		15: [1, 2, 3], // Abuso o Mal Uso -> NAC 1, 2, 3
-	};
+	}), []);
 
-	const allCategories = [
+	const allCategories = useMemo(() => [
 		{
 			id: 'potencial',
 			title: 'EVALUACIÓN POTENCIAL DE PÉRDIDA SIN CONTROLES',
@@ -122,7 +122,7 @@ function NecesidadesControlContent() {
 				},
 			]
 		}
-	];
+	], []);
 
 	// Cargar medidas correctivas existentes al inicializar
 	useState(() => {
@@ -159,7 +159,7 @@ function NecesidadesControlContent() {
 			items: category.items.filter(item => allowedNACIds.has(item.id))
 		})).filter(category => category.items.length > 0); // Solo mostrar categorías que tengan items
 
-	}, [causasBasicasData.personales.selectedItems, causasBasicasData.laborales.selectedItems]);
+	}, [causasBasicasData.personales.selectedItems, causasBasicasData.laborales.selectedItems, allCategories, causasBasicasToNAC]);
 
 	const handleItemClick = (item) => {
 		setActiveModal(item);
