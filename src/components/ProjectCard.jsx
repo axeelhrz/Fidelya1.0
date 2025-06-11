@@ -27,17 +27,17 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete, 
 					investigador: 'No especificado',
 					otrosDatos: ''
 				},
-				evaluacion: {
+				evaluacion: project.scatData?.evaluacion || {
 					severity: null,
 					probability: null,
 					frequency: null
 				},
-				contacto: {
+				contacto: project.scatData?.contacto || {
 					selectedIncidents: [],
 					image: null,
 					observation: ''
 				},
-				causasInmediatas: {
+				causasInmediatas: project.scatData?.causasInmediatas || {
 					actos: {
 						selectedItems: [],
 						image: null,
@@ -49,7 +49,7 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete, 
 						observation: ''
 					}
 				},
-				causasBasicas: {
+				causasBasicas: project.scatData?.causasBasicas || {
 					personales: {
 						selectedItems: [],
 						detailedSelections: {},
@@ -63,7 +63,7 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete, 
 						observation: ''
 					}
 				},
-				necesidadesControl: {
+				necesidadesControl: project.scatData?.necesidadesControl || {
 					selectedItems: [],
 					detailedData: {},
 					globalImage: null,
@@ -112,27 +112,32 @@ export default function ProjectCard({ project, isHighlighted = false, onDelete, 
 						{new Date(project.createdAt).toLocaleDateString('es-ES')}
 					</div>
 				)}
+				{project.version && project.version > 1 && (
+					<div className={styles.versionBadge}>
+						v{project.version}
+					</div>
+				)}
 			</div>
 
 			<div className={styles.actions}>
 				<button 
 					className={styles.actionButton} 
 					onClick={handleView}
-					title="Ver/Continuar proyecto en SCAT"
+					title="Ver/Continuar análisis SCAT"
 				>
 					<FileText size={14} />
 				</button>
 				<button 
 					className={styles.actionButton} 
 					onClick={handleEdit}
-					title="Editar información del proyecto"
+					title="Editar proyecto completo (todas las pestañas)"
 				>
 					<Edit size={14} />
 				</button>
 				<button 
 					className={styles.actionButton} 
 					onClick={handleDownloadPDF}
-					title="Descargar proyecto como PDF"
+					title="Descargar reporte PDF completo"
 				>
 					<FileDown size={14} />
 				</button>
