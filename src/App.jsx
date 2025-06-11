@@ -3,6 +3,7 @@
 import { useState } from "react";
 import BaseFrame from "./components/BaseFrame";
 import ScatInterface from "./components/frame3/ScatInterface";
+import ProjectsView from "./components/ProjectsView";
 import styles from "./App.module.css";
 
 function App() {
@@ -16,6 +17,10 @@ function App() {
 
 	const handleNavigateToBase = () => {
 		setCurrentFrame("base");
+	};
+
+	const handleNavigateToProjects = () => {
+		setCurrentFrame("projects");
 	};
 
 	const handleNavigateToHome = () => {
@@ -35,7 +40,14 @@ function App() {
 				<ScatInterface 
 					onNavigateToBase={handleNavigateToBase}
 					onNavigateToHome={handleNavigateToHome}
+					onNavigateToProjects={handleNavigateToProjects}
 					formData={formData}
+				/>
+			)}
+			{currentFrame === "projects" && (
+				<ProjectsView 
+					onNavigateToBase={handleNavigateToBase}
+					onNavigateToScat={handleNavigateToScat}
 				/>
 			)}
 		</div>

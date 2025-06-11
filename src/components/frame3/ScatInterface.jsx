@@ -43,7 +43,7 @@ const scatSections = [
 	},
 ];
 
-function ScatInterface({ onNavigateToBase }) {
+function ScatInterface({ onNavigateToBase, onNavigateToProjects }) {
 	const [activeSection, setActiveSection] = useState("evaluacion");
 
 	const handleSectionClick = (sectionId) => {
@@ -95,9 +95,9 @@ function ScatInterface({ onNavigateToBase }) {
 	};
 
 	const handleShowGrid = () => {
-		// Navegar de vuelta a la sección de proyectos
-		if (onNavigateToBase) {
-			onNavigateToBase();
+		// Navegar a la vista de proyectos
+		if (onNavigateToProjects) {
+			onNavigateToProjects();
 		}
 	};
 
