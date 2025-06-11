@@ -3,7 +3,7 @@
 import { useState } from "react";
 import styles from "./AccidentForm.module.css";
 
-export default function AccidentFormModal({ isOpen, onClose, onContinue }) {
+export default function AccidentFormModal({ isOpen, onClose, onContinue, onCreateProject }) {
 	const [formData, setFormData] = useState({
 		evento: "",
 		involucrado: "",
@@ -21,7 +21,43 @@ export default function AccidentFormModal({ isOpen, onClose, onContinue }) {
 	};
 
 	const handleContinue = () => {
-		onContinue(formData);
+		// Validar que al menos algunos campos estén llenos
+		const hasData = Object.values(formData).some(value => value.trim() !== "");
+		
+		if (!hasData) {
+			alert("Por favor, complete al menos un campo antes de continuar.");
+			return;
+		}
+
+		// Crear un proyecto si se proporciona la función
+		if (onCreateProject) {
+			const newProject = {
+				id: Date.now(),
+				name: formData.evento || "Nuevo Proyecto",
+				description: `Involucrado: ${formData.involucrado || "N/A"} - Área: ${formData.area || "N/A"}`,
+				createdAt: new Date().toISOString(),
+				formData: formData
+			};
+			onCreateProject(newProject);
+		}
+
+		// Continuar al SCAT
+		if (onContinue) {
+			onContinue(formData);
+		}
+	};
+
+	const handleClose = () => {
+		// Resetear el formulario al cerrar
+		setFormData({
+			evento: "",
+			involucrado: "",
+			area: "",
+			fechaHora: "",
+			investigador: "",
+			otrosDatos: "",
+		});
+		onClose();
 	};
 
 	const formFields = [
@@ -76,6 +112,7 @@ export default function AccidentFormModal({ isOpen, onClose, onContinue }) {
 		{
 			key: "fechaHora",
 			label: "Fecha y Hora",
+			type: "datetime-local",
 			icon: (
 				<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
@@ -104,6 +141,7 @@ export default function AccidentFormModal({ isOpen, onClose, onContinue }) {
 		{
 			key: "otrosDatos",
 			label: "Otros datos",
+			isTextarea: true,
 			icon: (
 				<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
@@ -120,24 +158,34 @@ export default function AccidentFormModal({ isOpen, onClose, onContinue }) {
 	if (!isOpen) return null;
 
 	return (
-		<div className={styles.modalSingle} onClick={onClose}>
+		<div className={styles.modalSingle} onClick={handleClose}>
 			<div className={styles.modalBody} onClick={(e) => e.stopPropagation()}>
 				<div className={styles.modalHeader}>
 					<h2 className={styles.modalTitle}>DATOS</h2>
-					<p className={styles.modalSubtitle}>ACCIDENTE / INCCIDENTE</p>
+					<p className={styles.modalSubtitle}>ACCIDENTE / INCIDENTE</p>
 				</div>
 
 				<div className={styles.formContainer}>
 					{formFields.map((field) => (
 						<div key={field.key} className={styles.formField}>
 							<div className={styles.inputContainer}>
-								<input
-									type="text"
-									placeholder={field.label}
-									value={formData[field.key]}
-									onChange={(e) => handleInputChange(field.key, e.target.value)}
-									className={styles.formInput}
-								/>
+								{field.isTextarea ? (
+									<textarea
+										placeholder={field.label}
+										value={formData[field.key]}
+										onChange={(e) => handleInputChange(field.key, e.target.value)}
+										className={`${styles.formInput} ${styles.formTextarea}`}
+										rows={3}
+									/>
+								) : (
+									<input
+										type={field.type || "text"}
+										placeholder={field.label}
+										value={formData[field.key]}
+										onChange={(e) => handleInputChange(field.key, e.target.value)}
+										className={styles.formInput}
+									/>
+								)}
 								<div className={styles.inputIcon}>{field.icon}</div>
 							</div>
 						</div>
@@ -145,7 +193,7 @@ export default function AccidentFormModal({ isOpen, onClose, onContinue }) {
 				</div>
 
 				<div className={styles.navigationContainer}>
-					<button className={styles.navButton} onClick={onClose}>
+					<button className={styles.navButton} onClick={handleClose}>
 						<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								strokeLinecap="round"

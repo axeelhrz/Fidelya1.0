@@ -8,14 +8,15 @@ import ProjectCard from "./ProjectCard";
 import AccidentFormModal from "./accident-form-modal";
 import styles from "./Baseframe.module.css";
 
-function App({ onNavigateToNext }) {
+function BaseFrame({ onNavigateToScat }) {
 	// Sample projects for demonstration
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	const handleContinue = (formData) => {
 		setIsModalOpen(false);
-		onNavigateToNext(formData);
+		onNavigateToScat(formData);
 	};
+
 	const initialProjects = [
 		{
 			id: 1,
@@ -74,7 +75,6 @@ function App({ onNavigateToNext }) {
 	];
 
 	const [projects, setProjects] = useState(initialProjects);
-	//const [isPopupOpen, setIsPopupOpen] = useState(false);
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
 	// Pagination state
@@ -162,18 +162,16 @@ function App({ onNavigateToNext }) {
 					</div>
 				</main>
 			</div>
-			<div className={styles.initialContForm}>
-				<div className={styles.accidentForm}>
-					<AccidentFormModal
-						isOpen={isModalOpen}
-						onClose={() => setIsModalOpen(false)}
-						onCreateProject={handleCreateProject}
-						onContinue={handleContinue}
-					/>
-				</div>
-			</div>
+
+			{/* Accident Form Modal */}
+			<AccidentFormModal
+				isOpen={isModalOpen}
+				onClose={() => setIsModalOpen(false)}
+				onCreateProject={handleCreateProject}
+				onContinue={handleContinue}
+			/>
 		</div>
 	);
 }
 
-export default App;
+export default BaseFrame;
