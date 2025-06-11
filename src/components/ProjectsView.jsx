@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Trash2, Archive, Info, Edit, Download, Eye, Layers } from "lucide-react";
 import styles from "./ProjectsView.module.css";
 
@@ -78,12 +78,36 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 			description: "Gestión de recursos humanos",
 			createdAt: new Date().toISOString(),
 		},
+		{
+			id: 13,
+			name: "PROYECTO 13",
+			description: "Control de calidad avanzado",
+			createdAt: new Date().toISOString(),
+		},
+		{
+			id: 14,
+			name: "PROYECTO 14",
+			description: "Automatización de procesos",
+			createdAt: new Date().toISOString(),
+		},
+		{
+			id: 15,
+			name: "PROYECTO 15",
+			description: "Gestión de riesgos financieros",
+			createdAt: new Date().toISOString(),
+		},
+		{
+			id: 16,
+			name: "PROYECTO 16",
+			description: "Optimización energética",
+			createdAt: new Date().toISOString(),
+		},
 	];
 
 	const [projects, setProjects] = useState(initialProjects);
 	const [selectedProjects, setSelectedProjects] = useState(new Set());
 	const [currentPage, setCurrentPage] = useState(1);
-	const projectsPerPage = 12;
+	const projectsPerPage = 16; // Aumenté el número para aprovechar mejor el espacio
 
 	// Calcular proyectos para la página actual
 	const indexOfLastProject = currentPage * projectsPerPage;
@@ -195,7 +219,7 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 				</div>
 			</div>
 
-			{/* Projects Grid - SIN BOTÓN DE CREAR */}
+			{/* Projects Grid - Ocupa toda la pantalla */}
 			<div className={styles.projectsContainer}>
 				<div className={styles.projectsGrid}>
 					{currentProjects.map((project) => (

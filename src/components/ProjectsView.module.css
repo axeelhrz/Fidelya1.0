@@ -2,9 +2,14 @@
 	display: flex;
 	flex-direction: column;
 	height: 100vh;
+	width: 100vw;
 	background-color: #1f2937;
 	color: white;
 	overflow: hidden;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 1000;
 }
 
 .header {
@@ -14,6 +19,8 @@
 	padding: 1rem 2rem;
 	background-color: #374151;
 	border-bottom: 1px solid #4b5563;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .headerLeft {
@@ -108,15 +115,19 @@
 
 .projectsContainer {
 	flex: 1;
-	padding: 0 2rem;
+	padding: 2rem;
 	overflow-y: auto;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .projectsGrid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-	gap: 1rem;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 1.5rem;
 	padding-bottom: 2rem;
+	width: 100%;
+	max-width: none;
 }
 
 .projectCard {
@@ -130,6 +141,8 @@
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .projectCard:hover {
@@ -194,6 +207,8 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .selectionControls {
@@ -247,14 +262,36 @@
 /* Responsive Design */
 @media (min-width: 640px) {
 	.projectsGrid {
-		grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 2rem;
+	}
+}
+
+@media (min-width: 768px) {
+	.projectsGrid {
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 2rem;
 	}
 }
 
 @media (min-width: 1024px) {
 	.projectsGrid {
-		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-		gap: 1.5rem;
+		grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+		gap: 2rem;
+	}
+}
+
+@media (min-width: 1280px) {
+	.projectsGrid {
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 2.5rem;
+	}
+}
+
+@media (min-width: 1536px) {
+	.projectsGrid {
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 3rem;
 	}
 }
 
@@ -265,12 +302,8 @@
 		gap: 1rem;
 	}
 
-	.createButtonContainer {
-		padding: 1rem;
-	}
-
 	.projectsContainer {
-		padding: 0 1rem;
+		padding: 1rem;
 	}
 
 	.bottomControls {
@@ -280,6 +313,7 @@
 	}
 
 	.projectsGrid {
-		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 1rem;
 	}
 }
