@@ -59,18 +59,25 @@ function ScatInterface({
 		hasData, 
 		getCompleteSummary,
 		setEditingState,
-		clearEditingData,
+		resetAllData,
 		loadProjectForEditing
 	} = useScatData();
 
 	// Cargar datos del proyecto cuando se reciban
 	useEffect(() => {
+		console.log('=== EFECTO DE CARGA DE DATOS ===');
+		console.log('FormData:', formData);
+		console.log('IsEditing:', isEditing);
+		console.log('EditingProject:', editingProject);
+		
 		if (formData) {
 			if (isEditing && editingProject) {
 				// Modo edición: cargar datos completos del proyecto
+				console.log('Cargando proyecto para edición...');
 				loadProjectForEditing(editingProject);
 			} else {
 				// Modo nuevo proyecto: solo cargar datos básicos
+				console.log('Cargando datos para nuevo proyecto...');
 				setProjectData(formData);
 				setEditingState(false);
 			}
@@ -108,13 +115,18 @@ function ScatInterface({
 	};
 
 	const handleBackToMenu = () => {
+		console.log('=== VOLVIENDO AL MENÚ PRINCIPAL ===');
+		
 		// Si estamos editando, guardar los cambios silenciosamente antes de salir
 		if (isEditing && editingProject) {
+			console.log('Guardando cambios antes de salir...');
 			handleSaveProgress(true, true); // true para isExiting, true para silent
-		} else {
-			// Si no estamos editando, limpiar datos del contexto
-			clearEditingData(false);
 		}
+		
+		// Limpiar el estado de edición y resetear datos
+		console.log('Limpiando estado de edición...');
+		setEditingState(false, null);
+		resetAllData();
 		
 		if (onNavigateToBase) {
 			onNavigateToBase();
@@ -123,10 +135,15 @@ function ScatInterface({
 
 	const handleSaveProgress = (isExiting = false, silent = false) => {
 		try {
+			console.log('=== GUARDANDO PROGRESO ===');
+			console.log('IsExiting:', isExiting);
+			console.log('Silent:', silent);
+			
 			// Obtener todos los datos actuales del contexto
 			const completeSummary = getCompleteSummary();
 
 			if (isEditing && editingProject) {
+				console.log('Guardando proyecto en modo edición...');
 				// Estamos editando un proyecto existente
 				const updatedProject = {
 					...editingProject,
@@ -150,6 +167,7 @@ function ScatInterface({
 						p.id === editingProject.id ? updatedProject : p
 					);
 					localStorage.setItem('scatProjects', JSON.stringify(updatedProjects));
+					console.log('Proyecto actualizado en localStorage');
 				}
 
 				// Llamar callback si existe
@@ -159,7 +177,8 @@ function ScatInterface({
 
 				if (isExiting) {
 					// Limpiar contexto al salir del modo edición
-					clearEditingData(false);
+					console.log('Limpiando contexto al salir...');
+					setEditingState(false, null);
 					// Solo mostrar mensaje si no es silencioso
 					if (!silent) {
 						alert("Cambios guardados exitosamente");
@@ -171,6 +190,7 @@ function ScatInterface({
 				}
 			} else {
 				// Nuevo proyecto o modo visualización
+				console.log('Guardando en modo nuevo proyecto...');
 				if (!isExiting && !silent) {
 					alert("Progreso guardado exitosamente");
 				}
@@ -189,13 +209,18 @@ function ScatInterface({
 	};
 
 	const handleShowGrid = () => {
+		console.log('=== NAVEGANDO A GRID DE PROYECTOS ===');
+		
 		// Si estamos editando, guardar antes de navegar
 		if (isEditing && editingProject) {
+			console.log('Guardando antes de navegar a grid...');
 			handleSaveProgress(true, true); // Guardar silenciosamente
-		} else {
-			// Si no estamos editando, limpiar datos del contexto
-			clearEditingData(false);
 		}
+		
+		// Limpiar el estado de edición y resetear datos
+		console.log('Limpiando estado antes de navegar...');
+		setEditingState(false, null);
+		resetAllData();
 		
 		if (onNavigateToProjects) {
 			onNavigateToProjects();
@@ -203,11 +228,18 @@ function ScatInterface({
 	};
 
 	const handleCompleteAnalysis = () => {
+		console.log('=== COMPLETANDO ANÁLISIS ===');
+		
 		if (hasData()) {
 			// Si estamos editando, guardar antes de finalizar
 			if (isEditing && editingProject) {
+				console.log('Guardando antes de finalizar...');
 				handleSaveProgress(true, true); // Guardar silenciosamente
 			}
+			
+			// Limpiar el estado de edición
+			console.log('Limpiando estado de edición...');
+			setEditingState(false, null);
 			
 			if (onNavigateToDescription) {
 				onNavigateToDescription();

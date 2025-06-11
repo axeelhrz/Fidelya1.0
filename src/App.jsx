@@ -14,12 +14,17 @@ function App() {
 	const [editingProject, setEditingProject] = useState(null);
 
 	const handleNavigateToScat = (data) => {
+		console.log('=== NAVEGANDO AL SCAT ===');
+		console.log('Datos recibidos:', data);
+		
 		setFormData(data);
 		
 		// Si estamos editando, guardar la referencia del proyecto
 		if (data.isEditing && data.projectData) {
+			console.log('Modo edición activado');
 			setEditingProject(data.projectData);
 		} else {
+			console.log('Modo nuevo proyecto');
 			setEditingProject(null);
 		}
 		
@@ -27,6 +32,7 @@ function App() {
 	};
 
 	const handleNavigateToBase = () => {
+		console.log('=== NAVEGANDO AL MENÚ PRINCIPAL ===');
 		// Limpiar estados al volver al menú principal
 		setFormData(null);
 		setEditingProject(null);
@@ -34,6 +40,7 @@ function App() {
 	};
 
 	const handleNavigateToProjects = () => {
+		console.log('=== NAVEGANDO A PROYECTOS ===');
 		// Limpiar estados al navegar a proyectos
 		setFormData(null);
 		setEditingProject(null);
@@ -41,10 +48,12 @@ function App() {
 	};
 
 	const handleNavigateToDescription = () => {
+		console.log('=== NAVEGANDO A DESCRIPCIÓN ===');
 		setCurrentFrame("description");
 	};
 
 	const handleNavigateToHome = () => {
+		console.log('=== NAVEGANDO AL HOME ===');
 		// Resetear todo y volver al dashboard principal
 		setFormData(null);
 		setEditingProject(null);
@@ -56,6 +65,7 @@ function App() {
 	};
 
 	const handleStartNew = () => {
+		console.log('=== INICIANDO NUEVO PROYECTO ===');
 		// Limpiar todo para empezar nuevo proyecto
 		setFormData(null);
 		setEditingProject(null);
@@ -66,6 +76,9 @@ function App() {
 	};
 
 	const handleSaveProject = (projectData) => {
+		console.log('=== GUARDANDO PROYECTO ===');
+		console.log('Datos del proyecto:', projectData);
+		
 		if (editingProject) {
 			// Estamos editando un proyecto existente
 			const updatedProject = {
@@ -75,6 +88,8 @@ function App() {
 				version: (editingProject.version || 1) + 1
 			};
 			
+			console.log('Proyecto actualizado:', updatedProject);
+			
 			// Actualizar en localStorage
 			const savedProjects = localStorage.getItem('scatProjects');
 			if (savedProjects) {
@@ -83,6 +98,7 @@ function App() {
 					p.id === editingProject.id ? updatedProject : p
 				);
 				localStorage.setItem('scatProjects', JSON.stringify(updatedProjects));
+				console.log('Proyectos actualizados en localStorage');
 			}
 		}
 	};

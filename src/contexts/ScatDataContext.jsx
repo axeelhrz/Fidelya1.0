@@ -130,10 +130,12 @@ function scatDataReducer(state, action) {
       return getCleanInitialState();
     
     case ACTIONS.CLEAR_EDITING_DATA:
+      console.log('=== LIMPIANDO DATOS DE EDICIÓN ===');
+      const cleanState = getCleanInitialState();
       return {
-        ...getCleanInitialState(),
+        ...cleanState,
         // Mantener solo los datos básicos si no estamos editando
-        projectData: action.keepProjectData ? state.projectData : getCleanInitialState().projectData
+        projectData: action.keepProjectData ? state.projectData : cleanState.projectData
       };
     
     default:
@@ -203,6 +205,10 @@ export function ScatDataProvider({ children }) {
   };
 
   const setEditingState = (isEditing, projectId = null) => {
+    console.log(`=== CAMBIANDO ESTADO DE EDICIÓN: ${isEditing ? 'EDITANDO' : 'NO EDITANDO'} ===`);
+    if (projectId) {
+      console.log(`Proyecto ID: ${projectId}`);
+    }
     dispatch({ 
       type: ACTIONS.SET_EDITING_STATE, 
       payload: { isEditing, projectId } 
@@ -217,6 +223,8 @@ export function ScatDataProvider({ children }) {
   };
 
   const clearEditingData = (keepProjectData = false) => {
+    console.log('=== LIMPIANDO DATOS DE EDICIÓN ===');
+    console.log(`Mantener datos del proyecto: ${keepProjectData}`);
     dispatch({ type: ACTIONS.CLEAR_EDITING_DATA, keepProjectData });
     // Limpiar localStorage para evitar conflictos
     localStorage.removeItem('scatData');
