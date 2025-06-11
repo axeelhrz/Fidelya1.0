@@ -329,7 +329,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 						)}
 
 						{/* Debug info (solo en desarrollo) */}
-						{process.env.NODE_ENV === 'development' && (
+						{typeof window !== 'undefined' && window.location.hostname === 'localhost' && (
 							<div style={{ 
 								position: 'fixed', 
 								bottom: '10px', 
@@ -372,5 +372,3 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 }
 
 export default BaseFrame;
-
-}
