@@ -1,6 +1,6 @@
 import { useReducer, useEffect } from 'react';
-import { ACTIONS } from './scatDataUtils';
-import { ScatDataContext } from './ScatDataContextDefinition';
+import { ACTIONS } from './useScatData';
+import { ScatDataContext } from './ScatContext';
 
 // Estado inicial
 const initialState = {
