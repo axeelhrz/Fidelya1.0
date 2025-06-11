@@ -419,7 +419,8 @@ class PDFService {
   addNecesidadesControlData(necesidadesControlData, categoriesData) {
     if (necesidadesControlData.selectedItems.length === 0 && 
         !necesidadesControlData.globalImage && 
-        !necesidadesControlData.globalObservation) {
+        !necesidadesControlData.globalObservation &&
+        (!necesidadesControlData.medidasCorrectivas || necesidadesControlData.medidasCorrectivas.trim() === '')) {
       return;
     }
 
@@ -524,6 +525,13 @@ class PDFService {
     if (necesidadesControlData.globalObservation && necesidadesControlData.globalObservation.trim() !== '') {
       this.addText('Observaciones Generales:', 0);
       this.addText(necesidadesControlData.globalObservation, 5);
+    }
+
+    // NUEVA SECCIÓN: Agregar medidas correctivas si existen
+    if (necesidadesControlData.medidasCorrectivas && necesidadesControlData.medidasCorrectivas.trim() !== '') {
+      this.currentY += 5; // Espacio adicional antes de la nueva sección
+      this.addSubtitle('MEDIDAS CORRECTIVAS');
+      this.addText(necesidadesControlData.medidasCorrectivas, 0);
     }
 
     this.addSeparator();
