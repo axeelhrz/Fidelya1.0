@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Starflex - La mejor app para encontrar bloques de Amazon Flex. Automatiza tu búsqueda, optimiza tus horarios y maximiza tus ganancias.">
+    <meta name="keywords" content="Amazon Flex, bloques, delivery, ganancias, automatización, horarios">
+    <meta name="author" content="Starflex">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Starflex - Mejores Bloques de Amazon Flex">
+    <meta property="og:description" content="Automatiza tu búsqueda de bloques, optimiza horarios y maximiza ganancias con Starflex">
+    <meta property="og:image" content="./assets/img/starflex-og-image.jpg">
+    <meta property="og:url" content="https://starflexapp.com">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Starflex - Mejores Bloques de Amazon Flex">
+    <meta name="twitter:description" content="Automatiza tu búsqueda de bloques, optimiza horarios y maximiza ganancias">
+    <meta name="twitter:image" content="./assets/img/starflex-og-image.jpg">
+    
+    <title>Starflex - Mejores Bloques de Amazon Flex | Automatiza tu Búsqueda</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="./assets/icons/favicon.ico">
+    <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="./css/style.css" as="style">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
+    
+    <!-- Stylesheets -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header" id="header">
+        <nav class="nav container">
+            <div class="nav__brand">
+                <img src="./assets/logos/starflex-logo.png" alt="Starflex Logo" class="nav__logo">
+                <span class="nav__title">Starflex</span>
+            </div>
+            
+            <div class="nav__menu" id="nav-menu">
+                <ul class="nav__list">
+                    <li class="nav__item">
+                        <a href="#inicio" class="nav__link">Inicio</a>
+                    </li>
+                    <li class="nav__item">
+                        <a href="#caracteristicas" class="nav__link">Características</a>
+                    </li>
+                    <li class="nav__item">
+                        <a href="#precios" class="nav__link">Precios</a>
+                    </li>
+                    <li class="nav__item">
+                        <a href="#faq" class="nav__link">FAQ</a>
+                    </li>
+                    <li class="nav__item">
+                        <a href="#contacto" class="nav__link">Contacto</a>
+                    </li>
+                </ul>
+                
+                <div class="nav__cta">
+                    <a href="#" class="btn btn--primary">Probar Gratis</a>
+                </div>
+            </div>
+            
+            <div class="nav__toggle" id="nav-toggle">
+                <span class="nav__toggle-line"></span>
+                <span class="nav__toggle-line"></span>
+                <span class="nav__toggle-line"></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Hero Section -->
+        <section class="hero section" id="inicio">
+            <div class="hero__container container">
+                <div class="hero__content">
+                    <h1 class="hero__title">
+                        Mejores Bloques de 
+                        <span class="hero__title--highlight">Amazon Flex</span>
+                    </h1>
+                    <p class="hero__description">
+                        Starflex es una empresa dedicada a mejorar la experiencia laboral de los conductores de Amazon Flex permitiendo seleccionar de forma automática y eficiente los mejores bloques de su preferencia.
+                    </p>
+                    
+                    <div class="hero__cta">
+                        <a href="#" class="btn btn--primary btn--large">
+                            <span>Prueba Gratuita</span>
+                            <small>de 3 días</small>
+                        </a>
+                        <a href="#contacto" class="btn btn--secondary btn--large">Contactar</a>
+                    </div>
+                    
+                    <div class="hero__download">
+                        <a href="#" class="download-btn">
+                            <img src="./assets/icons/google-play.svg" alt="Descargar en Google Play">
+                        </a>
+                        <a href="#" class="download-btn">
+                            <img src="./assets/icons/app-store.svg" alt="Descargar en App Store">
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="hero__image">
+                    <img src="./assets/img/hero-phone-mockup.png" alt="Starflex App Preview" class="hero__phone" loading="lazy">
+                </div>
+            </div>
+        </section>
+
+        <!-- Benefits Section -->
+        <section class="benefits section">
+            <div class="benefits__container container">
+                <h2 class="section__title">¿Por qué elegir Starflex?</h2>
+                <p class="section__description">
+                    Optimiza tu tiempo y maximiza tus ganancias con nuestra tecnología avanzada
+                </p>
+                
+                <div class="benefits__grid">
+                    <div class="benefit__card">
+                        <div class="benefit__icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12,6 12,12 16,14"/>
+                            </svg>
+                        </div>
+                        <h3 class="benefit__title">Ahorra Tiempo</h3>
+                        <p class="benefit__description">
+                            Automatiza la búsqueda de bloques y dedica más tiempo a lo que realmente importa
+                        </p>
+                    </div>
+                    
+                    <div class="benefit__card">
+                        <div class="benefit__icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <h3 class="benefit__title">Máximas Ganancias</h3>
+                        <p class="benefit__description">
+                            Encuentra los bloques mejor pagados y optimiza tus rutas para mayor rentabilidad
+                        </p>
+                    </div>
+                    
+                    <div class="benefit__card">
+                        <div class="benefit__icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 12l2 2 4-4"/>
+                                <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                                <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                                <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3"/>
+                                <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"/>
+                            </svg>
+                        </div>
+                        <h3 class="benefit__title">Fácil de Usar</h3>
+                        <p class="benefit__description">
+                            Interfaz intuitiva y configuración simple. Comienza en menos de 5 minutos
+                        </p>
+                    </div>
+                    
+                    <div class="benefit__card">
+                        <div class="benefit__icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <circle cx="12" cy="16" r="1"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                        </div>
+                        <h3 class="benefit__title">100% Seguro</h3>
+                        <p class="benefit__description">
+                            Tecnología Firebase y cifrado avanzado. Tus datos están completamente protegidos
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features section" id="caracteristicas">
+            <div class="features__container container">
+                <h2 class="section__title">Características Principales</h2>
+                <p class="section__description">
+                    Aquí puedes ver lo que te ofrece Starflex
+                </p>
+                
+                <!-- Feature 1: Horario -->
+                <div class="feature">
+                    <div class="feature__content">
+                        <h3 class="feature__title">HORARIO</h3>
+                        <p class="feature__description">
+                            Elige los días y horarios que prefieras para tus bloques de entrega.
+                        </p>
+                    </div>
+                    <div class="feature__image">
+                        <img src="./assets/img/feature-horario.png" alt="Configuración de Horarios" loading="lazy">
+                    </div>
+                </div>
+                
+                <!-- Feature 2: Estaciones -->
+                <div class="feature feature--reverse">
+                    <div class="feature__content">
+                        <h3 class="feature__title">ESTACIONES</h3>
+                        <p class="feature__description">
+                            Selecciona tus estaciones preferidas y precios para que nuestra app pueda ofrecerte los bloques que se ajusten a tus preferencias.
+                        </p>
+                    </div>
+                    <div class="feature__image">
+                        <img src="./assets/img/feature-estaciones.png" alt="Selección de Estaciones" loading="lazy">
+                    </div>
+                </div>
+                
+                <!-- Feature 3: Registro -->
+                <div class="feature">
+                    <div class="feature__content">
+                        <h3 class="feature__title">REGISTRO</h3>
+                        <p class="feature__description">
+                            En el registro podrás ver todos los bloques disponibles y el motivo detallado por el cual se ignoraron algunos. Esto te ayudará a ajustar tus filtros de preferencias según sea necesario para optimizar tus opciones.
+                        </p>
+                    </div>
+                    <div class="feature__image">
+                        <img src="./assets/img/feature-registro.png" alt="Registro de Bloques" loading="lazy">
+                    </div>
+                </div>
+                
+                <!-- Feature 4: Calendario -->
+                <div class="feature feature--reverse">
+                    <div class="feature__content">
+                        <h3 class="feature__title">CALENDARIO</h3>
+                        <p class="feature__description">
+                            En el calendario podrás ver tus bloques aceptados y encontrar las opciones para identificarte desde cualquier ubicación, así como la posibilidad de sincronizar y editar o cancelar bloques, todo en un solo lugar para tu máxima comodidad.
+                        </p>
+                    </div>
+                    <div class="feature__image">
+                        <img src="./assets/img/feature-calendario.png" alt="Calendario de Bloques" loading="lazy">
+                    </div>
+                </div>
+                
+                <!-- Feature 5: Configuración -->
+                <div class="feature">
+                    <div class="feature__content">
+                        <h3 class="feature__title">CONFIGURACIÓN</h3>
+                        <p class="feature__description">
+                            Dentro del menú de opciones encontrarás todas los ajustes de configuración para personalizar tu experiencia.
+                        </p>
+                    </div>
+                    <div class="feature__image">
+                        <img src="./assets/img/feature-configuracion.png" alt="Configuración de la App" loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Trust Section -->
+        <section class="trust section">
+            <div class="trust__container container">
+                <h2 class="section__title">Confianza y Seguridad</h2>
+                
+                <div class="trust__grid">
+                    <div class="trust__card">
+                        <div class="trust__icon">
+                            <img src="./assets/icons/firebase-icon.svg" alt="Firebase">
+                        </div>
+                        <h3 class="trust__title">Firebase</h3>
+                        <p class="trust__description">
+                            Respaldado por la infraestructura de Google para máxima confiabilidad
+                        </p>
+                    </div>
+                    
+                    <div class="trust__card">
+                        <div class="trust__icon">
+                            <img src="./assets/icons/paypal-icon.svg" alt="PayPal">
+                        </div>
+                        <h3 class="trust__title">PayPal</h3>
+                        <p class="trust__description">
+                            Pagos seguros y protegidos con la plataforma más confiable del mundo
+                        </p>
+                    </div>
+                    
+                    <div class="trust__card">
+                        <div class="trust__icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                        </div>
+                        <h3 class="trust__title">Cifrado SSL</h3>
+                        <p class="trust__description">
+                            Todos tus datos están protegidos con cifrado de nivel bancario
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="trust__message">
+                    <p>
+                        <strong>Tu privacidad es nuestra prioridad.</strong> Nunca compartimos tu información personal y tienes control total sobre tus datos.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section class="pricing section" id="precios">
+            <div class="pricing__container container">
+                <h2 class="section__title">Planes y Precios</h2>
+                <p class="section__description">
+                    Elige el plan que mejor se adapte a tus necesidades
+                </p>
+                
+                <div class="pricing__grid">
+                    <!-- Free Plan -->
+                    <div class="pricing__card">
+                        <div class="pricing__header">
+                            <h3 class="pricing__title">Gratuito</h3>
+                            <div class="pricing__price">
+                                <span class="pricing__currency">$</span>
+                                <span class="pricing__amount">0</span>
+                                <span class="pricing__period">/mes</span>
+                            </div>
+                        </div>
+                        
+                        <ul class="pricing__features">
+                            <li class="pricing__feature">
+                                <svg class="pricing__check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"/>
+                                </svg>
+                                Prueba de 3 días
+                            </li>
+                            <li class="pricing__feature">
+                                <svg class="pricing__check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"/>
+                                </svg>
+                                Funciones básicas
+                            </li>
+                            <li class="pricing__feature">
+                                <svg class="pricing__check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"/>
+                                </svg>
+                                Soporte por email
+                            </li>
+                        </ul>
+                        
+                        <a href="#" class="btn btn--outline btn--full">Comenzar Gratis</a>
+                    </div>
+                    
+                    <!-- Pro Plan -->
+                    <div class="pricing__card pricing__card--featured">
+                        <div class="pricing__badge">Más Popular</div>
+                        <div class="pricing__header">
+                            <h3 class="pricing__title">Pro</h3>
+                            <div class="pricing__price">
+                                <span class="pricing__currency">$</span>
+                                <span class="pricing__amount">29</span>
+                                <span class="pricing__period">/mes</span>
+                            </div>
+                        </div>
+                        
+                        <ul class="pricing__features">
+                            <li class="pricing__feature">
+                                <svg class="pricing__check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"/>
+                                </svg>
+                                Todas las funciones
+                            </li>
+                            <li class="pricing__feature">
+                                <svg class="pricing__check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"/>
+                                </svg>
+                                Búsqueda automática
+                            </li>
+                            <li class="pricing__feature">
+                                <svg class="pricing__check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"/>
+                                </svg>
+                                Notificaciones push
+                            </li>
+                            <li class="pricing__feature">
+                                <svg class="pricing__check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"/>
+                                </svg>
+                                Soporte prioritario
+                            </li>
+                        </ul>
+                        
+                        <a href="#" class="btn btn--primary btn--full">Suscribirse Ahora</a>
+                    </div>
+                    
+                    <!-- Enterprise Plan -->
+                    <div class="pricing__card">
+                        <div class="pricing__header">
+                            <h3 class="pricing__title">Enterprise</h3>
+                            <div class="pricing__price">
+                                <span class="pricing__currency">$</span>
+                                <span class="pricing__amount">99</span>
+                                <span class="pricing__period">/mes</span>
+                            </div>
+                        </div>
+                        
+                        <ul class="pricing__features">
+                            <li class="pricing__feature">
+                                <svg class="pricing__check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"/>
+                                </svg>
+                                Múltiples cuentas
+                            </li>
+                            <li class="pricing__feature">
+                                <svg class="pricing__check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"/>
+                                </svg>
+                                API personalizada
+                            </li>
+                            <li class="pricing__feature">
+                                <svg class="pricing__check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"/>
+                                </svg>
+                                Soporte 24/7
+                            </li>
+                            <li class="pricing__feature">
+                                <svg class="pricing__check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"/>
+                                </svg>
+                                Gerente dedicado
+                            </li>
+                        </ul>
+                        
+                        <a href="#contacto" class="btn btn--outline btn--full">Contactar</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="faq section" id="faq">
+            <div class="faq__container container">
+                <h2 class="section__title">Preguntas Frecuentes</h2>
+                
+                <div class="faq__list">
+                    <div class="faq__item">
+                        <button class="faq__question" data-faq="1">
+                            <span>¿Cuáles son los beneficios de utilizar StarFlex como controlador de Amazon Flex?</span>
+                            <svg class="faq__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6,9 12,15 18,9"/>
+                            </svg>
+                        </button>
+                        <div class="faq__answer" data-faq-content="1">
+                            <p>StarFlex te permite automatizar la búsqueda de bloques, optimizar tus horarios de trabajo, maximizar tus ganancias seleccionando los mejores bloques disponibles, y ahorrar tiempo valioso que puedes dedicar a otras actividades.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq__item">
+                        <button class="faq__question" data-faq="2">
+                            <span>¿Puede StarFlex resolver automáticamente los rompecabezas CAPTCHA?</span>
+                            <svg class="faq__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6,9 12,15 18,9"/>
+                            </svg>
+                        </button>
+                        <div class="faq__answer" data-faq-content="2">
+                            <p>Sí, StarFlex incluye tecnología avanzada para resolver automáticamente los CAPTCHA, permitiendo una experiencia fluida y sin interrupciones durante la búsqueda de bloques.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq__item">
+                        <button class="faq__question" data-faq="3">
+                            <span>¿Puede Amazon detectar el uso de StarFlex?</span>
+                            <svg class="faq__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6,9 12,15 18,9"/>
+                            </svg>
+                        </button>
+                        <div class="faq__answer" data-faq-content="3">
+                            <p>StarFlex utiliza tecnología avanzada que simula el comportamiento humano natural, minimizando significativamente las posibilidades de detección. Sin embargo, recomendamos usar la aplicación de manera responsable.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq__item">
+                        <button class="faq__question" data-faq="4">
+                            <span>¿StarFlex es compatible con iPhone y Android?</span>
+                            <svg class="faq__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6,9 12,15 18,9"/>
+                            </svg>
+                        </button>
+                        <div class="faq__answer" data-faq-content="4">
+                            <p>Sí, StarFlex está disponible tanto para dispositivos iOS (iPhone) como Android. Puedes descargar la aplicación desde Google Play Store o App Store.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq__item">
+                        <button class="faq__question" data-faq="5">
+                            <span>¿Qué necesito para empezar a utilizar StarFlex?</span>
+                            <svg class="faq__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6,9 12,15 18,9"/>
+                            </svg>
+                        </button>
+                        <div class="faq__answer" data-faq-content="5">
+                            <p>Solo necesitas una cuenta activa de Amazon Flex, un smartphone compatible, y descargar la aplicación StarFlex. El proceso de configuración es simple y toma menos de 5 minutos.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section class="contact section" id="contacto">
+            <div class="contact__container container">
+                <h2 class="section__title">Contacto y Soporte</h2>
+                <p class="section__description">
+                    ¿Tienes alguna pregunta? Estamos aquí para ayudarte
+                </p>
+                
+                <div class="contact__content">
+                    <div class="contact__info">
+                        <h3 class="contact__subtitle">Información de Contacto</h3>
+                        
+                        <div class="contact__item">
+                            <svg class="contact__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            <span>support@starflexapp.com</span>
+                        </div>
+                        
+                        <div class="contact__item">
+                            <svg class="contact__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            <span>Disponible 24/7</span>
+                        </div>
+                        
+                        <div class="contact__social">
+                            <h4>Síguenos en redes sociales</h4>
+                            <div class="social__links">
+                                <a href="#" class="social__link" aria-label="WhatsApp">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.891 3.426"/>
+                                    </svg>
+                                </a>
+                                <a href="#" class="social__link" aria-label="Telegram">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                                    </svg>
+                                </a>
+                                <a href="#" class="social__link" aria-label="Instagram">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                    </svg>
+                                </a>
+                                <a href="#" class="social__link" aria-label="TikTok">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form class="contact__form" id="contact-form">
+                        <div class="form__group">
+                            <label for="name" class="form__label">Nombre</label>
+                            <input type="text" id="name" name="name" class="form__input" required>
+                        </div>
+                        
+                        <div class="form__group">
+                            <label for="email" class="form__label">Email</label>
+                            <input type="email" id="email" name="email" class="form__input" required>
+                        </div>
+                        
+                        <div class="form__group">
+                            <label for="message" class="form__label">Mensaje</label>
+                            <textarea id="message" name="message" class="form__textarea" rows="5" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn--primary btn--full">Enviar Mensaje</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final CTA Section -->
+        <section class="final-cta section">
+            <div class="final-cta__container container">
+                <h2 class="final-cta__title">
+                    ¿Listo para maximizar tus ganancias con Amazon Flex?
+                </h2>
+                <p class="final-cta__description">
+                    Únete a miles de conductores que ya están optimizando sus bloques con Starflex
+                </p>
+                
+                <div class="final-cta__buttons">
+                    <a href="#" class="btn btn--primary btn--large">
+                        <span>Comenzar Ahora</span>
+                        <small>Prueba gratuita de 3 días</small>
+                    </a>
+                </div>
+                
+                <div class="final-cta__trust">
+                    <p>✓ Sin compromiso • ✓ Cancela cuando quieras • ✓ Soporte 24/7</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer__container container">
+            <div class="footer__content">
+                <div class="footer__brand">
+                    <img src="./assets/logos/starflex-logo.png" alt="Starflex Logo" class="footer__logo">
+                    <span class="footer__title">Starflex</span>
+                    <p class="footer__description">
+                        Mejores bloques de Amazon Flex. No olvides seguirnos en nuestras redes sociales ya que publicamos diariamente en nuestras historias la recopilación de los mejores bloques aceptados y así podrás estar al tanto de los horarios y precios.
+                    </p>
+                </div>
+                
+                <div class="footer__links">
+                    <div class="footer__group">
+                        <h4 class="footer__subtitle">Producto</h4>
+                        <ul class="footer__list">
+                            <li><a href="#caracteristicas" class="footer__link">Características</a></li>
+                            <li><a href="#precios" class="footer__link">Precios</a></li>
+                            <li><a href="#faq" class="footer__link">FAQ</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer__group">
+                        <h4 class="footer__subtitle">Soporte</h4>
+                        <ul class="footer__list">
+                            <li><a href="#contacto" class="footer__link">Contacto</a></li>
+                            <li><a href="mailto:support@starflexapp.com" class="footer__link">support@starflexapp.com</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer__group">
+                        <h4 class="footer__subtitle">Legal</h4>
+                        <ul class="footer__list">
+                            <li><a href="#" class="footer__link">Política de Privacidad</a></li>
+                            <li><a href="#" class="footer__link">Términos y Condiciones</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer__bottom">
+                <p class="footer__copyright">
+                    © Starflex • Todos los derechos reservados
+                </p>
+                
+                <div class="footer__social">
+                    <a href="#" class="footer__social-link" aria-label="WhatsApp">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.891 3.426"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="footer__social-link" aria-label="Telegram">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="footer__social-link" aria-label="Instagram">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- WhatsApp Floating Button -->
+    <a href="https://wa.me/1234567890" class="whatsapp-float" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.891 3.426"/>
+        </svg>
+    </a>
+
+    <!-- Scripts -->
+    <script src="./js/script.js" defer></script>
+</body>
+</html>
