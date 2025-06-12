@@ -44,7 +44,7 @@ const scatSections = [
 	},
 ];
 
-function ScatInterface({ 
+export default function ScatInterface({ 
 	onNavigateToBase, 
 	onNavigateToProjects, 
 	onNavigateToDescription, 
@@ -56,7 +56,7 @@ function ScatInterface({
 	const [isEditingMode, setIsEditingMode] = useState(false);
 	const [editingProjectId, setEditingProjectId] = useState(null);
 	const [initializationError, setInitializationError] = useState(null);
-	
+
 	const { 
 		setProjectData, 
 		hasData, 
@@ -73,71 +73,141 @@ function ScatInterface({
 		forceSave
 	} = useScatData();
 
-	// Función para guardar datos SCAT en proyecto existente
+	// Función para guardar datos SCAT SOLO en proyecto existente (NO CREAR NUEVOS)
 	const saveScatDataToProject = useCallback(async () => {
-		console.log('=== GUARDANDO DATOS SCAT EN PROYECTO ===');
+		console.log('=== GUARDANDO DATOS SCAT EN PROYECTO EXISTENTE ===');
 		
-		// Si no hay proyecto actual, intentar crear uno con los datos básicos
-		if (!currentProjectId && projectData && Object.values(projectData).some(v => v && v.toString().trim())) {
-			console.log('No hay proyecto actual, creando uno nuevo...');
+		// CRÍTICO: Solo guardar si hay un proyecto actual, NUNCA crear nuevos
+		if (!currentProjectId) {
+			console.log('No hay proyecto actual para guardar datos SCAT. No se creará proyecto automáticamente.');
+			return false;
+		}
+
+		try {
+			// Usar la función forceSave del contexto que ya maneja el guardado
+			forceSave();
+			console.log('=== DATOS SCAT GUARDADOS EN PROYECTO EXISTENTE ===');
+			return true;
+		} catch (error) {
+			console.error('Error guardando datos SCAT:', error);
+			return false;
+		}
+	}, [currentProjectId, forceSave]);
+
+	// Función para guardar proyecto editado
+	const saveEditedProject = useCallback(async () => {
+		if (!isEditingMode || !editingProjectId) {
+			console.log('No está en modo edición o no hay proyecto ID');
+			return false;
+		}
+
+		try {
+			console.log('=== GUARDANDO PROYECTO EDITADO ===');
+			console.log('Proyecto ID:', editingProjectId);
+
+			// Obtener resumen completo
+			const completeSummary = getCompleteSummary();
+			console.log('Resumen completo para guardar:', completeSummary);
+
+			// Obtener proyectos del localStorage
+			const savedProjects = localStorage.getItem('scatProjects');
+			if (!savedProjects) {
+				console.log('No hay proyectos guardados');
+				return false;
+			}
+
+			const projects = JSON.parse(savedProjects);
+			const projectIndex = projects.findIndex(p => p.id === editingProjectId);
 			
-			try {
-				// Crear proyecto con datos básicos
-				const newProject = {
-					id: Date.now(),
-					name: projectData.evento || 'Proyecto SCAT',
-					description: projectData.otrosDatos || `Involucrado: ${projectData.involucrado} - Área: ${projectData.area}`,
-					createdAt: new Date().toISOString(),
-					formData: { ...projectData },
-					scatData: {
-						evaluacion: evaluacionData,
-						contacto: contactoData,
-						causasInmediatas: causasInmediatasData,
-						causasBasicas: causasBasicasData,
-						necesidadesControl: necesidadesControlData
-					},
-					status: 'active',
-					lastModified: new Date().toISOString(),
-					version: 1,
-					isReal: true,
-					isExample: false,
-					isSimulated: false
-				};
-
-				// Guardar en localStorage
-				const existingProjects = localStorage.getItem('scatProjects');
-				const projects = existingProjects ? JSON.parse(existingProjects) : [];
-				const updatedProjects = [newProject, ...projects];
-				localStorage.setItem('scatProjects', JSON.stringify(updatedProjects));
-				
-				console.log('Nuevo proyecto creado y guardado:', newProject);
-				return true;
-			} catch (error) {
-				console.error('Error creando nuevo proyecto:', error);
+			if (projectIndex === -1) {
+				console.log('Proyecto no encontrado para editar');
 				return false;
 			}
-		}
 
-		// Si hay proyecto actual, usar el guardado forzado
-		if (currentProjectId) {
-			try {
-				forceSave();
-				console.log('Datos SCAT guardados en proyecto existente');
-				return true;
-			} catch (error) {
-				console.error('Error guardando en proyecto existente:', error);
-				return false;
+			// Actualizar proyecto existente
+			const updatedProject = {
+				...projects[projectIndex],
+				formData: completeSummary.project,
+				scatData: {
+					evaluacion: completeSummary.evaluacion,
+					contacto: completeSummary.contacto,
+					causasInmediatas: completeSummary.causasInmediatas,
+					causasBasicas: completeSummary.causasBasicas,
+					necesidadesControl: completeSummary.necesidadesControl
+				},
+				lastModified: new Date().toISOString(),
+				version: (projects[projectIndex].version || 1) + 1
+			};
+
+			projects[projectIndex] = updatedProject;
+			
+			// Guardar en localStorage
+			localStorage.setItem('scatProjects', JSON.stringify(projects));
+			
+			console.log('=== PROYECTO EDITADO GUARDADO EXITOSAMENTE ===');
+			return true;
+		} catch (error) {
+			console.error('Error guardando proyecto editado:', error);
+			return false;
+		}
+	}, [isEditingMode, editingProjectId, getCompleteSummary]);
+
+	// Función para manejar guardado manual
+	const handleSaveProgress = useCallback(async () => {
+		console.log('=== GUARDADO MANUAL SOLICITADO ===');
+		
+		if (isEditingMode) {
+			// Modo edición: guardar proyecto editado
+			const success = await saveEditedProject();
+			if (success) {
+				alert('Progreso guardado exitosamente');
+			} else {
+				alert('Error al guardar el progreso');
 			}
+		} else if (currentProjectId) {
+			// Proyecto existente: guardar datos SCAT
+			const success = await saveScatDataToProject();
+			if (success) {
+				alert('Progreso guardado exitosamente');
+			} else {
+				alert('Error al guardar el progreso');
+			}
+		} else {
+			// Sin proyecto: guardar temporalmente
+			console.log('Guardando datos temporalmente (sin proyecto)');
+			const currentData = getCompleteSummary();
+			localStorage.setItem('scatData', JSON.stringify(currentData));
+			alert('Progreso guardado temporalmente');
+		}
+	}, [isEditingMode, currentProjectId, saveEditedProject, saveScatDataToProject, getCompleteSummary]);
+
+	// Función para completar análisis
+	const handleCompleteAnalysis = useCallback(async () => {
+		console.log('=== COMPLETANDO ANÁLISIS ===');
+		
+		if (isViewingMode) {
+			// Modo visualización: ir directamente a descripción
+			console.log('Modo visualización - navegando a descripción');
+			if (onNavigateToDescription) {
+				onNavigateToDescription(projectData);
+			}
+			return;
 		}
 
-		// Si no hay datos del proyecto, guardar como temporal
-		console.log('Guardando datos temporalmente');
-		const currentState = getCompleteSummary();
-		localStorage.setItem('scatData', JSON.stringify(currentState));
-		return true;
-	}, [currentProjectId, projectData, evaluacionData, contactoData, causasInmediatasData, causasBasicasData, necesidadesControlData, forceSave, getCompleteSummary]);
+		// Guardar progreso antes de completar
+		if (isEditingMode) {
+			await saveEditedProject();
+		} else if (currentProjectId) {
+			await saveScatDataToProject();
+		}
 
-	// Debug: Mostrar datos cargados
+		// Navegar a descripción
+		if (onNavigateToDescription) {
+			onNavigateToDescription(projectData);
+		}
+	}, [isViewingMode, isEditingMode, currentProjectId, projectData, onNavigateToDescription, saveEditedProject, saveScatDataToProject]);
+
+	// Debug de estados
 	useEffect(() => {
 		console.log('=== SCAT INTERFACE - DATOS ACTUALES ===');
 		console.log('isViewingMode:', isViewingMode);
@@ -157,7 +227,7 @@ function ScatInterface({
 	useEffect(() => {
 		console.log('=== INICIALIZANDO SCAT INTERFACE ===');
 		console.log('FormData:', formData);
-		
+
 		if (isInitialized) {
 			console.log('Ya está inicializado, saltando...');
 			return;
@@ -166,7 +236,7 @@ function ScatInterface({
 		const initializeInterface = async () => {
 			try {
 				setInitializationError(null);
-				
+
 				if (formData) {
 					if (formData.isViewing && formData.projectData) {
 						// Modo visualización: cargar proyecto completo en solo lectura
@@ -186,7 +256,7 @@ function ScatInterface({
 						setEditingProjectId(null);
 						console.log('=== PROYECTO CARGADO PARA VISUALIZACIÓN ===');
 					} else if (formData.isEditing && formData.projectData) {
-						// Modo edición: cargar proyecto completo para edición
+						// Modo edición: cargar proyecto para editar
 						console.log('=== MODO EDICIÓN ===');
 						console.log('Proyecto a editar:', formData.projectData);
 						
@@ -200,17 +270,24 @@ function ScatInterface({
 						
 						setIsViewingMode(false);
 						setIsEditingMode(true);
-						setEditingProjectId(formData.projectId);
+						setEditingProjectId(formData.projectData.id);
 						console.log('=== PROYECTO CARGADO PARA EDICIÓN ===');
 					} else {
-						// Modo nuevo proyecto o continuación
-						console.log('=== MODO NUEVO PROYECTO/CONTINUACIÓN ===');
-						resetAllData();
-						await new Promise(resolve => setTimeout(resolve, 50));
+						// Nuevo proyecto o continuación: establecer datos del formulario
+						console.log('=== NUEVO PROYECTO O CONTINUACIÓN ===');
+						console.log('Datos del formulario:', formData);
+						
+						// NO resetear si hay datos existentes (continuación)
+						if (!hasData()) {
+							resetAllData();
+							await new Promise(resolve => setTimeout(resolve, 100));
+						}
+						
 						setProjectData(formData);
 						setIsViewingMode(false);
 						setIsEditingMode(false);
 						setEditingProjectId(null);
+						console.log('=== DATOS DEL FORMULARIO ESTABLECIDOS ===');
 					}
 				} else {
 					// Sin datos: inicializar limpio
@@ -220,10 +297,9 @@ function ScatInterface({
 					setIsEditingMode(false);
 					setEditingProjectId(null);
 				}
-				
+
 				setIsInitialized(true);
 				console.log('=== INICIALIZACIÓN COMPLETADA ===');
-				
 			} catch (error) {
 				console.error('Error en inicialización:', error);
 				setInitializationError(error.message);
@@ -232,290 +308,58 @@ function ScatInterface({
 		};
 
 		initializeInterface();
-	}, [formData, isInitialized, resetAllData, setProjectData, loadProjectData]);
-
-	// Función para guardar proyecto editado
-	const saveEditedProject = useCallback(async () => {
-		if (!isEditingMode || !editingProjectId) {
-			console.log('No está en modo edición o no hay proyecto ID');
-			return false;
-		}
-
-		try {
-			console.log('=== GUARDANDO PROYECTO EDITADO ===');
-			console.log('Project ID:', editingProjectId);
-			
-			// Obtener datos completos actuales
-			const currentData = getCompleteSummary();
-			console.log('Datos actuales para guardar:', currentData);
-
-			// Obtener proyectos del localStorage
-			const savedProjects = localStorage.getItem('scatProjects');
-			if (!savedProjects) {
-				throw new Error('No se encontraron proyectos en localStorage');
-			}
-
-			const projects = JSON.parse(savedProjects);
-			const projectIndex = projects.findIndex(p => p.id === editingProjectId);
-			
-			if (projectIndex === -1) {
-				throw new Error('Proyecto no encontrado');
-			}
-
-			// Actualizar proyecto con nuevos datos SCAT
-			const updatedProject = {
-				...projects[projectIndex],
-				// Actualizar datos SCAT
-				scatData: {
-					evaluacion: currentData.evaluacion,
-					contacto: currentData.contacto,
-					causasInmediatas: currentData.causasInmediatas,
-					causasBasicas: currentData.causasBasicas,
-					necesidadesControl: currentData.necesidadesControl
-				},
-				// Actualizar metadatos
-				lastModified: new Date().toISOString(),
-				version: (projects[projectIndex].version || 1) + 1
-			};
-
-			projects[projectIndex] = updatedProject;
-			
-			// Guardar en localStorage
-			localStorage.setItem('scatProjects', JSON.stringify(projects));
-			
-			console.log('=== PROYECTO EDITADO GUARDADO EXITOSAMENTE ===');
-			console.log('Proyecto actualizado:', updatedProject);
-			
-			return true;
-		} catch (error) {
-			console.error('Error guardando proyecto editado:', error);
-			return false;
-		}
-	}, [isEditingMode, editingProjectId, getCompleteSummary]);
+	}, [formData, isInitialized, resetAllData, setProjectData, loadProjectData, hasData]);
 
 	// Navegación entre secciones
-	const handleSectionClick = useCallback((sectionId) => {
-		console.log('=== NAVEGANDO A SECCIÓN ===', sectionId);
-		
-		const sectionExists = scatSections.find(section => section.id === sectionId);
-		if (!sectionExists) {
-			console.error('Sección no encontrada:', sectionId);
-			return;
-		}
-
-		setActiveSection(sectionId);
-	}, []);
-
-	// Función para obtener el índice de la sección actual
-	const getCurrentSectionIndex = useCallback(() => {
-		const index = scatSections.findIndex(section => section.id === activeSection);
-		return index;
-	}, [activeSection]);
-
-	// Navegación a sección anterior
-	const goToPreviousSection = useCallback(() => {
-		const currentIndex = getCurrentSectionIndex();
-		if (currentIndex > 0) {
-			const previousSection = scatSections[currentIndex - 1];
-			setActiveSection(previousSection.id);
-		}
-	}, [getCurrentSectionIndex]);
-
-	// Navegación a sección siguiente
-	const goToNextSection = useCallback(() => {
-		const currentIndex = getCurrentSectionIndex();
-		if (currentIndex < scatSections.length - 1) {
-			const nextSection = scatSections[currentIndex + 1];
-			setActiveSection(nextSection.id);
-		}
-	}, [getCurrentSectionIndex]);
-
-	// Funciones para verificar si se puede navegar
-	const canGoPrevious = useCallback(() => {
-		return getCurrentSectionIndex() > 0;
-	}, [getCurrentSectionIndex]);
-
-	const canGoNext = useCallback(() => {
-		return getCurrentSectionIndex() < scatSections.length - 1;
-	}, [getCurrentSectionIndex]);
-
-	// Navegación principal con guardado automático
-	const handleBackToMenu = useCallback(async () => {
-		console.log('=== NAVEGANDO AL MENÚ PRINCIPAL ===');
-		
-		if (isViewingMode) {
-			// En modo visualización, simplemente navegar
-			if (onNavigateToBase) {
-				onNavigateToBase();
-			}
-			return;
-		}
-
-		// Guardar datos antes de salir
-		if (hasData()) {
-			console.log('Hay datos para guardar antes de salir');
-			
-			try {
-				let saved = false;
-				
-				if (isEditingMode) {
-					saved = await saveEditedProject();
-				} else {
-					saved = await saveScatDataToProject();
-				}
-				
-				if (saved) {
-					console.log('Datos guardados exitosamente antes de navegar');
-				} else {
-					console.log('Error guardando datos, pero continuando navegación');
-				}
-			} catch (error) {
-				console.error('Error en guardado antes de navegar:', error);
-			}
-		}
-		
-		if (onNavigateToBase) {
-			onNavigateToBase();
-		}
-	}, [isViewingMode, isEditingMode, hasData, onNavigateToBase, saveEditedProject, saveScatDataToProject]);
-
-	const handleShowGrid = useCallback(async () => {
-		console.log('=== NAVEGANDO A PROYECTOS ===');
-		
-		if (isViewingMode) {
-			// En modo visualización, simplemente navegar
-			if (onNavigateToProjects) {
-				onNavigateToProjects();
-			}
-			return;
-		}
-
-		// Guardar datos antes de salir
-		if (hasData()) {
-			console.log('Hay datos para guardar antes de ir a proyectos');
-			
-			try {
-				let saved = false;
-				
-				if (isEditingMode) {
-					saved = await saveEditedProject();
-				} else {
-					saved = await saveScatDataToProject();
-				}
-				
-				if (saved) {
-					console.log('Datos guardados exitosamente antes de navegar a proyectos');
-				} else {
-					console.log('Error guardando datos, pero continuando navegación');
-				}
-			} catch (error) {
-				console.error('Error en guardado antes de navegar a proyectos:', error);
-			}
-		}
-		
-		if (onNavigateToProjects) {
-			onNavigateToProjects();
-		}
-	}, [isViewingMode, isEditingMode, hasData, onNavigateToProjects, saveEditedProject, saveScatDataToProject]);
-
-	const handleCompleteAnalysis = useCallback(async () => {
-		console.log('=== COMPLETANDO ANÁLISIS ===');
-		
-		if (!hasData()) {
-			alert("Por favor, complete al menos una sección antes de finalizar el análisis.");
-			return;
-		}
-		
-		// Guardar antes de finalizar
-		try {
-			let saved = false;
-			
-			if (isEditingMode) {
-				saved = await saveEditedProject();
-			} else {
-				saved = await saveScatDataToProject();
-			}
-			
-			if (saved) {
-				console.log('Datos guardados exitosamente antes de finalizar');
-			}
-		} catch (error) {
-			console.error('Error guardando antes de finalizar:', error);
-		}
-		
-		if (onNavigateToDescription) {
-			onNavigateToDescription();
-		}
-	}, [hasData, isEditingMode, onNavigateToDescription, saveEditedProject, saveScatDataToProject]);
-
-	// Funciones de utilidad
-	const handleSaveProgress = useCallback(async () => {
-		if (isViewingMode) {
-			alert('Este proyecto está en modo solo lectura');
-			return;
-		}
-		
-		console.log('=== GUARDANDO PROGRESO MANUALMENTE ===');
-		
-		try {
-			let saved = false;
-			
-			if (isEditingMode) {
-				saved = await saveEditedProject();
-			} else {
-				saved = await saveScatDataToProject();
-			}
-			
-			if (saved) {
-				alert('Progreso guardado exitosamente');
-			} else {
-				alert('Error al guardar el progreso');
-			}
-		} catch (error) {
-			console.error('Error guardando progreso:', error);
-			alert('Error al guardar el progreso');
-		}
-	}, [isViewingMode, isEditingMode, saveEditedProject, saveScatDataToProject]);
-
-	const handleShowInfo = () => {
-		const currentSection = scatSections.find(section => section.id === activeSection);
-		let modeInfo = '';
-		if (isViewingMode) {
-			modeInfo = ' (Modo solo lectura)';
-		} else if (isEditingMode) {
-			modeInfo = ' (Modo edición)';
-		}
-		alert(`Información sobre: ${currentSection?.title}${modeInfo}`);
+	const getCurrentSectionIndex = () => {
+		return scatSections.findIndex(section => section.id === activeSection);
 	};
 
-	// Obtener el componente activo
-	const ActiveComponent = scatSections.find((section) => section.id === activeSection)?.component || EvaluacionContent;
+	const goToPreviousSection = () => {
+		const currentIndex = getCurrentSectionIndex();
+		if (currentIndex > 0) {
+			setActiveSection(scatSections[currentIndex - 1].id);
+		}
+	};
 
-	// Variables para el estado de las flechas
-	const isPreviousDisabled = !canGoPrevious() || !isInitialized;
-	const isNextDisabled = !canGoNext() || !isInitialized;
+	const goToNextSection = () => {
+		const currentIndex = getCurrentSectionIndex();
+		if (currentIndex < scatSections.length - 1) {
+			setActiveSection(scatSections[currentIndex + 1].id);
+		}
+	};
 
-	// Mostrar pantalla de carga mientras se inicializa
-	if (!isInitialized) {
+	// Renderizar contenido de la sección activa
+	const renderActiveSection = () => {
+		const currentSection = scatSections.find(section => section.id === activeSection);
+		if (!currentSection) return null;
+
+		const SectionComponent = currentSection.component;
+		return <SectionComponent />;
+	};
+
+	// Manejar errores de inicialización
+	if (initializationError) {
 		return (
 			<div className={styles.container}>
-				<div className={styles.loadingOverlay}>
-					<div className={styles.loadingSpinner}></div>
-					<p>Inicializando interfaz...</p>
-					{formData?.isViewing && <p>Cargando datos del proyecto...</p>}
-					{formData?.isEditing && <p>Cargando proyecto para edición...</p>}
+				<div className={styles.errorBanner}>
+					<h3>Error de Inicialización</h3>
+					<p>{initializationError}</p>
+					<button onClick={() => window.location.reload()}>
+						Recargar Página
+					</button>
 				</div>
 			</div>
 		);
 	}
 
-	// Mostrar error de inicialización si existe
-	if (initializationError) {
+	// Mostrar loading si no está inicializado
+	if (!isInitialized) {
 		return (
 			<div className={styles.container}>
-				<div className={styles.errorBanner}>
-					<span>Error de inicialización: {initializationError}</span>
-					<button onClick={() => window.location.reload()}>Recargar</button>
+				<div className={styles.loadingOverlay}>
+					<div className={styles.loadingSpinner}></div>
+					<p>Inicializando formulario SCAT...</p>
 				</div>
 			</div>
 		);
@@ -529,25 +373,27 @@ function ScatInterface({
 					<div className={styles.headerLeft}>
 						<button 
 							className={styles.backToMenuButton}
-							onClick={handleBackToMenu}
-							title="Volver al menú principal (guarda automáticamente)"
+							onClick={onNavigateToBase}
+							title="Volver al menú principal"
 						>
-							← Menú Principal
+							← Menú
 						</button>
-						{(isViewingMode || isEditingMode) && (
+						
+						{isEditingMode && (
+							<div className={styles.editingIndicator}>
+								<span className={styles.editingBadge}>Editando</span>
+								<span className={styles.editingText}>Proyecto ID: {editingProjectId}</span>
+							</div>
+						)}
+						
+						{isViewingMode && (
 							<div className={styles.viewingIndicator}>
-								<span className={isViewingMode ? styles.viewingBadge : styles.editingBadge}>
-									{isViewingMode ? 'SOLO LECTURA' : 'EDITANDO'}
-								</span>
-								<span className={styles.viewingText}>
-									{formData?.projectData?.name || 'Proyecto'}
-								</span>
+								<span className={styles.viewingBadge}>Visualizando</span>
+								<span className={styles.viewingText}>Modo solo lectura</span>
 							</div>
 						)}
 					</div>
-					<div className={styles.headerCenter}>
-						{/* Espacio para título si es necesario */}
-					</div>
+
 					<div className={styles.headerRight}>
 						<div className={styles.sectionCounter}>
 							{getCurrentSectionIndex() + 1} de {scatSections.length}
@@ -568,39 +414,37 @@ function ScatInterface({
 			<div className={styles.navigationContainer}>
 				<div className={styles.navigationHeader}>
 					<button 
-						className={`${styles.navArrow} ${isPreviousDisabled ? styles.disabled : ''}`}
+						className={styles.navArrow}
 						onClick={goToPreviousSection}
-						disabled={isPreviousDisabled}
-						title={isPreviousDisabled ? 'No hay sección anterior' : 'Sección anterior'}
+						disabled={getCurrentSectionIndex() === 0}
+						title="Sección anterior"
 					>
 						<ArrowLeftIcon />
 					</button>
-					<div className={styles.currentSectionTitle}>
-						{scatSections.find(section => section.id === activeSection)?.title}
-					</div>
+					
+					<h2 className={styles.currentSectionTitle}>
+						{scatSections.find(s => s.id === activeSection)?.title}
+					</h2>
+					
 					<button 
-						className={`${styles.navArrow} ${isNextDisabled ? styles.disabled : ''}`}
+						className={styles.navArrow}
 						onClick={goToNextSection}
-						disabled={isNextDisabled}
-						title={isNextDisabled ? 'No hay sección siguiente' : 'Siguiente sección'}
+						disabled={getCurrentSectionIndex() === scatSections.length - 1}
+						title="Siguiente sección"
 					>
 						<ArrowRightIcon />
 					</button>
 				</div>
-				
+
 				<div className={styles.navigationButtons}>
 					{scatSections.map((section, index) => (
 						<button
 							key={section.id}
-							onClick={() => handleSectionClick(section.id)}
-							className={`${styles.navButton} ${
-								activeSection === section.id ? styles.activeButton : ""
-							}`}
+							className={`${styles.navButton} ${activeSection === section.id ? styles.active : ''}`}
+							onClick={() => setActiveSection(section.id)}
 							title={section.title}
-							disabled={!isInitialized}
 						>
-							<div className={styles.navButtonNumber}>{index + 1}</div>
-							<div className={styles.navButtonText}>{section.title}</div>
+							{index + 1}. {section.id.replace('-', ' ').toUpperCase()}
 						</button>
 					))}
 				</div>
@@ -608,77 +452,36 @@ function ScatInterface({
 
 			{/* Content Area */}
 			<div className={styles.contentArea}>
-				<ActiveComponent />
+				{renderActiveSection()}
 			</div>
 
 			{/* Bottom Navigation */}
 			<div className={styles.bottomNav}>
 				<button 
 					className={styles.iconButton}
-					onClick={handleShowInfo}
+					onClick={() => alert('Información sobre SCAT')}
 					title="Información"
-					disabled={!isInitialized}
 				>
 					<InfoIcon />
 				</button>
+				
 				<button 
 					className={styles.iconButton}
 					onClick={handleSaveProgress}
-					title={isViewingMode ? "Modo solo lectura" : "Guardar progreso manualmente"}
-					disabled={!isInitialized}
+					title="Guardar progreso"
+					disabled={isViewingMode}
 				>
 					<SaveIcon />
 				</button>
+				
 				<button 
-					className={`${styles.iconButton} ${styles.darkButton}`}
-					onClick={handleShowGrid}
-					title="Ver proyectos (guarda automáticamente)"
-					disabled={!isInitialized}
+					className={styles.iconButton}
+					onClick={onNavigateToProjects}
+					title="Ver proyectos"
 				>
 					<GridIcon />
 				</button>
-				<button
-					className={`${styles.iconButton} ${styles.darkButton} ${isPreviousDisabled ? styles.disabled : ''}`}
-					onClick={goToPreviousSection}
-					disabled={isPreviousDisabled}
-					title={isPreviousDisabled ? 'No hay sección anterior' : 'Sección anterior'}
-				>
-					<ArrowLeftIcon />
-				</button>
-				<button 
-					className={`${styles.iconButton} ${styles.darkButton} ${isNextDisabled ? styles.disabled : ''}`}
-					onClick={goToNextSection}
-					disabled={isNextDisabled}
-					title={isNextDisabled ? 'No hay sección siguiente' : 'Siguiente sección'}
-				>
-					<ArrowRightIcon />
-				</button>
-			</div>
-
-			{/* Progress Indicator */}
-			<div className={styles.progressIndicator}>
-				<div className={styles.progressBar}>
-					<div 
-						className={styles.progressFill}
-						style={{ width: `${((getCurrentSectionIndex() + 1) / scatSections.length) * 100}%` }}
-					></div>
-				</div>
-				<div className={styles.progressText}>
-					Progreso: {getCurrentSectionIndex() + 1}/{scatSections.length}
-					{isViewingMode && (
-						<span className={styles.viewingProgress}>
-							{' '}(Solo lectura)
-						</span>
-					)}
-					{isEditingMode && (
-						<span className={styles.editingProgress}>
-							{' '}(Editando)
-						</span>
-					)}
-				</div>
 			</div>
 		</div>
 	);
 }
-
-export default ScatInterface;
