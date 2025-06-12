@@ -55,9 +55,11 @@ const initialState = {
     globalObservation: '',
     medidasCorrectivas: ''
   },
-  // Metadatos simplificados
+  // Metadatos
   lastModified: null,
-  dataVersion: 1
+  dataVersion: 1,
+  isEditing: false,
+  editingProjectId: null
 };
 
 // Función para crear copia profunda
@@ -87,7 +89,7 @@ const safeDataMerge = (defaultData, loadedData) => {
   return merged;
 };
 
-// Reducer simplificado
+// Reducer mejorado
 function scatDataReducer(state, action) {
   const newState = { ...state, lastModified: new Date().toISOString() };
   
@@ -149,6 +151,13 @@ function scatDataReducer(state, action) {
         lastModified: new Date().toISOString()
       };
     
+    case ACTIONS.SET_EDITING_MODE:
+      return {
+        ...newState,
+        isEditing: action.payload.isEditing,
+        editingProjectId: action.payload.projectId
+      };
+    
     case ACTIONS.RESET_DATA:
       return getCleanInitialState();
     
@@ -157,7 +166,7 @@ function scatDataReducer(state, action) {
   }
 }
 
-// Provider simplificado
+// Provider mejorado
 export function ScatDataProvider({ children }) {
   const [state, dispatch] = useReducer(scatDataReducer, getCleanInitialState());
   const isInitializedRef = useRef(false);
@@ -168,31 +177,39 @@ export function ScatDataProvider({ children }) {
     if (!isInitializedRef.current) {
       console.log('=== INICIALIZANDO SCAT DATA CONTEXT ===');
       
-      // Cargar datos temporales si existen
-      const savedData = localStorage.getItem('scatData');
-      if (savedData) {
-        try {
-          const parsedData = JSON.parse(savedData);
-          console.log('Cargando datos temporales del localStorage');
-          dispatch({ type: ACTIONS.LOAD_DATA, payload: parsedData });
-        } catch (error) {
-          console.error('Error cargando datos temporales:', error);
+      // Solo cargar datos temporales si no estamos en modo edición
+      if (!state.isEditing) {
+        const savedData = localStorage.getItem('scatData');
+        if (savedData) {
+          try {
+            const parsedData = JSON.parse(savedData);
+            console.log('Cargando datos temporales del localStorage');
+            dispatch({ type: ACTIONS.LOAD_DATA, payload: parsedData });
+          } catch (error) {
+            console.error('Error cargando datos temporales:', error);
+          }
         }
       }
       
       isInitializedRef.current = true;
     }
-  }, []);
+  }, [state.isEditing]);
 
-  // Auto-guardado para proyectos nuevos
+  // Auto-guardado mejorado
   useEffect(() => {
     if (isInitializedRef.current) {
       const currentStateString = JSON.stringify(state);
       
       // Solo guardar si el estado ha cambiado realmente
       if (lastSavedStateRef.current !== currentStateString) {
-        console.log('Auto-guardando datos temporales');
-        localStorage.setItem('scatData', currentStateString);
+        if (state.isEditing) {
+          // En modo edición, no guardar en localStorage temporal
+          console.log('Modo edición activo - no guardando datos temporales');
+        } else {
+          // Solo para proyectos nuevos
+          console.log('Auto-guardando datos temporales');
+          localStorage.setItem('scatData', currentStateString);
+        }
         lastSavedStateRef.current = currentStateString;
       }
     }
@@ -231,6 +248,17 @@ export function ScatDataProvider({ children }) {
     dispatch({ type: ACTIONS.SET_NECESIDADES_CONTROL_DATA, payload: data });
   }, []);
 
+  // Función para establecer modo edición
+  const setEditingMode = useCallback((isEditing, projectId = null) => {
+    console.log('=== ESTABLECIENDO MODO EDICIÓN ===');
+    console.log('isEditing:', isEditing, 'projectId:', projectId);
+    
+    dispatch({ 
+      type: ACTIONS.SET_EDITING_MODE, 
+      payload: { isEditing, projectId } 
+    });
+  }, []);
+
   // Reset completo
   const resetAllData = useCallback(() => {
     console.log('=== RESET COMPLETO DE DATOS ===');
@@ -239,7 +267,7 @@ export function ScatDataProvider({ children }) {
     lastSavedStateRef.current = null;
   }, []);
 
-  // Cargar proyecto para visualización
+  // Cargar proyecto para visualización o edición
   const loadProjectData = useCallback((projectData) => {
     console.log('=== CARGANDO DATOS DE PROYECTO ===');
     console.log('Datos del proyecto:', projectData);
@@ -259,7 +287,9 @@ export function ScatDataProvider({ children }) {
         
         // Metadatos
         lastModified: projectData.lastModified || new Date().toISOString(),
-        dataVersion: (projectData.version || 1)
+        dataVersion: (projectData.version || 1),
+        isEditing: false, // Se establecerá por separado si es necesario
+        editingProjectId: null
       };
 
       console.log('=== ESTADO COMPLETO CONSTRUIDO ===');
@@ -287,7 +317,9 @@ export function ScatDataProvider({ children }) {
       necesidadesControl: state.necesidadesControlData,
       metadata: {
         lastModified: state.lastModified,
-        dataVersion: state.dataVersion
+        dataVersion: state.dataVersion,
+        isEditing: state.isEditing,
+        editingProjectId: state.editingProjectId
       }
     };
   }, [state]);
@@ -321,6 +353,49 @@ export function ScatDataProvider({ children }) {
     );
   }, [state]);
 
+  // Función para actualizar proyecto existente en localStorage
+  const updateExistingProject = useCallback((projectId, scatData) => {
+    try {
+      console.log('=== ACTUALIZANDO PROYECTO EXISTENTE ===');
+      console.log('Project ID:', projectId);
+      console.log('SCAT Data:', scatData);
+
+      // Obtener proyectos del localStorage
+      const savedProjects = localStorage.getItem('scatProjects');
+      if (!savedProjects) {
+        throw new Error('No se encontraron proyectos en localStorage');
+      }
+
+      const projects = JSON.parse(savedProjects);
+      const projectIndex = projects.findIndex(p => p.id === projectId);
+      
+      if (projectIndex === -1) {
+        throw new Error('Proyecto no encontrado');
+      }
+
+      // Actualizar proyecto con nuevos datos SCAT
+      const updatedProject = {
+        ...projects[projectIndex],
+        scatData: scatData,
+        lastModified: new Date().toISOString(),
+        version: (projects[projectIndex].version || 1) + 1
+      };
+
+      projects[projectIndex] = updatedProject;
+      
+      // Guardar en localStorage
+      localStorage.setItem('scatProjects', JSON.stringify(projects));
+      
+      console.log('=== PROYECTO ACTUALIZADO EXITOSAMENTE ===');
+      console.log('Proyecto actualizado:', updatedProject);
+      
+      return true;
+    } catch (error) {
+      console.error('Error actualizando proyecto:', error);
+      return false;
+    }
+  }, []);
+
   // Valor del contexto
   const value = {
     // Estado
@@ -333,8 +408,10 @@ export function ScatDataProvider({ children }) {
     setCausasInmediatasData,
     setCausasBasicasData,
     setNecesidadesControlData,
+    setEditingMode,
     resetAllData,
     loadProjectData,
+    updateExistingProject,
     
     // Funciones de utilidad
     getCompleteSummary,
