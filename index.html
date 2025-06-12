@@ -465,7 +465,7 @@
             font-size: clamp(3rem, 8vw, 6rem);
             font-weight: 800;
             line-height: 0.9;
-            margin-bottom: var(--space-xl);
+            margin-bottom: var(--space-lg);
             letter-spacing: -0.03em;
             position: relative;
         }
@@ -527,6 +527,37 @@
             font-family: var(--font-mono);
             margin-left: var(--space-xs);
             opacity: 0.7;
+        }
+
+        /* ===== DESCRIPCIÓN DE LA EMPRESA ===== */
+        .hero__company-description {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-xl);
+            line-height: 1.7;
+            max-width: 650px;
+            font-weight: 400;
+            position: relative;
+            padding: var(--space-lg);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            border-left: 4px solid var(--starflex-blue);
+        }
+
+        .hero__company-description::before {
+            content: '💼';
+            position: absolute;
+            top: var(--space-md);
+            left: var(--space-md);
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .hero__company-description-text {
+            margin-left: var(--space-xl);
+            font-style: italic;
         }
 
         .hero__subtitle {
@@ -649,7 +680,7 @@
             text-shadow: 0 0 10px rgba(6, 255, 165, 0.5);
         }
 
-        /* ===== VIDEO FUTURISTA ===== */
+        /* ===== VIDEO FUTURISTA CON MEJOR RESOLUCIÓN ===== */
         .hero__media {
             display: flex;
             justify-content: center;
@@ -688,11 +719,14 @@
         }
 
         .hero__video {
-            width: 350px;
-            height: 700px;
+            width: 380px;
+            height: 760px;
             object-fit: cover;
             border-radius: 35px;
             display: block;
+            /* Mejorar la calidad del video */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
         }
 
         .hero__video-glow {
@@ -829,12 +863,16 @@
             }
 
             .hero__video {
-                width: 300px;
-                height: 600px;
+                width: 320px;
+                height: 640px;
             }
 
             .hero__download {
                 justify-content: center;
+            }
+
+            .hero__company-description {
+                max-width: 100%;
             }
         }
 
@@ -899,6 +937,15 @@
                 font-size: 2.5rem;
             }
 
+            .hero__company-description {
+                font-size: 1rem;
+                padding: var(--space-md);
+            }
+
+            .hero__company-description-text {
+                margin-left: var(--space-lg);
+            }
+
             .hero__subtitle {
                 font-size: 1.1rem;
             }
@@ -909,8 +956,8 @@
             }
 
             .hero__video {
-                width: 260px;
-                height: 520px;
+                width: 280px;
+                height: 560px;
             }
 
             .btn--cta {
@@ -934,6 +981,15 @@
                 font-size: 2rem;
             }
 
+            .hero__company-description {
+                font-size: 0.95rem;
+                padding: var(--space-sm);
+            }
+
+            .hero__company-description-text {
+                margin-left: var(--space-md);
+            }
+
             .hero__subtitle {
                 font-size: 1rem;
             }
@@ -945,8 +1001,8 @@
             }
 
             .hero__video {
-                width: 220px;
-                height: 440px;
+                width: 240px;
+                height: 480px;
             }
 
             .download-btn__image {
@@ -1035,6 +1091,12 @@
                         <span class="hero__title--amazon">AMAZON</span>
                     </h1>
                     
+                    <div class="hero__company-description">
+                        <div class="hero__company-description-text">
+                            Somos una empresa dedicada a mejorar la experiencia laboral de los conductores de Amazon Flex permitiendo seleccionar de forma automática y eficiente los mejores bloques de su preferencia.
+                        </div>
+                    </div>
+                    
                     <p class="hero__subtitle">
                         Automatización inteligente de última generación que multiplica tus ganancias. 
                         La plataforma más avanzada para conductores profesionales del futuro.
@@ -1066,10 +1128,10 @@
                 
                 <div class="hero__media">
                     <div class="hero__video-container">
-                        <video class="hero__video" autoplay muted loop playsinline>
+                        <video class="hero__video" autoplay muted loop playsinline preload="metadata">
                             <source src="./assets/home.mp4" type="video/mp4">
                             <!-- Fallback futurista -->
-                            <div style="width: 350px; height: 700px; background: linear-gradient(135deg, #151922 0%, #0a0d14 100%); border-radius: 35px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1.5rem; border: 1px solid rgba(0, 212, 255, 0.2);">
+                            <div style="width: 380px; height: 760px; background: linear-gradient(135deg, #151922 0%, #0a0d14 100%); border-radius: 35px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1.5rem; border: 1px solid rgba(0, 212, 255, 0.2);">
                                 <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #00d4ff 0%, #8b5cf6 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);">📱</div>
                                 <div style="color: #00d4ff; font-size: 1.5rem; font-weight: bold; text-align: center; font-family: 'Space Grotesk', sans-serif;">
                                     <div>Starflex</div>
@@ -1187,6 +1249,10 @@
             init() {
                 if (!this.video) return;
 
+                // Configurar calidad del video
+                this.video.setAttribute('playsinline', '');
+                this.video.setAttribute('webkit-playsinline', '');
+                
                 const observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
@@ -1199,9 +1265,16 @@
 
                 observer.observe(this.video);
 
-                // Optimización de rendimiento
+                // Optimización de rendimiento y calidad
                 this.video.addEventListener('loadeddata', () => {
                     this.video.style.willChange = 'transform';
+                    // Mejorar la calidad de renderizado
+                    this.video.style.imageRendering = 'crisp-edges';
+                });
+
+                // Precargar el video para mejor calidad
+                this.video.addEventListener('canplaythrough', () => {
+                    console.log('📹 Video loaded with high quality');
                 });
             }
         }
