@@ -22,7 +22,7 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 	useEffect(() => {
 		if (isOpen && project && project.formData) {
 			console.log('=== CARGANDO PROYECTO EN EDIT MODAL ===');
-			console.log('Proyecto:', project);
+			console.log('Proyecto completo:', project);
 			
 			setFormData({
 				evento: project.formData.evento || "",
@@ -88,17 +88,19 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 		console.log('=== GUARDANDO CAMBIOS DEL PROYECTO ===');
 		console.log('Datos del formulario:', formData);
 
-		// Crear proyecto actualizado
+		// Crear proyecto actualizado PRESERVANDO TODOS LOS DATOS SCAT
 		const updatedProject = {
-			...project,
+			...project, // Mantener toda la estructura existente
 			name: formData.evento,
 			description: formData.otrosDatos || 'Sin descripción',
-			formData: formData,
+			formData: formData, // Solo actualizar formData
 			lastModified: new Date().toISOString(),
-			version: (project.version || 1) + 1
+			version: (project.version || 1) + 1,
+			// CRÍTICO: Preservar scatData completamente
+			scatData: project.scatData || {}
 		};
 
-		console.log('Proyecto actualizado:', updatedProject);
+		console.log('Proyecto actualizado (preservando SCAT data):', updatedProject);
 
 		// Llamar a la función onSave del padre
 		onSave(updatedProject);
@@ -146,6 +148,48 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 			alert('Error al generar el PDF. Por favor, intenta nuevamente.');
 		} finally {
 			setIsGeneratingPDF(false);
+		}
+	};
+
+	// Función para verificar si hay datos SCAT disponibles
+	const hasScatData = (section) => {
+		if (!project?.scatData) return false;
+		
+		switch (section) {
+			case 'evaluacion':
+				return project.scatData.evaluacion && 
+					   (project.scatData.evaluacion.severity || 
+						project.scatData.evaluacion.probability || 
+						project.scatData.evaluacion.frequency);
+			case 'contacto':
+				return project.scatData.contacto && 
+					   (project.scatData.contacto.selectedIncidents?.length > 0 ||
+						project.scatData.contacto.observation ||
+						project.scatData.contacto.image);
+			case 'causasInmediatas':
+				return project.scatData.causasInmediatas && 
+					   (project.scatData.causasInmediatas.actos?.selectedItems?.length > 0 ||
+						project.scatData.causasInmediatas.condiciones?.selectedItems?.length > 0 ||
+						project.scatData.causasInmediatas.actos?.observation ||
+						project.scatData.causasInmediatas.condiciones?.observation ||
+						project.scatData.causasInmediatas.actos?.image ||
+						project.scatData.causasInmediatas.condiciones?.image);
+			case 'causasBasicas':
+				return project.scatData.causasBasicas && 
+					   (project.scatData.causasBasicas.personales?.selectedItems?.length > 0 ||
+						project.scatData.causasBasicas.laborales?.selectedItems?.length > 0 ||
+						project.scatData.causasBasicas.personales?.observation ||
+						project.scatData.causasBasicas.laborales?.observation ||
+						project.scatData.causasBasicas.personales?.image ||
+						project.scatData.causasBasicas.laborales?.image);
+			case 'necesidadesControl':
+				return project.scatData.necesidadesControl && 
+					   (project.scatData.necesidadesControl.selectedItems?.length > 0 ||
+						project.scatData.necesidadesControl.globalObservation ||
+						project.scatData.necesidadesControl.globalImage ||
+						project.scatData.necesidadesControl.medidasCorrectivas);
+			default:
+				return false;
 		}
 	};
 
@@ -257,20 +301,20 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 							<div className={styles.scatDataInfo}>
 								<h4>Datos SCAT Disponibles:</h4>
 								<div className={styles.scatDataStatus}>
-									<span className={project.scatData?.evaluacion ? styles.available : styles.notAvailable}>
-										Evaluación: {project.scatData?.evaluacion ? '✓' : '✗'}
+									<span className={hasScatData('evaluacion') ? styles.available : styles.notAvailable}>
+										Evaluación: {hasScatData('evaluacion') ? '✓' : '✗'}
 									</span>
-									<span className={project.scatData?.contacto ? styles.available : styles.notAvailable}>
-										Contacto: {project.scatData?.contacto ? '✓' : '✗'}
+									<span className={hasScatData('contacto') ? styles.available : styles.notAvailable}>
+										Contacto: {hasScatData('contacto') ? '✓' : '✗'}
 									</span>
-									<span className={project.scatData?.causasInmediatas ? styles.available : styles.notAvailable}>
-										Causas Inmediatas: {project.scatData?.causasInmediatas ? '✓' : '✗'}
+									<span className={hasScatData('causasInmediatas') ? styles.available : styles.notAvailable}>
+										Causas Inmediatas: {hasScatData('causasInmediatas') ? '✓' : '✗'}
 									</span>
-									<span className={project.scatData?.causasBasicas ? styles.available : styles.notAvailable}>
-										Causas Básicas: {project.scatData?.causasBasicas ? '✓' : '✗'}
+									<span className={hasScatData('causasBasicas') ? styles.available : styles.notAvailable}>
+										Causas Básicas: {hasScatData('causasBasicas') ? '✓' : '✗'}
 									</span>
-									<span className={project.scatData?.necesidadesControl ? styles.available : styles.notAvailable}>
-										Necesidades de Control: {project.scatData?.necesidadesControl ? '✓' : '✗'}
+									<span className={hasScatData('necesidadesControl') ? styles.available : styles.notAvailable}>
+										Necesidades de Control: {hasScatData('necesidadesControl') ? '✓' : '✗'}
 									</span>
 								</div>
 							</div>

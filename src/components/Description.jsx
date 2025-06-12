@@ -3,9 +3,95 @@
 import "./description.css";
 import { useScatData } from "../contexts/ScatContext";
 import pdfService from "../services/pdfService";
+import { useEffect, useState } from "react";
 
 export default function NextPage({ onGoBack, onStartNew }) {
 	const { getCompleteSummary, resetAllData } = useScatData();
+	const [projectSaved, setProjectSaved] = useState(false);
+
+	// Guardar el proyecto automáticamente cuando se carga la página de descripción
+	useEffect(() => {
+		const saveCompletedProject = () => {
+			try {
+				console.log('=== GUARDANDO PROYECTO COMPLETADO ===');
+				
+				const scatData = getCompleteSummary();
+				
+				// Verificar que hay datos para guardar
+				if (!scatData.project?.evento) {
+					console.log('No hay datos del proyecto para guardar');
+					return;
+				}
+
+				// Crear el proyecto completo
+				const completedProject = {
+					id: Date.now().toString(), // Generar ID único
+					name: scatData.project.evento,
+					description: scatData.project.otrosDatos || 'Análisis SCAT completado',
+					createdAt: new Date().toISOString(),
+					lastModified: new Date().toISOString(),
+					version: 1,
+					formData: {
+						evento: scatData.project.evento,
+						involucrado: scatData.project.involucrado,
+						area: scatData.project.area,
+						fechaHora: scatData.project.fechaHora,
+						investigador: scatData.project.investigador,
+						otrosDatos: scatData.project.otrosDatos
+					},
+					scatData: {
+						evaluacion: scatData.evaluacion,
+						contacto: scatData.contacto,
+						causasInmediatas: scatData.causasInmediatas,
+						causasBasicas: scatData.causasBasicas,
+						necesidadesControl: scatData.necesidadesControl
+					},
+					isCompleted: true // Marcar como completado
+				};
+
+				// Obtener proyectos existentes
+				const existingProjects = JSON.parse(localStorage.getItem('scatProjects') || '[]');
+				
+				// Verificar si ya existe un proyecto con los mismos datos básicos
+				const existingProjectIndex = existingProjects.findIndex(p => 
+					p.formData?.evento === completedProject.formData.evento &&
+					p.formData?.involucrado === completedProject.formData.involucrado &&
+					p.formData?.area === completedProject.formData.area
+				);
+
+				if (existingProjectIndex >= 0) {
+					// Actualizar proyecto existente
+					existingProjects[existingProjectIndex] = {
+						...existingProjects[existingProjectIndex],
+						...completedProject,
+						id: existingProjects[existingProjectIndex].id, // Mantener ID original
+						createdAt: existingProjects[existingProjectIndex].createdAt, // Mantener fecha de creación
+						version: (existingProjects[existingProjectIndex].version || 1) + 1
+					};
+					console.log('Proyecto existente actualizado');
+				} else {
+					// Agregar nuevo proyecto
+					existingProjects.unshift(completedProject);
+					console.log('Nuevo proyecto guardado');
+				}
+
+				// Guardar en localStorage
+				localStorage.setItem('scatProjects', JSON.stringify(existingProjects));
+				setProjectSaved(true);
+				
+				console.log('=== PROYECTO GUARDADO EXITOSAMENTE ===');
+				console.log('Proyecto guardado:', completedProject);
+				
+			} catch (error) {
+				console.error('Error guardando proyecto completado:', error);
+			}
+		};
+
+		// Guardar el proyecto solo una vez cuando se carga la página
+		if (!projectSaved) {
+			saveCompletedProject();
+		}
+	}, [getCompleteSummary, projectSaved]);
 
 	const formatFieldValue = (value) => {
 		return value && value.trim() !== "" ? value : "No especificado";
@@ -191,6 +277,11 @@ Otros Datos: ${formatFieldValue(scatData.project?.otrosDatos)}
 							Análisis SCAT Completado
 						</div>
 						<h1 className="compact-title">Reporte Completo del Análisis SCAT</h1>
+						{projectSaved && (
+							<div className="project-saved-indicator">
+								✅ Proyecto guardado automáticamente
+							</div>
+						)}
 					</div>
 
 					{/* Información completa del formulario */}
@@ -449,6 +540,12 @@ Otros Datos: ${formatFieldValue(scatData.project?.otrosDatos)}
 								<div className="observation-box">
 									<h4>Observaciones Generales:</h4>
 									<p>{scatData.necesidadesControl.globalObservation}</p>
+								</div>
+							)}
+							{scatData.necesidadesControl?.medidasCorrectivas && (
+								<div className="observation-box">
+									<h4>Medidas Correctivas:</h4>
+									<p>{scatData.necesidadesControl.medidasCorrectivas}</p>
 								</div>
 							)}
 						</div>
