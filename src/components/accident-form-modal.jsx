@@ -17,17 +17,16 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 
 	const [errors, setErrors] = useState({});
 	const hasInitialized = useRef(false);
-	const isCreatingProject = useRef(false); // Prevenir creación múltiple
+	const isCreatingProject = useRef(false);
 
-	// Limpiar formulario cuando se abre el modal (solo una vez)
+	// Limpiar formulario cuando se abre el modal
 	useEffect(() => {
 		if (isOpen && !hasInitialized.current) {
 			console.log('=== MODAL ABIERTO - INICIALIZANDO FORMULARIO LIMPIO ===');
 			resetForm();
 			hasInitialized.current = true;
-			isCreatingProject.current = false; // Reset flag
+			isCreatingProject.current = false;
 		} else if (!isOpen) {
-			// Resetear la bandera cuando se cierra el modal
 			hasInitialized.current = false;
 			isCreatingProject.current = false;
 		}
@@ -40,7 +39,6 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 			[name]: value,
 		}));
 
-		// Limpiar error cuando el usuario empiece a escribir
 		if (errors[name]) {
 			setErrors((prev) => ({
 				...prev,
@@ -76,8 +74,8 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 		return Object.keys(newErrors).length === 0;
 	};
 
+	// FUNCIÓN SIMPLIFICADA PARA CREAR PROYECTO CON TODOS LOS DATOS
 	const createSingleProject = (dataToSave) => {
-		// Prevenir creación múltiple
 		if (isCreatingProject.current) {
 			console.log('Ya se está creando un proyecto, saltando...');
 			return null;
@@ -85,66 +83,78 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 
 		isCreatingProject.current = true;
 
-		console.log('=== CREANDO PROYECTO ÚNICO ===');
+		console.log('=== CREANDO PROYECTO CON TODOS LOS DATOS ===');
 		console.log('Datos del formulario:', dataToSave);
 
 		// Obtener datos SCAT actuales del contexto
 		const currentSummary = getCompleteSummary();
 		console.log('Resumen completo actual:', currentSummary);
 
-		// Verificar si hay datos SCAT reales
-		const hasScatData = (
-			// Evaluación
-			Object.values(currentSummary.evaluacion || {}).some(v => v !== null && v !== undefined) ||
-			// Contacto
-			(currentSummary.contacto?.selectedIncidents?.length > 0) ||
-			(currentSummary.contacto?.observation?.trim()) ||
-			(currentSummary.contacto?.image) ||
-			// Causas Inmediatas
-			(currentSummary.causasInmediatas?.actos?.selectedItems?.length > 0) ||
-			(currentSummary.causasInmediatas?.condiciones?.selectedItems?.length > 0) ||
-			(currentSummary.causasInmediatas?.actos?.observation?.trim()) ||
-			(currentSummary.causasInmediatas?.condiciones?.observation?.trim()) ||
-			(currentSummary.causasInmediatas?.actos?.image) ||
-			(currentSummary.causasInmediatas?.condiciones?.image) ||
-			// Causas Básicas
-			(currentSummary.causasBasicas?.personales?.selectedItems?.length > 0) ||
-			(currentSummary.causasBasicas?.laborales?.selectedItems?.length > 0) ||
-			(currentSummary.causasBasicas?.personales?.observation?.trim()) ||
-			(currentSummary.causasBasicas?.laborales?.observation?.trim()) ||
-			(currentSummary.causasBasicas?.personales?.image) ||
-			(currentSummary.causasBasicas?.laborales?.image) ||
-			// Necesidades de Control
-			(currentSummary.necesidadesControl?.selectedItems?.length > 0) ||
-			(currentSummary.necesidadesControl?.globalObservation?.trim()) ||
-			(currentSummary.necesidadesControl?.globalImage) ||
-			(currentSummary.necesidadesControl?.medidasCorrectivas?.trim())
-		);
-
-		// Preparar datos SCAT para guardar
-		let scatDataToSave = null;
-		if (hasScatData) {
-			scatDataToSave = {
-				evaluacion: currentSummary.evaluacion,
-				contacto: currentSummary.contacto,
-				causasInmediatas: currentSummary.causasInmediatas,
-				causasBasicas: currentSummary.causasBasicas,
-				necesidadesControl: currentSummary.necesidadesControl
-			};
-			console.log('Datos SCAT a guardar:', scatDataToSave);
-		} else {
-			console.log('No hay datos SCAT para guardar');
-		}
-
-		// Crear un nuevo proyecto con ID único y todos los datos necesarios
+		// Crear un nuevo proyecto con ID único y TODOS los datos
 		const newProject = {
-			id: Date.now(), // Usar timestamp como ID único
+			id: Date.now(),
 			name: dataToSave.evento,
 			description: dataToSave.otrosDatos || `Involucrado: ${dataToSave.involucrado} - Área: ${dataToSave.area}`,
 			createdAt: new Date().toISOString(),
-			formData: { ...dataToSave }, // Guardar todos los datos del formulario
-			scatData: scatDataToSave, // Incluir datos SCAT si existen
-			// Metadatos adicionales
+			
+			// CRÍTICO: Guardar TODOS los datos del formulario
+			formData: {
+				evento: dataToSave.evento,
+				involucrado: dataToSave.involucrado,
+				area: dataToSave.area,
+				fechaHora: dataToSave.fechaHora,
+				investigador: dataToSave.investigador,
+				otrosDatos: dataToSave.otrosDatos
+			},
+			
+			// CRÍTICO: Guardar TODOS los datos SCAT (incluso si están vacíos)
+			scatData: {
+				evaluacion: currentSummary.evaluacion || {
+					severity: null,
+					probability: null,
+					frequency: null
+				},
+				contacto: currentSummary.contacto || {
+					selectedIncidents: [],
+					image: null,
+					observation: ''
+				},
+				causasInmediatas: currentSummary.causasInmediatas || {
+					actos: {
+						selectedItems: [],
+						image: null,
+						observation: ''
+					},
+					condiciones: {
+						selectedItems: [],
+						image: null,
+						observation: ''
+					}
+				},
+				causasBasicas: currentSummary.causasBasicas || {
+					personales: {
+						selectedItems: [],
+						detailedSelections: {},
+						image: null,
+						observation: ''
+					},
+					laborales: {
+						selectedItems: [],
+						detailedSelections: {},
+						image: null,
+						observation: ''
+					}
+				},
+				necesidadesControl: currentSummary.necesidadesControl || {
+					selectedItems: [],
+					detailedData: {},
+					globalImage: null,
+					globalObservation: '',
+					medidasCorrectivas: ''
+				}
+			},
+			
+			// Metadatos
 			status: 'active',
 			lastModified: new Date().toISOString(),
 			version: 1,
@@ -153,9 +163,10 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 			isSimulated: false
 		};
 
-		console.log('Proyecto creado:', newProject);
+		console.log('=== PROYECTO CREADO CON ESTRUCTURA COMPLETA ===');
+		console.log('Proyecto completo:', newProject);
 
-		// Guardar proyecto inmediatamente en localStorage (UNA SOLA VEZ)
+		// Guardar proyecto en localStorage
 		try {
 			const existingProjects = localStorage.getItem('scatProjects');
 			const projects = existingProjects ? JSON.parse(existingProjects) : [];
@@ -169,14 +180,16 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 			
 			const updatedProjects = [newProject, ...projects];
 			localStorage.setItem('scatProjects', JSON.stringify(updatedProjects));
-			console.log('Proyecto guardado en localStorage (sin duplicados)');
+			
+			console.log('=== PROYECTO GUARDADO EN LOCALSTORAGE ===');
+			console.log('Proyectos actualizados:', updatedProjects);
 		} catch (error) {
 			console.error('Error guardando proyecto en localStorage:', error);
 			isCreatingProject.current = false;
 			return null;
 		}
 
-		// Establecer proyecto actual en el contexto DESPUÉS de guardarlo
+		// Establecer proyecto actual en el contexto
 		setCurrentProject(newProject.id);
 
 		// Llamar al callback para actualizar la UI del dashboard
@@ -192,17 +205,12 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 
 		if (validateForm()) {
 			console.log('=== GUARDAR SOLO ===');
-			console.log('Datos del formulario:', formData);
 			
-			// Crear el proyecto UNA SOLA VEZ
 			const createdProject = createSingleProject(formData);
 			
 			if (createdProject) {
-				// Limpiar formulario y cerrar modal
 				resetForm();
 				onClose();
-				
-				// Mostrar mensaje de confirmación
 				alert('Proyecto creado exitosamente y guardado en el dashboard.');
 			} else {
 				alert('Error al crear el proyecto. Por favor, intente nuevamente.');
@@ -215,31 +223,24 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 
 		if (validateForm()) {
 			console.log('=== GUARDAR Y CONTINUAR ===');
-			console.log('Datos del formulario antes de crear:', formData);
 			
-			// Hacer una copia de los datos antes de proceder
 			const dataToSave = { ...formData };
-			
-			// Crear el proyecto UNA SOLA VEZ
 			const newProject = createSingleProject(dataToSave);
 			
 			if (newProject) {
 				console.log('Proyecto creado para continuar:', newProject);
 				
-				// Establecer datos del proyecto en el contexto para continuar
+				// Establecer datos del proyecto en el contexto
 				setProjectData(dataToSave);
 				
-				// Usar setTimeout para asegurar que el estado se actualice antes de navegar
 				setTimeout(() => {
-					// Limpiar formulario
 					resetForm();
 					
-					// Navegar al SCAT con los datos originales
 					if (onContinue) {
 						console.log('Navegando al SCAT con datos:', dataToSave);
 						onContinue(dataToSave);
 					}
-				}, 100); // Pequeño delay para asegurar que el estado se actualice
+				}, 100);
 			} else {
 				alert('Error al crear el proyecto. Por favor, intente nuevamente.');
 			}
@@ -256,7 +257,7 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 			otrosDatos: "",
 		});
 		setErrors({});
-		isCreatingProject.current = false; // Reset flag
+		isCreatingProject.current = false;
 	};
 
 	const handleCancel = () => {
