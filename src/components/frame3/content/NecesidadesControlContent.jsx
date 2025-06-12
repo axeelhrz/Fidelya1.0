@@ -614,52 +614,54 @@ function NecesidadesControlContent() {
 					<p>Primero debe seleccionar causas básicas en la sección anterior (Botón 4) para ver las Necesidades de Acción de Control correspondientes.</p>
 				</div>
 			) : (
-				<div className={styles.categoriesGrid}>
-					{filteredNACItems.map((item) => {
-						const isSelected = necesidadesControlData.selectedItems.includes(item.id);
-						const hasDetailedData = necesidadesControlData.detailedData[item.id];
-						
-						return (
-							<div key={item.id} className={styles.categoryCard}>
-								<div 
-									className={styles.categoryHeader}
-									style={{ backgroundColor: '#f97316' }}
-								>
-									<h3 className={styles.categoryTitle}>NAC {item.id}</h3>
-									<p className={styles.categorySubtitle}>{item.text}</p>
-								</div>
-								
-								<div className={styles.categoryBody}>
-									<button
-										className={`${styles.itemButton} ${
-											isSelected ? styles.selected : ""
-										}`}
-										onClick={() => handleItemClick(item)}
+				<div className={styles.categoriesGridContainer}>
+					<div className={styles.categoriesGrid}>
+						{filteredNACItems.map((item) => {
+							const isSelected = necesidadesControlData.selectedItems.includes(item.id);
+							const hasDetailedData = necesidadesControlData.detailedData[item.id];
+							
+							return (
+								<div key={item.id} className={styles.categoryCard}>
+									<div 
+										className={styles.categoryHeader}
+										style={{ backgroundColor: '#f97316' }}
 									>
-										<div className={styles.itemNumber}>{item.id}</div>
-										<div className={styles.itemText}>{item.text}</div>
-										<div className={styles.itemIcon}>
-											{isSelected ? "✓" : "→"}
-										</div>
-										{hasDetailedData && (
-											<div className={styles.dataIndicator}>
-												{hasDetailedData.selectedOptions?.length > 0 && 
-													<span className={styles.optionsCount}>
-														{hasDetailedData.selectedOptions.length} opciones
-													</span>
-												}
-												{hasDetailedData.optionsPEC && Object.keys(hasDetailedData.optionsPEC).length > 0 && 
-													<span className={styles.pecIndicator}>
-														PEC: {Object.values(hasDetailedData.optionsPEC).flat().length}
-													</span>
-												}
+										<h3 className={styles.categoryTitle}>NAC {item.id}</h3>
+										<p className={styles.categorySubtitle}>{item.text}</p>
+									</div>
+									
+									<div className={styles.categoryBody}>
+										<button
+											className={`${styles.itemButton} ${
+												isSelected ? styles.selected : ""
+											}`}
+											onClick={() => handleItemClick(item)}
+										>
+											<div className={styles.itemNumber}>{item.id}</div>
+											<div className={styles.itemText}>{item.text}</div>
+											<div className={styles.itemIcon}>
+												{isSelected ? "✓" : "→"}
 											</div>
-										)}
-									</button>
+											{hasDetailedData && (
+												<div className={styles.dataIndicator}>
+													{hasDetailedData.selectedOptions?.length > 0 && 
+														<span className={styles.optionsCount}>
+															{hasDetailedData.selectedOptions.length} opciones
+														</span>
+													}
+													{hasDetailedData.optionsPEC && Object.keys(hasDetailedData.optionsPEC).length > 0 && 
+														<span className={styles.pecIndicator}>
+															PEC: {Object.values(hasDetailedData.optionsPEC).flat().length}
+														</span>
+													}
+												</div>
+											)}
+										</button>
+									</div>
 								</div>
-							</div>
-						);
-					})}
+							);
+						})}
+					</div>
 				</div>
 			)}
 

@@ -120,20 +120,45 @@
   max-width: 600px;
 }
 
-/* GRID DE CATEGORÍAS CON SCROLL COMPLETO */
+/* CONTENEDOR PRINCIPAL DEL GRID - CONFIGURADO PARA SCROLL EXTENSO */
+.categoriesGridContainer {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: #1f2937;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  flex: 1;
+  border: 2px solid #374151;
+  
+  /* ALTURA MÍNIMA GARANTIZADA PARA EL CONTENEDOR */
+  min-height: 700px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* GRID DE CATEGORÍAS CON SCROLL COMPLETO Y EXTENSO */
 .categoriesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: 1.5rem;
   overflow-y: auto;
   flex: 1;
-  padding: 0.5rem;
+  padding: 1rem;
+  
+  /* ALTURA MÍNIMA AUMENTADA SIGNIFICATIVAMENTE */
+  min-height: 620px;
+  max-height: 100%;
+  background: #111827;
+  border-radius: 0.5rem;
+  border: 1px solid #374151;
   
   /* Scroll mejorado y suave */
   scrollbar-width: thin;
   scrollbar-color: #4b5563 #111827;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .categoriesGrid::-webkit-scrollbar {
@@ -155,7 +180,7 @@
   background: #6b7280;
 }
 
-/* CARDS DE CATEGORÍAS */
+/* CARDS DE CATEGORÍAS MEJORADAS */
 .categoryCard {
   background: #1f2937;
   border: 2px solid #374151;
@@ -163,6 +188,9 @@
   overflow: hidden;
   transition: all 0.3s ease;
   height: fit-content;
+  min-height: 120px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease-out;
 }
 
 .categoryCard:hover {
@@ -172,21 +200,21 @@
 }
 
 .categoryHeader {
-  padding: 1rem;
+  padding: 1.2rem;
   text-align: center;
   color: white;
   font-weight: 700;
 }
 
 .categoryTitle {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   margin: 0 0 0.25rem 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .categorySubtitle {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   margin: 0;
   opacity: 0.9;
   font-weight: 500;
@@ -209,6 +237,7 @@
   text-align: left;
   color: white;
   border-top: 1px solid #4b5563;
+  min-height: 80px;
 }
 
 .itemButton:hover {
@@ -225,31 +254,35 @@
   background: #eab308;
   color: #1f2937;
   font-weight: 800;
-  font-size: 1.1rem;
-  padding: 0.5rem;
+  font-size: 1.2rem;
+  padding: 0.6rem;
   border-radius: 0.5rem;
-  min-width: 2.5rem;
-  height: 2.5rem;
+  min-width: 2.8rem;
+  height: 2.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .itemButton.selected .itemNumber {
   background: #10b981;
   color: white;
+  transform: scale(1.03);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .itemText {
   flex: 1;
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 500;
   line-height: 1.4;
+  color: #f3f4f6;
 }
 
 .itemIcon {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -992,6 +1025,11 @@
   .categoriesGrid {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1rem;
+    min-height: 500px;
+  }
+
+  .categoriesGridContainer {
+    min-height: 600px;
   }
 
   .modalContent,
@@ -1021,6 +1059,11 @@
   .categoriesGrid {
     grid-template-columns: 1fr;
     gap: 1rem;
+    min-height: 400px;
+  }
+
+  .categoriesGridContainer {
+    min-height: 500px;
   }
 
   .itemButton {
@@ -1124,6 +1167,14 @@
     min-height: 300px;
     font-size: 0.9rem;
   }
+
+  .categoriesGrid {
+    min-height: 350px;
+  }
+
+  .categoriesGridContainer {
+    min-height: 450px;
+  }
 }
 
 /* ANIMACIONES */
@@ -1190,4 +1241,25 @@
 
 .categoryCard.hasData .categoryHeader {
   background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+}
+
+/* EFECTOS DE HOVER MEJORADOS */
+.itemButton:hover .itemNumber {
+  transform: scale(1.03);
+  box-shadow: 0 3px 6px rgba(234, 179, 8, 0.3);
+}
+
+.itemButton:hover .itemText {
+  color: #ffffff;
+}
+
+/* TRANSICIONES SUAVES PARA TODOS LOS ELEMENTOS INTERACTIVOS */
+.itemButton,
+.categoryCard,
+.clearButton,
+.correctiveMeasuresButton,
+.globalObservationTextarea,
+.commentsTextarea,
+.correctiveTextarea {
+  transition: all 0.2s ease;
 }
