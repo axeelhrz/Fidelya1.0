@@ -4,9 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Starflex - Mejores Bloques de Amazon Flex</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        /* Reset básico */
+        /* Reset y variables */
+        :root {
+            --primary: #00c2ff;
+            --primary-dark: #0099cc;
+            --secondary: #e6002d;
+            --accent: #ff9500;
+            --dark-bg: #0a0f1c;
+            --darker-bg: #060b14;
+            --card-bg: #1a2332;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #b8c5d1;
+            --text-muted: #8892a0;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,28 +28,76 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0e1a25;
-            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
             line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Header */
+        /* Efectos de fondo animados */
+        .bg-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-effects::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 194, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(230, 0, 45, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 149, 0, 0.08) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .bg-effects::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(45deg, transparent 24%, rgba(255, 255, 255, 0.02) 25%, rgba(255, 255, 255, 0.02) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, 0.02) 75%, rgba(255, 255, 255, 0.02) 76%, transparent 77%);
+            background-size: 60px 60px;
+            opacity: 0.3;
+        }
+
+        /* Header mejorado */
         .header {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            background-color: #0e1a25;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(10, 15, 28, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
             z-index: 1000;
-            padding: 1rem 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .header.scrolled {
+            background: rgba(6, 11, 20, 0.95);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .nav {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 0 1rem;
+            padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -44,77 +106,141 @@
         .nav__brand {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            z-index: 1001;
         }
 
         .nav__logo {
-            width: 40px;
-            height: 40px;
-            background-color: #00c2ff;
-            border-radius: 8px;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 800;
+            font-size: 1.25rem;
             color: white;
+            box-shadow: 0 8px 24px rgba(0, 194, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav__logo::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 3s infinite;
         }
 
         .nav__title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: white;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .nav__menu {
             display: flex;
             align-items: center;
-            gap: 2rem;
+            gap: 3rem;
         }
 
         .nav__list {
             display: flex;
             list-style: none;
-            gap: 1.5rem;
+            gap: 2rem;
         }
 
         .nav__link {
-            color: #dee2e6;
+            color: var(--text-secondary);
             text-decoration: none;
             font-weight: 500;
-            transition: color 0.3s;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            padding: 0.5rem 0;
+        }
+
+        .nav__link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .nav__link:hover {
-            color: #00c2ff;
+            color: var(--text-primary);
+            transform: translateY(-1px);
         }
 
+        .nav__link:hover::after {
+            width: 100%;
+        }
+
+        /* Botones mejorados */
         .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
+            padding: 0.875rem 2rem;
+            border-radius: 12px;
             text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s;
-            display: inline-block;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            cursor: pointer;
         }
 
         .btn--primary {
-            background: linear-gradient(135deg, #00c2ff 0%, #0099cc 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
+            box-shadow: 0 8px 24px rgba(0, 194, 255, 0.3);
+        }
+
+        .btn--primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
         }
 
         .btn--primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 194, 255, 0.3);
+            box-shadow: 0 12px 32px rgba(0, 194, 255, 0.4);
         }
 
-        /* Hero Section */
+        .btn--primary:hover::before {
+            left: 100%;
+        }
+
+        /* Hero Section Ultra Mejorado */
         .hero {
-            padding-top: 100px;
             min-height: 100vh;
             display: flex;
             align-items: center;
-            background: linear-gradient(135deg, #0e1a25 0%, #0a1419 100%);
             position: relative;
+            z-index: 1;
+            background: 
+                radial-gradient(ellipse at top, rgba(0, 194, 255, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
             overflow: hidden;
         }
 
@@ -123,100 +249,220 @@
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 30% 20%, rgba(0, 194, 255, 0.1) 0%, transparent 50%);
-            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            background-image: url('./assets/background-blur-min.jpg');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.1;
+            z-index: -1;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 0 1rem;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 2;
         }
 
         .hero__container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 6rem;
             align-items: center;
-            position: relative;
-            z-index: 1;
+            padding-top: 100px;
+        }
+
+        .hero__content {
+            animation: fadeInUp 1s ease-out;
         }
 
         .hero__title {
-            font-size: 3.5rem;
-            font-weight: 700;
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            font-weight: 900;
             line-height: 1.1;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
+            letter-spacing: -0.02em;
         }
 
         .hero__title--highlight {
-            background: linear-gradient(135deg, #00c2ff 0%, #e6002d 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            display: inline-block;
+            animation: glow 2s ease-in-out infinite alternate;
         }
 
         .hero__title--amazon {
-            background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+            background: linear-gradient(135deg, var(--accent) 0%, #ff6b00 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            display: inline-block;
+            animation: pulse 3s ease-in-out infinite;
         }
 
         .hero__description {
-            font-size: 1.125rem;
-            color: #dee2e6;
-            margin-bottom: 2rem;
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
             line-height: 1.7;
+            max-width: 600px;
+            font-weight: 400;
         }
 
         .hero__cta {
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
         }
 
         .btn--large {
-            padding: 1rem 2rem;
-            font-size: 1.125rem;
+            padding: 1.5rem 3rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 0.25rem;
-            min-width: 200px;
+            min-width: 280px;
+            box-shadow: 0 16px 48px rgba(0, 194, 255, 0.3);
         }
 
         .btn--large small {
-            font-size: 0.875rem;
-            opacity: 0.8;
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-weight: 500;
         }
 
         .hero__download {
             display: flex;
-            gap: 1rem;
+            gap: 1.5rem;
+            align-items: center;
         }
 
         .download-btn {
             display: block;
-            transition: transform 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
         }
 
         .download-btn:hover {
-            transform: scale(1.05);
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
         }
 
+        .download-btn svg {
+            border-radius: 12px;
+        }
+
+        /* Imagen del Hero Ultra Mejorada */
         .hero__image {
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
+            animation: fadeInRight 1s ease-out 0.3s both;
+        }
+
+        .hero__phone-container {
+            position: relative;
+            transform: perspective(1000px) rotateY(-15deg) rotateX(5deg);
+            transition: transform 0.3s ease;
+        }
+
+        .hero__phone-container:hover {
+            transform: perspective(1000px) rotateY(-10deg) rotateX(2deg) scale(1.02);
         }
 
         .hero__phone {
-            max-width: 300px;
+            width: 350px;
+            height: 700px;
+            background: linear-gradient(135deg, #1a2332 0%, #0f1419 100%);
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 
+                0 40px 80px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero__phone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: auto;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            height: 100%;
+            background: url('./assets/starflex.png') center/cover;
+            border-radius: 30px;
+            z-index: 1;
+        }
+
+        .hero__phone::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            z-index: 2;
+        }
+
+        .hero__phone-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(0, 194, 255, 0.2) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            animation: pulse-glow 4s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        /* Partículas flotantes */
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .floating-elements::before,
+        .floating-elements::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: float-particle 8s ease-in-out infinite;
+        }
+
+        .floating-elements::before {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-elements::after {
+            top: 60%;
+            right: 15%;
+            animation-delay: 4s;
+            background: var(--accent);
         }
 
         /* Mobile Navigation */
@@ -226,29 +472,138 @@
             gap: 4px;
             cursor: pointer;
             padding: 0.5rem;
+            z-index: 1001;
         }
 
         .nav__toggle-line {
-            width: 25px;
+            width: 28px;
             height: 3px;
-            background: white;
+            background: var(--text-primary);
             border-radius: 2px;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Responsive */
+        .nav__toggle.active .nav__toggle-line:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .nav__toggle.active .nav__toggle-line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .nav__toggle.active .nav__toggle-line:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.4;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes glow {
+            0% { filter: brightness(1); }
+            100% { filter: brightness(1.2); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes float-particle {
+            0%, 100% {
+                transform: translateY(0px) translateX(0px);
+                opacity: 0.6;
+            }
+            25% {
+                transform: translateY(-30px) translateX(15px);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-60px) translateX(-10px);
+                opacity: 0.8;
+            }
+            75% {
+                transform: translateY(-30px) translateX(-15px);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive Ultra Mejorado */
+        @media (max-width: 1024px) {
+            .hero__container {
+                grid-template-columns: 1fr;
+                gap: 4rem;
+                text-align: center;
+            }
+
+            .hero__phone-container {
+                transform: none;
+            }
+
+            .hero__phone {
+                width: 300px;
+                height: 600px;
+            }
+        }
+
         @media (max-width: 768px) {
+            .nav {
+                padding: 1rem;
+            }
+
             .nav__menu {
                 position: fixed;
-                top: 70px;
+                top: 80px;
                 left: -100%;
                 width: 100%;
-                height: calc(100vh - 70px);
-                background: rgba(14, 26, 37, 0.98);
+                height: calc(100vh - 80px);
+                background: rgba(6, 11, 20, 0.98);
+                backdrop-filter: blur(20px);
                 flex-direction: column;
                 justify-content: flex-start;
-                padding: 2rem;
-                transition: left 0.3s;
+                padding: 3rem 2rem;
+                transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                border-top: 1px solid var(--border-color);
             }
 
             .nav__menu.active {
@@ -257,25 +612,30 @@
 
             .nav__list {
                 flex-direction: column;
-                gap: 1rem;
+                gap: 2rem;
                 width: 100%;
+                margin-bottom: 3rem;
             }
 
             .nav__link {
-                font-size: 1.125rem;
+                font-size: 1.25rem;
                 padding: 1rem 0;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                border-bottom: 1px solid var(--border-color);
                 width: 100%;
+                text-align: center;
             }
 
             .nav__toggle {
                 display: flex;
             }
 
+            .container {
+                padding: 0 1rem;
+            }
+
             .hero__container {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-                text-align: center;
+                gap: 3rem;
+                padding-top: 120px;
             }
 
             .hero__title {
@@ -285,6 +645,11 @@
             .hero__download {
                 justify-content: center;
                 flex-wrap: wrap;
+            }
+
+            .hero__phone {
+                width: 250px;
+                height: 500px;
             }
         }
 
@@ -297,12 +662,20 @@
                 flex-direction: column;
                 align-items: center;
             }
+
+            .btn--large {
+                min-width: 240px;
+                padding: 1.25rem 2rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Efectos de fondo -->
+    <div class="bg-effects"></div>
+
     <!-- Header -->
-    <header class="header">
+    <header class="header" id="header">
         <nav class="nav">
             <div class="nav__brand">
                 <div class="nav__logo">S</div>
@@ -331,6 +704,7 @@
 
     <!-- Hero Section -->
     <section class="hero" id="inicio">
+        <div class="floating-elements"></div>
         <div class="container">
             <div class="hero__container">
                 <div class="hero__content">
@@ -354,38 +728,54 @@
                     
                     <div class="hero__download">
                         <a href="#" class="download-btn">
-                            <svg width="150" height="45" viewBox="0 0 150 45" fill="none">
-                                <rect width="150" height="45" rx="8" fill="#000"/>
-                                <text x="75" y="28" text-anchor="middle" fill="white" font-size="12">Google Play</text>
+                            <svg width="160" height="50" viewBox="0 0 160 50" fill="none">
+                                <defs>
+                                    <linearGradient id="playGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#1a1a1a"/>
+                                        <stop offset="100%" style="stop-color:#000000"/>
+                                    </linearGradient>
+                                </defs>
+                                <rect width="160" height="50" rx="12" fill="url(#playGradient)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                                <text x="80" y="32" text-anchor="middle" fill="white" font-size="14" font-weight="600">Google Play</text>
                             </svg>
                         </a>
                         <a href="#" class="download-btn">
-                            <svg width="150" height="45" viewBox="0 0 150 45" fill="none">
-                                <rect width="150" height="45" rx="8" fill="#000"/>
-                                <text x="75" y="28" text-anchor="middle" fill="white" font-size="12">App Store</text>
+                            <svg width="160" height="50" viewBox="0 0 160 50" fill="none">
+                                <defs>
+                                    <linearGradient id="appGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#1a1a1a"/>
+                                        <stop offset="100%" style="stop-color:#000000"/>
+                                    </linearGradient>
+                                </defs>
+                                <rect width="160" height="50" rx="12" fill="url(#appGradient)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                                <text x="80" y="32" text-anchor="middle" fill="white" font-size="14" font-weight="600">App Store</text>
                             </svg>
                         </a>
                     </div>
                 </div>
                 
                 <div class="hero__image">
-                    <div style="width: 300px; height: 600px; background: linear-gradient(135deg, #1a2832 0%, #0e1a25 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);">
-                        <div style="color: #00c2ff; font-size: 1.5rem; font-weight: bold;">Starflex App</div>
+                    <div class="hero__phone-container">
+                        <div class="hero__phone">
+                            <div class="hero__phone-glow"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- JavaScript básico -->
+    <!-- JavaScript mejorado -->
     <script>
-        // Mobile menu toggle
+        // Mobile menu toggle con animaciones suaves
         const navToggle = document.getElementById('nav-toggle');
         const navMenu = document.getElementById('nav-menu');
+        const header = document.getElementById('header');
 
         navToggle.addEventListener('click', () => {
             navMenu.classList.toggle('active');
             navToggle.classList.toggle('active');
+            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
         });
 
         // Close menu when clicking on links
@@ -394,19 +784,67 @@
             link.addEventListener('click', () => {
                 navMenu.classList.remove('active');
                 navToggle.classList.remove('active');
+                document.body.style.overflow = '';
             });
         });
 
-        // Header scroll effect
+        // Header scroll effect mejorado
+        let lastScrollY = 0;
         window.addEventListener('scroll', () => {
-            const header = document.querySelector('.header');
-            if (window.scrollY > 50) {
-                header.style.backgroundColor = '#0a1419';
-                header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+            const scrollY = window.scrollY;
+            
+            if (scrollY > 50) {
+                header.classList.add('scrolled');
             } else {
-                header.style.backgroundColor = '#0e1a25';
-                header.style.boxShadow = 'none';
+                header.classList.remove('scrolled');
             }
+            
+            lastScrollY = scrollY;
+        });
+
+        // Parallax effect para el hero
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelector('.hero');
+            const speed = scrolled * 0.5;
+            
+            if (parallax) {
+                parallax.style.transform = `translateY(${speed}px)`;
+            }
+        });
+
+        // Smooth scroll para los enlaces
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer para animaciones
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observar elementos para animaciones
+        document.querySelectorAll('.hero__content, .hero__image').forEach(el => {
+            observer.observe(el);
         });
     </script>
 </body>
