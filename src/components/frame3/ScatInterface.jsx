@@ -75,54 +75,32 @@ function ScatInterface({
 		setCurrentProject
 	} = useScatData();
 
-	// Función para guardar datos SCAT SOLO en proyecto existente (CORREGIDA - NO CREAR NUEVOS)
+	// Función para guardar datos SCAT
 	const saveScatDataToProject = useCallback(async () => {
 		console.log('=== GUARDANDO DATOS SCAT EN PROYECTO ===');
 		
-		// CRÍTICO: Solo guardar si hay proyecto actual, NUNCA crear nuevos automáticamente
 		if (!currentProjectId) {
-			console.log('No hay proyecto actual para auto-guardar. No se creará proyecto automáticamente.');
-			// Guardar temporalmente en localStorage para no perder datos
+			console.log('No hay proyecto actual para auto-guardar');
 			const currentState = getCompleteSummary();
 			localStorage.setItem('scatData', JSON.stringify(currentState));
 			return true;
 		}
 
-		// Si hay proyecto actual, usar el guardado forzado
-		if (currentProjectId) {
-			try {
-				forceSave();
-				console.log('Datos SCAT guardados en proyecto existente');
-				return true;
-			} catch (error) {
-				console.error('Error guardando en proyecto existente:', error);
-				return false;
-			}
+		try {
+			forceSave();
+			console.log('Datos SCAT guardados en proyecto existente');
+			return true;
+		} catch (error) {
+			console.error('Error guardando en proyecto existente:', error);
+			return false;
 		}
-
-		return false;
 	}, [currentProjectId, forceSave, getCompleteSummary]);
 
-	// Debug: Mostrar datos cargados
+	// INICIALIZACIÓN COMPLETAMENTE REESCRITA
 	useEffect(() => {
-		console.log('=== SCAT INTERFACE - DATOS ACTUALES ===');
-		console.log('isViewingMode:', isViewingMode);
-		console.log('isEditingMode:', isEditingMode);
-		console.log('isInitialized:', isInitialized);
-		console.log('editingProjectId:', editingProjectId);
-		console.log('currentProjectId:', currentProjectId);
-		console.log('projectData:', projectData);
-		console.log('evaluacionData:', evaluacionData);
-		console.log('contactoData:', contactoData);
-		console.log('causasInmediatasData:', causasInmediatasData);
-		console.log('causasBasicasData:', causasBasicasData);
-		console.log('necesidadesControlData:', necesidadesControlData);
-	}, [isViewingMode, isEditingMode, isInitialized, editingProjectId, currentProjectId, projectData, evaluacionData, contactoData, causasInmediatasData, causasBasicasData, necesidadesControlData]);
-
-	// Inicialización del componente - CORREGIDA
-	useEffect(() => {
-		console.log('=== INICIALIZANDO SCAT INTERFACE (CORREGIDO) ===');
+		console.log('=== INICIALIZANDO SCAT INTERFACE (PRESERVACIÓN TOTAL) ===');
 		console.log('FormData recibido:', formData);
+		console.log('isInitialized:', isInitialized);
 		
 		if (isInitialized) {
 			console.log('Ya está inicializado, saltando...');
@@ -132,16 +110,17 @@ function ScatInterface({
 		const initializeInterface = async () => {
 			try {
 				setInitializationError(null);
+				console.log('=== INICIANDO PROCESO DE INICIALIZACIÓN ===');
 				
 				if (formData) {
 					if (formData.isViewing && formData.projectData) {
-						// Modo visualización: cargar proyecto completo en solo lectura
-						console.log('=== MODO VISUALIZACIÓN (CORREGIDO) ===');
+						// MODO VISUALIZACIÓN
+						console.log('=== MODO VISUALIZACIÓN - CARGANDO PROYECTO COMPLETO ===');
 						console.log('Proyecto a visualizar:', formData.projectData);
 						
-						// Limpiar contexto primero
+						// Limpiar contexto
 						resetAllData();
-						await new Promise(resolve => setTimeout(resolve, 100));
+						await new Promise(resolve => setTimeout(resolve, 200));
 						
 						// Cargar proyecto completo
 						const loadSuccess = loadProjectData(formData.projectData);
@@ -154,25 +133,29 @@ function ScatInterface({
 						setIsEditingMode(false);
 						setEditingProjectId(null);
 						
-						console.log('=== PROYECTO CARGADO PARA VISUALIZACIÓN (DATOS PRESERVADOS) ===');
+						console.log('=== PROYECTO CARGADO PARA VISUALIZACIÓN ===');
 						
 					} else if (formData.isEditing && formData.projectData) {
-						// Modo edición: cargar proyecto completo para edición
-						console.log('=== MODO EDICIÓN (CORREGIDO) ===');
+						// MODO EDICIÓN - CRÍTICO PARA PRESERVAR DATOS
+						console.log('=== MODO EDICIÓN - CARGANDO PROYECTO COMPLETO PARA EDICIÓN ===');
 						console.log('Proyecto a editar:', formData.projectData);
+						console.log('FormData del proyecto:', formData.projectData.formData);
+						console.log('ScatData del proyecto:', formData.projectData.scatData);
 						
-						// Limpiar contexto primero
+						// Limpiar contexto
 						resetAllData();
-						await new Promise(resolve => setTimeout(resolve, 100));
+						await new Promise(resolve => setTimeout(resolve, 200));
 						
-						// Cargar proyecto completo con TODOS los datos preservados
+						// CARGAR PROYECTO COMPLETO CON TODOS LOS DATOS
 						const loadSuccess = loadProjectData(formData.projectData);
 						if (!loadSuccess) {
 							throw new Error('Error cargando datos del proyecto para edición');
 						}
 						
-						// Establecer modo edición DESPUÉS de cargar datos
-						await new Promise(resolve => setTimeout(resolve, 50));
+						// Esperar a que se carguen los datos
+						await new Promise(resolve => setTimeout(resolve, 100));
+						
+						// Establecer modo edición
 						setEditingMode(true, formData.projectId);
 						setCurrentProject(formData.projectId);
 						
@@ -181,13 +164,15 @@ function ScatInterface({
 						setIsEditingMode(true);
 						setEditingProjectId(formData.projectId);
 						
-						console.log('=== PROYECTO CARGADO PARA EDICIÓN (TODOS LOS DATOS PRESERVADOS) ===');
+						console.log('=== PROYECTO CARGADO PARA EDICIÓN - TODOS LOS DATOS PRESERVADOS ===');
 						
 					} else {
-						// Modo nuevo proyecto o continuación
+						// MODO NUEVO PROYECTO O CONTINUACIÓN
 						console.log('=== MODO NUEVO PROYECTO/CONTINUACIÓN ===');
+						console.log('FormData para nuevo proyecto:', formData);
+						
 						resetAllData();
-						await new Promise(resolve => setTimeout(resolve, 50));
+						await new Promise(resolve => setTimeout(resolve, 100));
 						
 						// Establecer datos del proyecto
 						setProjectData(formData);
@@ -200,9 +185,11 @@ function ScatInterface({
 						setIsViewingMode(false);
 						setIsEditingMode(false);
 						setEditingProjectId(null);
+						
+						console.log('=== NUEVO PROYECTO INICIALIZADO ===');
 					}
 				} else {
-					// Sin datos: inicializar limpio
+					// SIN DATOS
 					console.log('=== SIN DATOS - INICIALIZACIÓN LIMPIA ===');
 					resetAllData();
 					setIsViewingMode(false);
@@ -222,6 +209,23 @@ function ScatInterface({
 
 		initializeInterface();
 	}, [formData, isInitialized, resetAllData, setProjectData, loadProjectData, setEditingMode, setCurrentProject]);
+
+	// Debug: Mostrar datos cargados DESPUÉS de la inicialización
+	useEffect(() => {
+		if (isInitialized) {
+			console.log('=== DATOS DESPUÉS DE INICIALIZACIÓN ===');
+			console.log('isViewingMode:', isViewingMode);
+			console.log('isEditingMode:', isEditingMode);
+			console.log('editingProjectId:', editingProjectId);
+			console.log('currentProjectId:', currentProjectId);
+			console.log('projectData cargado:', projectData);
+			console.log('evaluacionData cargado:', evaluacionData);
+			console.log('contactoData cargado:', contactoData);
+			console.log('causasInmediatasData cargado:', causasInmediatasData);
+			console.log('causasBasicasData cargado:', causasBasicasData);
+			console.log('necesidadesControlData cargado:', necesidadesControlData);
+		}
+	}, [isInitialized, isViewingMode, isEditingMode, editingProjectId, currentProjectId, projectData, evaluacionData, contactoData, causasInmediatasData, causasBasicasData, necesidadesControlData]);
 
 	// Función para guardar proyecto editado
 	const saveEditedProject = useCallback(async () => {
@@ -251,15 +255,15 @@ function ScatInterface({
 				throw new Error('Proyecto no encontrado');
 			}
 
-			// Actualizar proyecto con nuevos datos SCAT PRESERVANDO formData
+			// Actualizar proyecto PRESERVANDO TODO
 			const updatedProject = {
 				...projects[projectIndex],
-				// CRÍTICO: Preservar formData existente y actualizar con datos actuales
+				// PRESERVAR Y ACTUALIZAR formData
 				formData: {
-					...projects[projectIndex].formData, // Datos originales
-					...currentData.project // Datos actualizados del contexto
+					...projects[projectIndex].formData,
+					...currentData.project
 				},
-				// Actualizar datos SCAT
+				// ACTUALIZAR datos SCAT
 				scatData: {
 					evaluacion: currentData.evaluacion,
 					contacto: currentData.contacto,
@@ -273,11 +277,9 @@ function ScatInterface({
 			};
 
 			projects[projectIndex] = updatedProject;
-			
-			// Guardar en localStorage
 			localStorage.setItem('scatProjects', JSON.stringify(projects));
 			
-			console.log('=== PROYECTO EDITADO GUARDADO EXITOSAMENTE (DATOS PRESERVADOS) ===');
+			console.log('=== PROYECTO EDITADO GUARDADO EXITOSAMENTE ===');
 			console.log('Proyecto actualizado:', updatedProject);
 			
 			return true;
@@ -338,7 +340,6 @@ function ScatInterface({
 		console.log('=== NAVEGANDO AL MENÚ PRINCIPAL ===');
 		
 		if (isViewingMode) {
-			// En modo visualización, simplemente navegar
 			if (onNavigateToBase) {
 				onNavigateToBase();
 			}
@@ -377,7 +378,6 @@ function ScatInterface({
 		console.log('=== NAVEGANDO A PROYECTOS ===');
 		
 		if (isViewingMode) {
-			// En modo visualización, simplemente navegar
 			if (onNavigateToProjects) {
 				onNavigateToProjects();
 			}
@@ -496,8 +496,8 @@ function ScatInterface({
 				<div className={styles.loadingOverlay}>
 					<div className={styles.loadingSpinner}></div>
 					<p>Inicializando interfaz...</p>
-					{formData?.isViewing && <p>Cargando datos del proyecto...</p>}
-					{formData?.isEditing && <p>Cargando proyecto para edición...</p>}
+					{formData?.isViewing && <p>Cargando datos del proyecto para visualización...</p>}
+					{formData?.isEditing && <p>Cargando proyecto para edición (preservando todos los datos)...</p>}
 				</div>
 			</div>
 		);
@@ -534,7 +534,7 @@ function ScatInterface({
 									{isViewingMode ? 'SOLO LECTURA' : 'EDITANDO'}
 								</span>
 								<span className={styles.viewingText}>
-									{formData?.projectData?.name || 'Proyecto'}
+									{formData?.projectData?.name || projectData?.evento || 'Proyecto'}
 								</span>
 							</div>
 						)}
