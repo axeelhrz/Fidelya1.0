@@ -488,6 +488,7 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 				}}
 				project={editingProject}
 				onSave={handleSaveProject}
+				onNavigateToScat={onNavigateToScat}
 			/>
 		</div>
 	);
