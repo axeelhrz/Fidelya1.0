@@ -70,7 +70,9 @@ function ScatInterface({
 		causasBasicasData,
 		necesidadesControlData,
 		currentProjectId,
-		forceSave
+		forceSave,
+		setEditingMode,
+		setCurrentProject
 	} = useScatData();
 
 	// Función para guardar datos SCAT SOLO en proyecto existente (CORREGIDA - NO CREAR NUEVOS)
@@ -117,10 +119,10 @@ function ScatInterface({
 		console.log('necesidadesControlData:', necesidadesControlData);
 	}, [isViewingMode, isEditingMode, isInitialized, editingProjectId, currentProjectId, projectData, evaluacionData, contactoData, causasInmediatasData, causasBasicasData, necesidadesControlData]);
 
-	// Inicialización del componente
+	// Inicialización del componente - CORREGIDA
 	useEffect(() => {
-		console.log('=== INICIALIZANDO SCAT INTERFACE ===');
-		console.log('FormData:', formData);
+		console.log('=== INICIALIZANDO SCAT INTERFACE (CORREGIDO) ===');
+		console.log('FormData recibido:', formData);
 		
 		if (isInitialized) {
 			console.log('Ya está inicializado, saltando...');
@@ -134,44 +136,67 @@ function ScatInterface({
 				if (formData) {
 					if (formData.isViewing && formData.projectData) {
 						// Modo visualización: cargar proyecto completo en solo lectura
-						console.log('=== MODO VISUALIZACIÓN ===');
+						console.log('=== MODO VISUALIZACIÓN (CORREGIDO) ===');
 						console.log('Proyecto a visualizar:', formData.projectData);
 						
+						// Limpiar contexto primero
 						resetAllData();
 						await new Promise(resolve => setTimeout(resolve, 100));
 						
+						// Cargar proyecto completo
 						const loadSuccess = loadProjectData(formData.projectData);
 						if (!loadSuccess) {
-							throw new Error('Error cargando datos del proyecto');
+							throw new Error('Error cargando datos del proyecto para visualización');
 						}
 						
+						// Establecer modo visualización
 						setIsViewingMode(true);
 						setIsEditingMode(false);
 						setEditingProjectId(null);
-						console.log('=== PROYECTO CARGADO PARA VISUALIZACIÓN ===');
+						
+						console.log('=== PROYECTO CARGADO PARA VISUALIZACIÓN (DATOS PRESERVADOS) ===');
+						
 					} else if (formData.isEditing && formData.projectData) {
 						// Modo edición: cargar proyecto completo para edición
-						console.log('=== MODO EDICIÓN ===');
+						console.log('=== MODO EDICIÓN (CORREGIDO) ===');
 						console.log('Proyecto a editar:', formData.projectData);
 						
+						// Limpiar contexto primero
 						resetAllData();
 						await new Promise(resolve => setTimeout(resolve, 100));
 						
+						// Cargar proyecto completo con TODOS los datos preservados
 						const loadSuccess = loadProjectData(formData.projectData);
 						if (!loadSuccess) {
 							throw new Error('Error cargando datos del proyecto para edición');
 						}
 						
+						// Establecer modo edición DESPUÉS de cargar datos
+						await new Promise(resolve => setTimeout(resolve, 50));
+						setEditingMode(true, formData.projectId);
+						setCurrentProject(formData.projectId);
+						
+						// Establecer estados locales
 						setIsViewingMode(false);
 						setIsEditingMode(true);
 						setEditingProjectId(formData.projectId);
-						console.log('=== PROYECTO CARGADO PARA EDICIÓN ===');
+						
+						console.log('=== PROYECTO CARGADO PARA EDICIÓN (TODOS LOS DATOS PRESERVADOS) ===');
+						
 					} else {
 						// Modo nuevo proyecto o continuación
 						console.log('=== MODO NUEVO PROYECTO/CONTINUACIÓN ===');
 						resetAllData();
 						await new Promise(resolve => setTimeout(resolve, 50));
+						
+						// Establecer datos del proyecto
 						setProjectData(formData);
+						
+						// Si hay projectId, establecerlo como proyecto actual
+						if (formData.projectId) {
+							setCurrentProject(formData.projectId);
+						}
+						
 						setIsViewingMode(false);
 						setIsEditingMode(false);
 						setEditingProjectId(null);
@@ -186,7 +211,7 @@ function ScatInterface({
 				}
 				
 				setIsInitialized(true);
-				console.log('=== INICIALIZACIÓN COMPLETADA ===');
+				console.log('=== INICIALIZACIÓN COMPLETADA EXITOSAMENTE ===');
 				
 			} catch (error) {
 				console.error('Error en inicialización:', error);
@@ -196,7 +221,7 @@ function ScatInterface({
 		};
 
 		initializeInterface();
-	}, [formData, isInitialized, resetAllData, setProjectData, loadProjectData]);
+	}, [formData, isInitialized, resetAllData, setProjectData, loadProjectData, setEditingMode, setCurrentProject]);
 
 	// Función para guardar proyecto editado
 	const saveEditedProject = useCallback(async () => {
@@ -226,9 +251,14 @@ function ScatInterface({
 				throw new Error('Proyecto no encontrado');
 			}
 
-			// Actualizar proyecto con nuevos datos SCAT
+			// Actualizar proyecto con nuevos datos SCAT PRESERVANDO formData
 			const updatedProject = {
 				...projects[projectIndex],
+				// CRÍTICO: Preservar formData existente y actualizar con datos actuales
+				formData: {
+					...projects[projectIndex].formData, // Datos originales
+					...currentData.project // Datos actualizados del contexto
+				},
 				// Actualizar datos SCAT
 				scatData: {
 					evaluacion: currentData.evaluacion,
@@ -247,7 +277,7 @@ function ScatInterface({
 			// Guardar en localStorage
 			localStorage.setItem('scatProjects', JSON.stringify(projects));
 			
-			console.log('=== PROYECTO EDITADO GUARDADO EXITOSAMENTE ===');
+			console.log('=== PROYECTO EDITADO GUARDADO EXITOSAMENTE (DATOS PRESERVADOS) ===');
 			console.log('Proyecto actualizado:', updatedProject);
 			
 			return true;

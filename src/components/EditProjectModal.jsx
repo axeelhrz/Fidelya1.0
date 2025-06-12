@@ -20,26 +20,46 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave, onN
 	const [errors, setErrors] = useState({});
 	const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
-	// Cargar datos del proyecto cuando se abre el modal
+	// Cargar datos del proyecto cuando se abre el modal - CORREGIDO
 	useEffect(() => {
-		if (isOpen && project && project.formData) {
-			console.log('=== CARGANDO PROYECTO EN EDIT MODAL ===');
+		if (isOpen && project) {
+			console.log('=== CARGANDO PROYECTO EN EDIT MODAL (CORREGIDO) ===');
 			console.log('Proyecto completo:', project);
 			
+			// CRÍTICO: Preservar TODOS los datos del formulario
+			const projectFormData = project.formData || {};
 			setFormData({
-				evento: project.formData.evento || "",
-				involucrado: project.formData.involucrado || "",
-				area: project.formData.area || "",
-				fechaHora: project.formData.fechaHora || "",
-				investigador: project.formData.investigador || "",
-				otrosDatos: project.formData.otrosDatos || "",
+				evento: projectFormData.evento || project.name || "",
+				involucrado: projectFormData.involucrado || "",
+				area: projectFormData.area || "",
+				fechaHora: projectFormData.fechaHora || "",
+				investigador: projectFormData.investigador || "",
+				otrosDatos: projectFormData.otrosDatos || project.description || "",
+			});
+
+			console.log('=== DATOS DEL FORMULARIO CARGADOS ===');
+			console.log('Datos cargados en el formulario:', {
+				evento: projectFormData.evento || project.name || "",
+				involucrado: projectFormData.involucrado || "",
+				area: projectFormData.area || "",
+				fechaHora: projectFormData.fechaHora || "",
+				investigador: projectFormData.investigador || "",
+				otrosDatos: projectFormData.otrosDatos || project.description || "",
 			});
 
 			// Cargar datos SCAT en el contexto para que estén disponibles
-			if (project.scatData) {
-				console.log('=== CARGANDO DATOS SCAT EN CONTEXTO ===');
-				loadProjectData(project);
-				setEditingMode(true, project.id);
+			if (project.scatData || project.formData) {
+				console.log('=== CARGANDO DATOS COMPLETOS EN CONTEXTO ===');
+				console.log('Datos SCAT disponibles:', project.scatData);
+				
+				// Cargar proyecto completo en el contexto
+				const loadSuccess = loadProjectData(project);
+				if (loadSuccess) {
+					console.log('Proyecto cargado exitosamente en contexto');
+					setEditingMode(true, project.id);
+				} else {
+					console.error('Error cargando proyecto en contexto');
+				}
 			}
 		}
 	}, [isOpen, project, loadProjectData, setEditingMode]);
@@ -47,6 +67,7 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave, onN
 	// Limpiar contexto al cerrar modal
 	useEffect(() => {
 		if (!isOpen) {
+			console.log('=== LIMPIANDO CONTEXTO AL CERRAR MODAL ===');
 			resetAllData();
 		}
 	}, [isOpen, resetAllData]);
@@ -101,22 +122,30 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave, onN
 			return;
 		}
 
-		console.log('=== GUARDANDO CAMBIOS DEL PROYECTO ===');
-		console.log('Datos del formulario:', formData);
+		console.log('=== GUARDANDO CAMBIOS DEL PROYECTO (CORREGIDO) ===');
+		console.log('Datos del formulario actuales:', formData);
+		console.log('Proyecto original:', project);
 
-		// Crear proyecto actualizado PRESERVANDO TODOS LOS DATOS SCAT
+		// Crear proyecto actualizado PRESERVANDO COMPLETAMENTE TODOS LOS DATOS
 		const updatedProject = {
 			...project, // Mantener toda la estructura existente
-			name: formData.evento,
-			description: formData.otrosDatos || 'Sin descripción',
-			formData: formData, // Solo actualizar formData
+			name: formData.evento, // Actualizar nombre
+			description: formData.otrosDatos || 'Sin descripción', // Actualizar descripción
+			formData: {
+				// CRÍTICO: Preservar TODOS los datos del formulario
+				...project.formData, // Mantener datos existentes
+				...formData // Aplicar cambios nuevos
+			},
 			lastModified: new Date().toISOString(),
 			version: (project.version || 1) + 1,
-			// CRÍTICO: Preservar scatData completamente
+			// CRÍTICO: Preservar scatData completamente sin modificaciones
 			scatData: project.scatData || {}
 		};
 
-		console.log('Proyecto actualizado (preservando SCAT data):', updatedProject);
+		console.log('=== PROYECTO ACTUALIZADO (DATOS PRESERVADOS) ===');
+		console.log('Proyecto actualizado completo:', updatedProject);
+		console.log('FormData preservado:', updatedProject.formData);
+		console.log('ScatData preservado:', updatedProject.scatData);
 
 		// Llamar a la función onSave del padre
 		onSave(updatedProject);
@@ -126,23 +155,32 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave, onN
 	};
 
 	const handleEditScatData = () => {
-		console.log('=== EDITANDO DATOS SCAT ===');
+		console.log('=== EDITANDO DATOS SCAT (CORREGIDO) ===');
 		
 		if (!project) {
 			alert('No hay proyecto para editar');
 			return;
 		}
 
-		// Navegar al SCAT interface en modo edición
+		// Navegar al SCAT interface en modo edición con datos actualizados
 		if (onNavigateToScat) {
+			// Crear datos actualizados para navegación
+			const updatedProjectData = {
+				...project,
+				formData: {
+					...project.formData,
+					...formData // Incluir cambios actuales del formulario
+				}
+			};
+
 			const editData = {
-				...project.formData,
+				...formData, // Datos actuales del formulario
 				isEditing: true,
 				projectId: project.id,
-				projectData: project
+				projectData: updatedProjectData // Proyecto con datos actualizados
 			};
 			
-			console.log('Navegando al SCAT para editar datos:', editData);
+			console.log('Navegando al SCAT para editar con datos actualizados:', editData);
 			onNavigateToScat(editData);
 			onClose(); // Cerrar el modal
 		} else {
@@ -161,10 +199,16 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave, onN
 		// Navegar al SCAT interface en modo visualización
 		if (onNavigateToScat) {
 			const viewData = {
-				...project.formData,
+				...formData, // Datos actuales del formulario
 				isViewing: true,
 				projectId: project.id,
-				projectData: project
+				projectData: {
+					...project,
+					formData: {
+						...project.formData,
+						...formData // Incluir cambios actuales
+					}
+				}
 			};
 			
 			console.log('Navegando al SCAT para visualizar datos:', viewData);
@@ -178,13 +222,14 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave, onN
 	const handleCancel = () => {
 		// Resetear formulario a los datos originales
 		if (project && project.formData) {
+			const originalFormData = project.formData;
 			setFormData({
-				evento: project.formData.evento || "",
-				involucrado: project.formData.involucrado || "",
-				area: project.formData.area || "",
-				fechaHora: project.formData.fechaHora || "",
-				investigador: project.formData.investigador || "",
-				otrosDatos: project.formData.otrosDatos || "",
+				evento: originalFormData.evento || project.name || "",
+				involucrado: originalFormData.involucrado || "",
+				area: originalFormData.area || "",
+				fechaHora: originalFormData.fechaHora || "",
+				investigador: originalFormData.investigador || "",
+				otrosDatos: originalFormData.otrosDatos || project.description || "",
 			});
 		}
 		setErrors({});
@@ -202,9 +247,17 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave, onN
 			console.log('=== GENERANDO PDF DESDE EDIT MODAL ===');
 			console.log('Proyecto completo:', project);
 
+			// Crear proyecto temporal con datos actualizados para PDF
+			const projectForPDF = {
+				...project,
+				formData: {
+					...project.formData,
+					...formData // Incluir cambios actuales
+				}
+			};
+
 			// Usar la función normalizada para generar datos PDF consistentes
-			// Pasar los datos actuales del formulario para incluir cambios no guardados
-			const normalizedData = generatePDFDataFromProject(project, formData);
+			const normalizedData = generatePDFDataFromProject(projectForPDF);
 			
 			console.log('Datos normalizados para PDF:', normalizedData);
 

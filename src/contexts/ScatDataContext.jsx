@@ -64,29 +64,58 @@ const initialState = {
 };
 
 // Función para crear copia profunda
-const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
+const deepClone = (obj) => {
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return new Date(obj.getTime());
+  if (Array.isArray(obj)) return obj.map(item => deepClone(item));
+  
+  const cloned = {};
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      cloned[key] = deepClone(obj[key]);
+    }
+  }
+  return cloned;
+};
 
 // Función para obtener estado inicial limpio
 const getCleanInitialState = () => deepClone(initialState);
 
-// Función para fusionar datos de manera segura
+// Función mejorada para fusionar datos de manera segura
 const safeDataMerge = (defaultData, loadedData) => {
+  console.log('=== FUSIÓN SEGURA DE DATOS ===');
+  console.log('Datos por defecto:', defaultData);
+  console.log('Datos a cargar:', loadedData);
+  
   if (!loadedData || typeof loadedData !== 'object') {
-    return defaultData;
+    console.log('Datos a cargar inválidos, usando por defecto');
+    return deepClone(defaultData);
   }
   
-  const merged = { ...defaultData };
+  const merged = deepClone(defaultData);
   
   Object.keys(defaultData).forEach(key => {
     if (loadedData.hasOwnProperty(key)) {
-      if (typeof defaultData[key] === 'object' && defaultData[key] !== null && !Array.isArray(defaultData[key])) {
-        merged[key] = safeDataMerge(defaultData[key], loadedData[key]);
+      const loadedValue = loadedData[key];
+      const defaultValue = defaultData[key];
+      
+      if (loadedValue === null || loadedValue === undefined) {
+        // Mantener valor por defecto si el cargado es null/undefined
+        merged[key] = defaultValue;
+      } else if (Array.isArray(defaultValue)) {
+        // Para arrays, usar el cargado si existe, sino el por defecto
+        merged[key] = Array.isArray(loadedValue) ? deepClone(loadedValue) : defaultValue;
+      } else if (typeof defaultValue === 'object' && defaultValue !== null && !Array.isArray(defaultValue)) {
+        // Para objetos, fusionar recursivamente
+        merged[key] = safeDataMerge(defaultValue, loadedValue);
       } else {
-        merged[key] = loadedData[key];
+        // Para valores primitivos, usar el cargado
+        merged[key] = loadedValue;
       }
     }
   });
   
+  console.log('Datos fusionados:', merged);
   return merged;
 };
 
@@ -397,23 +426,29 @@ export function ScatDataProvider({ children }) {
     lastSavedStateRef.current = null;
   }, []);
 
-  // Cargar proyecto para visualización o edición
+  // Cargar proyecto para visualización o edición - FUNCIÓN CORREGIDA
   const loadProjectData = useCallback((projectData) => {
-    console.log('=== CARGANDO DATOS DE PROYECTO ===');
-    console.log('Datos del proyecto:', projectData);
+    console.log('=== CARGANDO DATOS DE PROYECTO (CORREGIDO) ===');
+    console.log('Datos del proyecto completo:', projectData);
 
     try {
-      // Construir estado completo con fusión segura de datos
+      // Validar que tenemos datos del proyecto
+      if (!projectData || !projectData.id) {
+        console.error('Datos del proyecto inválidos');
+        return false;
+      }
+
+      // Construir estado completo con fusión mejorada de datos
       const completeState = {
-        // Datos básicos del proyecto
-        projectData: safeDataMerge(initialState.projectData, projectData.formData),
+        // Datos básicos del proyecto - PRESERVAR COMPLETAMENTE
+        projectData: safeDataMerge(initialState.projectData, projectData.formData || {}),
         
-        // Datos SCAT con fusión segura
-        evaluacionData: safeDataMerge(initialState.evaluacionData, projectData.scatData?.evaluacion),
-        contactoData: safeDataMerge(initialState.contactoData, projectData.scatData?.contacto),
-        causasInmediatasData: safeDataMerge(initialState.causasInmediatasData, projectData.scatData?.causasInmediatas),
-        causasBasicasData: safeDataMerge(initialState.causasBasicasData, projectData.scatData?.causasBasicas),
-        necesidadesControlData: safeDataMerge(initialState.necesidadesControlData, projectData.scatData?.necesidadesControl),
+        // Datos SCAT con fusión segura - PRESERVAR TODOS LOS DATOS EXISTENTES
+        evaluacionData: safeDataMerge(initialState.evaluacionData, projectData.scatData?.evaluacion || {}),
+        contactoData: safeDataMerge(initialState.contactoData, projectData.scatData?.contacto || {}),
+        causasInmediatasData: safeDataMerge(initialState.causasInmediatasData, projectData.scatData?.causasInmediatas || {}),
+        causasBasicasData: safeDataMerge(initialState.causasBasicasData, projectData.scatData?.causasBasicas || {}),
+        necesidadesControlData: safeDataMerge(initialState.necesidadesControlData, projectData.scatData?.necesidadesControl || {}),
         
         // Metadatos
         lastModified: projectData.lastModified || new Date().toISOString(),
@@ -423,13 +458,24 @@ export function ScatDataProvider({ children }) {
         currentProjectId: projectData.id // Establecer proyecto actual
       };
 
-      console.log('=== ESTADO COMPLETO CONSTRUIDO ===');
+      console.log('=== ESTADO COMPLETO CONSTRUIDO (CORREGIDO) ===');
       console.log('Estado completo:', completeState);
+
+      // Verificar que los datos se preservaron correctamente
+      console.log('=== VERIFICACIÓN DE DATOS PRESERVADOS ===');
+      console.log('Datos del formulario preservados:', completeState.projectData);
+      console.log('Datos SCAT preservados:', {
+        evaluacion: completeState.evaluacionData,
+        contacto: completeState.contactoData,
+        causasInmediatas: completeState.causasInmediatasData,
+        causasBasicas: completeState.causasBasicasData,
+        necesidadesControl: completeState.necesidadesControlData
+      });
 
       // Cargar estado completo
       dispatch({ type: ACTIONS.LOAD_DATA, payload: completeState });
       
-      console.log('=== PROYECTO CARGADO EXITOSAMENTE ===');
+      console.log('=== PROYECTO CARGADO EXITOSAMENTE (DATOS PRESERVADOS) ===');
       return true;
     } catch (error) {
       console.error('Error cargando proyecto:', error);
