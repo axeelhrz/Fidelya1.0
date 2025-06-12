@@ -63,7 +63,7 @@
 }
 
 .editingText {
-  color: #333;
+  color: #e5e7eb;
   font-weight: 500;
   font-size: 14px;
 }
@@ -203,6 +203,29 @@
   flex-shrink: 0;
   max-height: 140px;
   overflow-y: auto;
+  
+  /* Scroll mejorado para navegación */
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1f2937;
+}
+
+.navigationContainer::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.navigationContainer::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-radius: 3px;
+}
+
+.navigationContainer::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 3px;
+}
+
+.navigationContainer::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }
 
 .navigationHeader {
@@ -255,8 +278,11 @@
   padding: 0.25rem 0;
   max-width: 1400px;
   margin: 0 auto;
+  
+  /* Scroll horizontal mejorado */
   scrollbar-width: thin;
   scrollbar-color: #4b5563 #1f2937;
+  -webkit-overflow-scrolling: touch;
 }
 
 .navigationButtons::-webkit-scrollbar {
@@ -315,39 +341,55 @@
   line-height: 1.2;
 }
 
+/* ÁREA DE CONTENIDO PRINCIPAL - SCROLL COMPLETO */
 .contentArea {
   position: relative;
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 1rem;
   background: #111827;
   min-height: 0;
   
+  /* Scroll mejorado y suave */
   scrollbar-width: thin;
   scrollbar-color: #4b5563 #111827;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
 .contentArea::-webkit-scrollbar {
-  width: 8px;
+  width: 12px;
 }
 
 .contentArea::-webkit-scrollbar-track {
   background: #111827;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .contentArea::-webkit-scrollbar-thumb {
   background: #4b5563;
-  border-radius: 4px;
+  border-radius: 6px;
+  border: 2px solid #111827;
 }
 
 .contentArea::-webkit-scrollbar-thumb:hover {
   background: #6b7280;
 }
 
+/* Asegurar que el contenido interno también sea scrolleable */
 .contentArea > * {
   max-width: 100%;
   overflow-x: auto;
+}
+
+/* Contenedores de contenido específicos */
+.contentArea .contentCard,
+.contentArea .scatContainer,
+.contentArea .incidentSelector,
+.contentArea .riskAssessment {
+  max-height: none;
+  overflow: visible;
 }
 
 .bottomNav {
@@ -358,6 +400,15 @@
   justify-content: center;
   gap: 0.75rem;
   flex-shrink: 0;
+  overflow-x: auto;
+  
+  /* Scroll horizontal para botones en móvil */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.bottomNav::-webkit-scrollbar {
+  display: none;
 }
 
 .iconButton {
@@ -439,6 +490,7 @@
   font-weight: 500;
 }
 
+/* RESPONSIVE DESIGN MEJORADO */
 @media (max-width: 1024px) {
   .headerContent {
     flex-direction: column;
@@ -574,6 +626,7 @@
   }
 }
 
+/* ALTURA MÍNIMA PARA PANTALLAS PEQUEÑAS */
 @media (max-height: 600px) {
   .navigationContainer {
     max-height: 80px;
@@ -592,6 +645,12 @@
   }
 }
 
+/* SCROLL SUAVE PARA TODOS LOS ELEMENTOS */
+* {
+  scroll-behavior: smooth;
+}
+
+/* CONTENIDO DE TABLAS SCROLLEABLE */
 .contentArea table {
   min-width: 100%;
   overflow-x: auto;
@@ -604,14 +663,14 @@
   margin: 1rem 0;
 }
 
-.contentArea {
+/* TOUCH SCROLLING PARA MÓVILES */
+.contentArea,
+.navigationButtons,
+.bottomNav {
   -webkit-overflow-scrolling: touch;
 }
 
-.navigationButtons {
-  -webkit-overflow-scrolling: touch;
-}
-
+/* ANIMACIONES SUAVES */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -623,23 +682,7 @@
   }
 }
 
-.infoModalBody::-webkit-scrollbar {
-  width: 6px;
-}
-
-.infoModalBody::-webkit-scrollbar-track {
-  background: #374151;
-}
-
-.infoModalBody::-webkit-scrollbar-thumb {
-  background: #6b7280;
-  border-radius: 3px;
-}
-
-.infoModalBody::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
+/* TOOLTIPS MEJORADOS */
 .iconButton[title]:hover::after,
 .navArrow[title]:hover::after,
 .backToMenuButton[title]:hover::after {
@@ -656,4 +699,22 @@
   white-space: nowrap;
   z-index: 1000;
   margin-bottom: 0.5rem;
+}
+
+/* SCROLL INDICATORS PARA CONTENIDO LARGO */
+.contentArea::before {
+  content: '';
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #eab308 0%, transparent 100%);
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.contentArea.scrolled::before {
+  opacity: 1;
 }
