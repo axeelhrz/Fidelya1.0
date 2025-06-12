@@ -61,6 +61,7 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-glow: 0 10px 30px rgba(37, 211, 102, 0.4);
   
   /* Transitions */
   --transition-fast: 0.15s ease-in-out;
@@ -437,6 +438,11 @@ img {
 .hero__phone {
   max-width: 400px;
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.3));
+}
+
+.hero__phone-glow {
+  width: 300px;
+  height: 300px;
 }
 
 /* ===== BENEFITS SECTION ===== */
@@ -956,6 +962,7 @@ img {
   width: 50px;
   height: 50px;
   margin-bottom: var(--spacing-md);
+  border-radius: var(--border-radius-md);
 }
 
 .footer__title {
@@ -993,11 +1000,12 @@ img {
 
 .footer__link {
   color: var(--gray-300);
-  transition: color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .footer__link:hover {
   color: var(--primary-color);
+  transform: translateX(5px);
 }
 
 .footer__bottom {
@@ -1035,6 +1043,7 @@ img {
   background: var(--primary-color);
   color: var(--white);
   transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
 }
 
 /* ===== WHATSAPP FLOATING BUTTON ===== */
@@ -1053,15 +1062,16 @@ img {
   box-shadow: var(--shadow-xl);
   z-index: var(--z-fixed);
   transition: all var(--transition-normal);
-  animation: pulse 2s infinite;
+  animation: pulse-whatsapp 2s infinite;
 }
 
 .whatsapp-float:hover {
   transform: scale(1.1);
   color: var(--white);
+  box-shadow: 0 10px 30px rgba(37, 211, 102, 0.4);
 }
 
-/* ===== ANIMATIONS ===== */
+/* ===== KEYFRAME ANIMATIONS ===== */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -1084,7 +1094,27 @@ img {
   }
 }
 
-@keyframes pulse {
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes pulse-whatsapp {
   0% {
     box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
   }
@@ -1094,6 +1124,144 @@ img {
   100% {
     box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
   }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.7;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes data-flow {
+  0% {
+    width: 0;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes calendar-blink {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse-bg {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 60%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-10px) scale(1.1);
+  }
+  80% {
+    transform: translateY(-5px) scale(1.05);
+  }
+}
+
+@keyframes particle-float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-40px) translateX(-5px);
+    opacity: 0.7;
+  }
+  75% {
+    transform: translateY(-20px) translateX(-10px);
+    opacity: 1;
+  }
+}
+
+/* ===== PARTICLES ANIMATION ===== */
+.hero__particles::before,
+.hero__particles::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  animation: particle-float 8s ease-in-out infinite;
+}
+
+.hero__particles::before {
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.hero__particles::after {
+  top: 60%;
+  right: 15%;
+  animation-delay: 4s;
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
@@ -1110,18 +1278,16 @@ img {
   }
   
   .hero__title {
-    font-size: var(--font-size-5xl);
+    font-size: var(--font-size-6xl);
   }
   
   .hero__cta {
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-md);
+    display: flex;
+    justify-content: center;
   }
   
-  .hero__cta .btn {
-    width: 100%;
-    max-width: 300px;
+  .hero__download {
+    justify-content: center;
   }
 }
 
@@ -1133,7 +1299,7 @@ img {
     width: 100%;
     height: calc(100vh - 70px);
     background: rgba(14, 26, 37, 0.98);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
     flex-direction: column;
     justify-content: flex-start;
     padding: var(--spacing-2xl);
@@ -1183,11 +1349,27 @@ img {
   }
   
   .hero {
-    padding-top: calc(70px + var(--spacing-2xl));
+    padding-top: calc(70px + var(--spacing-xl));
+    min-height: auto;
   }
   
   .hero__title {
-    font-size: var(--font-size-4xl);
+    font-size: var(--font-size-5xl);
+    text-align: center;
+  }
+  
+  .hero__description {
+    text-align: center;
+    max-width: none;
+  }
+  
+  .hero__cta {
+    justify-content: center;
+  }
+  
+  .hero__download {
+    flex-direction: column;
+    align-items: center;
   }
   
   .section {
@@ -1233,7 +1415,7 @@ img {
   }
   
   .hero__title {
-    font-size: var(--font-size-3xl);
+    font-size: var(--font-size-4xl);
   }
   
   .section__title {
@@ -1243,6 +1425,7 @@ img {
   .btn--large {
     padding: var(--spacing-md) var(--spacing-lg);
     font-size: var(--font-size-base);
+    min-height: 60px;
   }
   
   .pricing__card--featured {
@@ -1251,6 +1434,14 @@ img {
   
   .pricing__card--featured:hover {
     transform: translateY(-10px);
+  }
+  
+  .hero__download {
+    gap: var(--spacing-md);
+  }
+  
+  .download-btn img {
+    height: 40px;
   }
 }
 
@@ -1291,4 +1482,176 @@ img {
     --gray-300: #cccccc;
     --gray-400: #999999;
   }
+}
+
+/* ===== LOADING STATES ===== */
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid var(--primary-color);
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===== SCROLL INDICATORS ===== */
+.scroll-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  transform-origin: left;
+  transform: scaleX(0);
+  z-index: var(--z-fixed);
+  transition: transform 0.1s ease-out;
+}
+
+/* ===== CUSTOM SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: var(--border-radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-color);
+}
+
+/* ===== SELECTION STYLES ===== */
+::selection {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+::-moz-selection {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+/* ===== FOCUS STYLES ===== */
+.btn:focus,
+.form__input:focus,
+.form__textarea:focus,
+.nav__link:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* ===== PERFORMANCE OPTIMIZATIONS ===== */
+.hero__phone,
+.feature__phone-mockup img {
+  will-change: transform;
+}
+
+.benefit__card,
+.trust__card,
+.pricing__card {
+  will-change: transform;
+}
+
+/* ===== ADDITIONAL MICRO-ANIMATIONS ===== */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* ===== GRADIENT ANIMATIONS ===== */
+.hero__title--amazon {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* ===== ENHANCED HOVER EFFECTS ===== */
+.benefit__card:hover .benefit__icon,
+.trust__card:hover .trust__icon {
+  animation: bounce 0.6s ease;
+}
+
+/* ===== SMOOTH REVEAL ANIMATIONS ===== */
+.section {
+  overflow: hidden;
+}
+
+.section > * {
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.section.in-view > * {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ===== ENHANCED MOBILE EXPERIENCE ===== */
+@media (max-width: 768px) {
+  .hero__phone-glow {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .feature__phone-mockup img {
+    max-width: 250px;
+  }
+  
+  .hero__cta-main {
+    font-size: var(--font-size-lg);
+    padding: var(--spacing-lg) var(--spacing-2xl);
+  }
+}
+
+/* ===== FINAL OPTIMIZATIONS ===== */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.hero__phone,
+.feature__phone-mockup img,
+.benefit__icon,
+.trust__icon {
+  @extend .gpu-accelerated;
 }
