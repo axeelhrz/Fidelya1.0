@@ -134,39 +134,107 @@ function ScatInterface({
 
 	// Navegación entre secciones
 	const handleSectionClick = useCallback(async (sectionId) => {
-		// Auto-guardar si estamos editando
-		if (editingActive && hasUnsavedChanges) {
-			await saveProgress(true); // Guardar silenciosamente
+		console.log('=== NAVEGANDO A SECCIÓN ===', sectionId);
+		
+		// Verificar que la sección existe
+		const sectionExists = scatSections.find(section => section.id === sectionId);
+		if (!sectionExists) {
+			console.error('Sección no encontrada:', sectionId);
+			return;
 		}
-		setActiveSection(sectionId);
+
+		try {
+			// Auto-guardar si estamos editando
+			if (editingActive && hasUnsavedChanges) {
+				console.log('Auto-guardando antes de cambiar sección...');
+				await saveProgress(true); // Guardar silenciosamente
+			}
+			
+			console.log('Cambiando a sección:', sectionId);
+			setActiveSection(sectionId);
+		} catch (error) {
+			console.error('Error al cambiar de sección:', error);
+		}
 	}, [editingActive, hasUnsavedChanges, saveProgress]);
 
-	const getCurrentSectionIndex = () => {
-		return scatSections.findIndex(section => section.id === activeSection);
-	};
+	// Función para obtener el índice de la sección actual
+	const getCurrentSectionIndex = useCallback(() => {
+		const index = scatSections.findIndex(section => section.id === activeSection);
+		console.log('Índice de sección actual:', index, 'para sección:', activeSection);
+		return index;
+	}, [activeSection]);
 
+	// Navegación a sección anterior
 	const goToPreviousSection = useCallback(async () => {
+		console.log('=== INTENTANDO IR A SECCIÓN ANTERIOR ===');
+		
 		const currentIndex = getCurrentSectionIndex();
-		if (currentIndex > 0) {
+		console.log('Índice actual:', currentIndex);
+		
+		if (currentIndex <= 0) {
+			console.log('Ya estamos en la primera sección');
+			return;
+		}
+
+		const previousSection = scatSections[currentIndex - 1];
+		console.log('Sección anterior:', previousSection);
+
+		try {
 			if (editingActive && hasUnsavedChanges) {
+				console.log('Auto-guardando antes de ir a sección anterior...');
 				await saveProgress(true);
 			}
-			setActiveSection(scatSections[currentIndex - 1].id);
+			
+			console.log('Navegando a sección anterior:', previousSection.id);
+			setActiveSection(previousSection.id);
+		} catch (error) {
+			console.error('Error al ir a sección anterior:', error);
 		}
-	}, [editingActive, hasUnsavedChanges, saveProgress]);
+	}, [getCurrentSectionIndex, editingActive, hasUnsavedChanges, saveProgress]);
 
+	// Navegación a sección siguiente
 	const goToNextSection = useCallback(async () => {
+		console.log('=== INTENTANDO IR A SECCIÓN SIGUIENTE ===');
+		
 		const currentIndex = getCurrentSectionIndex();
-		if (currentIndex < scatSections.length - 1) {
+		console.log('Índice actual:', currentIndex);
+		console.log('Total de secciones:', scatSections.length);
+		
+		if (currentIndex >= scatSections.length - 1) {
+			console.log('Ya estamos en la última sección');
+			return;
+		}
+
+		const nextSection = scatSections[currentIndex + 1];
+		console.log('Sección siguiente:', nextSection);
+
+		try {
 			if (editingActive && hasUnsavedChanges) {
+				console.log('Auto-guardando antes de ir a sección siguiente...');
 				await saveProgress(true);
 			}
-			setActiveSection(scatSections[currentIndex + 1].id);
+			
+			console.log('Navegando a sección siguiente:', nextSection.id);
+			setActiveSection(nextSection.id);
+		} catch (error) {
+			console.error('Error al ir a sección siguiente:', error);
 		}
-	}, [editingActive, hasUnsavedChanges, saveProgress]);
+	}, [getCurrentSectionIndex, editingActive, hasUnsavedChanges, saveProgress]);
 
-	const canGoPrevious = () => getCurrentSectionIndex() > 0;
-	const canGoNext = () => getCurrentSectionIndex() < scatSections.length - 1;
+	// Funciones para verificar si se puede navegar
+	const canGoPrevious = useCallback(() => {
+		const currentIndex = getCurrentSectionIndex();
+		const canGo = currentIndex > 0;
+		console.log('¿Puede ir atrás?', canGo, '(índice:', currentIndex, ')');
+		return canGo;
+	}, [getCurrentSectionIndex]);
+
+	const canGoNext = useCallback(() => {
+		const currentIndex = getCurrentSectionIndex();
+		const canGo = currentIndex < scatSections.length - 1;
+		console.log('¿Puede ir adelante?', canGo, '(índice:', currentIndex, 'de', scatSections.length - 1, ')');
+		return canGo;
+	}, [getCurrentSectionIndex]);
 
 	// Navegación principal
 	const handleBackToMenu = useCallback(async () => {
@@ -276,6 +344,18 @@ function ScatInterface({
 
 	const statusIndicator = getStatusIndicator();
 
+	// Variables para el estado de las flechas
+	const isPreviousDisabled = !canGoPrevious() || isSaving || isLoading;
+	const isNextDisabled = !canGoNext() || isSaving || isLoading;
+
+	console.log('=== ESTADO DE NAVEGACIÓN ===');
+	console.log('Sección activa:', activeSection);
+	console.log('Índice actual:', getCurrentSectionIndex());
+	console.log('Puede ir atrás:', canGoPrevious());
+	console.log('Puede ir adelante:', canGoNext());
+	console.log('Flecha anterior deshabilitada:', isPreviousDisabled);
+	console.log('Flecha siguiente deshabilitada:', isNextDisabled);
+
 	return (
 		<div className={styles.container}>
 			{/* Header */}
@@ -325,10 +405,10 @@ function ScatInterface({
 			<div className={styles.navigationContainer}>
 				<div className={styles.navigationHeader}>
 					<button 
-						className={`${styles.navArrow} ${!canGoPrevious() ? styles.disabled : ''}`}
+						className={`${styles.navArrow} ${isPreviousDisabled ? styles.disabled : ''}`}
 						onClick={goToPreviousSection}
-						disabled={!canGoPrevious() || isSaving || isLoading}
-						title="Sección anterior"
+						disabled={isPreviousDisabled}
+						title={isPreviousDisabled ? 'No hay sección anterior' : 'Sección anterior'}
 					>
 						<ArrowLeftIcon />
 					</button>
@@ -336,10 +416,10 @@ function ScatInterface({
 						{scatSections.find(section => section.id === activeSection)?.title}
 					</div>
 					<button 
-						className={`${styles.navArrow} ${!canGoNext() ? styles.disabled : ''}`}
+						className={`${styles.navArrow} ${isNextDisabled ? styles.disabled : ''}`}
 						onClick={goToNextSection}
-						disabled={!canGoNext() || isSaving || isLoading}
-						title="Siguiente sección"
+						disabled={isNextDisabled}
+						title={isNextDisabled ? 'No hay sección siguiente' : 'Siguiente sección'}
 					>
 						<ArrowRightIcon />
 					</button>
@@ -402,18 +482,18 @@ function ScatInterface({
 					<GridIcon />
 				</button>
 				<button
-					className={`${styles.iconButton} ${styles.darkButton} ${!canGoPrevious() ? styles.disabled : ''}`}
+					className={`${styles.iconButton} ${styles.darkButton} ${isPreviousDisabled ? styles.disabled : ''}`}
 					onClick={goToPreviousSection}
-					disabled={!canGoPrevious() || isSaving || isLoading}
-					title="Sección anterior"
+					disabled={isPreviousDisabled}
+					title={isPreviousDisabled ? 'No hay sección anterior' : 'Sección anterior'}
 				>
 					<ArrowLeftIcon />
 				</button>
 				<button 
-					className={`${styles.iconButton} ${styles.darkButton} ${!canGoNext() ? styles.disabled : ''}`}
+					className={`${styles.iconButton} ${styles.darkButton} ${isNextDisabled ? styles.disabled : ''}`}
 					onClick={goToNextSection}
-					disabled={!canGoNext() || isSaving || isLoading}
-					title="Siguiente sección"
+					disabled={isNextDisabled}
+					title={isNextDisabled ? 'No hay sección siguiente' : 'Siguiente sección'}
 				>
 					<ArrowRightIcon />
 				</button>
