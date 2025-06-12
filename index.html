@@ -444,9 +444,13 @@
         }
 
         .hero__badge::before {
-            content: '⚡';
-            font-size: 1rem;
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--starflex-blue);
+            border-radius: 50%;
             animation: pulse 2s infinite;
+            box-shadow: 0 0 10px var(--starflex-blue);
         }
 
         .hero__badge::after {
@@ -529,7 +533,7 @@
             opacity: 0.7;
         }
 
-        /* ===== DESCRIPCIÓN DE LA EMPRESA ===== */
+        /* ===== DESCRIPCIÓN DE LA EMPRESA SIN EMOJI ===== */
         .hero__company-description {
             font-size: 1.1rem;
             color: var(--text-secondary);
@@ -547,12 +551,15 @@
         }
 
         .hero__company-description::before {
-            content: '💼';
+            content: '';
             position: absolute;
             top: var(--space-md);
             left: var(--space-md);
-            font-size: 1.2rem;
-            opacity: 0.8;
+            width: 12px;
+            height: 12px;
+            background: var(--starflex-blue);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--starflex-blue);
         }
 
         .hero__company-description-text {
@@ -673,11 +680,14 @@
         }
 
         .hero__trust::before {
-            content: '✓';
-            color: var(--starflex-cyan);
-            font-weight: bold;
-            font-size: 1.1rem;
-            text-shadow: 0 0 10px rgba(6, 255, 165, 0.5);
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: var(--starflex-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(6, 255, 165, 0.5);
+            display: inline-block;
+            margin-right: var(--space-xs);
         }
 
         /* ===== VIDEO FUTURISTA CON MEJOR RESOLUCIÓN ===== */
@@ -1130,9 +1140,11 @@
                     <div class="hero__video-container">
                         <video class="hero__video" autoplay muted loop playsinline preload="metadata">
                             <source src="./assets/home.mp4" type="video/mp4">
-                            <!-- Fallback futurista -->
+                            <!-- Fallback futurista sin emojis -->
                             <div style="width: 380px; height: 760px; background: linear-gradient(135deg, #151922 0%, #0a0d14 100%); border-radius: 35px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1.5rem; border: 1px solid rgba(0, 212, 255, 0.2);">
-                                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #00d4ff 0%, #8b5cf6 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);">📱</div>
+                                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #00d4ff 0%, #8b5cf6 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);">
+                                    <div style="width: 40px; height: 40px; background: white; border-radius: 8px;"></div>
+                                </div>
                                 <div style="color: #00d4ff; font-size: 1.5rem; font-weight: bold; text-align: center; font-family: 'Space Grotesk', sans-serif;">
                                     <div>Starflex</div>
                                     <div style="font-size: 1rem; color: #e2e8f0; font-weight: normal; margin-top: 0.5rem;">Amazon Flex AI</div>
@@ -1274,7 +1286,7 @@
 
                 // Precargar el video para mejor calidad
                 this.video.addEventListener('canplaythrough', () => {
-                    console.log('📹 Video loaded with high quality');
+                    console.log('Video loaded with high quality');
                 });
             }
         }
