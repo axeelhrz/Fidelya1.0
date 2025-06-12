@@ -183,8 +183,9 @@ export function ScatDataProvider({ children }) {
 
   // Función para auto-guardar datos SCAT en proyecto existente
   const autoSaveToProject = useCallback(() => {
-    if (!state.currentProjectId || state.isEditing) {
-      return; // No auto-guardar si no hay proyecto actual o estamos en modo edición
+    if (!state.currentProjectId) {
+      console.log('No hay proyecto actual para auto-guardar');
+      return;
     }
 
     try {
@@ -215,25 +216,55 @@ export function ScatDataProvider({ children }) {
         necesidadesControl: state.necesidadesControlData
       };
 
-      // Actualizar proyecto con nuevos datos SCAT
-      const updatedProject = {
-        ...projects[projectIndex],
-        scatData: scatData,
-        lastModified: new Date().toISOString(),
-        version: (projects[projectIndex].version || 1) + 1
-      };
+      // Verificar si hay datos SCAT reales para guardar
+      const hasRealScatData = (
+        Object.values(state.evaluacionData).some(v => v !== null && v !== undefined) ||
+        state.contactoData.selectedIncidents.length > 0 ||
+        state.contactoData.observation?.trim() ||
+        state.contactoData.image ||
+        state.causasInmediatasData.actos.selectedItems.length > 0 ||
+        state.causasInmediatasData.condiciones.selectedItems.length > 0 ||
+        state.causasInmediatasData.actos.observation?.trim() ||
+        state.causasInmediatasData.condiciones.observation?.trim() ||
+        state.causasInmediatasData.actos.image ||
+        state.causasInmediatasData.condiciones.image ||
+        state.causasBasicasData.personales.selectedItems.length > 0 ||
+        state.causasBasicasData.laborales.selectedItems.length > 0 ||
+        state.causasBasicasData.personales.observation?.trim() ||
+        state.causasBasicasData.laborales.observation?.trim() ||
+        state.causasBasicasData.personales.image ||
+        state.causasBasicasData.laborales.image ||
+        state.necesidadesControlData.selectedItems.length > 0 ||
+        state.necesidadesControlData.globalObservation?.trim() ||
+        state.necesidadesControlData.globalImage ||
+        state.necesidadesControlData.medidasCorrectivas?.trim()
+      );
 
-      projects[projectIndex] = updatedProject;
-      
-      // Guardar en localStorage
-      localStorage.setItem('scatProjects', JSON.stringify(projects));
-      
-      console.log('=== DATOS SCAT AUTO-GUARDADOS EN PROYECTO ===');
+      // Solo actualizar si hay datos SCAT reales
+      if (hasRealScatData) {
+        // Actualizar proyecto con nuevos datos SCAT
+        const updatedProject = {
+          ...projects[projectIndex],
+          scatData: scatData,
+          lastModified: new Date().toISOString(),
+          version: (projects[projectIndex].version || 1) + 1
+        };
+
+        projects[projectIndex] = updatedProject;
+        
+        // Guardar en localStorage
+        localStorage.setItem('scatProjects', JSON.stringify(projects));
+        
+        console.log('=== DATOS SCAT AUTO-GUARDADOS EN PROYECTO ===');
+        console.log('Datos guardados:', scatData);
+      } else {
+        console.log('No hay datos SCAT reales para auto-guardar');
+      }
       
     } catch (error) {
       console.error('Error en auto-guardado:', error);
     }
-  }, [state.currentProjectId, state.isEditing, state.evaluacionData, state.contactoData, state.causasInmediatasData, state.causasBasicasData, state.necesidadesControlData]);
+  }, [state]);
 
   // Inicialización única
   useEffect(() => {
@@ -273,10 +304,7 @@ export function ScatDataProvider({ children }) {
 
         // Configurar nuevo timeout para auto-guardado
         autoSaveTimeoutRef.current = setTimeout(() => {
-          if (state.isEditing) {
-            // En modo edición, no guardar en localStorage temporal
-            console.log('Modo edición activo - no guardando datos temporales');
-          } else if (state.currentProjectId) {
+          if (state.currentProjectId) {
             // Si hay un proyecto actual, auto-guardar datos SCAT en él
             autoSaveToProject();
           } else {
@@ -284,7 +312,7 @@ export function ScatDataProvider({ children }) {
             console.log('Auto-guardando datos temporales');
             localStorage.setItem('scatData', currentStateString);
           }
-        }, 2000); // Debounce de 2 segundos
+        }, 1000); // Debounce de 1 segundo
 
         lastSavedStateRef.current = currentStateString;
       }
