@@ -3,11 +3,9 @@
 import { useState, useEffect } from "react";
 import { Download } from "lucide-react";
 import styles from "./AccidentForm.module.css";
-import { useScatData } from "../contexts/ScatContext";
 import pdfService from "../services/pdfService";
 
 export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
-	const { getCompleteSummary } = useScatData();
 	const [formData, setFormData] = useState({
 		evento: "",
 		involucrado: "",
@@ -117,8 +115,16 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 			// Obtener datos completos del proyecto
 			const projectData = {
 				project: formData, // Usar datos actuales del formulario
-				evaluacion: project.scatData?.evaluacion || {},
-				contacto: project.scatData?.contacto || { selectedIncidents: [], image: null, observation: '' },
+				evaluacion: project.scatData?.evaluacion || {
+					severity: null,
+					probability: null,
+					frequency: null
+				},
+				contacto: project.scatData?.contacto || { 
+					selectedIncidents: [], 
+					image: null, 
+					observation: '' 
+				},
 				causasInmediatas: project.scatData?.causasInmediatas || {
 					actos: { selectedItems: [], image: null, observation: '' },
 					condiciones: { selectedItems: [], image: null, observation: '' }
@@ -139,7 +145,7 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 			console.log('Datos para PDF:', projectData);
 
 			// Generar nombre del archivo
-			const fileName = `SCAT_${formData.evento.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf';
+			const fileName = `SCAT_${formData.evento.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
 			
 			// Generar y descargar PDF
 			pdfService.downloadPDF(projectData, fileName);
@@ -306,13 +312,25 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 							<div className={styles.infoItem}>
 								<span className={styles.infoLabel}>Creado:</span>
 								<span className={styles.infoValue}>
-									{project?.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'Fecha desconocida'}
+									{project?.createdAt ? new Date(project.createdAt).toLocaleDateString('es-ES', {
+										year: 'numeric',
+										month: 'long',
+										day: 'numeric',
+										hour: '2-digit',
+										minute: '2-digit'
+									}) : 'Fecha desconocida'}
 								</span>
 							</div>
 							<div className={styles.infoItem}>
 								<span className={styles.infoLabel}>Última modificación:</span>
 								<span className={styles.infoValue}>
-									{project?.lastModified ? new Date(project.lastModified).toLocaleDateString() : 'Nunca'}
+									{project?.lastModified ? new Date(project.lastModified).toLocaleDateString('es-ES', {
+										year: 'numeric',
+										month: 'long',
+										day: 'numeric',
+										hour: '2-digit',
+										minute: '2-digit'
+									}) : 'Nunca'}
 								</span>
 							</div>
 							<div className={styles.infoItem}>
@@ -322,10 +340,47 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 								</span>
 							</div>
 							<div className={styles.infoItem}>
-								<span className={styles.infoLabel}>Datos SCAT:</span>
+								<span className={styles.infoLabel}>ID del Proyecto:</span>
 								<span className={styles.infoValue}>
-									{project?.scatData ? 'Disponibles' : 'No disponibles'}
+									{project?.id || 'N/A'}
 								</span>
+							</div>
+						</div>
+
+						{/* Información de datos SCAT */}
+						<div className={styles.scatDataInfo}>
+							<h4>Datos SCAT Disponibles:</h4>
+							<div className={styles.scatDataGrid}>
+								<div className={styles.scatDataItem}>
+									<span className={styles.scatDataLabel}>Evaluación:</span>
+									<span className={`${styles.scatDataStatus} ${project?.scatData?.evaluacion ? styles.available : styles.notAvailable}`}>
+										{project?.scatData?.evaluacion ? '✓ Disponible' : '✗ No disponible'}
+									</span>
+								</div>
+								<div className={styles.scatDataItem}>
+									<span className={styles.scatDataLabel}>Contacto:</span>
+									<span className={`${styles.scatDataStatus} ${project?.scatData?.contacto ? styles.available : styles.notAvailable}`}>
+										{project?.scatData?.contacto ? '✓ Disponible' : '✗ No disponible'}
+									</span>
+								</div>
+								<div className={styles.scatDataItem}>
+									<span className={styles.scatDataLabel}>Causas Inmediatas:</span>
+									<span className={`${styles.scatDataStatus} ${project?.scatData?.causasInmediatas ? styles.available : styles.notAvailable}`}>
+										{project?.scatData?.causasInmediatas ? '✓ Disponible' : '✗ No disponible'}
+									</span>
+								</div>
+								<div className={styles.scatDataItem}>
+									<span className={styles.scatDataLabel}>Causas Básicas:</span>
+									<span className={`${styles.scatDataStatus} ${project?.scatData?.causasBasicas ? styles.available : styles.notAvailable}`}>
+										{project?.scatData?.causasBasicas ? '✓ Disponible' : '✗ No disponible'}
+									</span>
+								</div>
+								<div className={styles.scatDataItem}>
+									<span className={styles.scatDataLabel}>Necesidades de Control:</span>
+									<span className={`${styles.scatDataStatus} ${project?.scatData?.necesidadesControl ? styles.available : styles.notAvailable}`}>
+										{project?.scatData?.necesidadesControl ? '✓ Disponible' : '✗ No disponible'}
+									</span>
+								</div>
 							</div>
 						</div>
 					</div>

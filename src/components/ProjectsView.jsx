@@ -241,7 +241,7 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 			};
 
 			// Generar nombre del archivo
-			const fileName = `SCAT_${(project.name || 'Proyecto').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf';
+			const fileName = `SCAT_${(project.name || 'Proyecto').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
 			
 			// Generar y descargar PDF
 			pdfService.downloadPDF(projectData, fileName);
