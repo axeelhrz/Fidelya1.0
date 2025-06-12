@@ -1,4 +1,4 @@
-// Constantes de acciones para el reducer de SCAT
+// Acciones disponibles para el reducer
 export const ACTIONS = {
   SET_PROJECT_DATA: 'SET_PROJECT_DATA',
   SET_EVALUACION_DATA: 'SET_EVALUACION_DATA',
@@ -8,6 +8,7 @@ export const ACTIONS = {
   SET_NECESIDADES_CONTROL_DATA: 'SET_NECESIDADES_CONTROL_DATA',
   LOAD_DATA: 'LOAD_DATA',
   SET_EDITING_MODE: 'SET_EDITING_MODE',
+  SET_CURRENT_PROJECT: 'SET_CURRENT_PROJECT',
   RESET_DATA: 'RESET_DATA'
 };
 

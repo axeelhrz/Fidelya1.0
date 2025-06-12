@@ -5,7 +5,7 @@ import styles from "./AccidentForm.module.css";
 import { useScatData } from "../contexts/ScatContext";
 
 export default function AccidentFormModal({ isOpen, onClose, onCreateProject, onContinue }) {
-	const { setProjectData } = useScatData();
+	const { setProjectData, getCompleteSummary, resetAllData } = useScatData();
 	const [formData, setFormData] = useState({
 		evento: "",
 		involucrado: "",
@@ -73,21 +73,73 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const createProject = (dataToSave) => {
+	const createProject = (dataToSave, includeScatData = false) => {
+		console.log('=== CREANDO PROYECTO ===');
+		console.log('Datos del formulario:', dataToSave);
+		console.log('Incluir datos SCAT:', includeScatData);
+
+		// Obtener datos SCAT actuales si se requiere
+		let scatData = null;
+		if (includeScatData) {
+			const currentSummary = getCompleteSummary();
+			console.log('Resumen completo actual:', currentSummary);
+			
+			// Solo incluir datos SCAT si realmente hay datos
+			const hasScatData = (
+				Object.values(currentSummary.evaluacion || {}).some(v => v !== null && v !== undefined) ||
+				(currentSummary.contacto?.selectedIncidents?.length > 0) ||
+				(currentSummary.contacto?.observation?.trim()) ||
+				(currentSummary.contacto?.image) ||
+				(currentSummary.causasInmediatas?.actos?.selectedItems?.length > 0) ||
+				(currentSummary.causasInmediatas?.condiciones?.selectedItems?.length > 0) ||
+				(currentSummary.causasInmediatas?.actos?.observation?.trim()) ||
+				(currentSummary.causasInmediatas?.condiciones?.observation?.trim()) ||
+				(currentSummary.causasInmediatas?.actos?.image) ||
+				(currentSummary.causasInmediatas?.condiciones?.image) ||
+				(currentSummary.causasBasicas?.personales?.selectedItems?.length > 0) ||
+				(currentSummary.causasBasicas?.laborales?.selectedItems?.length > 0) ||
+				(currentSummary.causasBasicas?.personales?.observation?.trim()) ||
+				(currentSummary.causasBasicas?.laborales?.observation?.trim()) ||
+				(currentSummary.causasBasicas?.personales?.image) ||
+				(currentSummary.causasBasicas?.laborales?.image) ||
+				(currentSummary.necesidadesControl?.selectedItems?.length > 0) ||
+				(currentSummary.necesidadesControl?.globalObservation?.trim()) ||
+				(currentSummary.necesidadesControl?.globalImage) ||
+				(currentSummary.necesidadesControl?.medidasCorrectivas?.trim())
+			);
+
+			if (hasScatData) {
+				scatData = {
+					evaluacion: currentSummary.evaluacion,
+					contacto: currentSummary.contacto,
+					causasInmediatas: currentSummary.causasInmediatas,
+					causasBasicas: currentSummary.causasBasicas,
+					necesidadesControl: currentSummary.necesidadesControl
+				};
+				console.log('Datos SCAT incluidos en el proyecto:', scatData);
+			} else {
+				console.log('No hay datos SCAT para incluir');
+			}
+		}
+
 		// Crear un nuevo proyecto con ID único y todos los datos necesarios
 		const newProject = {
 			id: Date.now(), // Usar timestamp como ID único
 			name: dataToSave.evento,
-			description: `Involucrado: ${dataToSave.involucrado} - Área: ${dataToSave.area}`,
+			description: dataToSave.otrosDatos || `Involucrado: ${dataToSave.involucrado} - Área: ${dataToSave.area}`,
 			createdAt: new Date().toISOString(),
 			formData: { ...dataToSave }, // Guardar todos los datos del formulario
+			scatData: scatData, // Incluir datos SCAT si existen
 			// Metadatos adicionales
 			status: 'active',
 			lastModified: new Date().toISOString(),
-			version: 1
+			version: 1,
+			isReal: true,
+			isExample: false,
+			isSimulated: false
 		};
 
-		console.log('Creando proyecto con datos:', newProject);
+		console.log('Proyecto creado:', newProject);
 
 		// Guardar en el contexto para uso inmediato en SCAT
 		setProjectData(dataToSave);
@@ -107,8 +159,8 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 			console.log('=== GUARDAR SOLO ===');
 			console.log('Datos del formulario:', formData);
 			
-			// Crear el proyecto
-			createProject(formData);
+			// Crear el proyecto incluyendo cualquier dato SCAT que pueda existir
+			createProject(formData, true);
 			
 			// Limpiar formulario y cerrar modal
 			resetForm();
@@ -129,8 +181,8 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 			// Hacer una copia de los datos antes de limpiar el formulario
 			const dataToSave = { ...formData };
 			
-			// Crear el proyecto con los datos guardados
-			const newProject = createProject(dataToSave);
+			// Crear el proyecto con los datos guardados (sin datos SCAT aún)
+			const newProject = createProject(dataToSave, false);
 			
 			console.log('Proyecto creado:', newProject);
 			
