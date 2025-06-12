@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Download } from "lucide-react";
 import styles from "./AccidentForm.module.css";
 import pdfService from "../services/pdfService";
+import { generatePDFDataFromProject } from "../utils/pdfDataNormalizer";
 
 export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 	const [formData, setFormData] = useState({
@@ -14,7 +15,6 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 		investigador: "",
 		otrosDatos: "",
 	});
-
 	const [errors, setErrors] = useState({});
 	const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
@@ -81,86 +81,31 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 	const handleSave = (e) => {
 		e.preventDefault();
 
-		if (validateForm()) {
-			console.log('=== GUARDANDO CAMBIOS DEL PROYECTO ===');
-			console.log('Datos del formulario:', formData);
-			
-			// Crear proyecto actualizado manteniendo todos los datos SCAT existentes
-			const updatedProject = {
-				...project,
-				name: formData.evento,
-				description: `Involucrado: ${formData.involucrado} - Área: ${formData.area}`,
-				formData: { ...formData },
-				lastModified: new Date().toISOString(),
-				version: (project.version || 1) + 1
-			};
-
-			console.log('Proyecto actualizado:', updatedProject);
-
-			if (onSave) {
-				onSave(updatedProject);
-			}
-
-			onClose();
+		if (!validateForm()) {
+			return;
 		}
-	};
 
-	const handleGeneratePDF = async () => {
-		if (!project) return;
+		console.log('=== GUARDANDO CAMBIOS DEL PROYECTO ===');
+		console.log('Datos del formulario:', formData);
 
-		try {
-			setIsGeneratingPDF(true);
-			console.log('=== GENERANDO PDF DEL PROYECTO ===');
-			
-			// Obtener datos completos del proyecto
-			const projectData = {
-				project: formData, // Usar datos actuales del formulario
-				evaluacion: project.scatData?.evaluacion || {
-					severity: null,
-					probability: null,
-					frequency: null
-				},
-				contacto: project.scatData?.contacto || { 
-					selectedIncidents: [], 
-					image: null, 
-					observation: '' 
-				},
-				causasInmediatas: project.scatData?.causasInmediatas || {
-					actos: { selectedItems: [], image: null, observation: '' },
-					condiciones: { selectedItems: [], image: null, observation: '' }
-				},
-				causasBasicas: project.scatData?.causasBasicas || {
-					personales: { selectedItems: [], detailedSelections: {}, image: null, observation: '' },
-					laborales: { selectedItems: [], detailedSelections: {}, image: null, observation: '' }
-				},
-				necesidadesControl: project.scatData?.necesidadesControl || {
-					selectedItems: [],
-					detailedData: {},
-					globalImage: null,
-					globalObservation: '',
-					medidasCorrectivas: ''
-				}
-			};
+		// Crear proyecto actualizado
+		const updatedProject = {
+			...project,
+			name: formData.evento,
+			description: formData.otrosDatos || 'Sin descripción',
+			formData: formData,
+			lastModified: new Date().toISOString(),
+			version: (project.version || 1) + 1
+		};
 
-			console.log('Datos para PDF:', projectData);
+		console.log('Proyecto actualizado:', updatedProject);
 
-			// Generar nombre del archivo
-			const fileName = `SCAT_${formData.evento.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
-			
-			// Generar y descargar PDF
-			pdfService.downloadPDF(projectData, fileName);
-			
-			console.log('PDF generado exitosamente');
-		} catch (error) {
-			console.error('Error generando PDF:', error);
-			alert('Error al generar el PDF. Por favor, intente nuevamente.');
-		} finally {
-			setIsGeneratingPDF(false);
-		}
+		// Llamar a la función onSave del padre
+		onSave(updatedProject);
 	};
 
 	const handleCancel = () => {
-		// Resetear a los datos originales
+		// Resetear formulario a los datos originales
 		if (project && project.formData) {
 			setFormData({
 				evento: project.formData.evento || "",
@@ -175,6 +120,35 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 		onClose();
 	};
 
+	const handleGeneratePDF = async () => {
+		if (!project) {
+			alert('No hay datos del proyecto para generar el PDF');
+			return;
+		}
+
+		try {
+			setIsGeneratingPDF(true);
+			console.log('=== GENERANDO PDF DESDE EDIT MODAL ===');
+			console.log('Proyecto completo:', project);
+
+			// Usar la función normalizada para generar datos PDF consistentes
+			// Pasar los datos actuales del formulario para incluir cambios no guardados
+			const normalizedData = generatePDFDataFromProject(project, formData);
+			
+			console.log('Datos normalizados para PDF:', normalizedData);
+
+			// Generar y descargar PDF usando los datos normalizados
+			await pdfService.downloadPDF(normalizedData);
+			
+			console.log('PDF generado exitosamente desde edit modal');
+		} catch (error) {
+			console.error('Error generando PDF:', error);
+			alert('Error al generar el PDF. Por favor, intenta nuevamente.');
+		} finally {
+			setIsGeneratingPDF(false);
+		}
+	};
+
 	if (!isOpen) return null;
 
 	return (
@@ -182,119 +156,80 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 			<div className={styles.modalContent}>
 				<div className={styles.modalHeader}>
 					<h2 className={styles.modalTitle}>Editar Proyecto</h2>
-					<div className={styles.modalHeaderActions}>
-						<button 
-							className={styles.pdfButton}
-							onClick={handleGeneratePDF}
-							disabled={isGeneratingPDF}
-							title="Generar PDF con datos actuales"
-						>
-							<Download size={16} />
-							{isGeneratingPDF ? 'Generando...' : 'PDF'}
-						</button>
-						<button className={styles.closeButton} onClick={handleCancel}>
-							×
-						</button>
-					</div>
+					<button className={styles.closeButton} onClick={handleCancel}>
+						×
+					</button>
 				</div>
 
-				<form className={styles.form}>
+				<form onSubmit={handleSave} className={styles.form}>
 					<div className={styles.formGrid}>
 						<div className={styles.formGroup}>
-							<label htmlFor="evento" className={styles.label}>
-								Evento *
-							</label>
+							<label className={styles.label}>Evento *</label>
 							<input
 								type="text"
-								id="evento"
 								name="evento"
 								value={formData.evento}
 								onChange={handleInputChange}
-								className={`${styles.input} ${errors.evento ? styles.inputError : ""}`}
-								placeholder="Descripción del evento"
+								className={`${styles.input} ${errors.evento ? styles.inputError : ''}`}
+								placeholder="Describe el evento ocurrido"
 							/>
-							{errors.evento && (
-								<span className={styles.errorMessage}>{errors.evento}</span>
-							)}
+							{errors.evento && <span className={styles.errorMessage}>{errors.evento}</span>}
 						</div>
 
 						<div className={styles.formGroup}>
-							<label htmlFor="involucrado" className={styles.label}>
-								Involucrado *
-							</label>
+							<label className={styles.label}>Involucrado *</label>
 							<input
 								type="text"
-								id="involucrado"
 								name="involucrado"
 								value={formData.involucrado}
 								onChange={handleInputChange}
-								className={`${styles.input} ${errors.involucrado ? styles.inputError : ""}`}
-								placeholder="Persona involucrada"
+								className={`${styles.input} ${errors.involucrado ? styles.inputError : ''}`}
+								placeholder="Nombre del involucrado"
 							/>
-							{errors.involucrado && (
-								<span className={styles.errorMessage}>{errors.involucrado}</span>
-							)}
+							{errors.involucrado && <span className={styles.errorMessage}>{errors.involucrado}</span>}
 						</div>
 
 						<div className={styles.formGroup}>
-							<label htmlFor="area" className={styles.label}>
-								Área *
-							</label>
+							<label className={styles.label}>Área *</label>
 							<input
 								type="text"
-								id="area"
 								name="area"
 								value={formData.area}
 								onChange={handleInputChange}
-								className={`${styles.input} ${errors.area ? styles.inputError : ""}`}
-								placeholder="Área donde ocurrió"
+								className={`${styles.input} ${errors.area ? styles.inputError : ''}`}
+								placeholder="Área donde ocurrió el evento"
 							/>
-							{errors.area && (
-								<span className={styles.errorMessage}>{errors.area}</span>
-							)}
+							{errors.area && <span className={styles.errorMessage}>{errors.area}</span>}
 						</div>
 
 						<div className={styles.formGroup}>
-							<label htmlFor="fechaHora" className={styles.label}>
-								Fecha y Hora *
-							</label>
+							<label className={styles.label}>Fecha y Hora *</label>
 							<input
 								type="datetime-local"
-								id="fechaHora"
 								name="fechaHora"
 								value={formData.fechaHora}
 								onChange={handleInputChange}
-								className={`${styles.input} ${errors.fechaHora ? styles.inputError : ""}`}
+								className={`${styles.input} ${errors.fechaHora ? styles.inputError : ''}`}
 							/>
-							{errors.fechaHora && (
-								<span className={styles.errorMessage}>{errors.fechaHora}</span>
-							)}
+							{errors.fechaHora && <span className={styles.errorMessage}>{errors.fechaHora}</span>}
 						</div>
 
 						<div className={styles.formGroup}>
-							<label htmlFor="investigador" className={styles.label}>
-								Investigador *
-							</label>
+							<label className={styles.label}>Investigador *</label>
 							<input
 								type="text"
-								id="investigador"
 								name="investigador"
 								value={formData.investigador}
 								onChange={handleInputChange}
-								className={`${styles.input} ${errors.investigador ? styles.inputError : ""}`}
+								className={`${styles.input} ${errors.investigador ? styles.inputError : ''}`}
 								placeholder="Nombre del investigador"
 							/>
-							{errors.investigador && (
-								<span className={styles.errorMessage}>{errors.investigador}</span>
-							)}
+							{errors.investigador && <span className={styles.errorMessage}>{errors.investigador}</span>}
 						</div>
 
 						<div className={styles.formGroup}>
-							<label htmlFor="otrosDatos" className={styles.label}>
-								Otros Datos
-							</label>
+							<label className={styles.label}>Otros Datos</label>
 							<textarea
-								id="otrosDatos"
 								name="otrosDatos"
 								value={formData.otrosDatos}
 								onChange={handleInputChange}
@@ -306,98 +241,56 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 					</div>
 
 					{/* Información del proyecto */}
-					<div className={styles.projectInfo}>
-						<h3>Información del Proyecto</h3>
-						<div className={styles.infoGrid}>
-							<div className={styles.infoItem}>
-								<span className={styles.infoLabel}>Creado:</span>
-								<span className={styles.infoValue}>
-									{project?.createdAt ? new Date(project.createdAt).toLocaleDateString('es-ES', {
-										year: 'numeric',
-										month: 'long',
-										day: 'numeric',
-										hour: '2-digit',
-										minute: '2-digit'
-									}) : 'Fecha desconocida'}
-								</span>
+					{project && (
+						<div className={styles.projectInfo}>
+							<h3>Información del Proyecto</h3>
+							<div className={styles.projectDetails}>
+								<p><strong>ID:</strong> {project.id}</p>
+								<p><strong>Creado:</strong> {project.createdAt ? new Date(project.createdAt).toLocaleString() : 'Fecha desconocida'}</p>
+								{project.lastModified && (
+									<p><strong>Última modificación:</strong> {new Date(project.lastModified).toLocaleString()}</p>
+								)}
+								<p><strong>Versión:</strong> {project.version || 1}</p>
 							</div>
-							<div className={styles.infoItem}>
-								<span className={styles.infoLabel}>Última modificación:</span>
-								<span className={styles.infoValue}>
-									{project?.lastModified ? new Date(project.lastModified).toLocaleDateString('es-ES', {
-										year: 'numeric',
-										month: 'long',
-										day: 'numeric',
-										hour: '2-digit',
-										minute: '2-digit'
-									}) : 'Nunca'}
-								</span>
-							</div>
-							<div className={styles.infoItem}>
-								<span className={styles.infoLabel}>Versión:</span>
-								<span className={styles.infoValue}>
-									{project?.version || 1}
-								</span>
-							</div>
-							<div className={styles.infoItem}>
-								<span className={styles.infoLabel}>ID del Proyecto:</span>
-								<span className={styles.infoValue}>
-									{project?.id || 'N/A'}
-								</span>
-							</div>
-						</div>
 
-						{/* Información de datos SCAT */}
-						<div className={styles.scatDataInfo}>
-							<h4>Datos SCAT Disponibles:</h4>
-							<div className={styles.scatDataGrid}>
-								<div className={styles.scatDataItem}>
-									<span className={styles.scatDataLabel}>Evaluación:</span>
-									<span className={`${styles.scatDataStatus} ${project?.scatData?.evaluacion ? styles.available : styles.notAvailable}`}>
-										{project?.scatData?.evaluacion ? '✓ Disponible' : '✗ No disponible'}
+							{/* Información de datos SCAT */}
+							<div className={styles.scatDataInfo}>
+								<h4>Datos SCAT Disponibles:</h4>
+								<div className={styles.scatDataStatus}>
+									<span className={project.scatData?.evaluacion ? styles.available : styles.notAvailable}>
+										Evaluación: {project.scatData?.evaluacion ? '✓' : '✗'}
 									</span>
-								</div>
-								<div className={styles.scatDataItem}>
-									<span className={styles.scatDataLabel}>Contacto:</span>
-									<span className={`${styles.scatDataStatus} ${project?.scatData?.contacto ? styles.available : styles.notAvailable}`}>
-										{project?.scatData?.contacto ? '✓ Disponible' : '✗ No disponible'}
+									<span className={project.scatData?.contacto ? styles.available : styles.notAvailable}>
+										Contacto: {project.scatData?.contacto ? '✓' : '✗'}
 									</span>
-								</div>
-								<div className={styles.scatDataItem}>
-									<span className={styles.scatDataLabel}>Causas Inmediatas:</span>
-									<span className={`${styles.scatDataStatus} ${project?.scatData?.causasInmediatas ? styles.available : styles.notAvailable}`}>
-										{project?.scatData?.causasInmediatas ? '✓ Disponible' : '✗ No disponible'}
+									<span className={project.scatData?.causasInmediatas ? styles.available : styles.notAvailable}>
+										Causas Inmediatas: {project.scatData?.causasInmediatas ? '✓' : '✗'}
 									</span>
-								</div>
-								<div className={styles.scatDataItem}>
-									<span className={styles.scatDataLabel}>Causas Básicas:</span>
-									<span className={`${styles.scatDataStatus} ${project?.scatData?.causasBasicas ? styles.available : styles.notAvailable}`}>
-										{project?.scatData?.causasBasicas ? '✓ Disponible' : '✗ No disponible'}
+									<span className={project.scatData?.causasBasicas ? styles.available : styles.notAvailable}>
+										Causas Básicas: {project.scatData?.causasBasicas ? '✓' : '✗'}
 									</span>
-								</div>
-								<div className={styles.scatDataItem}>
-									<span className={styles.scatDataLabel}>Necesidades de Control:</span>
-									<span className={`${styles.scatDataStatus} ${project?.scatData?.necesidadesControl ? styles.available : styles.notAvailable}`}>
-										{project?.scatData?.necesidadesControl ? '✓ Disponible' : '✗ No disponible'}
+									<span className={project.scatData?.necesidadesControl ? styles.available : styles.notAvailable}>
+										Necesidades de Control: {project.scatData?.necesidadesControl ? '✓' : '✗'}
 									</span>
 								</div>
 							</div>
 						</div>
-					</div>
+					)}
 
 					<div className={styles.formActions}>
 						<button
 							type="button"
-							onClick={handleCancel}
-							className={styles.cancelButton}
+							onClick={handleGeneratePDF}
+							disabled={isGeneratingPDF}
+							className={styles.pdfButton}
 						>
+							<Download size={16} />
+							{isGeneratingPDF ? 'Generando PDF...' : 'Descargar PDF'}
+						</button>
+						<button type="button" onClick={handleCancel} className={styles.cancelButton}>
 							Cancelar
 						</button>
-						<button 
-							type="button"
-							onClick={handleSave}
-							className={styles.submitButton}
-						>
+						<button type="submit" className={styles.saveButton}>
 							Guardar Cambios
 						</button>
 					</div>
