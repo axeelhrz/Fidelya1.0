@@ -1,12 +1,18 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import styles from "./ContactoContent.module.css";
 import { useScatData } from "../../../contexts/ScatContext";
 
 function ContactoContent() {
 	const { contactoData, setContactoData } = useScatData();
 	const fileInputRef = useRef(null);
+
+	// Debug: Mostrar datos cargados
+	useEffect(() => {
+		console.log('=== CONTACTO CONTENT - DATOS CARGADOS ===');
+		console.log('contactoData:', contactoData);
+	}, [contactoData]);
 
 	const incidents = [
 		{
@@ -71,6 +77,10 @@ function ContactoContent() {
 			? contactoData.selectedIncidents.filter((id) => id !== incidentId)
 			: [...contactoData.selectedIncidents, incidentId];
 
+		console.log('=== ACTUALIZANDO SELECCIÓN DE INCIDENTES ===');
+		console.log('Incidente seleccionado:', incidentId);
+		console.log('Nuevas selecciones:', newSelectedIncidents);
+
 		setContactoData({
 			...contactoData,
 			selectedIncidents: newSelectedIncidents
@@ -133,23 +143,28 @@ function ContactoContent() {
 			<div className={styles.contentWrapper}>
 				<div className={styles.incidentGridContainer}>
 					<div className={styles.incidentGrid}>
-						{incidents.map((incident) => (
-							<button
-								key={incident.id}
-								className={`${styles.incidentItem} ${
-									contactoData.selectedIncidents.includes(incident.id) ? styles.selected : ""
-								}`}
-								onClick={() => handleIncidentToggle(incident.id)}
-							>
-								<div className={styles.incidentNumber}>{incident.id}</div>
-								<div className={styles.incidentContent}>
-									<div className={styles.incidentTitle}>{incident.title}</div>
-									<div className={styles.incidentSubtitle}>
-										{incident.subtitle}
+						{incidents.map((incident) => {
+							const isSelected = contactoData.selectedIncidents.includes(incident.id);
+							console.log(`Incidente ${incident.id} seleccionado:`, isSelected);
+							
+							return (
+								<button
+									key={incident.id}
+									className={`${styles.incidentItem} ${
+										isSelected ? styles.selected : ""
+									}`}
+									onClick={() => handleIncidentToggle(incident.id)}
+								>
+									<div className={styles.incidentNumber}>{incident.id}</div>
+									<div className={styles.incidentContent}>
+										<div className={styles.incidentTitle}>{incident.title}</div>
+										<div className={styles.incidentSubtitle}>
+											{incident.subtitle}
+										</div>
 									</div>
-								</div>
-							</button>
-						))}
+								</button>
+							);
+						})}
 					</div>
 
 					{contactoData.selectedIncidents.length > 0 && (

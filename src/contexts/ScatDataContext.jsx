@@ -69,6 +69,27 @@ const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
 // Función para obtener estado inicial limpio
 const getCleanInitialState = () => deepClone(initialState);
 
+// Función para fusionar datos de manera segura
+const safeDataMerge = (defaultData, loadedData) => {
+  if (!loadedData || typeof loadedData !== 'object') {
+    return defaultData;
+  }
+  
+  const merged = { ...defaultData };
+  
+  Object.keys(defaultData).forEach(key => {
+    if (loadedData.hasOwnProperty(key)) {
+      if (typeof defaultData[key] === 'object' && defaultData[key] !== null && !Array.isArray(defaultData[key])) {
+        merged[key] = safeDataMerge(defaultData[key], loadedData[key]);
+      } else {
+        merged[key] = loadedData[key];
+      }
+    }
+  });
+  
+  return merged;
+};
+
 // Reducer optimizado
 function scatDataReducer(state, action) {
   const newState = { ...state, lastModified: new Date().toISOString() };
@@ -130,6 +151,8 @@ function scatDataReducer(state, action) {
       };
     
     case ACTIONS.LOAD_DATA:
+      console.log('=== CARGANDO DATOS COMPLETOS EN REDUCER ===');
+      console.log('Datos a cargar:', action.payload);
       return {
         ...action.payload,
         dataVersion: (action.payload.dataVersion || 0) + 1,
@@ -253,33 +276,41 @@ export function ScatDataProvider({ children }) {
     }, 100);
   }, []);
 
-  // Cargar proyecto para edición (versión mejorada)
+  // Cargar proyecto para edición (versión mejorada y corregida)
   const loadProjectForEditing = useCallback(async (projectData) => {
     console.log('=== CARGANDO PROYECTO PARA EDICIÓN ===');
-    console.log('Datos del proyecto:', projectData);
+    console.log('Datos del proyecto completo:', projectData);
 
     try {
       // Prevenir interferencia del localStorage
       skipLocalStorageRef.current = true;
 
-      // Construir estado completo
+      // Construir estado completo con fusión segura de datos
       const completeState = {
-        projectData: projectData.formData || initialState.projectData,
-        evaluacionData: projectData.scatData?.evaluacion || initialState.evaluacionData,
-        contactoData: projectData.scatData?.contacto || initialState.contactoData,
-        causasInmediatasData: projectData.scatData?.causasInmediatas || initialState.causasInmediatasData,
-        causasBasicasData: projectData.scatData?.causasBasicas || initialState.causasBasicasData,
-        necesidadesControlData: projectData.scatData?.necesidadesControl || initialState.necesidadesControlData,
+        // Datos básicos del proyecto
+        projectData: safeDataMerge(initialState.projectData, projectData.formData),
+        
+        // Datos SCAT con fusión segura
+        evaluacionData: safeDataMerge(initialState.evaluacionData, projectData.scatData?.evaluacion),
+        contactoData: safeDataMerge(initialState.contactoData, projectData.scatData?.contacto),
+        causasInmediatasData: safeDataMerge(initialState.causasInmediatasData, projectData.scatData?.causasInmediatas),
+        causasBasicasData: safeDataMerge(initialState.causasBasicasData, projectData.scatData?.causasBasicas),
+        necesidadesControlData: safeDataMerge(initialState.necesidadesControlData, projectData.scatData?.necesidadesControl),
+        
+        // Metadatos de edición
         isEditing: true,
         editingProjectId: projectData.id,
         lastModified: projectData.lastModified || new Date().toISOString(),
         dataVersion: (projectData.version || 1)
       };
 
+      console.log('=== ESTADO COMPLETO CONSTRUIDO PARA EDICIÓN ===');
+      console.log('Estado completo:', completeState);
+
       // Cargar estado completo
       dispatch({ type: ACTIONS.LOAD_DATA, payload: completeState });
       
-      console.log('=== PROYECTO CARGADO EXITOSAMENTE ===');
+      console.log('=== PROYECTO CARGADO EXITOSAMENTE PARA EDICIÓN ===');
       
       // Permitir localStorage después de un delay
       setTimeout(() => {

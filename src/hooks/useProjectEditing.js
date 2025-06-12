@@ -25,10 +25,11 @@ export function useProjectEditing() {
   } = useEditing();
 
   const lastSyncRef = useRef(null);
+  const isLoadingRef = useRef(false);
 
   // Sincronizar datos SCAT con el contexto de edición
   const syncScatData = useCallback(async () => {
-    if (!isEditing || !projectId) return;
+    if (!isEditing || !projectId || isLoadingRef.current) return;
 
     try {
       const scatSummary = getCompleteSummary();
@@ -58,7 +59,9 @@ export function useProjectEditing() {
   const startProjectEditing = useCallback(async (project) => {
     try {
       console.log('=== INICIANDO EDICIÓN DE PROYECTO ===');
-      console.log('Proyecto:', project);
+      console.log('Proyecto a editar:', project);
+
+      isLoadingRef.current = true;
 
       // Limpiar datos anteriores
       resetAllData();
@@ -66,17 +69,25 @@ export function useProjectEditing() {
       // Iniciar modo edición en el contexto
       startEditing(project);
       
-      // Cargar datos en el contexto SCAT
-      await loadProjectForEditing(project);
+      // Cargar datos en el contexto SCAT con verificación
+      const loadSuccess = await loadProjectForEditing(project);
+      if (!loadSuccess) {
+        throw new Error('Error cargando datos del proyecto');
+      }
       
       // Marcar como editando en SCAT context
       setEditingState(true, project.id);
       
-      console.log('Edición iniciada exitosamente');
+      // Pequeña pausa para asegurar que los datos se carguen completamente
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('=== EDICIÓN INICIADA EXITOSAMENTE ===');
       return true;
     } catch (error) {
       console.error('Error iniciando edición:', error);
       return false;
+    } finally {
+      isLoadingRef.current = false;
     }
   }, [resetAllData, startEditing, loadProjectForEditing, setEditingState]);
 
@@ -111,7 +122,7 @@ export function useProjectEditing() {
 
   // Guardar progreso actual
   const saveProgress = useCallback(async (silent = false) => {
-    if (!isEditing) return false;
+    if (!isEditing || isLoadingRef.current) return false;
     
     try {
       // Sincronizar datos actuales
@@ -125,10 +136,10 @@ export function useProjectEditing() {
     }
   }, [isEditing, syncScatData, saveProject]);
 
-  // Auto-sincronización periódica
+  // Auto-sincronización periódica (reducida para evitar conflictos)
   useEffect(() => {
-    if (isEditing && status !== EDITING_STATES.SAVING) {
-      const interval = setInterval(syncScatData, 5000); // Cada 5 segundos
+    if (isEditing && status !== EDITING_STATES.SAVING && !isLoadingRef.current) {
+      const interval = setInterval(syncScatData, 10000); // Cada 10 segundos
       return () => clearInterval(interval);
     }
   }, [isEditing, status, syncScatData, EDITING_STATES.SAVING]);
@@ -166,7 +177,7 @@ export function useProjectEditing() {
     EDITING_STATES,
     
     // Helpers
-    isLoading: status === EDITING_STATES.LOADING,
+    isLoading: status === EDITING_STATES.LOADING || isLoadingRef.current,
     isSaving: status === EDITING_STATES.SAVING,
     isSaved: status === EDITING_STATES.SAVED,
     hasError: status === EDITING_STATES.ERROR

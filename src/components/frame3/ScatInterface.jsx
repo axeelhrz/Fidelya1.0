@@ -54,7 +54,17 @@ function ScatInterface({
 	isEditing = false
 }) {
 	const [activeSection, setActiveSection] = useState("evaluacion");
-	const { setProjectData, hasData, resetAllData } = useScatData();
+	const { 
+		setProjectData, 
+		hasData, 
+		resetAllData,
+		// Agregar datos para debug
+		evaluacionData,
+		contactoData,
+		causasInmediatasData,
+		causasBasicasData,
+		necesidadesControlData
+	} = useScatData();
 	
 	const {
 		isEditing: editingActive,
@@ -73,6 +83,18 @@ function ScatInterface({
 		EDITING_STATES
 	} = useProjectEditing();
 
+	// Debug: Mostrar datos cargados
+	useEffect(() => {
+		console.log('=== SCAT INTERFACE - DATOS ACTUALES ===');
+		console.log('isEditing:', isEditing);
+		console.log('editingActive:', editingActive);
+		console.log('evaluacionData:', evaluacionData);
+		console.log('contactoData:', contactoData);
+		console.log('causasInmediatasData:', causasInmediatasData);
+		console.log('causasBasicasData:', causasBasicasData);
+		console.log('necesidadesControlData:', necesidadesControlData);
+	}, [isEditing, editingActive, evaluacionData, contactoData, causasInmediatasData, causasBasicasData, necesidadesControlData]);
+
 	// Inicialización del componente
 	useEffect(() => {
 		console.log('=== INICIALIZANDO SCAT INTERFACE ===');
@@ -89,6 +111,14 @@ function ScatInterface({
 					if (!success) {
 						console.error('Error iniciando edición');
 						alert('Error al cargar el proyecto para edición');
+					} else {
+						console.log('Edición iniciada exitosamente');
+						// Pequeña pausa para asegurar que los datos se reflejen en la UI
+						setTimeout(() => {
+							console.log('=== VERIFICANDO DATOS DESPUÉS DE CARGAR ===');
+							console.log('evaluacionData después de cargar:', evaluacionData);
+							console.log('contactoData después de cargar:', contactoData);
+						}, 200);
 					}
 				} else {
 					// Modo nuevo proyecto: cargar datos básicos
