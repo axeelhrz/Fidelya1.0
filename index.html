@@ -570,7 +570,7 @@
             letter-spacing: 1px;
         }
 
-        /* ===== DOWNLOAD BUTTONS CON SVG REALES ===== */
+        /* ===== DOWNLOAD BUTTONS CON TAMAÑOS IGUALES ===== */
         .hero__download {
             display: flex;
             gap: var(--space-lg);
@@ -618,6 +618,14 @@
             position: relative;
             z-index: 2;
             transition: all var(--transition);
+        }
+
+        /* Tamaño específico para App Store para igualar con Google Play */
+        .download-btn--app-store .download-btn__image {
+            height: 60px;
+            width: auto;
+            /* Forzar el mismo tamaño visual que Google Play */
+            min-width: 180px;
         }
 
         .download-btn:hover .download-btn__image {
@@ -914,6 +922,11 @@
             .download-btn__image {
                 height: 50px;
             }
+
+            .download-btn--app-store .download-btn__image {
+                height: 50px;
+                min-width: 150px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -938,6 +951,11 @@
 
             .download-btn__image {
                 height: 45px;
+            }
+
+            .download-btn--app-store .download-btn__image {
+                height: 45px;
+                min-width: 135px;
             }
         }
 
@@ -1035,7 +1053,7 @@
                                 <img src="./assets/Google-Play.svg" alt="Descargar en Google Play" class="download-btn__image">
                             </a>
                             
-                            <a href="#app-store" class="download-btn" aria-label="Descargar en App Store">
+                            <a href="#app-store" class="download-btn download-btn--app-store" aria-label="Descargar en App Store">
                                 <img src="./assets/App-Store.svg" alt="Descargar en App Store" class="download-btn__image">
                             </a>
                         </div>
