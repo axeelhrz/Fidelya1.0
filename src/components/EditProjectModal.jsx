@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Download } from "lucide-react";
 import styles from "./AccidentForm.module.css";
+import { useScatData } from "../contexts/ScatContext";
+import pdfService from "../services/pdfService";
 
 export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
+	const { getCompleteSummary } = useScatData();
 	const [formData, setFormData] = useState({
 		evento: "",
 		involucrado: "",
@@ -14,10 +18,14 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 	});
 
 	const [errors, setErrors] = useState({});
+	const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
 	// Cargar datos del proyecto cuando se abre el modal
 	useEffect(() => {
 		if (isOpen && project && project.formData) {
+			console.log('=== CARGANDO PROYECTO EN EDIT MODAL ===');
+			console.log('Proyecto:', project);
+			
 			setFormData({
 				evento: project.formData.evento || "",
 				involucrado: project.formData.involucrado || "",
@@ -76,7 +84,10 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 		e.preventDefault();
 
 		if (validateForm()) {
-			// Crear proyecto actualizado
+			console.log('=== GUARDANDO CAMBIOS DEL PROYECTO ===');
+			console.log('Datos del formulario:', formData);
+			
+			// Crear proyecto actualizado manteniendo todos los datos SCAT existentes
 			const updatedProject = {
 				...project,
 				name: formData.evento,
@@ -86,11 +97,59 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 				version: (project.version || 1) + 1
 			};
 
+			console.log('Proyecto actualizado:', updatedProject);
+
 			if (onSave) {
 				onSave(updatedProject);
 			}
 
 			onClose();
+		}
+	};
+
+	const handleGeneratePDF = async () => {
+		if (!project) return;
+
+		try {
+			setIsGeneratingPDF(true);
+			console.log('=== GENERANDO PDF DEL PROYECTO ===');
+			
+			// Obtener datos completos del proyecto
+			const projectData = {
+				project: formData, // Usar datos actuales del formulario
+				evaluacion: project.scatData?.evaluacion || {},
+				contacto: project.scatData?.contacto || { selectedIncidents: [], image: null, observation: '' },
+				causasInmediatas: project.scatData?.causasInmediatas || {
+					actos: { selectedItems: [], image: null, observation: '' },
+					condiciones: { selectedItems: [], image: null, observation: '' }
+				},
+				causasBasicas: project.scatData?.causasBasicas || {
+					personales: { selectedItems: [], detailedSelections: {}, image: null, observation: '' },
+					laborales: { selectedItems: [], detailedSelections: {}, image: null, observation: '' }
+				},
+				necesidadesControl: project.scatData?.necesidadesControl || {
+					selectedItems: [],
+					detailedData: {},
+					globalImage: null,
+					globalObservation: '',
+					medidasCorrectivas: ''
+				}
+			};
+
+			console.log('Datos para PDF:', projectData);
+
+			// Generar nombre del archivo
+			const fileName = `SCAT_${formData.evento.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf';
+			
+			// Generar y descargar PDF
+			pdfService.downloadPDF(projectData, fileName);
+			
+			console.log('PDF generado exitosamente');
+		} catch (error) {
+			console.error('Error generando PDF:', error);
+			alert('Error al generar el PDF. Por favor, intente nuevamente.');
+		} finally {
+			setIsGeneratingPDF(false);
 		}
 	};
 
@@ -117,9 +176,20 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 			<div className={styles.modalContent}>
 				<div className={styles.modalHeader}>
 					<h2 className={styles.modalTitle}>Editar Proyecto</h2>
-					<button className={styles.closeButton} onClick={handleCancel}>
-						×
-					</button>
+					<div className={styles.modalHeaderActions}>
+						<button 
+							className={styles.pdfButton}
+							onClick={handleGeneratePDF}
+							disabled={isGeneratingPDF}
+							title="Generar PDF con datos actuales"
+						>
+							<Download size={16} />
+							{isGeneratingPDF ? 'Generando...' : 'PDF'}
+						</button>
+						<button className={styles.closeButton} onClick={handleCancel}>
+							×
+						</button>
+					</div>
 				</div>
 
 				<form className={styles.form}>
@@ -226,6 +296,37 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 								placeholder="Información adicional relevante"
 								rows={3}
 							/>
+						</div>
+					</div>
+
+					{/* Información del proyecto */}
+					<div className={styles.projectInfo}>
+						<h3>Información del Proyecto</h3>
+						<div className={styles.infoGrid}>
+							<div className={styles.infoItem}>
+								<span className={styles.infoLabel}>Creado:</span>
+								<span className={styles.infoValue}>
+									{project?.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'Fecha desconocida'}
+								</span>
+							</div>
+							<div className={styles.infoItem}>
+								<span className={styles.infoLabel}>Última modificación:</span>
+								<span className={styles.infoValue}>
+									{project?.lastModified ? new Date(project.lastModified).toLocaleDateString() : 'Nunca'}
+								</span>
+							</div>
+							<div className={styles.infoItem}>
+								<span className={styles.infoLabel}>Versión:</span>
+								<span className={styles.infoValue}>
+									{project?.version || 1}
+								</span>
+							</div>
+							<div className={styles.infoItem}>
+								<span className={styles.infoLabel}>Datos SCAT:</span>
+								<span className={styles.infoValue}>
+									{project?.scatData ? 'Disponibles' : 'No disponibles'}
+								</span>
+							</div>
 						</div>
 					</div>
 

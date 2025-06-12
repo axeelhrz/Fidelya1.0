@@ -221,6 +221,110 @@
   transform: none;
 }
 
+/* Modal Header Actions */
+.modalHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pdfButton {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.pdfButton:hover {
+  background: #0056b3;
+}
+
+.pdfButton:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.projectInfo {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.projectInfo h3 {
+  margin: 0 0 15px 0;
+  color: #495057;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.infoLabel {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.infoValue {
+  font-size: 14px;
+  color: #495057;
+  font-weight: 400;
+}
+
+/* Estilos para el modo de visualización en SCAT */
+.viewingIndicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 15px;
+}
+
+.viewingBadge {
+  background: #17a2b8;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.viewingText {
+  color: #495057;
+  font-weight: 500;
+}
+
+.viewingProgress {
+  color: #17a2b8;
+  font-weight: 500;
+}
+
+/* Mejoras para ProjectsView */
+.projectScatData {
+  font-size: 12px;
+  color: #28a745;
+  font-weight: 500;
+  margin-top: 5px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .modalOverlay {

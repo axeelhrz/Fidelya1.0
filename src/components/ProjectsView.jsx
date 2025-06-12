@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { Trash2, Archive, Info, Edit, Download, Eye, Layers } from "lucide-react";
 import TrashModal from "./TrashModal";
+import EditProjectModal from "./EditProjectModal";
 import styles from "./ProjectsView.module.css";
+import pdfService from "../services/pdfService";
 
 function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 	const [projects, setProjects] = useState([]);
@@ -11,10 +13,12 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 	const [selectedProjects, setSelectedProjects] = useState(new Set());
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+	const [editingProject, setEditingProject] = useState(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const projectsPerPage = 16;
 
-	// Función para limpiar proyectos simulados (igual que en BaseFrame)
+	// Función para limpiar proyectos simulados
 	const cleanSimulatedProjects = (projectsList) => {
 		if (!Array.isArray(projectsList)) return [];
 		
@@ -174,7 +178,7 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 			
 			const viewData = {
 				...project.formData,
-				isEditing: false, // Modo solo lectura
+				isViewing: true, // Modo solo lectura
 				projectId: project.id,
 				projectData: project
 			};
@@ -185,28 +189,68 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 	};
 
 	const handleEditProject = (project) => {
-		// Navegar al SCAT en modo edición
-		if (onNavigateToScat && project.formData) {
-			console.log('=== EDITANDO PROYECTO DESDE PROJECTS VIEW ===');
-			console.log('Proyecto a editar:', project);
-			
-			const editData = {
-				...project.formData,
-				isEditing: true, // Modo edición
-				projectId: project.id,
-				projectData: project
-			};
-			
-			console.log('Datos de edición:', editData);
-			onNavigateToScat(editData);
-		} else {
-			alert('No se encontraron datos del proyecto para editar.');
-		}
+		// Abrir modal de edición
+		console.log('=== EDITANDO PROYECTO ===');
+		console.log('Proyecto a editar:', project);
+		
+		setEditingProject(project);
+		setIsEditModalOpen(true);
 	};
 
-	const handleDownloadProject = (project) => {
-		// Implementar descarga de proyecto (PDF, etc.)
-		alert(`Descargando proyecto: ${project.name || 'Sin nombre'}`);
+	const handleSaveProject = (updatedProject) => {
+		console.log('=== GUARDANDO PROYECTO ACTUALIZADO ===');
+		console.log('Proyecto actualizado:', updatedProject);
+		
+		// Actualizar proyecto en la lista
+		setProjects(prev => prev.map(p => 
+			p.id === updatedProject.id ? updatedProject : p
+		));
+		
+		// Cerrar modal
+		setIsEditModalOpen(false);
+		setEditingProject(null);
+		
+		alert('Proyecto actualizado exitosamente');
+	};
+
+	const handleDownloadProject = async (project) => {
+		try {
+			console.log('=== DESCARGANDO PROYECTO ===');
+			console.log('Proyecto:', project);
+			
+			// Preparar datos para el PDF
+			const projectData = {
+				project: project.formData || {},
+				evaluacion: project.scatData?.evaluacion || {},
+				contacto: project.scatData?.contacto || { selectedIncidents: [], image: null, observation: '' },
+				causasInmediatas: project.scatData?.causasInmediatas || {
+					actos: { selectedItems: [], image: null, observation: '' },
+					condiciones: { selectedItems: [], image: null, observation: '' }
+				},
+				causasBasicas: project.scatData?.causasBasicas || {
+					personales: { selectedItems: [], detailedSelections: {}, image: null, observation: '' },
+					laborales: { selectedItems: [], detailedSelections: {}, image: null, observation: '' }
+				},
+				necesidadesControl: project.scatData?.necesidadesControl || {
+					selectedItems: [],
+					detailedData: {},
+					globalImage: null,
+					globalObservation: '',
+					medidasCorrectivas: ''
+				}
+			};
+
+			// Generar nombre del archivo
+			const fileName = `SCAT_${(project.name || 'Proyecto').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf';
+			
+			// Generar y descargar PDF
+			pdfService.downloadPDF(projectData, fileName);
+			
+			console.log('PDF descargado exitosamente');
+		} catch (error) {
+			console.error('Error descargando proyecto:', error);
+			alert('Error al generar el PDF. Por favor, intente nuevamente.');
+		}
 	};
 
 	const handleBackToMenu = () => {
@@ -284,7 +328,7 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 				</div>
 			</div>
 
-			{/* Projects Grid - Ocupa toda la pantalla */}
+			{/* Projects Grid */}
 			<div className={styles.projectsContainer}>
 				{projects.length > 0 ? (
 					<div className={styles.projectsGrid}>
@@ -321,6 +365,11 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 											Versión: {project.version}
 										</p>
 									)}
+									{project.scatData && (
+										<p className={styles.projectScatData}>
+											✓ Datos SCAT disponibles
+										</p>
+									)}
 								</div>
 								<div className={styles.projectActions}>
 									<button 
@@ -333,14 +382,14 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 									<button 
 										className={`${styles.projectActionButton} ${styles.editButton}`}
 										onClick={() => handleEditProject(project)}
-										title="Editar proyecto (todas las pestañas)"
+										title="Editar información del proyecto"
 									>
 										<Edit size={14} />
 									</button>
 									<button 
 										className={styles.projectActionButton}
 										onClick={() => handleDownloadProject(project)}
-										title="Descargar proyecto"
+										title="Descargar PDF del proyecto"
 									>
 										<Download size={14} />
 									</button>
@@ -410,6 +459,17 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 				onRestoreProject={handleRestoreProject}
 				onPermanentDelete={handlePermanentDelete}
 				onEmptyTrash={handleEmptyTrash}
+			/>
+
+			{/* Edit Project Modal */}
+			<EditProjectModal
+				isOpen={isEditModalOpen}
+				onClose={() => {
+					setIsEditModalOpen(false);
+					setEditingProject(null);
+				}}
+				project={editingProject}
+				onSave={handleSaveProject}
 			/>
 		</div>
 	);

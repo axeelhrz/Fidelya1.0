@@ -55,10 +55,7 @@ const initialState = {
     globalObservation: '',
     medidasCorrectivas: ''
   },
-  // Estado de edición simplificado
-  isEditing: false,
-  editingProjectId: null,
-  // Metadatos
+  // Metadatos simplificados
   lastModified: null,
   dataVersion: 1
 };
@@ -90,7 +87,7 @@ const safeDataMerge = (defaultData, loadedData) => {
   return merged;
 };
 
-// Reducer optimizado
+// Reducer simplificado
 function scatDataReducer(state, action) {
   const newState = { ...state, lastModified: new Date().toISOString() };
   
@@ -143,13 +140,6 @@ function scatDataReducer(state, action) {
         necesidadesControlData: { ...state.necesidadesControlData, ...action.payload }
       };
     
-    case ACTIONS.SET_EDITING_STATE:
-      return {
-        ...state, // No actualizar lastModified para cambios de estado
-        isEditing: action.payload.isEditing,
-        editingProjectId: action.payload.projectId || null
-      };
-    
     case ACTIONS.LOAD_DATA:
       console.log('=== CARGANDO DATOS COMPLETOS EN REDUCER ===');
       console.log('Datos a cargar:', action.payload);
@@ -162,23 +152,15 @@ function scatDataReducer(state, action) {
     case ACTIONS.RESET_DATA:
       return getCleanInitialState();
     
-    case ACTIONS.CLEAR_EDITING_DATA:
-      const cleanState = getCleanInitialState();
-      return {
-        ...cleanState,
-        projectData: action.keepProjectData ? state.projectData : cleanState.projectData
-      };
-    
     default:
       return state;
   }
 }
 
-// Provider principal
+// Provider simplificado
 export function ScatDataProvider({ children }) {
   const [state, dispatch] = useReducer(scatDataReducer, getCleanInitialState());
   const isInitializedRef = useRef(false);
-  const skipLocalStorageRef = useRef(false);
   const lastSavedStateRef = useRef(null);
 
   // Inicialización única
@@ -186,15 +168,13 @@ export function ScatDataProvider({ children }) {
     if (!isInitializedRef.current) {
       console.log('=== INICIALIZANDO SCAT DATA CONTEXT ===');
       
-      // Solo cargar datos temporales si no estamos en modo edición
+      // Cargar datos temporales si existen
       const savedData = localStorage.getItem('scatData');
-      if (savedData && !skipLocalStorageRef.current) {
+      if (savedData) {
         try {
           const parsedData = JSON.parse(savedData);
-          if (!parsedData.isEditing) {
-            console.log('Cargando datos temporales del localStorage');
-            dispatch({ type: ACTIONS.LOAD_DATA, payload: parsedData });
-          }
+          console.log('Cargando datos temporales del localStorage');
+          dispatch({ type: ACTIONS.LOAD_DATA, payload: parsedData });
         } catch (error) {
           console.error('Error cargando datos temporales:', error);
         }
@@ -204,9 +184,9 @@ export function ScatDataProvider({ children }) {
     }
   }, []);
 
-  // Auto-guardado para proyectos nuevos (no en edición)
+  // Auto-guardado para proyectos nuevos
   useEffect(() => {
-    if (isInitializedRef.current && !state.isEditing && !skipLocalStorageRef.current) {
+    if (isInitializedRef.current) {
       const currentStateString = JSON.stringify(state);
       
       // Solo guardar si el estado ha cambiado realmente
@@ -218,7 +198,7 @@ export function ScatDataProvider({ children }) {
     }
   }, [state, isInitializedRef.current]);
 
-  // Funciones de actualización optimizadas
+  // Funciones de actualización
   const setProjectData = useCallback((data) => {
     dispatch({ type: ACTIONS.SET_PROJECT_DATA, payload: data });
   }, []);
@@ -251,40 +231,20 @@ export function ScatDataProvider({ children }) {
     dispatch({ type: ACTIONS.SET_NECESIDADES_CONTROL_DATA, payload: data });
   }, []);
 
-  const setEditingState = useCallback((isEditing, projectId = null) => {
-    console.log(`=== CAMBIANDO ESTADO DE EDICIÓN: ${isEditing ? 'EDITANDO' : 'NO EDITANDO'} ===`);
-    dispatch({ 
-      type: ACTIONS.SET_EDITING_STATE, 
-      payload: { isEditing, projectId } 
-    });
-  }, []);
-
   // Reset completo
   const resetAllData = useCallback(() => {
     console.log('=== RESET COMPLETO DE DATOS ===');
-    skipLocalStorageRef.current = true;
-    
     dispatch({ type: ACTIONS.RESET_DATA });
-    
-    // Limpiar localStorage
     localStorage.removeItem('scatData');
     lastSavedStateRef.current = null;
-    
-    // Permitir localStorage después de un delay
-    setTimeout(() => {
-      skipLocalStorageRef.current = false;
-    }, 100);
   }, []);
 
-  // Cargar proyecto para edición (versión mejorada y corregida)
-  const loadProjectForEditing = useCallback(async (projectData) => {
-    console.log('=== CARGANDO PROYECTO PARA EDICIÓN ===');
-    console.log('Datos del proyecto completo:', projectData);
+  // Cargar proyecto para visualización
+  const loadProjectData = useCallback((projectData) => {
+    console.log('=== CARGANDO DATOS DE PROYECTO ===');
+    console.log('Datos del proyecto:', projectData);
 
     try {
-      // Prevenir interferencia del localStorage
-      skipLocalStorageRef.current = true;
-
       // Construir estado completo con fusión segura de datos
       const completeState = {
         // Datos básicos del proyecto
@@ -297,30 +257,21 @@ export function ScatDataProvider({ children }) {
         causasBasicasData: safeDataMerge(initialState.causasBasicasData, projectData.scatData?.causasBasicas),
         necesidadesControlData: safeDataMerge(initialState.necesidadesControlData, projectData.scatData?.necesidadesControl),
         
-        // Metadatos de edición
-        isEditing: true,
-        editingProjectId: projectData.id,
+        // Metadatos
         lastModified: projectData.lastModified || new Date().toISOString(),
         dataVersion: (projectData.version || 1)
       };
 
-      console.log('=== ESTADO COMPLETO CONSTRUIDO PARA EDICIÓN ===');
+      console.log('=== ESTADO COMPLETO CONSTRUIDO ===');
       console.log('Estado completo:', completeState);
 
       // Cargar estado completo
       dispatch({ type: ACTIONS.LOAD_DATA, payload: completeState });
       
-      console.log('=== PROYECTO CARGADO EXITOSAMENTE PARA EDICIÓN ===');
-      
-      // Permitir localStorage después de un delay
-      setTimeout(() => {
-        skipLocalStorageRef.current = false;
-      }, 500);
-      
+      console.log('=== PROYECTO CARGADO EXITOSAMENTE ===');
       return true;
     } catch (error) {
-      console.error('Error cargando proyecto para edición:', error);
-      skipLocalStorageRef.current = false;
+      console.error('Error cargando proyecto:', error);
       return false;
     }
   }, []);
@@ -336,9 +287,7 @@ export function ScatDataProvider({ children }) {
       necesidadesControl: state.necesidadesControlData,
       metadata: {
         lastModified: state.lastModified,
-        dataVersion: state.dataVersion,
-        isEditing: state.isEditing,
-        editingProjectId: state.editingProjectId
+        dataVersion: state.dataVersion
       }
     };
   }, [state]);
@@ -384,9 +333,8 @@ export function ScatDataProvider({ children }) {
     setCausasInmediatasData,
     setCausasBasicasData,
     setNecesidadesControlData,
-    setEditingState,
     resetAllData,
-    loadProjectForEditing,
+    loadProjectData,
     
     // Funciones de utilidad
     getCompleteSummary,
