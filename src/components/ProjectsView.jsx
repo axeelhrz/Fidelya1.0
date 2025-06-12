@@ -6,6 +6,7 @@ import TrashModal from "./TrashModal";
 import EditProjectModal from "./EditProjectModal";
 import styles from "./ProjectsView.module.css";
 import pdfService from "../services/pdfService";
+import { generatePDFDataFromProject } from "../utils/pdfDataNormalizer";
 
 function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 	const [projects, setProjects] = useState([]);
@@ -215,40 +216,30 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 
 	const handleDownloadProject = async (project) => {
 		try {
-			console.log('=== DESCARGANDO PROYECTO ===');
-			console.log('Proyecto:', project);
+			console.log('=== DESCARGANDO PROYECTO DESDE DASHBOARD ===');
+			console.log('Proyecto completo:', project);
 			
-			// Preparar datos para el PDF
-			const projectData = {
-				project: project.formData || {},
-				evaluacion: project.scatData?.evaluacion || {},
-				contacto: project.scatData?.contacto || { selectedIncidents: [], image: null, observation: '' },
-				causasInmediatas: project.scatData?.causasInmediatas || {
-					actos: { selectedItems: [], image: null, observation: '' },
-					condiciones: { selectedItems: [], image: null, observation: '' }
-				},
-				causasBasicas: project.scatData?.causasBasicas || {
-					personales: { selectedItems: [], detailedSelections: {}, image: null, observation: '' },
-					laborales: { selectedItems: [], detailedSelections: {}, image: null, observation: '' }
-				},
-				necesidadesControl: project.scatData?.necesidadesControl || {
-					selectedItems: [],
-					detailedData: {},
-					globalImage: null,
-					globalObservation: '',
-					medidasCorrectivas: ''
-				}
-			};
+			// Verificar que el proyecto tenga datos
+			if (!project) {
+				alert('No hay datos del proyecto para generar el PDF');
+				return;
+			}
+
+			// Usar la función normalizada para generar datos PDF consistentes
+			// Esto asegura que se use el mismo formato que en otros lugares
+			const normalizedData = generatePDFDataFromProject(project);
+			
+			console.log('Datos normalizados para PDF desde dashboard:', normalizedData);
 
 			// Generar nombre del archivo
-			const fileName = `SCAT_${(project.name || 'Proyecto').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+			const fileName = `SCAT_${(project.name || project.formData?.evento || 'Proyecto').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
 			
-			// Generar y descargar PDF
-			pdfService.downloadPDF(projectData, fileName);
+			// Generar y descargar PDF usando los datos normalizados
+			await pdfService.downloadPDF(normalizedData, fileName);
 			
-			console.log('PDF descargado exitosamente');
+			console.log('PDF descargado exitosamente desde dashboard');
 		} catch (error) {
-			console.error('Error descargando proyecto:', error);
+			console.error('Error descargando proyecto desde dashboard:', error);
 			alert('Error al generar el PDF. Por favor, intente nuevamente.');
 		}
 	};
