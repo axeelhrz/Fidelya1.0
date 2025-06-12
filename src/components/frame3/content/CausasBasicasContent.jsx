@@ -5,10 +5,11 @@ import styles from "./CausasBasicasContent.module.css";
 import { useScatData } from "../../../contexts/ScatContext";
 
 function CausasBasicasContent() {
-	const { causasBasicasData, setCausasBasicasData } = useScatData();
+	const { causasBasicasData, setCausasBasicasData, causasInmediatasData } = useScatData();
 	const [activeSection, setActiveSection] = useState(null);
 	const [activeModal, setActiveModal] = useState(null);
 	const [modalSelectedItems, setModalSelectedItems] = useState([]);
+	const [showAllItems, setShowAllItems] = useState(false);
 	const fileInputRef = useRef(null);
 
 	const factoresPersonales = [
@@ -218,6 +219,143 @@ function CausasBasicasContent() {
 		}
 	];
 
+	// Mapeo de Causas Inmediatas a Causas Básicas
+	const ciToCBMapping = [
+		// Actos Subestándar (1-15) -> Factores Personales y Laborales
+		{ ci: 1, cb: [2, 4, 5, 7, 8, 12, 13, 15] }, // Operar equipos sin autorización
+		{ ci: 2, cb: [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 15] }, // Omitir el uso de equipos de seguridad personal
+		{ ci: 3, cb: [2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 15] }, // Omitir el uso de dispositivos de seguridad
+		{ ci: 4, cb: [2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15] }, // Operar a velocidad inadecuada
+		{ ci: 5, cb: [2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 15] }, // Poner fuera de servicio los dispositivos de seguridad
+		{ ci: 6, cb: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] }, // Usar equipos defectuosos
+		{ ci: 7, cb: [2, 3, 4, 5, 7, 8, 10, 12, 13, 15] }, // No usar o usar inadecuadamente el EPP
+		{ ci: 8, cb: [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15] }, // Cargar incorrectamente
+		{ ci: 9, cb: [2, 5, 6, 8, 13] }, // Colocar, mezclar, combinar de manera insegura
+		{ ci: 10, cb: [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 15] }, // Levantar objetos incorrectamente
+		{ ci: 11, cb: [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 15] }, // Adoptar posición insegura
+		{ ci: 12, cb: [2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 15] }, // Trabajar en equipos en movimiento
+		{ ci: 13, cb: [2, 3, 4, 5, 7, 8, 13, 15] }, // Distraerse, bromear, jugar
+		{ ci: 14, cb: [2, 3, 4, 5, 7, 8, 13, 15] }, // Omitir uso de EPP disponibles
+		{ ci: 15, cb: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15] }, // Usar equipos inseguros
+
+		// Condiciones Subestándar (16-28) -> Principalmente Factores Laborales
+		{ ci: 16, cb: [2, 4, 5, 7, 8, 12, 13, 15] }, // Guardas inadecuadas
+		{ ci: 17, cb: [5, 7, 8, 9, 10, 12, 13] }, // Equipos de protección inadecuados
+		{ ci: 18, cb: [8, 9, 10, 11, 12, 13, 14, 15] }, // Herramientas defectuosas
+		{ ci: 19, cb: [8, 9, 13] }, // Espacio limitado
+		{ ci: 20, cb: [8, 9, 10, 11, 12, 13] }, // Sistemas de advertencia inadecuados
+		{ ci: 21, cb: [5, 6, 7, 8, 9, 10, 11, 12, 13, 15] }, // Peligros de incendio y explosión
+		{ ci: 22, cb: [5, 6, 7, 8, 9, 10, 11, 12, 13, 15] }, // Orden y limpieza deficientes
+		{ ci: 23, cb: [5, 6, 7, 8, 9, 10, 11, 12, 13, 14] }, // Condiciones ambientales peligrosas
+		{ ci: 24, cb: [5, 6, 7, 8, 9, 10, 11, 12, 13, 14] }, // Iluminación deficiente
+		{ ci: 25, cb: [1, 2, 3, 8, 9, 11, 12] }, // Ventilación deficiente
+		{ ci: 26, cb: [8, 9, 10, 11, 12, 13] }, // Ropa o vestimenta insegura
+		{ ci: 27, cb: [8, 9, 10, 11, 12, 13] }, // Congestión o acción restringida
+		{ ci: 28, cb: [8, 9, 10, 11, 12, 13] }, // Ubicación peligrosa de equipos
+	];
+
+	// Función para obtener las CBs relevantes basadas en las CIs seleccionadas
+	const getRelevantCBs = () => {
+		const allSelectedCIs = [
+			...causasInmediatasData.actos.selectedItems,
+			...causasInmediatasData.condiciones.selectedItems
+		];
+
+		if (allSelectedCIs.length === 0) {
+			return [];
+		}
+
+		const relevantCBs = new Set();
+		allSelectedCIs.forEach(ciId => {
+			const mapping = ciToCBMapping.find(m => m.ci === ciId);
+			if (mapping) {
+				mapping.cb.forEach(cbId => relevantCBs.add(cbId));
+			}
+		});
+
+		return Array.from(relevantCBs).sort((a, b) => a - b);
+	};
+
+	// Función para filtrar items basado en las CBs relevantes
+	const getFilteredItems = (items) => {
+		if (showAllItems) {
+			return items;
+		}
+
+		const allSelectedCIs = [
+			...causasInmediatasData.actos.selectedItems,
+			...causasInmediatasData.condiciones.selectedItems
+		];
+
+		if (allSelectedCIs.length === 0) {
+			return items;
+		}
+
+		const relevantCBs = getRelevantCBs();
+		return items.filter(item => relevantCBs.includes(item.id));
+	};
+
+	// Función para obtener las CIs seleccionadas con sus nombres
+	const getSelectedCausasInmediatas = () => {
+		const actosNames = [
+			"Operar equipos sin autorización",
+			"Omitir el uso de equipos de seguridad personal",
+			"Omitir el uso de dispositivos de seguridad",
+			"Operar a velocidad inadecuada",
+			"Poner fuera de servicio los dispositivos de seguridad",
+			"Usar equipos defectuosos",
+			"No usar o usar inadecuadamente el equipo de protección personal",
+			"Cargar incorrectamente",
+			"Colocar, mezclar, combinar, etc., de manera insegura",
+			"Levantar objetos en forma incorrecta",
+			"Adoptar una posición insegura para hacer el trabajo",
+			"Trabajar en equipos en movimiento o peligrosos",
+			"Distraerse, bromear, jugar, etc.",
+			"Omitir el uso de equipos de protección personal disponibles",
+			"Usar equipos inseguros o usarlos inseguramente"
+		];
+
+		const condicionesNames = [
+			"Guardas inadecuadas",
+			"Equipos de protección inadecuados o insuficientes",
+			"Herramientas, equipos o materiales defectuosos",
+			"Espacio limitado para desenvolverse",
+			"Sistemas de advertencia inadecuados",
+			"Peligros de incendio y explosión",
+			"Orden y limpieza deficientes en el lugar de trabajo",
+			"Condiciones ambientales peligrosas",
+			"Iluminación deficiente",
+			"Ventilación deficiente",
+			"Ropa o vestimenta insegura",
+			"Congestión o acción restringida",
+			"Ubicación peligrosa de equipos y materiales"
+		];
+
+		const selectedCIs = [];
+
+		causasInmediatasData.actos.selectedItems.forEach(id => {
+			if (id >= 1 && id <= 15) {
+				selectedCIs.push({
+					id,
+					text: actosNames[id - 1],
+					type: 'Acto Subestándar'
+				});
+			}
+		});
+
+		causasInmediatasData.condiciones.selectedItems.forEach(id => {
+			if (id >= 16 && id <= 28) {
+				selectedCIs.push({
+					id,
+					text: condicionesNames[id - 16],
+					type: 'Condición Subestándar'
+				});
+			}
+		});
+
+		return selectedCIs.sort((a, b) => a.id - b.id);
+	};
+
 	const handleSectionSelect = (section) => {
 		setActiveSection(section);
 	};
@@ -335,6 +473,11 @@ function CausasBasicasContent() {
 	};
 
 	const getCurrentItems = () => {
+		const baseItems = activeSection === 'personales' ? factoresPersonales : factoresLaborales;
+		return getFilteredItems(baseItems);
+	};
+
+	const getAllItems = () => {
 		return activeSection === 'personales' ? factoresPersonales : factoresLaborales;
 	};
 
@@ -349,7 +492,7 @@ function CausasBasicasContent() {
 	};
 
 	const getModalItem = () => {
-		const items = getCurrentItems();
+		const items = getAllItems();
 		return items.find(item => item.id === activeModal);
 	};
 
@@ -362,7 +505,20 @@ function CausasBasicasContent() {
 		};
 	};
 
+	const isFiltered = () => {
+		const allSelectedCIs = [
+			...causasInmediatasData.actos.selectedItems,
+			...causasInmediatasData.condiciones.selectedItems
+		];
+		return !showAllItems && allSelectedCIs.length > 0;
+	};
+
 	if (!activeSection) {
+		const selectedCausasInmediatas = getSelectedCausasInmediatas();
+		const relevantCBs = getRelevantCBs();
+		const filteredPersonales = getFilteredItems(factoresPersonales);
+		const filteredLaborales = getFilteredItems(factoresLaborales);
+
 		return (
 			<div className={styles.contentCard}>
 				<div className={styles.contentHeader}>
@@ -371,6 +527,32 @@ function CausasBasicasContent() {
 						Técnica de Análisis Sistemático de las Causas
 					</p>
 				</div>
+
+				{selectedCausasInmediatas.length > 0 && (
+					<div className={styles.filterInfo}>
+						<div className={styles.filterHeader}>
+							<h4>🔍 Filtrado basado en causas inmediatas seleccionadas:</h4>
+							<button 
+								className={styles.toggleFilterButton}
+								onClick={() => setShowAllItems(!showAllItems)}
+							>
+								{showAllItems ? 'Mostrar Solo Relevantes' : 'Mostrar Todos los Items'}
+							</button>
+						</div>
+						<div className={styles.selectedCIList}>
+							{selectedCausasInmediatas.map(ci => (
+								<span key={ci.id} className={`${styles.ciTag} ${ci.type === 'Acto Subestándar' ? styles.actoTag : styles.condicionTag}`}>
+									{ci.id}. {ci.text.length > 50 ? ci.text.substring(0, 50) + '...' : ci.text}
+								</span>
+							))}
+						</div>
+						{!showAllItems && (
+							<p className={styles.filterDescription}>
+								Mostrando {relevantCBs.length} elementos relevantes de {factoresPersonales.length + factoresLaborales.length} totales
+							</p>
+						)}
+					</div>
+				)}
 
 				<div className={styles.contentBody}>
 					<p className={styles.description}>
@@ -390,7 +572,12 @@ function CausasBasicasContent() {
 								<p className={styles.sectionDescription}>
 									Factores relacionados con la persona
 								</p>
-								<p className={styles.sectionRange}>Opciones 1-7</p>
+								<p className={styles.sectionRange}>
+									{isFiltered() && !showAllItems 
+										? `${filteredPersonales.length} elementos relevantes (de 7 totales)`
+										: 'Opciones 1-7'
+									}
+								</p>
 								{causasBasicasData.personales.selectedItems.length > 0 && (
 									<p className={styles.dataIndicator}>
 										{causasBasicasData.personales.selectedItems.length} factor(es) seleccionado(s)
@@ -411,7 +598,12 @@ function CausasBasicasContent() {
 								<p className={styles.sectionDescription}>
 									Factores relacionados con el trabajo
 								</p>
-								<p className={styles.sectionRange}>Opciones 8-15</p>
+								<p className={styles.sectionRange}>
+									{isFiltered() && !showAllItems 
+										? `${filteredLaborales.length} elementos relevantes (de 8 totales)`
+										: 'Opciones 8-15'
+									}
+								</p>
 								{causasBasicasData.laborales.selectedItems.length > 0 && (
 									<p className={styles.dataIndicator}>
 										{causasBasicasData.laborales.selectedItems.length} factor(es) seleccionado(s)
@@ -426,6 +618,9 @@ function CausasBasicasContent() {
 	}
 
 	const currentSectionData = getCurrentSectionData();
+	const currentItems = getCurrentItems();
+	const allItems = getAllItems();
+	const selectedCausasInmediatas = getSelectedCausasInmediatas();
 
 	return (
 		<div className={styles.contentCard}>
@@ -439,6 +634,32 @@ function CausasBasicasContent() {
 				<h2 className={styles.contentTitle}>{getSectionTitle()}</h2>
 				<p className={styles.contentSubtitle}>{getSectionSubtitle()}</p>
 			</div>
+
+			{selectedCausasInmediatas.length > 0 && (
+				<div className={styles.filterInfo}>
+					<div className={styles.filterHeader}>
+						<h4>🔍 Filtrado por causas inmediatas:</h4>
+						<button 
+							className={styles.toggleFilterButton}
+							onClick={() => setShowAllItems(!showAllItems)}
+						>
+							{showAllItems ? 'Mostrar Solo Relevantes' : 'Mostrar Todos los Items'}
+						</button>
+					</div>
+					<div className={styles.selectedCIList}>
+						{selectedCausasInmediatas.map(ci => (
+							<span key={ci.id} className={`${styles.ciTag} ${ci.type === 'Acto Subestándar' ? styles.actoTag : styles.condicionTag}`}>
+								{ci.id}. {ci.text.length > 40 ? ci.text.substring(0, 40) + '...' : ci.text}
+							</span>
+						))}
+					</div>
+					{!showAllItems && (
+						<p className={styles.filterDescription}>
+							Mostrando {currentItems.length} de {allItems.length} elementos
+						</p>
+					)}
+				</div>
+			)}
 
 			<div className={styles.detailView}>
 				<div className={styles.header}>
@@ -455,7 +676,7 @@ function CausasBasicasContent() {
 				<div className={styles.contentWrapper}>
 					<div className={styles.itemsGridContainer}>
 						<div className={styles.itemsGrid}>
-							{getCurrentItems().map((item) => (
+							{currentItems.map((item) => (
 								<button
 									key={item.id}
 									className={`${styles.itemCard} ${
@@ -476,7 +697,7 @@ function CausasBasicasContent() {
 								<h4>Elementos Seleccionados ({currentSectionData.selectedItems.length}):</h4>
 								<div className={styles.selectedList}>
 									{currentSectionData.selectedItems.map((id) => {
-										const item = getCurrentItems().find((item) => item.id === id);
+										const item = allItems.find((item) => item.id === id);
 										const detailCount = currentSectionData.detailedSelections[id]?.length || 0;
 										return (
 											<span key={id} className={styles.selectedTag}>

@@ -1,116 +1,96 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Trash2, Archive, Info, Edit, Download, Eye, Layers } from "lucide-react";
 import TrashModal from "./TrashModal";
 import styles from "./ProjectsView.module.css";
 
 function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
-	const initialProjects = [
-		{
-			id: 1,
-			name: "PROYECTO 1",
-			description: "Primer proyecto de ejemplo",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 2,
-			name: "PROYECTO 2",
-			description: "Análisis sistemático de fallas",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 3,
-			name: "PROYECTO 3",
-			description: "Proyecto de mejora continua",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 4,
-			name: "PROYECTO 4",
-			description: "Evaluación de riesgos operativos",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 5,
-			name: "PROYECTO 5",
-			description: "Optimización de procesos industriales",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 6,
-			name: "PROYECTO 6",
-			description: "Sistema de control de calidad",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 7,
-			name: "PROYECTO 7",
-			description: "Plan de mantenimiento preventivo",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 8,
-			name: "PROYECTO 8",
-			description: "Protocolos de seguridad industrial",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 9,
-			name: "PROYECTO 9",
-			description: "Sistema de gestión ambiental",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 10,
-			name: "PROYECTO 10",
-			description: "Control de inventarios",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 11,
-			name: "PROYECTO 11",
-			description: "Análisis de productividad",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 12,
-			name: "PROYECTO 12",
-			description: "Gestión de recursos humanos",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 13,
-			name: "PROYECTO 13",
-			description: "Control de calidad avanzado",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 14,
-			name: "PROYECTO 14",
-			description: "Automatización de procesos",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 15,
-			name: "PROYECTO 15",
-			description: "Gestión de riesgos financieros",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: 16,
-			name: "PROYECTO 16",
-			description: "Optimización energética",
-			createdAt: new Date().toISOString(),
-		},
-	];
-
-	const [projects, setProjects] = useState(initialProjects);
+	const [projects, setProjects] = useState([]);
 	const [deletedProjects, setDeletedProjects] = useState([]);
 	const [selectedProjects, setSelectedProjects] = useState(new Set());
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
+	const [isLoading, setIsLoading] = useState(true);
 	const projectsPerPage = 16;
+
+	// Función para limpiar proyectos simulados (igual que en BaseFrame)
+	const cleanSimulatedProjects = (projectsList) => {
+		if (!Array.isArray(projectsList)) return [];
+		
+		return projectsList.filter(project => {
+			const isExample = project.isExample === true;
+			const isSimulated = project.isSimulated === true;
+			const hasGenericName = project.name && (
+				project.name.startsWith('PROYECTO ') ||
+				project.name.includes('ejemplo') ||
+				project.name.includes('Ejemplo') ||
+				project.name.includes('EJEMPLO') ||
+				project.name.includes('test') ||
+				project.name.includes('Test') ||
+				project.name.includes('TEST')
+			);
+			const hasGenericDescription = project.description && (
+				project.description.includes('ejemplo') ||
+				project.description.includes('Ejemplo') ||
+				project.description.includes('test') ||
+				project.description.includes('simulado')
+			);
+			
+			return !(isExample || isSimulated || hasGenericName || hasGenericDescription);
+		});
+	};
+
+	// Cargar proyectos reales desde localStorage
+	useEffect(() => {
+		const loadRealProjects = () => {
+			try {
+				setIsLoading(true);
+				
+				// Cargar proyectos activos
+				const savedProjects = localStorage.getItem('scatProjects');
+				let loadedProjects = [];
+				if (savedProjects) {
+					const parsedProjects = JSON.parse(savedProjects);
+					loadedProjects = cleanSimulatedProjects(parsedProjects);
+				}
+				setProjects(loadedProjects);
+				
+				// Cargar proyectos eliminados
+				const savedDeletedProjects = localStorage.getItem('scatDeletedProjects');
+				let loadedDeletedProjects = [];
+				if (savedDeletedProjects) {
+					const parsedDeletedProjects = JSON.parse(savedDeletedProjects);
+					loadedDeletedProjects = cleanSimulatedProjects(parsedDeletedProjects);
+				}
+				setDeletedProjects(loadedDeletedProjects);
+				
+			} catch (error) {
+				console.error('Error loading projects:', error);
+				setProjects([]);
+				setDeletedProjects([]);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		loadRealProjects();
+	}, []);
+
+	// Sincronizar cambios con localStorage
+	useEffect(() => {
+		if (!isLoading) {
+			const cleanedProjects = cleanSimulatedProjects(projects);
+			localStorage.setItem('scatProjects', JSON.stringify(cleanedProjects));
+		}
+	}, [projects, isLoading]);
+
+	useEffect(() => {
+		if (!isLoading) {
+			const cleanedDeletedProjects = cleanSimulatedProjects(deletedProjects);
+			localStorage.setItem('scatDeletedProjects', JSON.stringify(cleanedDeletedProjects));
+		}
+	}, [deletedProjects, isLoading]);
 
 	// Calcular proyectos para la página actual
 	const indexOfLastProject = currentPage * projectsPerPage;
@@ -180,22 +160,53 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 	};
 
 	const handleEmptyTrash = () => {
-		setDeletedProjects([]);
+		const confirmed = window.confirm('¿Estás seguro de que quieres vaciar la papelera? Esta acción no se puede deshacer.');
+		if (confirmed) {
+			setDeletedProjects([]);
+		}
 	};
 
 	const handleViewProject = (project) => {
-		// Navegar al SCAT con los datos del proyecto
-		if (onNavigateToScat) {
-			onNavigateToScat(project);
+		// Navegar al SCAT con los datos del proyecto en modo solo lectura
+		if (onNavigateToScat && project.formData) {
+			console.log('=== VISUALIZANDO PROYECTO ===');
+			console.log('Proyecto:', project);
+			
+			const viewData = {
+				...project.formData,
+				isEditing: false, // Modo solo lectura
+				projectId: project.id,
+				projectData: project
+			};
+			onNavigateToScat(viewData);
+		} else {
+			alert('No se encontraron datos del proyecto para visualizar.');
 		}
 	};
 
 	const handleEditProject = (project) => {
-		alert(`Editando proyecto: ${project.name}`);
+		// Navegar al SCAT en modo edición
+		if (onNavigateToScat && project.formData) {
+			console.log('=== EDITANDO PROYECTO DESDE PROJECTS VIEW ===');
+			console.log('Proyecto a editar:', project);
+			
+			const editData = {
+				...project.formData,
+				isEditing: true, // Modo edición
+				projectId: project.id,
+				projectData: project
+			};
+			
+			console.log('Datos de edición:', editData);
+			onNavigateToScat(editData);
+		} else {
+			alert('No se encontraron datos del proyecto para editar.');
+		}
 	};
 
 	const handleDownloadProject = (project) => {
-		alert(`Descargando proyecto: ${project.name}`);
+		// Implementar descarga de proyecto (PDF, etc.)
+		alert(`Descargando proyecto: ${project.name || 'Sin nombre'}`);
 	};
 
 	const handleBackToMenu = () => {
@@ -208,6 +219,17 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 		setCurrentPage(page);
 		setSelectedProjects(new Set());
 	};
+
+	// Mostrar loading mientras se cargan los proyectos
+	if (isLoading) {
+		return (
+			<div className={styles.container}>
+				<div className={styles.loading}>
+					<p>Cargando proyectos...</p>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className={styles.container}>
@@ -264,80 +286,121 @@ function ProjectsView({ onNavigateToBase, onNavigateToScat }) {
 
 			{/* Projects Grid - Ocupa toda la pantalla */}
 			<div className={styles.projectsContainer}>
-				<div className={styles.projectsGrid}>
-					{currentProjects.map((project) => (
-						<div 
-							key={project.id} 
-							className={`${styles.projectCard} ${selectedProjects.has(project.id) ? styles.selected : ''}`}
-						>
-							<div className={styles.projectHeader}>
-								<input
-									type="checkbox"
-									checked={selectedProjects.has(project.id)}
-									onChange={() => handleSelectProject(project.id)}
-									className={styles.checkbox}
-								/>
-								<h3 className={styles.projectName}>{project.name}</h3>
-							</div>
-							<div className={styles.projectActions}>
-								<button 
-									className={styles.projectActionButton}
-									onClick={() => handleViewProject(project)}
-									title="Ver proyecto"
-								>
-									<Eye size={14} />
-								</button>
-								<button 
-									className={styles.projectActionButton}
-									onClick={() => handleEditProject(project)}
-									title="Editar proyecto"
-								>
-									<Edit size={14} />
-								</button>
-								<button 
-									className={styles.projectActionButton}
-									onClick={() => handleDownloadProject(project)}
-									title="Descargar proyecto"
-								>
-									<Download size={14} />
-								</button>
-							</div>
-						</div>
-					))}
-				</div>
-			</div>
-
-			{/* Bottom Controls */}
-			<div className={styles.bottomControls}>
-				<div className={styles.selectionControls}>
-					<button 
-						className={styles.selectAllButton}
-						onClick={handleSelectAll}
-					>
-						{selectedProjects.size === currentProjects.length ? 'Deseleccionar todo' : 'Seleccionar todo'}
-					</button>
-					{selectedProjects.size > 0 && (
-						<span className={styles.selectedCount}>
-							{selectedProjects.size} seleccionado(s)
-						</span>
-					)}
-				</div>
-
-				{/* Pagination */}
-				{totalPages > 1 && (
-					<div className={styles.pagination}>
-						{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-							<button
-								key={page}
-								className={`${styles.pageButton} ${currentPage === page ? styles.activePage : ''}`}
-								onClick={() => handlePageChange(page)}
+				{projects.length > 0 ? (
+					<div className={styles.projectsGrid}>
+						{currentProjects.map((project) => (
+							<div 
+								key={project.id} 
+								className={`${styles.projectCard} ${selectedProjects.has(project.id) ? styles.selected : ''}`}
 							>
-								{page}
-							</button>
+								<div className={styles.projectHeader}>
+									<input
+										type="checkbox"
+										checked={selectedProjects.has(project.id)}
+										onChange={() => handleSelectProject(project.id)}
+										className={styles.checkbox}
+									/>
+									<h3 className={styles.projectName}>
+										{project.name || project.formData?.evento || 'Proyecto sin nombre'}
+									</h3>
+								</div>
+								<div className={styles.projectInfo}>
+									<p className={styles.projectDescription}>
+										{project.description || project.formData?.otrosDatos || 'Sin descripción'}
+									</p>
+									<p className={styles.projectDate}>
+										Creado: {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'Fecha desconocida'}
+									</p>
+									{project.lastModified && (
+										<p className={styles.projectModified}>
+											Modificado: {new Date(project.lastModified).toLocaleDateString()}
+										</p>
+									)}
+									{project.version && project.version > 1 && (
+										<p className={styles.projectVersion}>
+											Versión: {project.version}
+										</p>
+									)}
+								</div>
+								<div className={styles.projectActions}>
+									<button 
+										className={styles.projectActionButton}
+										onClick={() => handleViewProject(project)}
+										title="Ver proyecto (solo lectura)"
+									>
+										<Eye size={14} />
+									</button>
+									<button 
+										className={`${styles.projectActionButton} ${styles.editButton}`}
+										onClick={() => handleEditProject(project)}
+										title="Editar proyecto (todas las pestañas)"
+									>
+										<Edit size={14} />
+									</button>
+									<button 
+										className={styles.projectActionButton}
+										onClick={() => handleDownloadProject(project)}
+										title="Descargar proyecto"
+									>
+										<Download size={14} />
+									</button>
+								</div>
+							</div>
 						))}
+					</div>
+				) : (
+					/* Empty state cuando no hay proyectos */
+					<div className={styles.emptyState}>
+						<div className={styles.emptyIcon}>
+							<Layers size={64} />
+						</div>
+						<p className={styles.emptyTitle}>No tienes proyectos creados</p>
+						<p className={styles.emptyDescription}>
+							Los proyectos que crees aparecerán aquí. Regresa al menú principal para crear tu primer proyecto.
+						</p>
+						<button
+							onClick={handleBackToMenu}
+							className={styles.emptyStateButton}
+						>
+							← Volver al menú principal
+						</button>
 					</div>
 				)}
 			</div>
+
+			{/* Bottom Controls */}
+			{projects.length > 0 && (
+				<div className={styles.bottomControls}>
+					<div className={styles.selectionControls}>
+						<button 
+							className={styles.selectAllButton}
+							onClick={handleSelectAll}
+						>
+							{selectedProjects.size === currentProjects.length ? 'Deseleccionar todo' : 'Seleccionar todo'}
+						</button>
+						{selectedProjects.size > 0 && (
+							<span className={styles.selectedCount}>
+								{selectedProjects.size} seleccionado(s)
+							</span>
+						)}
+					</div>
+
+					{/* Pagination */}
+					{totalPages > 1 && (
+						<div className={styles.pagination}>
+							{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+								<button
+									key={page}
+									className={`${styles.pageButton} ${currentPage === page ? styles.activePage : ''}`}
+									onClick={() => handlePageChange(page)}
+								>
+									{page}
+								</button>
+							))}
+						</div>
+					)}
+				</div>
+			)}
 
 			{/* Trash Modal */}
 			<TrashModal
