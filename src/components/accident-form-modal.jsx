@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import styles from "./AccidentForm.module.css";
 import { useScatData } from "../contexts/ScatContext";
 
@@ -16,19 +16,6 @@ export default function AccidentFormModal({ isOpen, onClose, onCreateProject, on
 	});
 
 	const [errors, setErrors] = useState({});
-	const hasInitialized = useRef(false);
-
-	// Limpiar formulario cuando se abre el modal (solo una vez)
-	useEffect(() => {
-		if (isOpen && !hasInitialized.current) {
-			console.log('=== MODAL ABIERTO - INICIALIZANDO FORMULARIO LIMPIO ===');
-			resetForm();
-			hasInitialized.current = true;
-		} else if (!isOpen) {
-			// Resetear la bandera cuando se cierra el modal
-			hasInitialized.current = false;
-		}
-	}, [isOpen]);
 
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;

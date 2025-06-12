@@ -1,17 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, ChevronDown, Trash2, RefreshCw } from "lucide-react";
+import { Plus, ChevronDown, Trash2 } from "lucide-react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import ProjectCard from "./ProjectCard";
 import AccidentFormModal from "./accident-form-modal";
 import TrashModal from "./TrashModal";
 import styles from "./Baseframe.module.css";
-import { useScatData } from "../contexts/ScatContext";
 
 function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
-	const { resetAllData } = useScatData();
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
 	const [projects, setProjects] = useState([]);
@@ -25,84 +23,29 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	const [hasMore, setHasMore] = useState(true);
 	const projectsPerPage = 6;
 
-	// Función mejorada para limpiar proyectos simulados
+	// Función para limpiar proyectos simulados
 	const cleanSimulatedProjects = (projectsList) => {
-		if (!Array.isArray(projectsList)) return [];
-		
-		// Filtrar proyectos que NO sean de ejemplo o simulados
-		return projectsList.filter(project => {
-			// Verificar múltiples criterios para identificar proyectos simulados
-			const isExample = project.isExample === true;
-			const isSimulated = project.isSimulated === true;
-			const hasGenericName = project.name && (
-				project.name.startsWith('PROYECTO ') ||
-				project.name.includes('ejemplo') ||
-				project.name.includes('Ejemplo') ||
-				project.name.includes('EJEMPLO') ||
-				project.name.includes('test') ||
-				project.name.includes('Test') ||
-				project.name.includes('TEST')
-			);
-			const hasGenericDescription = project.description && (
-				project.description.includes('ejemplo') ||
-				project.description.includes('Ejemplo') ||
-				project.description.includes('test') ||
-				project.description.includes('simulado')
-			);
-			
-			// Si tiene cualquiera de estas características, es un proyecto simulado
-			return !(isExample || isSimulated || hasGenericName || hasGenericDescription);
-		});
+		// Filtrar solo proyectos que NO sean de ejemplo
+		return projectsList.filter(project => !project.isExample);
 	};
 
 	// Cargar proyectos desde localStorage al inicializar
 	useEffect(() => {
-		// Función para limpiar completamente todos los datos simulados
-		const cleanAllSimulatedDataLocal = () => {
-			console.log('=== LIMPIANDO TODOS LOS DATOS SIMULADOS ===');
-			
-			try {
-				// Limpiar proyectos activos
-				const savedProjects = localStorage.getItem('scatProjects');
-				if (savedProjects) {
-					const parsedProjects = JSON.parse(savedProjects);
-					const cleanedProjects = cleanSimulatedProjects(parsedProjects);
-					localStorage.setItem('scatProjects', JSON.stringify(cleanedProjects));
-					setProjects(cleanedProjects);
-				}
-				
-				// Limpiar proyectos eliminados
-				const savedDeletedProjects = localStorage.getItem('scatDeletedProjects');
-				if (savedDeletedProjects) {
-					const parsedDeletedProjects = JSON.parse(savedDeletedProjects);
-					const cleanedDeletedProjects = cleanSimulatedProjects(parsedDeletedProjects);
-					localStorage.setItem('scatDeletedProjects', JSON.stringify(cleanedDeletedProjects));
-					setDeletedProjects(cleanedDeletedProjects);
-				}
-				
-				// Limpiar datos temporales que puedan contener información simulada
-				localStorage.removeItem('scatData');
-				
-				console.log('Limpieza de datos simulados completada');
-				
-			} catch (error) {
-				console.error('Error durante la limpieza de datos simulados:', error);
-			}
-		};
-
 		const loadProjects = () => {
 			try {
-				// Primero, limpiar automáticamente cualquier dato simulado
-				cleanAllSimulatedDataLocal();
-				
 				const savedProjects = localStorage.getItem('scatProjects');
 				const savedDeletedProjects = localStorage.getItem('scatDeletedProjects');
 				
-				// Cargar solo proyectos reales del usuario
+				console.log('Cargando proyectos desde localStorage...');
+				console.log('savedProjects:', savedProjects);
+				
+				// Solo cargar proyectos reales del usuario
 				let loadedProjects = [];
 				if (savedProjects) {
 					const parsedProjects = JSON.parse(savedProjects);
+					// Limpiar proyectos simulados si existen
 					loadedProjects = cleanSimulatedProjects(parsedProjects);
+					console.log('Proyectos cargados después de limpiar:', loadedProjects);
 				}
 				
 				setProjects(loadedProjects);
@@ -110,6 +53,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 				let loadedDeletedProjects = [];
 				if (savedDeletedProjects) {
 					const parsedDeletedProjects = JSON.parse(savedDeletedProjects);
+					// Limpiar proyectos simulados de la papelera también
 					loadedDeletedProjects = cleanSimulatedProjects(parsedDeletedProjects);
 				}
 				
@@ -131,31 +75,24 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	// Guardar proyectos en localStorage cuando cambien (solo después de la inicialización)
 	useEffect(() => {
 		if (isInitialized) {
-			// Asegurar que solo guardamos proyectos reales
-			const cleanedProjects = cleanSimulatedProjects(projects);
-			localStorage.setItem('scatProjects', JSON.stringify(cleanedProjects));
+			console.log('Guardando proyectos en localStorage:', projects);
+			localStorage.setItem('scatProjects', JSON.stringify(projects));
+			console.log('Proyectos guardados en localStorage:', projects.length);
 		}
 	}, [projects, isInitialized]);
 
 	// Guardar proyectos eliminados en localStorage cuando cambien
 	useEffect(() => {
 		if (isInitialized) {
-			// Asegurar que solo guardamos proyectos reales en la papelera
-			const cleanedDeletedProjects = cleanSimulatedProjects(deletedProjects);
-			localStorage.setItem('scatDeletedProjects', JSON.stringify(cleanedDeletedProjects));
+			localStorage.setItem('scatDeletedProjects', JSON.stringify(deletedProjects));
 		}
 	}, [deletedProjects, isInitialized]);
 
-	// Función para abrir el modal de nuevo proyecto
-	const handleOpenNewProjectModal = () => {
-		console.log('=== ABRIENDO MODAL PARA NUEVO PROYECTO ===');
-		// Limpiar todos los datos del contexto SCAT antes de abrir el modal
-		resetAllData();
-		setIsModalOpen(true);
-	};
-
 	// Función para manejar la continuación al SCAT
 	const handleContinue = (formData) => {
+		console.log("handleContinue called with:", formData);
+		console.log("onNavigateToScat function:", onNavigateToScat);
+		
 		setIsModalOpen(false);
 		
 		// Verificar que la función existe antes de llamarla
@@ -177,6 +114,8 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		setDisplayedProjects(newDisplayedProjects);
 		setCurrentPage(page);
 		setHasMore(endIndex < projects.length);
+		
+		console.log('Proyectos mostrados actualizados:', newDisplayedProjects.length);
 	}, [projects, currentPage, projectsPerPage]);
 
 	// Initialize displayed projects
@@ -187,37 +126,19 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 	}, [projects, loadMoreProjects, isInitialized]);
 
 	const handleCreateProject = (newProject) => {
-		// Asegurar que el nuevo proyecto no tenga marcas de simulado
-		const realProject = {
-			...newProject,
-			isExample: false,
-			isSimulated: false,
-			isReal: true
-		};
+		console.log('=== CREANDO NUEVO PROYECTO EN BASEFRAME ===');
+		console.log('Proyecto recibido:', newProject);
+		console.log('Proyectos actuales antes de agregar:', projects.length);
 		
 		setProjects((prev) => {
-			const updatedProjects = [realProject, ...prev];
+			const updatedProjects = [newProject, ...prev];
+			console.log('Proyectos después de agregar:', updatedProjects.length);
+			console.log('Lista actualizada:', updatedProjects.map(p => ({ id: p.id, name: p.name })));
 			return updatedProjects;
 		});
+		
+		console.log('=== FIN CREACIÓN PROYECTO EN BASEFRAME ===');
 	};
-
-	const handleEditProject = (project) => {
-		// Cargar todos los datos del proyecto en el contexto y navegar al SCAT en modo edición
-		if (project.formData && typeof onNavigateToScat === 'function') {
-			// Marcar que estamos en modo edición
-			const editData = {
-				...project.formData,
-				isEditing: true,
-				projectId: project.id,
-				projectData: project
-			};
-			
-			onNavigateToScat(editData);
-		} else {
-			alert('No se encontraron datos del proyecto para editar.');
-		}
-	};
-
 
 	const handleDeleteProject = (projectId) => {
 		const projectToDelete = projects.find(p => p.id === projectId);
@@ -233,6 +154,8 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 			
 			// Remover de proyectos activos
 			setProjects(prev => prev.filter(p => p.id !== projectId));
+			
+			console.log('Proyecto movido a papelera:', projectToDelete.name);
 		}
 	};
 
@@ -245,12 +168,15 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		
 		// Remover de papelera
 		setDeletedProjects(prev => prev.filter(p => p.id !== project.id));
+		
+		console.log('Proyecto restaurado:', project.name);
 	};
 
 	const handlePermanentDelete = (projectId) => {
 		const confirmed = window.confirm('¿Estás seguro de que quieres eliminar permanentemente este proyecto? Esta acción no se puede deshacer.');
 		if (confirmed) {
 			setDeletedProjects(prev => prev.filter(p => p.id !== projectId));
+			console.log('Proyecto eliminado permanentemente');
 		}
 	};
 
@@ -258,34 +184,16 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 		const confirmed = window.confirm('¿Estás seguro de que quieres vaciar la papelera? Esta acción no se puede deshacer.');
 		if (confirmed) {
 			setDeletedProjects([]);
-		}
-	};
-
-	// Función para resetear completamente la aplicación (opcional)
-	const handleResetApplication = () => {
-		const confirmed = window.confirm('¿Estás seguro de que quieres resetear completamente la aplicación? Esto eliminará TODOS los proyectos y datos. Esta acción no se puede deshacer.');
-		if (confirmed) {
-			const doubleConfirm = window.confirm('ÚLTIMA CONFIRMACIÓN: ¿Realmente quieres eliminar TODOS los datos de la aplicación?');
-			if (doubleConfirm) {
-				// Limpiar todo el localStorage
-				localStorage.removeItem('scatProjects');
-				localStorage.removeItem('scatDeletedProjects');
-				localStorage.removeItem('scatData');
-				
-				// Resetear estados
-				setProjects([]);
-				setDeletedProjects([]);
-				setDisplayedProjects([]);
-				
-				// Resetear contexto
-				resetAllData();
-				
-				alert('Aplicación reseteada completamente. Todos los datos han sido eliminados.');
-			}
+			console.log('Papelera vaciada');
 		}
 	};
 
 	const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+	// Debug: Log props on component mount
+	useEffect(() => {
+		console.log("BaseFrame mounted with props:", { onNavigateToScat, onNavigateToProjects });
+	}, [onNavigateToScat, onNavigateToProjects]);
 
 	// Mostrar loading mientras se inicializa
 	if (!isInitialized) {
@@ -297,6 +205,12 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 			</div>
 		);
 	}
+
+	console.log('Renderizando BaseFrame con:', {
+		totalProjects: projects.length,
+		displayedProjects: displayedProjects.length,
+		deletedProjects: deletedProjects.length
+	});
 
 	return (
 		<div className={styles.container}>
@@ -315,7 +229,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 						<div className={styles.actionButtonsContainer}>
 							{/* Create New Project Button */}
 							<button
-								onClick={handleOpenNewProjectModal}
+								onClick={() => setIsModalOpen(true)}
 								className={styles.createButton}
 							>
 								<Plus size={20} />
@@ -334,16 +248,6 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 									<span className={styles.trashCount}>{deletedProjects.length}</span>
 								</button>
 							)}
-
-							{/* Reset Button - Solo en desarrollo o cuando sea necesario */}
-							<button
-								onClick={handleResetApplication}
-								className={styles.resetButton}
-								title="Resetear aplicación completamente"
-							>
-								<RefreshCw size={20} />
-								<span>Reset App</span>
-							</button>
 						</div>
 
 						{/* Projects Grid */}
@@ -356,7 +260,6 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 											project={project}
 											isHighlighted={index === 0}
 											onDelete={() => handleDeleteProject(project.id)}
-											onEdit={() => handleEditProject(project)}
 										/>
 									))}
 								</div>
@@ -385,7 +288,7 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 									Comienza creando tu primer proyecto de análisis SCAT
 								</p>
 								<button
-									onClick={handleOpenNewProjectModal}
+									onClick={() => setIsModalOpen(true)}
 									className={styles.emptyStateButton}
 								>
 									<Plus size={20} />
@@ -393,6 +296,8 @@ function BaseFrame({ onNavigateToScat, onNavigateToProjects }) {
 								</button>
 							</div>
 						)}
+
+
 					</div>
 				</main>
 			</div>

@@ -11,97 +11,43 @@ import styles from "./App.module.css";
 function App() {
 	const [currentFrame, setCurrentFrame] = useState("base");
 	const [formData, setFormData] = useState(null);
-	const [editingProject, setEditingProject] = useState(null);
 
 	const handleNavigateToScat = (data) => {
-		console.log('=== NAVEGANDO AL SCAT ===');
-		console.log('Datos recibidos:', data);
-		
+		console.log("Navigating to SCAT with data:", data);
 		setFormData(data);
-		
-		// Si estamos editando, guardar la referencia del proyecto
-		if (data.isEditing && data.projectData) {
-			console.log('Modo edición activado');
-			setEditingProject(data.projectData);
-		} else {
-			console.log('Modo nuevo proyecto');
-			setEditingProject(null);
-		}
-		
 		setCurrentFrame("scat");
 	};
 
 	const handleNavigateToBase = () => {
-		console.log('=== NAVEGANDO AL MENÚ PRINCIPAL ===');
-		// Limpiar estados al volver al menú principal
-		setFormData(null);
-		setEditingProject(null);
+		console.log("Navigating to base");
 		setCurrentFrame("base");
 	};
 
 	const handleNavigateToProjects = () => {
-		console.log('=== NAVEGANDO A PROYECTOS ===');
-		// Limpiar estados al navegar a proyectos
-		setFormData(null);
-		setEditingProject(null);
+		console.log("Navigating to projects");
 		setCurrentFrame("projects");
 	};
 
 	const handleNavigateToDescription = () => {
-		console.log('=== NAVEGANDO A DESCRIPCIÓN ===');
+		console.log("Navigating to description");
 		setCurrentFrame("description");
 	};
 
 	const handleNavigateToHome = () => {
-		console.log('=== NAVEGANDO AL HOME ===');
+		console.log("Navigating to home");
 		// Resetear todo y volver al dashboard principal
 		setFormData(null);
-		setEditingProject(null);
 		setCurrentFrame("base");
-		
-		// Limpiar datos temporales del localStorage
+		// Aquí podrías agregar lógica adicional como limpiar localStorage, etc.
 		localStorage.removeItem('scatProgress');
-		localStorage.removeItem('scatData');
 	};
 
 	const handleStartNew = () => {
-		console.log('=== INICIANDO NUEVO PROYECTO ===');
-		// Limpiar todo para empezar nuevo proyecto
 		setFormData(null);
-		setEditingProject(null);
 		setCurrentFrame("base");
-		
-		// Limpiar datos temporales
-		localStorage.removeItem('scatData');
 	};
 
-	const handleSaveProject = (projectData) => {
-		console.log('=== GUARDANDO PROYECTO ===');
-		console.log('Datos del proyecto:', projectData);
-		
-		if (editingProject) {
-			// Estamos editando un proyecto existente
-			const updatedProject = {
-				...editingProject,
-				...projectData,
-				lastModified: new Date().toISOString(),
-				version: (editingProject.version || 1) + 1
-			};
-			
-			console.log('Proyecto actualizado:', updatedProject);
-			
-			// Actualizar en localStorage
-			const savedProjects = localStorage.getItem('scatProjects');
-			if (savedProjects) {
-				const projects = JSON.parse(savedProjects);
-				const updatedProjects = projects.map(p => 
-					p.id === editingProject.id ? updatedProject : p
-				);
-				localStorage.setItem('scatProjects', JSON.stringify(updatedProjects));
-				console.log('Proyectos actualizados en localStorage');
-			}
-		}
-	};
+	console.log("Current frame:", currentFrame);
 
 	return (
 		<ScatDataProvider>
@@ -118,10 +64,7 @@ function App() {
 						onNavigateToHome={handleNavigateToHome}
 						onNavigateToProjects={handleNavigateToProjects}
 						onNavigateToDescription={handleNavigateToDescription}
-						onSaveProject={handleSaveProject}
 						formData={formData}
-						editingProject={editingProject}
-						isEditing={formData?.isEditing || false}
 					/>
 				)}
 				{currentFrame === "projects" && (

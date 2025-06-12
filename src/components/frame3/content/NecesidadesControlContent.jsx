@@ -1,398 +1,341 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef } from "react";
 import styles from "./NecesidadesControlContent.module.css";
 import { useScatData } from "../../../contexts/ScatContext";
 
 function NecesidadesControlContent() {
-	const { necesidadesControlData, setNecesidadesControlData, causasBasicasData } = useScatData();
+	const { necesidadesControlData, setNecesidadesControlData } = useScatData();
 	const [activeModal, setActiveModal] = useState(null);
 	const [modalData, setModalData] = useState({
 		selectedOptions: [],
-		optionsPEC: {},
+		selectedPEC: null,
 		image: null,
 		comments: ""
 	});
-	const [showCorrectiveModal, setShowCorrectiveModal] = useState(false);
-	const [correctiveText, setCorrectiveText] = useState("");
 	const fileInputRef = useRef(null);
 
-	// Mapeo específico de Causas Básicas a NAC según las imágenes proporcionadas
-	const causasBasicasToNAC = useMemo(() => ({
-		// CB 1: Capacidad Física / Fisiológica Inadecuada
-		1: [6, 9, 12, 15, 18],
-		
-		// CB 2: Capacidad Mental / Psicológica Inadecuada
-		2: [6, 9, 10, 15, 18],
-		
-		// CB 3: Tensión Física o Fisiológica
-		3: [4, 6, 9, 11, 12, 13, 15, 18, 20],
-		
-		// CB 4: Tensión Mental o Psicológica
-		4: [1,4, 5, 6, 10, 11, 12, 15, 16, 18, 20],
-		
-		// CB 5: Falta de Conocimiento
-		5: [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20],
-		
-		// CB 6: Falta de Habilidad
-		6: [2, 4, 5, 6, 7, 9, 10, 13, 15, 18],
-		
-		// CB 7: Motivación Incorrecta
-		7: [1, 2, 4, 5, 6, 8, 10, 11, 13, 15, 17, 18],
-		
-		// CB 8: Liderazgo y/o Supervisión Deficiente
-		8: [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
-		
-		// CB 9: Ingeniería Inadecuada
-		9: [1, 3, 4, 9, 12, 13, 14],
-		
-		// CB 10: Adquisiciones Deficientes
-		10: [1, 3, 4, 6, 9, 12, 13, 14, 15, 19],
-		
-		// CB 11: Mantenimiento Deficiente
-		11: [1, 3, 4, 6, 9, 10, 13, 15, 19],
-		
-		// CB 12: Herramientas y Equipos Inadecuados
-		12: [1, 3, 4, 6, 7, 9, 11, 12, 13, 14, 15, 19],
-		
-		// CB 13: Estándares de Trabajo Inadecuados
-		13: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 19],
-		
-		// CB 14: Uso y Desgaste
-		14: [3, 4, 6, 9, 10, 13, 14, 15],
-		
-		// CB 15: Abuso o Mal Uso
-		15: [1, 3, 4, 6, 8, 9, 10, 11, 13, 14, 15, 16, 17, 19]
-	}), []);
-
-	// Definición de todos los NAC según las imágenes
-	const allNACItems = useMemo(() => [
-		// NAC 1-5: Procedimientos de Investigación de Accidentes/Incidentes
-		{ 
-			id: 1, 
-			text: "LIDERAZGO Y ADMINISTRACIÓN",
-			title: "LIDERAZGO Y ADMINISTRACIÓN",
-			options: [
-				"Pólitica General",
-				"Coordinador del Programa",
-				"Participación de Gerencia Superior y Media",
-				"Estándares de Desempeño Gerencial",
-				"Participación de Gerencia",
-				"Participación de Reuniones de Gerencia",
-				"Manual de Referencia de Gerencia",
-				"Realización de Auditorías de Gerencia",
-				"Responsabilidad individual de Seguridad y Salud / Control de Pérdidas en Descripciones de Puestos",
-				"Establecimiento de Objetivos Anuales de Seguridad y Salud / Control de Pérdidas",
-				"Comités Conjuntos de Seguridad y Salud y/o Delegados de Seguridad y Salud",
-				"Negativa a trabajar debido al Procedimiento de Peligros de Seguridad y Salud",
-				"Biblioteca de Referencia"
-			]
-		},
-		{ 
-			id: 2, 
-			text: "Entrenamiento de Gerencia",
-			title: "ENTRENAMIENTO DE GERENCIA",
-			options: [
-				"Programa de Orientación/Inducción de Gerencia",
-				"Entrenamiento Formal Inicial del Personal de Gerencia Superior",
-				"Revisión Formal y Entrenamiento Actualizado del Personal de Gerencia Superior",
-				"Entrenamiento Inicial Formal para Personal de Gerencia Media y Supervisores",
-				"Revisión Formal y Entrenamiento Actualizado del Personal de Gerencia Media y Supervisores",
-				"Entrenamiento Formal del Coordinador del Programa"
-			]
-		},
-		{ 
-			id: 3, 
-			text: "Inspecciones Planificadas",
-			title: "INSPECCIONES PLANIFICADAS",
-			options: [
-				"Inspecciones Generales Planificadas",
-				"Procedimiento de Seguimiento",
-				"Análisis de Informe de Inspección",
-				"Programa de Inspección de Piezas/Rubros Criticos",
-				"Programa de Mantenimiento Preventivo",
-				"Insepcción Previa al uso de Equipo Movil y de Manipulación de Materiales",
-				"Sistema de Informe de Condiciones Alternas",
-				"Mantenimiento del Informe de Inspección General Planificada",
-				"Monitoreo Regular del Programa"
-			]
-		},
-		{ 
-			id: 4, 
-			text: "Análisis y Procedimientos de Tareas",
-			title: "ANÁLISIS Y PROCEDIMIENTOS DE TAREAS",
-			options: [
-				"Directiva de Gerencia sobre la Importancia",
-				"Inventario de Tareas Críticas",
-				"Objetivo de Análisis de Tareas y Procedimientos de Tareas",
-				"Análisis y Procedimientos de Tareas Efectuados para Tareas Críticas y Actualizados Periódicamente",
-				"Peligros de Seguridad y Salud en los Análisis y Procedimientos de Tareas Críticas",
-				"Monitoreo Regular del Programa"
-			]
-		},
-		{ 
-			id: 5, 
-			text: "Investigación de Accidente / Incidente",
-			title: "INVESTIGACIÓN DE ACCIDENTE / INCIDENTE",
-			options: [
-				"Procedimiento de Investigación de Accidentes/Incidentes",
-				"Alcance e Investigaciones establecidos",
-				"Seguimiento y Medidas de Corrección",
-				"Utilización de Anuncio de Accidente Mayor",
-				"Uso de Información de Alto Potencial de Incidente",
-				"Participación de la Gerencia de Operaciones",
-				"Informe e Investigación de Incidentes",
-				"Mantenimiento de Informes de Accidente/Incidente",
-				"Monitoreo Periódico del Programa"
-			]
-		},
-
-		// NAC 6: Observación de Tareas
-		{ 
-			id: 6, 
-			text: "Observación de Tareas",
-			title: "OBSERVACIÓN DE TAREAS",
-			options: [
-				"Directiva de Gerencia sobre su Importancia",
-				"Programa Completo de Observaciôn de Tareas",
-				"Nivel de Observación Completa de Tareas",
-				"Programa de Observación de Tareas Parciales",
-				"Análisis de Informe de Observación de Tareas",
-				"Monitoreo Periódico del Programa"
-			]
-		},
-
-		// NAC 7: Preparación para Emergencias
-		{ 
-			id: 7, 
-			text: "Preparación para Emergencias",
-			title: "PREPARACIÓN PARA EMERGENCIAS",
-			options: [
-				"Coordinador Designado",
-				"Plan de Emergencia por escrito",
-				"Entrenamiento de Primeros Auxilios para Supervisor",
-				"Entrenamiento de Primeros Auxilios para el Personal(10%)",
-				"Iluminación y Energía de Emergencias Adecuadas",
-				"Controles Principales con Código de Color y Rotulados",
-				"Equipo de Protección y de Rescate",
-				"Entrenamiento y Ejercicios del Equipo de Emergencias",
-				"Asistentes de Primeros Auxilios Calificados",
-				"Ayuda Exterior y Auxilio Mutuo Organizados",
-				"Protección de Registros Vitales",
-				"Planificación para Etapa Posterior al Evento",
-				"Se provee Comunicación de Emergencia",
-				"Comunicaciones de Seguridad Pública Planificadas"
-			]
-		},
-
-		// NAC 8: Sistemas de Permisos de Trabajo y Procedimientos Especiales
-		{ 
-			id: 8, 
-			text: "Reglamentos de la Compañia",
-			title: "REGLAMENTOS DE LA COMPAÑIA",
-			options: [
-				"Reglamento General de Seguridad y Salud",
-				"Reglamento de Trabajo Especializado",
-				"Sistemas de Permiso de Trabajo y Procedimientos Especiales",
-				"Programa de Educación y Revisión del Reglamento",
-				"Esfuerzo de Cumplimiento del Reglamento",
-				"Uso de Simbolos Educativos y Códigos de Colores",
-				"Monitoreo Periódico del Programa"
-			]
-		},
-
-		// NAC 9: Análisis de Accidente / Incidente
-		{ 
-			id: 9, 
-			text: "Análisis de Accidente / Incidente",
-			title: "ANÁLISIS DE ACCIDENTE / INCIDENTE",
-			options: [
-				"Cálculo y Uso de Estadísticas de Desempeño",
-				"Análisis de Lesiones y Enfermedades Ocupacionales",
-				"Identificación y Análisis de Incidentes de Propiedad y Equipo",
-				"Equipos de Proyecto para Solución de Problemas",
-				"Análisis de Incidentes Menores (Cuasi accidentes)"
-			]
-		},
-
-		// NAC 10: Entrenamiento de Seguridad y Salud Ocupacional
-		{ 
-			id: 10, 
-			text: "Entrenamiento del personal",
-			title: "Entrenamiento del Personal",
-			options: [
-				"Análisis de Necesidades de Entrenamiento",
-				"Programa de Entrenamiento del Personal",
-				"Evaluación del Programa de Entrenamiento",
-			]
-		},
-
-		// NAC 11: Estándares para Equipo de Protección Personal
-		{ 
-			id: 11, 
-			text: "Equipo de Protección Personal",
-			title: "EQUIPO DE PROTECCIÓN PERSONAL",
-			options: [
-				"Estándares para Equipo de Protección Personal",
-				"Registro de Equipo de Protección Personal",
-				"Cumplimiento de Estándares",
-				"Monitoreo Periódico del Programa"
-			]
-		},
-
-		// NAC 12: Control de la Salud
-		{ 
-			id: 12, 
-			text: "Control de la Salud",
-			title: "CONTROL DE LA SALUD",
-			options: [
-				"Identificación de Peligros para la Salud",
-				"Control de Peligros de la Salud",
-				"Información / Entrenamiento / Educación",
-				"Monitoreo de Higiene Industrial",
-				"Programa de Mantenimiento de la Salud",
-				"Asistencia Médica Profesional",
-				"Comunicaciones de Salud a los Trabajadores",
-				"Mantenimiento de Registros"
-			]
-		},
-
-		// NAC 13: Sistema de Evaluación del Programa
-		{ 
-			id: 13, 
-			text: "Sistema de Evaluación del Programa",
-			title: "SISTEMA DE EVALUACIÓN DEL PROGRAMA",
-			options: [
-				"Auditoría Completa del Cumplimiento de Estándares del Programa",
-				"Auditoría Completa del Cumplimiento de Estándares de Condiciones Físicas",
-				"Auditoría Completa del Cumplimiento de Estándares de Prevención y Control de Incendios",
-				"Auditoría Completa del Cumplimiento de Estándares de Salud Ocupacional",
-				"Registro de Sistemas de Evaluación de Programa"
-			]
-		},
-
-		// NAC 14: Controles de Ingeniería
-		{ 
-			id: 14, 
-			text: "Controles de Ingeniería",
-			title: "CONTROLES DE INGENIERÍA",
-			options: [
-				"Consideraciones de Seguridad y Salud de Ingeniería de Diseño en la Concepción y el Diseño",
-				"Consideraciones de Seguridad y Salud de Ingeniería de Proceso en la Concepción y el Diseño",
-				"Monitoreo Periódico del Programa"
-			]
-		},
-
-		// NAC 15: Comunicaciones al Personal
-		{ 
-			id: 15, 
-			text: "Comunicaciones al Personal",
-			title: "COMUNICACIONES AL PERSONAL",
-			options: [
-				"Entrenamiento y Motivación de Comunicación al Personal",
-				"Orientación / Motivación de Trabajo para Personal Nuevo/Transferido",
-				"Entrenamiento y Uso Adecuado de Instrucción de Tarea"
-			]
-		},
-
-		// NAC 16: Liderazgo y Administración
-		{ 
-			id: 16, 
-			text: "Reuniones Grupales",
-			title: "REUNIONES GRUPALES",
-			options: [
-				"Realización de Reuniones Grupales",
-				"Registro del Asunto, Ayudas Visuales, Asistencia y Problemas Tratados",
-				"Participación de la Gerencia Superior y Media",
-				"Monitoreo Periódico del Programa",
-			]
-		},
-
-		// NAC 17: Contratación y Colocación de Personal
-		{ 
-			id: 17, 
-			text: "Promoción General",
-			title: "PROMOCIÓN GENERAL",
-			options: [
-				"Programa de Periódico Mural de Seguridad",
-				"Uso de Estadísticas y Hechos del Programa",
-				"Promoción de Temas Críticos",
-				"Uso de Premios o Reconocimiento",
-				"Publicaciones de Información del Programa",
-				"Promoción del Desempeño en grupo",
-				"Promoción del Orden y la Limpieza",
-				"Registros de Actividades de Promoción del Programa"
-			]
-		},
-
-		// NAC 18: Controles de Compra
-		{ 
-			id: 18, 
-			text: "Contratación y Colocación de Personal",
-			title: "CONTRATACIÓN Y COLOCACIÓN DE PERSONAL",
-			options: [
-				"Análisis de la Capacidad Física",
-				"Examen Médico Pre-Ocupacional",
-				"Programa de Orientación / Inducción General",
-				"Identificación de Calificaciones Previa a la Contratación y Colocación"
-			]
-		},
-
-		// NAC 19: Mantenimiento y Inspecciones
-		{ 
-			id: 19, 
-			text: "Controles de Compra",
-			title: "CONTROLES DE COMPRA",
-			options: [
-				"Compras Incluyen la Seguridad y Salud en las Especificaciones y Logística",
-				"Selección y Control de Contratistas",
-			]
-		},
-
+	const categories = [
+		{
+			id: 'potencial',
+			title: 'EVALUACIÓN POTENCIAL DE PÉRDIDA SIN CONTROLES',
+			subtitle: 'Técnica de Análisis Sistemático de las Causas',
+			color: '#dc2626',
+			items: [
 				{ 
-			id: 20, 
-			text: "Liderazgo y Administración",
-			title: "LIDERAZGO Y ADMINISTRACIÓN",
-			options: [
-				"Establecimiento de Sistema de Informes y Análisis de Estádisticas",
-				"Comunicación de Información de Seguridad Fuera del Trabajo",
+					id: 1, 
+					text: 'Capacidad Física / Fisiológica Inadecuada',
+					options: [
+						"Altura, peso, talla, fuerza, alcance, etc. inadecuados",
+						"Capacidad de movimiento corporal limitada",
+						"Capacidad limitada para mantenerse en determinadas posiciones corporales",
+						"Limitaciones sensoriales (vista, oído, tacto, gusto, olfato, equilibrio)",
+						"Incapacidad respiratoria o circulatoria",
+						"Otras deficiencias físicas permanentes",
+						"Deficiencias temporales"
+					]
+				},
+				{ 
+					id: 2, 
+					text: 'Capacidad Mental / Psicológica Inadecuada',
+					options: [
+						"Temores y fobias",
+						"Problemas emocionales",
+						"Enfermedad mental",
+						"Nivel de inteligencia",
+						"Incapacidad de comprensión",
+						"Falta de juicio",
+						"Deficiencias de coordinación"
+					]
+				},
+				{ 
+					id: 3, 
+					text: 'Tensión Física o Fisiológica',
+					options: [
+						"Lesión o enfermedad",
+						"Fatiga debido a la carga o duración de las tareas",
+						"Fatiga debido a la falta de descanso",
+						"Fatiga debido a sobrecarga sensorial",
+						"Exposición a riesgos contra la salud"
+					]
+				},
+				{ 
+					id: 4, 
+					text: 'Tensión Mental o Psicológica',
+					options: [
+						"Sobrecarga emocional",
+						"Fatiga debido a la carga o las exigencias mentales de la tarea",
+						"Preocupaciones debido a problemas",
+						"Frustración",
+						"Enfermedad mental"
+					]
+				},
+				{ 
+					id: 5, 
+					text: 'Falta de Conocimiento',
+					options: [
+						"Falta de experiencia",
+						"Orientación deficiente",
+						"Entrenamiento inicial inadecuado",
+						"Reentrenamiento insuficiente",
+						"Órdenes mal interpretadas"
+					]
+				},
+			]
+		},
+		{
+			id: 'contacto',
+			title: 'Tipo de Contacto o Qué Contactó con Energía o Sustancia',
+			subtitle: '',
+			color: '#eab308',
+			items: [
+				{ 
+					id: 6, 
+					text: 'Golpeada Contra (chocar contra algo)',
+					options: [
+						"Golpeado contra objeto estacionario",
+						"Golpeado contra objeto en movimiento",
+						"Golpeado contra superficie áspera",
+						"Golpeado contra objeto punzante",
+						"Golpeado contra objeto caliente"
+					]
+				},
+				{ 
+					id: 7, 
+					text: 'Golpeado por (Impactado por objeto en movimiento)',
+					options: [
+						"Objeto volador",
+						"Objeto que cae",
+						"Objeto lanzado",
+						"Partícula en el ojo",
+						"Objeto oscilante"
+					]
+				},
+				{ 
+					id: 8, 
+					text: 'Caída a un nivel más bajo',
+					options: [
+						"Caída desde escalera",
+						"Caída desde andamio",
+						"Caída desde techo",
+						"Caída en excavación",
+						"Caída desde vehículo"
+					]
+				},
+				{ 
+					id: 9, 
+					text: 'Caída en el mismo nivel',
+					options: [
+						"Resbalón y caída",
+						"Tropezón y caída",
+						"Caída por pérdida de equilibrio",
+						"Caída por superficie irregular",
+						"Caída por obstáculo"
+					]
+				},
+				{ 
+					id: 10, 
+					text: 'Atrapado (Puntos de Pellizco y Mordida)',
+					options: [
+						"Atrapado entre objetos",
+						"Atrapado bajo objeto",
+						"Atrapado en maquinaria",
+						"Pellizco en punto de operación",
+						"Mordida de equipo"
+					]
+				},
+			]
+		},
+		{
+			id: 'causas_inmediatas',
+			title: '(CI) Causas Inmediatas / Directas',
+			subtitle: '',
+			color: '#eab308',
+			items: [
+				{ 
+					id: 11, 
+					text: 'Operar equipos sin autorización',
+					options: [
+						"Operar sin permiso",
+						"Operar sin capacitación",
+						"Operar fuera del horario autorizado",
+						"Operar equipo restringido",
+						"Operar sin supervisión requerida"
+					]
+				},
+				{ 
+					id: 12, 
+					text: 'Omitir el uso de equipos de seguridad personal',
+					options: [
+						"No usar casco",
+						"No usar guantes",
+						"No usar gafas de seguridad",
+						"No usar calzado de seguridad",
+						"No usar arnés de seguridad"
+					]
+				},
+				{ 
+					id: 13, 
+					text: 'Omitir el uso de dispositivos de seguridad',
+					options: [
+						"Remover guardas de seguridad",
+						"Desactivar sistemas de seguridad",
+						"No usar dispositivos de bloqueo",
+						"Omitir procedimientos de seguridad",
+						"No usar señalización requerida"
+					]
+				},
+				{ 
+					id: 14, 
+					text: 'Operar a velocidad inadecuada',
+					options: [
+						"Operar muy rápido",
+						"Operar muy lento",
+						"No respetar límites de velocidad",
+						"Acelerar inadecuadamente",
+						"Frenar inadecuadamente"
+					]
+				},
+				{ 
+					id: 15, 
+					text: 'Poner fuera de servicio los dispositivos de seguridad',
+					options: [
+						"Desconectar alarmas",
+						"Anular sistemas de protección",
+						"Remover etiquetas de seguridad",
+						"Desactivar interruptores de emergencia",
+						"Modificar dispositivos de seguridad"
+					]
+				},
+			]
+		},
+		{
+			id: 'causas_basicas',
+			title: '(CB) Causas Básicas / Subyacentes',
+			subtitle: '',
+			color: '#eab308',
+			items: [
+				{ 
+					id: 16, 
+					text: 'Liderazgo y/o Supervisión Deficiente',
+					options: [
+						"Relaciones jerárquicas poco claras",
+						"Asignación de responsabilidades poco clara",
+						"Delegación inadecuada o insuficiente",
+						"Definición inadecuada de políticas",
+						"Programación inadecuada del trabajo"
+					]
+				},
+				{ 
+					id: 17, 
+					text: 'Ingeniería Inadecuada',
+					options: [
+						"Evaluación inadecuada de exposiciones",
+						"Preocupación inadecuada por factores humanos",
+						"Normas de diseño inadecuadas",
+						"Control de construcciones inadecuado",
+						"Evaluación inadecuada para uso operacional"
+					]
+				},
+				{ 
+					id: 18, 
+					text: 'Adquisiciones Deficientes',
+					options: [
+						"Especificaciones deficientes de requerimientos",
+						"Investigación inadecuada de materiales",
+						"Especificaciones deficientes para vendedores",
+						"Inspecciones de recepción inadecuadas",
+						"Comunicación inadecuada de aspectos de seguridad"
+					]
+				},
+				{ 
+					id: 19, 
+					text: 'Mantenimiento Deficiente',
+					options: [
+						"Aspectos preventivos inadecuados",
+						"Lubricación y servicio inadecuados",
+						"Ajuste/ensamblaje inadecuados",
+						"Limpieza inadecuada",
+						"Comunicación de necesidades inadecuada"
+					]
+				},
+				{ 
+					id: 20, 
+					text: 'Herramientas y Equipos Inadecuados',
+					options: [
+						"Evaluación inadecuada de necesidades",
+						"Preocupación inadecuada por factores humanos",
+						"Normas o especificaciones inadecuadas",
+						"Disponibilidad inadecuada",
+						"Ajustes/reparación/mantenimiento deficientes"
+					]
+				},
+			]
+		},
+		{
+			id: 'necesidades',
+			title: '(NAC) Necesidades de Acción de Control (NAC)',
+			subtitle: 'Falta de Control',
+			color: '#10b981',
+			items: [
+				{ 
+					id: 21, 
+					text: 'Programa inadecuado de mantenimiento preventivo',
+					options: [
+						"Falta de programa de mantenimiento",
+						"Frecuencia inadecuada de mantenimiento",
+						"Procedimientos de mantenimiento deficientes",
+						"Personal no calificado para mantenimiento",
+						"Falta de repuestos y herramientas"
+					]
+				},
+				{ 
+					id: 22, 
+					text: 'Normas inadecuadas de trabajo',
+					options: [
+						"Procedimientos de trabajo inexistentes",
+						"Procedimientos desactualizados",
+						"Procedimientos no comunicados",
+						"Falta de entrenamiento en procedimientos",
+						"Procedimientos no aplicados"
+					]
+				},
+				{ 
+					id: 23, 
+					text: 'Diseño o mantenimiento inadecuado de las instalaciones',
+					options: [
+						"Diseño deficiente de instalaciones",
+						"Mantenimiento inadecuado de estructuras",
+						"Falta de señalización",
+						"Iluminación inadecuada",
+						"Ventilación deficiente"
+					]
+				},
+				{ 
+					id: 24, 
+					text: 'Compras inadecuadas',
+					options: [
+						"Especificaciones de compra deficientes",
+						"Evaluación inadecuada de proveedores",
+						"Control de calidad deficiente",
+						"Recepción inadecuada de materiales",
+						"Almacenamiento inadecuado"
+					]
+				},
+				{ 
+					id: 25, 
+					text: 'Mantenimiento inadecuado',
+					options: [
+						"Mantenimiento correctivo deficiente",
+						"Falta de personal de mantenimiento",
+						"Herramientas de mantenimiento inadecuadas",
+						"Repuestos de baja calidad",
+						"Documentación de mantenimiento deficiente"
+					]
+				},
 			]
 		}
-	], []);
-
-	// Cargar medidas correctivas existentes al inicializar
-	useState(() => {
-		if (necesidadesControlData.medidasCorrectivas) {
-			setCorrectiveText(necesidadesControlData.medidasCorrectivas);
-		}
-	}, []);
-
-	// Función para obtener los NAC filtrados según las selecciones de Causas Básicas
-	const getFilteredNACItems = useMemo(() => {
-		// Obtener todas las causas básicas seleccionadas
-		const selectedCausasBasicas = [
-			...causasBasicasData.personales.selectedItems,
-			...causasBasicasData.laborales.selectedItems
-		];
-
-		if (selectedCausasBasicas.length === 0) {
-			// Si no hay causas básicas seleccionadas, mostrar mensaje
-			return [];
-		}
-
-		// Obtener los NAC permitidos basados en las causas básicas seleccionadas
-		const allowedNACIds = new Set();
-		selectedCausasBasicas.forEach(causaId => {
-			const nacIds = causasBasicasToNAC[causaId];
-			if (nacIds) {
-				nacIds.forEach(nacId => allowedNACIds.add(nacId));
-			}
-		});
-
-		// Filtrar los NAC para mostrar solo los permitidos
-		return allNACItems.filter(item => allowedNACIds.has(item.id));
-
-	}, [causasBasicasData.personales.selectedItems, causasBasicasData.laborales.selectedItems, allNACItems, causasBasicasToNAC]);
+	];
 
 	const handleItemClick = (item) => {
 		setActiveModal(item);
@@ -404,7 +347,7 @@ function NecesidadesControlContent() {
 		} else {
 			setModalData({
 				selectedOptions: [],
-				optionsPEC: {},
+				selectedPEC: null,
 				image: null,
 				comments: ""
 			});
@@ -420,22 +363,11 @@ function NecesidadesControlContent() {
 		}));
 	};
 
-	// Nueva función para manejar la selección de P E C por opción
-	const handleOptionPECToggle = (optionIndex, pec) => {
-		setModalData(prev => {
-			const currentPECs = prev.optionsPEC[optionIndex] || [];
-			const newPECs = currentPECs.includes(pec)
-				? currentPECs.filter(p => p !== pec)
-				: [...currentPECs, pec];
-			
-			return {
-				...prev,
-				optionsPEC: {
-					...prev.optionsPEC,
-					[optionIndex]: newPECs
-				}
-			};
-		});
+	const handlePECSelect = (pec) => {
+		setModalData(prev => ({
+			...prev,
+			selectedPEC: prev.selectedPEC === pec ? null : pec
+		}));
 	};
 
 	const handleImageUpload = (e) => {
@@ -473,9 +405,9 @@ function NecesidadesControlContent() {
 
 	const handleModalConfirm = () => {
 		const hasData = modalData.selectedOptions.length > 0 || 
+						modalData.selectedPEC || 
 						modalData.image || 
-						modalData.comments.trim() !== "" ||
-						Object.keys(modalData.optionsPEC).length > 0;
+						modalData.comments.trim() !== "";
 
 		if (hasData) {
 			// Agregar el item a selectedItems si no está
@@ -510,7 +442,7 @@ function NecesidadesControlContent() {
 		setActiveModal(null);
 		setModalData({
 			selectedOptions: [],
-			optionsPEC: {},
+			selectedPEC: null,
 			image: null,
 			comments: ""
 		});
@@ -520,7 +452,7 @@ function NecesidadesControlContent() {
 		setActiveModal(null);
 		setModalData({
 			selectedOptions: [],
-			optionsPEC: {},
+			selectedPEC: null,
 			image: null,
 			comments: ""
 		});
@@ -531,10 +463,8 @@ function NecesidadesControlContent() {
 			selectedItems: [],
 			detailedData: {},
 			globalImage: null,
-			globalObservation: '',
-			medidasCorrectivas: ''
+			globalObservation: ''
 		});
-		setCorrectiveText("");
 	};
 
 	const handleGlobalObservationChange = (e) => {
@@ -544,48 +474,15 @@ function NecesidadesControlContent() {
 		});
 	};
 
-	// Funciones para el modal de medidas correctivas
-	const handleOpenCorrectiveModal = () => {
-		setCorrectiveText(necesidadesControlData.medidasCorrectivas || "");
-		setShowCorrectiveModal(true);
-	};
-
-	const handleCloseCorrectiveModal = () => {
-		setShowCorrectiveModal(false);
-	};
-
-	const handleSaveCorrectiveMeasures = () => {
-		setNecesidadesControlData({
-			...necesidadesControlData,
-			medidasCorrectivas: correctiveText
-		});
-		setShowCorrectiveModal(false);
-	};
-
-	const handleCorrectiveTextChange = (e) => {
-		setCorrectiveText(e.target.value);
-	};
-
 	const getSelectedCount = () => {
 		return necesidadesControlData.selectedItems.length;
 	};
-
-	// Obtener las causas básicas seleccionadas para mostrar información
-	const getSelectedCausasBasicas = () => {
-		return [
-			...causasBasicasData.personales.selectedItems,
-			...causasBasicasData.laborales.selectedItems
-		];
-	};
-
-	const selectedCausasBasicas = getSelectedCausasBasicas();
-	const filteredNACItems = getFilteredNACItems;
 
 	return (
 		<div className={styles.scatContainer}>
 			<div className={styles.header}>
 				<div className={styles.headerContent}>
-					<h1 className={styles.mainTitle}>NECESIDADES DE ACCIÓN DE CONTROL (NAC)</h1>
+					<h1 className={styles.mainTitle}>TABLA SCAT</h1>
 					<h2 className={styles.subtitle}>Técnica de Análisis Sistemático de las Causas</h2>
 				</div>
 				<div className={styles.headerActions}>
@@ -599,38 +496,27 @@ function NecesidadesControlContent() {
 				</div>
 			</div>
 
-			{/* Información sobre el filtrado */}
-			{selectedCausasBasicas.length > 0 && (
-				<div className={styles.filterInfo}>
-					<h3>NAC filtradas según Causas Básicas seleccionadas:</h3>
-					<p>Causas Básicas: {selectedCausasBasicas.join(', ')}</p>
-					<p>Se muestran {filteredNACItems.length} NAC relacionadas con estas causas básicas.</p>
-				</div>
-			)}
-
-			{filteredNACItems.length === 0 ? (
-				<div className={styles.noOptionsMessage}>
-					<h3>No hay NAC disponibles</h3>
-					<p>Primero debe seleccionar causas básicas en la sección anterior (Botón 4) para ver las Necesidades de Acción de Control correspondientes.</p>
-				</div>
-			) : (
-				<div className={styles.categoriesGrid}>
-					{filteredNACItems.map((item) => {
-						const isSelected = necesidadesControlData.selectedItems.includes(item.id);
-						const hasDetailedData = necesidadesControlData.detailedData[item.id];
+			<div className={styles.categoriesGrid}>
+				{categories.map((category) => (
+					<div key={category.id} className={styles.categoryCard}>
+						<div 
+							className={styles.categoryHeader}
+							style={{ backgroundColor: category.color }}
+						>
+							<h3 className={styles.categoryTitle}>{category.title}</h3>
+							{category.subtitle && (
+								<p className={styles.categorySubtitle}>{category.subtitle}</p>
+							)}
+						</div>
 						
-						return (
-							<div key={item.id} className={styles.categoryCard}>
-								<div 
-									className={styles.categoryHeader}
-									style={{ backgroundColor: '#f97316' }}
-								>
-									<h3 className={styles.categoryTitle}>NAC {item.id}</h3>
-									<p className={styles.categorySubtitle}>{item.text}</p>
-								</div>
+						<div className={styles.categoryBody}>
+							{category.items.map((item) => {
+								const isSelected = necesidadesControlData.selectedItems.includes(item.id);
+								const hasDetailedData = necesidadesControlData.detailedData[item.id];
 								
-								<div className={styles.categoryBody}>
+								return (
 									<button
+										key={item.id}
 										className={`${styles.itemButton} ${
 											isSelected ? styles.selected : ""
 										}`}
@@ -648,20 +534,20 @@ function NecesidadesControlContent() {
 														{hasDetailedData.selectedOptions.length} opciones
 													</span>
 												}
-												{hasDetailedData.optionsPEC && Object.keys(hasDetailedData.optionsPEC).length > 0 && 
+												{hasDetailedData.selectedPEC && 
 													<span className={styles.pecIndicator}>
-														PEC: {Object.values(hasDetailedData.optionsPEC).flat().length}
+														{hasDetailedData.selectedPEC}
 													</span>
 												}
 											</div>
 										)}
 									</button>
-								</div>
-							</div>
-						);
-					})}
-				</div>
-			)}
+								);
+							})}
+						</div>
+					</div>
+				))}
+			</div>
 
 			{/* Global Observation Section */}
 			<div className={styles.globalObservationSection}>
@@ -673,35 +559,6 @@ function NecesidadesControlContent() {
 					placeholder="Escriba observaciones generales sobre las necesidades de control identificadas..."
 					rows={4}
 				></textarea>
-			</div>
-
-			{/* Botón de Medidas Correctivas */}
-			<div className={styles.correctiveMeasuresSection}>
-				<button 
-					className={styles.correctiveMeasuresButton}
-					onClick={handleOpenCorrectiveModal}
-				>
-					<div className={styles.correctiveMeasuresIcon}>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-						>
-							<path d="M12 20h9"></path>
-							<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-						</svg>
-					</div>
-					<span>Aplicar Medidas Correctivas</span>
-					{necesidadesControlData.medidasCorrectivas && (
-						<div className={styles.correctiveMeasuresIndicator}>
-							✓ Completado
-						</div>
-					)}
-				</button>
 			</div>
 
 			<div className={styles.footer}>
@@ -729,7 +586,7 @@ function NecesidadesControlContent() {
 					<div className={styles.modalContent}>
 						<div className={styles.modalHeader}>
 							<h3 className={styles.modalTitle}>
-								{activeModal.title}
+								{activeModal.id}. {activeModal.text}
 							</h3>
 							<button 
 								className={styles.modalCloseBtn}
@@ -740,55 +597,54 @@ function NecesidadesControlContent() {
 						</div>
 						
 						<div className={styles.modalBody}>
-							{/* Options Selection with P-E-C buttons */}
+							{/* P-E-C Selection */}
+							<div className={styles.pecSection}>
+								<h4 className={styles.pecTitle}>Clasificación P-E-C</h4>
+								<div className={styles.pecButtons}>
+									<button
+										className={`${styles.pecButton} ${styles.pecP} ${
+											modalData.selectedPEC === 'P' ? styles.pecSelected : ""
+										}`}
+										onClick={() => handlePECSelect('P')}
+									>
+										P
+									</button>
+									<button
+										className={`${styles.pecButton} ${styles.pecE} ${
+											modalData.selectedPEC === 'E' ? styles.pecSelected : ""
+										}`}
+										onClick={() => handlePECSelect('E')}
+									>
+										E
+									</button>
+									<button
+										className={`${styles.pecButton} ${styles.pecC} ${
+											modalData.selectedPEC === 'C' ? styles.pecSelected : ""
+										}`}
+										onClick={() => handlePECSelect('C')}
+									>
+										C
+									</button>
+								</div>
+							</div>
+
+							{/* Options Selection */}
 							<div className={styles.optionsSection}>
 								<h4 className={styles.optionsTitle}>Seleccione las opciones que aplican:</h4>
 								<div className={styles.modalOptions}>
 									{activeModal.options.map((option, index) => (
-										<div key={index} className={styles.optionContainer}>
-											<button
-												className={`${styles.modalOption} ${
-													modalData.selectedOptions.includes(index) ? styles.modalOptionSelected : ""
-												}`}
-												onClick={() => handleOptionToggle(index)}
-											>
-												<div className={styles.modalOptionIcon}>
-													{modalData.selectedOptions.includes(index) ? "✓" : "○"}
-												</div>
-												<span className={styles.modalOptionText}>{option}</span>
-											</button>
-											
-											{/* Botones P E C al costado de cada opción */}
-											<div className={styles.optionPECButtons}>
-												<button
-													className={`${styles.optionPECButton} ${styles.optionPECP} ${
-														modalData.optionsPEC[index]?.includes('P') ? styles.optionPECSelected : ""
-													}`}
-													onClick={() => handleOptionPECToggle(index, 'P')}
-													title="Potencial"
-												>
-													P
-												</button>
-												<button
-													className={`${styles.optionPECButton} ${styles.optionPECE} ${
-														modalData.optionsPEC[index]?.includes('E') ? styles.optionPECSelected : ""
-													}`}
-													onClick={() => handleOptionPECToggle(index, 'E')}
-													title="Eventos"
-												>
-													E
-												</button>
-												<button
-													className={`${styles.optionPECButton} ${styles.optionPECC} ${
-														modalData.optionsPEC[index]?.includes('C') ? styles.optionPECSelected : ""
-													}`}
-													onClick={() => handleOptionPECToggle(index, 'C')}
-													title="Control"
-												>
-													C
-												</button>
+										<button
+											key={index}
+											className={`${styles.modalOption} ${
+												modalData.selectedOptions.includes(index) ? styles.modalOptionSelected : ""
+											}`}
+											onClick={() => handleOptionToggle(index)}
+										>
+											<div className={styles.modalOptionIcon}>
+												{modalData.selectedOptions.includes(index) ? "✓" : "○"}
 											</div>
-										</div>
+											<span className={styles.modalOptionText}>{option}</span>
+										</button>
 									))}
 								</div>
 							</div>
@@ -864,59 +720,6 @@ function NecesidadesControlContent() {
 								onClick={handleModalConfirm}
 							>
 								Confirmar
-							</button>
-						</div>
-					</div>
-				</div>
-			)}
-
-			{/* Modal para Medidas Correctivas */}
-			{showCorrectiveModal && (
-				<div className={styles.modalOverlay}>
-					<div className={styles.correctiveModalContent}>
-						<div className={styles.modalHeader}>
-							<h3 className={styles.modalTitle}>
-								Medidas Correctivas
-							</h3>
-							<button 
-								className={styles.modalCloseBtn}
-								onClick={handleCloseCorrectiveModal}
-							>
-								×
-							</button>
-						</div>
-						
-						<div className={styles.correctiveModalBody}>
-							<div className={styles.correctiveInstructions}>
-								<p>Describa las medidas correctivas que se implementarán para abordar las necesidades de control identificadas:</p>
-							</div>
-							
-							<textarea
-								className={styles.correctiveTextarea}
-								value={correctiveText}
-								onChange={handleCorrectiveTextChange}
-								placeholder="Escriba aquí las medidas correctivas detalladas, incluyendo:
-- Acciones específicas a implementar
-- Responsables de cada acción
-- Plazos de implementación
-- Recursos necesarios
-- Indicadores de seguimiento"
-								rows={15}
-							></textarea>
-						</div>
-						
-						<div className={styles.modalFooter}>
-							<button 
-								className={styles.modalCancelBtn}
-								onClick={handleCloseCorrectiveModal}
-							>
-								Cancelar
-							</button>
-							<button 
-								className={styles.modalConfirmBtn}
-								onClick={handleSaveCorrectiveMeasures}
-							>
-								Guardar Medidas Correctivas
 							</button>
 						</div>
 					</div>

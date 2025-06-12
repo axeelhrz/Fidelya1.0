@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef } from "react";
 import styles from "./CausasBasicasContent.module.css";
 import { useScatData } from "../../../contexts/ScatContext";
 
@@ -9,8 +9,6 @@ function CausasBasicasContent() {
 	const [activeSection, setActiveSection] = useState(null);
 	const [activeModal, setActiveModal] = useState(null);
 	const [modalSelectedItems, setModalSelectedItems] = useState([]);
-	const [searchTerm, setSearchTerm] = useState("");
-	const [isSelectedCollapsed, setIsSelectedCollapsed] = useState(false);
 	const fileInputRef = useRef(null);
 
 	const factoresPersonales = [
@@ -222,7 +220,6 @@ function CausasBasicasContent() {
 
 	const handleSectionSelect = (section) => {
 		setActiveSection(section);
-		setSearchTerm("");
 	};
 
 	const handleItemClick = (itemId) => {
@@ -295,10 +292,6 @@ function CausasBasicasContent() {
 		});
 	};
 
-	const toggleSelectedCollapse = () => {
-		setIsSelectedCollapsed(!isSelectedCollapsed);
-	};
-
 	const handleImageUpload = (e) => {
 		const file = e.target.files[0];
 		if (file) {
@@ -367,40 +360,6 @@ function CausasBasicasContent() {
 			image: null, 
 			observation: '' 
 		};
-	};
-
-	// Filtrar items basado en búsqueda
-	const filteredItems = useMemo(() => {
-		const items = getCurrentItems();
-		if (!searchTerm.trim()) return items;
-		
-		return items.filter(item => 
-			item.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			item.id.toString().includes(searchTerm)
-		);
-	}, [searchTerm, activeSection]);
-
-	const handleRemoveSelectedItem = (itemId) => {
-		const currentSection = activeSection;
-		const currentData = causasBasicasData[currentSection];
-		
-		// Remover de selectedItems
-		const newSelectedItems = currentData.selectedItems.filter(id => id !== itemId);
-		
-		// Remover de detailedSelections
-		const newDetailedSelections = { ...currentData.detailedSelections };
-		delete newDetailedSelections[itemId];
-
-		setCausasBasicasData(currentSection, {
-			...currentData,
-			selectedItems: newSelectedItems,
-			detailedSelections: newDetailedSelections
-		});
-	};
-
-	const hasDetails = (itemId) => {
-		const currentData = getCurrentSectionData();
-		return currentData.detailedSelections[itemId] && currentData.detailedSelections[itemId].length > 0;
 	};
 
 	if (!activeSection) {
@@ -484,90 +443,48 @@ function CausasBasicasContent() {
 			<div className={styles.detailView}>
 				<div className={styles.header}>
 					<h3>Seleccionar Elementos</h3>
-					<div className={styles.headerActions}>
-						{currentSectionData.selectedItems.length > 0 && (
-							<button
-								className={styles.toggleSelectedButton}
-								onClick={toggleSelectedCollapse}
-							>
-								{isSelectedCollapsed ? '👁️ Mostrar' : '👁️‍🗨️ Ocultar'} Selecciones
-							</button>
-						)}
-						<button
-							className={styles.clearButton}
-							onClick={clearAllSelections}
-							disabled={currentSectionData.selectedItems.length === 0}
-						>
-							Limpiar Selección
-						</button>
-					</div>
+					<button
+						className={styles.clearButton}
+						onClick={clearAllSelections}
+						disabled={currentSectionData.selectedItems.length === 0}
+					>
+						Limpiar Selección
+					</button>
 				</div>
 
 				<div className={styles.contentWrapper}>
 					<div className={styles.itemsGridContainer}>
-						{/* Barra de búsqueda */}
-						<div className={styles.searchSection}>
-							<input
-								type="text"
-								placeholder="Buscar elementos..."
-								value={searchTerm}
-								onChange={(e) => setSearchTerm(e.target.value)}
-								className={styles.searchInput}
-							/>
-						</div>
-
 						<div className={styles.itemsGrid}>
-							{filteredItems.map((item) => (
+							{getCurrentItems().map((item) => (
 								<button
 									key={item.id}
 									className={`${styles.itemCard} ${
 										currentSectionData.selectedItems.includes(item.id) ? styles.selected : ""
-									} ${hasDetails(item.id) ? styles.hasDetails : ""}`}
+									}`}
 									onClick={() => handleItemClick(item.id)}
 								>
 									<div className={styles.itemNumber}>{item.id}</div>
 									<div className={styles.itemContent}>
 										<div className={styles.itemText}>{item.text}</div>
 									</div>
-									{currentSectionData.selectedItems.includes(item.id) && (
-										<div className={styles.selectedIndicator}>✓</div>
-									)}
-									{hasDetails(item.id) && (
-										<div className={styles.detailsIndicator}>
-											{currentSectionData.detailedSelections[item.id].length} detalles
-										</div>
-									)}
 								</button>
 							))}
 						</div>
 
 						{currentSectionData.selectedItems.length > 0 && (
-							<div className={`${styles.selectedSummary} ${isSelectedCollapsed ? styles.collapsed : ''}`}>
-								<h4>
-									Elementos Seleccionados 
-									<span className={styles.selectedCount}>
-										{currentSectionData.selectedItems.length}
-									</span>
-								</h4>
-								{!isSelectedCollapsed && (
-									<div className={styles.selectedList}>
-										{currentSectionData.selectedItems.map((id) => {
-											const item = getCurrentItems().find((item) => item.id === id);
-											const detailCount = currentSectionData.detailedSelections[id]?.length || 0;
-											return (
-												<span 
-													key={id} 
-													className={`${styles.selectedTag} ${detailCount > 0 ? styles.hasDetails : ''}`}
-													onClick={() => handleRemoveSelectedItem(id)}
-													title="Click para deseleccionar"
-												>
-													{id}. {item?.text || 'Elemento no encontrado'} 
-													{detailCount > 0 && ` (${detailCount} detalles)`}
-												</span>
-											);
-										})}
-									</div>
-								)}
+							<div className={styles.selectedSummary}>
+								<h4>Elementos Seleccionados ({currentSectionData.selectedItems.length}):</h4>
+								<div className={styles.selectedList}>
+									{currentSectionData.selectedItems.map((id) => {
+										const item = getCurrentItems().find((item) => item.id === id);
+										const detailCount = currentSectionData.detailedSelections[id]?.length || 0;
+										return (
+											<span key={id} className={styles.selectedTag}>
+												{id}. {item.text} {detailCount > 0 && `(${detailCount} detalles)`}
+											</span>
+										);
+									})}
+								</div>
 							</div>
 						)}
 					</div>

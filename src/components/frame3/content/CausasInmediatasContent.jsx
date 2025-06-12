@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef } from "react";
 import styles from "./CausasInmediatasContent.module.css";
 import { useScatData } from "../../../contexts/ScatContext";
 
 function CausasInmediatasContent() {
-	const { causasInmediatasData, setCausasInmediatasData } = useScatData();
+	const { causasInmediatasData, setCausasInmediatasData, contactoData } = useScatData();
 	const [activeSection, setActiveSection] = useState(null);
-	const [searchTerm, setSearchTerm] = useState("");
-	const [isSelectedCollapsed, setIsSelectedCollapsed] = useState(false);
+	const [showAllItems, setShowAllItems] = useState(false);
 	const fileInputRef = useRef(null);
 
 	const actosSubestandar = [
@@ -45,9 +44,96 @@ function CausasInmediatasContent() {
 		{ id: 28, text: "Ubicación peligrosa de equipos y materiales" }
 	];
 
+	// Mapeo de incidentes de contacto a CIs
+	const contactoToCIMapping = [
+		{
+			id: 1,
+			title: "Golpeada Contra (chocar contra algo)",
+			ci: [1, 2, 4, 5, 12, 14, 15, 16, 17, 18, 19, 26],
+		},
+		{
+			id: 2,
+			title: "Golpeado por (Impactado por objeto en movimiento)",
+			ci: [1, 2, 4, 5, 6, 12, 14, 15, 16, 20, 26],
+		},
+		{
+			id: 3,
+			title: "Caída a un nivel más bajo",
+			ci: [3, 5, 6, 7, 11, 12, 13, 14, 15, 16, 17, 22],
+		},
+		{
+			id: 4,
+			title: "Caída en el mismo nivel (Resbalar y caer, tropezar)",
+			ci: [4, 8, 13, 14, 15, 16, 19, 22, 26],
+		},
+		{
+			id: 5,
+			title: "Atrapado (Puntos de Pellizco y Mordida)",
+			ci: [5, 6, 11, 13, 14, 15, 16, 18],
+		},
+		{
+			id: 6,
+			title: "Cogido (Enganchado, Colgado)",
+			ci: [5, 6, 11, 12, 13, 14, 15, 16, 18],
+		},
+		{
+			id: 7,
+			title: "Atrapado entre o debajo (Chancado, Amputado)",
+			ci: [6, 7, 9, 11, 12, 13, 14, 15, 16, 22, 28],
+		},
+		{
+			id: 8,
+			title: "Contacto con (Electricidad, Calor, Frío, Radiación, Causticos, Tóxicos, Ruido)",
+			ci: [8, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 23, 24, 25, 27, 28],
+		},
+		{
+			id: 9,
+			title: "Golpeado por (Impactado por objeto en movimiento)",
+			ci: [1, 2, 4, 5, 6, 8, 10, 12, 13, 14, 15, 16, 20, 26],
+		},
+	];
+
+	// Función para obtener los CIs relevantes basados en los incidentes de contacto seleccionados
+	const getRelevantCIs = () => {
+		if (!contactoData.selectedIncidents || contactoData.selectedIncidents.length === 0) {
+			return [];
+		}
+
+		const relevantCIs = new Set();
+		contactoData.selectedIncidents.forEach(incidentId => {
+			const mapping = contactoToCIMapping.find(m => m.id === incidentId);
+			if (mapping) {
+				mapping.ci.forEach(ciId => relevantCIs.add(ciId));
+			}
+		});
+
+		return Array.from(relevantCIs).sort((a, b) => a - b);
+	};
+
+	// Función para filtrar items basado en los CIs relevantes
+	const getFilteredItems = (items) => {
+		if (showAllItems || !contactoData.selectedIncidents || contactoData.selectedIncidents.length === 0) {
+			return items;
+		}
+
+		const relevantCIs = getRelevantCIs();
+		return items.filter(item => relevantCIs.includes(item.id));
+	};
+
+	// Función para obtener los nombres de los incidentes de contacto seleccionados
+	const getSelectedContactIncidents = () => {
+		if (!contactoData.selectedIncidents || contactoData.selectedIncidents.length === 0) {
+			return [];
+		}
+
+		return contactoData.selectedIncidents.map(id => {
+			const mapping = contactoToCIMapping.find(m => m.id === id);
+			return mapping ? { id, title: mapping.title } : null;
+		}).filter(Boolean);
+	};
+
 	const handleSectionSelect = (section) => {
 		setActiveSection(section);
-		setSearchTerm("");
 	};
 
 	const handleItemToggle = (itemId) => {
@@ -71,10 +157,6 @@ function CausasInmediatasContent() {
 			...currentData,
 			selectedItems: []
 		});
-	};
-
-	const toggleSelectedCollapse = () => {
-		setIsSelectedCollapsed(!isSelectedCollapsed);
 	};
 
 	const handleImageUpload = (e) => {
@@ -120,6 +202,11 @@ function CausasInmediatasContent() {
 	};
 
 	const getCurrentItems = () => {
+		const baseItems = activeSection === 'actos' ? actosSubestandar : condicionesSubestandar;
+		return getFilteredItems(baseItems);
+	};
+
+	const getAllItems = () => {
 		return activeSection === 'actos' ? actosSubestandar : condicionesSubestandar;
 	};
 
@@ -137,22 +224,16 @@ function CausasInmediatasContent() {
 		return causasInmediatasData[activeSection] || { selectedItems: [], image: null, observation: '' };
 	};
 
-	// Filtrar items basado en búsqueda
-	const filteredItems = useMemo(() => {
-		const items = getCurrentItems();
-		if (!searchTerm.trim()) return items;
-		
-		return items.filter(item => 
-			item.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			item.id.toString().includes(searchTerm)
-		);
-	}, [searchTerm, activeSection]);
-
-	const handleRemoveSelectedItem = (itemId) => {
-		handleItemToggle(itemId);
+	const isFiltered = () => {
+		return !showAllItems && contactoData.selectedIncidents && contactoData.selectedIncidents.length > 0;
 	};
 
 	if (!activeSection) {
+		const selectedContactIncidents = getSelectedContactIncidents();
+		const relevantCIs = getRelevantCIs();
+		const filteredActos = getFilteredItems(actosSubestandar);
+		const filteredCondiciones = getFilteredItems(condicionesSubestandar);
+
 		return (
 			<div className={styles.contentCard}>
 				<div className={styles.contentHeader}>
@@ -161,6 +242,32 @@ function CausasInmediatasContent() {
 						Técnica de Análisis Sistemático de las Causas
 					</p>
 				</div>
+
+				{selectedContactIncidents.length > 0 && (
+					<div className={styles.filterInfo}>
+						<div className={styles.filterHeader}>
+							<h4>🔍 Filtrado basado en tipos de contacto seleccionados:</h4>
+							<button 
+								className={styles.toggleFilterButton}
+								onClick={() => setShowAllItems(!showAllItems)}
+							>
+								{showAllItems ? 'Mostrar Solo Relevantes' : 'Mostrar Todos los Items'}
+							</button>
+						</div>
+						<div className={styles.selectedContactList}>
+							{selectedContactIncidents.map(incident => (
+								<span key={incident.id} className={styles.contactTag}>
+									{incident.id}. {incident.title.split("(")[0].trim()}
+								</span>
+							))}
+						</div>
+						{!showAllItems && (
+							<p className={styles.filterDescription}>
+								Mostrando {relevantCIs.length} elementos relevantes de {actosSubestandar.length + condicionesSubestandar.length} totales
+							</p>
+						)}
+					</div>
+				)}
 
 				<div className={styles.contentBody}>
 					<p className={styles.description}>
@@ -180,7 +287,12 @@ function CausasInmediatasContent() {
 								<p className={styles.sectionDescription}>
 									Violación de un procedimiento aceptado como seguro
 								</p>
-								<p className={styles.sectionRange}>Opciones 1-15</p>
+								<p className={styles.sectionRange}>
+									{isFiltered() && !showAllItems 
+										? `${filteredActos.length} elementos relevantes (de 15 totales)`
+										: 'Opciones 1-15'
+									}
+								</p>
 								{causasInmediatasData.actos.selectedItems.length > 0 && (
 									<p className={styles.dataIndicator}>
 										{causasInmediatasData.actos.selectedItems.length} elemento(s) seleccionado(s)
@@ -201,7 +313,12 @@ function CausasInmediatasContent() {
 								<p className={styles.sectionDescription}>
 									Condición o circunstancia física peligrosa
 								</p>
-								<p className={styles.sectionRange}>Opciones 16-28</p>
+								<p className={styles.sectionRange}>
+									{isFiltered() && !showAllItems 
+										? `${filteredCondiciones.length} elementos relevantes (de 13 totales)`
+										: 'Opciones 16-28'
+									}
+								</p>
 								{causasInmediatasData.condiciones.selectedItems.length > 0 && (
 									<p className={styles.dataIndicator}>
 										{causasInmediatasData.condiciones.selectedItems.length} elemento(s) seleccionado(s)
@@ -216,6 +333,9 @@ function CausasInmediatasContent() {
 	}
 
 	const currentSectionData = getCurrentSectionData();
+	const currentItems = getCurrentItems();
+	const allItems = getAllItems();
+	const selectedContactIncidents = getSelectedContactIncidents();
 
 	return (
 		<div className={styles.contentCard}>
@@ -230,43 +350,48 @@ function CausasInmediatasContent() {
 				<p className={styles.contentSubtitle}>{getSectionSubtitle()}</p>
 			</div>
 
+			{selectedContactIncidents.length > 0 && (
+				<div className={styles.filterInfo}>
+					<div className={styles.filterHeader}>
+						<h4>🔍 Filtrado por tipos de contacto:</h4>
+						<button 
+							className={styles.toggleFilterButton}
+							onClick={() => setShowAllItems(!showAllItems)}
+						>
+							{showAllItems ? 'Mostrar Solo Relevantes' : 'Mostrar Todos los Items'}
+						</button>
+					</div>
+					<div className={styles.selectedContactList}>
+						{selectedContactIncidents.map(incident => (
+							<span key={incident.id} className={styles.contactTag}>
+								{incident.id}. {incident.title.split("(")[0].trim()}
+							</span>
+						))}
+					</div>
+					{!showAllItems && (
+						<p className={styles.filterDescription}>
+							Mostrando {currentItems.length} de {allItems.length} elementos
+						</p>
+					)}
+				</div>
+			)}
+
 			<div className={styles.detailView}>
 				<div className={styles.header}>
 					<h3>Seleccionar Elementos</h3>
-					<div className={styles.headerActions}>
-						{currentSectionData.selectedItems.length > 0 && (
-							<button
-								className={styles.toggleSelectedButton}
-								onClick={toggleSelectedCollapse}
-							>
-								{isSelectedCollapsed ? '👁️ Mostrar' : '👁️‍🗨️ Ocultar'} Selecciones
-							</button>
-						)}
-						<button
-							className={styles.clearButton}
-							onClick={clearAllSelections}
-							disabled={currentSectionData.selectedItems.length === 0}
-						>
-							Limpiar Selección
-						</button>
-					</div>
+					<button
+						className={styles.clearButton}
+						onClick={clearAllSelections}
+						disabled={currentSectionData.selectedItems.length === 0}
+					>
+						Limpiar Selección
+					</button>
 				</div>
 
 				<div className={styles.contentWrapper}>
 					<div className={styles.itemsGridContainer}>
-						{/* Barra de búsqueda */}
-						<div className={styles.searchSection}>
-							<input
-								type="text"
-								placeholder="Buscar elementos..."
-								value={searchTerm}
-								onChange={(e) => setSearchTerm(e.target.value)}
-								className={styles.searchInput}
-							/>
-						</div>
-
 						<div className={styles.itemsGrid}>
-							{filteredItems.map((item) => (
+							{currentItems.map((item) => (
 								<button
 									key={item.id}
 									className={`${styles.itemCard} ${
@@ -278,38 +403,23 @@ function CausasInmediatasContent() {
 									<div className={styles.itemContent}>
 										<div className={styles.itemText}>{item.text}</div>
 									</div>
-									{currentSectionData.selectedItems.includes(item.id) && (
-										<div className={styles.selectedIndicator}>✓</div>
-									)}
 								</button>
 							))}
 						</div>
 
 						{currentSectionData.selectedItems.length > 0 && (
-							<div className={`${styles.selectedSummary} ${isSelectedCollapsed ? styles.collapsed : ''}`}>
-								<h4>
-									Elementos Seleccionados 
-									<span className={styles.selectedCount}>
-										{currentSectionData.selectedItems.length}
-									</span>
-								</h4>
-								{!isSelectedCollapsed && (
-									<div className={styles.selectedList}>
-										{currentSectionData.selectedItems.map((id) => {
-											const item = getCurrentItems().find((item) => item.id === id);
-											return (
-												<span 
-													key={id} 
-													className={styles.selectedTag}
-													onClick={() => handleRemoveSelectedItem(id)}
-													title="Click para deseleccionar"
-												>
-													{id}. {item?.text || 'Elemento no encontrado'}
-												</span>
-											);
-										})}
-									</div>
-								)}
+							<div className={styles.selectedSummary}>
+								<h4>Elementos Seleccionados ({currentSectionData.selectedItems.length}):</h4>
+								<div className={styles.selectedList}>
+									{currentSectionData.selectedItems.map((id) => {
+										const item = allItems.find((item) => item.id === id);
+										return (
+											<span key={id} className={styles.selectedTag}>
+												{id}. {item.text}
+											</span>
+										);
+									})}
+								</div>
 							</div>
 						)}
 					</div>

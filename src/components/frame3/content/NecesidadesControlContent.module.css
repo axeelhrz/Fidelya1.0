@@ -64,83 +64,6 @@
   transform: none;
 }
 
-/* Información de filtrado */
-.filterInfo {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-  border: 2px solid #3b82f6;
-  border-radius: 0.75rem;
-  padding: 1rem 1.5rem;
-  margin: 0.75rem;
-  color: white;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-}
-
-.filterInfo h3 {
-  color: #93c5fd;
-  font-size: 1rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.filterInfo h3::before {
-  content: "🔗";
-  font-size: 1.1rem;
-}
-
-.filterInfo p {
-  margin: 0.25rem 0;
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-
-.filterInfo p:first-of-type {
-  color: #dbeafe;
-  font-weight: 600;
-}
-
-.filterInfo p:last-of-type {
-  color: #bfdbfe;
-  font-style: italic;
-}
-
-/* Mensaje cuando no hay opciones disponibles */
-.noOptionsMessage {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  border: 2px solid #ef4444;
-  border-radius: 0.75rem;
-  padding: 2rem;
-  margin: 1rem;
-  text-align: center;
-  color: white;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-}
-
-.noOptionsMessage h3 {
-  color: #fecaca;
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0 0 0.75rem 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.noOptionsMessage h3::before {
-  content: "⚠️";
-  font-size: 1.3rem;
-}
-
-.noOptionsMessage p {
-  margin: 0;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: #fee2e2;
-}
-
 /* Categories Grid */
 .categoriesGrid {
   display: grid;
@@ -368,7 +291,7 @@
   background: #374151;
   border-radius: 0.75rem;
   width: 100%;
-  max-width: 800px;
+  max-width: 700px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -417,7 +340,62 @@
   gap: 1.5rem;
 }
 
-/* Options Section with P-E-C buttons */
+/* P-E-C Selection */
+.pecSection {
+  background: #4b5563;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.pecTitle {
+  color: #eab308;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.pecButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.pecButton {
+  width: 3rem;
+  height: 3rem;
+  border: 2px solid #6b7280;
+  border-radius: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pecP {
+  background: #dc2626;
+  color: white;
+}
+
+.pecE {
+  background: #eab308;
+  color: #1f2937;
+}
+
+.pecC {
+  background: #10b981;
+  color: white;
+}
+
+.pecButton:hover {
+  transform: scale(1.1);
+}
+
+.pecButton.pecSelected {
+  border-color: white;
+  box-shadow: 0 0 0 2px white;
+}
+
+/* Options Section */
 .optionsSection {
   background: #4b5563;
   padding: 1rem;
@@ -437,42 +415,28 @@
   gap: 0.75rem;
 }
 
-/* Nuevo contenedor para cada opción con sus botones P E C */
-.optionContainer {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: #374151;
-  border-radius: 0.5rem;
-  padding: 0.5rem;
-  border: 2px solid #6b7280;
-  transition: all 0.2s ease;
-}
-
-.optionContainer:hover {
-  border-color: #9ca3af;
-}
-
 .modalOption {
-  background: transparent;
-  border: none;
-  border-radius: 0.375rem;
-  padding: 0.75rem;
+  background: #374151;
+  border: 2px solid #6b7280;
+  border-radius: 0.5rem;
+  padding: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
   text-align: left;
-  flex: 1;
 }
 
 .modalOption:hover {
-  background: #4b5563;
+  border-color: #9ca3af;
+  background: #1f2937;
 }
 
 .modalOption.modalOptionSelected {
+  border-color: #eab308;
   background: #1f2937;
+  box-shadow: 0 0 0 1px #eab308;
 }
 
 .modalOptionIcon {
@@ -499,53 +463,6 @@
   color: #e5e7eb;
   font-size: 0.9rem;
   line-height: 1.4;
-}
-
-/* Botones P E C al costado de cada opción */
-.optionPECButtons {
-  display: flex;
-  gap: 0.25rem;
-  flex-shrink: 0;
-}
-
-.optionPECButton {
-  width: 2rem;
-  height: 2rem;
-  border: 2px solid #6b7280;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 900;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.optionPECP {
-  background: #dc2626;
-  color: white;
-}
-
-.optionPECE {
-  background: #eab308;
-  color: #1f2937;
-}
-
-.optionPECC {
-  background: #10b981;
-  color: white;
-}
-
-.optionPECButton:hover {
-  transform: scale(1.05);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.optionPECButton.optionPECSelected {
-  border-color: white;
-  box-shadow: 0 0 0 2px white;
-  transform: scale(1.1);
 }
 
 /* Image Section */
@@ -871,48 +788,14 @@
     font-size: 1.1rem;
   }
 
-  /* Ajustar botones P E C en móvil */
-  .optionContainer {
-    flex-direction: column;
-    align-items: stretch;
+  .pecButtons {
     gap: 0.5rem;
   }
 
-  .optionPECButtons {
-    justify-content: center;
-    gap: 0.5rem;
-  }
-
-  .optionPECButton {
+  .pecButton {
     width: 2.5rem;
     height: 2.5rem;
-    font-size: 1rem;
-  }
-
-  .filterInfo {
-    margin: 0.5rem;
-    padding: 0.75rem 1rem;
-  }
-
-  .filterInfo h3 {
-    font-size: 0.9rem;
-  }
-
-  .filterInfo p {
-    font-size: 0.8rem;
-  }
-
-  .noOptionsMessage {
-    margin: 0.5rem;
-    padding: 1.5rem;
-  }
-
-  .noOptionsMessage h3 {
-    font-size: 1rem;
-  }
-
-  .noOptionsMessage p {
-    font-size: 0.9rem;
+    font-size: 1.25rem;
   }
 }
 
@@ -936,38 +819,6 @@
 
   .itemText {
     font-size: 0.75rem;
-  }
-
-  .optionPECButton {
-    width: 2rem;
-    height: 2rem;
-    font-size: 0.875rem;
-  }
-
-  .filterInfo {
-    margin: 0.4rem;
-    padding: 0.6rem 0.8rem;
-  }
-
-  .filterInfo h3 {
-    font-size: 0.85rem;
-  }
-
-  .filterInfo p {
-    font-size: 0.75rem;
-  }
-
-  .noOptionsMessage {
-    margin: 0.4rem;
-    padding: 1.2rem;
-  }
-
-  .noOptionsMessage h3 {
-    font-size: 0.95rem;
-  }
-
-  .noOptionsMessage p {
-    font-size: 0.85rem;
   }
 }
 
@@ -1023,145 +874,4 @@
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-}
-
-/* Sección de Medidas Correctivas */
-.correctiveMeasuresSection {
-  margin: 32px 0;
-  padding: 24px;
-  background-color: #f8fafc;
-  border-radius: 12px;
-  border: 2px solid #e2e8f0;
-}
-
-.correctiveMeasuresButton {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 16px 24px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  position: relative;
-}
-
-.correctiveMeasuresButton:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.2);
-}
-
-.correctiveMeasuresButton:active {
-  transform: translateY(0);
-}
-
-.correctiveMeasuresIcon {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.correctiveMeasuresIcon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.correctiveMeasuresIndicator {
-  position: absolute;
-  right: 16px;
-  background-color: rgba(255, 255, 255, 0.2);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-/* Modal de Medidas Correctivas */
-.correctiveModalContent {
-  background: white;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-.correctiveModalBody {
-  padding: 24px;
-  flex: 1;
-  overflow-y: auto;
-}
-
-.correctiveInstructions {
-  margin-bottom: 16px;
-  padding: 16px;
-  background-color: #f0f9ff;
-  border-radius: 8px;
-  border-left: 4px solid #0ea5e9;
-}
-
-.correctiveInstructions p {
-  margin: 0;
-  color: #0369a1;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.correctiveTextarea {
-  width: 100%;
-  min-height: 400px;
-  padding: 16px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 14px;
-  line-height: 1.6;
-  resize: vertical;
-  font-family: inherit;
-  transition: border-color 0.2s ease;
-}
-
-.correctiveTextarea:focus {
-  outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-}
-
-.correctiveTextarea::placeholder {
-  color: #9ca3af;
-  line-height: 1.6;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .correctiveModalContent {
-    width: 95%;
-    max-height: 95vh;
-  }
-  
-  .correctiveModalBody {
-    padding: 16px;
-  }
-  
-  .correctiveTextarea {
-    min-height: 300px;
-    font-size: 16px; /* Prevent zoom on iOS */
-  }
-  
-  .correctiveMeasuresButton {
-    font-size: 16px;
-    padding: 14px 20px;
-  }
 }
