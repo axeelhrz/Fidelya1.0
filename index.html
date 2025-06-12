@@ -570,37 +570,100 @@
             letter-spacing: 1px;
         }
 
-        .hero__stats {
+        /* ===== DOWNLOAD BUTTONS (REEMPLAZA STATS) ===== */
+        .hero__download {
             display: flex;
-            gap: var(--space-xl);
+            gap: var(--space-lg);
             margin-bottom: var(--space-lg);
+            align-items: center;
+            justify-content: flex-start;
         }
 
-        .hero__stat {
-            text-align: center;
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-lg);
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-accent);
+            border-radius: 16px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all var(--transition);
             position: relative;
-            padding: var(--space-sm);
-            background: rgba(0, 212, 255, 0.05);
-            border-radius: 12px;
-            border: 1px solid rgba(0, 212, 255, 0.1);
-            backdrop-filter: blur(10px);
+            overflow: hidden;
+            min-width: 160px;
         }
 
-        .hero__stat-value {
-            font-size: 1.75rem;
-            font-weight: 800;
-            color: var(--starflex-blue);
-            font-family: var(--font-mono);
-            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        .download-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(139, 92, 246, 0.1));
+            opacity: 0;
+            transition: opacity var(--transition);
+            border-radius: 16px;
         }
 
-        .hero__stat-label {
-            font-size: 0.8rem;
+        .download-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2);
+            color: var(--text-primary);
+        }
+
+        .download-btn:hover::before {
+            opacity: 1;
+        }
+
+        .download-btn__icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .download-btn__text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .download-btn__label {
+            font-size: 0.75rem;
             color: var(--text-muted);
-            font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-top: var(--space-xs);
+        }
+
+        .download-btn__store {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Google Play Icon */
+        .google-play-icon {
+            background: linear-gradient(45deg, #34a853, #4285f4, #ea4335, #fbbc05);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 24px;
+        }
+
+        /* App Store Icon */
+        .app-store-icon {
+            background: linear-gradient(45deg, #007aff, #5856d6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 24px;
         }
 
         .hero__trust {
@@ -804,7 +867,7 @@
                 height: 600px;
             }
 
-            .hero__stats {
+            .hero__download {
                 justify-content: center;
             }
         }
@@ -874,9 +937,9 @@
                 font-size: 1.1rem;
             }
 
-            .hero__stats {
-                flex-wrap: wrap;
-                gap: var(--space-lg);
+            .hero__download {
+                flex-direction: column;
+                gap: var(--space-md);
             }
 
             .hero__video {
@@ -911,9 +974,9 @@
                 height: 440px;
             }
 
-            .hero__stats {
-                flex-direction: column;
-                gap: var(--space-md);
+            .download-btn {
+                min-width: 140px;
+                padding: var(--space-sm) var(--space-md);
             }
         }
 
@@ -1006,19 +1069,25 @@
                             </div>
                         </a>
                         
-                        <div class="hero__stats">
-                            <div class="hero__stat">
-                                <div class="hero__stat-value">15K+</div>
-                                <div class="hero__stat-label">Drivers</div>
-                            </div>
-                            <div class="hero__stat">
-                                <div class="hero__stat-value">$2.5M</div>
-                                <div class="hero__stat-label">Extra Earned</div>
-                            </div>
-                            <div class="hero__stat">
-                                <div class="hero__stat-value">4.9★</div>
-                                <div class="hero__stat-label">Rating</div>
-                            </div>
+                        <div class="hero__download">
+                            <a href="#" class="download-btn">
+                                <div class="download-btn__icon">
+                                    <div class="google-play-icon">📱</div>
+                                </div>
+                                <div class="download-btn__text">
+                                    <div class="download-btn__label">Descargar para Android</div>
+                                    <div class="download-btn__store">Google Play</div>
+                                </div>
+                            </a>
+                            <a href="#" class="download-btn">
+                                <div class="download-btn__icon">
+                                    <div class="app-store-icon">📱</div>
+                                </div>
+                                <div class="download-btn__text">
+                                    <div class="download-btn__label">Descargar para iOS</div>
+                                    <div class="download-btn__store">App Store</div>
+                                </div>
+                            </a>
                         </div>
                         
                         <div class="hero__trust">
