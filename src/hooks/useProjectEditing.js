@@ -26,6 +26,7 @@ export function useProjectEditing() {
 
   const lastSyncRef = useRef(null);
   const isLoadingRef = useRef(false);
+  const initializationRef = useRef(false);
 
   // Sincronizar datos SCAT con el contexto de edición
   const syncScatData = useCallback(async () => {
@@ -55,46 +56,46 @@ export function useProjectEditing() {
     }
   }, [isEditing, projectId, getCompleteSummary, updateProjectData]);
 
-  // Iniciar edición de un proyecto
+  // Iniciar edición de un proyecto - CORREGIDO
   const startProjectEditing = useCallback(async (project) => {
+    if (initializationRef.current) {
+      console.log('Ya se está inicializando, saltando...');
+      return true;
+    }
+
     try {
-      console.log('=== INICIANDO EDICIÓN DE PROYECTO ===');
+      console.log('=== INICIANDO EDICIÓN DE PROYECTO (HOOK) ===');
       console.log('Proyecto a editar:', project);
 
+      initializationRef.current = true;
       isLoadingRef.current = true;
 
-      // Limpiar datos anteriores
-      resetAllData();
-      
-      // Iniciar modo edición en el contexto
-      startEditing(project);
-      
-      // Cargar datos en el contexto SCAT con verificación
-      const loadSuccess = await loadProjectForEditing(project);
-      if (!loadSuccess) {
-        throw new Error('Error cargando datos del proyecto');
+      // Verificar que el proyecto tiene los datos necesarios
+      if (!project || !project.id) {
+        throw new Error('Proyecto inválido o sin ID');
       }
       
-      // Marcar como editando en SCAT context
-      setEditingState(true, project.id);
+      // Iniciar modo edición en el contexto de edición
+      startEditing(project);
       
-      // Pequeña pausa para asegurar que los datos se carguen completamente
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      console.log('=== EDICIÓN INICIADA EXITOSAMENTE ===');
+      console.log('=== EDICIÓN INICIADA EXITOSAMENTE (HOOK) ===');
       return true;
     } catch (error) {
-      console.error('Error iniciando edición:', error);
+      console.error('Error iniciando edición (hook):', error);
       return false;
     } finally {
       isLoadingRef.current = false;
+      // Reset initialization flag after a delay
+      setTimeout(() => {
+        initializationRef.current = false;
+      }, 1000);
     }
-  }, [resetAllData, startEditing, loadProjectForEditing, setEditingState]);
+  }, [startEditing]);
 
-  // Finalizar edición
+  // Finalizar edición - CORREGIDO
   const finishProjectEditing = useCallback(async (saveChanges = true) => {
     try {
-      console.log('=== FINALIZANDO EDICIÓN ===');
+      console.log('=== FINALIZANDO EDICIÓN (HOOK) ===');
       
       if (saveChanges && hasUnsavedChanges()) {
         // Sincronizar datos finales
@@ -109,16 +110,19 @@ export function useProjectEditing() {
       
       // Limpiar contextos
       stopEditing();
-      resetAllData();
       setEditingState(false, null);
       
-      console.log('Edición finalizada exitosamente');
+      // Reset refs
+      lastSyncRef.current = null;
+      initializationRef.current = false;
+      
+      console.log('Edición finalizada exitosamente (hook)');
       return true;
     } catch (error) {
-      console.error('Error finalizando edición:', error);
+      console.error('Error finalizando edición (hook):', error);
       return false;
     }
-  }, [hasUnsavedChanges, syncScatData, saveProject, stopEditing, resetAllData, setEditingState]);
+  }, [hasUnsavedChanges, syncScatData, saveProject, stopEditing, setEditingState]);
 
   // Guardar progreso actual
   const saveProgress = useCallback(async (silent = false) => {
@@ -138,8 +142,8 @@ export function useProjectEditing() {
 
   // Auto-sincronización periódica (reducida para evitar conflictos)
   useEffect(() => {
-    if (isEditing && status !== EDITING_STATES.SAVING && !isLoadingRef.current) {
-      const interval = setInterval(syncScatData, 10000); // Cada 10 segundos
+    if (isEditing && status !== EDITING_STATES.SAVING && !isLoadingRef.current && !initializationRef.current) {
+      const interval = setInterval(syncScatData, 15000); // Cada 15 segundos
       return () => clearInterval(interval);
     }
   }, [isEditing, status, syncScatData, EDITING_STATES.SAVING]);
