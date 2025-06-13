@@ -31,7 +31,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== VARIABLES MINIMALISTAS ===== */
+        /* ===== VARIABLES FUTURISTAS AVANZADAS ===== */
         :root {
             /* Colores principales */
             --primary-bg: #0a0d14;
@@ -47,6 +47,13 @@
             --starflex-purple: #8b5cf6;
             --starflex-cyan: #06ffa5;
             
+            /* NUEVO: Colores rojizos futuristas basados en 0xFFb8002e */
+            --starflex-crimson: #b8002e;
+            --starflex-crimson-light: #d4003a;
+            --starflex-crimson-dark: #9c0025;
+            --starflex-crimson-glow: #ff1744;
+            --starflex-crimson-bright: #ff4569;
+            
             /* Textos */
             --text-primary: #ffffff;
             --text-secondary: #e2e8f0;
@@ -60,10 +67,21 @@
             --glow-subtle: 0 0 20px rgba(0, 212, 255, 0.15);
             --glow-medium: 0 0 30px rgba(0, 212, 255, 0.25);
             
+            /* NUEVO: Efectos neón rojizos */
+            --neon-crimson: 0 0 25px rgba(184, 0, 46, 0.6);
+            --neon-crimson-strong: 0 0 50px rgba(184, 0, 46, 0.8);
+            --neon-crimson-ultra: 0 0 80px rgba(255, 23, 68, 0.9);
+            --neon-crimson-pulse: 0 0 35px rgba(255, 69, 105, 0.7);
+            
             /* Sombras suaves */
             --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
             --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.2);
             --shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.25);
+            
+            /* NUEVO: Sombras rojizas */
+            --shadow-crimson: 0 15px 40px rgba(184, 0, 46, 0.4);
+            --shadow-crimson-hover: 0 25px 60px rgba(184, 0, 46, 0.6);
+            --shadow-crimson-ultra: 0 30px 80px rgba(255, 23, 68, 0.5);
             
             /* Tipografía */
             --font-primary: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -270,20 +288,161 @@
             box-shadow: var(--shadow-md);
         }
 
+        /* ===== BOTÓN CTA PRINCIPAL ROJIZO FUTURISTA ===== */
         .btn--cta {
             padding: var(--space-lg) var(--space-2xl);
             font-size: 1.1rem;
             font-weight: 700;
-            border-radius: 16px;
-            background: linear-gradient(135deg, var(--starflex-blue) 0%, var(--starflex-cyan) 100%);
-            box-shadow: var(--shadow-md);
+            border-radius: 20px;
             min-width: 240px;
             position: relative;
+            overflow: hidden;
+            
+            /* Gradiente rojizo futurista principal */
+            background: linear-gradient(135deg, 
+                var(--starflex-crimson-dark) 0%, 
+                var(--starflex-crimson) 25%, 
+                var(--starflex-crimson-light) 50%, 
+                var(--starflex-crimson-glow) 75%, 
+                var(--starflex-crimson-bright) 100%
+            );
+            
+            /* Sombras y efectos neón rojizos */
+            box-shadow: 
+                var(--shadow-crimson),
+                var(--neon-crimson),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            
+            /* Borde con glassmorphism */
+            border: 2px solid rgba(255, 69, 105, 0.3);
+            
+            /* Color del texto */
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            
+            /* Transición suave */
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            
+            /* Optimización GPU */
+            will-change: transform, box-shadow;
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
 
+        /* Efecto de resplandor interno animado */
+        .btn--cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.3), 
+                transparent
+            );
+            transition: left 0.6s ease;
+            z-index: 1;
+        }
+
+        /* Efecto de pulso neón */
+        .btn--cta::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, 
+                var(--starflex-crimson-glow), 
+                var(--starflex-crimson-bright), 
+                var(--starflex-crimson-glow)
+            );
+            border-radius: 22px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            animation: crimson-pulse 3s ease-in-out infinite;
+        }
+
+        /* Estados de hover */
         .btn--cta:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px) scale(1.05);
+            
+            /* Sombras intensificadas */
+            box-shadow: 
+                var(--shadow-crimson-hover),
+                var(--neon-crimson-strong),
+                var(--neon-crimson-ultra),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            
+            /* Borde más brillante */
+            border-color: rgba(255, 69, 105, 0.6);
+            
+            /* Texto más brillante */
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            
+            /* Animación de flotación sutil */
+            animation: subtle-float 3s ease-in-out infinite;
+        }
+
+        .btn--cta:hover::before {
+            left: 100%;
+        }
+
+        .btn--cta:hover::after {
+            opacity: 1;
+        }
+
+        /* Estado activo/pressed */
+        .btn--cta:active {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 
+                var(--shadow-crimson),
+                var(--neon-crimson-pulse),
+                inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Efecto de focus para accesibilidad */
+        .btn--cta:focus {
+            outline: none;
+            box-shadow: 
+                var(--shadow-crimson-hover),
+                var(--neon-crimson-strong),
+                0 0 0 3px rgba(184, 0, 46, 0.3);
+        }
+
+        /* Texto del botón con efecto futurista */
+        .btn--cta .hero__cta-main span {
+            background: linear-gradient(135deg, 
+                #ffffff 0%, 
+                #ffebee 50%, 
+                #ffffff 100%
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn--cta .hero__cta-main small {
+            color: rgba(255, 255, 255, 0.9);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            text-shadow: 0 0 8px rgba(255, 69, 105, 0.6);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Efecto de brillo en el texto durante hover */
+        .btn--cta:hover .hero__cta-main span {
+            animation: text-glow-crimson 2s ease-in-out infinite;
         }
 
         /* ===== HERO SECTION ===== */
@@ -425,6 +584,8 @@
             flex-direction: column;
             align-items: center;
             gap: var(--space-xs);
+            position: relative;
+            z-index: 2;
         }
 
         .hero__cta-main small {
@@ -1377,6 +1538,40 @@
             }
         }
 
+        /* ===== ANIMACIONES ESPECÍFICAS DEL BOTÓN CTA ROJIZO ===== */
+        @keyframes crimson-pulse {
+            0%, 
+100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.02);
+            }
+        }
+
+        @keyframes text-glow-crimson {
+            0%, 100% {
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                text-shadow: 
+                    0 0 15px rgba(255, 255, 255, 0.8),
+                    0 0 25px rgba(255, 69, 105, 0.6),
+                    0 0 35px rgba(184, 0, 46, 0.4);
+            }
+        }
+
+        @keyframes subtle-float {
+            0%, 100% {
+                transform: translateY(-4px) scale(1.05);
+            }
+            50% {
+                transform: translateY(-6px) scale(1.05);
+            }
+        }
+
         /* ===== RESPONSIVE OPTIMIZADO ===== */
         @media (max-width: 1024px) {
             .hero__container {
@@ -1416,6 +1611,13 @@
             .faq__container {
                 max-width: 100%;
                 padding: 0 var(--space-lg);
+            }
+
+            /* Ajustes del botón CTA para tablet */
+            .btn--cta {
+                min-width: 220px;
+                padding: var(--space-md) var(--space-xl);
+                font-size: 1rem;
             }
         }
 
@@ -1498,10 +1700,21 @@
                 height: 560px;
             }
 
+            /* Ajustes del botón CTA para móvil */
             .btn--cta {
-                min-width: 220px;
-                padding: var(--space-md) var(--space-xl);
-                font-size: 1rem;
+                min-width: 200px;
+                padding: var(--space-md) var(--space-lg);
+                font-size: 0.95rem;
+                border-radius: 16px;
+            }
+
+            .btn--cta .hero__cta-main span {
+                font-size: 0.95rem;
+            }
+
+            .btn--cta .hero__cta-main small {
+                font-size: 0.75rem;
+                letter-spacing: 1.5px;
             }
 
             .download-btn__image {
@@ -1561,10 +1774,22 @@
                 font-size: 1rem;
             }
 
+            /* Ajustes del botón CTA para móviles pequeños */
             .btn--cta {
-                min-width: 200px;
-                padding: var(--space-sm) var(--space-lg);
-                font-size: 0.95rem;
+                min-width: 180px;
+                padding: var(--space-sm) var(--space-md);
+                font-size: 0.9rem;
+                border-radius: 14px;
+            }
+
+            .btn--cta .hero__cta-main span {
+                font-size: 0.9rem;
+                letter-spacing: 0.5px;
+            }
+
+            .btn--cta .hero__cta-main small {
+                font-size: 0.7rem;
+                letter-spacing: 1px;
             }
 
             .hero__video {
@@ -1638,6 +1863,13 @@
             will-change: transform;
         }
 
+        /* Optimización específica para el botón CTA */
+        .btn--cta {
+            will-change: transform, box-shadow;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
         /* ===== ACCESIBILIDAD ===== */
         @media (prefers-reduced-motion: reduce) {
             *,
@@ -1646,6 +1878,15 @@
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
+            }
+
+            /* Deshabilitar animaciones específicas del botón CTA */
+            .btn--cta::after {
+                animation: none !important;
+            }
+
+            .btn--cta:hover {
+                animation: none !important;
             }
         }
 
@@ -1656,6 +1897,140 @@
             outline: 2px solid var(--starflex-blue);
             outline-offset: 2px;
             border-radius: 4px;
+        }
+
+        /* Focus específico para el botón CTA rojizo */
+        .btn--cta:focus {
+            outline: 2px solid var(--starflex-crimson-bright);
+            outline-offset: 3px;
+        }
+
+        /* ===== EFECTOS ADICIONALES PARA EL BOTÓN CTA ===== */
+
+        /* Efecto de ondas al hacer clic */
+        .btn--cta:active::before {
+            animation: ripple-crimson 0.6s ease-out;
+        }
+
+        @keyframes ripple-crimson {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Efecto de partículas flotantes en el botón */
+        .btn--cta:hover::before {
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.4), 
+                rgba(255, 69, 105, 0.3),
+                rgba(255, 255, 255, 0.4),
+                transparent
+            );
+        }
+
+        /* Estados de carga para el botón CTA */
+        .btn--cta.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .btn--cta.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            z-index: 3;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Efecto de éxito */
+        .btn--cta.success {
+            background: linear-gradient(135deg, 
+                #4caf50 0%, 
+                #66bb6a 50%, 
+                #81c784 100%
+            );
+            box-shadow: 
+                0 15px 40px rgba(76, 175, 80, 0.4),
+                0 0 25px rgba(76, 175, 80, 0.6);
+        }
+
+        .btn--cta.success::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            color: white;
+            z-index: 3;
+            animation: success-bounce 0.6s ease-out;
+        }
+
+        @keyframes success-bounce {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        /* Micro-interacciones adicionales */
+        .hero__cta-group:hover .btn--cta {
+            transform: translateY(-4px) scale(1.05);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Compatibilidad con navegadores antiguos */
+        @supports not (backdrop-filter: blur(15px)) {
+            .btn--cta {
+                background: rgba(184, 0, 46, 0.95);
+            }
+        }
+
+        /* Optimización para dispositivos táctiles */
+        @media (hover: none) and (pointer: coarse) {
+            .btn--cta:hover {
+                transform: none;
+                animation: none;
+            }
+            
+            .btn--cta:active {
+                transform: scale(0.98);
+                transition: transform 0.1s ease;
+            }
+        }
+
+        /* ===== SELECCIÓN DE TEXTO ===== */
+        ::selection {
+            background: var(--starflex-crimson);
+            color: var(--text-primary);
+        }
+
+        ::-moz-selection {
+            background: var(--starflex-crimson);
+            color: var(--text-primary);
         }
     </style>
 </head>
@@ -2024,7 +2399,7 @@
                                             </div>
                                             <div class="config-option">
                                                 <span class="config-label">Filtros personalizados</span>
-                                                                                  <div class="config-toggle"></div>
+                                                <div class="config-toggle"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -2342,9 +2717,6 @@
                     item.classList.add('active');
                     answer.classList.add('active');
                     question.setAttribute('aria-expanded', 'true');
-                    
-                    // ELIMINADO: El scroll automático que causaba el problema
-                    // No hay scroll automático, se mantiene en la posición actual
                 }
             }
 
@@ -2446,9 +2818,8 @@
             new VideoOptimizer();
             new FeatureAnimations();
             
-            console.log('🚀 Starflex Minimalista initialized');
+            console.log('🚀 Starflex con Botón CTA Rojizo Futurista initialized');
         });
     </script>
 </body>
 </html>
-              
