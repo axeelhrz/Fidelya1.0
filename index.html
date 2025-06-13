@@ -31,13 +31,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== VARIABLES FUTURISTAS ===== */
+        /* ===== VARIABLES MINIMALISTAS ===== */
         :root {
             /* Colores principales */
             --primary-bg: #0a0d14;
             --secondary-bg: #151922;
             --accent-bg: #1e2330;
-            --glass-bg: rgba(21, 25, 34, 0.8);
+            --glass-bg: rgba(21, 25, 34, 0.6);
             
             /* Colores de marca Starflex */
             --starflex-blue: #00d4ff;
@@ -53,20 +53,19 @@
             --text-muted: #94a3b8;
             --text-accent: #00d4ff;
             
-            /* Efectos */
-            --border-subtle: rgba(255, 255, 255, 0.08);
-            --border-accent: rgba(0, 212, 255, 0.3);
-            --glass-border: rgba(255, 255, 255, 0.12);
-            --neon-glow: 0 0 20px rgba(0, 212, 255, 0.4);
-            --neon-glow-strong: 0 0 40px rgba(0, 212, 255, 0.6);
+            /* Efectos minimalistas */
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(0, 212, 255, 0.2);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glow-subtle: 0 0 20px rgba(0, 212, 255, 0.15);
+            --glow-medium: 0 0 30px rgba(0, 212, 255, 0.25);
             
-            /* Sombras futuristas */
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.3);
-            --shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.4);
-            --shadow-glow: 0 0 30px rgba(0, 212, 255, 0.3);
+            /* Sombras suaves */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.25);
             
-            /* Tipografía futurista */
+            /* Tipografía */
             --font-primary: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
             --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
             
@@ -80,8 +79,8 @@
             --space-3xl: 3rem;
             
             /* Transiciones suaves */
-            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --transition-fast: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         /* ===== RESET MEJORADO ===== */
@@ -107,7 +106,7 @@
             position: relative;
         }
 
-        /* ===== EFECTOS DE FONDO FUTURISTAS ===== */
+        /* ===== FONDO MINIMALISTA ===== */
         .bg-canvas {
             position: fixed;
             top: 0;
@@ -127,43 +126,28 @@
             width: 200%;
             height: 200%;
             background: 
-                radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(6, 255, 165, 0.04) 0%, transparent 50%);
-            animation: aurora 30s ease-in-out infinite;
+                radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.02) 0%, transparent 50%);
+            animation: aurora-gentle 60s ease-in-out infinite;
         }
 
-        .bg-canvas::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(45deg, transparent 24%, rgba(0, 212, 255, 0.02) 25%, rgba(0, 212, 255, 0.02) 26%, transparent 27%);
-            background-size: 80px 80px;
-            opacity: 0.3;
-            animation: grid-flow 60s linear infinite;
-        }
-
-        /* ===== HEADER FUTURISTA ===== */
+        /* ===== HEADER MINIMALISTA ===== */
         .header {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            background: rgba(10, 13, 20, 0.9);
-            backdrop-filter: blur(25px);
+            background: rgba(10, 13, 20, 0.8);
+            backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-subtle);
             z-index: 1000;
             transition: all var(--transition);
         }
 
         .header.scrolled {
-            background: rgba(10, 13, 20, 0.95);
+            background: rgba(10, 13, 20, 0.9);
             border-bottom-color: var(--border-accent);
-            box-shadow: var(--shadow-md), var(--neon-glow);
+            box-shadow: var(--shadow-md);
         }
 
         .nav {
@@ -191,53 +175,21 @@
             border-radius: 12px;
             position: relative;
             transition: all var(--transition);
-            filter: drop-shadow(0 0 15px rgba(0, 212, 255, 0.4));
-        }
-
-        .nav__logo::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, var(--starflex-blue), var(--starflex-purple), var(--starflex-cyan));
-            border-radius: 14px;
-            z-index: -1;
-            opacity: 0;
-            transition: opacity var(--transition);
-        }
-
-        .nav__logo:hover::before {
-            opacity: 1;
         }
 
         .nav__logo:hover {
             transform: scale(1.05);
-            filter: drop-shadow(0 0 25px rgba(0, 212, 255, 0.6));
+            filter: drop-shadow(var(--glow-subtle));
         }
 
         .nav__title {
             font-size: 1.75rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-blue) 50%, var(--starflex-cyan) 100%);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-blue) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             letter-spacing: -0.02em;
-            position: relative;
-        }
-
-        .nav__title::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, var(--starflex-blue), var(--starflex-cyan));
-            opacity: 0.6;
-            border-radius: 1px;
         }
 
         .nav__menu {
@@ -264,45 +216,27 @@
             border-radius: 8px;
         }
 
-        .nav__link::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(139, 92, 246, 0.1));
-            border-radius: 8px;
-            opacity: 0;
-            transition: opacity var(--transition);
-        }
-
         .nav__link::after {
             content: '';
             position: absolute;
             bottom: 0;
             left: 50%;
             width: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--starflex-blue), var(--starflex-cyan));
+            height: 1px;
+            background: var(--starflex-blue);
             transition: all var(--transition);
             transform: translateX(-50%);
         }
 
         .nav__link:hover {
             color: var(--text-primary);
-            transform: translateY(-1px);
-        }
-
-        .nav__link:hover::before {
-            opacity: 1;
         }
 
         .nav__link:hover::after {
             width: 80%;
         }
 
-        /* ===== BOTONES FUTURISTAS ===== */
+        /* ===== BOTONES MINIMALISTAS ===== */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -327,80 +261,39 @@
         .btn--primary {
             background: linear-gradient(135deg, var(--starflex-blue) 0%, var(--starflex-purple) 100%);
             color: white;
-            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+            box-shadow: var(--shadow-sm);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .btn--primary::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
         .btn--primary:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 12px 35px rgba(0, 212, 255, 0.4), var(--neon-glow);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
-        .btn--primary:hover::before {
-            left: 100%;
-        }
-
-        /* Botón CTA principal mejorado */
         .btn--cta {
             padding: var(--space-lg) var(--space-2xl);
             font-size: 1.1rem;
             font-weight: 700;
             border-radius: 16px;
-            background: linear-gradient(135deg, var(--starflex-blue) 0%, var(--starflex-orange) 50%, var(--starflex-cyan) 100%);
-            box-shadow: 
-                0 10px 30px rgba(0, 212, 255, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, var(--starflex-blue) 0%, var(--starflex-cyan) 100%);
+            box-shadow: var(--shadow-md);
             min-width: 240px;
             position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .btn--cta::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
-            opacity: 0;
-            transition: opacity var(--transition);
-            border-radius: 16px;
         }
 
         .btn--cta:hover {
-            transform: translateY(-3px) scale(1.03);
-            box-shadow: 
-                0 15px 40px rgba(0, 212, 255, 0.5),
-                var(--neon-glow-strong);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
         }
 
-        .btn--cta:hover::after {
-            opacity: 1;
-        }
-
-        /* ===== HERO SECTION FUTURISTA ===== */
+        /* ===== HERO SECTION ===== */
         .hero {
             min-height: 100vh;
             display: flex;
             align-items: center;
             position: relative;
             z-index: 1;
-            background: 
-                radial-gradient(ellipse at top left, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
-                radial-gradient(ellipse at bottom right, rgba(139, 92, 246, 0.03) 0%, transparent 50%),
-                linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
             overflow: hidden;
         }
 
@@ -445,26 +338,13 @@
 
         .hero__badge::before {
             content: '';
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: var(--starflex-blue);
             border-radius: 50%;
-            animation: pulse 2s infinite;
-            box-shadow: 0 0 10px var(--starflex-blue);
+            animation: pulse-gentle 3s infinite;
         }
 
-        .hero__badge::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
-            animation: shimmer 3s infinite;
-        }
-
-        /* ===== TIPOGRAFÍA HERO FUTURISTA ===== */
         .hero__title {
             font-size: clamp(3rem, 8vw, 6rem);
             font-weight: 800;
@@ -490,20 +370,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             position: relative;
-            text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
             margin-bottom: var(--space-sm);
-        }
-
-        .hero__title--highlight::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--starflex-blue), var(--starflex-cyan));
-            border-radius: 2px;
-            opacity: 0.6;
         }
 
         .hero__title--amazon {
@@ -517,23 +384,6 @@
             font-weight: 700;
         }
 
-        .hero__title--amazon::before {
-            content: '<';
-            color: var(--starflex-blue);
-            font-family: var(--font-mono);
-            margin-right: var(--space-xs);
-            opacity: 0.7;
-        }
-
-        .hero__title--amazon::after {
-            content: '/>';
-            color: var(--starflex-blue);
-            font-family: var(--font-mono);
-            margin-left: var(--space-xs);
-            opacity: 0.7;
-        }
-
-        /* ===== DESCRIPCIÓN DE LA EMPRESA SIN EMOJI ===== */
         .hero__company-description {
             font-size: 1.1rem;
             color: var(--text-secondary);
@@ -547,23 +397,10 @@
             backdrop-filter: blur(10px);
             border: 1px solid var(--border-subtle);
             border-radius: 16px;
-            border-left: 4px solid var(--starflex-blue);
-        }
-
-        .hero__company-description::before {
-            content: '';
-            position: absolute;
-            top: var(--space-md);
-            left: var(--space-md);
-            width: 12px;
-            height: 12px;
-            background: var(--starflex-blue);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--starflex-blue);
+            border-left: 3px solid var(--starflex-blue);
         }
 
         .hero__company-description-text {
-            margin-left: var(--space-xl);
             font-style: italic;
         }
 
@@ -574,15 +411,6 @@
             line-height: 1.6;
             max-width: 600px;
             font-weight: 400;
-            position: relative;
-        }
-
-        .hero__subtitle::before {
-            content: '//';
-            color: var(--starflex-blue);
-            font-family: var(--font-mono);
-            margin-right: var(--space-sm);
-            opacity: 0.6;
         }
 
         .hero__cta-group {
@@ -608,7 +436,6 @@
             letter-spacing: 1px;
         }
 
-        /* ===== DOWNLOAD BUTTONS CON TAMAÑOS IGUALES ===== */
         .hero__download {
             display: flex;
             gap: var(--space-lg);
@@ -626,48 +453,22 @@
             text-decoration: none;
         }
 
-        .download-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(139, 92, 246, 0.1));
-            opacity: 0;
-            transition: opacity var(--transition);
-            border-radius: 12px;
-            z-index: 1;
-        }
-
         .download-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            filter: drop-shadow(0 10px 25px rgba(0, 212, 255, 0.3));
-        }
-
-        .download-btn:hover::before {
-            opacity: 1;
+            transform: translateY(-2px);
+            filter: brightness(1.1);
         }
 
         .download-btn__image {
             height: 60px;
             width: auto;
             display: block;
-            position: relative;
-            z-index: 2;
             transition: all var(--transition);
         }
 
-        /* Tamaño específico para App Store para igualar con Google Play */
         .download-btn--app-store .download-btn__image {
             height: 60px;
             width: auto;
-            /* Forzar el mismo tamaño visual que Google Play */
             min-width: 180px;
-        }
-
-        .download-btn:hover .download-btn__image {
-            filter: brightness(1.1) saturate(1.2);
         }
 
         .hero__trust {
@@ -681,16 +482,14 @@
 
         .hero__trust::before {
             content: '';
-            width: 12px;
-            height: 12px;
+            width: 8px;
+            height: 8px;
             background: var(--starflex-cyan);
             border-radius: 50%;
-            box-shadow: 0 0 10px rgba(6, 255, 165, 0.5);
             display: inline-block;
             margin-right: var(--space-xs);
         }
 
-        /* ===== VIDEO FUTURISTA CON MEJOR RESOLUCIÓN ===== */
         .hero__media {
             display: flex;
             justify-content: center;
@@ -701,31 +500,15 @@
 
         .hero__video-container {
             position: relative;
-            transform: perspective(1000px) rotateY(-8deg) rotateX(2deg);
+            transform: perspective(1000px) rotateY(-5deg) rotateX(1deg);
             transition: transform var(--transition);
             border-radius: 35px;
             overflow: hidden;
-            box-shadow: 
-                0 25px 50px rgba(0, 0, 0, 0.4),
-                0 0 0 1px rgba(255, 255, 255, 0.1),
-                0 0 80px rgba(0, 212, 255, 0.2);
-        }
-
-        .hero__video-container::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, var(--starflex-blue), var(--starflex-purple), var(--starflex-cyan));
-            border-radius: 37px;
-            z-index: -1;
-            opacity: 0.6;
+            box-shadow: var(--shadow-lg);
         }
 
         .hero__video-container:hover {
-            transform: perspective(1000px) rotateY(-4deg) rotateX(1deg) scale(1.02);
+            transform: perspective(1000px) rotateY(-2deg) rotateX(0deg);
         }
 
         .hero__video {
@@ -734,52 +517,20 @@
             object-fit: cover;
             border-radius: 35px;
             display: block;
-            /* Mejorar la calidad del video */
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
         }
 
-        .hero__video-glow {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(0, 212, 255, 0.15) 0%, transparent 70%);
-            transform: translate(-50%, -50%);
-            animation: video-glow 6s ease-in-out infinite;
-            z-index: -1;
-        }
-
-        /* ===== SECCIÓN CARACTERÍSTICAS FUTURISTA ===== */
+        /* ===== SECCIÓN CARACTERÍSTICAS ===== */
         .features {
             padding: var(--space-3xl) 0;
             position: relative;
-            background: 
-                radial-gradient(ellipse at center, rgba(139, 92, 246, 0.03) 0%, transparent 50%),
-                linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
-            overflow: hidden;
-        }
-
-        .features::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                linear-gradient(90deg, transparent 24%, rgba(0, 212, 255, 0.01) 25%, rgba(0, 212, 255, 0.01) 26%, transparent 27%);
-            background-size: 120px 120px;
-            opacity: 0.2;
-            animation: grid-flow-slow 80s linear infinite;
+            background: linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
         }
 
         .features__header {
             text-align: center;
             margin-bottom: var(--space-3xl);
             opacity: 0;
-            transform: translateY(50px);
+            transform: translateY(30px);
             animation: fadeInUp 1s ease-out 0.2s forwards;
         }
 
@@ -787,7 +538,7 @@
             font-size: clamp(2.5rem, 5vw, 4rem);
             font-weight: 800;
             margin-bottom: var(--space-lg);
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-blue) 50%, var(--starflex-cyan) 100%);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-blue) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -813,7 +564,7 @@
             gap: var(--space-3xl);
             align-items: center;
             opacity: 0;
-            transform: translateY(80px);
+            transform: translateY(50px);
         }
 
         .feature.in-view {
@@ -866,26 +617,25 @@
 
         .feature__list-item::before {
             content: '';
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: var(--starflex-cyan);
             border-radius: 50%;
-            box-shadow: 0 0 10px rgba(6, 255, 165, 0.5);
             flex-shrink: 0;
         }
 
-        /* ===== CELULARES CSS PUROS ===== */
+        /* ===== CELULARES MINIMALISTAS ===== */
         .feature__phone {
             position: relative;
             width: 300px;
             height: 600px;
             margin: 0 auto;
-            transform: perspective(1000px) rotateY(5deg) rotateX(-2deg);
+            transform: perspective(1000px) rotateY(3deg) rotateX(-1deg);
             transition: transform var(--transition);
         }
 
         .feature__phone:hover {
-            transform: perspective(1000px) rotateY(2deg) rotateX(-1deg) scale(1.02);
+            transform: perspective(1000px) rotateY(1deg) rotateX(0deg);
         }
 
         .phone {
@@ -894,25 +644,10 @@
             background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
             border-radius: 35px;
             padding: 20px;
-            box-shadow: 
-                0 20px 40px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                0 0 0 1px rgba(255, 255, 255, 0.05);
+            box-shadow: var(--shadow-lg);
             position: relative;
             overflow: hidden;
-        }
-
-        .phone::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, var(--starflex-blue), var(--starflex-purple), var(--starflex-cyan));
-            border-radius: 37px;
-            z-index: -1;
-            opacity: 0.3;
+            border: 1px solid var(--border-subtle);
         }
 
         .phone__screen {
@@ -959,8 +694,6 @@
         }
 
         /* ===== PANTALLAS ESPECÍFICAS ===== */
-        
-        /* Pantalla de Horarios */
         .schedule-screen {
             background: linear-gradient(180deg, #0a0d14 0%, #151922 100%);
         }
@@ -1013,7 +746,6 @@
             font-family: var(--font-mono);
         }
 
-        /* Pantalla de Calendario */
         .calendar-screen {
             background: linear-gradient(180deg, #0a0d14 0%, #151922 100%);
         }
@@ -1080,7 +812,6 @@
             border-radius: 5px;
         }
 
-        /* Pantalla de Registro */
         .log-screen {
             background: linear-gradient(180deg, #0a0d14 0%, #151922 100%);
         }
@@ -1147,7 +878,6 @@
             color: var(--starflex-orange);
         }
 
-        /* Pantalla de Configuración */
         .config-screen {
             background: linear-gradient(180deg, #0a0d14 0%, #151922 100%);
         }
@@ -1227,14 +957,11 @@
             border-radius: 50%;
         }
 
-        /* ===== FAQ SECTION FUTURISTA ESPECTACULAR ===== */
+        /* ===== FAQ SECTION MINIMALISTA ===== */
         .faq {
             padding: var(--space-3xl) 0;
             position: relative;
-            background: 
-                radial-gradient(ellipse at top center, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
-                radial-gradient(ellipse at bottom left, rgba(0, 212, 255, 0.03) 0%, transparent 50%),
-                linear-gradient(180deg, var(--secondary-bg) 0%, var(--primary-bg) 100%);
+            background: linear-gradient(180deg, var(--secondary-bg) 0%, var(--primary-bg) 100%);
             overflow: hidden;
         }
 
@@ -1245,12 +972,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: 
-                radial-gradient(2px 2px at 40px 60px, rgba(0, 212, 255, 0.1), transparent),
-                radial-gradient(1px 1px at 80px 120px, rgba(139, 92, 246, 0.08), transparent);
-            background-size: 160px 160px;
-            opacity: 0.3;
-            animation: particle-drift 40s linear infinite;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.02) 0%, transparent 50%);
+            animation: breathe 8s ease-in-out infinite;
         }
 
         .faq__header {
@@ -1261,10 +984,10 @@
         }
 
         .faq__title {
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
-            font-weight: 800;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
             margin-bottom: var(--space-lg);
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-purple) 40%, var(--starflex-cyan) 100%);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-blue) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -1272,43 +995,30 @@
             position: relative;
         }
 
-        .faq__title::after {
-            content: '';
-            position: absolute;
-            bottom: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120px;
-            height: 4px;
-            background: linear-gradient(90deg, var(--starflex-purple), var(--starflex-cyan));
-            border-radius: 2px;
-            opacity: 0.8;
-        }
-
         .faq__subtitle {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             color: var(--text-secondary);
-            max-width: 700px;
+            max-width: 600px;
             margin: 0 auto var(--space-2xl);
             line-height: 1.6;
             font-weight: 400;
         }
 
-        /* ===== BARRA DE BÚSQUEDA FUTURISTA ===== */
+        /* ===== BARRA DE BÚSQUEDA MINIMALISTA ===== */
         .faq__search-container {
-            max-width: 600px;
-            margin: 0 auto var(--space-3xl);
+            max-width: 500px;
+            margin: 0 auto var(--space-2xl);
             position: relative;
         }
 
         .faq__search {
             width: 100%;
-            padding: var(--space-lg) var(--space-xl) var(--space-lg) 60px;
+            padding: var(--space-md) var(--space-lg) var(--space-md) 50px;
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 2px solid var(--border-subtle);
-            border-radius: 25px;
-            font-size: 1.1rem;
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            font-size: 1rem;
             color: var(--text-primary);
             font-family: var(--font-primary);
             transition: all var(--transition);
@@ -1322,95 +1032,37 @@
 
         .faq__search:focus {
             border-color: var(--starflex-blue);
-            box-shadow: 
-                0 0 0 4px rgba(0, 212, 255, 0.1),
-                0 8px 32px rgba(0, 212, 255, 0.2);
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
         }
 
         .faq__search-icon {
             position: absolute;
-            left: 20px;
+            left: 18px;
             top: 50%;
             transform: translateY(-50%);
-            width: 24px;
-            height: 24px;
+            width: 18px;
+            height: 18px;
             background: var(--starflex-blue);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 10px;
             transition: all var(--transition);
         }
 
         .faq__search-icon::before {
-            content: '🔍';
-            font-size: 14px;
+            content: '⌕';
+            color: white;
         }
 
         .faq__search:focus + .faq__search-icon {
             background: var(--starflex-cyan);
-            box-shadow: 0 0 15px rgba(6, 255, 165, 0.5);
-        }
-
-        /* ===== FILTROS DE CATEGORÍAS ===== */
-        .faq__filters {
-            display: flex;
-            justify-content: center;
-            gap: var(--space-md);
-            margin-bottom: var(--space-3xl);
-            flex-wrap: wrap;
-        }
-
-        .faq__filter {
-            padding: var(--space-sm) var(--space-lg);
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--border-subtle);
-            border-radius: 20px;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .faq__filter::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .faq__filter:hover {
-            border-color: var(--starflex-blue);
-            color: var(--text-primary);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2);
-        }
-
-        .faq__filter:hover::before {
-            left: 100%;
-        }
-
-        .faq__filter.active {
-            background: linear-gradient(135deg, var(--starflex-blue), var(--starflex-purple));
-            border-color: var(--starflex-blue);
-            color: white;
-            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
         }
 
         /* ===== CONTENEDOR FAQ PRINCIPAL ===== */
         .faq__container {
-            max-width: 1000px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 0 var(--space-xl);
             position: relative;
@@ -1419,76 +1071,53 @@
 
         .faq__list {
             display: grid;
-            gap: var(--space-lg);
+            gap: var(--space-md);
         }
 
-        /* ===== ITEMS FAQ GLASSMORPHISM ===== */
+        /* ===== ITEMS FAQ MINIMALISTAS ===== */
         .faq__item {
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(15px);
             border: 1px solid var(--border-subtle);
-            border-radius: 20px;
+            border-radius: 16px;
             overflow: hidden;
             transition: all var(--transition);
             position: relative;
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(20px);
             animation: fadeInUp 0.6s ease-out forwards;
         }
 
         .faq__item:nth-child(1) { animation-delay: 0.1s; }
-        .faq__item:nth-child(2) { animation-delay: 0.2s; }
-        .faq__item:nth-child(3) { animation-delay: 0.3s; }
-        .faq__item:nth-child(4) { animation-delay: 0.4s; }
-        .faq__item:nth-child(5) { animation-delay: 0.5s; }
-        .faq__item:nth-child(6) { animation-delay: 0.6s; }
-
-        .faq__item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--starflex-blue), var(--starflex-purple), var(--starflex-cyan));
-            opacity: 0;
-            transition: opacity var(--transition);
-        }
+        .faq__item:nth-child(2) { animation-delay: 0.15s; }
+        .faq__item:nth-child(3) { animation-delay: 0.2s; }
+        .faq__item:nth-child(4) { animation-delay: 0.25s; }
+        .faq__item:nth-child(5) { animation-delay: 0.3s; }
+        .faq__item:nth-child(6) { animation-delay: 0.35s; }
+        .faq__item:nth-child(7) { animation-delay: 0.4s; }
+        .faq__item:nth-child(8) { animation-delay: 0.45s; }
 
         .faq__item:hover {
             border-color: var(--border-accent);
-            transform: translateY(-4px);
-            box-shadow: 
-                0 20px 40px rgba(0, 0, 0, 0.3),
-                0 0 0 1px rgba(0, 212, 255, 0.1);
-        }
-
-        .faq__item:hover::before {
-            opacity: 1;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .faq__item.active {
             border-color: var(--starflex-blue);
-            box-shadow: 
-                0 25px 50px rgba(0, 0, 0, 0.4),
-                0 0 0 1px rgba(0, 212, 255, 0.3),
-                0 0 40px rgba(0, 212, 255, 0.2);
-        }
-
-        .faq__item.active::before {
-            opacity: 1;
+            box-shadow: var(--shadow-lg);
         }
 
         /* ===== PREGUNTA FAQ ===== */
         .faq__question {
             width: 100%;
-            padding: var(--space-xl);
+            padding: var(--space-lg);
             background: transparent;
             border: none;
             color: var(--text-primary);
             font-family: var(--font-primary);
-            font-size: 1.2rem;
-            font-weight: 700;
+            font-size: 1.1rem;
+            font-weight: 600;
             text-align: left;
             cursor: pointer;
             display: flex;
@@ -1497,40 +1126,22 @@
             gap: var(--space-lg);
             transition: all var(--transition);
             position: relative;
-            overflow: hidden;
-        }
-
-        .faq__question::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.05), transparent);
-            transition: left 0.6s;
         }
 
         .faq__question:hover {
             color: var(--starflex-blue);
         }
 
-        .faq__question:hover::before {
-            left: 100%;
-        }
-
         .faq__question-text {
             flex: 1;
             line-height: 1.4;
-            position: relative;
-            z-index: 2;
         }
 
-        /* ===== ICONO FAQ ANIMADO ===== */
+        /* ===== ICONO FAQ MINIMALISTA ===== */
         .faq__icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--starflex-blue), var(--starflex-purple));
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--starflex-blue), var(--starflex-cyan));
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -1538,7 +1149,6 @@
             position: relative;
             transition: all var(--transition);
             flex-shrink: 0;
-            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
         }
 
         .faq__icon::before,
@@ -1546,64 +1156,49 @@
             content: '';
             position: absolute;
             background: white;
-            border-radius: 2px;
+            border-radius: 1px;
             transition: all var(--transition);
         }
 
         .faq__icon::before {
-            width: 16px;
+            width: 12px;
             height: 2px;
         }
 
         .faq__icon::after {
             width: 2px;
-            height: 16px;
+            height: 12px;
         }
 
         .faq__item.active .faq__icon {
-            background: linear-gradient(135deg, var(--starflex-cyan), var(--starflex-blue));
-            transform: rotate(180deg);
-            box-shadow: 0 6px 20px rgba(6, 255, 165, 0.4);
+            transform: rotate(45deg);
         }
 
         .faq__item.active .faq__icon::after {
             opacity: 0;
-            transform: rotate(90deg);
         }
 
         /* ===== RESPUESTA FAQ ===== */
         .faq__answer {
             max-height: 0;
             overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            background: rgba(0, 0, 0, 0.2);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            background: rgba(0, 0, 0, 0.1);
         }
 
         .faq__answer.active {
-            max-height: 500px;
-            padding: 0 var(--space-xl) var(--space-xl);
+            max-height: 400px;
+            padding: 0 var(--space-lg) var(--space-lg);
         }
 
         .faq__answer-content {
-            padding-top: var(--space-md);
+            padding-top: var(--space-sm);
             border-top: 1px solid var(--border-subtle);
-            margin-left: var(--space-lg);
             position: relative;
         }
 
-        .faq__answer-content::before {
-            content: '';
-            position: absolute;
-            left: -var(--space-lg);
-            top: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, var(--starflex-blue), var(--starflex-cyan));
-            border-radius: 2px;
-        }
-
         .faq__answer-text {
-            font-size: 1.05rem;
+            font-size: 1rem;
             line-height: 1.7;
             color: var(--text-secondary);
             margin: 0;
@@ -1612,93 +1207,12 @@
         .faq__answer-highlight {
             color: var(--starflex-blue);
             font-weight: 600;
-            background: rgba(0, 212, 255, 0.1);
+            background: rgba(0, 212, 255, 0.08);
             padding: 2px 6px;
             border-radius: 4px;
-            border: 1px solid rgba(0, 212, 255, 0.2);
         }
 
-        /* ===== ESTADÍSTICAS FAQ ===== */
-        .faq__stats {
-            display: flex;
-            justify-content: center;
-            gap: var(--space-2xl);
-            margin-top: var(--space-3xl);
-            padding: var(--space-xl);
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--border-subtle);
-            border-radius: 20px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .faq__stat {
-            text-align: center;
-            position: relative;
-        }
-
-        .faq__stat-number {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--starflex-blue), var(--starflex-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            display: block;
-            margin-bottom: var(--space-xs);
-            font-family: var(--font-mono);
-        }
-
-        .faq__stat-label {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-
-        /* ===== BOTÓN DE CONTACTO ===== */
-        .faq__contact {
-            text-align: center;
-            margin-top: var(--space-3xl);
-        }
-
-        .faq__contact-text {
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            margin-bottom: var(--space-lg);
-        }
-
-        .faq__contact-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--space-sm);
-            padding: var(--space-lg) var(--space-2xl);
-            background: linear-gradient(135deg, var(--starflex-purple), var(--starflex-blue));
-            color: white;
-            text-decoration: none;
-            border-radius: 15px;
-            font-weight: 600;
-            font-size: 1.05rem;
-            transition: all var(--transition);
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .faq__contact-btn::before {
-            content: '💬';
-            font-size: 1.2rem;
-        }
-
-        .faq__contact-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.4);
-        }
-
-        /* ===== ESTADOS DE BÚSQUEDA ===== */
+        /* ===== MENSAJE DE NO RESULTADOS ===== */
         .faq__no-results {
             text-align: center;
             padding: var(--space-3xl);
@@ -1710,23 +1224,55 @@
             display: block;
         }
 
-        .faq__no-results-icon {
-            font-size: 4rem;
-            margin-bottom: var(--space-lg);
-            opacity: 0.5;
-        }
-
         .faq__no-results-text {
-            font-size: 1.2rem;
-            margin-bottom: var(--space-md);
+            font-size: 1.1rem;
+            margin-bottom: var(--space-sm);
         }
 
         .faq__no-results-suggestion {
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: var(--text-secondary);
         }
 
-        /* ===== MOBILE NAVIGATION MEJORADO ===== */
+        /* ===== CONTACTO MINIMALISTA ===== */
+        .faq__contact {
+            text-align: center;
+            margin-top: var(--space-3xl);
+            padding: var(--space-xl);
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+        }
+
+        .faq__contact-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-lg);
+        }
+
+        .faq__contact-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-xl);
+            background: linear-gradient(135deg, var(--starflex-blue), var(--starflex-cyan));
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .faq__contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ===== MOBILE NAVIGATION ===== */
         .nav__toggle {
             display: none;
             flex-direction: column;
@@ -1734,15 +1280,14 @@
             cursor: pointer;
             padding: var(--space-sm);
             z-index: 1001;
-            background: rgba(0, 212, 255, 0.1);
+            background: var(--glass-bg);
             border-radius: 8px;
-            border: 1px solid rgba(0, 212, 255, 0.2);
+            border: 1px solid var(--border-subtle);
             transition: all var(--transition);
         }
 
         .nav__toggle:hover {
-            background: rgba(0, 212, 255, 0.2);
-            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+            border-color: var(--border-accent);
         }
 
         .nav__toggle-line {
@@ -1765,11 +1310,11 @@
             transform: rotate(-45deg) translate(6px, -6px);
         }
 
-        /* ===== ANIMACIONES FUTURISTAS ===== */
+        /* ===== ANIMACIONES SUAVES ===== */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(40px);
+                transform: translateY(30px);
             }
             to {
                 opacity: 1;
@@ -1780,7 +1325,7 @@
         @keyframes fadeInRight {
             from {
                 opacity: 0;
-                transform: translateX(40px);
+                transform: translateX(30px);
             }
             to {
                 opacity: 1;
@@ -1791,7 +1336,7 @@
         @keyframes slideInUp {
             from {
                 opacity: 0;
-                transform: translateY(80px);
+                transform: translateY(50px);
             }
             to {
                 opacity: 1;
@@ -1799,72 +1344,40 @@
             }
         }
 
-        @keyframes aurora {
+        @keyframes aurora-gentle {
             0%, 100% { 
                 transform: translateY(0px) rotate(0deg); 
+                opacity: 0.3;
             }
             50% { 
-                transform: translateY(-30px) rotate(180deg); 
+                transform: translateY(-20px) rotate(180deg); 
+                opacity: 0.5;
             }
         }
 
-        @keyframes grid-flow {
-            0% { 
-                transform: translateX(0) translateY(0); 
-            }
-            100% { 
-                transform: translateX(80px) translateY(80px); 
-            }
-        }
-
-        @keyframes grid-flow-slow {
-            0% { 
-                transform: translateX(0) translateY(0); 
-            }
-            100% { 
-                transform: translateX(120px) translateY(120px); 
-            }
-        }
-
-        @keyframes particle-drift {
-            0% { 
-                transform: translateY(0); 
-            }
-            100% { 
-                transform: translateY(-160px); 
-            }
-        }
-
-        @keyframes video-glow {
-            0%, 100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 0.4;
-            }
-            50% {
-                transform: translate(-50%, -50%) scale(1.1);
-                opacity: 0.6;
-            }
-        }
-
-        @keyframes pulse {
+        @keyframes pulse-gentle {
             0%, 100% {
                 transform: scale(1);
+                opacity: 1;
             }
             50% {
                 transform: scale(1.1);
+                opacity: 0.8;
             }
         }
 
-        @keyframes shimmer {
-            0% {
-                left: -100%;
+        @keyframes breathe {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.3;
             }
-            100% {
-                left: 100%;
+            50% {
+                transform: scale(1.05);
+                opacity: 0.5;
             }
         }
 
-        /* ===== RESPONSIVE FUTURISTA ===== */
+        /* ===== RESPONSIVE OPTIMIZADO ===== */
         @media (max-width: 1024px) {
             .hero__container {
                 grid-template-columns: 1fr;
@@ -1883,10 +1396,6 @@
 
             .hero__download {
                 justify-content: center;
-            }
-
-            .hero__company-description {
-                max-width: 100%;
             }
 
             .feature {
@@ -1908,15 +1417,6 @@
                 max-width: 100%;
                 padding: 0 var(--space-lg);
             }
-
-            .faq__filters {
-                gap: var(--space-sm);
-            }
-
-            .faq__stats {
-                flex-direction: column;
-                gap: var(--space-lg);
-            }
         }
 
         @media (max-width: 768px) {
@@ -1930,14 +1430,13 @@
                 left: -100%;
                 width: 100%;
                 height: calc(100vh - 80px);
-                background: rgba(10, 13, 20, 0.98);
-                backdrop-filter: blur(25px);
+                background: rgba(10, 13, 20, 0.95);
+                backdrop-filter: blur(20px);
                 flex-direction: column;
                 justify-content: flex-start;
                 padding: var(--space-2xl) var(--space-xl);
                 transition: left 0.3s ease;
                 border-top: 1px solid var(--border-accent);
-                border-right: 1px solid var(--border-subtle);
             }
 
             .nav__menu.active {
@@ -1985,10 +1484,6 @@
                 padding: var(--space-md);
             }
 
-            .hero__company-description-text {
-                margin-left: var(--space-lg);
-            }
-
             .hero__subtitle {
                 font-size: 1.1rem;
             }
@@ -2032,28 +1527,23 @@
             }
 
             .faq__question {
-                font-size: 1.1rem;
-                padding: var(--space-lg);
+                font-size: 1rem;
+                padding: var(--space-md);
             }
 
             .faq__answer.active {
-                padding: 0 var(--space-lg) var(--space-lg);
+                padding: 0 var(--space-md) var(--space-md);
             }
 
             .faq__search {
-                padding: var(--space-md) var(--space-lg) var(--space-md) 50px;
-                font-size: 1rem;
+                padding: var(--space-sm) var(--space-md) var(--space-sm) 45px;
+                font-size: 0.95rem;
             }
 
-            .faq__filters {
-                justify-content: flex-start;
-                overflow-x: auto;
-                padding-bottom: var(--space-sm);
-            }
-
-            .faq__filter {
-                white-space: nowrap;
-                flex-shrink: 0;
+            .faq__search-icon {
+                left: 15px;
+                width: 16px;
+                height: 16px;
             }
         }
 
@@ -2065,10 +1555,6 @@
             .hero__company-description {
                 font-size: 0.95rem;
                 padding: var(--space-sm);
-            }
-
-            .hero__company-description-text {
-                margin-left: var(--space-md);
             }
 
             .hero__subtitle {
@@ -2109,36 +1595,27 @@
             }
 
             .faq__question {
-                font-size: 1rem;
-                padding: var(--space-md);
-            }
-
-            .faq__question-text {
-                padding-left: var(--space-sm);
+                font-size: 0.95rem;
+                padding: var(--space-sm);
             }
 
             .faq__answer.active {
-                padding: 0 var(--space-md) var(--space-md);
-            }
-
-            .faq__answer-content {
-                padding-left: var(--space-sm);
-                margin-left: 0;
+                padding: 0 var(--space-sm) var(--space-sm);
             }
 
             .faq__search-container {
-                margin-bottom: var(--space-2xl);
+                margin-bottom: var(--space-xl);
             }
 
             .faq__search {
-                padding: var(--space-sm) var(--space-md) var(--space-sm) 45px;
-                font-size: 0.95rem;
+                padding: var(--space-xs) var(--space-sm) var(--space-xs) 40px;
+                font-size: 0.9rem;
             }
 
             .faq__search-icon {
-                left: 15px;
-                width: 20px;
-                height: 20px;
+                left: 12px;
+                width: 14px;
+                height: 14px;
             }
 
             .faq__title {
@@ -2146,11 +1623,11 @@
             }
 
             .faq__subtitle {
-                font-size: 1.1rem;
+                font-size: 1rem;
             }
         }
 
-        /* ===== OPTIMIZACIONES ===== */
+        /* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
         .hero__video,
         .hero__video-container,
         .feature__phone {
@@ -2183,10 +1660,10 @@
     </style>
 </head>
 <body>
-    <!-- Canvas de fondo futurista -->
+    <!-- Canvas de fondo minimalista -->
     <div class="bg-canvas"></div>
 
-    <!-- Header Futurista -->
+    <!-- Header Minimalista -->
     <header class="header" id="header">
         <nav class="nav">
             <div class="nav__brand">
@@ -2214,7 +1691,7 @@
         </nav>
     </header>
 
-    <!-- Hero Section Futurista -->
+    <!-- Hero Section -->
     <section class="hero" id="inicio">
         <div class="container">
             <div class="hero__container">
@@ -2268,7 +1745,7 @@
                     <div class="hero__video-container">
                         <video class="hero__video" autoplay muted loop playsinline preload="metadata">
                             <source src="./assets/home.mp4" type="video/mp4">
-                            <!-- Fallback futurista sin emojis -->
+                            <!-- Fallback minimalista -->
                             <div style="width: 380px; height: 760px; background: linear-gradient(135deg, #151922 0%, #0a0d14 100%); border-radius: 35px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1.5rem; border: 1px solid rgba(0, 212, 255, 0.2);">
                                 <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #00d4ff 0%, #8b5cf6 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);">
                                     <div style="width: 40px; height: 40px; background: white; border-radius: 8px;"></div>
@@ -2279,7 +1756,6 @@
                                 </div>
                             </div>
                         </video>
-                        <div class="hero__video-glow"></div>
                     </div>
                 </div>
             </div>
@@ -2561,155 +2037,145 @@
         </div>
     </section>
 
-    <!-- Sección FAQ Espectacular -->
+    <!-- Sección FAQ Minimalista y Tranquila -->
     <section class="faq" id="faq">
         <div class="container">
             <div class="faq__header">
                 <h2 class="faq__title">Preguntas Frecuentes</h2>
                 <p class="faq__subtitle">
-                    Resuelve todas tus dudas sobre StarFlex y descubre cómo puede transformar tu experiencia con Amazon Flex de manera revolucionaria.
+                    Encuentra respuestas claras a las dudas más comunes sobre StarFlex y descubre cómo transformar tu experiencia con Amazon Flex.
                 </p>
                 
-                <!-- Barra de búsqueda futurista -->
+                <!-- Barra de búsqueda minimalista -->
                 <div class="faq__search-container">
                     <input 
                         type="text" 
                         class="faq__search" 
                         id="faq-search"
-                        placeholder="Busca tu pregunta aquí... ¿Qué necesitas saber?"
+                        placeholder="Buscar pregunta..."
                         autocomplete="off"
                     >
                     <div class="faq__search-icon"></div>
-                </div>
-
-                <!-- Filtros de categorías -->
-                <div class="faq__filters">
-                    <button class="faq__filter active" data-category="all">Todas</button>
-                    <button class="faq__filter" data-category="general">General</button>
-                    <button class="faq__filter" data-category="technical">Técnico</button>
-                    <button class="faq__filter" data-category="security">Seguridad</button>
-                    <button class="faq__filter" data-category="pricing">Precios</button>
-                    <button class="faq__filter" data-category="support">Soporte</button>
                 </div>
             </div>
 
             <div class="faq__container">
                 <div class="faq__list" id="faq-list">
                     <!-- FAQ 1: Beneficios -->
-                    <div class="faq__item" data-category="general">
+                    <div class="faq__item">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Cuáles son los beneficios revolucionarios de utilizar StarFlex como conductor de Amazon Flex?</span>
+                            <span class="faq__question-text">¿Cuáles son los principales beneficios de utilizar StarFlex?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    StarFlex está diseñado para <span class="faq__answer-highlight">eliminar por completo el riesgo de conducción distraída</span> para los conductores de Amazon Flex mediante automatización inteligente de búsquedas de ofertas. Esto te permite concentrarte plenamente en la conducción segura mientras nuestro sistema de IA trabaja 24/7 para encontrar los mejores bloques. Con StarFlex, dirás adiós a la necesidad de revisar constantemente tu teléfono, garantizando una experiencia de conducción más segura y eficiente que te permite concentrarte en lo que realmente importa: realizar entregas de manera óptima y maximizar tus ganancias.
+                                    StarFlex está diseñado para <span class="faq__answer-highlight">eliminar la conducción distraída</span> mediante automatización inteligente. Te permite concentrarte completamente en la conducción segura mientras nuestro sistema trabaja para encontrar los mejores bloques. Con StarFlex, no necesitas revisar constantemente tu teléfono, garantizando una experiencia más segura y eficiente que te permite maximizar tus ganancias.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- FAQ 2: CAPTCHA -->
-                    <div class="faq__item" data-category="technical">
+                    <div class="faq__item">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Puede StarFlex resolver automáticamente los rompecabezas CAPTCHA y verificaciones de seguridad?</span>
+                            <span class="faq__question-text">¿StarFlex puede resolver automáticamente los CAPTCHA?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    Sí, StarFlex viene equipado con una <span class="faq__answer-highlight">funcionalidad avanzada de IA que resuelve automáticamente los problemas CAPTCHA</span> y verificaciones de seguridad sin necesidad de intervención manual. Nuestro sistema utiliza algoritmos de machine learning de última generación que pueden interpretar y resolver diferentes tipos de verificaciones, permitiendo una navegación sin interrupciones y optimizando eficientemente tu tiempo. Esta tecnología revolucionaria hace que tu experiencia diaria sea más fluida y productiva, eliminando las frustraciones comunes de las verificaciones manuales.
+                                    Sí, StarFlex incluye <span class="faq__answer-highlight">tecnología avanzada para resolver CAPTCHA automáticamente</span>. Nuestro sistema utiliza algoritmos inteligentes que pueden interpretar y resolver diferentes tipos de verificaciones, permitiendo una navegación fluida sin interrupciones manuales. Esto optimiza tu tiempo y hace que tu experiencia diaria sea más eficiente.
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- FAQ 3: Detección Amazon -->
-                    <div class="faq__item" data-category="security">
+                    <!-- FAQ 3: Seguridad -->
+                    <div class="faq__item">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Puede Amazon detectar el uso de StarFlex? ¿Qué medidas de seguridad implementan?</span>
+                            <span class="faq__question-text">¿Es seguro usar StarFlex? ¿Amazon puede detectarlo?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    StarFlex utiliza <span class="faq__answer-highlight">tecnología de camuflaje avanzada y patrones de comportamiento humano simulado</span> para operar de manera completamente indetectable. Nuestro sistema implementa múltiples capas de protección incluyendo rotación de IP, simulación de gestos táctiles humanos, y tiempos de respuesta variables que imitan perfectamente el comportamiento natural de un usuario. Además, trabajamos continuamente con Amazon como socios tecnológicos para asegurar que los conductores puedan brindar el mejor servicio posible a los clientes, garantizando entregas eficientes y de calidad superior.
+                                    StarFlex utiliza <span class="faq__answer-highlight">tecnología avanzada de simulación humana</span> que incluye patrones de comportamiento naturales, tiempos de respuesta variables y gestos táctiles realistas. Nuestro enfoque se centra en ayudar a los conductores a brindar un mejor servicio a Amazon y sus clientes, asegurando entregas eficientes y de alta calidad.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- FAQ 4: Compatibilidad -->
-                    <div class="faq__item" data-category="technical">
+                    <div class="faq__item">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿StarFlex es compatible con iPhone y Android? ¿Qué versiones soporta?</span>
+                            <span class="faq__question-text">¿StarFlex funciona en iPhone y Android?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    Sí, StarFlex está diseñado para funcionar perfectamente en <span class="faq__answer-highlight">dispositivos iOS (iPhone 8 o superior) y Android (versión 8.0 o superior)</span>, ofreciendo una experiencia de usuario optimizada y completa en ambas plataformas. Nuestro equipo de desarrollo ha creado aplicaciones nativas que aprovechan al máximo las capacidades específicas de cada sistema operativo, garantizando rendimiento superior, integración perfecta con las funciones del dispositivo, y actualizaciones automáticas que mantienen tu aplicación siempre al día con las últimas mejoras y características.
+                                    Sí, StarFlex está disponible para <span class="faq__answer-highlight">iOS (iPhone 8+) y Android (8.0+)</span>. Hemos desarrollado aplicaciones nativas optimizadas para cada plataforma, garantizando el mejor rendimiento y una experiencia de usuario superior. Ambas versiones incluyen todas las funcionalidades y reciben actualizaciones automáticas.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- FAQ 5: Requisitos -->
-                    <div class="faq__item" data-category="general">
+                    <div class="faq__item">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Qué necesito para empezar a utilizar StarFlex y maximizar mis ganancias?</span>
+                            <span class="faq__question-text">¿Qué necesito para empezar a usar StarFlex?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    Para comenzar tu transformación con StarFlex, lo único que necesitas es una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo móvil compatible</span>. Una vez que tengas estos requisitos básicos, simplemente descarga nuestra aplicación, completa el proceso de configuración guiada que toma menos de 5 minutos, y estarás listo para acceder automáticamente a los mejores bloques de reparto de tu zona. Nuestro sistema de onboarding inteligente te guiará paso a paso para optimizar tu configuración personal y maximizar tus oportunidades de ganancias desde el primer día.
+                                    Solo necesitas una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo compatible</span>. Después de descargar la aplicación, el proceso de configuración toma menos de 5 minutos. Nuestro sistema de configuración guiada te ayudará a optimizar tu experiencia desde el primer día.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- FAQ 6: Precios -->
-                    <div class="faq__item" data-category="pricing">
+                    <div class="faq__item">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Cuáles son los planes de precios y qué incluye cada suscripción?</span>
+                            <span class="faq__question-text">¿Cuáles son los precios y planes disponibles?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    StarFlex ofrece <span class="faq__answer-highlight">planes flexibles desde $29.99/mes con 3 días de prueba gratuita</span>. Nuestro plan básico incluye automatización completa de bloques, resolución de CAPTCHA, y soporte 24/7. El plan premium ($49.99/mes) añade análisis avanzados de ganancias, optimización de rutas con IA, y acceso prioritario a bloques de alta demanda. Todos los planes incluyen actualizaciones automáticas, protección anti-detección, y una garantía de satisfacción de 30 días. Puedes cancelar en cualquier momento sin penalizaciones.
+                                    Ofrecemos planes desde <span class="faq__answer-highlight">$29.99/mes con 3 días de prueba gratuita</span>. El plan básico incluye automatización completa y soporte 24/7. El plan premium ($49.99/mes) añade análisis avanzados y acceso prioritario. Todos los planes incluyen actualizaciones automáticas y garantía de satisfacción de 30 días.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- FAQ 7: Soporte -->
-                    <div class="faq__item" data-category="support">
+                    <div class="faq__item">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Qué tipo de soporte técnico ofrecen y cómo puedo contactarlos?</span>
+                            <span class="faq__question-text">¿Qué tipo de soporte técnico ofrecen?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    Ofrecemos <span class="faq__answer-highlight">soporte técnico 24/7 multicanal con tiempo de respuesta promedio de 2 minutos</span>. Puedes contactarnos a través de chat en vivo integrado en la app, WhatsApp, email, o nuestro sistema de tickets avanzado. Nuestro equipo de expertos técnicos está especializado en Amazon Flex y puede resolver cualquier consulta desde configuración inicial hasta optimización avanzada. Además, tenemos una base de conocimientos completa, tutoriales en video, y webinars semanales gratuitos para maximizar tu experiencia con StarFlex.
+                                    Proporcionamos <span class="faq__answer-highlight">soporte 24/7 con respuesta promedio de 2 minutos</span>. Puedes contactarnos por chat en vivo, WhatsApp, email o nuestro sistema de tickets. Nuestro equipo especializado en Amazon Flex puede resolver cualquier consulta, desde configuración inicial hasta optimización avanzada.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- FAQ 8: Ganancias -->
-                    <div class="faq__item" data-category="general">
+                    <div class="faq__item">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Cuánto puedo aumentar mis ganancias utilizando StarFlex?</span>
+                            <span class="faq__question-text">¿Cuánto puedo aumentar mis ganancias con StarFlex?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    Nuestros usuarios reportan un <span class="faq__answer-highlight">aumento promedio del 300-500% en sus ganancias mensuales</span> después de implementar StarFlex. Esto se debe a nuestra capacidad de capturar bloques de alta demanda 24/7, optimizar rutas automáticamente, y acceder a oportunidades que manualmente serían imposibles de obtener. Algunos conductores han logrado aumentos de hasta $2,000-$4,000 adicionales por mes. Los resultados varían según la zona geográfica, dedicación de tiempo, y configuración personal, pero garantizamos una mejora significativa en tu eficiencia y ganancias desde la primera semana de uso.
+                                    Nuestros usuarios reportan un <span class="faq__answer-highlight">aumento promedio del 300-500% en ganancias mensuales</span>. Esto se debe a la capacidad de capturar bloques de alta demanda 24/7 y optimizar rutas automáticamente. Algunos conductores han logrado aumentos de $2,000-$4,000 adicionales por mes. Los resultados varían según la zona y dedicación.
                                 </p>
                             </div>
                         </div>
@@ -2718,43 +2184,26 @@
 
                 <!-- Mensaje de no resultados -->
                 <div class="faq__no-results" id="faq-no-results">
-                    <div class="faq__no-results-icon">🔍</div>
-                    <div class="faq__no-results-text">No encontramos preguntas que coincidan con tu búsqueda</div>
-                    <div class="faq__no-results-suggestion">Intenta con términos diferentes o explora nuestras categorías</div>
+                    <div class="faq__no-results-text">No se encontraron preguntas que coincidan con tu búsqueda</div>
+                    <div class="faq__no-results-suggestion">Intenta con términos diferentes o contacta nuestro soporte</div>
                 </div>
 
-                <!-- Estadísticas FAQ -->
-                <div class="faq__stats">
-                    <div class="faq__stat">
-                        <span class="faq__stat-number" data-count="15000">0</span>
-                        <span class="faq__stat-label">Conductores Activos</span>
-                    </div>
-                    <div class="faq__stat">
-                        <span class="faq__stat-number" data-count="98">0</span>
-                        <span class="faq__stat-label">% Satisfacción</span>
-                    </div>
-                    <div class="faq__stat">
-                        <span class="faq__stat-number" data-count="24">0</span>
-                        <span class="faq__stat-label">Soporte 24/7</span>
-                    </div>
-                </div>
-
-                <!-- Contacto adicional -->
+                <!-- Contacto -->
                 <div class="faq__contact">
                     <p class="faq__contact-text">¿No encontraste la respuesta que buscabas?</p>
-                    <a href="#contacto" class="faq__contact-btn">Contactar Soporte Especializado</a>
+                    <a href="#contacto" class="faq__contact-btn">Contactar Soporte</a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- JavaScript Mejorado -->
+    <!-- JavaScript Optimizado -->
     <script>
         // ===== UTILIDADES =====
         const $ = (selector) => document.querySelector(selector);
         const $$ = (selector) => document.querySelectorAll(selector);
 
-        // ===== NAVEGACIÓN MÓVIL MEJORADA =====
+        // ===== NAVEGACIÓN MÓVIL =====
         class MobileNav {
             constructor() {
                 this.toggle = $('#nav-toggle');
@@ -2769,7 +2218,6 @@
                     link.addEventListener('click', () => this.closeMenu());
                 });
                 
-                // Cerrar menú al hacer clic fuera
                 document.addEventListener('click', (e) => {
                     if (!this.toggle.contains(e.target) && !this.menu.contains(e.target)) {
                         this.closeMenu();
@@ -2790,7 +2238,7 @@
             }
         }
 
-        // ===== EFECTOS DE SCROLL MEJORADOS =====
+        // ===== EFECTOS DE SCROLL =====
         class ScrollEffects {
             constructor() {
                 this.header = $('#header');
@@ -2812,7 +2260,7 @@
             }
         }
 
-        // ===== SMOOTH SCROLL MEJORADO =====
+        // ===== SMOOTH SCROLL =====
         class SmoothScroll {
             constructor() {
                 this.init();
@@ -2841,23 +2289,18 @@
             }
         }
 
-        // ===== FAQ ACCORDION ESPECTACULAR =====
+        // ===== FAQ ACCORDION MINIMALISTA =====
         class FAQAccordion {
             constructor() {
                 this.faqItems = $$('.faq__item');
                 this.searchInput = $('#faq-search');
-                this.filterButtons = $$('.faq__filter');
                 this.noResults = $('#faq-no-results');
-                this.faqList = $('#faq-list');
-                this.currentFilter = 'all';
                 this.init();
             }
 
             init() {
                 this.setupAccordion();
                 this.setupSearch();
-                this.setupFilters();
-                this.animateStats();
             }
 
             setupAccordion() {
@@ -2869,7 +2312,6 @@
                         this.toggleItem(item, question, answer);
                     });
 
-                    // Keyboard accessibility
                     question.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
@@ -2882,7 +2324,7 @@
             toggleItem(item, question, answer) {
                 const isActive = item.classList.contains('active');
                 
-                // Close all other items with smooth animation
+                // Cerrar otros items
                 this.faqItems.forEach(otherItem => {
                     if (otherItem !== item && otherItem.classList.contains('active')) {
                         otherItem.classList.remove('active');
@@ -2891,7 +2333,7 @@
                     }
                 });
 
-                // Toggle current item
+                // Toggle item actual
                 if (isActive) {
                     item.classList.remove('active');
                     answer.classList.remove('active');
@@ -2901,7 +2343,7 @@
                     answer.classList.add('active');
                     question.setAttribute('aria-expanded', 'true');
                     
-                    // Smooth scroll to question
+                    // Scroll suave a la pregunta
                     setTimeout(() => {
                         const headerHeight = $('#header').offsetHeight;
                         const itemTop = item.offsetTop - headerHeight - 20;
@@ -2911,9 +2353,6 @@
                         });
                     }, 100);
                 }
-
-                // Analytics tracking
-                this.trackFAQInteraction(question.textContent.trim(), !isActive);
             }
 
             setupSearch() {
@@ -2926,13 +2365,6 @@
                         this.performSearch(e.target.value.toLowerCase());
                     }, 300);
                 });
-
-                // Search on Enter
-                this.searchInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        this.performSearch(e.target.value.toLowerCase());
-                    }
-                });
             }
 
             performSearch(searchTerm) {
@@ -2941,126 +2373,29 @@
                 this.faqItems.forEach(item => {
                     const questionText = item.querySelector('.faq__question-text').textContent.toLowerCase();
                     const answerText = item.querySelector('.faq__answer-text').textContent.toLowerCase();
-                    const category = item.dataset.category;
                     
-                    const matchesSearch = searchTerm === '' || 
-                                        questionText.includes(searchTerm) || 
-                                        answerText.includes(searchTerm);
+                    const matches = searchTerm === '' || 
+                                  questionText.includes(searchTerm) || 
+                                  answerText.includes(searchTerm);
                     
-                    const matchesFilter = this.currentFilter === 'all' || category === this.currentFilter;
-                    
-                    if (matchesSearch && matchesFilter) {
+                    if (matches) {
                         item.style.display = 'block';
-                        item.style.animation = 'fadeInUp 0.5s ease-out forwards';
                         visibleCount++;
                     } else {
                         item.style.display = 'none';
                     }
                 });
 
-                // Show/hide no results message
-                if (visibleCount === 0) {
+                // Mostrar/ocultar mensaje de no resultados
+                if (visibleCount === 0 && searchTerm !== '') {
                     this.noResults.classList.add('show');
-                    this.faqList.style.marginBottom = '0';
                 } else {
                     this.noResults.classList.remove('show');
-                    this.faqList.style.marginBottom = '';
                 }
-
-                // Track search
-                if (searchTerm) {
-                    this.trackSearchQuery(searchTerm, visibleCount);
-                }
-            }
-
-            setupFilters() {
-                this.filterButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        // Update active filter
-                        this.filterButtons.forEach(btn => btn.classList.remove('active'));
-                        button.classList.add('active');
-                        
-                        this.currentFilter = button.dataset.category;
-                        
-                        // Re-apply search with new filter
-                        const searchTerm = this.searchInput ? this.searchInput.value.toLowerCase() : '';
-                        this.performSearch(searchTerm);
-                        
-                        // Track filter usage
-                        this.trackFilterUsage(this.currentFilter);
-                    });
-                });
-            }
-
-            animateStats() {
-                const stats = $$('.faq__stat-number');
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            this.animateNumber(entry.target);
-                            observer.unobserve(entry.target);
-                        }
-                    });
-                }, { threshold: 0.5 });
-
-                stats.forEach(stat => observer.observe(stat));
-            }
-
-            animateNumber(element) {
-                const target = parseInt(element.dataset.count);
-                const duration = 2000;
-                const step = target / (duration / 16);
-                let current = 0;
-
-                const timer = setInterval(() => {
-                    current += step;
-                    if (current >= target) {
-                        current = target;
-                        clearInterval(timer);
-                    }
-                    
-                    if (target > 100) {
-                        element.textContent = Math.floor(current).toLocaleString();
-                    } else {
-                        element.textContent = Math.floor(current);
-                    }
-                }, 16);
-            }
-
-            trackFAQInteraction(question, isOpened) {
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'faq_interaction', {
-                        event_category: 'FAQ',
-                        event_label: question,
-                        action: isOpened ? 'opened' : 'closed'
-                    });
-                }
-                console.log(`📊 FAQ ${isOpened ? 'Opened' : 'Closed'}: ${question}`);
-            }
-
-            trackSearchQuery(query, results) {
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'faq_search', {
-                        event_category: 'FAQ',
-                        event_label: query,
-                        value: results
-                    });
-                }
-                console.log(`🔍 FAQ Search: "${query}" - ${results} results`);
-            }
-
-            trackFilterUsage(filter) {
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'faq_filter', {
-                        event_category: 'FAQ',
-                        event_label: filter
-                    });
-                }
-                console.log(`🏷️ FAQ Filter: ${filter}`);
             }
         }
 
-        // ===== OPTIMIZACIÓN DE VIDEO MEJORADA =====
+        // ===== OPTIMIZACIÓN DE VIDEO =====
         class VideoOptimizer {
             constructor() {
                 this.video = $('.hero__video');
@@ -3070,10 +2405,6 @@
             init() {
                 if (!this.video) return;
 
-                // Configurar calidad del video
-                this.video.setAttribute('playsinline', '');
-                this.video.setAttribute('webkit-playsinline', '');
-                
                 const observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
@@ -3085,48 +2416,13 @@
                 }, { threshold: 0.3 });
 
                 observer.observe(this.video);
-
-                // Optimización de rendimiento y calidad
-                this.video.addEventListener('loadeddata', () => {
-                    this.video.style.willChange = 'transform';
-                    // Mejorar la calidad de renderizado
-                    this.video.style.imageRendering = 'crisp-edges';
-                });
-
-                // Precargar el video para mejor calidad
-                this.video.addEventListener('canplaythrough', () => {
-                    console.log('Video loaded with high quality');
-                });
             }
         }
 
-        // ===== EFECTOS PARALLAX SUTILES =====
-        class ParallaxEffects {
-            constructor() {
-                this.elements = $$('.hero__video-glow');
-                this.init();
-            }
-
-            init() {
-                window.addEventListener('scroll', () => this.handleScroll(), { passive: true });
-            }
-
-            handleScroll() {
-                const scrollY = window.scrollY;
-                
-                this.elements.forEach(element => {
-                    const speed = 0.5;
-                    const yPos = -(scrollY * speed);
-                    element.style.transform = `translate(-50%, calc(-50% + ${yPos}px))`;
-                });
-            }
-        }
-
-        // ===== ANIMACIONES DE ENTRADA PARA CARACTERÍSTICAS =====
+        // ===== ANIMACIONES DE ENTRADA =====
         class FeatureAnimations {
             constructor() {
                 this.features = $$('.feature');
-                this.faqItems = $$('.faq__item');
                 this.init();
             }
 
@@ -3139,88 +2435,12 @@
                     });
                 }, { 
                     threshold: 0.2,
-                    rootMargin: '0px 0px -100px 0px'
+                    rootMargin: '0px 0px -50px 0px'
                 });
 
                 this.features.forEach(feature => {
                     observer.observe(feature);
                 });
-
-                // Observe FAQ items for animation
-                this.faqItems.forEach(item => {
-                    observer.observe(item);
-                });
-            }
-        }
-
-        // ===== ANALYTICS MEJORADO =====
-        class Analytics {
-            constructor() {
-                this.init();
-            }
-
-            init() {
-                $$('.btn--cta').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        this.trackEvent('CTA_Click', 'Hero_Primary_Button');
-                    });
-                });
-
-                $$('.download-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const isGooglePlay = btn.href.includes('google-play') || btn.querySelector('img').src.includes('Google-Play');
-                        const store = isGooglePlay ? 'Google_Play' : 'App_Store';
-                        this.trackEvent('Download_Click', store);
-                    });
-                });
-
-                // Track feature interactions
-                $$('.feature').forEach(feature => {
-                    feature.addEventListener('click', () => {
-                        const featureType = feature.dataset.feature;
-                        this.trackEvent('Feature_View', featureType);
-                    });
-                });
-
-                // Track FAQ section visibility
-                const faqSection = $('#faq');
-                if (faqSection) {
-                    const observer = new IntersectionObserver((entries) => {
-                        entries.forEach(entry => {
-                            if (entry.isIntersecting) {
-                                this.trackEvent('FAQ_Section_View', 'FAQ_Visible');
-                            }
-                        });
-                    }, { threshold: 0.3 });
-
-                    observer.observe(faqSection);
-                }
-
-                // Track scroll depth
-                this.trackScrollDepth();
-            }
-
-            trackEvent(action, label) {
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', action, {
-                        event_category: 'User_Interaction',
-                        event_label: label
-                    });
-                }
-                console.log(`📊 ${action}: ${label}`);
-            }
-
-            trackScrollDepth() {
-                let maxScroll = 0;
-                window.addEventListener('scroll', () => {
-                    const scrollPercent = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
-                    if (scrollPercent > maxScroll) {
-                        maxScroll = scrollPercent;
-                        if (maxScroll % 25 === 0) {
-                            this.trackEvent('Scroll_Depth', `${maxScroll}%`);
-                        }
-                    }
-                }, { passive: true });
             }
         }
 
@@ -3231,21 +2451,10 @@
             new SmoothScroll();
             new FAQAccordion();
             new VideoOptimizer();
-            new ParallaxEffects();
             new FeatureAnimations();
-            new Analytics();
             
-            console.log('🚀 Starflex Futurista con FAQ Espectacular initialized');
+            console.log('🚀 Starflex Minimalista initialized');
         });
-
-        // ===== PERFORMANCE OPTIMIZATION =====
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => {
-                // Lazy load non-critical features
-                console.log('🔧 Non-critical features loaded');
-            });
-        }
     </script>
 </body>
 </html>
-                        
