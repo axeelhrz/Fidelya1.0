@@ -168,110 +168,230 @@
             animation: grid-flow 80s linear infinite;
         }
 
-        /* ===== HEADER COMPACTO ===== */
+        /* ===== HEADER FUTURISTA MEJORADO ===== */
         .header {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            background: rgba(10, 13, 20, 0.9);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(10, 13, 20, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             border-bottom: 1px solid var(--border-subtle);
             z-index: 1000;
             transition: all var(--transition);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
         .header.scrolled {
             background: rgba(10, 13, 20, 0.95);
             border-bottom-color: var(--border-accent);
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-md), var(--glow-subtle);
         }
 
+        /* ===== NAVBAR FUTURISTA CENTRADO ===== */
         .nav {
             max-width: 1400px;
             margin: 0 auto;
-            padding: var(--space-sm) var(--space-xl);
-            display: flex;
-            justify-content: space-between;
+            padding: var(--space-md) var(--space-xl);
+            display: grid;
+            grid-template-columns: auto 1fr auto;
             align-items: center;
+            gap: var(--space-xl);
             position: relative;
         }
 
+        /* ===== LOGO MEJORADO Y MÁS GRANDE ===== */
         .nav__brand {
             display: flex;
             align-items: center;
-            gap: var(--space-md);
             z-index: 1001;
             position: relative;
         }
 
         .nav__logo {
-            width: 40px;
-            height: 40px;
+            width: 56px;
+            height: 56px;
             background: url('./assets/logo.png') center/contain no-repeat;
-            border-radius: 10px;
+            border-radius: 14px;
             position: relative;
             transition: all var(--transition);
+            cursor: pointer;
+            
+            /* Efecto de resplandor futurista */
+            box-shadow: 
+                0 0 20px rgba(0, 212, 255, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            
+            /* Borde con gradiente */
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .nav__logo::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, 
+                var(--starflex-blue) 0%, 
+                var(--starflex-purple) 25%, 
+                var(--starflex-cyan) 50%, 
+                var(--starflex-blue) 75%, 
+                var(--starflex-purple) 100%
+            );
+            border-radius: 16px;
+            z-index: -1;
+            opacity: 0.6;
+            transition: all var(--transition);
+            animation: logo-glow 4s ease-in-out infinite;
         }
 
         .nav__logo:hover {
-            transform: scale(1.05);
-            filter: drop-shadow(var(--glow-subtle));
+            transform: scale(1.08) rotate(2deg);
+            box-shadow: 
+                0 0 30px rgba(0, 212, 255, 0.5),
+                0 0 50px rgba(139, 92, 246, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
-        .nav__title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-blue) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.02em;
+        .nav__logo:hover::before {
+            opacity: 1;
+            animation-duration: 2s;
         }
 
+        /* ===== NAVEGACIÓN CENTRADA FUTURISTA ===== */
         .nav__menu {
             display: flex;
+            justify-content: center;
             align-items: center;
-            gap: var(--space-xl);
+            position: relative;
         }
 
         .nav__list {
             display: flex;
             list-style: none;
-            gap: var(--space-lg);
+            gap: var(--space-2xl);
             align-items: center;
+            background: rgba(21, 25, 34, 0.4);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 50px;
+            padding: var(--space-sm) var(--space-xl);
+            position: relative;
+            overflow: hidden;
+            
+            /* Sombra futurista */
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
+        .nav__list::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(0, 212, 255, 0.1), 
+                transparent
+            );
+            transition: left 0.8s ease;
+        }
+
+        .nav__list:hover::before {
+            left: 100%;
+        }
+
+        /* ===== ENLACES DE NAVEGACIÓN FUTURISTAS ===== */
         .nav__link {
             color: var(--text-secondary);
             text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9rem;
+            font-weight: 600;
+            font-size: 0.95rem;
             transition: all var(--transition);
             position: relative;
-            padding: var(--space-xs) var(--space-sm);
-            border-radius: 6px;
+            padding: var(--space-sm) var(--space-md);
+            border-radius: 25px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: var(--font-mono);
+            
+            /* Preparar para efectos */
+            overflow: hidden;
+            z-index: 1;
         }
 
+        /* Efecto de fondo en hover */
+        .nav__link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            opacity: 0;
+            transition: all var(--transition);
+            z-index: -1;
+        }
+
+        /* Línea neón rojiza en hover */
         .nav__link::after {
             content: '';
             position: absolute;
-            bottom: 0;
+            bottom: 2px;
             left: 50%;
             width: 0;
-            height: 1px;
-            background: var(--starflex-blue);
+            height: 2px;
+            background: linear-gradient(90deg, 
+                var(--starflex-crimson-glow) 0%, 
+                var(--starflex-crimson-bright) 50%, 
+                var(--starflex-crimson-glow) 100%
+            );
+            border-radius: 1px;
             transition: all var(--transition);
             transform: translateX(-50%);
+            
+            /* Efecto neón rojizo */
+            box-shadow: 
+                0 0 10px var(--starflex-crimson-glow),
+                0 0 20px var(--starflex-crimson-bright),
+                0 0 30px var(--starflex-crimson);
+            opacity: 0;
         }
 
         .nav__link:hover {
             color: var(--text-primary);
+            transform: translateY(-2px);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .nav__link:hover::before {
+            opacity: 1;
         }
 
         .nav__link:hover::after {
             width: 80%;
+            opacity: 1;
+        }
+
+        /* Estado activo */
+        .nav__link.active {
+            color: var(--starflex-crimson-bright);
+            text-shadow: 0 0 15px var(--starflex-crimson-glow);
+        }
+
+        .nav__link.active::after {
+            width: 80%;
+            opacity: 1;
         }
 
         /* ===== BOTONES COMPACTOS ===== */
@@ -1987,6 +2107,22 @@
             }
         }
 
+        /* ===== ANIMACIONES ESPECÍFICAS DEL LOGO ===== */
+        @keyframes logo-glow {
+            0%, 100% {
+                opacity: 0.6;
+                filter: hue-rotate(0deg);
+            }
+            33% {
+                opacity: 0.8;
+                filter: hue-rotate(120deg);
+            }
+            66% {
+                opacity: 0.7;
+                filter: hue-rotate(240deg);
+            }
+        }
+
         /* ===== ANIMACIONES ESPECÍFICAS DEL BOTÓN CTA ROJIZO ===== */
         @keyframes crimson-pulse {
             0%, 100% {
@@ -2077,6 +2213,16 @@
 
         /* ===== RESPONSIVE COMPACTO ===== */
         @media (max-width: 1024px) {
+            .nav {
+                grid-template-columns: auto 1fr auto;
+                gap: var(--space-lg);
+            }
+
+            .nav__list {
+                gap: var(--space-lg);
+                padding: var(--space-xs) var(--space-lg);
+            }
+
             .hero__container {
                 grid-template-columns: 1fr;
                 gap: var(--space-2xl);
@@ -2126,6 +2272,7 @@
 
         @media (max-width: 768px) {
             .nav {
+                grid-template-columns: auto 1fr auto;
                 padding: var(--space-xs) var(--space-lg);
             }
 
@@ -2153,6 +2300,10 @@
                 gap: var(--space-lg);
                 width: 100%;
                 margin-bottom: var(--space-xl);
+                background: transparent;
+                border: none;
+                padding: 0;
+                box-shadow: none;
             }
 
             .nav__link {
@@ -2161,6 +2312,7 @@
                 border-bottom: 1px solid var(--border-subtle);
                 width: 100%;
                 text-align: center;
+                border-radius: 0;
             }
 
             .nav__toggle {
@@ -2272,6 +2424,11 @@
         }
 
         @media (max-width: 480px) {
+            .nav__logo {
+                width: 48px;
+                height: 48px;
+            }
+
             .hero__title {
                 font-size: clamp(1.8rem, 5vw, 2.8rem);
                 line-height: 0.95;
@@ -2441,14 +2598,15 @@
     <!-- Canvas de fondo minimalista -->
     <div class="bg-canvas"></div>
 
-    <!-- Header Compacto -->
+    <!-- Header Futurista Mejorado -->
     <header class="header" id="header">
         <nav class="nav">
+            <!-- Logo más grande sin texto -->
             <div class="nav__brand">
                 <div class="nav__logo"></div>
-                <span class="nav__title">Starflex</span>
             </div>
             
+            <!-- Navegación centrada futurista -->
             <div class="nav__menu" id="nav-menu">
                 <ul class="nav__list">
                     <li><a href="#inicio" class="nav__link">Inicio</a></li>
@@ -2457,10 +2615,12 @@
                     <li><a href="#faq" class="nav__link">FAQ</a></li>
                     <li><a href="#contacto" class="nav__link">Contact</a></li>
                 </ul>
-                
-                <a href="#prueba-gratis" class="btn btn--primary">Start Free Trial</a>
             </div>
             
+            <!-- Botón CTA -->
+            <a href="#prueba-gratis" class="btn btn--primary">Start Free Trial</a>
+            
+            <!-- Toggle móvil -->
             <div class="nav__toggle" id="nav-toggle">
                 <span class="nav__toggle-line"></span>
                 <span class="nav__toggle-line"></span>
@@ -2776,11 +2936,103 @@
                                             <div class="log-status accepted">ACEPTADO</div>
                                         </div>
                                         <div class="log-entry">
+                                            <div class="log-item">Cancelación rápida de bloques</li>
+                        </ul>
+                    </div>
+                    <div class="feature__phone">
+                        <div class="phone">
+                            <div class="phone__screen calendar-screen">
+                time">12/04/2023 10:37:28 am</div>
+                                            <div class="log-message">(07:                <div class="phone__notch"></div>
+                                <div class="phone__status-bar">
+                                    <span>9:41</span>
+                                    <span>100%</span>
+                                </div>
+                                <div class="phone__content">
+                                    <div class="calendar-header">
+                                        <div class="calendar-title">CALENDARIO</div>
+                                        <div class="calendar-month">Octubre 2023</div>
+                                    </div>
+                                    <div class="calendar-grid">
+                                        <div class="calendar-day">L</div>
+                                        <div class="calendar-day">M</div>
+                                        <div class="calendar-day">X</div>
+                                        <div class="calendar-day">J</div>
+                                        <div class="calendar-day">V</div>
+                                        <div class="calendar-day">S</div>
+                                        <div class="calendar-day">D</div>
+                                        <div class="calendar-day">1</div>
+                                        <div class="calendar-day">2</div>
+                                        <div class="calendar-day">3</div>
+                                        <div class="calendar-day">4</div>
+                                        <div class="calendar-day">5</div>
+                                        <div class="calendar-day">6</div>
+                                        <div class="calendar-day">7</div>
+                                        <div class="calendar-day">8</div>
+                                        <div class="calendar-day">9</div>
+                                        <div class="calendar-day">10</div>
+                                30am - 11:00am) [Ab        <div class="calendar-day">11</div>
+                                        <div class="calendar-day has-block">12</div>
+                                        <div class="calendar-day">13</div>
+                                        <div class="calendar-day">14</div>
+                                        <div class="calendar-day active">15</div>
+                                        <div class="calendar-day">16</div>
+                                        <div class="calendar-day has-block">17</div>
+                                        <div class="calendar-day">18</div>
+                                        <div class="calendar-day">19</div>
+                                        <div class="calendar-day">20</div>
+                                        <div class="calendar-day">21</div>
+                                    </div>
+                                    <div class="calendar-events">
+                                        <div class="calendar-event">11:45am - 02:45pm Norcross GA</div>
+                                        <div class="calendar-event">07:30am - 11:00am Portland OR</div>
+                                        <div class="calendar-event">01:15pm - 05:45pm Portland OR</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Registro -->
+                <div class="feature" data-feature="log">
+                    <div class="feature__content">
+                        <h3 class="feature__title">REGISTRO</h3>
+                        <p class="feature__description">
+                            En el registro, podrá ver todos los bloques disponibles y el motivo detallado por el cual se ignoraron algunos. Esto le ayudará a ajustar sus filtros de preferencias según sea necesario para optimizar sus opciones.
+                        </p>
+                        <ul class="feature__list">
+                            <li class="feature__list-item">Historial completo de bloques</li>
+                            <li class="feature__list-item">Motivosr 14] [Portland OR (VOR detallados de rechazo</li>
+                            <li class="feature__list-item">Optimización de filtros</li>
+                            <li class="feature__list-item">Análisis de patrones</li>
+                        </ul>
+                    </div>
+                    <div class="feature__phone">
+                        <div class="phone">
+                            <div class="phone__screen log-screen">
+                                <div class="phone__notch"></div>
+                                <div class="phone__status-bar">
+                                    <span>9:41</span>
+                                    <span>100%</span>
+                                </div>
+                                <div class="phone__content">
+                                    <div class="log-header">
+                                        <div class="log-title">REGISTRO</div>
+                                        <div class="log-subtitle">Historial de actividad</div>
+                                    </div>
+                                    <div class="log-entries">
+                                        <div class="log-entry">
+                                            <div class="log-time">12/04/2023 10:06:41 am</div>
+                                            <div class="log-message">(11:45am - 02:45pm) [Mañana] [Norcross GA (VGA1) - Sub Same-Day] [54 USD] [3 Horas]</div>
+                                            <div class="log-status accepted">ACEPTADO</div>
+                                        </div>
+                                        <div class="log-entry">
                                             <div class="log-time">12/04/2023 10:37:28 am</div>
                                             <div class="log-message">(07:30am - 11:00am) [Abr 14] [Portland OR (VOR3) - Sub Same-Day] [73.5 USD] [3.5 Horas]</div>
                                             <div class="log-status ignored">IGNORADO por [Precio por bloque]</div>
                                         </div>
-                                        <div class="log-entry">
+                                        <div class="log-entry">3) - Sub Same-Day] [73.
                                             <div class="log-time">12/04/2023 10:37:28 am</div>
                                             <div class="log-message">(01:15pm - 05:45pm) [Hoy] [Portland OR (VOR3) - Sub Same-Day] [94.5 USD] [4.5 Horas]</div>
                                             <div class="log-status ignored">IGNORADO por [Precio por bloque]</div>
@@ -3406,7 +3658,7 @@
             new AnimatedCounters();
             new ParticleEffects();
             
-            console.log('🚀 Starflex Hero Section Compacto - "DOMINA LOS BLOQUES AMAZON" initialized');
+            console.log('🚀 Starflex Navbar Futurista Mejorado - Centrado con efectos neón rojizos initialized');
         });
 
         // ===== EFECTOS ADICIONALES DE PERFORMANCE COMPACTOS =====
@@ -3464,4 +3716,3 @@
     </script>
 </body>
 </html>
-           
