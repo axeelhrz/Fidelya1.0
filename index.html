@@ -1395,6 +1395,11 @@
                 width: 250px;
                 height: 500px;
             }
+
+            .faq__container {
+                max-width: 100%;
+                padding: 0 var(--space-lg);
+            }
         }
 
         @media (max-width: 768px) {
@@ -1508,6 +1513,15 @@
                 width: 220px;
                 height: 440px;
             }
+
+            .faq__question {
+                font-size: 1.1rem;
+                padding: var(--space-lg);
+            }
+
+            .faq__answer.active {
+                padding: 0 var(--space-lg) var(--space-lg);
+            }
         }
 
         @media (max-width: 480px) {
@@ -1560,6 +1574,24 @@
                 width: 200px;
                 height: 400px;
             }
+
+            .faq__question {
+                font-size: 1rem;
+                padding: var(--space-md);
+            }
+
+            .faq__question-text {
+                padding-left: var(--space-sm);
+            }
+
+            .faq__answer.active {
+                padding: 0 var(--space-md) var(--space-md);
+            }
+
+            .faq__answer-content {
+                padding-left: var(--space-sm);
+                margin-left: 0;
+            }
         }
 
         /* ===== OPTIMIZACIONES ===== */
@@ -1585,7 +1617,8 @@
         }
 
         .btn:focus,
-        .nav__link:focus {
+        .nav__link:focus,
+        .faq__question:focus {
             outline: 2px solid var(--starflex-blue);
             outline-offset: 2px;
             border-radius: 4px;
@@ -1971,6 +2004,97 @@
         </div>
     </section>
 
+    <!-- Sección FAQ -->
+    <section class="faq" id="faq">
+        <div class="container">
+            <div class="faq__header">
+                <h2 class="faq__title">Preguntas Frecuentes</h2>
+                <p class="faq__subtitle">
+                    Resuelve todas tus dudas sobre StarFlex y descubre cómo puede transformar tu experiencia con Amazon Flex.
+                </p>
+            </div>
+
+            <div class="faq__container">
+                <div class="faq__list">
+                    <!-- FAQ 1: Beneficios -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Cuáles son los beneficios de utilizar StarFlex como controlador de Amazon Flex?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    StarFlex está diseñado para <span class="faq__answer-highlight">eliminar por completo el riesgo de conducción distraída</span> para los conductores de Amazon Flex debido a aplicaciones automáticas en búsquedas de ofertas, permitiéndole concentrarse plenamente en un conductor. Con StarFlex, dirás adiós a la necesidad de un controlador automáticamente sin distraerte, garantizando una experiencia de conducción más segura y eficiente permitiéndote concentrarte en lo que realmente importa: realizar entregas de manera óptima y segura.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 2: CAPTCHA -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Puede StarFlex resolver automáticamente los rompecabezas CAPTCHA?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    Sí, StarFlex viene equipado con una <span class="faq__answer-highlight">funcionalidad avanzada que resuelve automáticamente los problemas CAPTCHA</span> sin necesidad de navegación sin interrupciones y optimizando eficientemente ya que tiempo de StarFlex de manera eficiente y a tiempo real. StarFlex hace que tu trabajo diario sea más fácil.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 3: Detección Amazon -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Puede Amazon detectar el uso de StarFlex?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    Si bien existe un <span class="faq__answer-highlight">riesgo inherente al utilizar cualquier servicio de automatización</span>, es importante destacar que nuestro enfoque en StarFlex destaca por su trabajo con Amazon como una oportunidad de sistemas complejos sintiéndose en entregas eficientes y de calidad. Al utilizar StarFlex, los conductores pueden brindar apoyo continuo a Amazon, asegurando que los clientes reciban sus paquetes de la manera más eficiente y satisfactoria posible.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 4: Compatibilidad -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿StarFlex es compatible con iPhone y Android?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    Sí, StarFlex está diseñado para funcionar en <span class="faq__answer-highlight">problemas tanto en dispositivos iOS como Android</span>, lo que te permite disfrutar de una experiencia de usuario personalizada y completa en ambas plataformas independientemente del sistema operativo que prefieras. Con StarFlex, disfrutarás de todas las funcionalidades y beneficios para mejorar tu experiencia como conductor de Amazon Flex.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 5: Requisitos -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Qué necesito para empezar a utilizar StarFlex?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    Para comenzar a aprovechar StarFlex, lo único que necesitas es una <span class="faq__answer-highlight">cuenta activa de Amazon Flex</span>. Una vez que la tengas, simplemente regístrate en nuestra app. Allí fácil te resultará estar listo para acceder a los mejores bloques de reparto de tu zona, optimizando tu experiencia como conductor de Amazon Flex.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- JavaScript Mejorado -->
     <script>
         // ===== UTILIDADES =====
@@ -2064,6 +2188,71 @@
             }
         }
 
+        // ===== FAQ ACCORDION FUNCTIONALITY =====
+        class FAQAccordion {
+            constructor() {
+                this.faqItems = $$('.faq__item');
+                this.init();
+            }
+
+            init() {
+                this.faqItems.forEach(item => {
+                    const question = item.querySelector('.faq__question');
+                    const answer = item.querySelector('.faq__answer');
+                    
+                    question.addEventListener('click', () => {
+                        this.toggleItem(item, question, answer);
+                    });
+
+                    // Keyboard accessibility
+                    question.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            this.toggleItem(item, question, answer);
+                        }
+                    });
+                });
+            }
+
+            toggleItem(item, question, answer) {
+                const isActive = item.classList.contains('active');
+                
+                // Close all other items
+                this.faqItems.forEach(otherItem => {
+                    if (otherItem !== item) {
+                        otherItem.classList.remove('active');
+                        otherItem.querySelector('.faq__answer').classList.remove('active');
+                        otherItem.querySelector('.faq__question').setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                // Toggle current item
+                if (isActive) {
+                    item.classList.remove('active');
+                    answer.classList.remove('active');
+                    question.setAttribute('aria-expanded', 'false');
+                } else {
+                    item.classList.add('active');
+                    answer.classList.add('active');
+                    question.setAttribute('aria-expanded', 'true');
+                }
+
+                // Analytics tracking
+                this.trackFAQInteraction(question.textContent.trim(), !isActive);
+            }
+
+            trackFAQInteraction(question, isOpened) {
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'faq_interaction', {
+                        event_category: 'FAQ',
+                        event_label: question,
+                        action: isOpened ? 'opened' : 'closed'
+                    });
+                }
+                console.log(`📊 FAQ ${isOpened ? 'Opened' : 'Closed'}: ${question}`);
+            }
+        }
+
         // ===== OPTIMIZACIÓN DE VIDEO MEJORADA =====
         class VideoOptimizer {
             constructor() {
@@ -2130,6 +2319,7 @@
         class FeatureAnimations {
             constructor() {
                 this.features = $$('.feature');
+                this.faqItems = $$('.faq__item');
                 this.init();
             }
 
@@ -2147,6 +2337,11 @@
 
                 this.features.forEach(feature => {
                     observer.observe(feature);
+                });
+
+                // Observe FAQ items for animation
+                this.faqItems.forEach(item => {
+                    observer.observe(item);
                 });
             }
         }
@@ -2213,12 +2408,13 @@
             new MobileNav();
             new ScrollEffects();
             new SmoothScroll();
+            new FAQAccordion();
             new VideoOptimizer();
             new ParallaxEffects();
             new FeatureAnimations();
             new Analytics();
             
-            console.log('🚀 Starflex Futurista con Características initialized');
+            console.log('🚀 Starflex Futurista con FAQ initialized');
         });
 
         // ===== PERFORMANCE OPTIMIZATION =====

@@ -1,36 +1,3 @@
-// ===== UTILITY FUNCTIONS =====
-const $ = (selector) => document.querySelector(selector);
-const $$ = (selector) => document.querySelectorAll(selector);
-
-// Debounce function for performance optimization
-const debounce = (func, wait, immediate) => {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      timeout = null;
-      if (!immediate) func(...args);
-    };
-    const callNow = immediate && !timeout;
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-    if (callNow) func(...args);
-  };
-};
-
-// Throttle function for scroll events
-const throttle = (func, limit) => {
-  let inThrottle;
-  return function() {
-    const args = arguments;
-    const context = this;
-    if (!inThrottle) {
-      func.apply(context, args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
-    }
-  }
-};
-
 // ===== SISTEMA DE PARTÍCULAS AVANZADO =====
 class ParticleSystem {
   constructor() {
@@ -228,6 +195,68 @@ class Navigation {
     // Update active navigation link
     this.updateActiveLink();
     
+    // Update scroll indicator
+    this.updateScrollIndicator();
+  }
+  
+  updateActiveLink() {
+    const sections = $$('section[id]');
+    const scrollPos = this.scrollY + 100;
+    
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop;
+      const sectionHeight = section.offsetHeight;
+      const sectionId = section.getAttribute('id');
+      const navLink = $(`.nav__link[href="#${sectionId}"]`);
+      
+      if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+        this.navLinks.forEach(link => link.classList.remove('active'));
+        navLink?.classList.add('active');
+      }
+    });
+  }
+
+  addScrollIndicator() {
+    const indicator = document.createElement('div');
+    indicator.className = 'scroll-indicator';
+    indicator.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #00d4ff 0%, #8b5cf6 50%, #06ffa5 100%);
+      transform-origin: left;
+      transform: scaleX(0);
+      z-index: 9999;
+      transition: transform 0.1s ease-out;
+    `;
+    document.body.appendChild(indicator);
+    this.scrollIndicator = indicator;
+  }
+
+  updateScrollIndicator() {
+    const scrollPercent = this.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+    this.scrollIndicator.style.transform = `scaleX(${Math.min(scrollPercent, 1)})`;
+  }
+  
+  smoothScroll(e) {
+    e.preventDefault();
+    const targetId = e.target.getAttribute('href');
+    const targetSection = $(targetId);
+    
+    if (targetSection) {
+      const headerHeight = this.header.offsetHeight;
+      const targetPosition = targetSection.offsetTop - headerHeight;
+      
+      window.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
+      });
+    }
+  }
+}
+
 // ===== UTILITY FUNCTIONS =====
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => document.querySelectorAll(selector);
