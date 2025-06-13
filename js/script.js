@@ -364,6 +364,330 @@ class ActiveNavigation {
     }
 }
 
+// ===== REPRODUCTOR DE VIDEO FUTURISTA =====
+class VideoPlayer {
+    constructor() {
+        this.video = $('#main-video');
+        this.playOverlay = $('#play-overlay');
+        this.progressBar = $('.videos__progress-fill');
+        this.currentTimeDisplay = $('.videos__current-time');
+        this.durationDisplay = $('.videos__duration');
+        this.progressIndicators = $('.videos__progress-indicators');
+        this.init();
+    }
+
+    init() {
+        if (!this.video) return;
+
+        this.setupVideoEvents();
+        this.setupPlayOverlay();
+        this.setupProgressTracking();
+    }
+
+    setupVideoEvents() {
+        // Evento de carga de metadatos
+        this.video.addEventListener('loadedmetadata', () => {
+            this.updateDuration();
+        });
+
+        // Evento de reproducción
+        this.video.addEventListener('play', () => {
+            this.hidePlayOverlay();
+            this.showProgressIndicators();
+        });
+
+        // Evento de pausa
+        this.video.addEventListener('pause', () => {
+            this.showPlayOverlay();
+        });
+
+        // Evento de finalización
+        this.video.addEventListener('ended', () => {
+            this.showPlayOverlay();
+            this.resetProgress();
+        });
+
+        // Evento de actualización de tiempo
+        this.video.addEventListener('timeupdate', () => {
+            this.updateProgress();
+        });
+
+        // Evento de carga
+        this.video.addEventListener('loadstart', () => {
+            this.video.setAttribute('data-loading', 'true');
+        });
+
+        this.video.addEventListener('canplay', () => {
+            this.video.removeAttribute('data-loading');
+        });
+    }
+
+    setupPlayOverlay() {
+        if (!this.playOverlay) return;
+
+        this.playOverlay.addEventListener('click', () => {
+            if (this.video.paused) {
+                this.playVideo();
+            } else {
+                this.pauseVideo();
+            }
+        });
+
+        // Accesibilidad con teclado
+        this.playOverlay.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (this.video.paused) {
+                    this.playVideo();
+                } else {
+                    this.pauseVideo();
+                }
+            }
+        });
+
+        // Hacer el overlay focusable
+        this.playOverlay.setAttribute('tabindex', '0');
+        this.playOverlay.setAttribute('role', 'button');
+        this.playOverlay.setAttribute('aria-label', 'Reproducir video');
+    }
+
+    setupProgressTracking() {
+        // Click en la barra de progreso para saltar
+        if (this.progressBar && this.progressBar.parentElement) {
+            this.progressBar.parentElement.addEventListener('click', (e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const percentage = clickX / rect.width;
+                const newTime = percentage * this.video.duration;
+                this.video.currentTime = newTime;
+            });
+        }
+    }
+
+    playVideo() {
+        const playPromise = this.video.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                // Video se reprodujo exitosamente
+                this.addPlayingEffects();
+            }).catch(error => {
+                console.warn('Error al reproducir video:', error);
+                this.showPlayOverlay();
+            });
+        }
+    }
+
+    pauseVideo() {
+        this.video.pause();
+        this.removePlayingEffects();
+    }
+
+    hidePlayOverlay() {
+        if (this.playOverlay) {
+            this.playOverlay.classList.add('hidden');
+        }
+    }
+
+    showPlayOverlay() {
+        if (this.playOverlay) {
+            this.playOverlay.classList.remove('hidden');
+        }
+    }
+
+    showProgressIndicators() {
+        if (this.progressIndicators) {
+            this.progressIndicators.classList.add('visible');
+        }
+    }
+
+    updateProgress() {
+        if (!this.video.duration) return;
+
+        const percentage = (this.video.currentTime / this.video.duration) * 100;
+        
+        if (this.progressBar) {
+            this.progressBar.style.width = percentage + '%';
+        }
+
+        if (this.currentTimeDisplay) {
+            this.currentTimeDisplay.textContent = this.formatTime(this.video.currentTime);
+        }
+    }
+
+    updateDuration() {
+        if (this.durationDisplay && this.video.duration) {
+            this.durationDisplay.textContent = this.formatTime(this.video.duration);
+        }
+    }
+
+    resetProgress() {
+        if (this.progressBar) {
+            this.progressBar.style.width = '0%';
+        }
+        if (this.currentTimeDisplay) {
+            this.currentTimeDisplay.textContent = '0:00';
+        }
+    }
+
+    formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+
+    addPlayingEffects() {
+        // Agregar efectos visuales mientras se reproduce
+        const playerFrame = $('.videos__player-frame');
+        if (playerFrame) {
+            playerFrame.style.boxShadow = `
+                inset 0 0 50px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                0 0 30px rgba(184, 0, 46, 0.3)
+            `;
+        }
+    }
+
+    removePlayingEffects() {
+        const playerFrame = $('.videos__player-frame');
+        if (playerFrame) {
+            playerFrame.style.boxShadow = `
+                inset 0 0 50px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05)
+            `;
+        }
+    }
+}
+
+// ===== INTERACCIONES DE TARJETAS DE VIDEO =====
+class VideoCardInteractions {
+    constructor() {
+        this.videoCards = $$('.videos__card');
+        this.init();
+    }
+
+    init() {
+        this.videoCards.forEach(card => {
+            this.setupCardHover(card);
+            this.setupCardClick(card);
+        });
+    }
+
+    setupCardHover(card) {
+        const playButton = card.querySelector('.videos__card-play');
+        
+        card.addEventListener('mouseenter', () => {
+            if (playButton) {
+                playButton.style.transform = 'scale(1.1)';
+                playButton.style.boxShadow = `
+                    0 25px 50px rgba(0, 0, 0, 0.3),
+                    0 0 30px rgba(0, 212, 255, 0.6)
+                `;
+            }
+        });
+
+        card.addEventListener('mouseleave', () => {
+            if (playButton) {
+                playButton.style.transform = 'scale(1)';
+                playButton.style.boxShadow = `
+                    0 15px 35px rgba(0, 0, 0, 0.25),
+                    0 0 20px rgba(0, 212, 255, 0.4)
+                `;
+            }
+        });
+    }
+
+    setupCardClick(card) {
+        card.addEventListener('click', () => {
+            // Efecto de click
+            card.style.transform = 'translateY(-8px) scale(0.98)';
+            
+            setTimeout(() => {
+                card.style.transform = 'translateY(-8px) scale(1)';
+                
+                // Aquí podrías agregar lógica para abrir un modal con el video
+                this.showVideoModal(card);
+            }, 150);
+        });
+
+        // Accesibilidad con teclado
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                card.click();
+            }
+        });
+
+        // Hacer las tarjetas focusables
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
+    }
+
+    showVideoModal(card) {
+        const title = card.querySelector('.videos__card-title').textContent;
+        
+        // Crear notificación temporal (puedes reemplazar con un modal real)
+        this.showNotification(`Reproduciendo: ${title}`);
+    }
+
+    showNotification(message) {
+        // Crear elemento de notificación
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--starflex-blue), var(--starflex-cyan));
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            font-weight: 600;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Animar entrada
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Remover después de 3 segundos
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+}
+
+// ===== EFECTOS DE SCROLL PARALLAX =====
+class ParallaxEffects {
+    constructor() {
+        this.videoOrbs = $$('.videos__orb');
+        this.init();
+    }
+
+    init() {
+        window.addEventListener('scroll', () => this.updateParallax(), { passive: true });
+    }
+
+    updateParallax() {
+        const scrollY = window.scrollY;
+        
+        this.videoOrbs.forEach((orb, index) => {
+            const speed = 0.5 + (index * 0.2);
+            const yPos = -(scrollY * speed);
+            orb.style.transform = `translateY(${yPos}px)`;
+        });
+    }
+}
+
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', () => {
     new MobileNav();
@@ -374,8 +698,11 @@ document.addEventListener('DOMContentLoaded', () => {
     new AnimatedCounters();
     new ParticleEffects();
     new ActiveNavigation();
+    new VideoPlayer();
+    new VideoCardInteractions();
+    new ParallaxEffects();
     
-    console.log('🚀 Starflex Ultra Futurista - Completo con iPhone 15 Pro, Navbar Flotante y Botones de Descarga Flotantes initialized');
+    console.log('🚀 Starflex Ultra Futurista con Sección de Videos - Completamente inicializado');
 });
 
 // ===== OPTIMIZACIÓN DE SCROLL =====
@@ -396,13 +723,20 @@ const preloadResources = () => {
     const criticalResources = [
         './assets/Google-Play.svg',
         './assets/App-Store.svg',
-        './assets/logo.png'
+        './assets/logo.png',
+        './assets/StarFlex.mp4'
     ];
 
     criticalResources.forEach(resource => {
         const link = document.createElement('link');
         link.rel = 'preload';
-        link.as = 'image';
+        
+        if (resource.endsWith('.mp4')) {
+            link.as = 'video';
+        } else {
+            link.as = 'image';
+        }
+        
         link.href = resource;
         document.head.appendChild(link);
     });
@@ -429,3 +763,20 @@ if ('IntersectionObserver' in window) {
         imageObserver.observe(img);
     });
 }
+
+// ===== MANEJO DE ERRORES DE VIDEO =====
+document.addEventListener('DOMContentLoaded', () => {
+    const video = $('#main-video');
+    if (video) {
+        video.addEventListener('error', (e) => {
+            console.warn('Error cargando video:', e);
+            const playOverlay = $('#play-overlay');
+            if (playOverlay) {
+                const playText = playOverlay.querySelector('.videos__play-subtitle');
+                if (playText) {
+                    playText.textContent = 'Video no disponible';
+                }
+            }
+        });
+    }
+});
