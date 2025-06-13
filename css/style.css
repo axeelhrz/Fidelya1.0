@@ -236,7 +236,7 @@ body {
 .nav__logo {
     width: 55px;
     height: 55px;
-    background: url('./assets/logo.png') center/contain no-repeat;
+    background: url('../assets/logo.png') center/contain no-repeat;
     border-radius: 12px;
     position: relative;
     transition: all var(--transition);
