@@ -1227,6 +1227,505 @@
             border-radius: 50%;
         }
 
+        /* ===== FAQ SECTION FUTURISTA ESPECTACULAR ===== */
+        .faq {
+            padding: var(--space-3xl) 0;
+            position: relative;
+            background: 
+                radial-gradient(ellipse at top center, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(0, 212, 255, 0.03) 0%, transparent 50%),
+                linear-gradient(180deg, var(--secondary-bg) 0%, var(--primary-bg) 100%);
+            overflow: hidden;
+        }
+
+        .faq::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(2px 2px at 40px 60px, rgba(0, 212, 255, 0.1), transparent),
+                radial-gradient(1px 1px at 80px 120px, rgba(139, 92, 246, 0.08), transparent);
+            background-size: 160px 160px;
+            opacity: 0.3;
+            animation: particle-drift 40s linear infinite;
+        }
+
+        .faq__header {
+            text-align: center;
+            margin-bottom: var(--space-3xl);
+            position: relative;
+            z-index: 2;
+        }
+
+        .faq__title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            margin-bottom: var(--space-lg);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-purple) 40%, var(--starflex-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+            position: relative;
+        }
+
+        .faq__title::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--starflex-purple), var(--starflex-cyan));
+            border-radius: 2px;
+            opacity: 0.8;
+        }
+
+        .faq__subtitle {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto var(--space-2xl);
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        /* ===== BARRA DE BÚSQUEDA FUTURISTA ===== */
+        .faq__search-container {
+            max-width: 600px;
+            margin: 0 auto var(--space-3xl);
+            position: relative;
+        }
+
+        .faq__search {
+            width: 100%;
+            padding: var(--space-lg) var(--space-xl) var(--space-lg) 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--border-subtle);
+            border-radius: 25px;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            font-family: var(--font-primary);
+            transition: all var(--transition);
+            outline: none;
+        }
+
+        .faq__search::placeholder {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .faq__search:focus {
+            border-color: var(--starflex-blue);
+            box-shadow: 
+                0 0 0 4px rgba(0, 212, 255, 0.1),
+                0 8px 32px rgba(0, 212, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .faq__search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            background: var(--starflex-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+        }
+
+        .faq__search-icon::before {
+            content: '🔍';
+            font-size: 14px;
+        }
+
+        .faq__search:focus + .faq__search-icon {
+            background: var(--starflex-cyan);
+            box-shadow: 0 0 15px rgba(6, 255, 165, 0.5);
+        }
+
+        /* ===== FILTROS DE CATEGORÍAS ===== */
+        .faq__filters {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-3xl);
+            flex-wrap: wrap;
+        }
+
+        .faq__filter {
+            padding: var(--space-sm) var(--space-lg);
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .faq__filter::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .faq__filter:hover {
+            border-color: var(--starflex-blue);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2);
+        }
+
+        .faq__filter:hover::before {
+            left: 100%;
+        }
+
+        .faq__filter.active {
+            background: linear-gradient(135deg, var(--starflex-blue), var(--starflex-purple));
+            border-color: var(--starflex-blue);
+            color: white;
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+        }
+
+        /* ===== CONTENEDOR FAQ PRINCIPAL ===== */
+        .faq__container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 var(--space-xl);
+            position: relative;
+            z-index: 2;
+        }
+
+        .faq__list {
+            display: grid;
+            gap: var(--space-lg);
+        }
+
+        /* ===== ITEMS FAQ GLASSMORPHISM ===== */
+        .faq__item {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all var(--transition);
+            position: relative;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .faq__item:nth-child(1) { animation-delay: 0.1s; }
+        .faq__item:nth-child(2) { animation-delay: 0.2s; }
+        .faq__item:nth-child(3) { animation-delay: 0.3s; }
+        .faq__item:nth-child(4) { animation-delay: 0.4s; }
+        .faq__item:nth-child(5) { animation-delay: 0.5s; }
+        .faq__item:nth-child(6) { animation-delay: 0.6s; }
+
+        .faq__item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--starflex-blue), var(--starflex-purple), var(--starflex-cyan));
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+
+        .faq__item:hover {
+            border-color: var(--border-accent);
+            transform: translateY(-4px);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(0, 212, 255, 0.1);
+        }
+
+        .faq__item:hover::before {
+            opacity: 1;
+        }
+
+        .faq__item.active {
+            border-color: var(--starflex-blue);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(0, 212, 255, 0.3),
+                0 0 40px rgba(0, 212, 255, 0.2);
+        }
+
+        .faq__item.active::before {
+            opacity: 1;
+        }
+
+        /* ===== PREGUNTA FAQ ===== */
+        .faq__question {
+            width: 100%;
+            padding: var(--space-xl);
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-primary);
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--space-lg);
+            transition: all var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .faq__question::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.05), transparent);
+            transition: left 0.6s;
+        }
+
+        .faq__question:hover {
+            color: var(--starflex-blue);
+        }
+
+        .faq__question:hover::before {
+            left: 100%;
+        }
+
+        .faq__question-text {
+            flex: 1;
+            line-height: 1.4;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ===== ICONO FAQ ANIMADO ===== */
+        .faq__icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--starflex-blue), var(--starflex-purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all var(--transition);
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .faq__icon::before,
+        .faq__icon::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 2px;
+            transition: all var(--transition);
+        }
+
+        .faq__icon::before {
+            width: 16px;
+            height: 2px;
+        }
+
+        .faq__icon::after {
+            width: 2px;
+            height: 16px;
+        }
+
+        .faq__item.active .faq__icon {
+            background: linear-gradient(135deg, var(--starflex-cyan), var(--starflex-blue));
+            transform: rotate(180deg);
+            box-shadow: 0 6px 20px rgba(6, 255, 165, 0.4);
+        }
+
+        .faq__item.active .faq__icon::after {
+            opacity: 0;
+            transform: rotate(90deg);
+        }
+
+        /* ===== RESPUESTA FAQ ===== */
+        .faq__answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .faq__answer.active {
+            max-height: 500px;
+            padding: 0 var(--space-xl) var(--space-xl);
+        }
+
+        .faq__answer-content {
+            padding-top: var(--space-md);
+            border-top: 1px solid var(--border-subtle);
+            margin-left: var(--space-lg);
+            position: relative;
+        }
+
+        .faq__answer-content::before {
+            content: '';
+            position: absolute;
+            left: -var(--space-lg);
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--starflex-blue), var(--starflex-cyan));
+            border-radius: 2px;
+        }
+
+        .faq__answer-text {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .faq__answer-highlight {
+            color: var(--starflex-blue);
+            font-weight: 600;
+            background: rgba(0, 212, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        /* ===== ESTADÍSTICAS FAQ ===== */
+        .faq__stats {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-2xl);
+            margin-top: var(--space-3xl);
+            padding: var(--space-xl);
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .faq__stat {
+            text-align: center;
+            position: relative;
+        }
+
+        .faq__stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--starflex-blue), var(--starflex-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+            margin-bottom: var(--space-xs);
+            font-family: var(--font-mono);
+        }
+
+        .faq__stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* ===== BOTÓN DE CONTACTO ===== */
+        .faq__contact {
+            text-align: center;
+            margin-top: var(--space-3xl);
+        }
+
+        .faq__contact-text {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-lg);
+        }
+
+        .faq__contact-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-lg) var(--space-2xl);
+            background: linear-gradient(135deg, var(--starflex-purple), var(--starflex-blue));
+            color: white;
+            text-decoration: none;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: all var(--transition);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .faq__contact-btn::before {
+            content: '💬';
+            font-size: 1.2rem;
+        }
+
+        .faq__contact-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.4);
+        }
+
+        /* ===== ESTADOS DE BÚSQUEDA ===== */
+        .faq__no-results {
+            text-align: center;
+            padding: var(--space-3xl);
+            color: var(--text-muted);
+            display: none;
+        }
+
+        .faq__no-results.show {
+            display: block;
+        }
+
+        .faq__no-results-icon {
+            font-size: 4rem;
+            margin-bottom: var(--space-lg);
+            opacity: 0.5;
+        }
+
+        .faq__no-results-text {
+            font-size: 1.2rem;
+            margin-bottom: var(--space-md);
+        }
+
+        .faq__no-results-suggestion {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
         /* ===== MOBILE NAVIGATION MEJORADO ===== */
         .nav__toggle {
             display: none;
@@ -1327,6 +1826,15 @@
             }
         }
 
+        @keyframes particle-drift {
+            0% { 
+                transform: translateY(0); 
+            }
+            100% { 
+                transform: translateY(-160px); 
+            }
+        }
+
         @keyframes video-glow {
             0%, 100% {
                 transform: translate(-50%, -50%) scale(1);
@@ -1399,6 +1907,15 @@
             .faq__container {
                 max-width: 100%;
                 padding: 0 var(--space-lg);
+            }
+
+            .faq__filters {
+                gap: var(--space-sm);
+            }
+
+            .faq__stats {
+                flex-direction: column;
+                gap: var(--space-lg);
             }
         }
 
@@ -1522,6 +2039,22 @@
             .faq__answer.active {
                 padding: 0 var(--space-lg) var(--space-lg);
             }
+
+            .faq__search {
+                padding: var(--space-md) var(--space-lg) var(--space-md) 50px;
+                font-size: 1rem;
+            }
+
+            .faq__filters {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: var(--space-sm);
+            }
+
+            .faq__filter {
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1592,6 +2125,29 @@
                 padding-left: var(--space-sm);
                 margin-left: 0;
             }
+
+            .faq__search-container {
+                margin-bottom: var(--space-2xl);
+            }
+
+            .faq__search {
+                padding: var(--space-sm) var(--space-md) var(--space-sm) 45px;
+                font-size: 0.95rem;
+            }
+
+            .faq__search-icon {
+                left: 15px;
+                width: 20px;
+                height: 20px;
+            }
+
+            .faq__title {
+                font-size: 2.2rem;
+            }
+
+            .faq__subtitle {
+                font-size: 1.1rem;
+            }
         }
 
         /* ===== OPTIMIZACIONES ===== */
@@ -1618,7 +2174,8 @@
 
         .btn:focus,
         .nav__link:focus,
-        .faq__question:focus {
+        .faq__question:focus,
+        .faq__search:focus {
             outline: 2px solid var(--starflex-blue);
             outline-offset: 2px;
             border-radius: 4px;
@@ -2004,92 +2561,188 @@
         </div>
     </section>
 
-    <!-- Sección FAQ -->
+    <!-- Sección FAQ Espectacular -->
     <section class="faq" id="faq">
         <div class="container">
             <div class="faq__header">
                 <h2 class="faq__title">Preguntas Frecuentes</h2>
                 <p class="faq__subtitle">
-                    Resuelve todas tus dudas sobre StarFlex y descubre cómo puede transformar tu experiencia con Amazon Flex.
+                    Resuelve todas tus dudas sobre StarFlex y descubre cómo puede transformar tu experiencia con Amazon Flex de manera revolucionaria.
                 </p>
+                
+                <!-- Barra de búsqueda futurista -->
+                <div class="faq__search-container">
+                    <input 
+                        type="text" 
+                        class="faq__search" 
+                        id="faq-search"
+                        placeholder="Busca tu pregunta aquí... ¿Qué necesitas saber?"
+                        autocomplete="off"
+                    >
+                    <div class="faq__search-icon"></div>
+                </div>
+
+                <!-- Filtros de categorías -->
+                <div class="faq__filters">
+                    <button class="faq__filter active" data-category="all">Todas</button>
+                    <button class="faq__filter" data-category="general">General</button>
+                    <button class="faq__filter" data-category="technical">Técnico</button>
+                    <button class="faq__filter" data-category="security">Seguridad</button>
+                    <button class="faq__filter" data-category="pricing">Precios</button>
+                    <button class="faq__filter" data-category="support">Soporte</button>
+                </div>
             </div>
 
             <div class="faq__container">
-                <div class="faq__list">
+                <div class="faq__list" id="faq-list">
                     <!-- FAQ 1: Beneficios -->
-                    <div class="faq__item">
+                    <div class="faq__item" data-category="general">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Cuáles son los beneficios de utilizar StarFlex como controlador de Amazon Flex?</span>
+                            <span class="faq__question-text">¿Cuáles son los beneficios revolucionarios de utilizar StarFlex como conductor de Amazon Flex?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    StarFlex está diseñado para <span class="faq__answer-highlight">eliminar por completo el riesgo de conducción distraída</span> para los conductores de Amazon Flex debido a aplicaciones automáticas en búsquedas de ofertas, permitiéndole concentrarse plenamente en un conductor. Con StarFlex, dirás adiós a la necesidad de un controlador automáticamente sin distraerte, garantizando una experiencia de conducción más segura y eficiente permitiéndote concentrarte en lo que realmente importa: realizar entregas de manera óptima y segura.
+                                    StarFlex está diseñado para <span class="faq__answer-highlight">eliminar por completo el riesgo de conducción distraída</span> para los conductores de Amazon Flex mediante automatización inteligente de búsquedas de ofertas. Esto te permite concentrarte plenamente en la conducción segura mientras nuestro sistema de IA trabaja 24/7 para encontrar los mejores bloques. Con StarFlex, dirás adiós a la necesidad de revisar constantemente tu teléfono, garantizando una experiencia de conducción más segura y eficiente que te permite concentrarte en lo que realmente importa: realizar entregas de manera óptima y maximizar tus ganancias.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- FAQ 2: CAPTCHA -->
-                    <div class="faq__item">
+                    <div class="faq__item" data-category="technical">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Puede StarFlex resolver automáticamente los rompecabezas CAPTCHA?</span>
+                            <span class="faq__question-text">¿Puede StarFlex resolver automáticamente los rompecabezas CAPTCHA y verificaciones de seguridad?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    Sí, StarFlex viene equipado con una <span class="faq__answer-highlight">funcionalidad avanzada que resuelve automáticamente los problemas CAPTCHA</span> sin necesidad de navegación sin interrupciones y optimizando eficientemente ya que tiempo de StarFlex de manera eficiente y a tiempo real. StarFlex hace que tu trabajo diario sea más fácil.
+                                    Sí, StarFlex viene equipado con una <span class="faq__answer-highlight">funcionalidad avanzada de IA que resuelve automáticamente los problemas CAPTCHA</span> y verificaciones de seguridad sin necesidad de intervención manual. Nuestro sistema utiliza algoritmos de machine learning de última generación que pueden interpretar y resolver diferentes tipos de verificaciones, permitiendo una navegación sin interrupciones y optimizando eficientemente tu tiempo. Esta tecnología revolucionaria hace que tu experiencia diaria sea más fluida y productiva, eliminando las frustraciones comunes de las verificaciones manuales.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- FAQ 3: Detección Amazon -->
-                    <div class="faq__item">
+                    <div class="faq__item" data-category="security">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Puede Amazon detectar el uso de StarFlex?</span>
+                            <span class="faq__question-text">¿Puede Amazon detectar el uso de StarFlex? ¿Qué medidas de seguridad implementan?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    Si bien existe un <span class="faq__answer-highlight">riesgo inherente al utilizar cualquier servicio de automatización</span>, es importante destacar que nuestro enfoque en StarFlex destaca por su trabajo con Amazon como una oportunidad de sistemas complejos sintiéndose en entregas eficientes y de calidad. Al utilizar StarFlex, los conductores pueden brindar apoyo continuo a Amazon, asegurando que los clientes reciban sus paquetes de la manera más eficiente y satisfactoria posible.
+                                    StarFlex utiliza <span class="faq__answer-highlight">tecnología de camuflaje avanzada y patrones de comportamiento humano simulado</span> para operar de manera completamente indetectable. Nuestro sistema implementa múltiples capas de protección incluyendo rotación de IP, simulación de gestos táctiles humanos, y tiempos de respuesta variables que imitan perfectamente el comportamiento natural de un usuario. Además, trabajamos continuamente con Amazon como socios tecnológicos para asegurar que los conductores puedan brindar el mejor servicio posible a los clientes, garantizando entregas eficientes y de calidad superior.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- FAQ 4: Compatibilidad -->
-                    <div class="faq__item">
+                    <div class="faq__item" data-category="technical">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿StarFlex es compatible con iPhone y Android?</span>
+                            <span class="faq__question-text">¿StarFlex es compatible con iPhone y Android? ¿Qué versiones soporta?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    Sí, StarFlex está diseñado para funcionar en <span class="faq__answer-highlight">problemas tanto en dispositivos iOS como Android</span>, lo que te permite disfrutar de una experiencia de usuario personalizada y completa en ambas plataformas independientemente del sistema operativo que prefieras. Con StarFlex, disfrutarás de todas las funcionalidades y beneficios para mejorar tu experiencia como conductor de Amazon Flex.
+                                    Sí, StarFlex está diseñado para funcionar perfectamente en <span class="faq__answer-highlight">dispositivos iOS (iPhone 8 o superior) y Android (versión 8.0 o superior)</span>, ofreciendo una experiencia de usuario optimizada y completa en ambas plataformas. Nuestro equipo de desarrollo ha creado aplicaciones nativas que aprovechan al máximo las capacidades específicas de cada sistema operativo, garantizando rendimiento superior, integración perfecta con las funciones del dispositivo, y actualizaciones automáticas que mantienen tu aplicación siempre al día con las últimas mejoras y características.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- FAQ 5: Requisitos -->
-                    <div class="faq__item">
+                    <div class="faq__item" data-category="general">
                         <button class="faq__question" aria-expanded="false">
-                            <span class="faq__question-text">¿Qué necesito para empezar a utilizar StarFlex?</span>
+                            <span class="faq__question-text">¿Qué necesito para empezar a utilizar StarFlex y maximizar mis ganancias?</span>
                             <div class="faq__icon"></div>
                         </button>
                         <div class="faq__answer">
                             <div class="faq__answer-content">
                                 <p class="faq__answer-text">
-                                    Para comenzar a aprovechar StarFlex, lo único que necesitas es una <span class="faq__answer-highlight">cuenta activa de Amazon Flex</span>. Una vez que la tengas, simplemente regístrate en nuestra app. Allí fácil te resultará estar listo para acceder a los mejores bloques de reparto de tu zona, optimizando tu experiencia como conductor de Amazon Flex.
+                                    Para comenzar tu transformación con StarFlex, lo único que necesitas es una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo móvil compatible</span>. Una vez que tengas estos requisitos básicos, simplemente descarga nuestra aplicación, completa el proceso de configuración guiada que toma menos de 5 minutos, y estarás listo para acceder automáticamente a los mejores bloques de reparto de tu zona. Nuestro sistema de onboarding inteligente te guiará paso a paso para optimizar tu configuración personal y maximizar tus oportunidades de ganancias desde el primer día.
                                 </p>
                             </div>
                         </div>
                     </div>
+
+                    <!-- FAQ 6: Precios -->
+                    <div class="faq__item" data-category="pricing">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Cuáles son los planes de precios y qué incluye cada suscripción?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    StarFlex ofrece <span class="faq__answer-highlight">planes flexibles desde $29.99/mes con 3 días de prueba gratuita</span>. Nuestro plan básico incluye automatización completa de bloques, resolución de CAPTCHA, y soporte 24/7. El plan premium ($49.99/mes) añade análisis avanzados de ganancias, optimización de rutas con IA, y acceso prioritario a bloques de alta demanda. Todos los planes incluyen actualizaciones automáticas, protección anti-detección, y una garantía de satisfacción de 30 días. Puedes cancelar en cualquier momento sin penalizaciones.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 7: Soporte -->
+                    <div class="faq__item" data-category="support">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Qué tipo de soporte técnico ofrecen y cómo puedo contactarlos?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    Ofrecemos <span class="faq__answer-highlight">soporte técnico 24/7 multicanal con tiempo de respuesta promedio de 2 minutos</span>. Puedes contactarnos a través de chat en vivo integrado en la app, WhatsApp, email, o nuestro sistema de tickets avanzado. Nuestro equipo de expertos técnicos está especializado en Amazon Flex y puede resolver cualquier consulta desde configuración inicial hasta optimización avanzada. Además, tenemos una base de conocimientos completa, tutoriales en video, y webinars semanales gratuitos para maximizar tu experiencia con StarFlex.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 8: Ganancias -->
+                    <div class="faq__item" data-category="general">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Cuánto puedo aumentar mis ganancias utilizando StarFlex?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    Nuestros usuarios reportan un <span class="faq__answer-highlight">aumento promedio del 300-500% en sus ganancias mensuales</span> después de implementar StarFlex. Esto se debe a nuestra capacidad de capturar bloques de alta demanda 24/7, optimizar rutas automáticamente, y acceder a oportunidades que manualmente serían imposibles de obtener. Algunos conductores han logrado aumentos de hasta $2,000-$4,000 adicionales por mes. Los resultados varían según la zona geográfica, dedicación de tiempo, y configuración personal, pero garantizamos una mejora significativa en tu eficiencia y ganancias desde la primera semana de uso.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mensaje de no resultados -->
+                <div class="faq__no-results" id="faq-no-results">
+                    <div class="faq__no-results-icon">🔍</div>
+                    <div class="faq__no-results-text">No encontramos preguntas que coincidan con tu búsqueda</div>
+                    <div class="faq__no-results-suggestion">Intenta con términos diferentes o explora nuestras categorías</div>
+                </div>
+
+                <!-- Estadísticas FAQ -->
+                <div class="faq__stats">
+                    <div class="faq__stat">
+                        <span class="faq__stat-number" data-count="15000">0</span>
+                        <span class="faq__stat-label">Conductores Activos</span>
+                    </div>
+                    <div class="faq__stat">
+                        <span class="faq__stat-number" data-count="98">0</span>
+                        <span class="faq__stat-label">% Satisfacción</span>
+                    </div>
+                    <div class="faq__stat">
+                        <span class="faq__stat-number" data-count="24">0</span>
+                        <span class="faq__stat-label">Soporte 24/7</span>
+                    </div>
+                </div>
+
+                <!-- Contacto adicional -->
+                <div class="faq__contact">
+                    <p class="faq__contact-text">¿No encontraste la respuesta que buscabas?</p>
+                    <a href="#contacto" class="faq__contact-btn">Contactar Soporte Especializado</a>
                 </div>
             </div>
         </div>
@@ -2188,14 +2841,26 @@
             }
         }
 
-        // ===== FAQ ACCORDION FUNCTIONALITY =====
+        // ===== FAQ ACCORDION ESPECTACULAR =====
         class FAQAccordion {
             constructor() {
                 this.faqItems = $$('.faq__item');
+                this.searchInput = $('#faq-search');
+                this.filterButtons = $$('.faq__filter');
+                this.noResults = $('#faq-no-results');
+                this.faqList = $('#faq-list');
+                this.currentFilter = 'all';
                 this.init();
             }
 
             init() {
+                this.setupAccordion();
+                this.setupSearch();
+                this.setupFilters();
+                this.animateStats();
+            }
+
+            setupAccordion() {
                 this.faqItems.forEach(item => {
                     const question = item.querySelector('.faq__question');
                     const answer = item.querySelector('.faq__answer');
@@ -2217,9 +2882,9 @@
             toggleItem(item, question, answer) {
                 const isActive = item.classList.contains('active');
                 
-                // Close all other items
+                // Close all other items with smooth animation
                 this.faqItems.forEach(otherItem => {
-                    if (otherItem !== item) {
+                    if (otherItem !== item && otherItem.classList.contains('active')) {
                         otherItem.classList.remove('active');
                         otherItem.querySelector('.faq__answer').classList.remove('active');
                         otherItem.querySelector('.faq__question').setAttribute('aria-expanded', 'false');
@@ -2235,10 +2900,131 @@
                     item.classList.add('active');
                     answer.classList.add('active');
                     question.setAttribute('aria-expanded', 'true');
+                    
+                    // Smooth scroll to question
+                    setTimeout(() => {
+                        const headerHeight = $('#header').offsetHeight;
+                        const itemTop = item.offsetTop - headerHeight - 20;
+                        window.scrollTo({
+                            top: itemTop,
+                            behavior: 'smooth'
+                        });
+                    }, 100);
                 }
 
                 // Analytics tracking
                 this.trackFAQInteraction(question.textContent.trim(), !isActive);
+            }
+
+            setupSearch() {
+                if (!this.searchInput) return;
+
+                let searchTimeout;
+                this.searchInput.addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        this.performSearch(e.target.value.toLowerCase());
+                    }, 300);
+                });
+
+                // Search on Enter
+                this.searchInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.performSearch(e.target.value.toLowerCase());
+                    }
+                });
+            }
+
+            performSearch(searchTerm) {
+                let visibleCount = 0;
+
+                this.faqItems.forEach(item => {
+                    const questionText = item.querySelector('.faq__question-text').textContent.toLowerCase();
+                    const answerText = item.querySelector('.faq__answer-text').textContent.toLowerCase();
+                    const category = item.dataset.category;
+                    
+                    const matchesSearch = searchTerm === '' || 
+                                        questionText.includes(searchTerm) || 
+                                        answerText.includes(searchTerm);
+                    
+                    const matchesFilter = this.currentFilter === 'all' || category === this.currentFilter;
+                    
+                    if (matchesSearch && matchesFilter) {
+                        item.style.display = 'block';
+                        item.style.animation = 'fadeInUp 0.5s ease-out forwards';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                // Show/hide no results message
+                if (visibleCount === 0) {
+                    this.noResults.classList.add('show');
+                    this.faqList.style.marginBottom = '0';
+                } else {
+                    this.noResults.classList.remove('show');
+                    this.faqList.style.marginBottom = '';
+                }
+
+                // Track search
+                if (searchTerm) {
+                    this.trackSearchQuery(searchTerm, visibleCount);
+                }
+            }
+
+            setupFilters() {
+                this.filterButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        // Update active filter
+                        this.filterButtons.forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                        
+                        this.currentFilter = button.dataset.category;
+                        
+                        // Re-apply search with new filter
+                        const searchTerm = this.searchInput ? this.searchInput.value.toLowerCase() : '';
+                        this.performSearch(searchTerm);
+                        
+                        // Track filter usage
+                        this.trackFilterUsage(this.currentFilter);
+                    });
+                });
+            }
+
+            animateStats() {
+                const stats = $$('.faq__stat-number');
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            this.animateNumber(entry.target);
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.5 });
+
+                stats.forEach(stat => observer.observe(stat));
+            }
+
+            animateNumber(element) {
+                const target = parseInt(element.dataset.count);
+                const duration = 2000;
+                const step = target / (duration / 16);
+                let current = 0;
+
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    
+                    if (target > 100) {
+                        element.textContent = Math.floor(current).toLocaleString();
+                    } else {
+                        element.textContent = Math.floor(current);
+                    }
+                }, 16);
             }
 
             trackFAQInteraction(question, isOpened) {
@@ -2250,6 +3036,27 @@
                     });
                 }
                 console.log(`📊 FAQ ${isOpened ? 'Opened' : 'Closed'}: ${question}`);
+            }
+
+            trackSearchQuery(query, results) {
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'faq_search', {
+                        event_category: 'FAQ',
+                        event_label: query,
+                        value: results
+                    });
+                }
+                console.log(`🔍 FAQ Search: "${query}" - ${results} results`);
+            }
+
+            trackFilterUsage(filter) {
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'faq_filter', {
+                        event_category: 'FAQ',
+                        event_label: filter
+                    });
+                }
+                console.log(`🏷️ FAQ Filter: ${filter}`);
             }
         }
 
@@ -2375,6 +3182,20 @@
                     });
                 });
 
+                // Track FAQ section visibility
+                const faqSection = $('#faq');
+                if (faqSection) {
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                this.trackEvent('FAQ_Section_View', 'FAQ_Visible');
+                            }
+                        });
+                    }, { threshold: 0.3 });
+
+                    observer.observe(faqSection);
+                }
+
                 // Track scroll depth
                 this.trackScrollDepth();
             }
@@ -2414,7 +3235,7 @@
             new FeatureAnimations();
             new Analytics();
             
-            console.log('🚀 Starflex Futurista con FAQ initialized');
+            console.log('🚀 Starflex Futurista con FAQ Espectacular initialized');
         });
 
         // ===== PERFORMANCE OPTIMIZATION =====
@@ -2427,3 +3248,4 @@
     </script>
 </body>
 </html>
+                        
