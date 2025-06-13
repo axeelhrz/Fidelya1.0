@@ -49,6 +49,7 @@
                 <ul class="nav__list">
                     <li><a href="#inicio" class="nav__link">Inicio</a></li>
                     <li><a href="#caracteristicas" class="nav__link">Features</a></li>
+                    <li><a href="#videos" class="nav__link">Videos</a></li>
                     <li><a href="#precios" class="nav__link">Pricing</a></li>
                     <li><a href="#faq" class="nav__link">FAQ</a></li>
                     <li><a href="#contacto" class="nav__link">Contact</a></li>
@@ -482,6 +483,239 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECCIÓN DE VIDEOS FUTURISTA ===== -->
+    <section class="videos" id="videos">
+        <div class="container">
+            <!-- Header de la sección -->
+            <div class="videos__header">
+                <div class="videos__badge">
+                    <span class="videos__badge-icon">▶</span>
+                    Experiencia Visual Inmersiva
+                </div>
+                
+                <h2 class="videos__title">
+                    <span class="videos__title--main">VE STARFLEX</span>
+                    <span class="videos__title--highlight">EN ACCIÓN</span>
+                </h2>
+                
+                <p class="videos__subtitle">
+                    Descubre cómo StarFlex revoluciona tu experiencia con Amazon Flex. 
+                    Mira la automatización inteligente trabajando en tiempo real.
+                </p>
+            </div>
+
+            <!-- Video principal con efectos futuristas -->
+            <div class="videos__main-container">
+                <div class="videos__main-wrapper">
+                    <!-- Efectos de fondo del video -->
+                    <div class="videos__bg-effects">
+                        <div class="videos__orb videos__orb--1"></div>
+                        <div class="videos__orb videos__orb--2"></div>
+                        <div class="videos__orb videos__orb--3"></div>
+                        <div class="videos__grid-overlay"></div>
+                    </div>
+
+                    <!-- Contenedor del video principal -->
+                    <div class="videos__player-container">
+                        <div class="videos__player-frame">
+                            <video 
+                                class="videos__player" 
+                                id="main-video"
+                                poster="./assets/video-poster.jpg"
+                                preload="metadata"
+                                playsinline
+                                controls
+                            >
+                                <source src="./assets/StarFlex.mp4" type="video/mp4">
+                                <p>Tu navegador no soporta videos HTML5. <a href="./assets/StarFlex.mp4">Descargar video</a>.</p>
+                            </video>
+                            
+                            <!-- Overlay de play personalizado -->
+                            <div class="videos__play-overlay" id="play-overlay">
+                                <div class="videos__play-button">
+                                    <div class="videos__play-icon">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="videos__play-pulse"></div>
+                                </div>
+                                <div class="videos__play-text">
+                                    <span class="videos__play-title">REPRODUCIR DEMO</span>
+                                    <span class="videos__play-subtitle">Ver StarFlex en acción</span>
+                                </div>
+                            </div>
+
+                            <!-- Indicadores de progreso futuristas -->
+                            <div class="videos__progress-indicators">
+                                <div class="videos__progress-bar">
+                                    <div class="videos__progress-fill"></div>
+                                </div>
+                                <div class="videos__time-display">
+                                    <span class="videos__current-time">0:00</span>
+                                    <span class="videos__duration">0:00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información del video -->
+                        <div class="videos__info">
+                            <div class="videos__info-main">
+                                <h3 class="videos__info-title">StarFlex Demo Completo</h3>
+                                <p class="videos__info-description">
+                                    Observa cómo StarFlex automatiza completamente tu experiencia con Amazon Flex. 
+                                    Desde la configuración inicial hasta la captura automática de bloques.
+                                </p>
+                            </div>
+                            
+                            <div class="videos__info-stats">
+                                <div class="videos__stat">
+                                    <div class="videos__stat-number">2:45</div>
+                                    <div class="videos__stat-label">Duración</div>
+                                </div>
+                                <div class="videos__stat">
+                                    <div class="videos__stat-number">4K</div>
+                                    <div class="videos__stat-label">Calidad</div>
+                                </div>
+                                <div class="videos__stat">
+                                    <div class="videos__stat-number">15K+</div>
+                                    <div class="videos__stat-label">Vistas</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Videos secundarios / características -->
+            <div class="videos__secondary">
+                <div class="videos__secondary-header">
+                    <h3 class="videos__secondary-title">Características en Detalle</h3>
+                    <p class="videos__secondary-subtitle">
+                        Explora cada funcionalidad de StarFlex con demostraciones específicas
+                    </p>
+                </div>
+
+                <div class="videos__grid">
+                    <!-- Video feature 1 -->
+                    <div class="videos__card">
+                        <div class="videos__card-media">
+                            <div class="videos__card-thumbnail">
+                                <div class="videos__card-play">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                </div>
+                                <div class="videos__card-duration">1:20</div>
+                            </div>
+                        </div>
+                        <div class="videos__card-content">
+                            <h4 class="videos__card-title">Configuración Automática</h4>
+                            <p class="videos__card-description">
+                                Aprende a configurar StarFlex en menos de 5 minutos
+                            </p>
+                            <div class="videos__card-tags">
+                                <span class="videos__tag">Setup</span>
+                                <span class="videos__tag">Básico</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Video feature 2 -->
+                    <div class="videos__card">
+                        <div class="videos__card-media">
+                            <div class="videos__card-thumbnail">
+                                <div class="videos__card-play">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                </div>
+                                <div class="videos__card-duration">2:15</div>
+                            </div>
+                        </div>
+                        <div class="videos__card-content">
+                            <h4 class="videos__card-title">Captura de Bloques</h4>
+                            <p class="videos__card-description">
+                                Observa cómo StarFlex captura bloques automáticamente
+                            </p>
+                            <div class="videos__card-tags">
+                                <span class="videos__tag">Automatización</span>
+                                <span class="videos__tag">Avanzado</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Video feature 3 -->
+                    <div class="videos__card">
+                        <div class="videos__card-media">
+                            <div class="videos__card-thumbnail">
+                                <div class="videos__card-play">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                </div>
+                                <div class="videos__card-duration">1:45</div>
+                            </div>
+                        </div>
+                        <div class="videos__card-content">
+                            <h4 class="videos__card-title">Optimización de Ganancias</h4>
+                            <p class="videos__card-description">
+                                Descubre cómo maximizar tus ingresos con filtros inteligentes
+                            </p>
+                            <div class="videos__card-tags">
+                                <span class="videos__tag">Ganancias</span>
+                                <span class="videos__tag">Pro</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Video feature 4 -->
+                    <div class="videos__card">
+                        <div class="videos__card-media">
+                            <div class="videos__card-thumbnail">
+                                <div class="videos__card-play">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                </div>
+                                <div class="videos__card-duration">3:00</div>
+                            </div>
+                        </div>
+                        <div class="videos__card-content">
+                            <h4 class="videos__card-title">Casos de Éxito</h4>
+                            <p class="videos__card-description">
+                                Testimonios reales de conductores que triplicaron sus ganancias
+                            </p>
+                            <div class="videos__card-tags">
+                                <span class="videos__tag">Testimonios</span>
+                                <span class="videos__tag">Resultados</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA de la sección de videos -->
+            <div class="videos__cta">
+                <div class="videos__cta-content">
+                    <h3 class="videos__cta-title">¿Listo para Transformar tus Ganancias?</h3>
+                    <p class="videos__cta-description">
+                        Únete a más de 15,000 conductores que ya están maximizando sus ingresos con StarFlex
+                    </p>
+                    <div class="videos__cta-buttons">
+                        <a href="#prueba-gratis" class="btn btn--primary btn--cta-video">
+                            <span>COMENZAR AHORA</span>
+                            <small>3 días gratis</small>
+                        </a>
+                        <a href="#contacto" class="btn btn--secondary btn--demo">
+                            <span>VER DEMO PERSONALIZADA</span>
+                        </a>
                     </div>
                 </div>
             </div>
