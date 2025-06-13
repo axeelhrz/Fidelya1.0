@@ -2024,7 +2024,7 @@
                                             </div>
                                             <div class="config-option">
                                                 <span class="config-label">Filtros personalizados</span>
-                                                <div class="config-toggle"></div>
+                                                                                  <div class="config-toggle"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -2289,7 +2289,7 @@
             }
         }
 
-        // ===== FAQ ACCORDION MINIMALISTA =====
+        // ===== FAQ ACCORDION MINIMALISTA (SIN SCROLL AUTOMÁTICO) =====
         class FAQAccordion {
             constructor() {
                 this.faqItems = $$('.faq__item');
@@ -2343,15 +2343,8 @@
                     answer.classList.add('active');
                     question.setAttribute('aria-expanded', 'true');
                     
-                    // Scroll suave a la pregunta
-                    setTimeout(() => {
-                        const headerHeight = $('#header').offsetHeight;
-                        const itemTop = item.offsetTop - headerHeight - 20;
-                        window.scrollTo({
-                            top: itemTop,
-                            behavior: 'smooth'
-                        });
-                    }, 100);
+                    // ELIMINADO: El scroll automático que causaba el problema
+                    // No hay scroll automático, se mantiene en la posición actual
                 }
             }
 
@@ -2458,3 +2451,4 @@
     </script>
 </body>
 </html>
+              
