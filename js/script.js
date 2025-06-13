@@ -1,3 +1,262 @@
+// ===== SISTEMA DE PARTÍCULAS AVANZADO =====
+class ParticleSystem {
+  constructor() {
+    this.particles = [];
+    this.canvas = null;
+    this.ctx = null;
+    this.animationId = null;
+    this.init();
+  }
+
+  init() {
+    this.createCanvas();
+    this.createParticles();
+    this.animate();
+    this.bindEvents();
+  }
+
+  createCanvas() {
+    this.canvas = document.createElement('canvas');
+    this.canvas.className = 'particles-canvas';
+    this.canvas.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.6;
+    `;
+    document.body.appendChild(this.canvas);
+    
+    this.ctx = this.canvas.getContext('2d');
+    this.resize();
+  }
+
+  createParticles() {
+    const particleCount = Math.min(50, Math.floor(window.innerWidth / 30));
+    
+    for (let i = 0; i < particleCount; i++) {
+      this.particles.push({
+        x: Math.random() * this.canvas.width,
+        y: Math.random() * this.canvas.height,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        size: Math.random() * 3 + 1,
+        opacity: Math.random() * 0.5 + 0.2,
+        color: this.getRandomColor()
+      });
+    }
+  }
+
+  getRandomColor() {
+    const colors = ['#00d4ff', '#8b5cf6', '#06ffa5', '#f472b6', '#ff6b35'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  animate() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    this.particles.forEach(particle => {
+      // Actualizar posición
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      
+      // Rebotar en los bordes
+      if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
+      if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
+      
+      // Dibujar partícula
+      this.ctx.beginPath();
+      this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+      this.ctx.fillStyle = particle.color;
+      this.ctx.globalAlpha = particle.opacity;
+      this.ctx.fill();
+      
+      // Efecto de resplandor
+      this.ctx.shadowBlur = 10;
+      this.ctx.shadowColor = particle.color;
+      this.ctx.fill();
+      this.ctx.shadowBlur = 0;
+    });
+    
+    this.animationId = requestAnimationFrame(() => this.animate());
+  }
+
+  resize() {
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+  }
+
+  bindEvents() {
+    window.addEventListener('resize', debounce(() => this.resize(), 250));
+    
+    // Pausar animación cuando la pestaña no está visible
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        cancelAnimationFrame(this.animationId);
+      } else {
+        this.animate();
+      }
+    });
+  }
+
+  destroy() {
+    cancelAnimationFrame(this.animationId);
+    if (this.canvas && this.canvas.parentNode) {
+      this.canvas.parentNode.removeChild(this.canvas);
+    }
+  }
+}
+
+// ===== NAVEGACIÓN MEJORADA CON GLASSMORPHISM =====
+class Navigation {
+  constructor() {
+    this.header = $('#header');
+    this.navToggle = $('#nav-toggle');
+    this.navMenu = $('#nav-menu');
+    this.navLinks = $$('.nav__link');
+    this.isMenuOpen = false;
+    this.scrollY = 0;
+    
+    this.init();
+  }
+  
+  init() {
+    this.bindEvents();
+    this.handleScroll();
+    this.addScrollIndicator();
+  }
+  
+  bindEvents() {
+    // Mobile menu toggle
+    this.navToggle?.addEventListener('click', () => this.toggleMenu());
+    
+    // Close menu when clicking on links
+    this.navLinks.forEach(link => {
+      link.addEventListener('click', () => this.closeMenu());
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (this.isMenuOpen && !this.navMenu.contains(e.target) && !this.navToggle.contains(e.target)) {
+        this.closeMenu();
+      }
+    });
+    
+    // Handle scroll with throttling
+    window.addEventListener('scroll', throttle(() => this.handleScroll(), 16));
+    
+    // Smooth scroll for anchor links
+    this.navLinks.forEach(link => {
+      if (link.getAttribute('href').startsWith('#')) {
+        link.addEventListener('click', (e) => this.smoothScroll(e));
+      }
+    });
+
+    // Keyboard navigation
+    this.navToggle?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.toggleMenu();
+      }
+    });
+  }
+  
+  toggleMenu() {
+    this.isMenuOpen = !this.isMenuOpen;
+    this.navMenu.classList.toggle('active');
+    this.navToggle.classList.toggle('active');
+    document.body.style.overflow = this.isMenuOpen ? 'hidden' : '';
+    
+    // Actualizar aria-expanded
+    this.navToggle.setAttribute('aria-expanded', this.isMenuOpen.toString());
+  }
+  
+  closeMenu() {
+    this.isMenuOpen = false;
+    this.navMenu.classList.remove('active');
+    this.navToggle.classList.remove('active');
+    document.body.style.overflow = '';
+    this.navToggle.setAttribute('aria-expanded', 'false');
+  }
+  
+  handleScroll() {
+    this.scrollY = window.scrollY;
+    
+    // Add scrolled class to header with glassmorphism effect
+    if (this.scrollY > 50) {
+      this.header.classList.add('scrolled');
+    } else {
+      this.header.classList.remove('scrolled');
+    }
+    
+    // Update active navigation link
+    this.updateActiveLink();
+    
+    // Update scroll indicator
+    this.updateScrollIndicator();
+  }
+  
+  updateActiveLink() {
+    const sections = $$('section[id]');
+    const scrollPos = this.scrollY + 100;
+    
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop;
+      const sectionHeight = section.offsetHeight;
+      const sectionId = section.getAttribute('id');
+      const navLink = $(`.nav__link[href="#${sectionId}"]`);
+      
+      if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+        this.navLinks.forEach(link => link.classList.remove('active'));
+        navLink?.classList.add('active');
+      }
+    });
+  }
+
+  addScrollIndicator() {
+    const indicator = document.createElement('div');
+    indicator.className = 'scroll-indicator';
+    indicator.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #00d4ff 0%, #8b5cf6 50%, #06ffa5 100%);
+      transform-origin: left;
+      transform: scaleX(0);
+      z-index: 9999;
+      transition: transform 0.1s ease-out;
+    `;
+    document.body.appendChild(indicator);
+    this.scrollIndicator = indicator;
+  }
+
+  updateScrollIndicator() {
+    const scrollPercent = this.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+    this.scrollIndicator.style.transform = `scaleX(${Math.min(scrollPercent, 1)})`;
+  }
+  
+  smoothScroll(e) {
+    e.preventDefault();
+    const targetId = e.target.getAttribute('href');
+    const targetSection = $(targetId);
+    
+    if (targetSection) {
+      const headerHeight = this.header.offsetHeight;
+      const targetPosition = targetSection.offsetTop - headerHeight;
+      
+      window.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
+      });
+    }
+  }
+}
+
 // ===== UTILITY FUNCTIONS =====
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => document.querySelectorAll(selector);
@@ -308,7 +567,8 @@ class ParallaxEffects {
     this.elements = [
       { el: $('.hero__video-glow'), speed: 0.5 },
       { el: $('.bg-canvas'), speed: 0.2 },
-      { el: $$('.feature__phone'), speed: 0.3 }
+      { el: $$('.feature__phone'), speed: 0.3 },
+      { el: $('.video-glow'), speed: 0.4 }
     ].filter(item => item.el);
   }
 
@@ -437,10 +697,114 @@ class VideoOptimizer {
   }
 }
 
+// ===== GESTOR DE VIDEO YOUTUBE =====
+class YouTubeVideoManager {
+  constructor() {
+    this.videoContainer = $('#video-container');
+    this.videoOverlay = $('#video-overlay');
+    this.videoId = 'IeKGEAdEtYA'; // ID del video de YouTube
+    this.isLoaded = false;
+    this.init();
+  }
+
+  init() {
+    if (!this.videoContainer || !this.videoOverlay) return;
+
+    // Agregar event listeners
+    this.videoOverlay.addEventListener('click', () => this.loadVideo());
+    this.videoOverlay.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.loadVideo();
+      }
+    });
+
+    // Hacer el overlay focusable
+    this.videoOverlay.setAttribute('tabindex', '0');
+    this.videoOverlay.setAttribute('role', 'button');
+    this.videoOverlay.setAttribute('aria-label', 'Reproducir video de demostración de Starflex');
+
+    // Lazy loading con Intersection Observer
+    this.setupLazyLoading();
+  }
+
+  setupLazyLoading() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !this.isLoaded) {
+          // Precargar la miniatura del video
+          this.preloadThumbnail();
+        }
+      });
+    }, { threshold: 0.1 });
+
+    observer.observe(this.videoContainer);
+  }
+
+  preloadThumbnail() {
+    // Crear imagen de miniatura de YouTube
+    const thumbnail = document.createElement('div');
+    thumbnail.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('https://img.youtube.com/vi/${this.videoId}/maxresdefault.jpg');
+      background-size: cover;
+      background-position: center;
+      border-radius: 20px;
+      z-index: 1;
+    `;
+    
+    this.videoContainer.insertBefore(thumbnail, this.videoOverlay);
+  }
+
+  loadVideo() {
+    if (this.isLoaded) return;
+
+    // Crear iframe de YouTube
+    const iframe = document.createElement('iframe');
+    iframe.className = 'video-iframe';
+    iframe.src = `https://www.youtube.com/embed/${this.videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+    iframe.setAttribute('title', 'Demostración de Starflex - Amazon Flex Automation');
+
+    // Agregar el iframe al contenedor
+    this.videoContainer.appendChild(iframe);
+
+    // Ocultar el overlay
+    this.videoOverlay.classList.add('hidden');
+
+    // Marcar como cargado
+    this.isLoaded = true;
+
+    // Analytics
+    this.trackVideoPlay();
+
+    console.log('YouTube video loaded and playing');
+  }
+
+  trackVideoPlay() {
+    // Enviar evento a analytics
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'video_play', {
+        event_category: 'Video',
+        event_label: 'YouTube_Demo_Video',
+        video_title: 'Starflex Demo'
+      });
+    }
+
+    // Analytics personalizado
+    console.log('📹 Video Play Event: YouTube Demo Video');
+  }
+}
+
 // ===== ANIMACIONES DE SCROLL AVANZADAS =====
 class ScrollAnimations {
   constructor() {
-    this.animatedElements = $$('[data-animate], .feature, .features__header');
+    this.animatedElements = $$('[data-animate], .feature, .features__header, .video-section__header, .video-wrapper');
     this.observer = null;
     this.init();
   }
@@ -503,6 +867,7 @@ class HoverEffects {
     this.setupButtonEffects();
     this.setupCardEffects();
     this.setupPhoneEffects();
+    this.setupVideoEffects();
   }
 
   setupButtonEffects() {
@@ -525,6 +890,14 @@ class HoverEffects {
       phone.addEventListener('mouseenter', () => this.animatePhone(phone, true));
       phone.addEventListener('mouseleave', () => this.animatePhone(phone, false));
     });
+  }
+
+  setupVideoEffects() {
+    const videoContainer = $('#video-container');
+    if (videoContainer) {
+      videoContainer.addEventListener('mouseenter', () => this.animateVideoContainer(videoContainer, true));
+      videoContainer.addEventListener('mouseleave', () => this.animateVideoContainer(videoContainer, false));
+    }
   }
 
   createRipple(e) {
@@ -614,6 +987,19 @@ class HoverEffects {
       });
     }
   }
+
+  animateVideoContainer(container, isHover) {
+    const playButton = container.querySelector('.play-button');
+    if (playButton) {
+      if (isHover) {
+        playButton.style.transform = 'scale(1.1)';
+        playButton.style.boxShadow = '0 15px 40px rgba(255, 107, 53, 0.5), 0 0 50px rgba(255, 107, 53, 0.4)';
+      } else {
+        playButton.style.transform = 'scale(1)';
+        playButton.style.boxShadow = '';
+      }
+    }
+  }
 }
 
 // ===== ANALYTICS AVANZADO =====
@@ -680,6 +1066,20 @@ class Analytics {
         });
       });
     });
+
+    // Track video section visibility
+    const videoSection = $('#video');
+    if (videoSection) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            this.trackEvent('video_section_view', 'Video', { section: 'YouTube_Demo_Section' });
+          }
+        });
+      }, { threshold: 0.5 });
+
+      observer.observe(videoSection);
+    }
   }
   
   trackPerformance() {
@@ -812,7 +1212,7 @@ class AccessibilityEnhancements {
   
   addKeyboardNavigation() {
     // Navegación con teclado para elementos interactivos
-    $$('.feature__phone, .download-btn, .btn').forEach(element => {
+    $$('.feature__phone, .download-btn, .btn, .video-overlay').forEach(element => {
       element.setAttribute('tabindex', '0');
       
       element.addEventListener('keydown', (e) => {
@@ -905,6 +1305,12 @@ class AccessibilityEnhancements {
     
     const nav = $('nav');
     if (nav) nav.setAttribute('role', 'navigation');
+
+    // Video section
+    const videoSection = $('#video');
+    if (videoSection) {
+      videoSection.setAttribute('aria-label', 'Sección de video demostración');
+    }
   }
   
   addReducedMotionSupport() {
@@ -1017,6 +1423,7 @@ class StarflexApp {
       this.components.push(new ParticleSystem());
       this.components.push(new ParallaxEffects());
       this.components.push(new VideoOptimizer());
+      this.components.push(new YouTubeVideoManager());
       this.components.push(new ScrollAnimations());
       this.components.push(new HoverEffects());
       this.components.push(new Analytics());
@@ -1027,7 +1434,7 @@ class StarflexApp {
       // Agregar CSS de animaciones dinámicamente
       this.addDynamicStyles();
       
-      console.log('🚀 Starflex Futurista initialized successfully');
+      console.log('🚀 Starflex Futurista con Video YouTube initialized successfully');
       
       // Trigger custom event
       window.dispatchEvent(new CustomEvent('starflexInitialized', {
@@ -1061,6 +1468,12 @@ class StarflexApp {
         .particles-canvas {
           display: none !important;
         }
+      }
+      
+      .video-overlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
       }
     `;
     document.head.appendChild(style);
@@ -1098,6 +1511,7 @@ if (typeof module !== 'undefined' && module.exports) {
     Navigation,
     ParticleSystem,
     VideoOptimizer,
+    YouTubeVideoManager,
     Analytics
   };
 }

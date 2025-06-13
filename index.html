@@ -751,6 +751,244 @@
             z-index: -1;
         }
 
+        /* ===== SECCIÓN VIDEO YOUTUBE FUTURISTA ===== */
+        .video-section {
+            padding: var(--space-3xl) 0;
+            position: relative;
+            background: 
+                radial-gradient(ellipse at center top, rgba(0, 212, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at center bottom, rgba(139, 92, 246, 0.02) 0%, transparent 50%),
+                linear-gradient(180deg, var(--secondary-bg) 0%, var(--primary-bg) 100%);
+            overflow: hidden;
+        }
+
+        .video-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(90deg, transparent 24%, rgba(0, 212, 255, 0.01) 25%, rgba(0, 212, 255, 0.01) 26%, transparent 27%);
+            background-size: 100px 100px;
+            opacity: 0.15;
+            animation: grid-flow-slow 90s linear infinite;
+        }
+
+        .video-section__container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-xl);
+            position: relative;
+            z-index: 2;
+        }
+
+        .video-section__header {
+            text-align: center;
+            margin-bottom: var(--space-3xl);
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 1s ease-out 0.2s forwards;
+        }
+
+        .video-section__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-lg);
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-accent);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--starflex-orange);
+            margin-bottom: var(--space-xl);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .video-section__badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--starflex-orange);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px var(--starflex-orange);
+        }
+
+        .video-section__title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            margin-bottom: var(--space-lg);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-orange) 50%, var(--starflex-red) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .video-section__subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto var(--space-2xl);
+            line-height: 1.6;
+        }
+
+        .video-section__content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-2xl);
+            align-items: center;
+        }
+
+        .video-wrapper {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(80px);
+            animation: slideInUp 1s ease-out 0.4s forwards;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-accent);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                0 0 80px rgba(255, 107, 53, 0.2);
+            transition: all var(--transition);
+        }
+
+        .video-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--starflex-orange), var(--starflex-red), var(--starflex-purple));
+            border-radius: 22px;
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        .video-container:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 
+                0 35px 70px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.15),
+                0 0 120px rgba(255, 107, 53, 0.3);
+        }
+
+        .video-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 20px;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(255, 107, 53, 0.1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .video-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .play-button {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--starflex-orange) 0%, var(--starflex-red) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 10px 30px rgba(255, 107, 53, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+            transition: all var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .play-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+            opacity: 0;
+            transition: opacity var(--transition);
+            border-radius: 50%;
+        }
+
+        .play-button:hover {
+            transform: scale(1.1);
+            box-shadow: 
+                0 15px 40px rgba(255, 107, 53, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.3),
+                0 0 50px rgba(255, 107, 53, 0.4);
+        }
+
+        .play-button:hover::before {
+            opacity: 1;
+        }
+
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-left: 25px solid white;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            margin-left: 5px;
+        }
+
+        .video-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle, rgba(255, 107, 53, 0.1) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            animation: video-glow 8s ease-in-out infinite;
+            z-index: -1;
+            border-radius: 50%;
+        }
+
         /* ===== SECCIÓN CARACTERÍSTICAS FUTURISTA ===== */
         .features {
             padding: var(--space-3xl) 0;
@@ -1207,7 +1445,6 @@
             font-size: 0.8rem;
             color: var(--text-secondary);
         }
-
         .config-toggle {
             width: 35px;
             height: 18px;
@@ -1395,6 +1632,10 @@
                 width: 250px;
                 height: 500px;
             }
+
+            .video-container {
+                padding-bottom: 56.25%;
+            }
         }
 
         @media (max-width: 768px) {
@@ -1508,6 +1749,26 @@
                 width: 220px;
                 height: 440px;
             }
+
+            .video-section__title {
+                font-size: 2.5rem;
+            }
+
+            .video-section__subtitle {
+                font-size: 1.1rem;
+            }
+
+            .play-button {
+                width: 60px;
+                height: 60px;
+            }
+
+            .play-icon {
+                border-left: 18px solid white;
+                border-top: 12px solid transparent;
+                border-bottom: 12px solid transparent;
+                margin-left: 4px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1560,12 +1821,34 @@
                 width: 200px;
                 height: 400px;
             }
+
+            .video-section__title {
+                font-size: 2rem;
+            }
+
+            .video-section__subtitle {
+                font-size: 1rem;
+                padding: 0 var(--space-md);
+            }
+
+            .play-button {
+                width: 50px;
+                height: 50px;
+            }
+
+            .play-icon {
+                border-left: 15px solid white;
+                border-top: 10px solid transparent;
+                border-bottom: 10px solid transparent;
+                margin-left: 3px;
+            }
         }
 
         /* ===== OPTIMIZACIONES ===== */
         .hero__video,
         .hero__video-container,
-        .feature__phone {
+        .feature__phone,
+        .video-container {
             will-change: transform;
         }
 
@@ -1585,7 +1868,8 @@
         }
 
         .btn:focus,
-        .nav__link:focus {
+        .nav__link:focus,
+        .video-overlay:focus {
             outline: 2px solid var(--starflex-blue);
             outline-offset: 2px;
             border-radius: 4px;
@@ -1607,6 +1891,7 @@
             <div class="nav__menu" id="nav-menu">
                 <ul class="nav__list">
                     <li><a href="#inicio" class="nav__link">Inicio</a></li>
+                    <li><a href="#video" class="nav__link">Demo</a></li>
                     <li><a href="#caracteristicas" class="nav__link">Features</a></li>
                     <li><a href="#precios" class="nav__link">Pricing</a></li>
                     <li><a href="#faq" class="nav__link">FAQ</a></li>
@@ -1690,6 +1975,40 @@
                             </div>
                         </video>
                         <div class="hero__video-glow"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Video YouTube -->
+    <section class="video-section" id="video">
+        <div class="video-section__container">
+            <div class="video-section__header">
+                <div class="video-section__badge">
+                    Demostración en Vivo
+                </div>
+                
+                <h2 class="video-section__title">
+                    Ve Starflex en Acción
+                </h2>
+                
+                <p class="video-section__subtitle">
+                    Descubre cómo Starflex revoluciona tu experiencia con Amazon Flex. 
+                    Mira esta demostración completa de todas las funcionalidades que te ayudarán 
+                    a maximizar tus ganancias de forma automática e inteligente.
+                </p>
+            </div>
+
+            <div class="video-section__content">
+                <div class="video-wrapper">
+                    <div class="video-container" id="video-container">
+                        <div class="video-overlay" id="video-overlay">
+                            <div class="play-button">
+                                <div class="play-icon"></div>
+                            </div>
+                        </div>
+                        <div class="video-glow"></div>
                     </div>
                 </div>
             </div>
@@ -2104,10 +2423,114 @@
             }
         }
 
+        // ===== GESTOR DE VIDEO YOUTUBE =====
+        class YouTubeVideoManager {
+            constructor() {
+                this.videoContainer = $('#video-container');
+                this.videoOverlay = $('#video-overlay');
+                this.videoId = 'IeKGEAdEtYA'; // ID del video de YouTube
+                this.isLoaded = false;
+                this.init();
+            }
+
+            init() {
+                if (!this.videoContainer || !this.videoOverlay) return;
+
+                // Agregar event listeners
+                this.videoOverlay.addEventListener('click', () => this.loadVideo());
+                this.videoOverlay.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.loadVideo();
+                    }
+                });
+
+                // Hacer el overlay focusable
+                this.videoOverlay.setAttribute('tabindex', '0');
+                this.videoOverlay.setAttribute('role', 'button');
+                this.videoOverlay.setAttribute('aria-label', 'Reproducir video de demostración de Starflex');
+
+                // Lazy loading con Intersection Observer
+                this.setupLazyLoading();
+            }
+
+            setupLazyLoading() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting && !this.isLoaded) {
+                            // Precargar la miniatura del video
+                            this.preloadThumbnail();
+                        }
+                    });
+                }, { threshold: 0.1 });
+
+                observer.observe(this.videoContainer);
+            }
+
+            preloadThumbnail() {
+                // Crear imagen de miniatura de YouTube
+                const thumbnail = document.createElement('div');
+                thumbnail.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-image: url('https://img.youtube.com/vi/${this.videoId}/maxresdefault.jpg');
+                    background-size: cover;
+                    background-position: center;
+                    border-radius: 20px;
+                    z-index: 1;
+                `;
+                
+                this.videoContainer.insertBefore(thumbnail, this.videoOverlay);
+            }
+
+            loadVideo() {
+                if (this.isLoaded) return;
+
+                // Crear iframe de YouTube
+                const iframe = document.createElement('iframe');
+                iframe.className = 'video-iframe';
+                iframe.src = `https://www.youtube.com/embed/${this.videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+                iframe.setAttribute('allowfullscreen', '');
+                iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+                iframe.setAttribute('title', 'Demostración de Starflex - Amazon Flex Automation');
+
+                // Agregar el iframe al contenedor
+                this.videoContainer.appendChild(iframe);
+
+                // Ocultar el overlay
+                this.videoOverlay.classList.add('hidden');
+
+                // Marcar como cargado
+                this.isLoaded = true;
+
+                // Analytics
+                this.trackVideoPlay();
+
+                console.log('YouTube video loaded and playing');
+            }
+
+            trackVideoPlay() {
+                // Enviar evento a analytics
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'video_play', {
+                        event_category: 'Video',
+                        event_label: 'YouTube_Demo_Video',
+                        video_title: 'Starflex Demo'
+                    });
+                }
+
+                // Analytics personalizado
+                console.log('📹 Video Play Event: YouTube Demo Video');
+            }
+        }
+
         // ===== EFECTOS PARALLAX SUTILES =====
         class ParallaxEffects {
             constructor() {
-                this.elements = $$('.hero__video-glow');
+                this.elements = $$('.hero__video-glow, .video-glow');
                 this.init();
             }
 
@@ -2129,7 +2552,7 @@
         // ===== ANIMACIONES DE ENTRADA PARA CARACTERÍSTICAS =====
         class FeatureAnimations {
             constructor() {
-                this.features = $$('.feature');
+                this.features = $$('.feature, .video-wrapper');
                 this.init();
             }
 
@@ -2180,6 +2603,20 @@
                     });
                 });
 
+                // Track video section visibility
+                const videoSection = $('#video');
+                if (videoSection) {
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                this.trackEvent('Video_Section_View', 'YouTube_Demo_Section');
+                            }
+                        });
+                    }, { threshold: 0.5 });
+
+                    observer.observe(videoSection);
+                }
+
                 // Track scroll depth
                 this.trackScrollDepth();
             }
@@ -2214,11 +2651,12 @@
             new ScrollEffects();
             new SmoothScroll();
             new VideoOptimizer();
+            new YouTubeVideoManager();
             new ParallaxEffects();
             new FeatureAnimations();
             new Analytics();
             
-            console.log('🚀 Starflex Futurista con Características initialized');
+            console.log('🚀 Starflex Futurista con Video YouTube initialized');
         });
 
         // ===== PERFORMANCE OPTIMIZATION =====
