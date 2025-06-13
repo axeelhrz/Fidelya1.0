@@ -174,13 +174,10 @@
             top: 0;
             left: 0;
             width: 100%;
-            background: rgba(10, 13, 20, 0.85);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border-bottom: 1px solid var(--border-subtle);
+            background: transparent;
             z-index: 1000;
             transition: all var(--transition);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            pointer-events: none; /* Permite que el fondo sea clickeable */
         }
 
         .header.scrolled {
@@ -193,12 +190,12 @@
         .nav {
             max-width: 1400px;
             margin: 0 auto;
-            padding: var(--space-md) var(--space-xl);
-            display: grid;
-            grid-template-columns: auto 1fr auto;
+            padding: var(--space-lg) var(--space-xl);
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: var(--space-xl);
             position: relative;
+            pointer-events: none; /* El contenedor no intercepta clicks */
         }
 
         /* ===== LOGO MEJORADO Y MÁS GRANDE ===== */
@@ -207,25 +204,30 @@
             align-items: center;
             z-index: 1001;
             position: relative;
+            pointer-events: auto; /* Permite interacción con el logo */
         }
 
-        .nav__logo {
-            width: 56px;
-            height: 56px;
+       .nav__logo {
+            width: 60px;
+            height: 60px;
             background: url('./assets/logo.png') center/contain no-repeat;
-            border-radius: 14px;
+            border-radius: 16px;
             position: relative;
             transition: all var(--transition);
             cursor: pointer;
             
             /* Efecto de resplandor futurista */
             box-shadow: 
-                0 0 20px rgba(0, 212, 255, 0.3),
+                0 0 30px rgba(0, 212, 255, 0.4),
+                0 0 60px rgba(139, 92, 246, 0.2),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
             
             /* Borde con gradiente */
             border: 2px solid transparent;
             background-clip: padding-box;
+
+            animation: logo-float 4s ease-in-out 
+            infinite;
         }
 
         .nav__logo::before {
@@ -246,20 +248,22 @@
             z-index: -1;
             opacity: 0.6;
             transition: all var(--transition);
-            animation: logo-glow 4s ease-in-out infinite;
+            animation: logo-glow 6s ease-in-out infinite;
         }
 
         .nav__logo:hover {
-            transform: scale(1.08) rotate(2deg);
+            transform: scale(1.1) rotate(5deg);
             box-shadow: 
-                0 0 30px rgba(0, 212, 255, 0.5),
-                0 0 50px rgba(139, 92, 246, 0.3),
+                0 0 40px rgba(0, 212, 255, 0.6),
+                0 0 80px rgba(139, 92, 246, 0.4),
+                0 0 120px rgba(6, 255, 165, 0.3),
                 inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .nav__logo:hover::before {
             opacity: 1;
-            animation-duration: 2s;
+            animation-duration: 3s;
+            transform: scale(1.1);
         }
 
         /* ===== NAVEGACIÓN CENTRADA FUTURISTA ===== */
@@ -267,7 +271,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: auto; /* Permite interacción con el menú */
         }
 
         .nav__list {
@@ -275,19 +283,23 @@
             list-style: none;
             gap: var(--space-2xl);
             align-items: center;
-            background: rgba(21, 25, 34, 0.4);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--border-subtle);
+            background: rgba(21, 25, 34, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 50px;
-            padding: var(--space-sm) var(--space-xl);
+            padding: var(--space-md) var(--space-2xl);
             position: relative;
             overflow: hidden;
             
             /* Sombra futurista */
             box-shadow: 
-                0 8px 32px rgba(0, 0, 0, 0.2),
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(0, 212, 255, 0.1),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+            animation: nav-float 5s ease-in-out 
+            infinite;
         }
 
         .nav__list::before {
