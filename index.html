@@ -105,6 +105,7 @@
             --space-3xl: 2rem;
             --space-4xl: 2.5rem;
             --space-5xl: 3rem;
+            --space-6xl: 4rem;
             
             /* Transiciones suaves */
             --transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -528,6 +529,7 @@
             background: 
                 linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
             overflow: hidden;
+            padding-top: var(--space-6xl); /* Separación del navbar */
         }
 
         .container {
@@ -851,6 +853,7 @@
             z-index: 2;
         }
 
+        /* ===== BOTONES DE DESCARGA FLOTANTES ===== */
         .hero__download {
             display: flex;
             gap: var(--space-xl);
@@ -866,30 +869,42 @@
             border-radius: 15px;
             overflow: hidden;
             text-decoration: none;
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--border-subtle);
-            padding: var(--space-sm);
-            box-shadow: var(--shadow-md);
+            cursor: pointer;
+            
+            /* Efecto flotante sin contenedor visible */
+            filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
+            animation: download-float 6s ease-in-out infinite;
         }
 
         .download-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            filter: brightness(1.1);
-            box-shadow: var(--shadow-lg);
+            transform: translateY(-5px) scale(1.05);
+            filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.4)) brightness(1.1);
         }
 
         .download-btn__image {
-            height: 55px;
+            height: 60px;
             width: auto;
             display: block;
             transition: all var(--transition);
+            border-radius: 12px;
+            
+            /* Sombra sutil para efecto flotante */
+            box-shadow: 
+                0 4px 15px rgba(0, 0, 0, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
         }
 
         .download-btn--app-store .download-btn__image {
-            height: 55px;
+            height: 60px;
             width: auto;
-            min-width: 165px;
+            min-width: 180px;
+        }
+
+        .download-btn:hover .download-btn__image {
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                0 0 20px rgba(0, 212, 255, 0.2);
         }
 
         .hero__trust {
@@ -1363,6 +1378,781 @@
         .hero__particle:nth-child(4) { top: 85%; left: 15%; animation-delay: 6s; background: var(--starflex-orange); }
         .hero__particle:nth-child(5) { top: 25%; left: 92%; animation-delay: 1s; background: var(--starflex-crimson); }
 
+        /* ===== SECCIÓN CARACTERÍSTICAS ===== */
+        .features {
+            padding: var(--space-6xl) 0;
+            position: relative;
+            background: 
+                linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--primary-bg) 
+100%);
+            overflow: hidden;
+        }
+
+        .features__header {
+            text-align: center;
+            margin-bottom: var(--space-5xl);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1s ease-out 0.2s forwards;
+        }
+
+        .features__title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            margin-bottom: var(--space-xl);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        .features__subtitle {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .features__grid {
+            display: grid;
+            gap: var(--space-6xl);
+        }
+
+        .feature {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-5xl);
+            align-items: center;
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        .feature.in-view {
+            animation: slideInUp 1s ease-out forwards;
+        }
+
+        .feature:nth-child(even) {
+            direction: rtl;
+        }
+
+        .feature:nth-child(even) > * {
+            direction: ltr;
+        }
+
+        .feature__content {
+            padding: var(--space-2xl);
+        }
+
+        .feature__title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: var(--space-xl);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        .feature__description {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: var(--space-xl);
+        }
+
+        .feature__list {
+            list-style: none;
+            margin-bottom: var(--space-2xl);
+        }
+
+        .feature__list-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .feature__list-item::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--starflex-cyan);
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: var(--glow-subtle);
+        }
+
+        /* ===== CELULARES MINIMALISTAS ===== */
+        .feature__phone {
+            position: relative;
+            width: 320px;
+            height: 650px;
+            margin: 0 auto;
+            transform: perspective(1000px) rotateY(3deg) rotateX(-1deg);
+            transition: transform var(--transition);
+        }
+
+        .feature__phone:hover {
+            transform: perspective(1000px) rotateY(1deg) rotateX(0deg);
+        }
+
+        .phone {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
+            border-radius: 55px;
+            padding: 8px;
+            box-shadow: var(--shadow-2xl);
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #2c2c2e;
+        }
+
+        .phone::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(145deg, 
+                #8e8e93 0%, 
+                #636366 25%, 
+                #48484a 50%, 
+                #636366 75%, 
+                #8e8e93 100%
+            );
+            border-radius: 58px;
+            z-index: -1;
+        }
+
+        .phone__screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #0a0d14 0%, #151922 100%);
+            border-radius: 47px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .phone__island {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 126px;
+            height: 37px;
+            background: #000000;
+            border-radius: 19px;
+            z-index: 10;
+        }
+
+        .phone__status-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 85px;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 30px 15px;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            z-index: 5;
+        }
+
+        .phone__content {
+            padding: 95px 20px 20px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* ===== PANTALLAS ESPECÍFICAS ===== */
+        .schedule-screen {
+            background: linear-gradient(180deg, #0a0d14 0%, #151922 100%);
+        }
+
+        .schedule-header {
+            background: linear-gradient(135deg, var(--starflex-blue) 0%, var(--starflex-purple) 100%);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .schedule-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .schedule-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .schedule-days {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .schedule-day {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .day-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .day-time {
+            font-size: 0.9rem;
+            color: var(--starflex-blue);
+            font-family: var(--font-mono);
+        }
+
+        .calendar-screen {
+            background: linear-gradient(180deg, #0a0d14 0%, #151922 100%);
+        }
+
+        .calendar-header {
+            background: linear-gradient(135deg, var(--starflex-orange) 0%, var(--starflex-red) 100%);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .calendar-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .calendar-month {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            color: var(--text-secondary);
+        }
+
+        .calendar-day.active {
+            background: var(--starflex-blue);
+            color: white;
+        }
+
+        .calendar-day.has-block {
+            background: rgba(255, 107, 53, 0.2);
+            border: 1px solid var(--starflex-orange);
+        }
+
+        .calendar-events {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .calendar-event {
+            font-size: 0.8rem;
+            color: var(--starflex-orange);
+            margin-bottom: 8px;
+            padding: 8px;
+            background: rgba(255, 107, 53, 0.1);
+            border-radius: 8px;
+        }
+
+        .log-screen {
+            background: linear-gradient(180deg, #0a0d14 0%, #151922 100%);
+        }
+
+        .log-header {
+            background: linear-gradient(135deg, var(--starflex-cyan) 0%, var(--starflex-blue) 100%);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .log-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .log-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .log-entries {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid var(--starflex-cyan);
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .log-time {
+            font-size: 0.8rem;
+            color: var(--starflex-cyan);
+            font-family: var(--font-mono);
+            margin-bottom: 5px;
+        }
+
+        .log-message {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .log-status {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .log-status.accepted {
+            color: var(--starflex-cyan);
+        }
+
+        .log-status.ignored {
+            color: var(--starflex-orange);
+        }
+
+        .config-screen {
+            background: linear-gradient(180deg, #0a0d14 0%, #151922 100%);
+        }
+
+        .config-header {
+            background: linear-gradient(135deg, var(--starflex-purple) 0%, var(--starflex-red) 100%);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .config-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .config-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .config-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .config-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .config-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .config-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .config-option:last-child {
+            border-bottom: none;
+        }
+
+        .config-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .config-toggle {
+            width: 40px;
+            height: 20px;
+            background: var(--starflex-blue);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .config-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        /* ===== FAQ SECTION COMPACTA ===== */
+        .faq {
+            padding: var(--space-6xl) 0;
+            position: relative;
+            background: linear-gradient(180deg, var(--secondary-bg) 0%, var(--primary-bg) 100%);
+            overflow: hidden;
+        }
+
+        .faq::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.02) 0%, transparent 50%);
+            animation: breathe 8s ease-in-out infinite;
+        }
+
+        .faq__header {
+            text-align: center;
+            margin-bottom: var(--space-5xl);
+            position: relative;
+            z-index: 2;
+        }
+
+        .faq__title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            margin-bottom: var(--space-xl);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--starflex-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+            position: relative;
+        }
+
+        .faq__subtitle {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto var(--space-3xl);
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        /* ===== BARRA DE BÚSQUEDA COMPACTA ===== */
+        .faq__search-container {
+            max-width: 600px;
+            margin: 0 auto var(--space-3xl);
+            position: relative;
+        }
+
+        .faq__search {
+            width: 100%;
+            padding: var(--space-md) var(--space-lg) var(--space-md) 50px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-family: var(--font-primary);
+            transition: all var(--transition);
+            outline: none;
+        }
+
+        .faq__search::placeholder {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .faq__search:focus {
+            border-color: var(--starflex-blue);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        .faq__search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: var(--starflex-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all var(--transition);
+        }
+
+        .faq__search-icon::before {
+            content: '⌕';
+            color: white;
+        }
+
+        .faq__search:focus + .faq__search-icon {
+            background: var(--starflex-cyan);
+        }
+
+        /* ===== CONTENEDOR FAQ PRINCIPAL ===== */
+        .faq__container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 var(--space-xl);
+            position: relative;
+            z-index: 2;
+        }
+
+        .faq__list {
+            display: grid;
+            gap: var(--space-lg);
+        }
+
+        /* ===== ITEMS FAQ COMPACTOS ===== */
+        .faq__item {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 18px;
+            overflow: hidden;
+            transition: all var(--transition);
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .faq__item:nth-child(1) { animation-delay: 0.1s; }
+        .faq__item:nth-child(2) { animation-delay: 0.15s; }
+        .faq__item:nth-child(3) { animation-delay: 0.2s; }
+        .faq__item:nth-child(4) { animation-delay: 0.25s; }
+        .faq__item:nth-child(5) { animation-delay: 0.3s; }
+        .faq__item:nth-child(6) { animation-delay: 0.35s; }
+        .faq__item:nth-child(7) { animation-delay: 0.4s; }
+        .faq__item:nth-child(8) { animation-delay: 0.45s; }
+
+        .faq__item:hover {
+            border-color: var(--border-accent);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .faq__item.active {
+            border-color: var(--starflex-blue);
+            box-shadow: var(--shadow-xl);
+        }
+
+        /* ===== PREGUNTA FAQ ===== */
+        .faq__question {
+            width: 100%;
+            padding: var(--space-lg);
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--space-lg);
+            transition: all var(--transition);
+            position: relative;
+        }
+
+        .faq__question:hover {
+            color: var(--starflex-blue);
+        }
+
+        .faq__question-text {
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        /* ===== ICONO FAQ COMPACTO ===== */
+        .faq__icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--starflex-blue), var(--starflex-cyan));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all var(--transition);
+            flex-shrink: 0;
+        }
+
+        .faq__icon::before,
+        .faq__icon::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 1px;
+            transition: all var(--transition);
+        }
+
+        .faq__icon::before {
+            width: 12px;
+            height: 2px;
+        }
+
+        .faq__icon::after {
+            width: 2px;
+            height: 12px;
+        }
+
+        .faq__item.active .faq__icon {
+            transform: rotate(45deg);
+        }
+
+        .faq__item.active .faq__icon::after {
+            opacity: 0;
+        }
+
+        /* ===== RESPUESTA FAQ ===== */
+        .faq__answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .faq__answer.active {
+            max-height: 500px;
+            padding: 0 var(--space-lg) var(--space-lg);
+        }
+
+        .faq__answer-content {
+            padding-top: var(--space-md);
+            border-top: 1px solid var(--border-subtle);
+            position: relative;
+        }
+
+        .faq__answer-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .faq__answer-highlight {
+            color: var(--starflex-blue);
+            font-weight: 600;
+            background: rgba(0, 212, 255, 0.08);
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        /* ===== MENSAJE DE NO RESULTADOS ===== */
+        .faq__no-results {
+            text-align: center;
+            padding: var(--space-3xl);
+            color: var(--text-muted);
+            display: none;
+        }
+
+        .faq__no-results.show {
+            display: block;
+        }
+
+        .faq__no-results-text {
+            font-size: 1.1rem;
+            margin-bottom: var(--space-md);
+        }
+
+        .faq__no-results-suggestion {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        /* ===== CONTACTO COMPACTO ===== */
+        .faq__contact {
+            text-align: center;
+            margin-top: var(--space-3xl);
+            padding: var(--space-2xl);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+        }
+
+        .faq__contact-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-lg);
+        }
+
+        .faq__contact-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-xl);
+            background: linear-gradient(135deg, var(--starflex-blue), var(--starflex-cyan));
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .faq__contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
         /* ===== ANIMACIONES AVANZADAS ===== */
         @keyframes logo-gentle-float {
             0%, 100% {
@@ -1388,6 +2178,15 @@
             }
             50% {
                 transform: translateY(-5px);
+            }
+        }
+
+        @keyframes download-float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-3px);
             }
         }
 
@@ -1485,6 +2284,17 @@
             }
         }
 
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @keyframes pulse-gentle {
             0%, 100% {
                 transform: scale(1);
@@ -1493,6 +2303,17 @@
             50% {
                 transform: scale(1.2);
                 opacity: 0.8;
+            }
+        }
+
+        @keyframes breathe {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.5;
             }
         }
 
@@ -1616,6 +2437,21 @@
                 padding: var(--space-md) var(--space-xl);
                 font-size: 0.95rem;
             }
+
+            .feature {
+                grid-template-columns: 1fr;
+                gap: var(--space-xl);
+                text-align: center;
+            }
+
+            .feature:nth-child(even) {
+                direction: ltr;
+            }
+
+            .feature__phone {
+                width: 280px;
+                height: 570px;
+            }
         }
 
         @media (max-width: 768px) {
@@ -1736,6 +2572,32 @@
                 min-width: 150px;
             }
 
+            .features__title {
+                font-size: clamp(2rem, 5vw, 3.5rem);
+            }
+
+            .feature__title {
+                font-size: 2.2rem;
+            }
+
+            .feature__phone {
+                width: 250px;
+                height: 510px;
+            }
+
+            .faq__title {
+                font-size: clamp(2rem, 5vw, 3.5rem);
+            }
+
+            .faq__question {
+                font-size: 1rem;
+                padding: var(--space-md);
+            }
+
+            .faq__answer.active {
+                padding: 0 var(--space-md) var(--space-md);
+            }
+
             /* Orbes flotantes más pequeños en móvil */
             .hero::after {
                 width: 200px;
@@ -1808,6 +2670,33 @@
                 min-width: 135px;
             }
 
+            .features__title {
+                font-size: 2.5rem;
+            }
+
+            .feature__title {
+                font-size: 2rem;
+            }
+
+            .feature__phone {
+                width: 220px;
+                height: 450px;
+            }
+
+            .faq__title {
+                font-size: 2.5rem;
+            }
+
+            .faq__question {
+                font-size: 0.95rem;
+                padding: var(--space-sm);
+            }
+
+            .faq__search {
+                padding: var(--space-sm) var(--space-md) var(--space-sm) 45px;
+                font-size: 0.9rem;
+            }
+
             /* Ocultar algunos orbes en pantallas muy pequeñas */
             .hero .floating-orb-3 {
                 display: none;
@@ -1819,7 +2708,8 @@
         .hero__phone-container,
         .nav__logo,
         .nav__list,
-        .btn--primary {
+        .btn--primary,
+        .feature__phone {
             will-change: transform;
         }
 
@@ -1854,7 +2744,9 @@
 
         .btn:focus,
         .nav__link:focus,
-        .nav__logo:focus {
+        .nav__logo:focus,
+        .faq__question:focus,
+        .faq__search:focus {
             outline: 2px solid var(--starflex-blue);
             outline-offset: 3px;
             border-radius: 6px;
@@ -2058,6 +2950,442 @@
         </div>
     </section>
 
+    <!-- Sección Características -->
+    <section class="features" id="caracteristicas">
+        <div class="container">
+            <div class="features__header">
+                <h2 class="features__title">Características</h2>
+                <p class="features__subtitle">
+                    Aquí puedes ver lo que te ofrece StarFlex.
+                </p>
+            </div>
+
+            <div class="features__grid">
+                <!-- Feature 1: Horario -->
+                <div class="feature" data-feature="schedule">
+                    <div class="feature__content">
+                        <h3 class="feature__title">HORARIO</h3>
+                        <p class="feature__description">
+                            Elige los días y horarios que prefieras para tus bloques de entrega.
+                        </p>
+                        <ul class="feature__list">
+                            <li class="feature__list-item">Configuración personalizada por día</li>
+                            <li class="feature__list-item">Horarios flexibles de trabajo</li>
+                            <li class="feature__list-item">Optimización automática de turnos</li>
+                            <li class="feature__list-item">Sincronización con tu calendario</li>
+                        </ul>
+                    </div>
+                    <div class="feature__phone">
+                        <div class="phone">
+                            <div class="phone__screen schedule-screen">
+                                <div class="phone__island"></div>
+                                <div class="phone__status-bar">
+                                    <span>9:41</span>
+                                    <span>100%</span>
+                                </div>
+                                <div class="phone__content">
+                                    <div class="schedule-header">
+                                        <div class="schedule-title">HORARIO</div>
+                                        <div class="schedule-subtitle">Configura tus días preferidos</div>
+                                    </div>
+                                    <div class="schedule-days">
+                                        <div class="schedule-day">
+                                            <span class="day-name">Lunes</span>
+                                            <span class="day-time">3am - 10pm</span>
+                                        </div>
+                                        <div class="schedule-day">
+                                            <span class="day-name">Martes</span>
+                                            <span class="day-time">3am - 10pm</span>
+                                        </div>
+                                        <div class="schedule-day">
+                                            <span class="day-name">Miércoles</span>
+                                            <span class="day-time">3am - 10pm</span>
+                                        </div>
+                                        <div class="schedule-day">
+                                            <span class="day-name">Jueves</span>
+                                            <span class="day-time">3am - 10pm</span>
+                                        </div>
+                                        <div class="schedule-day">
+                                            <span class="day-name">Viernes</span>
+                                            <span class="day-time">3am - 10pm</span>
+                                        </div>
+                                        <div class="schedule-day">
+                                            <span class="day-name">Sábado</span>
+                                            <span class="day-time">Desactivado</span>
+                                        </div>
+                                        <div class="schedule-day">
+                                            <span class="day-name">Domingo</span>
+                                            <span class="day-time">Desactivado</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Calendario -->
+                <div class="feature" data-feature="calendar">
+                    <div class="feature__content">
+                        <h3 class="feature__title">CALENDARIO</h3>
+                        <p class="feature__description">
+                            En el calendario podrás ver tus bloques aceptados y encontrar las opciones para identificarte desde cualquier ubicación, así como la posibilidad de saltarte la selfie y cancelar bloques, todo en un solo lugar para tu máxima comodidad.
+                        </p>
+                        <ul class="feature__list">
+                            <li class="feature__list-item">Vista mensual de bloques</li>
+                            <li class="feature__list-item">Identificación desde cualquier ubicación</li>
+                            <li class="feature__list-item">Opción de saltar selfie</li>
+                            <li class="feature__list-item">Cancelación rápida de bloques</li>
+                        </ul>
+                    </div>
+                    <div class="feature__phone">
+                        <div class="phone">
+                            <div class="phone__screen calendar-screen">
+                                <div class="phone__island"></div>
+                                <div class="phone__status-bar">
+                                    <span>9:41</span>
+                                    <span>100%</span>
+                                </div>
+                                <div class="phone__content">
+                                    <div class="calendar-header">
+                                        <div class="calendar-title">CALENDARIO</div>
+                                        <div class="calendar-month">Octubre 2023</div>
+                                    </div>
+                                    <div class="calendar-grid">
+                                        <div class="calendar-day">L</div>
+                                        <div class="calendar-day">M</div>
+                                        <div class="calendar-day">X</div>
+                                        <div class="calendar-day">J</div>
+                                        <div class="calendar-day">V</div>
+                                        <div class="calendar-day">S</div>
+                                        <div class="calendar-day">D</div>
+                                        <div class="calendar-day">1</div>
+                                        <div class="calendar-day">2</div>
+                                        <div class="calendar-day">3</div>
+                                        <div class="calendar-day">4</div>
+                                        <div class="calendar-day">5</div>
+                                        <div class="calendar-day">6</div>
+                                        <div class="calendar-day">7</div>
+                                        <div class="calendar-day">8</div>
+                                        <div class="calendar-day">9</div>
+                                        <div class="calendar-day">10</div>
+                                        <div class="calendar-day">11</div>
+                                        <div class="calendar-day has-block">12</div>
+                                        <div class="calendar-day">13</div>
+                                        <div class="calendar-day">14</div>
+                                        <div class="calendar-day active">15</div>
+                                        <div class="calendar-day">16</div>
+                                        <div class="calendar-day has-block">17</div>
+                                        <div class="calendar-day">18</div>
+                                        <div class="calendar-day">19</div>
+                                        <div class="calendar-day">20</div>
+                                        <div class="calendar-day">21</div>
+                                    </div>
+                                    <div class="calendar-events">
+                                        <div class="calendar-event">11:45am - 02:45pm Norcross GA</div>
+                                        <div class="calendar-event">07:30am - 11:00am Portland OR</div>
+                                        <div class="calendar-event">01:15pm - 05:45pm Portland OR</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Registro -->
+                <div class="feature" data-feature="log">
+                    <div class="feature__content">
+                        <h3 class="feature__title">REGISTRO</h3>
+                        <p class="feature__description">
+                            En el registro, podrá ver todos los bloques disponibles y el motivo detallado por el cual se ignoraron algunos. Esto le ayudará a ajustar sus filtros de preferencias según sea necesario para optimizar sus opciones.
+                        </p>
+                        <ul class="feature__list">
+                            <li class="feature__list-item">Historial completo de bloques</li>
+                            <li class="feature__list-item">Motivos detallados de rechazo</li>
+                            <li class="feature__list-item">Optimización de filtros</li>
+                            <li class="feature__list-item">Análisis de patrones</li>
+                        </ul>
+                    </div>
+                    <div class="feature__phone">
+                        <div class="phone">
+                            <div class="phone__screen log-screen">
+                                <div class="phone__island"></div>
+                                <div class="phone__status-bar">
+                                    <span>9:41</span>
+                                    <span>100%</span>
+                                </div>
+                                <div class="phone__content">
+                                    <div class="log-header">
+                                        <div class="log-title">REGISTRO</div>
+                                        <div class="log-subtitle">Historial de actividad</div>
+                                    </div>
+                                    <div class="log-entries">
+                                        <div class="log-entry">
+                                            <div class="log-time">12/04/2023 10:06:41 am</div>
+                                            <div class="log-message">(11:45am - 02:45pm) [Mañana] [Norcross GA (VGA1) - Sub Same-Day] [54 USD] [3 Horas]</div>
+                                            <div class="log-status accepted">ACEPTADO</div>
+                                        </div>
+                                        <div class="log-entry">
+                                            <div class="log-time">12/04/2023 10:37:28 am</div>
+                                            <div class="log-message">(07:30am - 11:00am) [Abr 14] [Portland OR (VOR3) - Sub Same-Day] [73.5 USD] [3.5 Horas]</div>
+                                            <div class="log-status ignored">IGNORADO por [Precio por bloque]</div>
+                                        </div>
+                                        <div class="log-entry">
+                                            <div class="log-time">12/04/2023 10:37:28 am</div>
+                                            <div class="log-message">(01:15pm - 05:45pm) [Hoy] [Portland OR (VOR3) - Sub Same-Day] [94.5 USD] [4.5 Horas]</div>
+                                            <div class="log-status ignored">IGNORADO por [Precio por bloque]</div>
+                                        </div>
+                                        <div class="log-entry">
+                                            <div class="log-time">11/04/2023 05:17:45 pm</div>
+                                            <div class="log-message">La búsqueda se ha detenido</div>
+                                            <div class="log-status">INFORMACIÓN</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 4: Configuración -->
+                <div class="feature" data-feature="config">
+                    <div class="feature__content">
+                        <h3 class="feature__title">CONFIGURACIÓN</h3>
+                        <p class="feature__description">
+                            Dentro del menú de opciones encontrarás todas las ajustes de configuración para personalizar tu experiencia.
+                        </p>
+                        <ul class="feature__list">
+                            <li class="feature__list-item">Llegar</li>
+                            <li class="feature__list-item">Saltar selfie</li>
+                            <li class="feature__list-item">Saltar CAPTCHA-PUZZLE</li>
+                            <li class="feature__list-item">Filtros personalizados</li>
+                            <li class="feature__list-item">Auto búsqueda</li>
+                            <li class="feature__list-item">Notificación persistente</li>
+                            <li class="feature__list-item">Notificación por Llamada Telefónica</li>
+                        </ul>
+                    </div>
+                    <div class="feature__phone">
+                        <div class="phone">
+                            <div class="phone__screen config-screen">
+                                <div class="phone__island"></div>
+                                <div class="phone__status-bar">
+                                    <span>9:41</span>
+                                    <span>100%</span>
+                                </div>
+                                <div class="phone__content">
+                                    <div class="config-header">
+                                        <div class="config-title">CONFIGURACIÓN</div>
+                                        <div class="config-subtitle">Personaliza tu experiencia</div>
+                                    </div>
+                                    <div class="config-sections">
+                                        <div class="config-section">
+                                            <div class="config-section-title">Automatización</div>
+                                            <div class="config-option">
+                                                <span class="config-label">Llegar automáticamente</span>
+                                                <div class="config-toggle"></div>
+                                            </div>
+                                            <div class="config-option">
+                                                <span class="config-label">Saltar selfie</span>
+                                                <div class="config-toggle"></div>
+                                            </div>
+                                            <div class="config-option">
+                                                <span class="config-label">Saltar CAPTCHA</span>
+                                                <div class="config-toggle"></div>
+                                            </div>
+                                        </div>
+                                        <div class="config-section">
+                                            <div class="config-section-title">Notificaciones</div>
+                                            <div class="config-option">
+                                                <span class="config-label">Notificación persistente</span>
+                                                <div class="config-toggle"></div>
+                                            </div>
+                                            <div class="config-option">
+                                                <span class="config-label">Llamada telefónica</span>
+                                                <div class="config-toggle"></div>
+                                            </div>
+                                        </div>
+                                        <div class="config-section">
+                                            <div class="config-section-title">Búsqueda</div>
+                                            <div class="config-option">
+                                                <span class="config-label">Auto búsqueda</span>
+                                                <div class="config-toggle"></div>
+                                            </div>
+                                            <div class="config-option">
+                                                <span class="config-label">Filtros personalizados</span>
+                                                <div class="config-toggle"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección FAQ -->
+    <section class="faq" id="faq">
+        <div class="container">
+            <div class="faq__header">
+                <h2 class="faq__title">Preguntas Frecuentes</h2>
+                <p class="faq__subtitle">
+                    Encuentra respuestas claras a las dudas más comunes sobre StarFlex y descubre cómo transformar tu experiencia con Amazon Flex.
+                </p>
+                
+                <!-- Barra de búsqueda -->
+                <div class="faq__search-container">
+                    <input 
+                        type="text" 
+                        class="faq__search" 
+                        id="faq-search"
+                        placeholder="Buscar pregunta..."
+                        autocomplete="off"
+                    >
+                    <div class="faq__search-icon"></div>
+                </div>
+            </div>
+
+            <div class="faq__container">
+                <div class="faq__list" id="faq-list">
+                    <!-- FAQ 1: Beneficios -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Cuáles son los principales beneficios de utilizar StarFlex?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    StarFlex está diseñado para <span class="faq__answer-highlight">eliminar la conducción distraída</span> mediante automatización inteligente. Te permite concentrarte completamente en la conducción segura mientras nuestro sistema trabaja para
+                                    encontrar los mejores bloques. Con StarFlex, no necesitas revisar constantemente tu teléfono, garantizando una experiencia más segura y eficiente que te permite maximizar tus ganancias.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 2: CAPTCHA -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿StarFlex puede resolver automáticamente los CAPTCHA?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    Sí, StarFlex incluye <span class="faq__answer-highlight">tecnología avanzada para resolver CAPTCHA automáticamente</span>. Nuestro sistema utiliza algoritmos inteligentes que pueden interpretar y resolver diferentes tipos de verificaciones, permitiendo una navegación fluida sin interrupciones manuales. Esto optimiza tu tiempo y hace que tu experiencia diaria sea más eficiente.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 3: Seguridad -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Es seguro usar StarFlex? ¿Amazon puede detectarlo?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    StarFlex utiliza <span class="faq__answer-highlight">tecnología avanzada de simulación humana</span> que incluye patrones de comportamiento naturales, tiempos de respuesta variables y gestos táctiles realistas. Nuestro enfoque se centra en ayudar a los conductores a brindar un mejor servicio a Amazon y sus clientes, asegurando entregas eficientes y de alta calidad.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 4: Compatibilidad -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿StarFlex funciona en iPhone y Android?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    Sí, StarFlex está disponible para <span class="faq__answer-highlight">iOS (iPhone 8+) y Android (8.0+)</span>. Hemos desarrollado aplicaciones nativas optimizadas para cada plataforma, garantizando el mejor rendimiento y una experiencia de usuario superior. Ambas versiones incluyen todas las funcionalidades y reciben actualizaciones automáticas.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 5: Requisitos -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Qué necesito para empezar a usar StarFlex?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    Solo necesitas una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo compatible</span>. Después de descargar la aplicación, el proceso de configuración toma menos de 5 minutos. Nuestro sistema de configuración guiada te ayudará a optimizar tu experiencia desde el primer día.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 6: Precios -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Cuáles son los precios y planes disponibles?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    Ofrecemos planes desde <span class="faq__answer-highlight">$29.99/mes con 3 días de prueba gratuita</span>. El plan básico incluye automatización completa y soporte 24/7. El plan premium ($49.99/mes) añade análisis avanzados y acceso prioritario. Todos los planes incluyen actualizaciones automáticas y garantía de satisfacción de 30 días.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 7: Soporte -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Qué tipo de soporte técnico ofrecen?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    Proporcionamos <span class="faq__answer-highlight">soporte 24/7 con respuesta promedio de 2 minutos</span>. Puedes contactarnos por chat en vivo, WhatsApp, email o nuestro sistema de tickets. Nuestro equipo especializado en Amazon Flex puede resolver cualquier consulta, desde configuración inicial hasta optimización avanzada.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 8: Ganancias -->
+                    <div class="faq__item">
+                        <button class="faq__question" aria-expanded="false">
+                            <span class="faq__question-text">¿Cuánto puedo aumentar mis ganancias con StarFlex?</span>
+                            <div class="faq__icon"></div>
+                        </button>
+                        <div class="faq__answer">
+                            <div class="faq__answer-content">
+                                <p class="faq__answer-text">
+                                    Nuestros usuarios reportan un <span class="faq__answer-highlight">aumento promedio del 300-500% en ganancias mensuales</span>. Esto se debe a la capacidad de capturar bloques de alta demanda 24/7 y optimizar rutas automáticamente. Algunos conductores han logrado aumentos de $2,000-$4,000 adicionales por mes. Los resultados varían según la zona y dedicación.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mensaje de no resultados -->
+                <div class="faq__no-results" id="faq-no-results">
+                    <div class="faq__no-results-text">No se encontraron preguntas que coincidan con tu búsqueda</div>
+                    <div class="faq__no-results-suggestion">Intenta con términos diferentes o contacta nuestro soporte</div>
+                </div>
+
+                <!-- Contacto -->
+                <div class="faq__contact">
+                    <p class="faq__contact-text">¿No encontraste la respuesta que buscabas?</p>
+                    <a href="#contacto" class="faq__contact-btn">Contactar Soporte</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- JavaScript Optimizado -->
     <script>
         // ===== UTILIDADES ===== 
@@ -2130,6 +3458,127 @@
                         behavior: 'smooth'
                     });
                 }
+            }
+        }
+
+        // ===== FAQ ACCORDION =====
+        class FAQAccordion {
+            constructor() {
+                this.faqItems = $$('.faq__item');
+                this.searchInput = $('#faq-search');
+                this.noResults = $('#faq-no-results');
+                this.init();
+            }
+
+            init() {
+                this.setupAccordion();
+                this.setupSearch();
+            }
+
+            setupAccordion() {
+                this.faqItems.forEach(item => {
+                    const question = item.querySelector('.faq__question');
+                    const answer = item.querySelector('.faq__answer');
+                    
+                    question.addEventListener('click', () => {
+                        this.toggleItem(item, question, answer);
+                    });
+
+                    question.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            this.toggleItem(item, question, answer);
+                        }
+                    });
+                });
+            }
+
+            toggleItem(item, question, answer) {
+                const isActive = item.classList.contains('active');
+                
+                // Cerrar otros items
+                this.faqItems.forEach(otherItem => {
+                    if (otherItem !== item && otherItem.classList.contains('active')) {
+                        otherItem.classList.remove('active');
+                        otherItem.querySelector('.faq__answer').classList.remove('active');
+                        otherItem.querySelector('.faq__question').setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                // Toggle item actual
+                if (isActive) {
+                    item.classList.remove('active');
+                    answer.classList.remove('active');
+                    question.setAttribute('aria-expanded', 'false');
+                } else {
+                    item.classList.add('active');
+                    answer.classList.add('active');
+                    question.setAttribute('aria-expanded', 'true');
+                }
+            }
+
+            setupSearch() {
+                if (!this.searchInput) return;
+
+                let searchTimeout;
+                this.searchInput.addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        this.performSearch(e.target.value.toLowerCase());
+                    }, 300);
+                });
+            }
+
+            performSearch(searchTerm) {
+                let visibleCount = 0;
+
+                this.faqItems.forEach(item => {
+                    const questionText = item.querySelector('.faq__question-text').textContent.toLowerCase();
+                    const answerText = item.querySelector('.faq__answer-text').textContent.toLowerCase();
+                    
+                    const matches = searchTerm === '' || 
+                                  questionText.includes(searchTerm) || 
+                                  answerText.includes(searchTerm);
+                    
+                    if (matches) {
+                        item.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                // Mostrar/ocultar mensaje de no resultados
+                if (visibleCount === 0 && searchTerm !== '') {
+                    this.noResults.classList.add('show');
+                } else {
+                    this.noResults.classList.remove('show');
+                }
+            }
+        }
+
+        // ===== ANIMACIONES DE ENTRADA =====
+        class FeatureAnimations {
+            constructor() {
+                this.features = $$('.feature');
+                this.init();
+            }
+
+            init() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('in-view');
+                        }
+                    });
+                }, { 
+                    threshold: 0.2,
+                    rootMargin: '0px 0px -50px 0px'
+                });
+
+                this.features.forEach(feature => {
+                    observer.observe(feature);
+                });
             }
         }
 
@@ -2309,12 +3758,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             new MobileNav();
             new SmoothScroll();
+            new FAQAccordion();
+            new FeatureAnimations();
             new PhoneInteractions();
             new AnimatedCounters();
             new ParticleEffects();
             new ActiveNavigation();
             
-            console.log('🚀 Starflex Ultra Futurista - iPhone 15 Pro & Navbar Flotante initialized');
+            console.log('🚀 Starflex Ultra Futurista - Completo con iPhone 15 Pro, Navbar Flotante y Botones de Descarga Flotantes initialized');
         });
 
         // ===== OPTIMIZACIÓN DE SCROLL =====
@@ -2371,4 +3822,3 @@
     </script>
 </body>
 </html>
-            0%,
