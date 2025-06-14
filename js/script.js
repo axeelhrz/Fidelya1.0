@@ -364,6 +364,89 @@ class ActiveNavigation {
     }
 }
 
+// ===== INTERACCIONES DE ESTACIONES =====
+class StationsInteractions {
+    constructor() {
+        this.stationItems = $$('.stations__station-item');
+        this.favoriteButtons = $$('.stations__favorite-btn');
+        this.filters = $$('.stations__filter');
+        this.phoneContainer = $('.stations__phone-container');
+        this.init();
+    }
+
+    init() {
+        this.setupStationHovers();
+        this.setupFavoriteButtons();
+        this.setupFilters();
+        this.setupPhoneInteractions();
+    }
+
+    setupStationHovers() {
+        this.stationItems.forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                item.style.transform = 'translateY(-3px) scale(1.02)';
+                item.style.boxShadow = '0 12px 35px rgba(0, 212, 255, 0.2)';
+            });
+
+            item.addEventListener('mouseleave', () => {
+                item.style.transform = 'translateY(0) scale(1)';
+                item.style.boxShadow = '';
+            });
+        });
+    }
+
+    setupFavoriteButtons() {
+        this.favoriteButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                btn.classList.toggle('stations__favorite-btn--active');
+                
+                // Añadir efecto de pulso
+                btn.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    btn.style.transform = 'scale(1)';
+                }, 150);
+            });
+        });
+    }
+
+    setupFilters() {
+        this.filters.forEach(filter => {
+            filter.addEventListener('click', () => {
+                // Remover clase activa de todos los filtros
+                this.filters.forEach(f => f.classList.remove('stations__filter--active'));
+                
+                // Añadir clase activa al filtro clickeado
+                filter.classList.add('stations__filter--active');
+                
+                // Efecto de animación
+                filter.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    filter.style.transform = 'scale(1)';
+                }, 100);
+            });
+        });
+    }
+
+    setupPhoneInteractions() {
+        if (this.phoneContainer) {
+            this.phoneContainer.addEventListener('mouseenter', () => {
+                const phone = this.phoneContainer.querySelector('.stations__phone');
+                if (phone) {
+                    phone.style.transform = 'perspective(1000px) rotateY(-2deg) rotateX(1deg) scale(1.02)';
+                }
+            });
+
+            this.phoneContainer.addEventListener('mouseleave', () => {
+                const phone = this.phoneContainer.querySelector('.stations__phone');
+                if (phone) {
+                    phone.style.transform = 'perspective(1000px) rotateY(-5deg) rotateX(2deg) scale(1)';
+                }
+            });
+        }
+    }
+}
+
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', () => {
     new MobileNav();
@@ -374,8 +457,9 @@ document.addEventListener('DOMContentLoaded', () => {
     new AnimatedCounters();
     new ParticleEffects();
     new ActiveNavigation();
+    new StationsInteractions();
     
-    console.log('🚀 Starflex Ultra Futurista - Completo con iPhone 15 Pro, Navbar Flotante y Botones de Descarga Flotantes initialized');
+    console.log('🚀 StarFlex Landing Page initialized successfully!');
 });
 
 // ===== OPTIMIZACIÓN DE SCROLL =====
