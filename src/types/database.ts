@@ -4,42 +4,36 @@ export interface Database {
       trabajadores: {
         Row: {
           id: number
-          nombre: string
-          apellido: string
-          email: string
-          telefono: string | null
-          cargo: string | null
-          departamento: string | null
-          fecha_ingreso: string | null
+          empresa_id: number | null
+          nombre_completo: string
+          rut: string
+          turno_habitual: string | null
           activo: boolean
           created_at: string
-          updated_at: string
+          contraseña: string
+          rol: string | null
         }
         Insert: {
           id?: number
-          nombre: string
-          apellido: string
-          email: string
-          telefono?: string | null
-          cargo?: string | null
-          departamento?: string | null
-          fecha_ingreso?: string | null
+          empresa_id?: number | null
+          nombre_completo: string
+          rut: string
+          turno_habitual?: string | null
           activo?: boolean
           created_at?: string
-          updated_at?: string
+          contraseña: string
+          rol?: string | null
         }
         Update: {
           id?: number
-          nombre?: string
-          apellido?: string
-          email?: string
-          telefono?: string | null
-          cargo?: string | null
-          departamento?: string | null
-          fecha_ingreso?: string | null
+          empresa_id?: number | null
+          nombre_completo?: string
+          rut?: string
+          turno_habitual?: string | null
           activo?: boolean
           created_at?: string
-          updated_at?: string
+          contraseña?: string
+          rol?: string | null
         }
       }
       shifts: {

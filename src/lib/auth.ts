@@ -1,17 +1,23 @@
 import { supabase } from './supabase'
 import { Trabajador } from '@/types/database'
 
-// Función para generar contraseña automática
-export function generatePassword(nombre: string, apellido: string): string {
-  if (!nombre || !apellido) return ''
+// Función para generar contraseña automática basada en nombre completo
+export function generatePassword(nombreCompleto: string): string {
+  if (!nombreCompleto) return ''
+  
+  const nameParts = nombreCompleto.trim().split(' ')
+  if (nameParts.length < 2) return ''
+  
+  const firstName = nameParts[0]
+  const lastName = nameParts[nameParts.length - 1] // Tomar el último apellido
   
   // Primera letra del nombre + apellido completo, todo en mayúsculas
-  return (nombre.charAt(0) + apellido).toUpperCase()
+  return (firstName.charAt(0) + lastName).toUpperCase()
 }
 
-// Función para obtener el nombre completo
+// Función para obtener el nombre completo (ya viene completo en la BD)
 export function getFullName(trabajador: Trabajador): string {
-  return `${trabajador.nombre} ${trabajador.apellido}`
+  return trabajador.nombre_completo
 }
 
 // Función para obtener todos los trabajadores activos
@@ -23,7 +29,7 @@ export async function getAllUsers(): Promise<Trabajador[]> {
       .from('trabajadores')
       .select('*')
       .eq('activo', true)
-      .order('nombre')
+      .order('nombre_completo')
     
     if (error) {
       console.error('Supabase error:', error)
@@ -39,25 +45,15 @@ export async function getAllUsers(): Promise<Trabajador[]> {
 }
 
 // Función de login personalizada por nombre
-export async function signInWithName(fullName: string) {
+export async function signInWithName(nombreCompleto: string) {
   try {
-    console.log('Attempting to sign in with name:', fullName)
+    console.log('Attempting to sign in with name:', nombreCompleto)
     
-    // Separar nombre y apellido
-    const nameParts = fullName.trim().split(' ')
-    if (nameParts.length < 2) {
-      throw new Error('Formato de nombre inválido')
-    }
-    
-    const nombre = nameParts[0]
-    const apellido = nameParts.slice(1).join(' ')
-    
-    // Buscar el trabajador por nombre y apellido
+    // Buscar el trabajador por nombre completo
     const { data: trabajador, error: trabajadorError } = await supabase
       .from('trabajadores')
       .select('*')
-      .eq('nombre', nombre)
-      .eq('apellido', apellido)
+      .eq('nombre_completo', nombreCompleto)
       .eq('activo', true)
       .single()
     
@@ -70,23 +66,29 @@ export async function signInWithName(fullName: string) {
       throw new Error('Usuario no encontrado')
     }
     
-    console.log('Trabajador found:', trabajador.email)
+    console.log('Trabajador found:', trabajador.nombre_completo, 'RUT:', trabajador.rut)
     
     // Generar la contraseña automática
-    const password = generatePassword(trabajador.nombre, trabajador.apellido)
-    console.log('Generated password:', password)
+    const generatedPassword = generatePassword(trabajador.nombre_completo)
+    console.log('Generated password:', generatedPassword)
+    
+    // Verificar si coincide con la contraseña almacenada (si existe)
+    if (trabajador.contraseña && trabajador.contraseña !== generatedPassword) {
+      console.log('Using stored password instead of generated one')
+    }
     
     // Para este sistema simplificado, vamos a crear una sesión simulada
-    // En un sistema real, necesitarías integrar con Supabase Auth
-    
     // Guardar información del trabajador en localStorage para simular sesión
     const sessionData = {
       user: {
         id: trabajador.id.toString(),
-        email: trabajador.email,
+        email: `${trabajador.rut}@empresa.com`, // Usar RUT como email base
         user_metadata: {
-          full_name: getFullName(trabajador),
-          trabajador_id: trabajador.id
+          full_name: trabajador.nombre_completo,
+          trabajador_id: trabajador.id,
+          rut: trabajador.rut,
+          rol: trabajador.rol,
+          turno_habitual: trabajador.turno_habitual
         }
       },
       trabajador: trabajador

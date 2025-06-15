@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { signInWithName, getAllUsers, generatePassword, testSupabaseConnection, getFullName } from '@/lib/auth'
 import { Trabajador } from '@/types/database'
-import { Utensils, User, ChevronDown, LogIn, AlertCircle, RefreshCw } from 'lucide-react'
+import { Utensils, User, ChevronDown, LogIn, AlertCircle, RefreshCw, Badge } from 'lucide-react'
 
 export default function LoginForm() {
   const [selectedUser, setSelectedUser] = useState<Trabajador | null>(null)
@@ -45,7 +45,7 @@ export default function LoginForm() {
         setError('No se encontraron trabajadores activos en la base de datos.')
       } else {
         setUsers(usersList)
-        console.log('Trabajadores loaded:', usersList.map(u => getFullName(u)))
+        console.log('Trabajadores loaded:', usersList.map(u => u.nombre_completo))
       }
     } catch (error: any) {
       console.error('Error fetching users:', error)
@@ -73,9 +73,8 @@ export default function LoginForm() {
     setError('')
 
     try {
-      const fullName = getFullName(selectedUser)
-      console.log('Attempting login for:', fullName)
-      await signInWithName(fullName)
+      console.log('Attempting login for:', selectedUser.nombre_completo)
+      await signInWithName(selectedUser.nombre_completo)
       console.log('Login successful, redirecting...')
       router.push('/dashboard')
     } catch (err: any) {
@@ -83,6 +82,21 @@ export default function LoginForm() {
       setError(err.message || 'Error al iniciar sesión')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const getTurnoColor = (turno: string | null) => {
+    if (!turno) return 'bg-gray-100 text-gray-600'
+    switch (turno.toLowerCase()) {
+      case 'día':
+      case 'dia':
+        return 'bg-yellow-100 text-yellow-700'
+      case 'noche':
+        return 'bg-blue-100 text-blue-700'
+      case 'mixto':
+        return 'bg-purple-100 text-purple-700'
+      default:
+        return 'bg-gray-100 text-gray-600'
     }
   }
 
@@ -107,7 +121,7 @@ export default function LoginForm() {
               Iniciar Sesión
             </CardTitle>
             <CardDescription className="text-gray-600 text-base">
-              Accede a tu cuenta para hacer tus pedidos
+              Selecciona tu nombre para acceder al sistema
             </CardDescription>
             
             {/* Connection Status */}
@@ -144,7 +158,7 @@ export default function LoginForm() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-3">
                 <label className="text-sm font-semibold text-gray-700 block">
-                  Tu Nombre
+                  Selecciona tu nombre
                 </label>
                 
                 {loadingUsers ? (
@@ -165,7 +179,7 @@ export default function LoginForm() {
                           <User className="w-4 h-4 text-white" />
                         </div>
                         <span className={`text-base ${selectedUser ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
-                          {selectedUser ? getFullName(selectedUser) : 
+                          {selectedUser ? selectedUser.nombre_completo : 
                            users.length === 0 ? 'No hay trabajadores disponibles' : 'Selecciona tu nombre...'}
                         </span>
                       </div>
@@ -184,11 +198,18 @@ export default function LoginForm() {
                             <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
                               <User className="w-4 h-4 text-white" />
                             </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{getFullName(user)}</p>
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900">{user.nombre_completo}</p>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <p className="text-xs text-gray-500">RUT: {user.rut}</p>
+                                {user.turno_habitual && (
+                                  <span className={`text-xs px-2 py-0.5 rounded-full ${getTurnoColor(user.turno_habitual)}`}>
+                                    {user.turno_habitual}
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-xs text-gray-500">
-                                {user.cargo && `${user.cargo} - `}
-                                Contraseña: {generatePassword(user.nombre, user.apellido)}
+                                Contraseña: <span className="font-mono font-bold">{generatePassword(user.nombre_completo)}</span>
                               </p>
                             </div>
                           </button>
@@ -205,17 +226,22 @@ export default function LoginForm() {
                     <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                       <User className="w-5 h-5 text-white" />
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">{getFullName(selectedUser)}</p>
-                      <p className="text-sm text-gray-600">
-                        {selectedUser.cargo && `Cargo: ${selectedUser.cargo}`}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Email: <span className="font-mono text-blue-600">{selectedUser.email}</span>
-                      </p>
-                      <p className="text-sm text-gray-600">
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">{selectedUser.nombre_completo}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <p className="text-sm text-gray-600">RUT: {selectedUser.rut}</p>
+                        {selectedUser.turno_habitual && (
+                          <span className={`text-xs px-2 py-1 rounded-full ${getTurnoColor(selectedUser.turno_habitual)}`}>
+                            {selectedUser.turno_habitual}
+                          </span>
+                        )}
+                      </div>
+                      {selectedUser.rol && (
+                        <p className="text-sm text-gray-600">Rol: {selectedUser.rol}</p>
+                      )}
+                      <p className="text-sm text-gray-600 mt-1">
                         Contraseña: <span className="font-mono font-bold text-blue-600">
-                          {generatePassword(selectedUser.nombre, selectedUser.apellido)}
+                          {generatePassword(selectedUser.nombre_completo)}
                         </span>
                       </p>
                     </div>

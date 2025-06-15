@@ -63,10 +63,8 @@ export default function SupabaseTest() {
         error,
         dataLength: data?.length || 0,
         url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/trabajadores`,
-        headers: {
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20) + '...',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20)}...`
-        }
+        sampleFields: data?.[0] ? Object.keys(data[0]) : [],
+        expectedFields: ['id', 'empresa_id', 'nombre_completo', 'rut', 'turno_habitual', 'activo', 'created_at', 'contraseña', 'rol']
       })
 
       if (error) {
@@ -84,39 +82,33 @@ export default function SupabaseTest() {
     }
   }
 
-  const createSampleData = async () => {
+  const checkRLSPolicies = async () => {
     setLoading(true)
     setError('')
+    setConnectionStatus('Verificando políticas RLS...')
 
     try {
-      // Try to insert a sample trabajador
+      // Test SELECT permission
       const { data, error } = await supabase
         .from('trabajadores')
-        .insert([
-          {
-            nombre: 'Test',
-            apellido: 'Usuario',
-            email: 'test@empresa.com',
-            cargo: 'Tester',
-            departamento: 'IT',
-            activo: true
-          }
-        ])
-        .select()
+        .select('id, nombre_completo, activo')
+        .limit(1)
 
       if (error) {
-        throw error
+        if (error.code === '42501') {
+          throw new Error('Sin permisos para leer la tabla. Configura las políticas RLS.')
+        } else {
+          throw new Error(`Error RLS: ${error.message}`)
+        }
       }
 
-      setConnectionStatus('✅ Datos de prueba creados exitosamente')
-      setDebugInfo({ inserted: data })
-      
-      // Refresh the list
-      testDirectQuery()
+      setConnectionStatus('✅ Políticas RLS configuradas correctamente')
+      setDebugInfo({ rlsTest: 'passed', sampleData: data })
+
     } catch (err: any) {
       setError(err.message)
-      setConnectionStatus('❌ Error creando datos de prueba')
-      setDebugInfo({ insertError: err })
+      setConnectionStatus('❌ Error en políticas RLS')
+      setDebugInfo({ rlsTest: 'failed', error: err })
     } finally {
       setLoading(false)
     }
@@ -125,19 +117,22 @@ export default function SupabaseTest() {
   return (
     <Card className="max-w-6xl mx-auto m-8">
       <CardHeader>
-        <CardTitle>Diagnóstico Completo de Supabase - Tabla Trabajadores</CardTitle>
+        <CardTitle>🔍 Diagnóstico - Tabla Trabajadores (Estructura Real)</CardTitle>
+        <p className="text-sm text-gray-600">
+          Columnas detectadas: id, empresa_id, nombre_completo, rut, turno_habitual, activo, created_at, contraseña, rol
+        </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Botones de prueba */}
+        {/* Botones de diagnóstico */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <Button onClick={testConnection} disabled={loading} variant="default">
-            Probar Conexión
+            🔌 Probar Conexión
           </Button>
           <Button onClick={testDirectQuery} disabled={loading} variant="outline">
-            Query Directo
+            📊 Query Directo
           </Button>
-          <Button onClick={createSampleData} disabled={loading} variant="secondary">
-            Crear Datos Prueba
+          <Button onClick={checkRLSPolicies} disabled={loading} variant="secondary">
+            🔒 Verificar RLS
           </Button>
         </div>
 
@@ -161,47 +156,27 @@ export default function SupabaseTest() {
         {/* Información de debug */}
         {debugInfo && (
           <div className="p-4 bg-gray-100 border border-gray-300 rounded-lg">
-            <p className="font-medium mb-2">Información de Debug:</p>
+            <p className="font-medium mb-2">🔍 Información de Debug:</p>
             <pre className="text-xs overflow-auto bg-white p-2 rounded border max-h-40">
               {JSON.stringify(debugInfo, null, 2)}
             </pre>
           </div>
         )}
 
-        {/* Configuración actual */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="font-medium mb-2">Configuración Supabase</h3>
-            <div className="text-sm space-y-1">
-              <p><strong>URL:</strong> {process.env.NEXT_PUBLIC_SUPABASE_URL}</p>
-              <p><strong>Key:</strong> {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20)}...</p>
-              <p><strong>Tabla objetivo:</strong> trabajadores</p>
-            </div>
-          </div>
-
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <h3 className="font-medium mb-2">Pasos para solucionar</h3>
-            <div className="text-sm space-y-1">
-              <p>1. Ejecutar el script SQL en Supabase</p>
-              <p>2. Verificar que la tabla existe</p>
-              <p>3. Configurar políticas RLS</p>
-              <p>4. Insertar datos de prueba</p>
-            </div>
-          </div>
-        </div>
-
         {/* Trabajadores encontrados */}
         {trabajadores.length > 0 && (
           <div className="space-y-4">
-            <h3 className="font-medium text-lg">Trabajadores encontrados ({trabajadores.length}):</h3>
+            <h3 className="font-medium text-lg">👥 Trabajadores Encontrados ({trabajadores.length}):</h3>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {trabajadores.map((trabajador) => (
                 <div key={trabajador.id} className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p><strong>Nombre:</strong> {getFullName(trabajador)}</p>
-                  <p><strong>Email:</strong> {trabajador.email}</p>
-                  <p><strong>Cargo:</strong> {trabajador.cargo || 'No especificado'}</p>
-                  <p><strong>Departamento:</strong> {trabajador.departamento || 'No especificado'}</p>
-                  <p><strong>Contraseña:</strong> <span className="font-mono font-bold text-green-700">{generatePassword(trabajador.nombre, trabajador.apellido)}</span></p>
+                  <p><strong>Nombre:</strong> {trabajador.nombre_completo}</p>
+                  <p><strong>RUT:</strong> {trabajador.rut}</p>
+                  <p><strong>Turno:</strong> {trabajador.turno_habitual || 'No especificado'}</p>
+                  <p><strong>Rol:</strong> {trabajador.rol || 'No especificado'}</p>
+                  <p><strong>Empresa ID:</strong> {trabajador.empresa_id || 'N/A'}</p>
+                  <p><strong>Contraseña generada:</strong> <span className="font-mono font-bold text-green-700">{generatePassword(trabajador.nombre_completo)}</span></p>
+                  <p><strong>Contraseña BD:</strong> <span className="font-mono text-gray-600">{trabajador.contraseña || 'No definida'}</span></p>
                   <p><strong>ID:</strong> {trabajador.id}</p>
                   <p><strong>Activo:</strong> {trabajador.activo ? '✅ Sí' : '❌ No'}</p>
                 </div>
@@ -210,37 +185,27 @@ export default function SupabaseTest() {
           </div>
         )}
 
-        {/* Script SQL */}
+        {/* Script SQL de solución */}
         <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-          <h3 className="font-medium mb-2">Script SQL para ejecutar en Supabase:</h3>
-          <div className="text-xs bg-white p-3 rounded border overflow-auto max-h-60">
+          <h3 className="font-medium mb-2">📝 Script SQL para configurar RLS:</h3>
+          <div className="text-xs bg-white p-3 rounded border overflow-auto max-h-40">
             <code>
-              {`-- Ejecutar este script en el SQL Editor de Supabase
-CREATE TABLE IF NOT EXISTS public.trabajadores (
-  id SERIAL PRIMARY KEY,
-  nombre TEXT NOT NULL,
-  apellido TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  telefono TEXT,
-  cargo TEXT,
-  departamento TEXT,
-  fecha_ingreso DATE,
-  activo BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
+              {`-- Habilitar RLS en la tabla trabajadores
 ALTER TABLE public.trabajadores ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow all operations" ON public.trabajadores
-  FOR ALL USING (true);
+-- Crear política que permita todas las operaciones
+CREATE POLICY "Allow all operations for trabajadores" ON public.trabajadores
+  FOR ALL USING (true) WITH CHECK (true);
 
--- Insertar datos de ejemplo
-INSERT INTO public.trabajadores (nombre, apellido, email, cargo, departamento, activo) VALUES
-  ('Juan', 'Pérez', 'juan.perez@empresa.com', 'Desarrollador', 'IT', true),
-  ('María', 'García', 'maria.garcia@empresa.com', 'Diseñadora', 'Marketing', true),
-  ('Carlos', 'López', 'carlos.lopez@empresa.com', 'Analista', 'Finanzas', true)
-ON CONFLICT (email) DO NOTHING;`}
+-- Verificar datos
+SELECT 'Total trabajadores:' as info, count(*) as total FROM public.trabajadores;
+SELECT 'Trabajadores activos:' as info, count(*) as total FROM public.trabajadores WHERE activo = true;
+
+-- Mostrar estructura
+SELECT column_name, data_type, is_nullable 
+FROM information_schema.columns 
+WHERE table_name = 'trabajadores' AND table_schema = 'public'
+ORDER BY ordinal_position;`}
             </code>
           </div>
         </div>
