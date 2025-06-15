@@ -240,7 +240,6 @@ class FloatingButtons {
 
     init() {
         this.createFloatingButtons();
-        this.setupScrollBehavior();
     }
 
     createFloatingButtons() {
@@ -288,78 +287,87 @@ class FloatingButtons {
     addFloatingButtonsCSS() {
         const style = document.createElement('style');
         style.textContent = `
-            /* ===== BOTONES FLOTANTES ROJIZOS STARFLEX ===== */
+            /* ===== BOTONES FLOTANTES ROJIZOS STARFLEX - POSICIÓN FIJA ===== */
             .floating-buttons {
-                position: fixed;
-                right: 20px;
-                bottom: 20px;
-                z-index: 1000;
-                pointer-events: none;
+                position: fixed !important;
+                right: 20px !important;
+                bottom: 20px !important;
+                z-index: 9999 !important;
+                pointer-events: none !important;
+                /* Asegurar que no se mueva con scroll */
+                transform: none !important;
+                transition: none !important;
+                opacity: 1 !important;
             }
 
             .floating-buttons__container {
-                display: flex;
-                flex-direction: column;
-                gap: 15px;
-                pointer-events: auto;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 15px !important;
+                pointer-events: auto !important;
+                /* Asegurar posición estática */
+                position: static !important;
+                transform: none !important;
+                transition: none !important;
             }
 
             .floating-btn {
-                position: relative;
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                text-decoration: none;
-                color: white;
+                position: relative !important;
+                width: 60px !important;
+                height: 60px !important;
+                border-radius: 50% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-decoration: none !important;
+                color: white !important;
                 box-shadow: 
                     0 4px 20px rgba(0, 0, 0, 0.3),
-                    0 0 0 1px rgba(255, 69, 105, 0.2);
-                transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-                overflow: hidden;
-                transform: translateY(0);
-                animation: floating-btn-bounce 3s ease-in-out infinite;
-                border: 2px solid rgba(255, 69, 105, 0.3);
+                    0 0 0 1px rgba(255, 69, 105, 0.2) !important;
+                transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+                overflow: hidden !important;
+                border: 2px solid rgba(255, 69, 105, 0.3) !important;
+                /* Asegurar que no se mueva */
+                transform: translateY(0) !important;
+                animation: floating-btn-bounce 3s ease-in-out infinite !important;
             }
 
             .floating-btn::before {
-                content: '';
-                position: absolute;
-                top: -2px;
-                left: -2px;
-                right: -2px;
-                bottom: -2px;
-                border-radius: 50%;
+                content: '' !important;
+                position: absolute !important;
+                top: -2px !important;
+                left: -2px !important;
+                right: -2px !important;
+                bottom: -2px !important;
+                border-radius: 50% !important;
                 background: linear-gradient(45deg, 
                     var(--starflex-crimson-glow) 0%,
                     var(--starflex-crimson-bright) 25%,
                     var(--starflex-crimson) 50%,
                     var(--starflex-crimson-bright) 75%,
                     var(--starflex-crimson-glow) 100%
-                );
-                z-index: -1;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-                animation: crimson-pulse-ring 4s ease-in-out infinite;
+                ) !important;
+                z-index: -1 !important;
+                opacity: 0 !important;
+                transition: opacity 0.3s ease !important;
+                animation: crimson-pulse-ring 4s ease-in-out infinite !important;
             }
 
             .floating-btn:hover {
-                transform: translateY(-5px) scale(1.1);
+                transform: translateY(-5px) scale(1.1) !important;
                 box-shadow: 
                     0 8px 30px rgba(0, 0, 0, 0.4),
                     0 0 25px rgba(255, 69, 105, 0.6),
-                    0 0 50px rgba(184, 0, 46, 0.4);
-                border-color: rgba(255, 69, 105, 0.8);
+                    0 0 50px rgba(184, 0, 46, 0.4) !important;
+                border-color: rgba(255, 69, 105, 0.8) !important;
             }
 
             .floating-btn:hover::before {
-                opacity: 1;
+                opacity: 1 !important;
             }
 
             .floating-btn:active {
-                transform: translateY(-2px) scale(1.05);
+                transform: translateY(-2px) scale(1.05) !important;
             }
 
             /* Botón WhatsApp con tema rojizo */
@@ -369,15 +377,15 @@ class FloatingButtons {
                     var(--starflex-crimson) 25%, 
                     var(--starflex-crimson-light) 50%, 
                     var(--starflex-crimson-bright) 100%
-                );
-                animation-delay: 0s;
+                ) !important;
+                animation-delay: 0s !important;
             }
 
             .floating-btn--whatsapp:hover {
                 box-shadow: 
                     0 8px 30px rgba(0, 0, 0, 0.4),
                     0 0 25px rgba(255, 69, 105, 0.7),
-                    0 0 50px rgba(184, 0, 46, 0.5);
+                    0 0 50px rgba(184, 0, 46, 0.5) !important;
             }
 
             /* Botón Telegram con tema rojizo */
@@ -387,178 +395,178 @@ class FloatingButtons {
                     var(--starflex-crimson-bright) 25%, 
                     var(--starflex-crimson-glow) 50%, 
                     #ff6b9d 100%
-                );
-                animation-delay: 1.5s;
+                ) !important;
+                animation-delay: 1.5s !important;
             }
 
             .floating-btn--telegram:hover {
                 box-shadow: 
                     0 8px 30px rgba(0, 0, 0, 0.4),
                     0 0 25px rgba(255, 23, 68, 0.7),
-                    0 0 50px rgba(255, 69, 105, 0.5);
+                    0 0 50px rgba(255, 69, 105, 0.5) !important;
             }
 
             .floating-btn__icon {
-                width: 28px;
-                height: 28px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: transform 0.3s ease;
-                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+                width: 28px !important;
+                height: 28px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                transition: transform 0.3s ease !important;
+                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) !important;
             }
 
             .floating-btn:hover .floating-btn__icon {
-                transform: scale(1.1) rotate(5deg);
-                filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+                transform: scale(1.1) rotate(5deg) !important;
+                filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4)) !important;
             }
 
             .floating-btn__icon svg {
-                width: 100%;
-                height: 100%;
+                width: 100% !important;
+                height: 100% !important;
             }
 
             /* Tooltip mejorado con tema rojizo */
             .floating-btn__tooltip {
-                position: absolute;
-                right: 75px;
-                top: 50%;
-                transform: translateY(-50%);
+                position: absolute !important;
+                right: 75px !important;
+                top: 50% !important;
+                transform: translateY(-50%) !important;
                 background: linear-gradient(135deg, 
                     rgba(184, 0, 46, 0.95) 0%, 
                     rgba(156, 0, 37, 0.95) 100%
-                );
-                color: white;
-                padding: 8px 12px;
-                border-radius: 8px;
-                font-size: 12px;
-                font-weight: 600;
-                white-space: nowrap;
-                opacity: 0;
-                visibility: hidden;
-                transition: all 0.3s ease;
-                pointer-events: none;
-                font-family: var(--font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
-                border: 1px solid rgba(255, 69, 105, 0.3);
+                ) !important;
+                color: white !important;
+                padding: 8px 12px !important;
+                border-radius: 8px !important;
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                white-space: nowrap !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+                transition: all 0.3s ease !important;
+                pointer-events: none !important;
+                font-family: var(--font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif) !important;
+                border: 1px solid rgba(255, 69, 105, 0.3) !important;
                 box-shadow: 
                     0 4px 15px rgba(0, 0, 0, 0.3),
-                    0 0 10px rgba(255, 69, 105, 0.2);
-                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+                    0 0 10px rgba(255, 69, 105, 0.2) !important;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
             }
 
             .floating-btn__tooltip::after {
-                content: '';
-                position: absolute;
-                top: 50%;
-                right: -6px;
-                transform: translateY(-50%);
-                width: 0;
-                height: 0;
-                border-left: 6px solid rgba(184, 0, 46, 0.95);
-                border-top: 6px solid transparent;
-                border-bottom: 6px solid transparent;
+                content: '' !important;
+                position: absolute !important;
+                top: 50% !important;
+                right: -6px !important;
+                transform: translateY(-50%) !important;
+                width: 0 !important;
+                height: 0 !important;
+                border-left: 6px solid rgba(184, 0, 46, 0.95) !important;
+                border-top: 6px solid transparent !important;
+                border-bottom: 6px solid transparent !important;
             }
 
             .floating-btn:hover .floating-btn__tooltip {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(-50%) translateX(-5px);
+                opacity: 1 !important;
+                visibility: visible !important;
+                transform: translateY(-50%) translateX(-5px) !important;
             }
 
             /* Animación de rebote mejorada */
             @keyframes floating-btn-bounce {
                 0%, 100% {
-                    transform: translateY(0);
+                    transform: translateY(0) !important;
                 }
                 50% {
-                    transform: translateY(-8px);
+                    transform: translateY(-8px) !important;
                 }
             }
 
             /* Animación del anillo de pulso rojizo */
             @keyframes crimson-pulse-ring {
                 0%, 100% {
-                    transform: scale(1);
-                    opacity: 0;
+                    transform: scale(1) !important;
+                    opacity: 0 !important;
                 }
                 50% {
-                    transform: scale(1.2);
-                    opacity: 0.3;
+                    transform: scale(1.2) !important;
+                    opacity: 0.3 !important;
                 }
             }
 
             /* Efectos de brillo adicionales */
             .floating-btn::after {
-                content: '';
-                position: absolute;
-                top: 10%;
-                left: 10%;
-                width: 80%;
-                height: 80%;
-                border-radius: 50%;
+                content: '' !important;
+                position: absolute !important;
+                top: 10% !important;
+                left: 10% !important;
+                width: 80% !important;
+                height: 80% !important;
+                border-radius: 50% !important;
                 background: linear-gradient(135deg, 
                     rgba(255, 255, 255, 0.2) 0%, 
                     transparent 50%
-                );
-                opacity: 0;
-                transition: opacity 0.3s ease;
-                pointer-events: none;
+                ) !important;
+                opacity: 0 !important;
+                transition: opacity 0.3s ease !important;
+                pointer-events: none !important;
             }
 
             .floating-btn:hover::after {
-                opacity: 1;
+                opacity: 1 !important;
             }
 
             /* Responsivo */
             @media (max-width: 768px) {
                 .floating-buttons {
-                    right: 15px;
-                    bottom: 15px;
+                    right: 15px !important;
+                    bottom: 15px !important;
                 }
 
                 .floating-btn {
-                    width: 55px;
-                    height: 55px;
+                    width: 55px !important;
+                    height: 55px !important;
                 }
 
                 .floating-btn__icon {
-                    width: 24px;
-                    height: 24px;
+                    width: 24px !important;
+                    height: 24px !important;
                 }
 
                 .floating-btn__tooltip {
-                    display: none;
+                    display: none !important;
                 }
             }
 
             @media (max-width: 480px) {
                 .floating-buttons {
-                    right: 10px;
-                    bottom: 10px;
+                    right: 10px !important;
+                    bottom: 10px !important;
                 }
 
                 .floating-btn {
-                    width: 50px;
-                    height: 50px;
-                    border-width: 1px;
+                    width: 50px !important;
+                    height: 50px !important;
+                    border-width: 1px !important;
                 }
 
                 .floating-btn__icon {
-                    width: 22px;
-                    height: 22px;
+                    width: 22px !important;
+                    height: 22px !important;
                 }
             }
 
             /* Estados especiales */
             .floating-btn:focus {
-                outline: 2px solid var(--starflex-crimson-bright);
-                outline-offset: 3px;
+                outline: 2px solid var(--starflex-crimson-bright) !important;
+                outline-offset: 3px !important;
             }
 
             /* Ocultar en impresión */
             @media print {
                 .floating-buttons {
-                    display: none;
+                    display: none !important;
                 }
             }
 
@@ -568,73 +576,60 @@ class FloatingButtons {
                     background: linear-gradient(135deg, 
                         rgba(184, 0, 46, 0.98) 0%, 
                         rgba(156, 0, 37, 0.98) 100%
-                    );
-                    border-color: rgba(255, 69, 105, 0.5);
+                    ) !important;
+                    border-color: rgba(255, 69, 105, 0.5) !important;
                 }
             }
 
             /* Reducir movimiento para usuarios que lo prefieren */
             @media (prefers-reduced-motion: reduce) {
                 .floating-btn {
-                    animation: none;
+                    animation: none !important;
                 }
                 
                 .floating-btn::before {
-                    animation: none;
+                    animation: none !important;
                 }
                 
                 .floating-btn:hover {
-                    transform: scale(1.05);
+                    transform: scale(1.05) !important;
                 }
                 
                 .floating-btn__icon {
-                    transition: none;
+                    transition: none !important;
                 }
                 
                 .floating-btn:hover .floating-btn__icon {
-                    transform: scale(1.1);
+                    transform: scale(1.1) !important;
                 }
             }
 
             /* Mejoras de contraste */
             @media (prefers-contrast: high) {
                 .floating-btn {
-                    border-width: 3px;
-                    border-color: rgba(255, 69, 105, 0.8);
+                    border-width: 3px !important;
+                    border-color: rgba(255, 69, 105, 0.8) !important;
                 }
                 
                 .floating-btn__tooltip {
-                    border-width: 2px;
-                    border-color: rgba(255, 69, 105, 0.8);
+                    border-width: 2px !important;
+                    border-color: rgba(255, 69, 105, 0.8) !important;
                 }
+            }
+
+            /* OVERRIDE PARA CUALQUIER CONFLICTO DE CSS EXISTENTE */
+            .floating-buttons,
+            .floating-buttons * {
+                box-sizing: border-box !important;
+            }
+
+            /* Asegurar que no hay interferencia con otros elementos */
+            .floating-buttons {
+                isolation: isolate !important;
             }
         `;
         
         document.head.appendChild(style);
-    }
-
-    setupScrollBehavior() {
-        // Opcional: Ocultar botones al hacer scroll hacia abajo y mostrar al hacer scroll hacia arriba
-        let lastScrollTop = 0;
-        const floatingContainer = $('.floating-buttons');
-        
-        if (!floatingContainer) return;
-
-        window.addEventListener('scroll', () => {
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            
-            if (scrollTop > lastScrollTop && scrollTop > 100) {
-                // Scrolling down
-                floatingContainer.style.transform = 'translateY(100px)';
-                floatingContainer.style.opacity = '0.7';
-            } else {
-                // Scrolling up
-                floatingContainer.style.transform = 'translateY(0)';
-                floatingContainer.style.opacity = '1';
-            }
-            
-            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-        }, { passive: true });
     }
 }
 
