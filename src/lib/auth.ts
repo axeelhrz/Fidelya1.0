@@ -44,10 +44,10 @@ export async function getAllUsers(): Promise<Trabajador[]> {
   }
 }
 
-// Función de login personalizada por nombre
-export async function signInWithName(nombreCompleto: string) {
+// Función de login que verifica nombre y contraseña
+export async function signInWithCredentials(nombreCompleto: string, password: string) {
   try {
-    console.log('Attempting to sign in with name:', nombreCompleto)
+    console.log('Attempting to sign in with:', nombreCompleto)
     
     // Buscar el trabajador por nombre completo
     const { data: trabajador, error: trabajadorError } = await supabase
@@ -59,30 +59,29 @@ export async function signInWithName(nombreCompleto: string) {
     
     if (trabajadorError) {
       console.error('Trabajador error:', trabajadorError)
-      throw new Error('Usuario no encontrado en la base de datos')
+      throw new Error('Usuario no encontrado')
     }
     
     if (!trabajador) {
       throw new Error('Usuario no encontrado')
     }
     
-    console.log('Trabajador found:', trabajador.nombre_completo, 'RUT:', trabajador.rut)
+    // Generar la contraseña esperada
+    const expectedPassword = generatePassword(trabajador.nombre_completo)
+    console.log('Expected password:', expectedPassword, 'Provided:', password)
     
-    // Generar la contraseña automática
-    const generatedPassword = generatePassword(trabajador.nombre_completo)
-    console.log('Generated password:', generatedPassword)
-    
-    // Verificar si coincide con la contraseña almacenada (si existe)
-    if (trabajador.contraseña && trabajador.contraseña !== generatedPassword) {
-      console.log('Using stored password instead of generated one')
+    // Verificar contraseña
+    if (password.toUpperCase() !== expectedPassword) {
+      throw new Error('Contraseña incorrecta')
     }
     
-    // Para este sistema simplificado, vamos a crear una sesión simulada
-    // Guardar información del trabajador en localStorage para simular sesión
+    console.log('Login successful for:', trabajador.nombre_completo)
+    
+    // Crear sesión
     const sessionData = {
       user: {
         id: trabajador.id.toString(),
-        email: `${trabajador.rut}@empresa.com`, // Usar RUT como email base
+        email: `${trabajador.rut}@empresa.com`,
         user_metadata: {
           full_name: trabajador.nombre_completo,
           trabajador_id: trabajador.id,
@@ -96,10 +95,9 @@ export async function signInWithName(nombreCompleto: string) {
     
     localStorage.setItem('supabase_session', JSON.stringify(sessionData))
     
-    console.log('Login successful')
     return { data: sessionData, error: null }
   } catch (error) {
-    console.error('Error in signInWithName:', error)
+    console.error('Error in signInWithCredentials:', error)
     throw error
   }
 }
@@ -145,7 +143,6 @@ export async function signOut() {
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  // Implementación básica para compatibilidad
   throw new Error('Login por email no implementado en este sistema')
 }
 
@@ -187,4 +184,10 @@ export async function updateProfile(userId: string, updates: Partial<Trabajador>
   
   if (error) throw error
   return data
+}
+
+// Mantener compatibilidad con función anterior
+export async function signInWithName(nombreCompleto: string) {
+  const expectedPassword = generatePassword(nombreCompleto)
+  return signInWithCredentials(nombreCompleto, expectedPassword)
 }
