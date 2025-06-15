@@ -1424,9 +1424,47 @@ background: url('../assets/phones/Calendario.jpg') center/contain no-repeat;
 background: url('../assets/phones/Registro.jpg') center/contain no-repeat;
 }
 
-/* ===== PANTALLA DE CONFIGURACIÓN - ACTUALIZADA CON NUEVA IMAGEN JPG ===== */
-.feature:nth-child(5) .phone__app-image {
-background: url('../assets/phones/Configuracion.jpg') center/contain no-repeat;
+/* ===== PANTALLA DE NOTIFICACIONES - NUEVA SECCIÓN ===== */
+.feature:nth-child(5) .phone__app-image--notifications {
+background: linear-gradient(180deg, 
+rgba(10, 13, 20, 0.95) 0%, 
+rgba(21, 25, 34, 0.98) 50%,
+rgba(10, 13, 20, 0.95) 100%
+);
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: var(--space-xl);
+position: relative;
+overflow: hidden;
+}
+
+.feature:nth-child(5) .phone__app-image--notifications::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: 
+radial-gradient(circle at 30% 20%, rgba(255, 69, 105, 0.1) 0%, transparent 50%),
+radial-gradient(circle at 70% 80%, rgba(0, 212, 255, 0.08) 0%, transparent 50%);
+z-index: 1;
+}
+
+.feature:nth-child(5) .phone__app-image--notifications::after {
+content: '📱 💬 📧 📞';
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+font-size: 3rem;
+z-index: 2;
+text-align: center;
+line-height: 1.2;
+animation: notification-icons-float 4s ease-in-out infinite;
+filter: drop-shadow(0 0 20px rgba(255, 69, 105, 0.5));
 }
 
 /* ===== SECCIÓN DE VIDEOS FUTURISTA ===== */
@@ -2865,6 +2903,26 @@ text-transform: uppercase;
 letter-spacing: 1.5px;
 }
 
+/* ===== ANIMACIÓN ESPECÍFICA PARA NOTIFICACIONES ===== */
+@keyframes notification-icons-float {
+0%, 100% {
+transform: translate(-50%, -50%) scale(1);
+opacity: 0.8;
+}
+25% {
+transform: translate(-50%, -55%) scale(1.1);
+opacity: 1;
+}
+50% {
+transform: translate(-50%, -50%) scale(1.05);
+opacity: 0.9;
+}
+75% {
+transform: translate(-50%, -45%) scale(1.1);
+opacity: 1;
+}
+}
+
 /* ===== RESPONSIVE OPTIMIZADO ===== */
 @media (max-width: 1024px) {
 .hero__container {
@@ -2913,11 +2971,6 @@ background: url('../assets/phones/Calendario.jpg') center top/cover no-repeat;
 background: url('../assets/phones/Registro.jpg') center top/cover no-repeat;
 }
 
-/* ===== CONFIGURACIÓN ACTUALIZADA PARA TABLET ===== */
-.feature:nth-child(5) .phone__app-image {
-background: url('../assets/phones/Configuracion.jpg') center top/cover no-repeat;
-}
-
 .hero__download {
 justify-content: center;
 }
@@ -2963,11 +3016,6 @@ background-size: cover !important;
 background-position: center top !important;
 object-fit: cover !important;
 object-position: center top !important;
-}
-
-/* ===== CONFIGURACIÓN ACTUALIZADA PARA MÓVIL ===== */
-.feature:nth-child(5) .phone__app-image {
-background: url('../assets/phones/Configuracion.jpg') center top/cover no-repeat !important;
 }
 
 /* Resto del CSS móvil permanece igual */
@@ -3257,11 +3305,6 @@ padding: 80px 15px 15px;
 
 .phone__app-image {
 border-radius: 0 0 35px 35px;
-}
-
-/* ===== CONFIGURACIÓN ACTUALIZADA PARA PANTALLAS PEQUEÑAS ===== */
-.feature:nth-child(5) .phone__app-image {
-background: url('../assets/phones/Configuracion.jpg') center top/cover no-repeat !important;
 }
 
 .contact__title {
@@ -3717,7 +3760,8 @@ transition-duration: 0.01ms !important;
 .floating-orb-2,
 .floating-orb-3,
 .contact__channel,
-.contact__badge {
+.contact__badge,
+.feature:nth-child(5) .phone__app-image--notifications::after {
 animation: none !important;
 }
 }
@@ -3879,163 +3923,151 @@ contain: layout style paint;
 contain: layout style;
 }
 
-/* ... código existente ... */
-
 /* ===== ESTILOS ADICIONALES PARA VIDEO Y BOTONES FLOTANTES ===== */
 
 /* Video Player Improvements */
 .videos__player-frame {
-    position: relative;
-    cursor: pointer;
+position: relative;
+cursor: pointer;
 }
 
 .videos__player-frame:hover .videos__progress-indicators {
-    opacity: 1;
-    visibility: visible;
+opacity: 1;
+visibility: visible;
 }
 
 .videos__progress-indicators {
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
+opacity: 0;
+visibility: hidden;
+transition: all 0.3s ease;
 }
 
 .videos__progress-indicators.visible {
-    opacity: 1;
-    visibility: visible;
+opacity: 1;
+visibility: visible;
 }
 
 #play-overlay {
-    transition: all 0.3s ease;
+transition: all 0.3s ease;
 }
 
 #play-overlay.hidden {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
+opacity: 0;
+visibility: hidden;
+pointer-events: none;
 }
 
 /* Video Error Notification */
 .video-error-notification {
-    animation: slideInRight 0.3s ease-out;
+animation: slideInRight 0.3s ease-out;
 }
 
 @keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+from {
+transform: translateX(100%);
+opacity: 0;
+}
+to {
+transform: translateX(0);
+opacity: 1;
+}
 }
 
 /* Mejoras de accesibilidad para el video */
 #main-video:focus {
-    outline: 2px solid var(--starflex-blue);
-    outline-offset: 4px;
+outline: 2px solid var(--starflex-blue);
+outline-offset: 4px;
 }
 
 .videos__progress-bar:focus {
-    outline: 2px solid var(--starflex-blue);
-    outline-offset: 2px;
+outline: 2px solid var(--starflex-blue);
+outline-offset: 2px;
 }
 
 /* Responsive adjustments for floating buttons */
 @media (max-width: 1024px) {
-    .floating-buttons {
-        right: 15px;
-        bottom: 80px; /* Ajustar para evitar conflictos con navegación móvil */
-    }
+.floating-buttons {
+right: 15px;
+bottom: 80px; /* Ajustar para evitar conflictos con navegación móvil */
+}
 }
 
 @media (max-width: 768px) {
-    .floating-buttons {
-        bottom: 70px;
-    }
-    
-    .floating-btn {
-        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.25);
-    }
+.floating-buttons {
+bottom: 70px;
+}
+
+.floating-btn {
+box-shadow: 0 3px 15px rgba(0, 0, 0, 0.25);
+}
 }
 
 /* Mejoras de performance */
 .floating-btn {
-    will-change: transform;
+will-change: transform;
 }
 
 .floating-btn:hover {
-    will-change: transform, box-shadow;
+will-change: transform, box-shadow;
 }
 
 /* Estados de carga para video */
 #main-video[data-loading="true"] {
-    background: linear-gradient(90deg, 
-        var(--secondary-bg) 25%, 
-        var(--accent-bg) 50%, 
-        var(--secondary-bg) 75%
-    );
-    background-size: 200% 100%;
-    animation: loading-shimmer 2s infinite;
-}
-
-/* Animación de carga */
-@keyframes loading-shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-    100% {
-        background-position: 200% 0;
-    }
+background: linear-gradient(90deg, 
+var(--secondary-bg) 25%, 
+var(--accent-bg) 50%, 
+var(--secondary-bg) 75%
+);
+background-size: 200% 100%;
+animation: loading-shimmer 2s infinite;
 }
 
 /* Mejoras para modo oscuro */
 @media (prefers-color-scheme: dark) {
-    .floating-btn__tooltip {
-        background: rgba(0, 0, 0, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+.floating-btn__tooltip {
+background: rgba(0, 0, 0, 0.95);
+border: 1px solid rgba(255, 255, 255, 0.1);
+}
 }
 
 /* Animaciones suaves para todos los elementos interactivos */
 .videos__player-frame *,
 .floating-btn *,
 .floating-btn__tooltip {
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Estados de hover mejorados */
 .floating-btn:hover {
-    animation-play-state: paused;
+animation-play-state: paused;
 }
 
 /* Mejoras de contraste */
 @media (prefers-contrast: high) {
-    .floating-btn {
-        border: 2px solid rgba(255, 255, 255, 0.3);
-    }
-    
-    .floating-btn__tooltip {
-        border: 1px solid rgba(255, 255, 255, 0.5);
-    }
+.floating-btn {
+border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.floating-btn__tooltip {
+border: 1px solid rgba(255, 255, 255, 0.5);
+}
 }
 
 /* Reducir movimiento para usuarios que lo prefieren */
 @media (prefers-reduced-motion: reduce) {
-    .floating-btn {
-        animation: none;
-    }
-    
-    .floating-btn:hover {
-        transform: scale(1.05);
-    }
-    
-    .floating-btn__icon {
-        transition: none;
-    }
-    
-    .floating-btn:hover .floating-btn__icon {
-        transform: scale(1.1);
-    }
+.floating-btn {
+animation: none;
+}
+
+.floating-btn:hover {
+transform: scale(1.05);
+}
+
+.floating-btn__icon {
+transition: none;
+}
+
+.floating-btn:hover .floating-btn__icon {
+transform: scale(1.1);
+}
 }
