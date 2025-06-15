@@ -1,21 +1,21 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { getCurrentSession, signOut as authSignOut } from '@/lib/auth'
-import { Funcionario } from '@/types/database'
+import { getCurrentSession, getCurrentUser, getProfile, signOut as authSignOut } from '@/lib/auth'
+import { Trabajador } from '@/types/database'
 
 interface User {
   id: string
   email: string
   user_metadata: {
     full_name: string
-    funcionario_id: number
+    trabajador_id: number
   }
 }
 
 interface AuthContextType {
   user: User | null
-  profile: Funcionario | null
+  profile: Trabajador | null
   loading: boolean
   signOut: () => Promise<void>
 }
@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<Funcionario | null>(null)
+  const [profile, setProfile] = useState<Trabajador | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const session = await getCurrentSession()
       if (session) {
         setUser(session.user)
-        setProfile(session.funcionario)
+        setProfile(session.trabajador)
       }
     } catch (error) {
       console.error('Error checking session:', error)

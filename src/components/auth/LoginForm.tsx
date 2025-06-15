@@ -1,20 +1,22 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { signInWithName, getAllUsers, generatePassword, testSupabaseConnection, getFullName } from '@/lib/auth'
-import { Funcionario } from '@/types/database'
+import { Trabajador } from '@/types/database'
 import { Utensils, User, ChevronDown, LogIn, AlertCircle, RefreshCw } from 'lucide-react'
 
 export default function LoginForm() {
-  const [selectedUser, setSelectedUser] = useState<Funcionario | null>(null)
-  const [users, setUsers] = useState<Funcionario[]>([])
+  const [selectedUser, setSelectedUser] = useState<Trabajador | null>(null)
+  const [users, setUsers] = useState<Trabajador[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [loading, setLoading] = useState(false)
   const [loadingUsers, setLoadingUsers] = useState(true)
   const [error, setError] = useState('')
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
+  const router = useRouter()
 
   useEffect(() => {
     checkConnection()
@@ -40,21 +42,20 @@ export default function LoginForm() {
       const usersList = await getAllUsers()
       
       if (usersList.length === 0) {
-        setError('No se encontraron funcionarios activos en la base de datos.')
+        setError('No se encontraron trabajadores activos en la base de datos.')
       } else {
         setUsers(usersList)
-        console.log('Funcionarios loaded:', usersList.map(u => getFullName(u)))
+        console.log('Trabajadores loaded:', usersList.map(u => getFullName(u)))
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Error fetching users:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-      setError(`Error al cargar funcionarios: ${errorMessage}`)
+      setError(`Error al cargar trabajadores: ${error.message}`)
     } finally {
       setLoadingUsers(false)
     }
   }
 
-  const handleUserSelect = (user: Funcionario) => {
+  const handleUserSelect = (user: Trabajador) => {
     setSelectedUser(user)
     setShowDropdown(false)
     setError('')
@@ -76,10 +77,10 @@ export default function LoginForm() {
       console.log('Attempting login for:', fullName)
       await signInWithName(fullName)
       console.log('Login successful, redirecting...')
-    } catch (err: unknown) {
+      router.push('/dashboard')
+    } catch (err: any) {
       console.error('Login error:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Error al iniciar sesión'
-      setError(errorMessage)
+      setError(err.message || 'Error al iniciar sesión')
     } finally {
       setLoading(false)
     }
@@ -149,7 +150,7 @@ export default function LoginForm() {
                 {loadingUsers ? (
                   <div className="flex items-center justify-center h-14 border border-gray-300 rounded-xl bg-gray-50">
                     <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="ml-2 text-gray-600">Cargando funcionarios...</span>
+                    <span className="ml-2 text-gray-600">Cargando trabajadores...</span>
                   </div>
                 ) : (
                   <div className="relative">
@@ -165,7 +166,7 @@ export default function LoginForm() {
                         </div>
                         <span className={`text-base ${selectedUser ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
                           {selectedUser ? getFullName(selectedUser) : 
-                           users.length === 0 ? 'No hay funcionarios disponibles' : 'Selecciona tu nombre...'}
+                           users.length === 0 ? 'No hay trabajadores disponibles' : 'Selecciona tu nombre...'}
                         </span>
                       </div>
                       <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} />
@@ -258,7 +259,7 @@ export default function LoginForm() {
               
               {/* Debug info */}
               <div className="mt-4 text-xs text-gray-400">
-                <p>Funcionarios cargados: {users.length}</p>
+                <p>Trabajadores cargados: {users.length}</p>
                 <p>Estado: {connectionStatus}</p>
               </div>
             </div>
