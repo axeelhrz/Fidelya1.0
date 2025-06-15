@@ -10,14 +10,14 @@
     --glass-bg-strong: rgba(255, 255, 255, 0.12);
     
     /* Colores de marca Starflex */
-    --starflex-blue: #00d4ff;
-    --starflex-blue-dark: #0099cc;
-    --starflex-blue-bright: #00e6ff;
+    --starflex-blue: #ff4569;
+    --starflex-blue-dark: #cc1744;
+    --starflex-blue-bright: #ff6b9d;
     --starflex-orange: #ff6b35;
     --starflex-orange-bright: #ff7a47;
     --starflex-red: #e6002d;
     --starflex-purple: #8b5cf6;
-    --starflex-cyan: #06ffa5;
+    --starflex-cyan: #ff1744;
     
     /* Colores rojizos futuristas */
     --starflex-crimson: #b8002e;
@@ -30,24 +30,24 @@
     --neon-green: #39ff14;
     --neon-pink: #ff073a;
     --neon-yellow: #ffff00;
-    --electric-blue: #0080ff;
+    --electric-blue: #ff4569;
     --cyber-purple: #9d00ff;
-    --hologram-teal: #00ffff;
+    --hologram-teal: #ff1744;
     
     /* Textos */
     --text-primary: #ffffff;
     --text-secondary: #e2e8f0;
     --text-muted: #94a3b8;
-    --text-accent: #00d4ff;
+    --text-accent: #ff4569;
     
     /* Efectos avanzados */
     --border-subtle: rgba(255, 255, 255, 0.08);
-    --border-accent: rgba(0, 212, 255, 0.3);
+    --border-accent: rgba(255, 69, 105, 0.3);
     --border-crimson: rgba(184, 0, 46, 0.4);
     --glass-border: rgba(255, 255, 255, 0.12);
-    --glow-subtle: 0 0 20px rgba(0, 212, 255, 0.2);
-    --glow-medium: 0 0 30px rgba(0, 212, 255, 0.3);
-    --glow-strong: 0 0 40px rgba(0, 212, 255, 0.4);
+    --glow-subtle: 0 0 20px rgba(255, 69, 105, 0.2);
+    --glow-medium: 0 0 30px rgba(255, 69, 105, 0.3);
+    --glow-strong: 0 0 40px rgba(255, 69, 105, 0.4);
     
     /* Efectos neón rojizos */
     --neon-crimson: 0 0 25px rgba(184, 0, 46, 0.6);
@@ -147,7 +147,7 @@ body {
     width: 100%;
     height: 100%;
     background-image: 
-        linear-gradient(45deg, transparent 24%, rgba(0, 212, 255, 0.015) 25%, rgba(0, 212, 255, 0.015) 26%, transparent 27%),
+        linear-gradient(45deg, transparent 24%, rgba(255, 69, 105, 0.015) 25%, rgba(255, 69, 105, 0.015) 26%, transparent 27%),
         linear-gradient(-45deg, transparent 24%, rgba(139, 92, 246, 0.01) 25%, rgba(139, 92, 246, 0.01) 26%, transparent 27%);
     background-size: 60px 60px, 80px 80px;
     opacity: 0.4;
@@ -163,9 +163,9 @@ body {
     right: 0;
     bottom: 0;
     background: 
-        radial-gradient(ellipse at top center, rgba(0, 212, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at top center, rgba(255, 69, 105, 0.08) 0%, transparent 60%),
         radial-gradient(ellipse at bottom left, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
-        radial-gradient(ellipse at bottom right, rgba(6, 255, 165, 0.04) 0%, transparent 50%);
+        radial-gradient(ellipse at bottom right, rgba(255, 23, 68, 0.04) 0%, transparent 50%);
     z-index: 1;
     animation: hero-glow 20s ease-in-out infinite;
 }
@@ -177,7 +177,7 @@ body {
     left: 10%;
     width: 300px;
     height: 300px;
-    background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255, 69, 105, 0.1) 0%, transparent 70%);
     border-radius: 50%;
     filter: blur(40px);
     animation: floating-orb-1 15s ease-in-out infinite;
@@ -538,7 +538,7 @@ body {
     border-radius: 25px;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--starflex-blue);
+    color: var(--starflex-crimson-bright);
     margin-bottom: var(--space-xl);
     position: relative;
     overflow: hidden;
@@ -551,7 +551,7 @@ body {
     content: '';
     width: 8px;
     height: 8px;
-    background: var(--starflex-blue);
+    background: var(--starflex-crimson-bright);
     border-radius: 50%;
     animation: pulse-gentle 3s infinite;
     box-shadow: var(--glow-subtle);
@@ -587,10 +587,10 @@ body {
 .hero__title--highlight {
     display: block;
     background: linear-gradient(135deg, 
-        var(--starflex-blue) 0%, 
-        var(--starflex-blue-bright) 30%, 
-        var(--starflex-cyan) 70%, 
-        #00ffcc 100%
+        var(--starflex-crimson) 0%, 
+        var(--starflex-crimson-bright) 30%, 
+        var(--starflex-crimson-glow) 70%, 
+        #ff6b9d 100%
     );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -598,8 +598,8 @@ body {
     position: relative;
     margin-bottom: var(--space-sm);
     font-weight: 900;
-    text-shadow: var(--glow-strong);
-    filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.4));
+    text-shadow: var(--neon-crimson);
+    filter: drop-shadow(0 0 20px rgba(255, 69, 105, 0.4));
 }
 
 .hero__title--highlight::after {
@@ -610,8 +610,8 @@ body {
     width: 100%;
     height: 4px;
     background: linear-gradient(90deg, 
-        var(--starflex-blue) 0%, 
-        var(--starflex-cyan) 50%, 
+        var(--starflex-crimson) 0%, 
+        var(--starflex-crimson-bright) 50%, 
         transparent 100%
     );
     border-radius: 2px;
@@ -651,7 +651,7 @@ body {
     backdrop-filter: blur(20px);
     border: 1px solid var(--border-subtle);
     border-radius: 20px;
-    border-left: 4px solid var(--starflex-blue);
+    border-left: 4px solid var(--starflex-crimson-bright);
     box-shadow: var(--shadow-md);
 }
 
@@ -662,7 +662,7 @@ body {
     left: var(--space-lg);
     width: 12px;
     height: 12px;
-    background: var(--starflex-blue);
+    background: var(--starflex-crimson-bright);
     border-radius: 50%;
     box-shadow: var(--glow-subtle);
 }
@@ -685,7 +685,7 @@ body {
 
 .hero__subtitle::before {
     content: '//';
-    color: var(--starflex-blue);
+    color: var(--starflex-crimson-bright);
     font-family: var(--font-mono);
     margin-right: var(--space-md);
     opacity: 0.7;
