@@ -1,28 +1,43 @@
 export interface Database {
   public: {
     Tables: {
-      profiles: {
+      funcionarios: {
         Row: {
-          id: string
+          id: number
+          nombre: string
+          apellido: string
           email: string
-          full_name: string | null
-          avatar_url: string | null
+          telefono: string | null
+          cargo: string | null
+          departamento: string | null
+          fecha_ingreso: string | null
+          activo: boolean
           created_at: string
           updated_at: string
         }
         Insert: {
-          id: string
+          id?: number
+          nombre: string
+          apellido: string
           email: string
-          full_name?: string | null
-          avatar_url?: string | null
+          telefono?: string | null
+          cargo?: string | null
+          departamento?: string | null
+          fecha_ingreso?: string | null
+          activo?: boolean
           created_at?: string
           updated_at?: string
         }
         Update: {
-          id?: string
+          id?: number
+          nombre?: string
+          apellido?: string
           email?: string
-          full_name?: string | null
-          avatar_url?: string | null
+          telefono?: string | null
+          cargo?: string | null
+          departamento?: string | null
+          fecha_ingreso?: string | null
+          activo?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -56,7 +71,7 @@ export interface Database {
       orders: {
         Row: {
           id: string
-          user_id: string
+          funcionario_id: number
           shift_id: string
           order_date: string
           menu_item: string
@@ -67,7 +82,7 @@ export interface Database {
         }
         Insert: {
           id?: string
-          user_id: string
+          funcionario_id: number
           shift_id: string
           order_date: string
           menu_item: string
@@ -78,7 +93,7 @@ export interface Database {
         }
         Update: {
           id?: string
-          user_id?: string
+          funcionario_id?: number
           shift_id?: string
           order_date?: string
           menu_item?: string
@@ -92,6 +107,9 @@ export interface Database {
   }
 }
 
-export type Profile = Database['public']['Tables']['profiles']['Row']
+export type Funcionario = Database['public']['Tables']['funcionarios']['Row']
 export type Shift = Database['public']['Tables']['shifts']['Row']
 export type Order = Database['public']['Tables']['orders']['Row']
+
+// Alias para compatibilidad
+export type Profile = Funcionario

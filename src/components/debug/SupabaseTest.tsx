@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { supabase } from '@/lib/supabase'
-import { getAllUsers, testSupabaseConnection } from '@/lib/auth'
-import { Profile } from '@/types/database'
+import { getAllUsers, testSupabaseConnection, getFullName, generatePassword } from '@/lib/auth'
+import { Funcionario } from '@/types/database'
 
 export default function SupabaseTest() {
-  const [users, setUsers] = useState<Profile[]>([])
+  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [connectionStatus, setConnectionStatus] = useState('')
@@ -26,13 +26,13 @@ export default function SupabaseTest() {
       }
       setConnectionStatus('✅ Conexión exitosa')
 
-      // Test fetching users
-      const usersList = await getAllUsers()
-      setUsers(usersList)
-      setConnectionStatus(`✅ Conexión exitosa - ${usersList.length} usuarios encontrados`)
+      // Test fetching funcionarios
+      const funcionariosList = await getAllUsers()
+      setFuncionarios(funcionariosList)
+      setConnectionStatus(`✅ Conexión exitosa - ${funcionariosList.length} funcionarios encontrados`)
 
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error desconocido')
       setConnectionStatus('❌ Error de conexión')
     } finally {
       setLoading(false)
@@ -45,16 +45,17 @@ export default function SupabaseTest() {
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('funcionarios')
         .select('*')
+        .eq('activo', true)
         .limit(10)
 
       if (error) throw error
 
-      setUsers(data || [])
-      setConnectionStatus(`✅ Query directo exitoso - ${data?.length || 0} usuarios`)
-    } catch (err: any) {
-      setError(err.message)
+      setFuncionarios(data || [])
+      setConnectionStatus(`✅ Query directo exitoso - ${data?.length || 0} funcionarios`)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error desconocido')
       setConnectionStatus('❌ Error en query directo')
     } finally {
       setLoading(false)
@@ -62,9 +63,9 @@ export default function SupabaseTest() {
   }
 
   return (
-    <Card className="max-w-2xl mx-auto m-8">
+    <Card className="max-w-4xl mx-auto m-8">
       <CardHeader>
-        <CardTitle>Prueba de Conexión Supabase</CardTitle>
+        <CardTitle>Prueba de Conexión Supabase - Tabla Funcionarios</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex space-x-4">
@@ -89,22 +90,29 @@ export default function SupabaseTest() {
           </div>
         )}
 
-        {users.length > 0 && (
+        {funcionarios.length > 0 && (
           <div className="space-y-2">
-            <h3 className="font-medium">Usuarios encontrados:</h3>
-            {users.map((user) => (
-              <div key={user.id} className="p-2 bg-green-50 border border-green-200 rounded">
-                <p><strong>Nombre:</strong> {user.full_name}</p>
-                <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>ID:</strong> {user.id}</p>
-              </div>
-            ))}
+            <h3 className="font-medium">Funcionarios encontrados:</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              {funcionarios.map((funcionario) => (
+                <div key={funcionario.id} className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p><strong>Nombre:</strong> {getFullName(funcionario)}</p>
+                  <p><strong>Email:</strong> {funcionario.email}</p>
+                  <p><strong>Cargo:</strong> {funcionario.cargo || 'No especificado'}</p>
+                  <p><strong>Departamento:</strong> {funcionario.departamento || 'No especificado'}</p>
+                  <p><strong>Contraseña generada:</strong> <span className="font-mono font-bold text-green-700">{generatePassword(funcionario.nombre, funcionario.apellido)}</span></p>
+                  <p><strong>ID:</strong> {funcionario.id}</p>
+                  <p><strong>Activo:</strong> {funcionario.activo ? '✅ Sí' : '❌ No'}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded">
           <p><strong>URL:</strong> {process.env.NEXT_PUBLIC_SUPABASE_URL}</p>
           <p><strong>Key:</strong> {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20)}...</p>
+          <p><strong>Tabla:</strong> funcionarios</p>
         </div>
       </CardContent>
     </Card>

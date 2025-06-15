@@ -1,22 +1,20 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { signInWithName, getAllUsers, generatePassword, testSupabaseConnection } from '@/lib/auth'
-import { Profile } from '@/types/database'
+import { signInWithName, getAllUsers, generatePassword, testSupabaseConnection, getFullName } from '@/lib/auth'
+import { Funcionario } from '@/types/database'
 import { Utensils, User, ChevronDown, LogIn, AlertCircle, RefreshCw } from 'lucide-react'
 
 export default function LoginForm() {
-  const [selectedUser, setSelectedUser] = useState<Profile | null>(null)
-  const [users, setUsers] = useState<Profile[]>([])
+  const [selectedUser, setSelectedUser] = useState<Funcionario | null>(null)
+  const [users, setUsers] = useState<Funcionario[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [loading, setLoading] = useState(false)
   const [loadingUsers, setLoadingUsers] = useState(true)
   const [error, setError] = useState('')
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
-  const router = useRouter()
 
   useEffect(() => {
     checkConnection()
@@ -42,20 +40,21 @@ export default function LoginForm() {
       const usersList = await getAllUsers()
       
       if (usersList.length === 0) {
-        setError('No se encontraron usuarios en la base de datos. Asegúrate de que existan usuarios en la tabla profiles.')
+        setError('No se encontraron funcionarios activos en la base de datos.')
       } else {
         setUsers(usersList)
-        console.log('Users loaded:', usersList.map(u => u.full_name))
+        console.log('Funcionarios loaded:', usersList.map(u => getFullName(u)))
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching users:', error)
-      setError(`Error al cargar usuarios: ${error.message}`)
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+      setError(`Error al cargar funcionarios: ${errorMessage}`)
     } finally {
       setLoadingUsers(false)
     }
   }
 
-  const handleUserSelect = (user: Profile) => {
+  const handleUserSelect = (user: Funcionario) => {
     setSelectedUser(user)
     setShowDropdown(false)
     setError('')
@@ -73,13 +72,14 @@ export default function LoginForm() {
     setError('')
 
     try {
-      console.log('Attempting login for:', selectedUser.full_name)
-      await signInWithName(selectedUser.full_name!)
+      const fullName = getFullName(selectedUser)
+      console.log('Attempting login for:', fullName)
+      await signInWithName(fullName)
       console.log('Login successful, redirecting...')
-      router.push('/dashboard')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login error:', err)
-      setError(err.message || 'Error al iniciar sesión')
+      const errorMessage = err instanceof Error ? err.message : 'Error al iniciar sesión'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -149,7 +149,7 @@ export default function LoginForm() {
                 {loadingUsers ? (
                   <div className="flex items-center justify-center h-14 border border-gray-300 rounded-xl bg-gray-50">
                     <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="ml-2 text-gray-600">Cargando usuarios...</span>
+                    <span className="ml-2 text-gray-600">Cargando funcionarios...</span>
                   </div>
                 ) : (
                   <div className="relative">
@@ -164,8 +164,8 @@ export default function LoginForm() {
                           <User className="w-4 h-4 text-white" />
                         </div>
                         <span className={`text-base ${selectedUser ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
-                          {selectedUser ? selectedUser.full_name : 
-                           users.length === 0 ? 'No hay usuarios disponibles' : 'Selecciona tu nombre...'}
+                          {selectedUser ? getFullName(selectedUser) : 
+                           users.length === 0 ? 'No hay funcionarios disponibles' : 'Selecciona tu nombre...'}
                         </span>
                       </div>
                       <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} />
@@ -184,9 +184,10 @@ export default function LoginForm() {
                               <User className="w-4 h-4 text-white" />
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">{user.full_name}</p>
+                              <p className="font-medium text-gray-900">{getFullName(user)}</p>
                               <p className="text-xs text-gray-500">
-                                Contraseña: {generatePassword(user.full_name || '')}
+                                {user.cargo && `${user.cargo} - `}
+                                Contraseña: {generatePassword(user.nombre, user.apellido)}
                               </p>
                             </div>
                           </button>
@@ -204,13 +205,16 @@ export default function LoginForm() {
                       <User className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">{selectedUser.full_name}</p>
+                      <p className="font-semibold text-gray-900">{getFullName(selectedUser)}</p>
+                      <p className="text-sm text-gray-600">
+                        {selectedUser.cargo && `Cargo: ${selectedUser.cargo}`}
+                      </p>
                       <p className="text-sm text-gray-600">
                         Email: <span className="font-mono text-blue-600">{selectedUser.email}</span>
                       </p>
                       <p className="text-sm text-gray-600">
                         Contraseña: <span className="font-mono font-bold text-blue-600">
-                          {generatePassword(selectedUser.full_name || '')}
+                          {generatePassword(selectedUser.nombre, selectedUser.apellido)}
                         </span>
                       </p>
                     </div>
@@ -254,7 +258,7 @@ export default function LoginForm() {
               
               {/* Debug info */}
               <div className="mt-4 text-xs text-gray-400">
-                <p>Usuarios cargados: {users.length}</p>
+                <p>Funcionarios cargados: {users.length}</p>
                 <p>Estado: {connectionStatus}</p>
               </div>
             </div>

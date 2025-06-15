@@ -43,7 +43,7 @@ async function createSampleUsers() {
     try {
       const password = generatePassword(user.name)
       
-      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+      const { error } = await supabaseAdmin.auth.admin.createUser({
         email: user.email,
         password: password,
         user_metadata: {

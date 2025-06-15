@@ -1,39 +1,39 @@
 import { supabase } from './supabase'
-import { Profile } from '@/types/database'
+import { Funcionario } from '@/types/database'
 
 // Función para generar contraseña automática
-export function generatePassword(fullName: string): string {
-  if (!fullName) return ''
-  
-  const nameParts = fullName.trim().split(' ')
-  if (nameParts.length < 2) return ''
-  
-  const firstName = nameParts[0]
-  const lastName = nameParts[nameParts.length - 1] // Tomar el último apellido
+export function generatePassword(nombre: string, apellido: string): string {
+  if (!nombre || !apellido) return ''
   
   // Primera letra del nombre + apellido completo, todo en mayúsculas
-  return (firstName.charAt(0) + lastName).toUpperCase()
+  return (nombre.charAt(0) + apellido).toUpperCase()
 }
 
-// Función para obtener todos los usuarios registrados
-export async function getAllUsers(): Promise<Profile[]> {
+// Función para obtener el nombre completo
+export function getFullName(funcionario: Funcionario): string {
+  return `${funcionario.nombre} ${funcionario.apellido}`
+}
+
+// Función para obtener todos los funcionarios activos
+export async function getAllUsers(): Promise<Funcionario[]> {
   try {
-    console.log('Fetching users from Supabase...')
+    console.log('Fetching funcionarios from Supabase...')
     
     const { data, error } = await supabase
-      .from('profiles')
+      .from('funcionarios')
       .select('*')
-      .order('full_name')
+      .eq('activo', true)
+      .order('nombre')
     
     if (error) {
       console.error('Supabase error:', error)
       throw error
     }
     
-    console.log('Users fetched successfully:', data?.length || 0, 'users')
+    console.log('Funcionarios fetched successfully:', data?.length || 0, 'users')
     return data || []
   } catch (error) {
-    console.error('Error fetching users:', error)
+    console.error('Error fetching funcionarios:', error)
     return []
   }
 }
@@ -43,41 +43,59 @@ export async function signInWithName(fullName: string) {
   try {
     console.log('Attempting to sign in with name:', fullName)
     
-    // Buscar el usuario por nombre completo
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+    // Separar nombre y apellido
+    const nameParts = fullName.trim().split(' ')
+    if (nameParts.length < 2) {
+      throw new Error('Formato de nombre inválido')
+    }
+    
+    const nombre = nameParts[0]
+    const apellido = nameParts.slice(1).join(' ')
+    
+    // Buscar el funcionario por nombre y apellido
+    const { data: funcionario, error: funcionarioError } = await supabase
+      .from('funcionarios')
       .select('*')
-      .eq('full_name', fullName)
+      .eq('nombre', nombre)
+      .eq('apellido', apellido)
+      .eq('activo', true)
       .single()
     
-    if (profileError) {
-      console.error('Profile error:', profileError)
+    if (funcionarioError) {
+      console.error('Funcionario error:', funcionarioError)
       throw new Error('Usuario no encontrado en la base de datos')
     }
     
-    if (!profile) {
+    if (!funcionario) {
       throw new Error('Usuario no encontrado')
     }
     
-    console.log('Profile found:', profile.email)
+    console.log('Funcionario found:', funcionario.email)
     
     // Generar la contraseña automática
-    const password = generatePassword(fullName)
+    const password = generatePassword(funcionario.nombre, funcionario.apellido)
     console.log('Generated password:', password)
     
-    // Intentar hacer login con email y contraseña generada
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: profile.email,
-      password: password,
-    })
+    // Para este sistema simplificado, vamos a crear una sesión simulada
+    // En un sistema real, necesitarías integrar con Supabase Auth
     
-    if (error) {
-      console.error('Auth error:', error)
-      throw new Error(`Error de autenticación: ${error.message}`)
+    // Guardar información del funcionario en localStorage para simular sesión
+    const sessionData = {
+      user: {
+        id: funcionario.id.toString(),
+        email: funcionario.email,
+        user_metadata: {
+          full_name: getFullName(funcionario),
+          funcionario_id: funcionario.id
+        }
+      },
+      funcionario: funcionario
     }
     
+    localStorage.setItem('supabase_session', JSON.stringify(sessionData))
+    
     console.log('Login successful')
-    return data
+    return { data: sessionData, error: null }
   } catch (error) {
     console.error('Error in signInWithName:', error)
     throw error
@@ -87,8 +105,8 @@ export async function signInWithName(fullName: string) {
 // Función para verificar la conexión con Supabase
 export async function testSupabaseConnection(): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
+    const { error } = await supabase
+      .from('funcionarios')
       .select('count')
       .limit(1)
     
@@ -105,60 +123,63 @@ export async function testSupabaseConnection(): Promise<boolean> {
   }
 }
 
-export async function signInWithEmail(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-  
-  if (error) throw error
-  return data
+// Función para obtener la sesión actual
+export async function getCurrentSession() {
+  try {
+    const sessionData = localStorage.getItem('supabase_session')
+    if (!sessionData) return null
+    
+    return JSON.parse(sessionData)
+  } catch (error) {
+    console.error('Error getting session:', error)
+    return null
+  }
 }
 
-export async function signUpWithEmail(email: string, password: string, fullName: string) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        full_name: fullName,
-      },
-    },
-  })
-  
-  if (error) throw error
-  return data
-}
-
+// Función para cerrar sesión
 export async function signOut() {
-  const { error } = await supabase.auth.signOut()
-  if (error) throw error
+  localStorage.removeItem('supabase_session')
+  window.location.href = '/login'
+}
+
+export async function signInWithEmail() {
+  // Implementación básica para compatibilidad
+  throw new Error('Login por email no implementado en este sistema')
+}
+
+export async function signUpWithEmail() {
+  throw new Error('Registro no implementado en este sistema')
 }
 
 export async function getCurrentUser() {
-  const { data: { user } } = await supabase.auth.getUser()
-  return user
+  const session = await getCurrentSession()
+  return session?.user || null
 }
 
-export async function getProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
-  
-  if (error) {
-    console.error('Error fetching profile:', error)
+export async function getProfile(userId: string): Promise<Funcionario | null> {
+  try {
+    const { data, error } = await supabase
+      .from('funcionarios')
+      .select('*')
+      .eq('id', parseInt(userId))
+      .single()
+    
+    if (error) {
+      console.error('Error fetching funcionario:', error)
+      return null
+    }
+    return data
+  } catch (error) {
+    console.error('Error in getProfile:', error)
     return null
   }
-  return data
 }
 
-export async function updateProfile(userId: string, updates: Partial<Profile>) {
+export async function updateProfile(userId: string, updates: Partial<Funcionario>) {
   const { data, error } = await supabase
-    .from('profiles')
+    .from('funcionarios')
     .update(updates)
-    .eq('id', userId)
+    .eq('id', parseInt(userId))
     .select()
     .single()
   

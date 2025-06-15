@@ -60,7 +60,7 @@ export default function Header() {
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-medium text-gray-900">
-                    {profile?.full_name || user?.email}
+                    {profile ? `${profile.nombre} ${profile.apellido}` : user?.email}
                   </p>
                   <p className="text-xs text-gray-500">Usuario</p>
                 </div>
@@ -106,7 +106,7 @@ export default function Header() {
               </div>
               <div>
                 <p className="font-medium text-gray-900">
-                  {profile?.full_name || user?.email}
+                  {profile ? `${profile.nombre} ${profile.apellido}` : user?.email}
                 </p>
                 <p className="text-sm text-gray-500">Usuario</p>
               </div>

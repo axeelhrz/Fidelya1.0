@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -98,8 +97,8 @@ export default function OrderModal({
 
       onOrderSaved()
       onClose()
-    } catch (err: any) {
-      setError(err.message || 'Error al guardar el pedido')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al guardar el pedido')
     } finally {
       setLoading(false)
     }
@@ -125,8 +124,8 @@ export default function OrderModal({
 
       onOrderSaved()
       onClose()
-    } catch (err: any) {
-      setError(err.message || 'Error al eliminar el pedido')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al eliminar el pedido')
     } finally {
       setLoading(false)
     }

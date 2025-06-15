@@ -1,14 +1,21 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
-import { Profile } from '@/types/database'
-import { getProfile } from '@/lib/auth'
+import { getCurrentSession, signOut as authSignOut } from '@/lib/auth'
+import { Funcionario } from '@/types/database'
+
+interface User {
+  id: string
+  email: string
+  user_metadata: {
+    full_name: string
+    funcionario_id: number
+  }
+}
 
 interface AuthContextType {
   user: User | null
-  profile: Profile | null
+  profile: Funcionario | null
   loading: boolean
   signOut: () => Promise<void>
 }
@@ -17,38 +24,31 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const [profile, setProfile] = useState<Funcionario | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        getProfile(session.user.id).then(setProfile)
-      }
-      setLoading(false)
-    })
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        const userProfile = await getProfile(session.user.id)
-        setProfile(userProfile)
-      } else {
-        setProfile(null)
-      }
-      setLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
+    checkSession()
   }, [])
 
+  const checkSession = async () => {
+    try {
+      const session = await getCurrentSession()
+      if (session) {
+        setUser(session.user)
+        setProfile(session.funcionario)
+      }
+    } catch (error) {
+      console.error('Error checking session:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const signOut = async () => {
-    await supabase.auth.signOut()
+    await authSignOut()
+    setUser(null)
+    setProfile(null)
   }
 
   const value = {
