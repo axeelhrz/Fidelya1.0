@@ -23,21 +23,20 @@
     <link rel="icon" type="image/png" href="./assets/logo.png">
     <link rel="apple-touch-icon" sizes="180x180" href="./assets/logo.png">
     <link rel="icon" type="image/png" sizes="32x32" href="./assets/logo.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="./assets/logo.png">
     
-    <!-- Preload Critical Resources -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" as="style">
-    
-    <!-- Fonts -->
+    <!-- Fuentes Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <!-- Canvas de fondo futurista -->
     <div class="bg-canvas"></div>
-
+    
     <!-- Header Futurista Flotante -->
     <header class="header" id="header">
         <nav class="nav">
@@ -76,7 +75,7 @@
         <!-- Orbes flotantes adicionales -->
         <div class="floating-orb-2"></div>
         <div class="floating-orb-3"></div>
-        
+
         <div class="container">
             <div class="hero__container">
                 <div class="hero__content">
@@ -124,8 +123,8 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- iPhone 15 Pro Realista -->
+
+                <!-- iPhone 15 Pro Realista con imagen real -->
                 <div class="hero__media">
                     <div class="hero__phone-container">
                         <div class="hero__phone">
@@ -138,7 +137,7 @@
                             
                             <!-- Botón de acción lateral -->
                             <div class="hero__phone-action-button"></div>
-                            
+
                             <div class="hero__phone-screen">
                                 <!-- Dynamic Island del iPhone 15 Pro -->
                                 <div class="hero__phone-island"></div>
@@ -149,92 +148,11 @@
                                     <span>🔴 📶 📱 🔋</span>
                                 </div>
                                 
-                                <!-- Contenido de la app -->
+                                <!-- Contenido de la app con imagen real -->
                                 <div class="hero__phone-content">
-                                    <!-- Header de la app -->
-                                    <div class="hero__app-header">
-                                        <div class="hero__app-title">Home</div>
-                                    </div>
-                                    
-                                    <!-- Información de renovación -->
-                                    <div class="hero__renewal-info">
-                                        <div class="hero__renewal-item">
-                                            <span class="hero__renewal-label">Renewal date:</span>
-                                            <span class="hero__renewal-value">25 October 2024</span>
-                                        </div>
-                                        <div class="hero__renewal-item">
-                                            <span class="hero__renewal-label">Automatic payment:</span>
-                                            <span class="hero__renewal-value">
-                                                Enabled
-                                                <div class="hero__toggle enabled"></div>
-                                            </span>
-                                        </div>
-                                        <div class="hero__renewal-item">
-                                            <span class="hero__renewal-label">Schedule autosearch:</span>
-                                            <span class="hero__renewal-value">
-                                                None
-                                                <span style="opacity: 0.6;">🔒</span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Círculo de búsqueda central -->
-                                    <div class="hero__search-circle">
-                                        <div class="hero__circle-outer">
-                                            <div class="hero__circle-inner">
-                                                <div class="hero__circle-center"></div>
-                                                <div class="hero__progress-indicator"></div>
-                                            </div>
-                                        </div>
-                                        <div class="hero__water-waves"></div>
-                                    </div>
-                                    
-                                    <!-- Texto de búsqueda -->
-                                    <div class="hero__search-text">
-                                        Searching for blocks. Relax while we<br>
-                                        find a block for you!
-                                    </div>
-                                    
-                                    <!-- Botón de invitación -->
-                                    <button class="hero__invite-button">
-                                        Invite and win 1 week!
-                                    </button>
-                                    
-                                    <!-- Navegación inferior -->
-                                    <div class="hero__bottom-nav">
-                                        <div class="hero__nav-item active">
-                                            <div class="hero__nav-icon"></div>
-                                            <span>Home</span>
-                                        </div>
-                                        <div class="hero__nav-item">
-                                            <div class="hero__nav-icon"></div>
-                                            <span>Hours</span>
-                                        </div>
-                                        <div class="hero__nav-item">
-                                            <div class="hero__nav-icon"></div>
-                                            <span>Stations</span>
-                                        </div>
-                                        <div class="hero__nav-item">
-                                            <div class="hero__nav-icon"></div>
-                                            <span>Calendar</span>
-                                        </div>
-                                        <div class="hero__nav-item">
-                                            <div class="hero__nav-item">
-                                            <div class="hero__nav-icon"></div>
-                                            <span>Log</span>
-                                        </div>
-                                    </div>
+                                    <div class="hero__phone-app-image"></div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Partículas flotantes -->
-                        <div class="hero__particles">
-                            <div class="hero__particle"></div>
-                            <div class="hero__particle"></div>
-                            <div class="hero__particle"></div>
-                            <div class="hero__particle"></div>
-                            <div class="hero__particle"></div>
                         </div>
                     </div>
                 </div>
@@ -267,178 +185,57 @@
                             <li class="feature__list-item">Sincronización con tu calendario</li>
                         </ul>
                     </div>
+
                     <div class="feature__phone">
                         <div class="phone">
-                            <div class="phone__screen schedule-screen">
+                            <div class="phone__screen">
                                 <div class="phone__island"></div>
                                 <div class="phone__status-bar">
                                     <span>9:41</span>
                                     <span>100%</span>
                                 </div>
                                 <div class="phone__content">
-                                    <div class="schedule-header">
-                                        <div class="schedule-title">HORARIO</div>
-                                        <div class="schedule-subtitle">Configura tus días preferidos</div>
-                                    </div>
-                                    <div class="schedule-days">
-                                        <div class="schedule-day">
-                                            <span class="day-name">Lunes</span>
-                                            <span class="day-time">10:00am - 10:30pm</span>
-                                        </div>
-                                        <div class="schedule-day">
-                                            <span class="day-name">Martes</span>
-                                            <span class="day-time">8:00am - 10:00pm</span>
-                                        </div>
-                                        <div class="schedule-day">
-                                            <span class="day-name">Miércoles</span>
-                                            <span class="day-time">10:30am - 11:00pm</span>
-                                        </div>
-                                        <div class="schedule-day">
-                                            <span class="day-name">Jueves</span>
-                                            <span class="day-time">10:00am - 8:00pm</span>
-                                        </div>
-                                        <div class="schedule-day">
-                                            <span class="day-name">Viernes</span>
-                                            <span class="day-time">8:30am - 8:00pm</span>
-                                        </div>
-                                        <div class="schedule-day">
-                                            <span class="day-name">Sábado</span>
-                                            <span class="day-time">10:00am - 8:00pm</span>
-                                        </div>
-                                        <div class="schedule-day">
-                                            <span class="day-name">Domingo</span>
-                                            <span class="day-time">12:00am - 11:00pm</span>
-                                        </div>
-                                    </div>
+                                    <div class="phone__app-image"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Feature 5: Estaciones -->
-<div class="feature" data-feature="stations">
-    <div class="feature__content">
-        <h3 class="feature__title">ESTACIONES</h3>
-        <p class="feature__description">
-            Selecciona tus estaciones preferidas y precios para que nuestra app pueda 
-            ofrecerte los bloques que se ajusten a tus preferencias.
-        </p>
-        <ul class="feature__list">
-            <li class="feature__list-item">Selección personalizada de estaciones favoritas</li>
-            <li class="feature__list-item">Configuración de precios mínimos por estación</li>
-            <li class="feature__list-item">Análisis de rentabilidad por ubicación</li>
-            <li class="feature__list-item">Notificaciones instantáneas de bloques disponibles</li>
-            <li class="feature__list-item">Mapa interactivo con todas las estaciones</li>
-        </ul>
-    </div>
-    <div class="feature__phone">
-        <div class="phone">
-            <div class="phone__screen stations-screen">
-                <div class="phone__island"></div>
-                <div class="phone__status-bar">
-                    <span>9:41</span>
-                    <span>100%</span>
-                </div>
-                <div class="phone__content">
-                    <div class="stations-header">
-                        <div class="stations-title">ESTACIONES</div>
-                        <div class="stations-subtitle">Gestiona tus ubicaciones preferidas</div>
+                <!-- Feature 2: Estaciones -->
+                <div class="feature" data-feature="stations">
+                    <div class="feature__content">
+                        <h3 class="feature__title">ESTACIONES</h3>
+                        <p class="feature__description">
+                            Selecciona tus estaciones preferidas y precios para que nuestra app pueda 
+                            ofrecerte los bloques que se ajusten a tus preferencias.
+                        </p>
+                        <ul class="feature__list">
+                            <li class="feature__list-item">Selección personalizada de estaciones favoritas</li>
+                            <li class="feature__list-item">Configuración de precios mínimos por estación</li>
+                            <li class="feature__list-item">Análisis de rentabilidad por ubicación</li>
+                            <li class="feature__list-item">Notificaciones instantáneas de bloques disponibles</li>
+                            <li class="feature__list-item">Mapa interactivo con todas las estaciones</li>
+                        </ul>
                     </div>
-                    
-                    <!-- Filtros -->
-                    <div class="stations-filters">
-                        <div class="stations-filter stations-filter--active">Todas</div>
-                        <div class="stations-filter">Favoritas</div>
-                        <div class="stations-filter">Rentables</div>
-                    </div>
-                    
-                    <!-- Lista de estaciones -->
-                    <div class="stations-list">
-                        <div class="station-item station-item--favorite">
-                            <div class="station-info">
-                                <div class="station-name">DLA7 - Riverside</div>
-                                <div class="station-address">1234 Commerce Dr, Riverside, CA</div>
-                                <div class="station-stats">
-                                    <span class="station-stat">Min: $25/hr</span>
-                                    <span class="station-stat station-stat--success">Activa</span>
+
+                    <div class="feature__phone">
+                        <div class="phone">
+                            <div class="phone__screen">
+                                <div class="phone__island"></div>
+                                <div class="phone__status-bar">
+                                    <span>9:41</span>
+                                    <span>100%</span>
+                                </div>
+                                <div class="phone__content">
+                                    <div class="phone__app-image"></div>
                                 </div>
                             </div>
-                            <div class="station-actions">
-                                <div class="favorite-btn favorite-btn--active">⭐</div>
-                                <div class="price-tag">$28</div>
-                            </div>
-                        </div>
-                        
-                        <div class="station-item">
-                            <div class="station-info">
-                                <div class="station-name">DLA9 - San Bernardino</div>
-                                <div class="station-address">5678 Industrial Blvd, San Bernardino, CA</div>
-                                <div class="station-stats">
-                                    <span class="station-stat">Min: $22/hr</span>
-                                    <span class="station-stat station-stat--warning">Pausada</span>
-                                </div>
-                            </div>
-                            <div class="station-actions">
-                                <div class="favorite-btn">⭐</div>
-                                <div class="price-tag">$24</div>
-                            </div>
-                        </div>
-                        
-                        <div class="station-item station-item--favorite">
-                            <div class="station-info">
-                                <div class="station-name">DLA3 - Moreno Valley</div>
-                                <div class="station-address">9012 Logistics Way, Moreno Valley, CA</div>
-                                <div class="station-stats">
-                                    <span class="station-stat">Min: $26/hr</span>
-                                    <span class="station-stat station-stat--success">Activa</span>
-                                </div>
-                            </div>
-                            <div class="station-actions">
-                                <div class="favorite-btn favorite-btn--active">⭐</div>
-                                <div class="price-tag">$30</div>
-                            </div>
-                        </div>
-                        
-                        <div class="station-item">
-                            <div class="station-info">
-                                <div class="station-name">DLA5 - Corona</div>
-                                <div class="station-address">3456 Distribution Center Dr, Corona, CA</div>
-                                <div class="station-stats">
-                                    <span class="station-stat">Min: $23/hr</span>
-                                    <span class="station-stat station-stat--success">Activa</span>
-                                </div>
-                            </div>
-                            <div class="station-actions">
-                                <div class="favorite-btn">⭐</div>
-                                <div class="price-tag">$25</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Estadísticas en tiempo real -->
-                    <div class="stations-stats">
-                        <div class="stat-item">
-                            <div class="stat-value">12</div>
-                            <div class="stat-label">Activas</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">$26.5</div>
-                            <div class="stat-label">Promedio</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">3</div>
-                            <div class="stat-label">Favoritas</div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-
-                <!-- Feature 2: Calendario -->
+                <!-- Feature 3: Calendario -->
                 <div class="feature" data-feature="calendar">
                     <div class="feature__content">
                         <h3 class="feature__title">CALENDARIO</h3>
@@ -451,61 +248,24 @@
                             <li class="feature__list-item">Cancelación rápida de bloques</li>
                         </ul>
                     </div>
+
                     <div class="feature__phone">
                         <div class="phone">
-                            <div class="phone__screen calendar-screen">
+                            <div class="phone__screen">
                                 <div class="phone__island"></div>
                                 <div class="phone__status-bar">
                                     <span>9:41</span>
                                     <span>100%</span>
                                 </div>
                                 <div class="phone__content">
-                                    <div class="calendar-header">
-                                        <div class="calendar-title">CALENDARIO</div>
-                                        <div class="calendar-month">Octubre 2023</div>
-                                    </div>
-                                    <div class="calendar-grid">
-                                        <div class="calendar-day">L</div>
-                                        <div class="calendar-day">M</div>
-                                        <div class="calendar-day">X</div>
-                                        <div class="calendar-day">J</div>
-                                        <div class="calendar-day">V</div>
-                                        <div class="calendar-day">S</div>
-                                        <div class="calendar-day">D</div>
-                                        <div class="calendar-day">1</div>
-                                        <div class="calendar-day">2</div>
-                                        <div class="calendar-day">3</div>
-                                        <div class="calendar-day">4</div>
-                                        <div class="calendar-day">5</div>
-                                        <div class="calendar-day">6</div>
-                                        <div class="calendar-day">7</div>
-                                        <div class="calendar-day">8</div>
-                                        <div class="calendar-day">9</div>
-                                        <div class="calendar-day">10</div>
-                                        <div class="calendar-day">11</div>
-                                        <div class="calendar-day has-block">12</div>
-                                        <div class="calendar-day">13</div>
-                                        <div class="calendar-day">14</div>
-                                        <div class="calendar-day active">15</div>
-                                        <div class="calendar-day">16</div>
-                                        <div class="calendar-day has-block">17</div>
-                                        <div class="calendar-day">18</div>
-                                        <div class="calendar-day">19</div>
-                                        <div class="calendar-day">20</div>
-                                        <div class="calendar-day">21</div>
-                                    </div>
-                                    <div class="calendar-events">
-                                        <div class="calendar-event">11:45am - 02:45pm Norcross GA</div>
-                                        <div class="calendar-event">07:30am - 11:00am Portland OR</div>
-                                        <div class="calendar-event">01:15pm - 05:45pm Portland OR</div>
-                                    </div>
+                                    <div class="phone__app-image"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Feature 3: Registro -->
+                <!-- Feature 4: Registro -->
                 <div class="feature" data-feature="log">
                     <div class="feature__content">
                         <h3 class="feature__title">REGISTRO</h3>
@@ -519,48 +279,24 @@
                             <li class="feature__list-item">Análisis de patrones</li>
                         </ul>
                     </div>
+
                     <div class="feature__phone">
                         <div class="phone">
-                            <div class="phone__screen log-screen">
+                            <div class="phone__screen">
                                 <div class="phone__island"></div>
                                 <div class="phone__status-bar">
                                     <span>9:41</span>
                                     <span>100%</span>
                                 </div>
                                 <div class="phone__content">
-                                    <div class="log-header">
-                                        <div class="log-title">REGISTRO</div>
-                                        <div class="log-subtitle">Historial de actividad</div>
-                                    </div>
-                                    <div class="log-entries">
-                                        <div class="log-entry">
-                                            <div class="log-time">12/04/2023 10:06:41 am</div>
-                                            <div class="log-message">(11:45am - 02:45pm) [Mañana] [Norcross GA (VGA1) - Sub Same-Day] [54 USD] [3 Horas]</div>
-                                            <div class="log-status accepted">ACEPTADO</div>
-                                        </div>
-                                        <div class="log-entry">
-                                            <div class="log-time">12/04/2023 10:37:28 am</div>
-                                            <div class="log-message">(07:30am - 11:00am) [Abr 14] [Portland OR (VOR3) - Sub Same-Day] [73.5 USD] [3.5 Horas]</div>
-                                            <div class="log-status ignored">IGNORADO por [Precio por bloque]</div>
-                                        </div>
-                                        <div class="log-entry">
-                                            <div class="log-time">12/04/2023 10:37:28 am</div>
-                                            <div class="log-message">(01:15pm - 05:45pm) [Hoy] [Portland OR (VOR3) - Sub Same-Day] [94.5 USD] [4.5 Horas]</div>
-                                            <div class="log-status ignored">IGNORADO por [Precio por bloque]</div>
-                                        </div>
-                                        <div class="log-entry">
-                                            <div class="log-time">11/04/2023 05:17:45 pm</div>
-                                            <div class="log-message">La búsqueda se ha detenido</div>
-                                            <div class="log-status">INFORMACIÓN</div>
-                                        </div>
-                                    </div>
+                                    <div class="phone__app-image"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Feature 4: Configuración -->
+                <!-- Feature 5: Configuración -->
                 <div class="feature" data-feature="config">
                     <div class="feature__content">
                         <h3 class="feature__title">CONFIGURACIÓN</h3>
@@ -577,56 +313,42 @@
                             <li class="feature__list-item">Notificación por Llamada Telefónica</li>
                         </ul>
                     </div>
+
                     <div class="feature__phone">
                         <div class="phone">
-                            <div class="phone__screen config-screen">
+                            <div class="phone__screen">
                                 <div class="phone__island"></div>
                                 <div class="phone__status-bar">
                                     <span>9:41</span>
                                     <span>100%</span>
                                 </div>
                                 <div class="phone__content">
+                                    <!-- Para configuración mantenemos el contenido CSS ya que no hay imagen específica -->
                                     <div class="config-header">
                                         <div class="config-title">CONFIGURACIÓN</div>
                                         <div class="config-subtitle">Personaliza tu experiencia</div>
                                     </div>
-                                    <div class="config-sections">
-                                        <div class="config-section">
-                                            <div class="config-section-title">Automatización</div>
-                                            <div class="config-option">
-                                                <span class="config-label">Llegar automáticamente</span>
-                                                <div class="config-toggle"></div>
-                                            </div>
-                                            <div class="config-option">
-                                                <span class="config-label">Saltar selfie</span>
-                                                <div class="config-toggle"></div>
-                                            </div>
-                                            <div class="config-option">
-                                                <span class="config-label">Saltar CAPTCHA</span>
-                                                <div class="config-toggle"></div>
-                                            </div>
+                                    
+                                    <div class="config-options">
+                                        <div class="config-option">
+                                            <span class="config-option-label">Llegar</span>
+                                            <div class="config-toggle enabled"></div>
                                         </div>
-                                        <div class="config-section">
-                                            <div class="config-section-title">Notificaciones</div>
-                                            <div class="config-option">
-                                                <span class="config-label">Notificación persistente</span>
-                                                <div class="config-toggle"></div>
-                                            </div>
-                                            <div class="config-option">
-                                                <span class="config-label">Llamada telefónica</span>
-                                                <div class="config-toggle"></div>
-                                            </div>
+                                        <div class="config-option">
+                                            <span class="config-option-label">Saltar selfie</span>
+                                            <div class="config-toggle enabled"></div>
                                         </div>
-                                        <div class="config-section">
-                                            <div class="config-section-title">Búsqueda</div>
-                                            <div class="config-option">
-                                                <span class="config-label">Auto búsqueda</span>
-                                                <div class="config-toggle"></div>
-                                            </div>
-                                            <div class="config-option">
-                                                <span class="config-label">Filtros personalizados</span>
-                                                <div class="config-toggle"></div>
-                                            </div>
+                                        <div class="config-option">
+                                            <span class="config-option-label">Saltar CAPTCHA-PUZZLE</span>
+                                            <div class="config-toggle enabled"></div>
+                                        </div>
+                                        <div class="config-option">
+                                            <span class="config-option-label">Auto búsqueda</span>
+                                            <div class="config-toggle"></div>
+                                        </div>
+                                        <div class="config-option">
+                                            <span class="config-option-label">Notificación persistente</span>
+                                            <div class="config-toggle enabled"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -864,7 +586,6 @@
                 <div class="contact__orb contact__orb--1"></div>
                 <div class="contact__orb contact__orb--2"></div>
                 <div class="contact__orb contact__orb--3"></div>
-                <div class="contact__grid-overlay"></div>
             </div>
 
             <!-- Header de contacto -->
@@ -893,11 +614,11 @@
                 <div class="contact__channel" data-channel="whatsapp">
                     <div class="contact__channel-icon">
                         <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.893 3.486"/>
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
                         </svg>
                     </div>
                     <div class="contact__channel-content">
-                        <h3 class="contact__channel-title">Canales de noticias de</h3>
+                        <h3 class="contact__channel-title">Canales de noticias de WhatsApp</h3>
                         <p class="contact__channel-description">Únete a nuestro canal de WhatsApp para recibir las últimas actualizaciones y mejores bloques disponibles</p>
                         <a href="https://www.whatsapp.com/channel/0029VaL0DdmIyPtQxdrlHm1d" target="_blank" rel="noopener noreferrer" class="contact__channel-btn">
                             <span>Unirse al Canal</span>
@@ -944,7 +665,7 @@
                 <div class="contact__channel" data-channel="tiktok">
                     <div class="contact__channel-icon">
                         <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.1 2.19-.64 2.87-1.49.68-.85 1.1-1.92 1.17-2.99.13-2.17.05-4.34.07-6.51 0-4.11-.02-8.22.02-12.33"/>
+                            <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
                         </svg>
                     </div>
                     <div class="contact__channel-content">
