@@ -7,14 +7,14 @@ import { Input } from '@/components/ui/Input'
 import { Card, CardContent } from '@/components/ui/Card'
 import { signInWithCredentials, getAllUsers, generatePassword, testSupabaseConnection } from '@/lib/auth'
 import { Trabajador } from '@/types/database'
-import { 
-  Utensils, 
-  User, 
-  ChevronDown, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  AlertCircle, 
+import {
+  Utensils,
+  User,
+  ChevronDown,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
   CheckCircle2,
   Loader2,
   Shield,
@@ -53,7 +53,7 @@ export default function LoginForm() {
     setConnectionStatus('checking')
     const isConnected = await testSupabaseConnection()
     setConnectionStatus(isConnected ? 'connected' : 'error')
-    
+
     if (isConnected) {
       fetchUsers()
     } else {
@@ -67,7 +67,7 @@ export default function LoginForm() {
       setLoadingUsers(true)
       setError('')
       const usersList = await getAllUsers()
-      
+
       if (usersList.length === 0) {
         setError('No se encontraron trabajadores activos')
       } else {
@@ -89,7 +89,7 @@ export default function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!selectedUser) {
       setError('Por favor selecciona tu nombre')
       return
@@ -154,13 +154,13 @@ export default function LoginForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23f1f5f9" fill-opacity="0.4"%3E%3Ccircle cx="30" cy="30" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
-      
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23f1f5f9\" fill-opacity=\"0.4\"%3E%3Ccircle cx=\"30\" cy=\"30\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
+
       {/* Floating Elements */}
       <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-orange-400 to-red-400 rounded-full opacity-10 animate-pulse"></div>
       <div className="absolute bottom-20 right-10 w-32 h-32 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-10 animate-pulse delay-1000"></div>
       <div className="absolute top-1/2 left-5 w-16 h-16 bg-gradient-to-r from-green-400 to-teal-400 rounded-full opacity-10 animate-pulse delay-500"></div>
-      
+
       <div className="relative w-full max-w-md z-10">
         {/* Logo y Header */}
         <div className="text-center mb-8 animate-fade-in">
@@ -215,7 +215,7 @@ export default function LoginForm() {
                   <User className="w-4 h-4" />
                   <span>Tu Nombre</span>
                 </label>
-                
+
                 {loadingUsers ? (
                   <div className="flex items-center justify-center h-14 border-2 border-slate-200 rounded-xl bg-slate-50 loading-shimmer">
                     <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
@@ -252,7 +252,7 @@ export default function LoginForm() {
                     {showDropdown && users.length > 0 && (
                       <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-2xl z-50 max-h-80 overflow-y-auto animate-fade-in">
                         <div className="p-2">
-                          {users.map((user, index) => (
+                          {users.map((user) => (
                             <button
                               key={user.id}
                               type="button"
@@ -316,11 +316,11 @@ export default function LoginForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={`pl-12 pr-12 h-14 border-2 border-slate-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-base font-medium transition-all duration-200 ${
-                      password && selectedUser ? 
-                        isPasswordCorrect() 
-                          ? 'border-emerald-400 bg-emerald-50 focus:border-emerald-500 focus:ring-emerald-500' 
+                      password && selectedUser ?
+                        isPasswordCorrect()
+                          ? 'border-emerald-400 bg-emerald-50 focus:border-emerald-500 focus:ring-emerald-500'
                           : 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-500'
-                      : 'hover:border-slate-300'
+                        : 'hover:border-slate-300'
                     }`}
                     disabled={!selectedUser}
                   />
@@ -333,7 +333,7 @@ export default function LoginForm() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
-                
+
                 {/* Hint de contraseña */}
                 {selectedUser && (
                   <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
@@ -364,8 +364,8 @@ export default function LoginForm() {
                 {/* Validación visual */}
                 {password && selectedUser && (
                   <div className={`flex items-center space-x-3 p-3 rounded-lg border ${
-                    isPasswordCorrect() 
-                      ? 'text-emerald-700 bg-emerald-50 border-emerald-200' 
+                    isPasswordCorrect()
+                      ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
                       : 'text-red-700 bg-red-50 border-red-200'
                   }`}>
                     {isPasswordCorrect() ? (
@@ -420,7 +420,7 @@ export default function LoginForm() {
                   Contacta al administrador
                 </a>
               </p>
-              
+
               {/* Debug Info (solo en desarrollo) */}
               {process.env.NODE_ENV === 'development' && (
                 <div className="text-xs text-slate-400 bg-slate-50 rounded-lg p-3 border border-slate-200">
