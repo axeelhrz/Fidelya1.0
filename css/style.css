@@ -3878,3 +3878,164 @@ contain: layout style paint;
 .hero__phone-content {
 contain: layout style;
 }
+
+/* ... código existente ... */
+
+/* ===== ESTILOS ADICIONALES PARA VIDEO Y BOTONES FLOTANTES ===== */
+
+/* Video Player Improvements */
+.videos__player-frame {
+    position: relative;
+    cursor: pointer;
+}
+
+.videos__player-frame:hover .videos__progress-indicators {
+    opacity: 1;
+    visibility: visible;
+}
+
+.videos__progress-indicators {
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.videos__progress-indicators.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+#play-overlay {
+    transition: all 0.3s ease;
+}
+
+#play-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Video Error Notification */
+.video-error-notification {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Mejoras de accesibilidad para el video */
+#main-video:focus {
+    outline: 2px solid var(--starflex-blue);
+    outline-offset: 4px;
+}
+
+.videos__progress-bar:focus {
+    outline: 2px solid var(--starflex-blue);
+    outline-offset: 2px;
+}
+
+/* Responsive adjustments for floating buttons */
+@media (max-width: 1024px) {
+    .floating-buttons {
+        right: 15px;
+        bottom: 80px; /* Ajustar para evitar conflictos con navegación móvil */
+    }
+}
+
+@media (max-width: 768px) {
+    .floating-buttons {
+        bottom: 70px;
+    }
+    
+    .floating-btn {
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.25);
+    }
+}
+
+/* Mejoras de performance */
+.floating-btn {
+    will-change: transform;
+}
+
+.floating-btn:hover {
+    will-change: transform, box-shadow;
+}
+
+/* Estados de carga para video */
+#main-video[data-loading="true"] {
+    background: linear-gradient(90deg, 
+        var(--secondary-bg) 25%, 
+        var(--accent-bg) 50%, 
+        var(--secondary-bg) 75%
+    );
+    background-size: 200% 100%;
+    animation: loading-shimmer 2s infinite;
+}
+
+/* Animación de carga */
+@keyframes loading-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Mejoras para modo oscuro */
+@media (prefers-color-scheme: dark) {
+    .floating-btn__tooltip {
+        background: rgba(0, 0, 0, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* Animaciones suaves para todos los elementos interactivos */
+.videos__player-frame *,
+.floating-btn *,
+.floating-btn__tooltip {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Estados de hover mejorados */
+.floating-btn:hover {
+    animation-play-state: paused;
+}
+
+/* Mejoras de contraste */
+@media (prefers-contrast: high) {
+    .floating-btn {
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .floating-btn__tooltip {
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+}
+
+/* Reducir movimiento para usuarios que lo prefieren */
+@media (prefers-reduced-motion: reduce) {
+    .floating-btn {
+        animation: none;
+    }
+    
+    .floating-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .floating-btn__icon {
+        transition: none;
+    }
+    
+    .floating-btn:hover .floating-btn__icon {
+        transform: scale(1.1);
+    }
+}

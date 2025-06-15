@@ -43,7 +43,475 @@ class MobileNav {
     }
 }
 
-// ===== SMOOTH SCROLL =====
+// ===== REPRODUCTOR DE VIDEO PERSONALIZADO =====
+class VideoPlayer {
+    constructor() {
+        this.video = $('#main-video');
+        this.playOverlay = $('#play-overlay');
+        this.progressBar = $('.videos__progress-bar');
+        this.progressFill = $('.videos__progress-fill');
+        this.currentTimeDisplay = $('.videos__current-time');
+        this.durationDisplay = $('.videos__duration');
+        this.progressIndicators = $('.videos__progress-indicators');
+        this.init();
+    }
+
+    init() {
+        if (!this.video) return;
+
+        this.setupEventListeners();
+        this.updateDuration();
+    }
+
+    setupEventListeners() {
+        // Click en overlay para reproducir
+        this.playOverlay?.addEventListener('click', () => this.togglePlay());
+        
+        // Click en video para pausar/reproducir
+        this.video.addEventListener('click', () => this.togglePlay());
+        
+        // Actualizar progreso
+        this.video.addEventListener('timeupdate', () => this.updateProgress());
+        
+        // Video cargado
+        this.video.addEventListener('loadedmetadata', () => this.updateDuration());
+        
+        // Video terminado
+        this.video.addEventListener('ended', () => this.onVideoEnded());
+        
+        // Click en barra de progreso
+        this.progressBar?.addEventListener('click', (e) => this.seekVideo(e));
+        
+        // Teclas de control
+        document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+        
+        // Mostrar/ocultar controles al hacer hover
+        const playerFrame = $('.videos__player-frame');
+        if (playerFrame) {
+            playerFrame.addEventListener('mouseenter', () => this.showControls());
+            playerFrame.addEventListener('mouseleave', () => this.hideControls());
+        }
+    }
+
+    togglePlay() {
+        if (this.video.paused) {
+            this.playVideo();
+        } else {
+            this.pauseVideo();
+        }
+    }
+
+    playVideo() {
+        this.video.play().then(() => {
+            this.playOverlay?.classList.add('hidden');
+            this.showControls();
+            console.log('🎬 Video reproduciendo');
+        }).catch(error => {
+            console.error('Error al reproducir video:', error);
+            this.showError('Error al reproducir el video. Por favor, intenta de nuevo.');
+        });
+    }
+
+    pauseVideo() {
+        this.video.pause();
+        this.playOverlay?.classList.remove('hidden');
+        console.log('⏸️ Video pausado');
+    }
+
+    updateProgress() {
+        if (!this.video.duration) return;
+
+        const progress = (this.video.currentTime / this.video.duration) * 100;
+        if (this.progressFill) {
+            this.progressFill.style.width = `${progress}%`;
+        }
+
+        // Actualizar tiempo actual
+        if (this.currentTimeDisplay) {
+            this.currentTimeDisplay.textContent = this.formatTime(this.video.currentTime);
+        }
+    }
+
+    updateDuration() {
+        if (this.video.duration && this.durationDisplay) {
+            this.durationDisplay.textContent = this.formatTime(this.video.duration);
+        }
+    }
+
+    seekVideo(e) {
+        if (!this.video.duration) return;
+
+        const rect = this.progressBar.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const percentage = clickX / rect.width;
+        const newTime = percentage * this.video.duration;
+        
+        this.video.currentTime = newTime;
+    }
+
+    formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    showControls() {
+        if (this.progressIndicators && !this.video.paused) {
+            this.progressIndicators.classList.add('visible');
+        }
+    }
+
+    hideControls() {
+        if (this.progressIndicators) {
+            setTimeout(() => {
+                if (!this.video.paused) {
+                    this.progressIndicators.classList.remove('visible');
+                }
+            }, 2000);
+        }
+    }
+
+    onVideoEnded() {
+        this.playOverlay?.classList.remove('hidden');
+        this.progressIndicators?.classList.remove('visible');
+        console.log('✅ Video terminado');
+    }
+
+    handleKeyboard(e) {
+        if (!this.video) return;
+
+        // Solo funcionar si el video está visible en pantalla
+        const videoRect = this.video.getBoundingClientRect();
+        const isVideoVisible = videoRect.top < window.innerHeight && videoRect.bottom > 0;
+        
+        if (!isVideoVisible) return;
+
+        switch(e.code) {
+            case 'Space':
+                e.preventDefault();
+                this.togglePlay();
+                break;
+            case 'ArrowLeft':
+                e.preventDefault();
+                this.video.currentTime = Math.max(0, this.video.currentTime - 10);
+                break;
+            case 'ArrowRight':
+                e.preventDefault();
+                this.video.currentTime = Math.min(this.video.duration, this.video.currentTime + 10);
+                break;
+            case 'KeyM':
+                e.preventDefault();
+                this.video.muted = !this.video.muted;
+                break;
+        }
+    }
+
+    showError(message) {
+        // Crear notificación de error
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'video-error-notification';
+        errorDiv.textContent = message;
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ff4444;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            font-family: var(--font-primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        `;
+        
+        document.body.appendChild(errorDiv);
+        
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 5000);
+    }
+}
+
+// ===== BOTONES FLOTANTES PARA WHATSAPP Y TELEGRAM =====
+class FloatingButtons {
+    constructor() {
+        this.init();
+    }
+
+    init() {
+        this.createFloatingButtons();
+        this.setupScrollBehavior();
+    }
+
+    createFloatingButtons() {
+        // Crear contenedor de botones flotantes
+        const floatingContainer = document.createElement('div');
+        floatingContainer.className = 'floating-buttons';
+        floatingContainer.innerHTML = `
+            <div class="floating-buttons__container">
+                <!-- Botón de WhatsApp -->
+                <a href="https://www.whatsapp.com/channel/0029VaL0DdmIyPtQxdrlHm1d" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   class="floating-btn floating-btn--whatsapp"
+                   aria-label="Unirse al canal de WhatsApp">
+                    <div class="floating-btn__icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                        </svg>
+                    </div>
+                    <span class="floating-btn__tooltip">Canal WhatsApp</span>
+                </a>
+
+                <!-- Botón de Telegram -->
+                <a href="https://t.me/starflexnews" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   class="floating-btn floating-btn--telegram"
+                   aria-label="Unirse al canal de Telegram">
+                    <div class="floating-btn__icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                        </svg>
+                    </div>
+                    <span class="floating-btn__tooltip">Canal Telegram</span>
+                </a>
+            </div>
+        `;
+
+        document.body.appendChild(floatingContainer);
+        
+        // Añadir estilos CSS
+        this.addFloatingButtonsCSS();
+    }
+
+    addFloatingButtonsCSS() {
+        const style = document.createElement('style');
+        style.textContent = `
+            /* ===== BOTONES FLOTANTES ===== */
+            .floating-buttons {
+                position: fixed;
+                right: 20px;
+                bottom: 20px;
+                z-index: 1000;
+                pointer-events: none;
+            }
+
+            .floating-buttons__container {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                pointer-events: auto;
+            }
+
+            .floating-btn {
+                position: relative;
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+                color: white;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                overflow: hidden;
+                transform: translateY(0);
+                animation: floating-btn-bounce 3s ease-in-out infinite;
+            }
+
+            .floating-btn::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                border-radius: 50%;
+                background: inherit;
+                z-index: -1;
+                transition: transform 0.3s ease;
+            }
+
+            .floating-btn:hover {
+                transform: translateY(-5px) scale(1.1);
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            }
+
+            .floating-btn:hover::before {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+
+            .floating-btn:active {
+                transform: translateY(-2px) scale(1.05);
+            }
+
+            /* Botón WhatsApp */
+            .floating-btn--whatsapp {
+                background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+                animation-delay: 0s;
+            }
+
+            .floating-btn--whatsapp:hover {
+                box-shadow: 0 8px 30px rgba(37, 211, 102, 0.5);
+            }
+
+            /* Botón Telegram */
+            .floating-btn--telegram {
+                background: linear-gradient(135deg, #0088cc 0%, #229ed9 100%);
+                animation-delay: 1.5s;
+            }
+
+            .floating-btn--telegram:hover {
+                box-shadow: 0 8px 30px rgba(0, 136, 204, 0.5);
+            }
+
+            .floating-btn__icon {
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: transform 0.3s ease;
+            }
+
+            .floating-btn:hover .floating-btn__icon {
+                transform: scale(1.1) rotate(5deg);
+            }
+
+            .floating-btn__icon svg {
+                width: 100%;
+                height: 100%;
+                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+            }
+
+            /* Tooltip */
+            .floating-btn__tooltip {
+                position: absolute;
+                right: 75px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 8px;
+                font-size: 12px;
+                font-weight: 500;
+                white-space: nowrap;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                pointer-events: none;
+                font-family: var(--font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+            }
+
+            .floating-btn__tooltip::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                right: -5px;
+                transform: translateY(-50%);
+                width: 0;
+                height: 0;
+                border-left: 5px solid rgba(0, 0, 0, 0.9);
+                border-top: 5px solid transparent;
+                border-bottom: 5px solid transparent;
+            }
+
+            .floating-btn:hover .floating-btn__tooltip {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(-50%) translateX(-5px);
+            }
+
+            /* Animación de rebote */
+            @keyframes floating-btn-bounce {
+                0%, 100% {
+                    transform: translateY(0);
+                }
+                50% {
+                    transform: translateY(-8px);
+                }
+            }
+
+            /* Responsivo */
+            @media (max-width: 768px) {
+                .floating-buttons {
+                    right: 15px;
+                    bottom: 15px;
+                }
+
+                .floating-btn {
+                    width: 55px;
+                    height: 55px;
+                }
+
+                .floating-btn__icon {
+                    width: 24px;
+                    height: 24px;
+                }
+
+                .floating-btn__tooltip {
+                    display: none;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .floating-buttons {
+                    right: 10px;
+                    bottom: 10px;
+                }
+
+                .floating-btn {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .floating-btn__icon {
+                    width: 22px;
+                    height: 22px;
+                }
+            }
+
+            /* Ocultar en impresión */
+            @media print {
+                .floating-buttons {
+                    display: none;
+                }
+            }
+        `;
+        
+        document.head.appendChild(style);
+    }
+
+    setupScrollBehavior() {
+        // Opcional: Ocultar botones al hacer scroll hacia abajo y mostrar al hacer scroll hacia arriba
+        let lastScrollTop = 0;
+        const floatingContainer = $('.floating-buttons');
+        
+        if (!floatingContainer) return;
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                // Scrolling down
+                floatingContainer.style.transform = 'translateY(100px)';
+                floatingContainer.style.opacity = '0.7';
+            } else {
+                // Scrolling up
+                floatingContainer.style.transform = 'translateY(0)';
+                floatingContainer.style.opacity = '1';
+            }
+            
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        }, { passive: true });
+    }
+}
+
+// ===== DESPLAZAMIENTO SUAVE =====
 class SmoothScroll {
     constructor() {
         this.init();
@@ -51,27 +519,21 @@ class SmoothScroll {
 
     init() {
         $$('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', (e) => this.handleClick(e));
-        });
-    }
-
-    handleClick(e) {
-        e.preventDefault();
-        const targetId = e.currentTarget.getAttribute('href');
-        const target = $(targetId);
-        
-        if (target) {
-            const targetPosition = target.offsetTop;
-            
-            window.scrollTo({
-                top: targetPosition,
-                behavior: 'smooth'
+            anchor.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = $(anchor.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             });
-        }
+        });
     }
 }
 
-// ===== FAQ ACCORDION =====
+// ===== ACORDEÓN FAQ =====
 class FAQAccordion {
     constructor() {
         this.faqItems = $$('.faq__item');
@@ -89,85 +551,81 @@ class FAQAccordion {
         this.faqItems.forEach(item => {
             const question = item.querySelector('.faq__question');
             const answer = item.querySelector('.faq__answer');
-            
+
             question.addEventListener('click', () => {
-                this.toggleItem(item, question, answer);
+                const isExpanded = question.getAttribute('aria-expanded') === 'true';
+                
+                // Cerrar todos los otros items
+                this.faqItems.forEach(otherItem => {
+                    if (otherItem !== item) {
+                        const otherQuestion = otherItem.querySelector('.faq__question');
+                        const otherAnswer = otherItem.querySelector('.faq__answer');
+                        otherQuestion.setAttribute('aria-expanded', 'false');
+                        otherAnswer.style.maxHeight = '0';
+                        otherItem.classList.remove('active');
+                    }
+                });
+
+                // Toggle el item actual
+                if (isExpanded) {
+                    question.setAttribute('aria-expanded', 'false');
+                    answer.style.maxHeight = '0';
+                    item.classList.remove('active');
+                } else {
+                    question.setAttribute('aria-expanded', 'true');
+                    answer.style.maxHeight = answer.scrollHeight + 'px';
+                    item.classList.add('active');
+                }
             });
 
+            // Soporte para teclado
             question.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    this.toggleItem(item, question, answer);
+                    question.click();
                 }
             });
         });
     }
 
-    toggleItem(item, question, answer) {
-        const isActive = item.classList.contains('active');
-        
-        // Cerrar otros items
-        this.faqItems.forEach(otherItem => {
-            if (otherItem !== item && otherItem.classList.contains('active')) {
-                otherItem.classList.remove('active');
-                otherItem.querySelector('.faq__answer').classList.remove('active');
-                otherItem.querySelector('.faq__question').setAttribute('aria-expanded', 'false');
-            }
-        });
-
-        // Toggle item actual
-        if (isActive) {
-            item.classList.remove('active');
-            answer.classList.remove('active');
-            question.setAttribute('aria-expanded', 'false');
-        } else {
-            item.classList.add('active');
-            answer.classList.add('active');
-            question.setAttribute('aria-expanded', 'true');
-        }
-    }
-
     setupSearch() {
         if (!this.searchInput) return;
 
-        let searchTimeout;
         this.searchInput.addEventListener('input', (e) => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                this.performSearch(e.target.value.toLowerCase());
-            }, 300);
-        });
-    }
+            const searchTerm = e.target.value.toLowerCase().trim();
+            let visibleCount = 0;
 
-    performSearch(searchTerm) {
-        let visibleCount = 0;
+            this.faqItems.forEach(item => {
+                const questionText = item.querySelector('.faq__question-text').textContent.toLowerCase();
+                const answerText = item.querySelector('.faq__answer-text').textContent.toLowerCase();
+                
+                if (questionText.includes(searchTerm) || answerText.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                    // Cerrar si está abierto
+                    const question = item.querySelector('.faq__question');
+                    const answer = item.querySelector('.faq__answer');
+                    question.setAttribute('aria-expanded', 'false');
+                    answer.style.maxHeight = '0';
+                    item.classList.remove('active');
+                }
+            });
 
-        this.faqItems.forEach(item => {
-            const questionText = item.querySelector('.faq__question-text').textContent.toLowerCase();
-            const answerText = item.querySelector('.faq__answer-text').textContent.toLowerCase();
-            
-            const matches = searchTerm === '' || 
-                          questionText.includes(searchTerm) || 
-                          answerText.includes(searchTerm);
-            
-            if (matches) {
-                item.style.display = 'block';
-                visibleCount++;
-            } else {
-                item.style.display = 'none';
+            // Mostrar/ocultar mensaje de no resultados
+            if (this.noResults) {
+                if (visibleCount === 0 && searchTerm !== '') {
+                    this.noResults.classList.add('show');
+                } else {
+                    this.noResults.classList.remove('show');
+                }
             }
         });
-
-        // Mostrar/ocultar mensaje de no resultados
-        if (visibleCount === 0 && searchTerm !== '') {
-            this.noResults.classList.add('show');
-        } else {
-            this.noResults.classList.remove('show');
-        }
     }
 }
 
-// ===== ANIMACIONES DE ENTRADA =====
+// ===== ANIMACIONES DE CARACTERÍSTICAS =====
 class FeatureAnimations {
     constructor() {
         this.features = $$('.feature');
@@ -181,8 +639,8 @@ class FeatureAnimations {
                     entry.target.classList.add('in-view');
                 }
             });
-        }, { 
-            threshold: 0.2,
+        }, {
+            threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
         });
 
@@ -192,324 +650,55 @@ class FeatureAnimations {
     }
 }
 
-// ===== EFECTOS INTERACTIVOS DEL IPHONE =====
-class PhoneInteractions {
-    constructor() {
-        this.phoneContainer = $('.hero__phone-container');
-        this.appAction = $('.hero__app-action');
-        this.statCards = $$('.hero__stat-card');
-        this.blockItems = $$('.hero__block-item');
-        this.init();
-    }
-
-    init() {
-        if (!this.phoneContainer) return;
-
-        this.setupPhoneHover();
-        this.setupAppInteractions();
-        this.setupStatAnimations();
-        this.setupBlockAnimations();
-    }
-
-    setupPhoneHover() {
-        this.phoneContainer.addEventListener('mouseenter', () => {
-            this.phoneContainer.style.transform = 'perspective(1200px) rotateY(-6deg) rotateX(1deg) scale(1.02)';
-        });
-
-        this.phoneContainer.addEventListener('mouseleave', () => {
-            this.phoneContainer.style.transform = 'perspective(1200px) rotateY(-12deg) rotateX(3deg) scale(1)';
-        });
-    }
-
-    setupAppInteractions() {
-        if (this.appAction) {
-            this.appAction.addEventListener('click', () => {
-                this.appAction.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    this.appAction.style.transform = 'scale(1)';
-                }, 150);
-            });
-        }
-    }
-
-    setupStatAnimations() {
-        this.statCards.forEach((card) => {
-            card.addEventListener('mouseenter', () => {
-                card.style.transform = 'translateY(-4px) scale(1.03)';
-                card.style.borderColor = 'rgba(0, 212, 255, 0.5)';
-                card.style.boxShadow = '0 8px 25px rgba(0, 212, 255, 0.3)';
-            });
-
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = 'translateY(0) scale(1)';
-                card.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                card.style.boxShadow = '';
-            });
-        });
-    }
-
-    setupBlockAnimations() {
-        this.blockItems.forEach(item => {
-            item.addEventListener('mouseenter', () => {
-                item.style.background = 'rgba(0, 212, 255, 0.1)';
-                item.style.borderRadius = '10px';
-                item.style.paddingLeft = '12px';
-                item.style.paddingRight = '12px';
-                item.style.transform = 'translateX(4px)';
-            });
-
-            item.addEventListener('mouseleave', () => {
-                item.style.background = 'transparent';
-                item.style.paddingLeft = '0';
-                item.style.paddingRight = '0';
-                item.style.transform = 'translateX(0)';
-            });
-        });
-    }
-}
-
-// ===== CONTADOR ANIMADO =====
-class AnimatedCounters {
-    constructor() {
-        this.counters = $$('.hero__stat-number');
-        this.init();
-    }
-
-    init() {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    this.animateCounter(entry.target);
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.5 });
-
-        this.counters.forEach(counter => {
-            observer.observe(counter);
-        });
-    }
-
-    animateCounter(element) {
-        const target = element.textContent;
-        const isPrice = target.includes('$');
-        const numericValue = parseInt(target.replace(/[^0-9]/g, ''));
-        
-        let current = 0;
-        const increment = numericValue / 60;
-        const timer = setInterval(() => {
-            current += increment;
-            if (current >= numericValue) {
-                current = numericValue;
-                clearInterval(timer);
-            }
-            
-            if (isPrice) {
-                element.textContent = '$' + Math.floor(current);
-            } else {
-                element.textContent = Math.floor(current);
-            }
-        }, 16);
-    }
-}
-
-// ===== EFECTOS DE PARTÍCULAS =====
-class ParticleEffects {
-    constructor() {
-        this.particles = $$('.hero__particle');
-        this.init();
-    }
-
-    init() {
-        this.particles.forEach((particle) => {
-            const size = Math.random() * 3 + 4;
-            particle.style.width = size + 'px';
-            particle.style.height = size + 'px';
-            
-            const opacity = Math.random() * 0.4 + 0.5;
-            particle.style.opacity = opacity;
-            
-            const duration = Math.random() * 4 + 8;
-            particle.style.animationDuration = duration + 's';
-        });
-    }
-}
-
-// ===== EFECTOS DE NAVEGACIÓN ACTIVA =====
-class ActiveNavigation {
-    constructor() {
-        this.links = $$('.nav__link');
-        this.sections = $$('section[id]');
-        this.init();
-    }
-
-    init() {
-        window.addEventListener('scroll', () => this.updateActiveLink(), { passive: true });
-    }
-
-    updateActiveLink() {
-        const scrollY = window.scrollY + 100;
-
-        this.sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionHeight = section.offsetHeight;
-            const sectionId = section.getAttribute('id');
-            const navLink = $(`.nav__link[href="#${sectionId}"]`);
-
-            if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
-                this.links.forEach(link => link.classList.remove('active'));
-                navLink?.classList.add('active');
-            }
-        });
-    }
-}
-
-// ===== INTERACCIONES DE ESTACIONES =====
-class StationsInteractions {
-    constructor() {
-        this.stationItems = $$('.stations__station-item');
-        this.favoriteButtons = $$('.stations__favorite-btn');
-        this.filters = $$('.stations__filter');
-        this.phoneContainer = $('.stations__phone-container');
-        this.init();
-    }
-
-    init() {
-        this.setupStationHovers();
-        this.setupFavoriteButtons();
-        this.setupFilters();
-        this.setupPhoneInteractions();
-    }
-
-    setupStationHovers() {
-        this.stationItems.forEach(item => {
-            item.addEventListener('mouseenter', () => {
-                item.style.transform = 'translateY(-3px) scale(1.02)';
-                item.style.boxShadow = '0 12px 35px rgba(0, 212, 255, 0.2)';
-            });
-
-            item.addEventListener('mouseleave', () => {
-                item.style.transform = 'translateY(0) scale(1)';
-                item.style.boxShadow = '';
-            });
-        });
-    }
-
-    setupFavoriteButtons() {
-        this.favoriteButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                btn.classList.toggle('stations__favorite-btn--active');
-                
-                // Añadir efecto de pulso
-                btn.style.transform = 'scale(1.2)';
-                setTimeout(() => {
-                    btn.style.transform = 'scale(1)';
-                }, 150);
-            });
-        });
-    }
-
-    setupFilters() {
-        this.filters.forEach(filter => {
-            filter.addEventListener('click', () => {
-                // Remover clase activa de todos los filtros
-                this.filters.forEach(f => f.classList.remove('stations__filter--active'));
-                
-                // Añadir clase activa al filtro clickeado
-                filter.classList.add('stations__filter--active');
-                
-                // Efecto de animación
-                filter.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    filter.style.transform = 'scale(1)';
-                }, 100);
-            });
-        });
-    }
-
-    setupPhoneInteractions() {
-        if (this.phoneContainer) {
-            this.phoneContainer.addEventListener('mouseenter', () => {
-                const phone = this.phoneContainer.querySelector('.stations__phone');
-                if (phone) {
-                    phone.style.transform = 'perspective(1000px) rotateY(-2deg) rotateX(1deg) scale(1.02)';
-                }
-            });
-
-            this.phoneContainer.addEventListener('mouseleave', () => {
-                const phone = this.phoneContainer.querySelector('.stations__phone');
-                if (phone) {
-                    phone.style.transform = 'perspective(1000px) rotateY(-5deg) rotateX(2deg) scale(1)';
-                }
-            });
-        }
-    }
-}
-
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', () => {
+    // Inicializar todas las funcionalidades
     new MobileNav();
+    new VideoPlayer(); // ¡Nuevo reproductor de video!
+    new FloatingButtons(); // ¡Nuevos botones flotantes!
     new SmoothScroll();
     new FAQAccordion();
     new FeatureAnimations();
-    new PhoneInteractions();
-    new AnimatedCounters();
-    new ParticleEffects();
-    new ActiveNavigation();
-    new StationsInteractions();
     
-    console.log('🚀 StarFlex Landing Page initialized successfully!');
+    console.log('🚀 StarFlex Landing Page cargada completamente');
 });
 
-// ===== OPTIMIZACIÓN DE SCROLL =====
-let ticking = false;
-function updateScrollEffects() {
-    ticking = false;
+// ===== OPTIMIZACIÓN DE RENDIMIENTO =====
+// Throttle para eventos de scroll
+function throttle(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
 
-window.addEventListener('scroll', () => {
-    if (!ticking) {
-        requestAnimationFrame(updateScrollEffects);
-        ticking = true;
-    }
-}, { passive: true });
-
-// ===== PRELOAD DE RECURSOS =====
-const preloadResources = () => {
-    const criticalResources = [
-        './assets/Google-Play.svg',
-        './assets/App-Store.svg',
-        './assets/logo.png'
+// Precargar recursos críticos
+function preloadCriticalResources() {
+    const criticalImages = [
+        './assets/phones/Horario.jpg',
+        './assets/phones/Estaciones.jpg',
+        './assets/phones/Calendario.jpg',
+        './assets/phones/Registro.jpg',
+        './assets/phones/Configuracion.jpg'
     ];
 
-    criticalResources.forEach(resource => {
+    criticalImages.forEach(src => {
         const link = document.createElement('link');
         link.rel = 'preload';
         link.as = 'image';
-        link.href = resource;
+        link.href = src;
         document.head.appendChild(link);
     });
-};
+}
 
-window.addEventListener('load', preloadResources);
-
-// ===== EFECTOS DE PERFORMANCE =====
-if ('IntersectionObserver' in window) {
-    const imageObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                if (img.dataset.src) {
-                    img.src = img.dataset.src;
-                    img.classList.remove('lazy');
-                    imageObserver.unobserve(img);
-                }
-            }
-        });
-    });
-
-    $$('img[data-src]').forEach(img => {
-        imageObserver.observe(img);
-    });
+// Ejecutar precarga cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', preloadCriticalResources);
+} else {
+    preloadCriticalResources();
 }
