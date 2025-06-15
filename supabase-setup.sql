@@ -14,9 +14,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- Enable RLS on profiles
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- Create policy for profiles
-CREATE POLICY "Users can view own profile" ON public.profiles
-  FOR SELECT USING (auth.uid() = id);
+-- Create policy for profiles (allow all authenticated users to read all profiles for the dropdown)
+CREATE POLICY "Authenticated users can view all profiles" ON public.profiles
+  FOR SELECT USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Users can update own profile" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
@@ -74,6 +74,31 @@ INSERT INTO public.shifts (name, start_time, end_time) VALUES
   ('Turno Noche', '14:00:00', '22:00:00')
 ON CONFLICT DO NOTHING;
 
+-- Function to generate password (first letter of first name + last name in uppercase)
+CREATE OR REPLACE FUNCTION generate_user_password(full_name TEXT)
+RETURNS TEXT AS $$
+DECLARE
+  name_parts TEXT[];
+  first_name TEXT;
+  last_name TEXT;
+BEGIN
+  IF full_name IS NULL OR trim(full_name) = '' THEN
+    RETURN '';
+  END IF;
+  
+  name_parts := string_to_array(trim(full_name), ' ');
+  
+  IF array_length(name_parts, 1) < 2 THEN
+    RETURN '';
+  END IF;
+  
+  first_name := name_parts[1];
+  last_name := name_parts[array_length(name_parts, 1)];
+  
+  RETURN upper(substring(first_name, 1, 1) || last_name);
+END;
+$$ LANGUAGE plpgsql;
+
 -- Function to handle new user registration
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
@@ -110,3 +135,51 @@ DROP TRIGGER IF EXISTS update_orders_updated_at ON public.orders;
 CREATE TRIGGER update_orders_updated_at
   BEFORE UPDATE ON public.orders
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Insert example users (you'll need to create these users in Supabase Auth first)
+-- Example users with their generated passwords:
+-- Juan Pérez -> JPEREZ
+-- María García -> MGARCIA  
+-- Carlos López -> CLOPEZ
+-- Ana Martínez -> AMARTINEZ
+-- Luis Rodríguez -> LRODRIGUEZ
+
+-- Note: You need to create these users manually in Supabase Auth dashboard first,
+-- then their profiles will be automatically created by the trigger.
+-- Make sure to set their passwords to match the generated pattern.
+
+-- Example of how to insert users programmatically (if needed):
+/*
+-- First create the auth user, then the profile will be created automatically
+INSERT INTO auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  raw_user_meta_data,
+  created_at,
+  updated_at,
+  confirmation_token,
+  email_change,
+  email_change_token_new,
+  recovery_token
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  gen_random_uuid(),
+  'authenticated',
+  'authenticated',
+  'juan.perez@example.com',
+  crypt('JPEREZ', gen_salt('bf')),
+  NOW(),
+  '{"full_name": "Juan Pérez"}',
+  NOW(),
+  NOW(),
+  '',
+  '',
+  '',
+  ''
+);
+*/

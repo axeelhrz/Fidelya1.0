@@ -1,10 +1,11 @@
-# Plataforma de Pedidos de Almuerzo
+# 🍽️ Plataforma de Pedidos de Almuerzo
 
 Una aplicación moderna y profesional para gestionar pedidos de almuerzo, construida con Next.js, TypeScript, Tailwind CSS y Supabase.
 
 ## 🚀 Características
 
-- **Autenticación segura** con Supabase Auth
+- **Sistema de autenticación por nombre** - Selecciona tu nombre de una lista
+- **Contraseñas automáticas** - Primera letra del nombre + apellido en mayúsculas
 - **Interfaz moderna** con componentes UI personalizados
 - **Gestión de turnos** (Día/Noche)
 - **Calendario interactivo** para seleccionar fechas
@@ -18,7 +19,7 @@ Una aplicación moderna y profesional para gestionar pedidos de almuerzo, constr
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **Styling**: Tailwind CSS 4
 - **Base de datos**: Supabase (PostgreSQL)
-- **Autenticación**: Supabase Auth
+- **Autenticación**: Supabase Auth (personalizada)
 - **Iconos**: Lucide React
 - **Deployment**: Vercel (recomendado)
 
@@ -55,18 +56,45 @@ Ejecutar el script SQL en el editor SQL de Supabase:
 -- Copiar y ejecutar el contenido de supabase-setup.sql
 
 
-5. **Ejecutar en desarrollo**
+5. **Crear usuarios de ejemplo**
+En el dashboard de Supabase Auth, crear usuarios manualmente con:
+- Email: nombre.apellido@empresa.com
+- Contraseña: Primera letra del nombre + apellido (ej: JPEREZ para Juan Pérez)
+- User Metadata: `{"full_name": "Nombre Completo"}`
+
+**Ejemplos de usuarios:**
+- Juan Pérez → Email: juan.perez@empresa.com → Contraseña: JPEREZ
+- María García → Email: maria.garcia@empresa.com → Contraseña: MGARCIA
+- Carlos López → Email: carlos.lopez@empresa.com → Contraseña: CLOPEZ
+
+6. **Ejecutar en desarrollo**
 
 npm run dev
 
 
 La aplicación estará disponible en `http://localhost:3000`
 
+## 🔐 Sistema de Autenticación
+
+### Cómo funciona:
+1. **Selección por nombre**: Los usuarios ven una lista desplegable con todos los nombres registrados
+2. **Contraseña automática**: Se genera automáticamente como primera letra del nombre + apellido en mayúsculas
+3. **Ejemplo**: "Juan Pérez" → Contraseña: "JPEREZ"
+
+### Crear nuevos usuarios:
+1. Ve al dashboard de Supabase → Authentication → Users
+2. Clic en "Add user"
+3. Completa:
+   - Email: nombre.apellido@empresa.com
+   - Password: Primera letra + apellido en mayúsculas
+   - User Metadata: `{"full_name": "Nombre Completo"}`
+4. El perfil se creará automáticamente
+
 ## 🗄️ Estructura de la base de datos
 
 ### Tablas principales:
 
-- **profiles**: Perfiles de usuario
+- **profiles**: Perfiles de usuario con nombres completos
 - **shifts**: Turnos disponibles (Día/Noche)
 - **orders**: Pedidos de almuerzo
 
@@ -80,7 +108,7 @@ La aplicación estará disponible en `http://localhost:3000`
 ## 🎨 Componentes principales
 
 ### Autenticación
-- `LoginForm`: Formulario de inicio de sesión moderno
+- `LoginForm`: Formulario con dropdown de nombres y contraseñas automáticas
 - `AuthProvider`: Context para manejo de estado de autenticación
 
 ### Dashboard
@@ -97,7 +125,8 @@ La aplicación estará disponible en `http://localhost:3000`
 ## 🚀 Funcionalidades
 
 ### Para usuarios:
-- ✅ Iniciar sesión con email/contraseña
+- ✅ Seleccionar nombre de lista desplegable
+- ✅ Login automático con contraseña generada
 - ✅ Seleccionar turno de trabajo
 - ✅ Ver calendario mensual de pedidos
 - ✅ Crear pedidos para fechas futuras
