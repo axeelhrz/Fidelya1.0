@@ -8,7 +8,7 @@
     --glass-bg-light: rgba(255, 255, 255, 0.05);
     --glass-bg-medium: rgba(255, 255, 255, 0.08);
     --glass-bg-strong: rgba(255, 255, 255, 0.12);
-    
+        
     /* Colores de marca Starflex */
     --starflex-blue: #ff4569;
     --starflex-blue-dark: #cc1744;
@@ -33,7 +33,7 @@
     --electric-blue: #ff4569;
     --cyber-purple: #9d00ff;
     --hologram-teal: #ff1744;
-    
+        
     /* Textos */
     --text-primary: #ffffff;
     --text-secondary: #e2e8f0;
@@ -1006,6 +1006,7 @@ body {
     z-index: 10;
     box-shadow: 
         inset 0 3px 10px rgba(0, 0, 0, 0.9),
+        0 0 0 1px rgba(255, 255, 255, 0.03),
         0 0 20px rgba(0, 212, 255, 0.3);
     border: 1px solid rgba(0, 212, 255, 0.2);
     animation: island-pulse 4s ease-in-out infinite;
@@ -1102,27 +1103,29 @@ body {
 
 /* ===== CONTENIDO DE LA PANTALLA ULTRA FUTURISTA Y COMPACTO ===== */
 .hero__phone-content {
-    padding: 100px 0 0;
+    padding: 95px 0 0;
     height: 100%;
     position: relative;
     overflow: hidden;
     background: linear-gradient(180deg, 
-        rgba(0, 0, 0, 0.98) 0%, 
-        rgba(10, 10, 10, 0.95) 50%,
-        rgba(0, 0, 0, 0.98) 100%
+        rgba(10, 13, 20, 0.95) 0%, 
+        rgba(21, 25, 34, 0.98) 100%
     );
+    position: relative;
+
 }
 
 .hero__phone-app-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 0 0 46px 46px;
+    border-radius: 0 0 43px 43px;
     position: absolute;
     top: 0;
     left: 0;
     z-index: 1;
     transition: all var(--transition);
+    content: url('../assets/Hero.jpg');
 }
 
 
