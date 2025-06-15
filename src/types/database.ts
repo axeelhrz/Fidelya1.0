@@ -1,7 +1,7 @@
 export interface Database {
   public: {
     Tables: {
-      funcionarios: {
+      trabajadores: {
         Row: {
           id: number
           nombre: string
@@ -71,7 +71,7 @@ export interface Database {
       orders: {
         Row: {
           id: string
-          funcionario_id: number
+          trabajador_id: number
           shift_id: string
           order_date: string
           menu_item: string
@@ -82,7 +82,7 @@ export interface Database {
         }
         Insert: {
           id?: string
-          funcionario_id: number
+          trabajador_id: number
           shift_id: string
           order_date: string
           menu_item: string
@@ -93,7 +93,7 @@ export interface Database {
         }
         Update: {
           id?: string
-          funcionario_id?: number
+          trabajador_id?: number
           shift_id?: string
           order_date?: string
           menu_item?: string
@@ -107,9 +107,10 @@ export interface Database {
   }
 }
 
-export type Funcionario = Database['public']['Tables']['funcionarios']['Row']
+export type Trabajador = Database['public']['Tables']['trabajadores']['Row']
 export type Shift = Database['public']['Tables']['shifts']['Row']
 export type Order = Database['public']['Tables']['orders']['Row']
 
 // Alias para compatibilidad
-export type Profile = Funcionario
+export type Profile = Trabajador
+export type Funcionario = Trabajador
