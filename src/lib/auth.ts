@@ -18,12 +18,19 @@ export function generatePassword(fullName: string): string {
 // Función para obtener todos los usuarios registrados
 export async function getAllUsers(): Promise<Profile[]> {
   try {
+    console.log('Fetching users from Supabase...')
+    
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .order('full_name')
     
-    if (error) throw error
+    if (error) {
+      console.error('Supabase error:', error)
+      throw error
+    }
+    
+    console.log('Users fetched successfully:', data?.length || 0, 'users')
     return data || []
   } catch (error) {
     console.error('Error fetching users:', error)
@@ -34,6 +41,8 @@ export async function getAllUsers(): Promise<Profile[]> {
 // Función de login personalizada por nombre
 export async function signInWithName(fullName: string) {
   try {
+    console.log('Attempting to sign in with name:', fullName)
+    
     // Buscar el usuario por nombre completo
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -41,12 +50,20 @@ export async function signInWithName(fullName: string) {
       .eq('full_name', fullName)
       .single()
     
-    if (profileError || !profile) {
+    if (profileError) {
+      console.error('Profile error:', profileError)
+      throw new Error('Usuario no encontrado en la base de datos')
+    }
+    
+    if (!profile) {
       throw new Error('Usuario no encontrado')
     }
     
+    console.log('Profile found:', profile.email)
+    
     // Generar la contraseña automática
     const password = generatePassword(fullName)
+    console.log('Generated password:', password)
     
     // Intentar hacer login con email y contraseña generada
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -55,30 +72,36 @@ export async function signInWithName(fullName: string) {
     })
     
     if (error) {
-      // Si falla el login, intentar crear/actualizar la contraseña del usuario
-      const { error: updateError } = await supabase.auth.admin.updateUserById(
-        profile.id,
-        { password: password }
-      )
-      
-      if (updateError) {
-        throw new Error('Error al actualizar credenciales')
-      }
-      
-      // Intentar login nuevamente
-      const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
-        email: profile.email,
-        password: password,
-      })
-      
-      if (retryError) throw retryError
-      return retryData
+      console.error('Auth error:', error)
+      throw new Error(`Error de autenticación: ${error.message}`)
     }
     
+    console.log('Login successful')
     return data
   } catch (error) {
     console.error('Error in signInWithName:', error)
     throw error
+  }
+}
+
+// Función para verificar la conexión con Supabase
+export async function testSupabaseConnection(): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('count')
+      .limit(1)
+    
+    if (error) {
+      console.error('Connection test failed:', error)
+      return false
+    }
+    
+    console.log('Supabase connection successful')
+    return true
+  } catch (error) {
+    console.error('Connection test error:', error)
+    return false
   }
 }
 
@@ -124,7 +147,10 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     .eq('id', userId)
     .single()
   
-  if (error) return null
+  if (error) {
+    console.error('Error fetching profile:', error)
+    return null
+  }
   return data
 }
 

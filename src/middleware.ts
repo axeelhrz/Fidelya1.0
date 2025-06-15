@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
+  // Skip middleware for test page
+  if (req.nextUrl.pathname === '/test') {
+    return NextResponse.next()
+  }
+
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
 
@@ -25,7 +30,7 @@ export async function middleware(req: NextRequest) {
   } catch (error) {
     // If there's an error with the session, redirect to login
     console.error('Middleware error:', error)
-    if (req.nextUrl.pathname !== '/login') {
+    if (req.nextUrl.pathname !== '/login' && req.nextUrl.pathname !== '/test') {
       return NextResponse.redirect(new URL('/login', req.url))
     }
     return res
