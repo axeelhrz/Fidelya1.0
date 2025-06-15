@@ -288,7 +288,7 @@ class FloatingButtons {
     addFloatingButtonsCSS() {
         const style = document.createElement('style');
         style.textContent = `
-            /* ===== BOTONES FLOTANTES ===== */
+            /* ===== BOTONES FLOTANTES ROJIZOS STARFLEX ===== */
             .floating-buttons {
                 position: fixed;
                 right: 20px;
@@ -314,58 +314,88 @@ class FloatingButtons {
                 justify-content: center;
                 text-decoration: none;
                 color: white;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                box-shadow: 
+                    0 4px 20px rgba(0, 0, 0, 0.3),
+                    0 0 0 1px rgba(255, 69, 105, 0.2);
                 transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
                 overflow: hidden;
                 transform: translateY(0);
                 animation: floating-btn-bounce 3s ease-in-out infinite;
+                border: 2px solid rgba(255, 69, 105, 0.3);
             }
 
             .floating-btn::before {
                 content: '';
                 position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
+                top: -2px;
+                left: -2px;
+                right: -2px;
+                bottom: -2px;
                 border-radius: 50%;
-                background: inherit;
+                background: linear-gradient(45deg, 
+                    var(--starflex-crimson-glow) 0%,
+                    var(--starflex-crimson-bright) 25%,
+                    var(--starflex-crimson) 50%,
+                    var(--starflex-crimson-bright) 75%,
+                    var(--starflex-crimson-glow) 100%
+                );
                 z-index: -1;
-                transition: transform 0.3s ease;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                animation: crimson-pulse-ring 4s ease-in-out infinite;
             }
 
             .floating-btn:hover {
                 transform: translateY(-5px) scale(1.1);
-                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+                box-shadow: 
+                    0 8px 30px rgba(0, 0, 0, 0.4),
+                    0 0 25px rgba(255, 69, 105, 0.6),
+                    0 0 50px rgba(184, 0, 46, 0.4);
+                border-color: rgba(255, 69, 105, 0.8);
             }
 
             .floating-btn:hover::before {
-                transform: scale(1.2);
-                opacity: 0.8;
+                opacity: 1;
             }
 
             .floating-btn:active {
                 transform: translateY(-2px) scale(1.05);
             }
 
-            /* Botón WhatsApp */
+            /* Botón WhatsApp con tema rojizo */
             .floating-btn--whatsapp {
-                background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+                background: linear-gradient(135deg, 
+                    var(--starflex-crimson-dark) 0%, 
+                    var(--starflex-crimson) 25%, 
+                    var(--starflex-crimson-light) 50%, 
+                    var(--starflex-crimson-bright) 100%
+                );
                 animation-delay: 0s;
             }
 
             .floating-btn--whatsapp:hover {
-                box-shadow: 0 8px 30px rgba(37, 211, 102, 0.5);
+                box-shadow: 
+                    0 8px 30px rgba(0, 0, 0, 0.4),
+                    0 0 25px rgba(255, 69, 105, 0.7),
+                    0 0 50px rgba(184, 0, 46, 0.5);
             }
 
-            /* Botón Telegram */
+            /* Botón Telegram con tema rojizo */
             .floating-btn--telegram {
-                background: linear-gradient(135deg, #0088cc 0%, #229ed9 100%);
+                background: linear-gradient(135deg, 
+                    var(--starflex-crimson) 0%, 
+                    var(--starflex-crimson-bright) 25%, 
+                    var(--starflex-crimson-glow) 50%, 
+                    #ff6b9d 100%
+                );
                 animation-delay: 1.5s;
             }
 
             .floating-btn--telegram:hover {
-                box-shadow: 0 8px 30px rgba(0, 136, 204, 0.5);
+                box-shadow: 
+                    0 8px 30px rgba(0, 0, 0, 0.4),
+                    0 0 25px rgba(255, 23, 68, 0.7),
+                    0 0 50px rgba(255, 69, 105, 0.5);
             }
 
             .floating-btn__icon {
@@ -375,49 +405,58 @@ class FloatingButtons {
                 align-items: center;
                 justify-content: center;
                 transition: transform 0.3s ease;
+                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
             }
 
             .floating-btn:hover .floating-btn__icon {
                 transform: scale(1.1) rotate(5deg);
+                filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
             }
 
             .floating-btn__icon svg {
                 width: 100%;
                 height: 100%;
-                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
             }
 
-            /* Tooltip */
+            /* Tooltip mejorado con tema rojizo */
             .floating-btn__tooltip {
                 position: absolute;
                 right: 75px;
                 top: 50%;
                 transform: translateY(-50%);
-                background: rgba(0, 0, 0, 0.9);
+                background: linear-gradient(135deg, 
+                    rgba(184, 0, 46, 0.95) 0%, 
+                    rgba(156, 0, 37, 0.95) 100%
+                );
                 color: white;
                 padding: 8px 12px;
                 border-radius: 8px;
                 font-size: 12px;
-                font-weight: 500;
+                font-weight: 600;
                 white-space: nowrap;
                 opacity: 0;
                 visibility: hidden;
                 transition: all 0.3s ease;
                 pointer-events: none;
                 font-family: var(--font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+                border: 1px solid rgba(255, 69, 105, 0.3);
+                box-shadow: 
+                    0 4px 15px rgba(0, 0, 0, 0.3),
+                    0 0 10px rgba(255, 69, 105, 0.2);
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
             }
 
             .floating-btn__tooltip::after {
                 content: '';
                 position: absolute;
                 top: 50%;
-                right: -5px;
+                right: -6px;
                 transform: translateY(-50%);
                 width: 0;
                 height: 0;
-                border-left: 5px solid rgba(0, 0, 0, 0.9);
-                border-top: 5px solid transparent;
-                border-bottom: 5px solid transparent;
+                border-left: 6px solid rgba(184, 0, 46, 0.95);
+                border-top: 6px solid transparent;
+                border-bottom: 6px solid transparent;
             }
 
             .floating-btn:hover .floating-btn__tooltip {
@@ -426,7 +465,7 @@ class FloatingButtons {
                 transform: translateY(-50%) translateX(-5px);
             }
 
-            /* Animación de rebote */
+            /* Animación de rebote mejorada */
             @keyframes floating-btn-bounce {
                 0%, 100% {
                     transform: translateY(0);
@@ -434,6 +473,40 @@ class FloatingButtons {
                 50% {
                     transform: translateY(-8px);
                 }
+            }
+
+            /* Animación del anillo de pulso rojizo */
+            @keyframes crimson-pulse-ring {
+                0%, 100% {
+                    transform: scale(1);
+                    opacity: 0;
+                }
+                50% {
+                    transform: scale(1.2);
+                    opacity: 0.3;
+                }
+            }
+
+            /* Efectos de brillo adicionales */
+            .floating-btn::after {
+                content: '';
+                position: absolute;
+                top: 10%;
+                left: 10%;
+                width: 80%;
+                height: 80%;
+                border-radius: 50%;
+                background: linear-gradient(135deg, 
+                    rgba(255, 255, 255, 0.2) 0%, 
+                    transparent 50%
+                );
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                pointer-events: none;
+            }
+
+            .floating-btn:hover::after {
+                opacity: 1;
             }
 
             /* Responsivo */
@@ -467,6 +540,7 @@ class FloatingButtons {
                 .floating-btn {
                     width: 50px;
                     height: 50px;
+                    border-width: 1px;
                 }
 
                 .floating-btn__icon {
@@ -475,10 +549,63 @@ class FloatingButtons {
                 }
             }
 
+            /* Estados especiales */
+            .floating-btn:focus {
+                outline: 2px solid var(--starflex-crimson-bright);
+                outline-offset: 3px;
+            }
+
             /* Ocultar en impresión */
             @media print {
                 .floating-buttons {
                     display: none;
+                }
+            }
+
+            /* Mejoras para modo oscuro */
+            @media (prefers-color-scheme: dark) {
+                .floating-btn__tooltip {
+                    background: linear-gradient(135deg, 
+                        rgba(184, 0, 46, 0.98) 0%, 
+                        rgba(156, 0, 37, 0.98) 100%
+                    );
+                    border-color: rgba(255, 69, 105, 0.5);
+                }
+            }
+
+            /* Reducir movimiento para usuarios que lo prefieren */
+            @media (prefers-reduced-motion: reduce) {
+                .floating-btn {
+                    animation: none;
+                }
+                
+                .floating-btn::before {
+                    animation: none;
+                }
+                
+                .floating-btn:hover {
+                    transform: scale(1.05);
+                }
+                
+                .floating-btn__icon {
+                    transition: none;
+                }
+                
+                .floating-btn:hover .floating-btn__icon {
+                    transform: scale(1.1);
+                }
+            }
+
+            /* Mejoras de contraste */
+            @media (prefers-contrast: high) {
+                .floating-btn {
+                    border-width: 3px;
+                    border-color: rgba(255, 69, 105, 0.8);
+                }
+                
+                .floating-btn__tooltip {
+                    border-width: 2px;
+                    border-color: rgba(255, 69, 105, 0.8);
                 }
             }
         `;
@@ -654,8 +781,8 @@ class FeatureAnimations {
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializar todas las funcionalidades
     new MobileNav();
-    new VideoPlayer(); // ¡Nuevo reproductor de video!
-    new FloatingButtons(); // ¡Nuevos botones flotantes!
+    new VideoPlayer(); // ¡Reproductor de video funcional!
+    new FloatingButtons(); // ¡Botones flotantes rojizos que no se ocultan!
     new SmoothScroll();
     new FAQAccordion();
     new FeatureAnimations();
