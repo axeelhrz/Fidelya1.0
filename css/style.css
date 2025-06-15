@@ -886,7 +886,7 @@ box-shadow: var(--glow-subtle);
 animation: pulse-gentle 3s infinite;
 }
 
-/* ===== IPHONE 15 PRO ULTRA FUTURISTA ===== */
+/* ===== IPHONE 15 PRO ULTRA FUTURISTA MEJORADO PARA MÓVIL ===== */
 .hero__media {
 display: flex;
 justify-content: center;
@@ -1098,13 +1098,14 @@ rgba(0, 0, 0, 0.98) 100%
 width: 100%;
 height: 100%;
 object-fit: cover;
+object-position: center;
 border-radius: 0 0 46px 46px;
 position: absolute;
 top: 0;
 left: 0;
 z-index: 1;
 transition: all var(--transition);
-background: url('../assets/phones/registro.png') center/cover no-repeat;
+background: url('../assets/phones/Hero.jpg') center/cover no-repeat;
 }
 
 /* ===== SECCIÓN CARACTERÍSTICAS COMPLETAMENTE MODERNIZADA ===== */
@@ -1268,7 +1269,7 @@ color: var(--text-primary);
 transform: translateX(5px);
 }
 
-/* ===== CELULARES CON IMÁGENES REALES ===== */
+/* ===== CELULARES CON IMÁGENES REALES MEJORADOS PARA MÓVIL ===== */
 .feature__phone {
 position: relative;
 width: 320px;
@@ -1381,11 +1382,12 @@ rgba(21, 25, 34, 0.98) 100%
 );
 }
 
-/* ===== IMÁGENES ESPECÍFICAS PARA CADA PANTALLA ===== */
+/* ===== IMÁGENES ESPECÍFICAS PARA CADA PANTALLA MEJORADAS ===== */
 .phone__app-image {
 width: 100%;
 height: 100%;
 object-fit: cover;
+object-position: center;
 border-radius: 0 0 43px 43px;
 position: absolute;
 top: 0;
@@ -1414,7 +1416,7 @@ background: url('../assets/phones/Calendario.jpg') center/cover no-repeat;
 background: url('../assets/phones/Registro.jpg') center/cover no-repeat;
 }
 
-/* Pantalla de Configuración */
+/* Pantalla de Configuración - usando imagen PNG */
 .feature:nth-child(5) .phone__app-image {
 background: url('../assets/phones/Configuracion.png') center/cover no-repeat;
 }
@@ -1523,6 +1525,7 @@ font-weight: 900;
 text-shadow: var(--neon-crimson);
 filter: drop-shadow(0 0 20px rgba(184, 0, 46, 0.4));
 }
+
 .videos__title--highlight::after {
 content: '';
 position: absolute;
@@ -3217,7 +3220,7 @@ transform: perspective(1200px) rotateY(-12deg) rotateX(3deg) translateY(-15px);
 }
 }
 
-/* ===== RESPONSIVE ULTRA OPTIMIZADO ===== */
+/* ===== RESPONSIVE ULTRA OPTIMIZADO PARA MÓVIL ===== */
 @media (max-width: 1024px) {
 .hero__container {
 grid-template-columns: 1fr;
@@ -3362,9 +3365,17 @@ flex-direction: column;
 gap: var(--space-lg);
 }
 
+/* ===== MEJORAS CRÍTICAS PARA MÓVIL - CELULARES ===== */
 .hero__phone {
-width: 300px;
-height: 610px;
+width: 280px;
+height: 570px;
+}
+
+.hero__phone-app-image {
+object-fit: cover;
+object-position: center top;
+background-size: cover;
+background-position: center top;
 }
 
 .btn--cta {
@@ -3391,9 +3402,48 @@ font-size: clamp(2rem, 5vw, 3.5rem);
 font-size: 2.2rem;
 }
 
+/* ===== MEJORAS CRÍTICAS PARA CELULARES EN FEATURES ===== */
 .feature__phone {
-width: 250px;
-height: 510px;
+width: 260px;
+height: 530px;
+transform: none;
+}
+
+.feature__phone:hover {
+transform: scale(1.02);
+}
+
+.phone {
+width: 100%;
+height: 100%;
+}
+
+.phone__app-image {
+object-fit: cover;
+object-position: center top;
+background-size: cover !important;
+background-position: center top !important;
+}
+
+/* Asegurar que las imágenes se vean completas en móvil */
+.feature:nth-child(1) .phone__app-image {
+background: url('../assets/phones/Horario.jpg') center top/cover no-repeat;
+}
+
+.feature:nth-child(2) .phone__app-image {
+background: url('../assets/phones/Estaciones.jpg') center top/cover no-repeat;
+}
+
+.feature:nth-child(3) .phone__app-image {
+background: url('../assets/phones/Calendario.jpg') center top/cover no-repeat;
+}
+
+.feature:nth-child(4) .phone__app-image {
+background: url('../assets/phones/Registro.jpg') center top/cover no-repeat;
+}
+
+.feature:nth-child(5) .phone__app-image {
+background: url('../assets/phones/Configuracion.png') center top/cover no-repeat;
 }
 
 .contact {
@@ -3492,9 +3542,14 @@ font-size: 0.85rem;
 border-radius: 12px;
 }
 
+/* ===== MEJORAS CRÍTICAS PARA PANTALLAS MUY PEQUEÑAS ===== */
 .hero__phone {
-width: 280px;
-height: 570px;
+width: 250px;
+height: 510px;
+}
+
+.hero__phone-app-image {
+background: url('../assets/phones/Hero.jpg') center top/cover no-repeat !important;
 }
 
 .download-btn__image {
@@ -3514,9 +3569,63 @@ font-size: 2.5rem;
 font-size: 2rem;
 }
 
+/* ===== CELULARES ULTRA OPTIMIZADOS PARA PANTALLAS PEQUEÑAS ===== */
 .feature__phone {
 width: 220px;
 height: 450px;
+margin: 0 auto;
+}
+
+.phone {
+border-radius: 45px;
+padding: 6px;
+}
+
+.phone__screen {
+border-radius: 39px;
+}
+
+.phone__island {
+width: 100px;
+height: 30px;
+top: 20px;
+}
+
+.phone__status-bar {
+height: 70px;
+padding: 0 25px 12px;
+font-size: 0.7rem;
+}
+
+.phone__content {
+padding: 80px 15px 15px;
+}
+
+.phone__app-image {
+border-radius: 0 0 35px 35px;
+object-fit: cover;
+object-position: center top;
+}
+
+/* Optimización específica de imágenes para pantallas pequeñas */
+.feature:nth-child(1) .phone__app-image {
+background: url('../assets/phones/Horario.jpg') center top/cover no-repeat !important;
+}
+
+.feature:nth-child(2) .phone__app-image {
+background: url('../assets/phones/Estaciones.jpg') center top/cover no-repeat !important;
+}
+
+.feature:nth-child(3) .phone__app-image {
+background: url('../assets/phones/Calendario.jpg') center top/cover no-repeat !important;
+}
+
+.feature:nth-child(4) .phone__app-image {
+background: url('../assets/phones/Registro.jpg') center top/cover no-repeat !important;
+}
+
+.feature:nth-child(5) .phone__app-image {
+background: url('../assets/phones/Configuracion.png') center top/cover no-repeat !important;
 }
 
 .contact__title {
@@ -3567,6 +3676,45 @@ display: none;
 
 .contact__orb--3 {
 display: none;
+}
+}
+
+/* ===== MEJORAS ESPECÍFICAS PARA IMÁGENES EN MÓVIL ===== */
+@media (max-width: 768px) {
+/* Asegurar que todas las imágenes de los celulares se vean correctamente */
+.hero__phone-app-image,
+.phone__app-image {
+background-attachment: scroll !important;
+background-size: cover !important;
+background-position: center top !important;
+background-repeat: no-repeat !important;
+object-fit: cover !important;
+object-position: center top !important;
+}
+
+/* Mejoras específicas para cada imagen */
+.hero__phone-app-image {
+background-image: url('../assets/phones/Hero.jpg') !important;
+}
+
+.feature:nth-child(1) .phone__app-image {
+background-image: url('../assets/phones/Horario.jpg') !important;
+}
+
+.feature:nth-child(2) .phone__app-image {
+background-image: url('../assets/phones/Estaciones.jpg') !important;
+}
+
+.feature:nth-child(3) .phone__app-image {
+background-image: url('../assets/phones/Calendario.jpg') !important;
+}
+
+.feature:nth-child(4) .phone__app-image {
+background-image: url('../assets/phones/Registro.jpg') !important;
+}
+
+.feature:nth-child(5) .phone__app-image {
+background-image: url('../assets/phones/Configuracion.png') !important;
 }
 }
 
@@ -3769,4 +3917,66 @@ contain: layout style paint;
 
 .hero__phone-content {
 contain: layout style;
+}
+
+/* ===== MEJORAS ADICIONALES PARA MÓVIL ===== */
+@media (max-width: 768px) {
+/* Asegurar que el contenido no se desborde horizontalmente */
+body {
+overflow-x: hidden;
+}
+
+/* Mejorar el espaciado en móvil */
+.hero__cta-group {
+gap: var(--space-lg);
+}
+
+.hero__download {
+gap: var(--space-md);
+}
+
+/* Optimizar el tamaño de los botones para móvil */
+.btn--cta .hero__cta-main {
+gap: var(--space-xs);
+}
+
+.btn--cta .hero__cta-main small {
+font-size: 0.75rem;
+letter-spacing: 1px;
+}
+
+/* Mejorar la legibilidad en pantallas pequeñas */
+.feature__description {
+font-size: 1.1rem;
+line-height: 1.6;
+}
+
+.feature__list-item {
+font-size: 1rem;
+}
+}
+
+/* ===== OPTIMIZACIONES FINALES PARA IMÁGENES EN CELULARES ===== */
+@media (max-width: 480px) {
+/* Asegurar que las imágenes se carguen correctamente en dispositivos pequeños */
+.phone__app-image,
+.hero__phone-app-image {
+background-attachment: scroll !important;
+background-size: cover !important;
+background-position: center top !important;
+background-repeat: no-repeat !important;
+image-rendering: -webkit-optimize-contrast;
+image-rendering: crisp-edges;
+}
+
+/* Optimizar la carga de imágenes */
+.phone__app-image {
+content-visibility: auto;
+contain-intrinsic-size: 220px 450px;
+}
+
+.hero__phone-app-image {
+content-visibility: auto;
+contain-intrinsic-size: 250px 510px;
+}
 }
