@@ -886,7 +886,7 @@ box-shadow: var(--glow-subtle);
 animation: pulse-gentle 3s infinite;
 }
 
-/* ===== IPHONE 15 PRO ULTRA FUTURISTA MEJORADO PARA MÓVIL ===== */
+/* ===== IPHONE 15 PRO ULTRA FUTURISTA OPTIMIZADO PARA DESKTOP ===== */
 .hero__media {
 display: flex;
 justify-content: center;
@@ -1081,7 +1081,7 @@ border-radius: 3px 0 0 3px;
 box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* ===== CONTENIDO DE LA PANTALLA CON IMAGEN REAL ===== */
+/* ===== CONTENIDO DE LA PANTALLA OPTIMIZADO PARA DESKTOP ===== */
 .hero__phone-content {
 padding: 100px 0 0;
 height: 100%;
@@ -1094,18 +1094,22 @@ rgba(0, 0, 0, 0.98) 100%
 );
 }
 
+/* ===== IMAGEN OPTIMIZADA PARA DESKTOP - HERO PHONE ===== */
 .hero__phone-app-image {
 width: 100%;
 height: 100%;
-object-fit: cover;
-object-position: center;
 border-radius: 0 0 46px 46px;
 position: absolute;
 top: 0;
 left: 0;
 z-index: 1;
 transition: all var(--transition);
-background: url('../assets/phones/Hero.jpg') center/cover no-repeat;
+/* Optimización específica para desktop */
+background: url('../assets/phones/Hero.jpg') center/contain no-repeat;
+background-size: contain;
+background-position: center;
+object-fit: contain;
+object-position: center;
 }
 
 /* ===== SECCIÓN CARACTERÍSTICAS COMPLETAMENTE MODERNIZADA ===== */
@@ -1269,7 +1273,7 @@ color: var(--text-primary);
 transform: translateX(5px);
 }
 
-/* ===== CELULARES CON IMÁGENES REALES MEJORADOS PARA MÓVIL ===== */
+/* ===== CELULARES OPTIMIZADOS PARA DESKTOP ===== */
 .feature__phone {
 position: relative;
 width: 320px;
@@ -1382,43 +1386,489 @@ rgba(21, 25, 34, 0.98) 100%
 );
 }
 
-/* ===== IMÁGENES ESPECÍFICAS PARA CADA PANTALLA MEJORADAS ===== */
+/* ===== IMÁGENES OPTIMIZADAS PARA DESKTOP - FEATURES ===== */
 .phone__app-image {
 width: 100%;
 height: 100%;
-object-fit: cover;
-object-position: center;
 border-radius: 0 0 43px 43px;
 position: absolute;
 top: 0;
 left: 0;
 z-index: 1;
 transition: all var(--transition);
+/* Optimización específica para desktop */
+object-fit: contain;
+object-position: center;
+background-size: contain;
+background-position: center;
+background-repeat: no-repeat;
 }
 
-/* Pantalla de Horario */
+/* Pantalla de Horario - Optimizada para Desktop */
 .feature:nth-child(1) .phone__app-image {
-background: url('../assets/phones/Horario.jpg') center/cover no-repeat;
+background: url('../assets/phones/Horario.jpg') center/contain no-repeat;
 }
 
-/* Pantalla de Estaciones */
+/* Pantalla de Estaciones - Optimizada para Desktop */
 .feature:nth-child(2) .phone__app-image {
-background: url('../assets/phones/Estaciones.jpg') center/cover no-repeat;
+background: url('../assets/phones/Estaciones.jpg') center/contain no-repeat;
 }
 
-/* Pantalla de Calendario */
+/* Pantalla de Calendario - Optimizada para Desktop */
 .feature:nth-child(3) .phone__app-image {
-background: url('../assets/phones/Calendario.jpg') center/cover no-repeat;
+background: url('../assets/phones/Calendario.jpg') center/contain no-repeat;
 }
 
-/* Pantalla de Registro */
+/* Pantalla de Registro - Optimizada para Desktop */
 .feature:nth-child(4) .phone__app-image {
-background: url('../assets/phones/Registro.jpg') center/cover no-repeat;
+background: url('../assets/phones/Registro.jpg') center/contain no-repeat;
 }
 
-/* Pantalla de Configuración - usando imagen PNG */
+/* Pantalla de Configuración - Optimizada para Desktop */
 .feature:nth-child(5) .phone__app-image {
-background: url('../assets/phones/Configuracion.png') center/cover no-repeat;
+background: url('../assets/phones/Configuracion.png') center/contain no-repeat;
+}
+
+/* ===== RESTO DEL CSS PERMANECE IGUAL ===== */
+/* ... resto del código CSS sin cambios ... */
+
+/* ===== RESPONSIVE OPTIMIZADO ===== */
+@media (max-width: 1024px) {
+.hero__container {
+grid-template-columns: 1fr;
+gap: var(--space-3xl);
+text-align: center;
+}
+
+.hero__phone-container {
+transform: none;
+}
+
+.hero__phone {
+width: 320px;
+height: 650px;
+}
+
+/* Mantener optimización para tablet */
+.hero__phone-app-image {
+background-size: cover;
+background-position: center top;
+object-fit: cover;
+object-position: center top;
+}
+
+.phone__app-image {
+background-size: cover;
+background-position: center top;
+object-fit: cover;
+object-position: center top;
+}
+
+.feature:nth-child(1) .phone__app-image {
+background: url('../assets/phones/Horario.jpg') center top/cover no-repeat;
+}
+
+.feature:nth-child(2) .phone__app-image {
+background: url('../assets/phones/Estaciones.jpg') center top/cover no-repeat;
+}
+
+.feature:nth-child(3) .phone__app-image {
+background: url('../assets/phones/Calendario.jpg') center top/cover no-repeat;
+}
+
+.feature:nth-child(4) .phone__app-image {
+background: url('../assets/phones/Registro.jpg') center top/cover no-repeat;
+}
+
+.feature:nth-child(5) .phone__app-image {
+background: url('../assets/phones/Configuracion.jpg') center top/cover no-repeat;
+}
+
+.hero__download {
+justify-content: center;
+}
+
+.btn--cta {
+min-width: 200px;
+padding: var(--space-md) var(--space-xl);
+font-size: 0.95rem;
+}
+
+.feature {
+grid-template-columns: 1fr;
+gap: var(--space-xl);
+text-align: center;
+}
+
+.feature:nth-child(even) {
+direction: ltr;
+}
+
+.feature__phone {
+width: 280px;
+height: 570px;
+}
+
+.contact__grid {
+grid-template-columns: repeat(2, 1fr);
+gap: var(--space-xl);
+}
+}
+
+@media (max-width: 768px) {
+/* Cambiar a cover para móvil */
+.hero__phone-app-image {
+background-size: cover !important;
+background-position: center top !important;
+object-fit: cover !important;
+object-position: center top !important;
+}
+
+.phone__app-image {
+background-size: cover !important;
+background-position: center top !important;
+object-fit: cover !important;
+object-position: center top !important;
+}
+
+/* Resto del CSS móvil permanece igual */
+.header {
+padding: var(--space-md) 0;
+}
+
+.nav {
+padding: 0 var(--space-lg);
+}
+
+.nav__logo {
+width: 50px;
+height: 50px;
+}
+
+.nav__menu {
+position: fixed;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100vh;
+background: rgba(10, 13, 20, 0.98);
+backdrop-filter: blur(30px);
+flex-direction: column;
+justify-content: center;
+align-items: center;
+transition: left 0.4s ease;
+transform: none;
+pointer-events: auto;
+z-index: 999;
+}
+
+.nav__menu.active {
+left: 0;
+}
+
+.nav__list {
+flex-direction: column;
+gap: var(--space-3xl);
+background: transparent;
+border: none;
+padding: 0;
+box-shadow: none;
+animation: none;
+}
+
+.nav__link {
+font-size: 1.3rem;
+padding: var(--space-lg) var(--space-2xl);
+text-align: center;
+border-radius: 15px;
+background: rgba(21, 25, 34, 0.6);
+border: 1px solid rgba(255, 255, 255, 0.1);
+min-width: 220px;
+backdrop-filter: blur(15px);
+}
+
+.nav__toggle {
+display: flex;
+}
+
+.container {
+padding: 0 var(--space-lg);
+}
+
+.hero {
+min-height: 90vh;
+}
+
+.hero__container {
+gap: var(--space-2xl);
+}
+
+.hero__title {
+font-size: clamp(2.2rem, 7vw, 4rem);
+margin-bottom: var(--space-lg);
+}
+
+.hero__company-description {
+font-size: 1rem;
+padding: var(--space-lg);
+margin-bottom: var(--space-lg);
+}
+
+.hero__company-description-text {
+margin-left: var(--space-lg);
+}
+
+.hero__subtitle {
+font-size: 1.1rem;
+margin-bottom: var(--space-xl);
+}
+
+.hero__download {
+flex-direction: column;
+gap: var(--space-lg);
+}
+
+.hero__phone {
+width: 280px;
+height: 570px;
+}
+
+.btn--cta {
+min-width: 180px;
+padding: var(--space-md) var(--space-lg);
+font-size: 0.9rem;
+border-radius: 14px;
+}
+
+.download-btn__image {
+height: 50px;
+}
+
+.download-btn--app-store .download-btn__image {
+height: 50px;
+min-width: 150px;
+}
+
+.features__title {
+font-size: clamp(2rem, 5vw, 3.5rem);
+}
+
+.feature__title {
+font-size: 2.2rem;
+}
+
+.feature__phone {
+width: 260px;
+height: 530px;
+transform: none;
+}
+
+.feature__phone:hover {
+transform: scale(1.02);
+}
+
+.contact {
+padding: var(--space-5xl) 0;
+}
+
+.contact__title {
+font-size: clamp(2.2rem, 6vw, 3.5rem);
+margin-bottom: var(--space-lg);
+}
+
+.contact__subtitle {
+font-size: 1.1rem;
+margin-bottom: var(--space-4xl);
+}
+
+.contact__grid {
+grid-template-columns: 1fr;
+gap: var(--space-lg);
+padding: 0 var(--space-lg);
+}
+
+.contact__channel {
+padding: var(--space-xl);
+}
+
+.contact__channel-icon {
+width: 70px;
+height: 70px;
+}
+
+.contact__channel-icon svg {
+width: 32px;
+height: 32px;
+}
+
+.contact__channel-title {
+font-size: 1.2rem;
+}
+
+.contact__channel-description {
+font-size: 0.95rem;
+}
+
+.contact__footer-content {
+flex-direction: column;
+gap: var(--space-xl);
+text-align: center;
+}
+
+.btn--footer {
+min-width: 160px;
+padding: var(--space-sm) var(--space-lg);
+font-size: 0.9rem;
+}
+}
+
+@media (max-width: 480px) {
+.nav__logo {
+width: 45px;
+height: 45px;
+}
+
+.nav__list {
+gap: var(--space-2xl);
+}
+
+.nav__link {
+font-size: 1.1rem;
+min-width: 200px;
+padding: var(--space-md) var(--space-xl);
+}
+
+.hero__title {
+font-size: clamp(2rem, 6vw, 3.2rem);
+line-height: 0.95;
+}
+
+.hero__company-description {
+font-size: 0.95rem;
+padding: var(--space-md);
+}
+
+.hero__company-description-text {
+margin-left: var(--space-md);
+}
+
+.hero__subtitle {
+font-size: 1rem;
+}
+
+.btn--cta {
+min-width: 160px;
+padding: var(--space-sm) var(--space-md);
+font-size: 0.85rem;
+border-radius: 12px;
+}
+
+.hero__phone {
+width: 250px;
+height: 510px;
+}
+
+.download-btn__image {
+height: 45px;
+}
+
+.download-btn--app-store .download-btn__image {
+height: 45px;
+min-width: 135px;
+}
+
+.features__title {
+font-size: 2.5rem;
+}
+
+.feature__title {
+font-size: 2rem;
+}
+
+.feature__phone {
+width: 220px;
+height: 450px;
+margin: 0 auto;
+}
+
+.phone {
+border-radius: 45px;
+padding: 6px;
+}
+
+.phone__screen {
+border-radius: 39px;
+}
+
+.phone__island {
+width: 100px;
+height: 30px;
+top: 20px;
+}
+
+.phone__status-bar {
+height: 70px;
+padding: 0 25px 12px;
+font-size: 0.7rem;
+}
+
+.phone__content {
+padding: 80px 15px 15px;
+}
+
+.phone__app-image {
+border-radius: 0 0 35px 35px;
+}
+
+.contact__title {
+font-size: clamp(1.8rem, 5vw, 2.8rem);
+}
+
+.contact__subtitle {
+font-size: 1rem;
+}
+
+.contact__channel {
+padding: var(--space-lg);
+}
+
+.contact__channel-icon {
+width: 60px;
+height: 60px;
+}
+
+.contact__channel-icon svg {
+width: 28px;
+height: 28px;
+}
+
+.contact__channel-title {
+font-size: 1.1rem;
+}
+
+.contact__channel-description {
+font-size: 0.9rem;
+}
+
+.contact__channel-btn {
+padding: var(--space-sm) var(--space-md);
+font-size: 0.85rem;
+}
+
+.btn--footer {
+min-width: 140px;
+padding: var(--space-xs) var(--space-md);
+font-size: 0.85rem;
+}
+
+/* Ocultar algunos elementos decorativos en pantallas muy pequeñas */
+.hero .floating-orb-3 {
+display: none;
+}
+
+.contact__orb--3 {
+display: none;
+}
 }
 
 /* ===== SECCIÓN DE VIDEOS FUTURISTA ===== */
@@ -3220,504 +3670,6 @@ transform: perspective(1200px) rotateY(-12deg) rotateX(3deg) translateY(-15px);
 }
 }
 
-/* ===== RESPONSIVE ULTRA OPTIMIZADO PARA MÓVIL ===== */
-@media (max-width: 1024px) {
-.hero__container {
-grid-template-columns: 1fr;
-gap: var(--space-3xl);
-text-align: center;
-}
-
-.hero__phone-container {
-transform: none;
-}
-
-.hero__phone {
-width: 320px;
-height: 650px;
-}
-
-.hero__download {
-justify-content: center;
-}
-
-.btn--cta {
-min-width: 200px;
-padding: var(--space-md) var(--space-xl);
-font-size: 0.95rem;
-}
-
-.feature {
-grid-template-columns: 1fr;
-gap: var(--space-xl);
-text-align: center;
-}
-
-.feature:nth-child(even) {
-direction: ltr;
-}
-
-.feature__phone {
-width: 280px;
-height: 570px;
-}
-
-.contact__grid {
-grid-template-columns: repeat(2, 1fr);
-gap: var(--space-xl);
-}
-}
-
-@media (max-width: 768px) {
-.header {
-padding: var(--space-md) 0;
-}
-
-.nav {
-padding: 0 var(--space-lg);
-}
-
-.nav__logo {
-width: 50px;
-height: 50px;
-}
-
-.nav__menu {
-position: fixed;
-top: 0;
-left: -100%;
-width: 100%;
-height: 100vh;
-background: rgba(10, 13, 20, 0.98);
-backdrop-filter: blur(30px);
-flex-direction: column;
-justify-content: center;
-align-items: center;
-transition: left 0.4s ease;
-transform: none;
-pointer-events: auto;
-z-index: 999;
-}
-
-.nav__menu.active {
-left: 0;
-}
-
-.nav__list {
-flex-direction: column;
-gap: var(--space-3xl);
-background: transparent;
-border: none;
-padding: 0;
-box-shadow: none;
-animation: none;
-}
-
-.nav__link {
-font-size: 1.3rem;
-padding: var(--space-lg) var(--space-2xl);
-text-align: center;
-border-radius: 15px;
-background: rgba(21, 25, 34, 0.6);
-border: 1px solid rgba(255, 255, 255, 0.1);
-min-width: 220px;
-backdrop-filter: blur(15px);
-}
-
-.nav__toggle {
-display: flex;
-}
-
-.container {
-padding: 0 var(--space-lg);
-}
-
-.hero {
-min-height: 90vh;
-}
-
-.hero__container {
-gap: var(--space-2xl);
-}
-
-.hero__title {
-font-size: clamp(2.2rem, 7vw, 4rem);
-margin-bottom: var(--space-lg);
-}
-
-.hero__company-description {
-font-size: 1rem;
-padding: var(--space-lg);
-margin-bottom: var(--space-lg);
-}
-
-.hero__company-description-text {
-margin-left: var(--space-lg);
-}
-
-.hero__subtitle {
-font-size: 1.1rem;
-margin-bottom: var(--space-xl);
-}
-
-.hero__download {
-flex-direction: column;
-gap: var(--space-lg);
-}
-
-/* ===== MEJORAS CRÍTICAS PARA MÓVIL - CELULARES ===== */
-.hero__phone {
-width: 280px;
-height: 570px;
-}
-
-.hero__phone-app-image {
-object-fit: cover;
-object-position: center top;
-background-size: cover;
-background-position: center top;
-}
-
-.btn--cta {
-min-width: 180px;
-padding: var(--space-md) var(--space-lg);
-font-size: 0.9rem;
-border-radius: 14px;
-}
-
-.download-btn__image {
-height: 50px;
-}
-
-.download-btn--app-store .download-btn__image {
-height: 50px;
-min-width: 150px;
-}
-
-.features__title {
-font-size: clamp(2rem, 5vw, 3.5rem);
-}
-
-.feature__title {
-font-size: 2.2rem;
-}
-
-/* ===== MEJORAS CRÍTICAS PARA CELULARES EN FEATURES ===== */
-.feature__phone {
-width: 260px;
-height: 530px;
-transform: none;
-}
-
-.feature__phone:hover {
-transform: scale(1.02);
-}
-
-.phone {
-width: 100%;
-height: 100%;
-}
-
-.phone__app-image {
-object-fit: cover;
-object-position: center top;
-background-size: cover !important;
-background-position: center top !important;
-}
-
-/* Asegurar que las imágenes se vean completas en móvil */
-.feature:nth-child(1) .phone__app-image {
-background: url('../assets/phones/Horario.jpg') center top/cover no-repeat;
-}
-
-.feature:nth-child(2) .phone__app-image {
-background: url('../assets/phones/Estaciones.jpg') center top/cover no-repeat;
-}
-
-.feature:nth-child(3) .phone__app-image {
-background: url('../assets/phones/Calendario.jpg') center top/cover no-repeat;
-}
-
-.feature:nth-child(4) .phone__app-image {
-background: url('../assets/phones/Registro.jpg') center top/cover no-repeat;
-}
-
-.feature:nth-child(5) .phone__app-image {
-background: url('../assets/phones/Configuracion.png') center top/cover no-repeat;
-}
-
-.contact {
-padding: var(--space-5xl) 0;
-}
-
-.contact__title {
-font-size: clamp(2.2rem, 6vw, 3.5rem);
-margin-bottom: var(--space-lg);
-}
-
-.contact__subtitle {
-font-size: 1.1rem;
-margin-bottom: var(--space-4xl);
-}
-
-.contact__grid {
-grid-template-columns: 1fr;
-gap: var(--space-lg);
-padding: 0 var(--space-lg);
-}
-
-.contact__channel {
-padding: var(--space-xl);
-}
-
-.contact__channel-icon {
-width: 70px;
-height: 70px;
-}
-
-.contact__channel-icon svg {
-width: 32px;
-height: 32px;
-}
-
-.contact__channel-title {
-font-size: 1.2rem;
-}
-
-.contact__channel-description {
-font-size: 0.95rem;
-}
-
-.contact__footer-content {
-flex-direction: column;
-gap: var(--space-xl);
-text-align: center;
-}
-
-.btn--footer {
-min-width: 160px;
-padding: var(--space-sm) var(--space-lg);
-font-size: 0.9rem;
-}
-}
-
-@media (max-width: 480px) {
-.nav__logo {
-width: 45px;
-height: 45px;
-}
-
-.nav__list {
-gap: var(--space-2xl);
-}
-
-.nav__link {
-font-size: 1.1rem;
-min-width: 200px;
-padding: var(--space-md) var(--space-xl);
-}
-
-.hero__title {
-font-size: clamp(2rem, 6vw, 3.2rem);
-line-height: 0.95;
-}
-
-.hero__company-description {
-font-size: 0.95rem;
-padding: var(--space-md);
-}
-
-.hero__company-description-text {
-margin-left: var(--space-md);
-}
-
-.hero__subtitle {
-font-size: 1rem;
-}
-
-.btn--cta {
-min-width: 160px;
-padding: var(--space-sm) var(--space-md);
-font-size: 0.85rem;
-border-radius: 12px;
-}
-
-/* ===== MEJORAS CRÍTICAS PARA PANTALLAS MUY PEQUEÑAS ===== */
-.hero__phone {
-width: 250px;
-height: 510px;
-}
-
-.hero__phone-app-image {
-background: url('../assets/phones/Hero.jpg') center top/cover no-repeat !important;
-}
-
-.download-btn__image {
-height: 45px;
-}
-
-.download-btn--app-store .download-btn__image {
-height: 45px;
-min-width: 135px;
-}
-
-.features__title {
-font-size: 2.5rem;
-}
-
-.feature__title {
-font-size: 2rem;
-}
-
-/* ===== CELULARES ULTRA OPTIMIZADOS PARA PANTALLAS PEQUEÑAS ===== */
-.feature__phone {
-width: 220px;
-height: 450px;
-margin: 0 auto;
-}
-
-.phone {
-border-radius: 45px;
-padding: 6px;
-}
-
-.phone__screen {
-border-radius: 39px;
-}
-
-.phone__island {
-width: 100px;
-height: 30px;
-top: 20px;
-}
-
-.phone__status-bar {
-height: 70px;
-padding: 0 25px 12px;
-font-size: 0.7rem;
-}
-
-.phone__content {
-padding: 80px 15px 15px;
-}
-
-.phone__app-image {
-border-radius: 0 0 35px 35px;
-object-fit: cover;
-object-position: center top;
-}
-
-/* Optimización específica de imágenes para pantallas pequeñas */
-.feature:nth-child(1) .phone__app-image {
-background: url('../assets/phones/Horario.jpg') center top/cover no-repeat !important;
-}
-
-.feature:nth-child(2) .phone__app-image {
-background: url('../assets/phones/Estaciones.jpg') center top/cover no-repeat !important;
-}
-
-.feature:nth-child(3) .phone__app-image {
-background: url('../assets/phones/Calendario.jpg') center top/cover no-repeat !important;
-}
-
-.feature:nth-child(4) .phone__app-image {
-background: url('../assets/phones/Registro.jpg') center top/cover no-repeat !important;
-}
-
-.feature:nth-child(5) .phone__app-image {
-background: url('../assets/phones/Configuracion.png') center top/cover no-repeat !important;
-}
-
-.contact__title {
-font-size: clamp(1.8rem, 5vw, 2.8rem);
-}
-
-.contact__subtitle {
-font-size: 1rem;
-}
-
-.contact__channel {
-padding: var(--space-lg);
-}
-
-.contact__channel-icon {
-width: 60px;
-height: 60px;
-}
-
-.contact__channel-icon svg {
-width: 28px;
-height: 28px;
-}
-
-.contact__channel-title {
-font-size: 1.1rem;
-}
-
-.contact__channel-description {
-font-size: 0.9rem;
-}
-
-.contact__channel-btn {
-padding: var(--space-sm) var(--space-md);
-font-size: 0.85rem;
-}
-
-.btn--footer {
-min-width: 140px;
-padding: var(--space-xs) var(--space-md);
-font-size: 0.85rem;
-}
-
-/* Ocultar algunos elementos decorativos en pantallas muy pequeñas */
-.hero .floating-orb-3 {
-display: none;
-}
-
-.contact__orb--3 {
-display: none;
-}
-}
-
-/* ===== MEJORAS ESPECÍFICAS PARA IMÁGENES EN MÓVIL ===== */
-@media (max-width: 768px) {
-/* Asegurar que todas las imágenes de los celulares se vean correctamente */
-.hero__phone-app-image,
-.phone__app-image {
-background-attachment: scroll !important;
-background-size: cover !important;
-background-position: center top !important;
-background-repeat: no-repeat !important;
-object-fit: cover !important;
-object-position: center top !important;
-}
-
-/* Mejoras específicas para cada imagen */
-.hero__phone-app-image {
-background-image: url('../assets/phones/Hero.jpg') !important;
-}
-
-.feature:nth-child(1) .phone__app-image {
-background-image: url('../assets/phones/Horario.jpg') !important;
-}
-
-.feature:nth-child(2) .phone__app-image {
-background-image: url('../assets/phones/Estaciones.jpg') !important;
-}
-
-.feature:nth-child(3) .phone__app-image {
-background-image: url('../assets/phones/Calendario.jpg') !important;
-}
-
-.feature:nth-child(4) .phone__app-image {
-background-image: url('../assets/phones/Registro.jpg') !important;
-}
-
-.feature:nth-child(5) .phone__app-image {
-background-image: url('../assets/phones/Configuracion.png') !important;
-}
-}
-
 /* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
 .hero__phone,
 .hero__phone-container,
@@ -3917,66 +3869,4 @@ contain: layout style paint;
 
 .hero__phone-content {
 contain: layout style;
-}
-
-/* ===== MEJORAS ADICIONALES PARA MÓVIL ===== */
-@media (max-width: 768px) {
-/* Asegurar que el contenido no se desborde horizontalmente */
-body {
-overflow-x: hidden;
-}
-
-/* Mejorar el espaciado en móvil */
-.hero__cta-group {
-gap: var(--space-lg);
-}
-
-.hero__download {
-gap: var(--space-md);
-}
-
-/* Optimizar el tamaño de los botones para móvil */
-.btn--cta .hero__cta-main {
-gap: var(--space-xs);
-}
-
-.btn--cta .hero__cta-main small {
-font-size: 0.75rem;
-letter-spacing: 1px;
-}
-
-/* Mejorar la legibilidad en pantallas pequeñas */
-.feature__description {
-font-size: 1.1rem;
-line-height: 1.6;
-}
-
-.feature__list-item {
-font-size: 1rem;
-}
-}
-
-/* ===== OPTIMIZACIONES FINALES PARA IMÁGENES EN CELULARES ===== */
-@media (max-width: 480px) {
-/* Asegurar que las imágenes se carguen correctamente en dispositivos pequeños */
-.phone__app-image,
-.hero__phone-app-image {
-background-attachment: scroll !important;
-background-size: cover !important;
-background-position: center top !important;
-background-repeat: no-repeat !important;
-image-rendering: -webkit-optimize-contrast;
-image-rendering: crisp-edges;
-}
-
-/* Optimizar la carga de imágenes */
-.phone__app-image {
-content-visibility: auto;
-contain-intrinsic-size: 220px 450px;
-}
-
-.hero__phone-app-image {
-content-visibility: auto;
-contain-intrinsic-size: 250px 510px;
-}
 }
