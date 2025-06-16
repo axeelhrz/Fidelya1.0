@@ -1,51 +1,16 @@
-import {
-  Dashboard,
-  People,
-  EventNote,
-  Warning,
-  Analytics,
-  Settings,
+import { 
+  Dashboard as DashboardIcon,
+  People as PeopleIcon,
+  Psychology as PsychologyIcon,
+  Assignment as AssignmentIcon,
+  NotificationsActive as NotificationsIcon,
+  BarChart as BarChartIcon,
+  Settings as SettingsIcon,
+  AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
 
 export interface NavigationItem {
+  id: string;
   label: string;
-  path: string;
-  icon: React.ReactNode;
-  badge?: number;
-  adminOnly?: boolean;
+  path: string
 }
-
-export const NAVIGATION_ITEMS: NavigationItem[] = [
-  {
-    label: 'Dashboard',
-    path: '/dashboard',
-    icon: Dashboard,
-  },
-  {
-    label: 'Pacientes',
-    path: '/dashboard/patients',
-    icon: People,
-  },
-  {
-    label: 'Sesiones',
-    path: '/dashboard/sessions',
-    icon: EventNote,
-  },
-  {
-    label: 'Alertas',
-    path: '/dashboard/alerts',
-    icon: Warning,
-    badge: 3,
-  },
-  {
-    label: 'Métricas',
-    path: '/dashboard/metrics',
-    icon: Analytics,
-  },
-  {
-    label: 'Configuración',
-    path: '/dashboard/settings',
-    icon: Settings,
-    adminOnly: true,
-  },
-];
