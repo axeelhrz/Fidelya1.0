@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Order, Shift, Menu } from '@/types/database'
+import { Pedido, Shift, Menu } from '@/types/database'
 import { X, Save, Trash2, Loader2, ChefHat, Calendar, Clock, FileText } from 'lucide-react'
 
 interface OrderModalProps {
@@ -13,7 +13,7 @@ interface OrderModalProps {
   onClose: () => void
   selectedDate: Date
   selectedShift: Shift
-  existingOrder?: Order | null
+  existingOrder?: Pedido | null
   onOrderSaved: () => void
   availableMenus: Menu[]
 }
@@ -37,10 +37,10 @@ export default function OrderModal({
     if (existingOrder) {
       // Buscar el menú correspondiente al pedido existente
       const matchingMenu = availableMenus.find(menu => 
-        menu.descripcion_opcion === existingOrder.menu_item
+        menu.descripcion_opcion === existingOrder.descripcion_opcion
       )
       setSelectedMenuId(matchingMenu?.id.toString() || '')
-      setNotes(existingOrder.notes || '')
+      setNotes(existingOrder.notas || '')
     } else {
       setSelectedMenuId('')
       setNotes('')
@@ -64,23 +64,33 @@ export default function OrderModal({
     setError('')
 
     try {
-      const orderData = {
-        trabajador_id: profile.id,
-        shift_id: selectedShift.id,
-        order_date: selectedDate.toISOString().split('T')[0],
-        menu_item: selectedMenu.descripcion_opcion,
-        notes: notes.trim() || null,
-        status: 'pending' as const
+      // Get day name in Spanish
+      const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+      const dayName = dayNames[selectedDate.getDay()]
+
+      const pedidoData = {
+        nombre_trabajador: profile.nombre_completo,
+        rut_trabajador: profile.rut,
+        turno_elegido: selectedShift.name,
+        fecha_entrega: selectedDate.toISOString().split('T')[0],
+        dia_semana: dayName,
+        numero_dia: selectedDate.getDate(),
+        codigo_opcion: selectedMenu.codigo_opcion,
+        descripcion_opcion: selectedMenu.descripcion_opcion,
+        categoria_opcion: selectedMenu.categoria,
+        notas: notes.trim() || null,
+        empresa: profile.empresa || ''
       }
 
       if (existingOrder) {
         // Update existing order
         const { error } = await supabase
-          .from('orders')
+          .from('pedidos')
           .update({
-            menu_item: orderData.menu_item,
-            notes: orderData.notes,
-            updated_at: new Date().toISOString()
+            codigo_opcion: pedidoData.codigo_opcion,
+            descripcion_opcion: pedidoData.descripcion_opcion,
+            categoria_opcion: pedidoData.categoria_opcion,
+            notas: pedidoData.notas
           })
           .eq('id', existingOrder.id)
 
@@ -88,8 +98,8 @@ export default function OrderModal({
       } else {
         // Create new order
         const { error } = await supabase
-          .from('orders')
-          .insert([orderData])
+          .from('pedidos')
+          .insert([pedidoData])
 
         if (error) throw error
       }
@@ -97,6 +107,7 @@ export default function OrderModal({
       onOrderSaved()
       onClose()
     } catch (err: unknown) {
+      console.error('Error saving order:', err)
       setError(err instanceof Error ? err.message : 'Error al guardar el pedido')
     } finally {
       setLoading(false)
@@ -115,7 +126,7 @@ export default function OrderModal({
 
     try {
       const { error } = await supabase
-        .from('orders')
+        .from('pedidos')
         .delete()
         .eq('id', existingOrder.id)
 
@@ -124,6 +135,7 @@ export default function OrderModal({
       onOrderSaved()
       onClose()
     } catch (err: unknown) {
+      console.error('Error deleting order:', err)
       setError(err instanceof Error ? err.message : 'Error al eliminar el pedido')
     } finally {
       setLoading(false)

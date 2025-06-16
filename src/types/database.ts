@@ -65,39 +65,51 @@ export interface Database {
           created_at?: string
         }
       }
-      orders: {
+      pedidos: {
         Row: {
-          id: string
-          trabajador_id: number
-          shift_id: string
-          order_date: string
-          menu_item: string
-          status: 'pending' | 'confirmed' | 'delivered' | 'cancelled'
-          notes: string | null
+          id: number
+          nombre_trabajador: string
+          rut_trabajador: string
+          turno_elegido: string
+          fecha_entrega: string
+          dia_semana: string
+          numero_dia: number
+          codigo_opcion: string
+          descripcion_opcion: string
+          categoria_opcion: string
+          notas: string | null
           created_at: string
-          updated_at: string
+          empresa: string
         }
         Insert: {
-          id?: string
-          trabajador_id: number
-          shift_id: string
-          order_date: string
-          menu_item: string
-          status?: 'pending' | 'confirmed' | 'delivered' | 'cancelled'
-          notes?: string | null
+          id?: number
+          nombre_trabajador: string
+          rut_trabajador: string
+          turno_elegido: string
+          fecha_entrega: string
+          dia_semana: string
+          numero_dia: number
+          codigo_opcion: string
+          descripcion_opcion: string
+          categoria_opcion: string
+          notas?: string | null
           created_at?: string
-          updated_at?: string
+          empresa: string
         }
         Update: {
-          id?: string
-          trabajador_id?: number
-          shift_id?: string
-          order_date?: string
-          menu_item?: string
-          status?: 'pending' | 'confirmed' | 'delivered' | 'cancelled'
-          notes?: string | null
+          id?: number
+          nombre_trabajador?: string
+          rut_trabajador?: string
+          turno_elegido?: string
+          fecha_entrega?: string
+          dia_semana?: string
+          numero_dia?: number
+          codigo_opcion?: string
+          descripcion_opcion?: string
+          categoria_opcion?: string
+          notas?: string | null
           created_at?: string
-          updated_at?: string
+          empresa?: string
         }
       }
       menus: {
@@ -141,8 +153,11 @@ export interface Database {
 
 export type Trabajador = Database['public']['Tables']['trabajadores']['Row']
 export type Shift = Database['public']['Tables']['shifts']['Row']
-export type Order = Database['public']['Tables']['orders']['Row']
+export type Pedido = Database['public']['Tables']['pedidos']['Row']
 export type Menu = Database['public']['Tables']['menus']['Row']
+
+// Keep Order as alias for backward compatibility, but map to Pedido
+export type Order = Pedido
 
 // Nueva interfaz para empresas
 export interface Empresa {

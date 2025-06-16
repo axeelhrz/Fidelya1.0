@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import OrderModal from './OrderModal'
-import { Order, Shift, Menu } from '@/types/database'
+import { Pedido, Shift, Menu } from '@/types/database'
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -28,39 +28,48 @@ interface CalendarProps {
 
 export default function Calendar({ selectedShift, currentDate, onDateChange }: CalendarProps) {
   const { user, profile } = useAuth()
-  const [orders, setOrders] = useState<Order[]>([])
+  const [orders, setOrders] = useState<Pedido[]>([])
   const [menus, setMenus] = useState<Menu[]>([])
   const [loading, setLoading] = useState(true)
   const [showOrderModal, setShowOrderModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [selectedOrder, setSelectedOrder] = useState<Pedido | null>(null)
 
   useEffect(() => {
-    if (user && selectedShift) {
+    if (user && profile && selectedShift) {
       fetchOrders()
       fetchMenus()
     }
-  }, [user, selectedShift, currentDate])
+  }, [user, profile, selectedShift, currentDate])
 
   const fetchOrders = async () => {
-    if (!user || !selectedShift || !profile) return
+    if (!user || !profile || !selectedShift) return
 
     try {
+      setLoading(true)
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
 
       const { data, error } = await supabase
-        .from('orders')
+        .from('pedidos')
         .select('*')
-        .eq('trabajador_id', profile.id)
-        .eq('shift_id', selectedShift.id)
-        .gte('order_date', startOfMonth.toISOString().split('T')[0])
-        .lte('order_date', endOfMonth.toISOString().split('T')[0])
+        .eq('nombre_trabajador', profile.nombre_completo)
+        .eq('rut_trabajador', profile.rut)
+        .eq('turno_elegido', selectedShift.name)
+        .gte('fecha_entrega', startOfMonth.toISOString().split('T')[0])
+        .lte('fecha_entrega', endOfMonth.toISOString().split('T')[0])
+        .order('fecha_entrega', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching orders:', error)
+        throw error
+      }
+
       setOrders(data || [])
     } catch (error) {
       console.error('Error fetching orders:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -110,9 +119,9 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
     return days
   }
 
-  const getOrderForDate = (date: Date): Order | null => {
+  const getOrderForDate = (date: Date): Pedido | null => {
     const dateStr = date.toISOString().split('T')[0]
-    return orders.find(order => order.order_date === dateStr) || null
+    return orders.find(order => order.fecha_entrega === dateStr) || null
   }
 
   const getMenusForDate = (date: Date): Menu[] => {
@@ -138,30 +147,14 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
     onDateChange(newDate)
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return <CheckCircle className="w-4 h-4 text-emerald-600" />
-      case 'pending':
-        return <Clock className="w-4 h-4 text-amber-600" />
-      case 'cancelled':
-        return <AlertCircle className="w-4 h-4 text-red-600" />
-      default:
-        return null
-    }
+  const getStatusIcon = (order: Pedido) => {
+    // Since pedidos table doesn't have status, we'll show a confirmed icon for existing orders
+    return <CheckCircle className="w-4 h-4 text-emerald-600" />
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'bg-emerald-50 border-emerald-200'
-      case 'pending':
-        return 'bg-amber-50 border-amber-200'
-      case 'cancelled':
-        return 'bg-red-50 border-red-200'
-      default:
-        return 'bg-slate-50 border-slate-200'
-    }
+  const getStatusColor = (order: Pedido) => {
+    // Since pedidos table doesn't have status, we'll use a default confirmed style
+    return 'bg-emerald-50 border-emerald-200'
   }
 
   const weekDays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
@@ -193,138 +186,118 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
   return (
     <>
       <Card className="bg-white shadow-sm border border-slate-200">
-        <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
+        <CardHeader className="border-b border-slate-200">
           <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigateMonth('prev')}
-              className="text-white hover:bg-white/20 rounded-xl"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            
-            <div className="text-center">
-              <CardTitle className="text-2xl font-bold">
-                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-              </CardTitle>
-              <p className="text-indigo-100 text-sm mt-1">
-                Gestiona tus pedidos de almuerzo
-              </p>
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                <CalendarIcon className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold text-slate-900">
+                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                </CardTitle>
+                <p className="text-sm text-slate-600">
+                  Selecciona un día para gestionar tu pedido
+                </p>
+              </div>
             </div>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigateMonth('next')}
-              className="text-white hover:bg-white/20 rounded-xl"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigateMonth('prev')}
+                className="border-slate-300 hover:bg-slate-50"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigateMonth('next')}
+                className="border-slate-300 hover:bg-slate-50"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </CardHeader>
-        
+
         <CardContent className="p-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-slate-600">Cargando calendario...</p>
-              </div>
+              <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Week day headers */}
+              {/* Week days header */}
               <div className="grid grid-cols-7 gap-2">
-                {weekDays.map(day => (
-                  <div key={day} className="p-3 text-center font-semibold text-slate-700 bg-slate-50 rounded-xl border border-slate-200">
-                    <span className="hidden sm:block">{day}</span>
-                    <span className="sm:hidden">{day.slice(0, 3)}</span>
+                {weekDays.map((day) => (
+                  <div key={day} className="text-center text-sm font-semibold text-slate-600 py-2">
+                    {day.slice(0, 3)}
                   </div>
                 ))}
               </div>
-              
-              {/* Calendar days */}
+
+              {/* Calendar grid */}
               <div className="grid grid-cols-7 gap-2">
                 {getDaysInMonth().map((date, index) => {
                   if (!date) {
-                    return <div key={index} className="p-3 h-32" />
+                    return <div key={index} className="h-20" />
                   }
-                  
+
                   const today = new Date()
                   today.setHours(0, 0, 0, 0)
                   const isToday = date.getTime() === today.getTime()
                   const isPast = date < today
                   const order = getOrderForDate(date)
-                  const dayMenus = getMenusForDate(date)
-                  
+                  const hasMenus = getMenusForDate(date).length > 0
+
                   return (
                     <div
-                      key={index}
-                      onClick={() => !isPast && handleDayClick(date)}
+                      key={date.toISOString()}
                       className={`
-                        p-3 h-32 border-2 rounded-xl transition-all duration-200 cursor-pointer
+                        h-20 border border-slate-200 rounded-xl p-2 transition-all duration-200 relative
                         ${isPast 
-                          ? 'bg-slate-50 border-slate-200 cursor-not-allowed opacity-60' 
-                          : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-md hover:scale-105'
+                          ? 'bg-slate-50 cursor-not-allowed opacity-60' 
+                          : hasMenus
+                            ? 'cursor-pointer hover:shadow-md hover:border-indigo-300 bg-white'
+                            : 'bg-slate-50 cursor-not-allowed opacity-40'
                         }
-                        ${isToday ? 'ring-2 ring-indigo-500 border-indigo-500 shadow-md' : ''}
-                        ${order ? `${getStatusColor(order.status)} shadow-sm` : ''}
+                        ${isToday ? 'ring-2 ring-indigo-500 border-indigo-500' : ''}
+                        ${order ? getStatusColor(order) : ''}
                       `}
+                      onClick={() => !isPast && hasMenus && handleDayClick(date)}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`text-sm font-bold ${
-                          isToday ? 'text-indigo-600' : 
-                          isPast ? 'text-slate-400' : 'text-slate-900'
-                        }`}>
-                          {date.getDate()}
-                        </span>
-                        {order && getStatusIcon(order.status)}
-                      </div>
-                      
-                      <div className="space-y-1">
-                        {dayMenus.length > 0 ? (
-                          <div className="space-y-1">
-                            {dayMenus.slice(0, 2).map((menu, idx) => (
-                              <div key={idx} className="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-lg truncate font-medium">
-                                {menu.descripcion_opcion}
-                              </div>
-                            ))}
-                            {dayMenus.length > 2 && (
-                              <div className="text-xs text-slate-500 text-center font-medium">
-                                +{dayMenus.length - 2} opciones más
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center text-xs text-slate-400">
-                            <Package className="w-3 h-3 mr-1" />
-                            Sin menú
+                      <div className="flex flex-col h-full">
+                        <div className="flex items-center justify-between">
+                          <span className={`
+                            text-sm font-medium
+                            ${isToday ? 'text-indigo-600' : isPast ? 'text-slate-400' : 'text-slate-900'}
+                          `}>
+                            {date.getDate()}
+                          </span>
+                          {isToday && (
+                            <div className="w-2 h-2 bg-indigo-500 rounded-full" />
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 flex items-center justify-center">
+                          {order ? (
+                            <div className="flex items-center space-x-1">
+                              {getStatusIcon(order)}
+                              <Edit className="w-3 h-3 text-slate-500" />
+                            </div>
+                          ) : hasMenus && !isPast ? (
+                            <Plus className="w-4 h-4 text-slate-400" />
+                          ) : null}
+                        </div>
+
+                        {order && (
+                          <div className="text-xs text-slate-600 truncate">
+                            {order.descripcion_opcion}
                           </div>
                         )}
                       </div>
-
-                      {order ? (
-                        <div className="mt-2">
-                          <div className="text-xs font-medium text-slate-800 truncate">
-                            {order.menu_item}
-                          </div>
-                          {!isPast && (
-                            <div className="flex items-center justify-center mt-1">
-                              <Edit className="w-3 h-3 text-slate-400" />
-                            </div>
-                          )}
-                        </div>
-                      ) : !isPast ? (
-                        <div className="flex items-center justify-center mt-2">
-                          <div className="flex flex-col items-center space-y-1">
-                            <div className="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center">
-                              <Plus className="w-4 h-4 text-indigo-600" />
-                            </div>
-                            <span className="text-xs text-slate-600 font-medium">Pedir</span>
-                          </div>
-                        </div>
-                      ) : null}
                     </div>
                   )
                 })}
@@ -335,7 +308,7 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
       </Card>
 
       {/* Order Modal */}
-      {showOrderModal && selectedDate && (
+      {showOrderModal && selectedDate && selectedShift && (
         <OrderModal
           isOpen={showOrderModal}
           onClose={() => setShowOrderModal(false)}
