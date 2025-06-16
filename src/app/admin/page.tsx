@@ -43,29 +43,8 @@ interface AdminStats {
   pedidosEsteMes: number
 }
 
-interface PedidoCompleto {
-  id: number
-  nombre_trabajador: string
-  rut_trabajador: string | null
-  turno_elegido: string
-  fecha_entrega: string
-  dia_semana: string
-  numero_dia: number
-  codigo_opcion: string
-  descripcion_opcion: string
-  categoria_opcion: string
-  notas: string | null
-  empresa: string
-  created_at: string
-  trabajador_info?: {
-    id: number
-    nombre_completo: string
-    rut: string
-    empresa: string
-    rol: string | null
-    turno_habitual: string | null
-    activo: boolean
-  }
+interface PedidoCompleto extends Pedido {
+  trabajador_info?: Trabajador
 }
 
 interface PedidosPorEmpresa {
@@ -89,6 +68,7 @@ export default function AdminPage() {
     pedidosEsteMes: 0
   })
   const [pedidos, setPedidos] = useState<PedidoCompleto[]>([])
+  const [trabajadores, setTrabajadores] = useState<Trabajador[]>([])
   const [pedidosPorEmpresa, setPedidosPorEmpresa] = useState<PedidosPorEmpresa[]>([])
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [searchTerm, setSearchTerm] = useState('')
@@ -123,9 +103,9 @@ export default function AdminPage() {
     setLoadingStats(true)
     try {
       await Promise.all([
+        fetchTrabajadores(),
         fetchPedidos(),
-        fetchStats(),
-        fetchTrabajadoresActivos()
+        fetchStats()
       ])
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -134,28 +114,55 @@ export default function AdminPage() {
     }
   }
 
-  const fetchPedidos = async () => {
+  const fetchTrabajadores = async () => {
     try {
-      // Fetch pedidos for selected date
-      const { data: pedidosData, error: pedidosError } = await supabase
-        .from('pedidos')
-        .select('*')
-        .eq('fecha_entrega', selectedDate)
-        .order('created_at', { ascending: false })
-
-      if (pedidosError) throw pedidosError
-
-      // Fetch trabajadores info for cross-reference
-      const { data: trabajadoresData, error: trabajadoresError } = await supabase
+      const { data, error } = await supabase
         .from('trabajadores')
         .select('*')
         .eq('activo', true)
 
-      if (trabajadoresError) throw trabajadoresError
+      if (error) throw error
+      setTrabajadores(data || [])
+    } catch (error) {
+      console.error('Error fetching trabajadores:', error)
+    }
+  }
+
+  const fetchPedidos = async () => {
+    try {
+      console.log('Fetching pedidos for date:', selectedDate)
+      
+      // Fetch pedidos for selected date with exact column names
+      const { data: pedidosData, error: pedidosError } = await supabase
+        .from('pedidos')
+        .select(`
+          id,
+          nombre_trabajador,
+          rut_trabajador,
+          turno_elegido,
+          fecha_entrega,
+          dia_semana,
+          numero_dia,
+          codigo_opcion,
+          descripcion_opcion,
+          categoria_opcion,
+          notas,
+          created_at,
+          empresa
+        `)
+        .eq('fecha_entrega', selectedDate)
+        .order('created_at', { ascending: false })
+
+      if (pedidosError) {
+        console.error('Error fetching pedidos:', pedidosError)
+        throw pedidosError
+      }
+
+      console.log('Pedidos fetched:', pedidosData?.length || 0)
 
       // Combine pedidos with trabajador info
       const pedidosCompletos: PedidoCompleto[] = pedidosData?.map(pedido => {
-        const trabajadorInfo = trabajadoresData?.find(t => 
+        const trabajadorInfo = trabajadores.find(t => 
           t.nombre_completo === pedido.nombre_trabajador ||
           (pedido.rut_trabajador && t.rut === pedido.rut_trabajador)
         )
@@ -217,29 +224,12 @@ export default function AdminPage() {
         pedidosDia: diaCount,
         pedidosNoche: nocheCount,
         empresasActivas: empresasUnicas.size,
+        trabajadoresActivos: trabajadores.length,
         pedidosHoy: todayData?.length || 0,
         pedidosEsteMes: monthData?.length || 0
       }))
     } catch (error) {
       console.error('Error fetching stats:', error)
-    }
-  }
-
-  const fetchTrabajadoresActivos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('trabajadores')
-        .select('id')
-        .eq('activo', true)
-
-      if (error) throw error
-
-      setStats(prev => ({
-        ...prev,
-        trabajadoresActivos: data?.length || 0
-      }))
-    } catch (error) {
-      console.error('Error fetching trabajadores:', error)
     }
   }
 
@@ -289,7 +279,8 @@ export default function AdminPage() {
         (pedido.rut_trabajador && pedido.rut_trabajador.includes(searchTerm)) ||
         pedido.descripcion_opcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pedido.empresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        pedido.codigo_opcion.toLowerCase().includes(searchTerm.toLowerCase())
+        pedido.codigo_opcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        pedido.categoria_opcion.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -308,9 +299,9 @@ export default function AdminPage() {
       
       // Convert to CSV
       const headers = [
-        'ID', 'Nombre Trabajador', 'RUT Trabajador', 'Empresa', 'Turno', 
-        'Fecha Entrega', 'Día Semana', 'Código Opción', 
-        'Descripción Opción', 'Categoría', 'Notas', 'Fecha Creación',
+        'ID', 'Nombre Trabajador', 'RUT Trabajador', 'Empresa', 'Turno Elegido', 
+        'Fecha Entrega', 'Día Semana', 'Número Día', 'Código Opción', 
+        'Descripción Opción', 'Categoría Opción', 'Notas', 'Fecha Creación',
         'Rol Trabajador', 'Turno Habitual', 'Estado Trabajador'
       ]
       
@@ -324,6 +315,7 @@ export default function AdminPage() {
           pedido.turno_elegido === 'dia' ? 'Día' : 'Noche',
           pedido.fecha_entrega,
           `"${pedido.dia_semana}"`,
+          pedido.numero_dia,
           pedido.codigo_opcion,
           `"${pedido.descripcion_opcion}"`,
           `"${pedido.categoria_opcion}"`,
@@ -478,7 +470,7 @@ export default function AdminPage() {
                 />
               </div>
               <div className="text-sm text-slate-600">
-                Última actualización: {new Date().toLocaleTimeString('es-ES')}
+                Última actualización: {new Date().toLocaleTimeString('es-ES')} | {pedidos.length} pedidos cargados
               </div>
             </div>
           </CardContent>
@@ -741,6 +733,9 @@ export default function AdminPage() {
                             <div className="flex-1">
                               <div className="flex items-center space-x-3 mb-2">
                                 <h4 className="font-semibold text-slate-900 text-lg">{pedido.nombre_trabajador}</h4>
+                                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                                  ID: {pedido.id}
+                                </span>
                                 {pedido.trabajador_info?.rol && (
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                     pedido.trabajador_info.rol.toLowerCase() === 'admin' || pedido.trabajador_info.rol.toLowerCase() === 'administrador'
