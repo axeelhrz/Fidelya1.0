@@ -400,6 +400,12 @@ export default function AdminPage() {
     }
   }
 
+  // Función para limpiar texto y evitar problemas con CSV
+  const cleanText = (text: string | null | undefined): string => {
+    if (!text) return ''
+    return text.replace(/"/g, '""').replace(/,/g, ' ')
+  }
+
   const generateKitchenCSV = () => {
     const dateFormatted = new Date(selectedDate).toLocaleDateString('es-ES', { 
       weekday: 'long', 
@@ -410,52 +416,37 @@ export default function AdminPage() {
 
     let content = [
       // Header principal
-      'VISTA DIARIA PARA COCINA',
-      `Fecha: ${dateFormatted}`,
-      '', // Línea vacía
-      '', // Línea vacía
-      
-      // Sección Turno Día
-      'PEDIDOS - TURNO DÍA',
-      '', // Línea vacía
+      `VISTA DIARIA PARA COCINA - ${dateFormatted}`,
+      '',
+      'PEDIDOS TURNO DIA',
+      ''
     ]
 
     if (vistaCocina.dia.length > 0) {
       // Headers para turno día
-      content.push('Plato,Código,Categoría,Cantidad,Trabajadores')
+      content.push('Plato,Categoria,Cantidad,Trabajadores')
       
       // Datos del turno día
       vistaCocina.dia.forEach(plato => {
-        content.push([
-          `"${plato.descripcion_opcion}"`,
-          plato.codigo_opcion,
-          plato.categoria_opcion,
-          plato.cantidad.toString(),
-          `"${plato.trabajadores.join('; ')}"`
-        ].join(','))
+        const trabajadoresText = plato.trabajadores.join(' - ')
+        content.push(`"${cleanText(plato.descripcion_opcion)}","${plato.categoria_opcion}",${plato.cantidad},"${cleanText(trabajadoresText)}"`)
       })
     } else {
       content.push('No hay pedidos para este turno')
     }
 
-    content.push('') // Línea vacía
-    content.push('') // Línea vacía
-    content.push('PEDIDOS - TURNO NOCHE')
-    content.push('') // Línea vacía
+    content.push('')
+    content.push('PEDIDOS TURNO NOCHE')
+    content.push('')
 
     if (vistaCocina.noche.length > 0) {
       // Headers para turno noche
-      content.push('Plato,Código,Categoría,Cantidad,Trabajadores')
+      content.push('Plato,Categoria,Cantidad,Trabajadores')
       
       // Datos del turno noche
       vistaCocina.noche.forEach(plato => {
-        content.push([
-          `"${plato.descripcion_opcion}"`,
-          plato.codigo_opcion,
-          plato.categoria_opcion,
-          plato.cantidad.toString(),
-          `"${plato.trabajadores.join('; ')}"`
-        ].join(','))
+        const trabajadoresText = plato.trabajadores.join(' - ')
+        content.push(`"${cleanText(plato.descripcion_opcion)}","${plato.categoria_opcion}",${plato.cantidad},"${cleanText(trabajadoresText)}"`)
       })
     } else {
       content.push('No hay pedidos para este turno')
@@ -474,13 +465,12 @@ export default function AdminPage() {
 
     let content = [
       // Header principal
-      'PEDIDOS POR TRABAJADOR',
-      `Fecha: ${dateFormatted}`,
+      `PEDIDOS POR TRABAJADOR - ${dateFormatted}`,
       `Total de pedidos: ${pedidos.length}`,
-      '', // Línea vacía
+      '',
       
       // Headers de columnas
-      'Trabajador,RUT,Empresa,Turno,Plato,Código,Categoría,Notas,Hora Pedido'
+      'Trabajador,Empresa,Turno,Plato,Notas'
     ]
 
     // Ordenar pedidos por trabajador y luego por turno
@@ -491,17 +481,10 @@ export default function AdminPage() {
 
     // Agregar datos de cada pedido
     sortedPedidos.forEach(pedido => {
-      content.push([
-        `"${pedido.nombre_trabajador}"`,
-        pedido.rut_trabajador || 'Sin RUT',
-        `"${pedido.empresa}"`,
-        pedido.turno_elegido === 'dia' ? 'Día' : 'Noche',
-        `"${pedido.descripcion_opcion}"`,
-        pedido.codigo_opcion,
-        pedido.categoria_opcion,
-        `"${pedido.notas || 'Sin notas'}"`,
-        new Date(pedido.created_at).toLocaleTimeString('es-ES')
-      ].join(','))
+      const turnoText = pedido.turno_elegido === 'dia' ? 'Dia' : 'Noche'
+      const notasText = pedido.notas || 'Sin notas'
+      
+      content.push(`"${cleanText(pedido.nombre_trabajador)}","${cleanText(pedido.empresa)}","${turnoText}","${cleanText(pedido.descripcion_opcion)}","${cleanText(notasText)}"`)
     })
 
     return content.join('\n')
@@ -517,57 +500,40 @@ export default function AdminPage() {
 
     let content = [
       // Header principal
-      'PEDIDOS POR TURNO',
-      `Fecha: ${dateFormatted}`,
-      '', // Línea vacía
+      `PEDIDOS POR TURNO - ${dateFormatted}`,
+      '',
     ]
 
     // Sección Turno Día
     const pedidosDia = pedidos.filter(p => p.turno_elegido === 'dia')
-    content.push('TURNO DÍA')
-    content.push(`Total pedidos: ${pedidosDia.length}`)
-    content.push('') // Línea vacía
+    content.push(`TURNO DIA - ${pedidosDia.length} pedidos`)
+    content.push('')
     
     if (pedidosDia.length > 0) {
-      content.push('Trabajador,RUT,Empresa,Plato,Código,Categoría,Notas')
+      content.push('Trabajador,Empresa,Plato,Notas')
       
       pedidosDia.forEach(pedido => {
-        content.push([
-          `"${pedido.nombre_trabajador}"`,
-          pedido.rut_trabajador || 'Sin RUT',
-          `"${pedido.empresa}"`,
-          `"${pedido.descripcion_opcion}"`,
-          pedido.codigo_opcion,
-          pedido.categoria_opcion,
-          `"${pedido.notas || 'Sin notas'}"`
-        ].join(','))
+        const notasText = pedido.notas || 'Sin notas'
+        content.push(`"${cleanText(pedido.nombre_trabajador)}","${cleanText(pedido.empresa)}","${cleanText(pedido.descripcion_opcion)}","${cleanText(notasText)}"`)
       })
     } else {
       content.push('No hay pedidos para este turno')
     }
 
-    content.push('') // Línea vacía
-    content.push('') // Línea vacía
+    content.push('')
+    content.push('')
 
     // Sección Turno Noche
     const pedidosNoche = pedidos.filter(p => p.turno_elegido === 'noche')
-    content.push('TURNO NOCHE')
-    content.push(`Total pedidos: ${pedidosNoche.length}`)
-    content.push('') // Línea vacía
+    content.push(`TURNO NOCHE - ${pedidosNoche.length} pedidos`)
+    content.push('')
 
     if (pedidosNoche.length > 0) {
-      content.push('Trabajador,RUT,Empresa,Plato,Código,Categoría,Notas')
+      content.push('Trabajador,Empresa,Plato,Notas')
       
       pedidosNoche.forEach(pedido => {
-        content.push([
-          `"${pedido.nombre_trabajador}"`,
-          pedido.rut_trabajador || 'Sin RUT',
-          `"${pedido.empresa}"`,
-          `"${pedido.descripcion_opcion}"`,
-          pedido.codigo_opcion,
-          pedido.categoria_opcion,
-          `"${pedido.notas || 'Sin notas'}"`
-        ].join(','))
+        const notasText = pedido.notas || 'Sin notas'
+        content.push(`"${cleanText(pedido.nombre_trabajador)}","${cleanText(pedido.empresa)}","${cleanText(pedido.descripcion_opcion)}","${cleanText(notasText)}"`)
       })
     } else {
       content.push('No hay pedidos para este turno')
@@ -587,33 +553,21 @@ export default function AdminPage() {
     
     let content = [
       // Header principal
-      'REPORTE GENERAL DE PEDIDOS',
-      `Fecha: ${dateFormatted}`,
+      `REPORTE GENERAL DE PEDIDOS - ${dateFormatted}`,
       `Total de pedidos: ${dataToExport.length}`,
-      '', // Línea vacía
+      '',
       
       // Headers de columnas
-      'ID,Trabajador,RUT,Empresa,Turno,Plato,Código,Categoría,Notas,Día Semana,Fecha Creación,Rol Trabajador,Turno Habitual,Estado'
+      'Trabajador,Empresa,Turno,Plato,Categoria,Notas,Fecha Creacion'
     ]
     
     // Datos de cada pedido
     dataToExport.forEach(pedido => {
-      content.push([
-        pedido.id.toString(),
-        `"${pedido.nombre_trabajador}"`,
-        pedido.rut_trabajador || 'Sin RUT',
-        `"${pedido.empresa}"`,
-        pedido.turno_elegido === 'dia' ? 'Día' : 'Noche',
-        `"${pedido.descripcion_opcion}"`,
-        pedido.codigo_opcion,
-        pedido.categoria_opcion,
-        `"${pedido.notas || 'Sin notas'}"`,
-        pedido.dia_semana,
-        new Date(pedido.created_at).toLocaleString('es-ES'),
-        pedido.trabajador_info?.rol || 'N/A',
-        pedido.trabajador_info?.turno_habitual || 'N/A',
-        pedido.trabajador_info?.activo ? 'Activo' : 'Inactivo'
-      ].join(','))
+      const turnoText = pedido.turno_elegido === 'dia' ? 'Dia' : 'Noche'
+      const notasText = pedido.notas || 'Sin notas'
+      const fechaCreacion = new Date(pedido.created_at).toLocaleString('es-ES')
+      
+      content.push(`"${cleanText(pedido.nombre_trabajador)}","${cleanText(pedido.empresa)}","${turnoText}","${cleanText(pedido.descripcion_opcion)}","${pedido.categoria_opcion}","${cleanText(notasText)}","${fechaCreacion}"`)
     })
 
     return content.join('\n')
@@ -1024,7 +978,6 @@ export default function AdminPage() {
                             <div>
                               <h4 className="font-semibold text-slate-900 text-lg">{plato.descripcion_opcion}</h4>
                               <div className="flex items-center space-x-3 mt-1">
-                                <span className="text-sm text-slate-600">Código: {plato.codigo_opcion}</span>
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(plato.categoria_opcion)}`}>
                                   {plato.categoria_opcion}
                                 </span>
@@ -1082,7 +1035,6 @@ export default function AdminPage() {
                             <div>
                               <h4 className="font-semibold text-slate-900 text-lg">{plato.descripcion_opcion}</h4>
                               <div className="flex items-center space-x-3 mt-1">
-                                <span className="text-sm text-slate-600">Código: {plato.codigo_opcion}</span>
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(plato.categoria_opcion)}`}>
                                   {plato.categoria_opcion}
                                 </span>
