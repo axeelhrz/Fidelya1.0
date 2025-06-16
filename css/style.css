@@ -8,6 +8,7 @@
 --glass-bg-light: rgba(255, 255, 255, 0.05);
 --glass-bg-medium: rgba(255, 255, 255, 0.08);
 --glass-bg-strong: rgba(255, 255, 255, 0.12);
+
 /* Colores de marca Starflex */
 --starflex-blue: #ff4569;
 --starflex-blue-dark: #cc1744;
@@ -17,12 +18,14 @@
 --starflex-red: #e6002d;
 --starflex-purple: #8b5cf6;
 --starflex-cyan: #ff1744;
+
 /* Colores rojizos optimizados */
 --starflex-crimson: #b8002e;
 --starflex-crimson-light: #d4003a;
 --starflex-crimson-dark: #9c0025;
 --starflex-crimson-glow: #ff1744;
 --starflex-crimson-bright: #ff4569;
+
 /* Nuevos colores futuristas para el celular */
 --neon-green: #39ff14;
 --neon-pink: #ff073a;
@@ -30,11 +33,13 @@
 --electric-blue: #ff4569;
 --cyber-purple: #9d00ff;
 --hologram-teal: #ff1744;
+
 /* Textos */
 --text-primary: #ffffff;
 --text-secondary: #e2e8f0;
 --text-muted: #94a3b8;
 --text-accent: #ff4569;
+
 /* Efectos optimizados */
 --border-subtle: rgba(255, 255, 255, 0.08);
 --border-accent: rgba(255, 69, 105, 0.3);
@@ -43,24 +48,29 @@
 --glow-subtle: 0 0 20px rgba(255, 69, 105, 0.2);
 --glow-medium: 0 0 30px rgba(255, 69, 105, 0.3);
 --glow-strong: 0 0 40px rgba(255, 69, 105, 0.4);
+
 /* Efectos neón rojizos simplificados */
 --neon-crimson: 0 0 25px rgba(184, 0, 46, 0.6);
 --neon-crimson-strong: 0 0 45px rgba(184, 0, 46, 0.8);
 --neon-crimson-ultra: 0 0 65px rgba(255, 23, 68, 0.9);
 --neon-crimson-pulse: 0 0 35px rgba(255, 69, 105, 0.7);
+
 /* Sombras optimizadas */
 --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.15);
 --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.2);
 --shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.25);
 --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.3);
 --shadow-2xl: 0 35px 70px rgba(0, 0, 0, 0.4);
+
 /* Sombras rojizas simplificadas */
 --shadow-crimson: 0 15px 40px rgba(184, 0, 46, 0.4);
 --shadow-crimson-hover: 0 25px 60px rgba(184, 0, 46, 0.6);
 --shadow-crimson-ultra: 0 30px 80px rgba(255, 23, 68, 0.5);
+
 /* Tipografía */
 --font-primary: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
 --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
 /* Espaciado */
 --space-xs: 0.375rem;
 --space-sm: 0.5rem;
@@ -72,10 +82,12 @@
 --space-4xl: 2.5rem;
 --space-5xl: 3rem;
 --space-6xl: 4rem;
+
 /* Transiciones suaves */
 --transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 --transition-fast: 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 --transition-slow: 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
 /* Variables específicas para navbar responsive */
 --navbar-height: 80px;
 --navbar-height-mobile: 70px;
@@ -107,6 +119,74 @@ overflow-x: hidden;
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 position: relative;
+}
+
+/* ===== OPTIMIZACIÓN DE IMÁGENES - ESTADOS DE CARGA ===== */
+.image-optimized {
+transition: all var(--transition);
+position: relative;
+overflow: hidden;
+}
+
+.image-optimized.loading {
+background: linear-gradient(90deg, 
+var(--secondary-bg) 25%, 
+var(--accent-bg) 50%, 
+var(--secondary-bg) 75%
+);
+background-size: 200% 100%;
+animation: image-loading-shimmer 1.5s infinite;
+}
+
+.image-optimized.loading::after {
+content: '';
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+width: 40px;
+height: 40px;
+border: 3px solid var(--border-subtle);
+border-top: 3px solid var(--starflex-blue);
+border-radius: 50%;
+animation: image-loading-spinner 1s linear infinite;
+}
+
+.image-optimized.loaded {
+opacity: 1;
+transform: scale(1);
+}
+
+.image-optimized.error {
+background: var(--accent-bg);
+display: flex;
+align-items: center;
+justify-content: center;
+color: var(--text-muted);
+font-size: 0.9rem;
+}
+
+.image-optimized.error::before {
+content: '⚠️ Error cargando imagen';
+}
+
+/* ===== ANIMACIONES DE CARGA DE IMÁGENES ===== */
+@keyframes image-loading-shimmer {
+0% {
+background-position: -200% 0;
+}
+100% {
+background-position: 200% 0;
+}
+}
+
+@keyframes image-loading-spinner {
+0% {
+transform: translate(-50%, -50%) rotate(0deg);
+}
+100% {
+transform: translate(-50%, -50%) rotate(360deg);
+}
 }
 
 /* ===== PREVENCIÓN DE SCROLL CUANDO EL MENÚ ESTÁ ABIERTO ===== */
@@ -154,7 +234,7 @@ position: relative;
 pointer-events: none;
 }
 
-/* ===== LOGO FLOTANTE OPTIMIZADO ===== */
+/* ===== LOGO FLOTANTE OPTIMIZADO CON SOPORTE MULTI-FORMATO ===== */
 .nav__brand {
 pointer-events: auto;
 z-index: calc(var(--navbar-z-index) + 1);
@@ -163,13 +243,27 @@ z-index: calc(var(--navbar-z-index) + 1);
 .nav__logo {
 width: 55px;
 height: 55px;
-background: url('../assets/logo.png') center/contain no-repeat;
+background-size: contain;
+background-repeat: no-repeat;
+background-position: center;
 border-radius: 12px;
 position: relative;
 transition: all var(--transition);
 cursor: pointer;
 animation: logo-gentle-float 6s ease-in-out infinite;
 filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
+/* Fallback para navegadores sin soporte de formatos modernos */
+background-image: url('../assets/logo.png');
+}
+
+/* Soporte para WebP */
+.webp .nav__logo {
+background-image: url('../assets/logo.webp');
+}
+
+/* Soporte para AVIF */
+.avif .nav__logo {
+background-image: url('../assets/logo.avif');
 }
 
 .nav__logo:hover {
@@ -668,548 +762,6 @@ font-size: 0.75rem;
 }
 }
 
-/* ===== ANIMACIONES OPTIMIZADAS ===== */
-@keyframes logo-gentle-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-6px);
-}
-}
-
-@keyframes nav-gentle-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-4px);
-}
-}
-
-@keyframes cta-gentle-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-5px);
-}
-}
-
-@keyframes mobile-menu-glow {
-0%, 100% {
-opacity: 0.8;
-transform: scale(1);
-}
-50% {
-opacity: 1;
-transform: scale(1.02);
-}
-}
-
-/* ===== ESTADOS DE CARGA Y TRANSICIONES ===== */
-.nav__menu.loading {
-opacity: 0.7;
-pointer-events: none;
-}
-
-.nav__link.loading {
-opacity: 0.5;
-cursor: not-allowed;
-}
-
-/* ===== MEJORAS DE ACCESIBILIDAD ===== */
-@media (prefers-reduced-motion: reduce) {
-.nav__logo,
-.nav__list,
-.btn--primary,
-.nav__toggle {
-animation: none !important;
-}
-
-.nav__menu {
-transition-duration: 0.2s !important;
-}
-
-.nav__link,
-.nav__toggle-line {
-transition-duration: 0.2s !important;
-}
-}
-
-/* ===== SOPORTE PARA PANTALLAS TÁCTILES ===== */
-@media (hover: none) and (pointer: coarse) {
-.nav__link:hover {
-transform: none;
-}
-
-.nav__toggle:hover {
-transform: none;
-}
-
-.btn--primary:hover {
-transform: translateY(-2px) scale(1.02);
-}
-}
-
-/* ===== MEJORAS PARA PANTALLAS DE ALTA DENSIDAD ===== */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-.nav__logo {
-background-image: url('../assets/logo@2x.png');
-}
-
-.nav__toggle-line {
-height: 1.5px;
-}
-}
-
-/* ===== SOPORTE PARA ORIENTACIÓN ===== */
-@media (orientation: landscape) and (max-height: 500px) {
-.nav__menu {
-padding: var(--space-lg);
-}
-
-.nav__list {
-gap: var(--space-xl);
-}
-
-.nav__link {
-padding: var(--space-sm) var(--space-lg);
-font-size: 1rem;
-}
-}
-
-/* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
-.nav__menu,
-.nav__toggle,
-.nav__logo,
-.btn--primary {
-will-change: transform;
-transform: translateZ(0);
-backface-visibility: hidden;
-}
-
-.nav__menu.active {
-will-change: auto;
-}
-
-/* ===== FALLBACKS PARA NAVEGADORES ANTIGUOS ===== */
-@supports not (backdrop-filter: blur(20px)) {
-.nav__list,
-.nav__toggle,
-.nav__menu {
-background: rgba(21, 25, 34, 0.95);
-}
-}
-
-@supports not (height: 100dvh) {
-.nav__menu {
-height: 100vh;
-}
-}
-
-/* ===== RESTO DEL CSS PERMANECE IGUAL ===== */
-/* Continúo con las demás secciones sin cambios... */
-
-/* ===== BOTÓN FLOTANTE FUTURISTA CON WHATSAPP, TELEGRAM Y TOGGLE DE IDIOMA ===== */
-.floating-widget {
-position: fixed;
-bottom: 30px;
-right: 30px;
-z-index: 1500;
-display: flex;
-flex-direction: column;
-gap: var(--space-md);
-pointer-events: none;
-}
-
-/* ===== CONTENEDOR PRINCIPAL DEL WIDGET ===== */
-.floating-widget__container {
-position: relative;
-pointer-events: auto;
-}
-
-/* ===== BOTÓN PRINCIPAL FLOTANTE ===== */
-.floating-widget__main-btn {
-width: 70px;
-height: 70px;
-border-radius: 50%;
-background: linear-gradient(135deg, 
-var(--starflex-crimson-dark) 0%, 
-var(--starflex-crimson) 25%, 
-var(--starflex-crimson-light) 50%, 
-var(--starflex-crimson-glow) 75%, 
-var(--starflex-crimson-bright) 100%
-);
-border: none;
-cursor: pointer;
-display: flex;
-align-items: center;
-justify-content: center;
-position: relative;
-transition: all var(--transition);
-box-shadow: 
-var(--shadow-crimson),
-var(--neon-crimson),
-inset 0 2px 0 rgba(255, 255, 255, 0.15);
-animation: floating-widget-pulse 4s ease-in-out infinite;
-overflow: hidden;
-}
-
-.floating-widget__main-btn::before {
-content: '';
-position: absolute;
-top: -2px;
-left: -2px;
-right: -2px;
-bottom: -2px;
-background: linear-gradient(45deg, 
-var(--starflex-crimson-glow), 
-var(--starflex-crimson-bright), 
-var(--starflex-crimson-glow)
-);
-border-radius: 50%;
-z-index: -1;
-opacity: 0;
-transition: opacity 0.4s ease;
-animation: floating-widget-ring 4s ease-in-out infinite;
-}
-
-.floating-widget__main-btn:hover {
-transform: scale(1.1);
-box-shadow: 
-var(--shadow-crimson-hover),
-var(--neon-crimson-strong),
-var(--neon-crimson-ultra),
-inset 0 2px 0 rgba(255, 255, 255, 0.25);
-}
-
-.floating-widget__main-btn:hover::before {
-opacity: 1;
-}
-
-.floating-widget__main-btn.active {
-transform: rotate(45deg) scale(1.05);
-}
-
-/* ===== ICONO PRINCIPAL ===== */
-.floating-widget__main-icon {
-width: 32px;
-height: 32px;
-color: white;
-transition: all var(--transition);
-filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.floating-widget__main-btn.active .floating-widget__main-icon {
-transform: rotate(-45deg);
-}
-
-/* ===== MENÚ DESPLEGABLE ===== */
-.floating-widget__menu {
-position: absolute;
-bottom: 80px;
-right: 0;
-display: flex;
-flex-direction: column;
-gap: var(--space-sm);
-opacity: 0;
-visibility: hidden;
-transform: translateY(20px) scale(0.8);
-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-pointer-events: none;
-}
-
-.floating-widget__menu.active {
-opacity: 1;
-visibility: visible;
-transform: translateY(0) scale(1);
-pointer-events: auto;
-}
-
-/* ===== BOTONES DEL MENÚ ===== */
-.floating-widget__menu-item {
-width: 60px;
-height: 60px;
-border-radius: 50%;
-border: none;
-cursor: pointer;
-display: flex;
-align-items: center;
-justify-content: center;
-position: relative;
-transition: all var(--transition);
-text-decoration: none;
-overflow: hidden;
-box-shadow: 
-0 8px 25px rgba(0, 0, 0, 0.3),
-inset 0 1px 0 rgba(255, 255, 255, 0.1);
-animation: floating-widget-item-float 6s ease-in-out infinite;
-}
-
-.floating-widget__menu-item:nth-child(1) { animation-delay: 0.2s; }
-.floating-widget__menu-item:nth-child(2) { animation-delay: 0.4s; }
-.floating-widget__menu-item:nth-child(3) { animation-delay: 0.6s; }
-
-.floating-widget__menu-item::before {
-content: '';
-position: absolute;
-top: 0;
-left: -100%;
-width: 100%;
-height: 100%;
-background: linear-gradient(90deg, 
-transparent, 
-rgba(255, 255, 255, 0.2), 
-transparent
-);
-transition: left 0.6s ease;
-border-radius: 50%;
-}
-
-.floating-widget__menu-item:hover::before {
-left: 100%;
-}
-
-.floating-widget__menu-item:hover {
-transform: scale(1.1);
-box-shadow: 
-0 12px 35px rgba(0, 0, 0, 0.4),
-inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-/* ===== WHATSAPP ===== */
-.floating-widget__whatsapp {
-background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
-}
-
-.floating-widget__whatsapp:hover {
-box-shadow: 
-0 12px 35px rgba(37, 211, 102, 0.4),
-0 0 25px rgba(37, 211, 102, 0.3),
-inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-/* ===== TELEGRAM ===== */
-.floating-widget__telegram {
-background: linear-gradient(135deg, #0088cc 0%, #229ed9 100%);
-}
-
-.floating-widget__telegram:hover {
-box-shadow: 
-0 12px 35px rgba(0, 136, 204, 0.4),
-0 0 25px rgba(0, 136, 204, 0.3),
-inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-/* ===== TOGGLE DE IDIOMA FLOTANTE ===== */
-.floating-widget__language {
-background: linear-gradient(135deg, 
-var(--starflex-crimson) 0%, 
-var(--starflex-crimson-bright) 100%
-);
-position: relative;
-}
-
-.floating-widget__language:hover {
-box-shadow: 
-var(--shadow-crimson-hover),
-var(--neon-crimson),
-inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-/* ===== ICONOS DE LOS BOTONES ===== */
-.floating-widget__icon {
-width: 28px;
-height: 28px;
-color: white;
-transition: all var(--transition);
-filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.floating-widget__menu-item:hover .floating-widget__icon {
-transform: scale(1.1);
-}
-
-/* ===== TEXTO DEL IDIOMA ===== */
-.floating-widget__language-text {
-color: white;
-font-family: var(--font-mono);
-font-size: 0.75rem;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: 1px;
-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-/* ===== TOOLTIPS ===== */
-.floating-widget__tooltip {
-position: absolute;
-right: 70px;
-top: 50%;
-transform: translateY(-50%);
-background: rgba(0, 0, 0, 0.9);
-color: white;
-padding: var(--space-xs) var(--space-md);
-border-radius: 8px;
-font-size: 0.8rem;
-font-weight: 600;
-white-space: nowrap;
-opacity: 0;
-visibility: hidden;
-transition: all var(--transition);
-pointer-events: none;
-backdrop-filter: blur(10px);
-border: 1px solid rgba(255, 255, 255, 0.1);
-box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-z-index: 10;
-}
-
-.floating-widget__tooltip::after {
-content: '';
-position: absolute;
-left: 100%;
-top: 50%;
-transform: translateY(-50%);
-border: 6px solid transparent;
-border-left-color: rgba(0, 0, 0, 0.9);
-}
-
-.floating-widget__menu-item:hover .floating-widget__tooltip {
-opacity: 1;
-visibility: visible;
-transform: translateY(-50%) translateX(-5px);
-}
-
-/* ===== ANIMACIONES ===== */
-@keyframes floating-widget-pulse {
-0%, 100% {
-transform: scale(1);
-box-shadow: 
-var(--shadow-crimson),
-var(--neon-crimson),
-inset 0 2px 0 rgba(255, 255, 255, 0.15);
-}
-50% {
-transform: scale(1.05);
-box-shadow: 
-var(--shadow-crimson-hover),
-var(--neon-crimson-strong),
-inset 0 2px 0 rgba(255, 255, 255, 0.2);
-}
-}
-
-@keyframes floating-widget-ring {
-0%, 100% {
-opacity: 0;
-transform: scale(1);
-}
-50% {
-opacity: 0.3;
-transform: scale(1.1);
-}
-}
-
-@keyframes floating-widget-item-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-3px);
-}
-}
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-.floating-widget {
-bottom: 20px;
-right: 20px;
-}
-
-.floating-widget__main-btn {
-width: 60px;
-height: 60px;
-}
-
-.floating-widget__main-icon {
-width: 28px;
-height: 28px;
-}
-
-.floating-widget__menu-item {
-width: 50px;
-height: 50px;
-}
-
-.floating-widget__icon {
-width: 24px;
-height: 24px;
-}
-
-.floating-widget__language-text {
-font-size: 0.7rem;
-}
-
-.floating-widget__tooltip {
-right: 60px;
-font-size: 0.75rem;
-padding: var(--space-xs) var(--space-sm);
-}
-}
-
-@media (max-width: 480px) {
-.floating-widget {
-bottom: 15px;
-right: 15px;
-}
-
-.floating-widget__main-btn {
-width: 55px;
-height: 55px;
-}
-
-.floating-widget__main-icon {
-width: 24px;
-height: 24px;
-}
-
-.floating-widget__menu-item {
-width: 45px;
-height: 45px;
-}
-
-.floating-widget__icon {
-width: 20px;
-height: 20px;
-}
-
-.floating-widget__language-text {
-font-size: 0.65rem;
-}
-
-.floating-widget__tooltip {
-display: none; /* Ocultar tooltips en móviles muy pequeños */
-}
-}
-
-/* ===== ACCESIBILIDAD ===== */
-@media (prefers-reduced-motion: reduce) {
-.floating-widget__main-btn,
-.floating-widget__menu-item {
-animation: none !important;
-}
-
-.floating-widget__main-btn::before {
-animation: none !important;
-}
-}
-
-.floating-widget__main-btn:focus,
-.floating-widget__menu-item:focus {
-outline: 2px solid var(--starflex-crimson-bright);
-outline-offset: 3px;
-}
-
 /* ===== FONDO FUTURISTA AVANZADO ===== */
 .bg-canvas {
 position: fixed;
@@ -1252,7 +804,19 @@ opacity: 0.4;
 animation: grid-drift 120s linear infinite;
 }
 
-/* ===== EFECTOS DE FONDO ADICIONALES ===== */
+/* ===== HERO SECTION MEJORADO CON IMÁGENES OPTIMIZADAS ===== */
+.hero {
+min-height: 100vh;
+display: flex;
+align-items: center;
+position: relative;
+z-index: 2;
+background: 
+linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+overflow: hidden;
+padding-top: calc(var(--navbar-height) + var(--space-xl));
+}
+
 .hero::before {
 content: '';
 position: absolute;
@@ -1307,19 +871,6 @@ border-radius: 50%;
 filter: blur(25px);
 animation: floating-orb-3 12s ease-in-out infinite;
 z-index: 1;
-}
-
-/* ===== HERO SECTION MEJORADO ===== */
-.hero {
-min-height: 100vh;
-display: flex;
-align-items: center;
-position: relative;
-z-index: 2;
-background: 
-linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
-overflow: hidden;
-padding-top: calc(var(--navbar-height) + var(--space-xl));
 }
 
 .container {
@@ -1640,7 +1191,7 @@ position: relative;
 z-index: 2;
 }
 
-/* ===== BOTONES DE DESCARGA FLOTANTES ===== */
+/* ===== BOTONES DE DESCARGA OPTIMIZADOS ===== */
 .hero__download {
 display: flex;
 gap: var(--space-xl);
@@ -1675,6 +1226,9 @@ border-radius: 12px;
 box-shadow: 
 0 4px 15px rgba(0, 0, 0, 0.2),
 0 0 0 1px rgba(255, 255, 255, 0.05);
+/* Optimización de imágenes con múltiples formatos */
+image-rendering: -webkit-optimize-contrast;
+image-rendering: crisp-edges;
 }
 
 .download-btn--app-store .download-btn__image {
@@ -1712,7 +1266,7 @@ box-shadow: var(--glow-subtle);
 animation: pulse-gentle 3s infinite;
 }
 
-/* ===== TELÉFONO HERO PROFESIONAL Y LIMPIO ===== */
+/* ===== TELÉFONO HERO OPTIMIZADO CON IMÁGENES MODERNAS ===== */
 .hero__media {
 display: flex;
 justify-content: center;
@@ -1740,28 +1294,6 @@ box-shadow:
 0 0 0 1px rgba(255, 255, 255, 0.05);
 filter: drop-shadow(0 0 30px rgba(255, 69, 105, 0.15));
 background: #000000;
-}
-
-.particles-container {
-position: absolute;
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
-pointer-events: none;
-z-index: 2;
-overflow: hidden;
-border-radius: inherit;
-opacity: 1;
-}
-
-.particles-canvas {
-position: absolute;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-border-radius: inherit;
 }
 
 .hero__phone::before {
@@ -1802,6 +1334,7 @@ background: #000000;
 border-radius: 45px;
 }
 
+/* ===== IMAGEN DEL HERO OPTIMIZADA CON FORMATOS MODERNOS ===== */
 .hero__phone-app-image {
 width: 100%;
 height: 100%;
@@ -1811,15 +1344,32 @@ top: 0;
 left: 0;
 z-index: 1;
 transition: all var(--transition);
-background: url('../assets/phones/Hero.jpg') center/cover no-repeat;
 background-size: cover;
 background-position: center;
+background-repeat: no-repeat;
 object-fit: cover;
 object-position: center;
 filter: brightness(1.02) contrast(1.05) saturate(1.08);
+/* Fallback para navegadores sin soporte de formatos modernos */
+background-image: url('../assets/phones/Hero.jpg');
+/* Optimización de renderizado */
+image-rendering: -webkit-optimize-contrast;
+image-rendering: crisp-edges;
+transform: translateZ(0);
+backface-visibility: hidden;
 }
 
-/* ===== SECCIÓN CARACTERÍSTICAS MODERNIZADA ===== */
+/* Soporte para WebP */
+.webp .hero__phone-app-image {
+background-image: url('../assets/phones/Hero.webp');
+}
+
+/* Soporte para AVIF */
+.avif .hero__phone-app-image {
+background-image: url('../assets/phones/Hero.avif');
+}
+
+/* ===== SECCIÓN CARACTERÍSTICAS CON IMÁGENES OPTIMIZADAS ===== */
 .features {
 padding: var(--space-6xl) 0;
 position: relative;
@@ -1979,27 +1529,6 @@ color: var(--text-primary);
 transform: translateX(5px);
 }
 
-.feature__reward {
-display: inline-flex;
-align-items: center;
-padding: var(--space-xs) var(--space-md);
-background: linear-gradient(135deg, 
-#ffd700 0%, 
-#ffed4e 50%, 
-#ffd700 100%
-);
-color: #1a1a1a;
-font-weight: 800;
-font-size: 1.1rem;
-border-radius: 8px;
-margin-right: var(--space-sm);
-box-shadow: 
-0 4px 15px rgba(255, 215, 0, 0.4),
-inset 0 1px 0 rgba(255, 255, 255, 0.3);
-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-animation: reward-shine 3s ease-in-out infinite;
-}
-
 .feature__phone {
 position: relative;
 width: 300px;
@@ -2093,6 +1622,7 @@ background: #000000;
 border-radius: 40px;
 }
 
+/* ===== IMÁGENES DE CARACTERÍSTICAS OPTIMIZADAS ===== */
 .phone__app-image {
 width: 100%;
 height: 100%;
@@ -2108,30 +1638,86 @@ background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
 filter: brightness(1.02) contrast(1.05) saturate(1.08);
+/* Optimización de renderizado */
+image-rendering: -webkit-optimize-contrast;
+image-rendering: crisp-edges;
+transform: translateZ(0);
+backface-visibility: hidden;
 }
 
+/* Fallbacks para navegadores sin soporte de formatos modernos */
 .feature:nth-child(1) .phone__app-image {
-background: url('../assets/phones/Horario.jpg') center/cover no-repeat;
+background-image: url('../assets/phones/Horario.jpg');
 }
 
 .feature:nth-child(2) .phone__app-image {
-background: url('../assets/phones/Estaciones.jpg') center/cover no-repeat;
+background-image: url('../assets/phones/Estaciones.jpg');
 }
 
 .feature:nth-child(3) .phone__app-image {
-background: url('../assets/phones/Calendario.jpg') center/cover no-repeat;
+background-image: url('../assets/phones/Calendario.jpg');
 }
 
 .feature:nth-child(4) .phone__app-image {
-background: url('../assets/phones/Registro.jpg') center/cover no-repeat;
+background-image: url('../assets/phones/Registro.jpg');
 }
 
 .feature:nth-child(5) .phone__app-image {
-background: url('../assets/phones/Notificaciones.jpg') center/cover no-repeat;
+background-image: url('../assets/phones/Notificaciones.jpg');
 }
 
 .feature:nth-child(6) .phone__app-image {
-background: url('../assets/phones/Referidos.jpg') center/cover no-repeat;
+background-image: url('../assets/phones/Referidos.jpg');
+}
+
+/* Soporte para WebP */
+.webp .feature:nth-child(1) .phone__app-image {
+background-image: url('../assets/phones/Horario.webp');
+}
+
+.webp .feature:nth-child(2) .phone__app-image {
+background-image: url('../assets/phones/Estaciones.webp');
+}
+
+.webp .feature:nth-child(3) .phone__app-image {
+background-image: url('../assets/phones/Calendario.webp');
+}
+
+.webp .feature:nth-child(4) .phone__app-image {
+background-image: url('../assets/phones/Registro.webp');
+}
+
+.webp .feature:nth-child(5) .phone__app-image {
+background-image: url('../assets/phones/Notificaciones.webp');
+}
+
+.webp .feature:nth-child(6) .phone__app-image {
+background-image: url('../assets/phones/Referidos.webp');
+}
+
+/* Soporte para AVIF */
+.avif .feature:nth-child(1) .phone__app-image {
+background-image: url('../assets/phones/Horario.avif');
+}
+
+.avif .feature:nth-child(2) .phone__app-image {
+background-image: url('../assets/phones/Estaciones.avif');
+}
+
+.avif .feature:nth-child(3) .phone__app-image {
+background-image: url('../assets/phones/Calendario.avif');
+}
+
+.avif .feature:nth-child(4) .phone__app-image {
+background-image: url('../assets/phones/Registro.avif');
+}
+
+.avif .feature:nth-child(5) .phone__app-image {
+background-image: url('../assets/phones/Notificaciones.avif');
+}
+
+.avif .feature:nth-child(6) .phone__app-image {
+background-image: url('../assets/phones/Referidos.avif');
 }
 
 /* ===== SECCIÓN DE VIDEOS FUTURISTA ===== */
@@ -2632,43 +2218,6 @@ color: var(--text-secondary);
 line-height: 1.6;
 }
 
-.videos__info-stats {
-display: flex;
-gap: var(--space-xl);
-}
-
-.videos__stat {
-text-align: center;
-padding: var(--space-lg);
-background: var(--glass-bg-light);
-border: 1px solid var(--border-subtle);
-border-radius: 15px;
-min-width: 80px;
-transition: all var(--transition);
-}
-
-.videos__stat:hover {
-border-color: var(--border-accent);
-transform: translateY(-2px);
-box-shadow: var(--shadow-md);
-}
-
-.videos__stat-number {
-font-size: 1.5rem;
-font-weight: 700;
-color: var(--starflex-blue);
-margin-bottom: var(--space-xs);
-font-family: var(--font-mono);
-}
-
-.videos__stat-label {
-font-size: 0.8rem;
-color: var(--text-muted);
-text-transform: uppercase;
-letter-spacing: 0.5px;
-font-weight: 600;
-}
-
 .videos__cta {
 text-align: center;
 background: var(--glass-bg);
@@ -2931,9 +2480,6 @@ animation: fadeInUp 0.6s ease-out forwards;
 .faq__item:nth-child(3) { animation-delay: 0.2s; }
 .faq__item:nth-child(4) { animation-delay: 0.25s; }
 .faq__item:nth-child(5) { animation-delay: 0.3s; }
-.faq__item:nth-child(6) { animation-delay: 0.35s; }
-.faq__item:nth-child(7) { animation-delay: 0.4s; }
-.faq__item:nth-child(8) { animation-delay: 0.45s; }
 
 .faq__item:hover {
 border-color: var(--border-accent);
@@ -3068,44 +2614,7 @@ font-size: 1rem;
 color: var(--text-secondary);
 }
 
-.faq__contact {
-text-align: center;
-margin-top: var(--space-3xl);
-padding: var(--space-2xl);
-background: var(--glass-bg);
-backdrop-filter: blur(20px);
-border: 1px solid var(--border-subtle);
-border-radius: 20px;
-}
-
-.faq__contact-text {
-font-size: 1rem;
-color: var(--text-secondary);
-margin-bottom: var(--space-lg);
-}
-
-.faq__contact-btn {
-display: inline-flex;
-align-items: center;
-gap: var(--space-sm);
-padding: var(--space-md) var(--space-xl);
-background: linear-gradient(135deg, var(--starflex-blue), var(--starflex-cyan));
-color: white;
-text-decoration: none;
-border-radius: 12px;
-font-weight: 600;
-font-size: 1rem;
-transition: all var(--transition);
-text-transform: uppercase;
-letter-spacing: 0.5px;
-}
-
-.faq__contact-btn:hover {
-transform: translateY(-2px);
-box-shadow: var(--shadow-lg);
-}
-
-/* ===== SECCIÓN DE CONTACTO OPTIMIZADA Y ELEGANTE ===== */
+/* ===== SECCIÓN DE CONTACTO OPTIMIZADA ===== */
 .contact {
 padding: var(--space-6xl) 0;
 position: relative;
@@ -3166,18 +2675,6 @@ transform: translateX(-50%);
 width: 200px;
 height: 200px;
 background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%);
-}
-
-.contact__grid-overlay {
-position: absolute;
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
-background-image: 
-linear-gradient(45deg, transparent 24%, rgba(0, 212, 255, 0.008) 25%, rgba(0, 212, 255, 0.008) 26%, transparent 27%);
-background-size: 60px 60px;
-opacity: 0.3;
 }
 
 .contact__header {
@@ -3543,6 +3040,276 @@ text-transform: uppercase;
 letter-spacing: 1.5px;
 }
 
+/* ===== BOTÓN FLOTANTE FUTURISTA CON WHATSAPP, TELEGRAM Y TOGGLE DE IDIOMA ===== */
+.floating-widget {
+position: fixed;
+bottom: 30px;
+right: 30px;
+z-index: 1500;
+display: flex;
+flex-direction: column;
+gap: var(--space-md);
+pointer-events: none;
+}
+
+/* ===== CONTENEDOR PRINCIPAL DEL WIDGET ===== */
+.floating-widget__container {
+position: relative;
+pointer-events: auto;
+}
+
+/* ===== BOTÓN PRINCIPAL FLOTANTE ===== */
+.floating-widget__main-btn {
+width: 70px;
+height: 70px;
+border-radius: 50%;
+background: linear-gradient(135deg, 
+var(--starflex-crimson-dark) 0%, 
+var(--starflex-crimson) 25%, 
+var(--starflex-crimson-light) 50%, 
+var(--starflex-crimson-glow) 75%, 
+var(--starflex-crimson-bright) 100%
+);
+border: none;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+position: relative;
+transition: all var(--transition);
+box-shadow: 
+var(--shadow-crimson),
+var(--neon-crimson),
+inset 0 2px 0 rgba(255, 255, 255, 0.15);
+animation: floating-widget-pulse 4s ease-in-out infinite;
+overflow: hidden;
+}
+
+.floating-widget__main-btn::before {
+content: '';
+position: absolute;
+top: -2px;
+left: -2px;
+right: -2px;
+bottom: -2px;
+background: linear-gradient(45deg, 
+var(--starflex-crimson-glow), 
+var(--starflex-crimson-bright), 
+var(--starflex-crimson-glow)
+);
+border-radius: 50%;
+z-index: -1;
+opacity: 0;
+transition: opacity 0.4s ease;
+animation: floating-widget-ring 4s ease-in-out infinite;
+}
+
+.floating-widget__main-btn:hover {
+transform: scale(1.1);
+box-shadow: 
+var(--shadow-crimson-hover),
+var(--neon-crimson-strong),
+var(--neon-crimson-ultra),
+inset 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+.floating-widget__main-btn:hover::before {
+opacity: 1;
+}
+
+.floating-widget__main-btn.active {
+transform: rotate(45deg) scale(1.05);
+}
+
+/* ===== ICONO PRINCIPAL ===== */
+.floating-widget__main-icon {
+width: 32px;
+height: 32px;
+color: white;
+transition: all var(--transition);
+filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.floating-widget__main-btn.active .floating-widget__main-icon {
+transform: rotate(-45deg);
+}
+
+/* ===== MENÚ DESPLEGABLE ===== */
+.floating-widget__menu {
+position: absolute;
+bottom: 80px;
+right: 0;
+display: flex;
+flex-direction: column;
+gap: var(--space-sm);
+opacity: 0;
+visibility: hidden;
+transform: translateY(20px) scale(0.8);
+transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+pointer-events: none;
+}
+
+.floating-widget__menu.active {
+opacity: 1;
+visibility: visible;
+transform: translateY(0) scale(1);
+pointer-events: auto;
+}
+
+/* ===== BOTONES DEL MENÚ ===== */
+.floating-widget__menu-item {
+width: 60px;
+height: 60px;
+border-radius: 50%;
+border: none;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+position: relative;
+transition: all var(--transition);
+text-decoration: none;
+overflow: hidden;
+box-shadow: 
+0 8px 25px rgba(0, 0, 0, 0.3),
+inset 0 1px 0 rgba(255, 255, 255, 0.1);
+animation: floating-widget-item-float 6s ease-in-out infinite;
+}
+
+.floating-widget__menu-item:nth-child(1) { animation-delay: 0.2s; }
+.floating-widget__menu-item:nth-child(2) { animation-delay: 0.4s; }
+.floating-widget__menu-item:nth-child(3) { animation-delay: 0.6s; }
+
+.floating-widget__menu-item::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, 
+transparent, 
+rgba(255, 255, 255, 0.2), 
+transparent
+);
+transition: left 0.6s ease;
+border-radius: 50%;
+}
+
+.floating-widget__menu-item:hover::before {
+left: 100%;
+}
+
+.floating-widget__menu-item:hover {
+transform: scale(1.1);
+box-shadow: 
+0 12px 35px rgba(0, 0, 0, 0.4),
+inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ===== WHATSAPP ===== */
+.floating-widget__whatsapp {
+background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+}
+
+.floating-widget__whatsapp:hover {
+box-shadow: 
+0 12px 35px rgba(37, 211, 102, 0.4),
+0 0 25px rgba(37, 211, 102, 0.3),
+inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ===== TELEGRAM ===== */
+.floating-widget__telegram {
+background: linear-gradient(135deg, #0088cc 0%, #229ed9 100%);
+}
+
+.floating-widget__telegram:hover {
+box-shadow: 
+0 12px 35px rgba(0, 136, 204, 0.4),
+0 0 25px rgba(0, 136, 204, 0.3),
+inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ===== TOGGLE DE IDIOMA FLOTANTE ===== */
+.floating-widget__language {
+background: linear-gradient(135deg, 
+var(--starflex-crimson) 0%, 
+var(--starflex-crimson-bright) 100%
+);
+position: relative;
+}
+
+.floating-widget__language:hover {
+box-shadow: 
+var(--shadow-crimson-hover),
+var(--neon-crimson),
+inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ===== ICONOS DE LOS BOTONES ===== */
+.floating-widget__icon {
+width: 28px;
+height: 28px;
+color: white;
+transition: all var(--transition);
+filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.floating-widget__menu-item:hover .floating-widget__icon {
+transform: scale(1.1);
+}
+
+/* ===== TEXTO DEL IDIOMA ===== */
+.floating-widget__language-text {
+color: white;
+font-family: var(--font-mono);
+font-size: 0.75rem;
+font-weight: 700;
+text-transform: uppercase;
+letter-spacing: 1px;
+text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== TOOLTIPS ===== */
+.floating-widget__tooltip {
+position: absolute;
+right: 70px;
+top: 50%;
+transform: translateY(-50%);
+background: rgba(0, 0, 0, 0.9);
+color: white;
+padding: var(--space-xs) var(--space-md);
+border-radius: 8px;
+font-size: 0.8rem;
+font-weight: 600;
+white-space: nowrap;
+opacity: 0;
+visibility: hidden;
+transition: all var(--transition);
+pointer-events: none;
+backdrop-filter: blur(10px);
+border: 1px solid rgba(255, 255, 255, 0.1);
+box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+z-index: 10;
+}
+
+.floating-widget__tooltip::after {
+content: '';
+position: absolute;
+left: 100%;
+top: 50%;
+transform: translateY(-50%);
+border: 6px solid transparent;
+border-left-color: rgba(0, 0, 0, 0.9);
+}
+
+.floating-widget__menu-item:hover .floating-widget__tooltip {
+opacity: 1;
+visibility: visible;
+transform: translateY(-50%) translateX(-5px);
+}
+
 /* ===== ANIMACIONES OPTIMIZADAS ===== */
 @keyframes ambient-glow {
 0%, 100% {
@@ -3572,19 +3339,6 @@ transform: perspective(1000px) rotateY(2deg) rotateX(-1deg) translateY(0px);
 }
 50% {
 transform: perspective(1000px) rotateY(2deg) rotateX(-1deg) translateY(-8px);
-}
-}
-
-@keyframes reward-shine {
-0%, 100% {
-box-shadow: 
-0 4px 15px rgba(255, 215, 0, 0.4),
-inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-50% {
-box-shadow: 
-0 6px 20px rgba(255, 215, 0, 0.6),
-inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 }
 
@@ -3871,16 +3625,78 @@ transform: translateY(0);
 }
 }
 
-@keyframes phone-glow {
+@keyframes logo-gentle-float {
 0%, 100% {
-opacity: 0.2;
-filter: hue-rotate(0deg) blur(8px);
+transform: translateY(0px);
+}
+50% {
+transform: translateY(-6px);
+}
+}
+
+@keyframes nav-gentle-float {
+0%, 100% {
+transform: translateY(0px);
+}
+50% {
+transform: translateY(-4px);
+}
+}
+
+@keyframes cta-gentle-float {
+0%, 100% {
+transform: translateY(0px);
+}
+50% {
+transform: translateY(-5px);
+}
+}
+
+@keyframes mobile-menu-glow {
+0%, 100% {
+opacity: 0.8;
+transform: scale(1);
+}
+50% {
+opacity: 1;
+transform: scale(1.02);
+}
+}
+
+@keyframes floating-widget-pulse {
+0%, 100% {
+transform: scale(1);
+box-shadow: 
+var(--shadow-crimson),
+var(--neon-crimson),
+inset 0 2px 0 rgba(255, 255, 255, 0.15);
+}
+50% {
+transform: scale(1.05);
+box-shadow: 
+var(--shadow-crimson-hover),
+var(--neon-crimson-strong),
+inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+}
+
+@keyframes floating-widget-ring {
+0%, 100% {
+opacity: 0;
 transform: scale(1);
 }
 50% {
 opacity: 0.3;
-filter: hue-rotate(180deg) blur(10px);
-transform: scale(1.01);
+transform: scale(1.1);
+}
+}
+
+@keyframes floating-widget-item-float {
+0%, 100% {
+transform: translateY(0px);
+}
+50% {
+transform: translateY(-3px);
 }
 }
 
@@ -4097,6 +3913,41 @@ min-width: 160px;
 padding: var(--space-sm) var(--space-lg);
 font-size: 0.9rem;
 }
+
+.floating-widget {
+bottom: 20px;
+right: 20px;
+}
+
+.floating-widget__main-btn {
+width: 60px;
+height: 60px;
+}
+
+.floating-widget__main-icon {
+width: 28px;
+height: 28px;
+}
+
+.floating-widget__menu-item {
+width: 50px;
+height: 50px;
+}
+
+.floating-widget__icon {
+width: 24px;
+height: 24px;
+}
+
+.floating-widget__language-text {
+font-size: 0.7rem;
+}
+
+.floating-widget__tooltip {
+right: 60px;
+font-size: 0.75rem;
+padding: var(--space-xs) var(--space-sm);
+}
 }
 
 @media (max-width: 480px) {
@@ -4227,6 +4078,39 @@ padding: var(--space-xs) var(--space-md);
 font-size: 0.85rem;
 }
 
+.floating-widget {
+bottom: 15px;
+right: 15px;
+}
+
+.floating-widget__main-btn {
+width: 55px;
+height: 55px;
+}
+
+.floating-widget__main-icon {
+width: 24px;
+height: 24px;
+}
+
+.floating-widget__menu-item {
+width: 45px;
+height: 45px;
+}
+
+.floating-widget__icon {
+width: 20px;
+height: 20px;
+}
+
+.floating-widget__language-text {
+font-size: 0.65rem;
+}
+
+.floating-widget__tooltip {
+display: none; /* Ocultar tooltips en móviles muy pequeños */
+}
+
 /* Ocultar algunos elementos decorativos en pantallas muy pequeñas */
 .hero .floating-orb-3 {
 display: none;
@@ -4283,7 +4167,6 @@ transition-duration: 0.01ms !important;
 .contact__badge,
 .ambient-glow,
 .feature-ambient-glow,
-.particles-container,
 .nav__toggle,
 .floating-widget__main-btn,
 .floating-widget__menu-item {
@@ -4302,8 +4185,9 @@ background: var(--starflex-crimson);
 color: var(--text-primary);
 }
 
-/* ===== ESTADOS DE CARGA ===== */
-.hero__phone[data-loading="true"] {
+/* ===== ESTADOS DE CARGA PARA IMÁGENES OPTIMIZADAS ===== */
+.hero__phone[data-loading="true"],
+.phone[data-loading="true"] {
 background: linear-gradient(90deg, 
 var(--secondary-bg) 25%, 
 var(--accent-bg) 50%, 
@@ -4311,6 +4195,17 @@ var(--secondary-bg) 75%
 );
 background-size: 200% 100%;
 animation: loading-shimmer 2s infinite;
+}
+
+.hero__phone-app-image[data-loading="true"],
+.phone__app-image[data-loading="true"] {
+background: linear-gradient(90deg, 
+var(--secondary-bg) 25%, 
+var(--accent-bg) 50%, 
+var(--secondary-bg) 75%
+);
+background-size: 200% 100%;
+animation: loading-shimmer 1.5s infinite;
 }
 
 @keyframes loading-shimmer {
@@ -4397,7 +4292,6 @@ color: var(--starflex-orange);
 .floating-orb-2,
 .floating-orb-3,
 .bg-canvas,
-.particles-container,
 .nav__toggle,
 .floating-widget {
 display: none;
@@ -4422,6 +4316,21 @@ color: #000;
 .phone {
 border-width: 1px;
 }
+
+/* Logo de alta densidad */
+.nav__logo {
+background-image: url('../assets/logo@2x.png');
+}
+
+/* Soporte para WebP en alta densidad */
+.webp .nav__logo {
+background-image: url('../assets/logo@2x.webp');
+}
+
+/* Soporte para AVIF en alta densidad */
+.avif .nav__logo {
+background-image: url('../assets/logo@2x.avif');
+}
 }
 
 /* ===== EFECTOS DE TRANSICIÓN SUAVES PARA CAMBIOS DE ESTADO ===== */
@@ -4440,28 +4349,84 @@ contain: layout style paint;
 contain: layout style;
 }
 
-/* ===== MEJORAS ESPECÍFICAS PARA IMÁGENES ===== */
+/* ===== MEJORAS ESPECÍFICAS PARA IMÁGENES OPTIMIZADAS ===== */
 .phone__app-image,
 .hero__phone-app-image {
 image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
 transform: translateZ(0);
 backface-visibility: hidden;
+/* Optimización para carga progresiva */
+background-attachment: scroll;
+background-blend-mode: normal;
+isolation: isolate;
 }
 
-/* ===== LOADING STATES ===== */
-.phone__app-image[data-loading="true"],
-.hero__phone-app-image[data-loading="true"] {
-background: linear-gradient(90deg, 
-var(--secondary-bg) 25%, 
-var(--accent-bg) 50%, 
-var(--secondary-bg) 75%
-);
-background-size: 200% 100%;
-animation: loading-shimmer 1.5s infinite;
+/* ===== ESTADOS FINALES DE CARGA ===== */
+.hero__phone.loaded .hero__phone-app-image,
+.phone.loaded .phone__app-image {
+opacity: 1;
+transform: scale(1) translateZ(0);
 }
 
-/* ===== FINAL OPTIMIZATIONS ===== */
+.hero__phone.loading .hero__phone-app-image,
+.phone.loading .phone__app-image {
+opacity: 0.7;
+transform: scale(0.98) translateZ(0);
+}
+
+/* ===== CLEANUP Y OPTIMIZACIÓN FINAL ===== */
+.hero__phone *,
+.phone * {
+box-sizing: border-box;
+}
+
+.hero__phone-container,
+.feature__phone {
+contain: layout style;
+}
+
+/* ===== SOPORTE PARA DETECCIÓN DE FORMATOS DE IMAGEN ===== */
+.no-avif .avif .hero__phone-app-image,
+.no-avif .avif .phone__app-image,
+.no-avif .avif .nav__logo {
+background-image: inherit;
+}
+
+.no-webp .webp .hero__phone-app-image,
+.no-webp .webp .phone__app-image,
+.no-webp .webp .nav__logo {
+background-image: inherit;
+}
+
+/* ===== MEJORAS FINALES DE INTEGRACIÓN ===== */
+.hero__phone,
+.phone {
+background-blend-mode: normal;
+isolation: isolate;
+}
+
+.hero__phone-app-image,
+.phone__app-image {
+image-rendering: optimizeQuality;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== ESTADOS FINALES ===== */
+.hero__phone.loaded .hero__phone-app-image,
+.phone.loaded .phone__app-image {
+opacity: 1;
+transform: scale(1) translateZ(0);
+}
+
+.hero__phone.loading .hero__phone-app-image,
+.phone.loading .phone__app-image {
+opacity: 0.7;
+transform: scale(0.98) translateZ(0);
+}
+
+/* ===== OPTIMIZACIÓN FINAL PARA RENDIMIENTO ===== */
 @media (max-width: 320px) {
 .hero__phone {
 width: 200px;
@@ -4501,42 +4466,4 @@ border-radius: 20px;
 .phone__app-image {
 border-radius: 20px;
 }
-}
-
-/* ===== MEJORAS FINALES DE INTEGRACIÓN ===== */
-.hero__phone,
-.phone {
-background-blend-mode: normal;
-isolation: isolate;
-}
-
-.hero__phone-app-image,
-.phone__app-image {
-image-rendering: optimizeQuality;
--webkit-font-smoothing: antialiased;
--moz-osx-font-smoothing: grayscale;
-}
-
-/* ===== ESTADOS FINALES ===== */
-.hero__phone.loaded .hero__phone-app-image,
-.phone.loaded .phone__app-image {
-opacity: 1;
-transform: scale(1) translateZ(0);
-}
-
-.hero__phone.loading .hero__phone-app-image,
-.phone.loading .phone__app-image {
-opacity: 0.7;
-transform: scale(0.98) translateZ(0);
-}
-
-/* ===== CLEANUP Y OPTIMIZACIÓN FINAL ===== */
-.hero__phone *,
-.phone * {
-box-sizing: border-box;
-}
-
-.hero__phone-container,
-.feature__phone {
-contain: layout style;
 }
