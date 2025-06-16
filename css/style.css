@@ -886,7 +886,7 @@ box-shadow: var(--glow-subtle);
 animation: pulse-gentle 3s infinite;
 }
 
-/* ===== IPHONE 15 PRO ULTRA FUTURISTA OPTIMIZADO PARA DESKTOP ===== */
+/* ===== TELÉFONO HERO OPTIMIZADO - MARCO LIMPIO ===== */
 .hero__media {
 display: flex;
 justify-content: center;
@@ -897,222 +897,107 @@ animation: fadeInRight 1s ease-out 0.3s both;
 
 .hero__phone-container {
 position: relative;
-transform: perspective(1200px) rotateY(-12deg) rotateX(3deg);
+transform: perspective(1200px) rotateY(-8deg) rotateX(2deg);
 transition: transform var(--transition-slow);
 animation: phone-float 8s ease-in-out infinite;
 }
 
 .hero__phone-container:hover {
-transform: perspective(1200px) rotateY(-6deg) rotateX(1deg) scale(1.02);
+transform: perspective(1200px) rotateY(-4deg) rotateX(1deg) scale(1.02);
 }
 
+/* ===== MARCO SIMPLIFICADO Y OPTIMIZADO ===== */
 .hero__phone {
-width: 340px;
-height: 690px;
-background: linear-gradient(145deg, #0a0a0a 0%, #000000 100%);
-border-radius: 60px;
-padding: 10px;
+width: 320px;
+height: 640px;
+background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
+border-radius: 45px;
+padding: 4px;
 position: relative;
 overflow: hidden;
-border: 4px solid #1a1a1a;
+border: 2px solid #2c2c2e;
 box-shadow: 
-0 30px 100px rgba(0, 0, 0, 0.8),
+0 25px 60px rgba(0, 0, 0, 0.6),
 0 0 0 1px rgba(255, 255, 255, 0.03),
-inset 0 2px 0 rgba(255, 255, 255, 0.08);
+inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Marco metálico del iPhone 15 Pro Ultra */
+/* Marco metálico simplificado */
 .hero__phone::before {
 content: '';
 position: absolute;
-top: -4px;
-left: -4px;
-right: -4px;
-bottom: -4px;
+top: -2px;
+left: -2px;
+right: -2px;
+bottom: -2px;
 background: linear-gradient(145deg, 
-#2a2a2a 0%, 
-#1a1a1a 25%, 
-#0a0a0a 50%, 
-#1a1a1a 75%, 
-#2a2a2a 100%
+#3a3a3c 0%, 
+#2c2c2e 50%, 
+#1c1c1e 100%
 );
-border-radius: 64px;
+border-radius: 47px;
 z-index: -1;
 }
 
-/* Resplandor futurista ultra avanzado */
+/* Resplandor sutil */
 .hero__phone::after {
 content: '';
 position: absolute;
-top: -12px;
-left: -12px;
-right: -12px;
-bottom: -12px;
+top: -8px;
+left: -8px;
+right: -8px;
+bottom: -8px;
 background: linear-gradient(45deg, 
-var(--neon-green) 0%,
-var(--electric-blue) 20%,
-var(--cyber-purple) 40%,
-var(--neon-pink) 60%,
-var(--hologram-teal) 80%,
-var(--neon-green) 100%
+var(--starflex-blue) 0%,
+var(--starflex-purple) 50%,
+var(--starflex-cyan) 100%
 );
-border-radius: 72px;
+border-radius: 53px;
 z-index: -2;
-opacity: 0.6;
-animation: phone-rainbow-glow 8s ease-in-out infinite;
-filter: blur(12px);
+opacity: 0.2;
+animation: phone-glow 6s ease-in-out infinite;
+filter: blur(8px);
 }
 
+/* ===== PANTALLA OPTIMIZADA ===== */
 .hero__phone-screen {
 width: 100%;
 height: 100%;
 background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
-border-radius: 50px;
+border-radius: 41px;
 overflow: hidden;
 position: relative;
-border: 2px solid rgba(255, 255, 255, 0.03);
-box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.9);
+border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
-/* Dynamic Island Ultra Futurista */
-.hero__phone-island {
-position: absolute;
-top: 30px;
-left: 50%;
-transform: translateX(-50%);
-width: 140px;
-height: 42px;
-background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
-border-radius: 21px;
-z-index: 10;
-box-shadow: 
-inset 0 3px 10px rgba(0, 0, 0, 0.9),
-0 0 20px rgba(0, 212, 255, 0.3);
-border: 1px solid rgba(0, 212, 255, 0.2);
-animation: island-pulse 4s ease-in-out infinite;
-}
-
-/* Cámara y sensores en Dynamic Island Ultra */
-.hero__phone-island::before {
-content: '';
-position: absolute;
-top: 50%;
-left: 25px;
-transform: translateY(-50%);
-width: 14px;
-height: 14px;
-background: radial-gradient(circle, #0a0a0a 30%, #000 100%);
-border-radius: 50%;
-border: 1px solid rgba(0, 212, 255, 0.3);
-box-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
-}
-
-.hero__phone-island::after {
-content: '';
-position: absolute;
-top: 50%;
-right: 25px;
-transform: translateY(-50%);
-width: 10px;
-height: 10px;
-background: linear-gradient(45deg, var(--neon-green), var(--electric-blue));
-border-radius: 50%;
-animation: sensor-glow 3s ease-in-out infinite;
-}
-
-/* Barra de estado ultra futurista */
-.hero__phone-status {
-position: absolute;
-top: 0;
-left: 0;
-right: 0;
-height: 95px;
-background: linear-gradient(180deg, 
-rgba(0, 0, 0, 0.8) 0%, 
-rgba(0, 0, 0, 0.4) 70%,
-transparent 100%
-);
-backdrop-filter: blur(25px);
-display: flex;
-justify-content: space-between;
-align-items: flex-end;
-padding: 0 35px 18px;
-font-size: 0.85rem;
-color: var(--text-primary);
-z-index: 5;
-font-family: var(--font-mono);
-font-weight: 700;
-text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-}
-
-/* Botones laterales del iPhone Ultra */
-.hero__phone-buttons {
-position: absolute;
-left: -4px;
-top: 200px;
-}
-
-.hero__phone-button {
-width: 4px;
-height: 70px;
-background: linear-gradient(90deg, #2a2a2a, #1a1a1a);
-margin-bottom: 18px;
-border-radius: 0 3px 3px 0;
-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.hero__phone-button:first-child {
-height: 35px;
-}
-
-.hero__phone-button:last-child {
-height: 35px;
-}
-
-/* Botón de acción del lado derecho Ultra */
-.hero__phone-action-button {
-position: absolute;
-right: -4px;
-top: 220px;
-width: 4px;
-height: 90px;
-background: linear-gradient(90deg, #1a1a1a, #2a2a2a);
-border-radius: 3px 0 0 3px;
-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-/* ===== CONTENIDO DE LA PANTALLA OPTIMIZADO PARA DESKTOP ===== */
+/* ===== CONTENIDO SIN INTERFERENCIAS ===== */
 .hero__phone-content {
-padding: 100px 0 0;
+width: 100%;
 height: 100%;
 position: relative;
 overflow: hidden;
-background: linear-gradient(180deg, 
-rgba(0, 0, 0, 0.98) 0%, 
-rgba(10, 10, 10, 0.95) 50%,
-rgba(0, 0, 0, 0.98) 100%
-);
+background: #000000;
+border-radius: 41px;
 }
 
-/* ===== IMAGEN OPTIMIZADA PARA DESKTOP - HERO PHONE ===== */
+/* ===== IMAGEN HERO OPTIMIZADA ===== */
 .hero__phone-app-image {
 width: 100%;
 height: 100%;
-border-radius: 0 0 46px 46px;
+border-radius: 41px;
 position: absolute;
 top: 0;
 left: 0;
 z-index: 1;
 transition: all var(--transition);
-/* Optimización específica para desktop */
-background: url('../assets/phones/Hero.jpg') center/contain no-repeat;
-background-size: contain;
+background: url('../assets/phones/Hero.jpg') center/cover no-repeat;
+background-size: cover;
 background-position: center;
-object-fit: contain;
+object-fit: cover;
 object-position: center;
 }
 
-/* ===== SECCIÓN CARACTERÍSTICAS COMPLETAMENTE MODERNIZADA ===== */
+/* ===== SECCIÓN CARACTERÍSTICAS MODERNIZADA ===== */
 .features {
 padding: var(--space-6xl) 0;
 position: relative;
@@ -1273,13 +1158,13 @@ color: var(--text-primary);
 transform: translateX(5px);
 }
 
-/* ===== CELULARES OPTIMIZADOS PARA DESKTOP ===== */
+/* ===== TELÉFONOS DE CARACTERÍSTICAS - MARCOS LIMPIOS ===== */
 .feature__phone {
 position: relative;
-width: 320px;
-height: 650px;
+width: 300px;
+height: 600px;
 margin: 0 auto;
-transform: perspective(1000px) rotateY(3deg) rotateX(-1deg);
+transform: perspective(1000px) rotateY(2deg) rotateX(-1deg);
 transition: transform var(--transition);
 }
 
@@ -1287,35 +1172,34 @@ transition: transform var(--transition);
 transform: perspective(1000px) rotateY(1deg) rotateX(0deg) scale(1.02);
 }
 
+/* ===== MARCO SIMPLIFICADO PARA FEATURES ===== */
 .phone {
 width: 100%;
 height: 100%;
 background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
-border-radius: 55px;
-padding: 8px;
+border-radius: 40px;
+padding: 3px;
 box-shadow: 
-0 25px 60px rgba(0, 0, 0, 0.4),
-0 0 0 1px rgba(255, 255, 255, 0.05);
+0 20px 50px rgba(0, 0, 0, 0.4),
+0 0 0 1px rgba(255, 255, 255, 0.03);
 position: relative;
 overflow: hidden;
-border: 3px solid #2c2c2e;
+border: 2px solid #2c2c2e;
 }
 
 .phone::before {
 content: '';
 position: absolute;
-top: -3px;
-left: -3px;
-right: -3px;
-bottom: -3px;
+top: -2px;
+left: -2px;
+right: -2px;
+bottom: -2px;
 background: linear-gradient(145deg, 
-#8e8e93 0%, 
-#636366 25%, 
-#48484a 50%, 
-#636366 75%, 
-#8e8e93 100%
+#3a3a3c 0%, 
+#2c2c2e 50%, 
+#1c1c1e 100%
 );
-border-radius: 58px;
+border-radius: 42px;
 z-index: -1;
 }
 
@@ -1332,105 +1216,100 @@ var(--starflex-purple),
 var(--starflex-cyan),
 var(--starflex-blue)
 );
-border-radius: 61px;
+border-radius: 46px;
 z-index: -2;
-opacity: 0.3;
+opacity: 0.15;
 filter: blur(6px);
 }
 
+/* ===== PANTALLA LIMPIA ===== */
 .phone__screen {
 width: 100%;
 height: 100%;
-background: linear-gradient(180deg, #0a0d14 0%, #151922 100%);
-border-radius: 47px;
+background: #000000;
+border-radius: 37px;
 overflow: hidden;
 position: relative;
 }
 
-.phone__island {
-position: absolute;
-top: 25px;
-left: 50%;
-transform: translateX(-50%);
-width: 126px;
-height: 37px;
-background: #000000;
-border-radius: 19px;
-z-index: 10;
-}
-
-.phone__status-bar {
-position: absolute;
-top: 0;
-left: 0;
-right: 0;
-height: 85px;
-background: rgba(0, 0, 0, 0.3);
-display: flex;
-justify-content: space-between;
-align-items: flex-end;
-padding: 0 30px 15px;
-font-size: 0.8rem;
-color: var(--text-primary);
-z-index: 5;
-font-family: var(--font-mono);
-}
-
+/* ===== CONTENIDO SIN ELEMENTOS QUE INTERFIEREN ===== */
 .phone__content {
-padding: 95px 20px 20px;
+width: 100%;
 height: 100%;
 overflow: hidden;
-background: linear-gradient(180deg, 
-rgba(10, 13, 20, 0.95) 0%, 
-rgba(21, 25, 34, 0.98) 100%
-);
+background: #000000;
+border-radius: 37px;
 }
 
-/* ===== IMÁGENES OPTIMIZADAS PARA DESKTOP - FEATURES ===== */
+/* ===== IMÁGENES OPTIMIZADAS PARA TODAS LAS PANTALLAS ===== */
 .phone__app-image {
 width: 100%;
 height: 100%;
-border-radius: 0 0 43px 43px;
+border-radius: 37px;
 position: absolute;
 top: 0;
 left: 0;
 z-index: 1;
 transition: all var(--transition);
-/* Optimización específica para desktop */
-object-fit: contain;
+object-fit: cover;
 object-position: center;
-background-size: contain;
+background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
 }
 
-/* Pantalla de Horario - Optimizada para Desktop */
+/* ===== IMÁGENES ESPECÍFICAS OPTIMIZADAS ===== */
 .feature:nth-child(1) .phone__app-image {
-background: url('../assets/phones/Horario.jpg') center/contain no-repeat;
+background: url('../assets/phones/Horario.jpg') center/cover no-repeat;
 }
 
-/* Pantalla de Estaciones - Optimizada para Desktop */
 .feature:nth-child(2) .phone__app-image {
-background: url('../assets/phones/Estaciones.jpg') center/contain no-repeat;
+background: url('../assets/phones/Estaciones.jpg') center/cover no-repeat;
 }
 
-/* Pantalla de Calendario - Optimizada para Desktop */
 .feature:nth-child(3) .phone__app-image {
-background: url('../assets/phones/Calendario.jpg') center/contain no-repeat;
+background: url('../assets/phones/Calendario.jpg') center/cover no-repeat;
 }
 
-/* Pantalla de Registro - Optimizada para Desktop */
 .feature:nth-child(4) .phone__app-image {
-background: url('../assets/phones/Registro.jpg') center/contain no-repeat;
+background: url('../assets/phones/Registro.jpg') center/cover no-repeat;
 }
 
-/* ===== PANTALLA DE NOTIFICACIONES - USANDO IMAGEN REAL ===== */
 .feature:nth-child(5) .phone__app-image {
-background: url('../assets/phones/Notificaciones.jpg') center/contain no-repeat;
+background: url('../assets/phones/Notificaciones.jpg') center/cover no-repeat;
 }
 
-/* ===== RESTO DEL CSS PERMANECE IGUAL ===== */
-/* ... resto del código CSS sin cambios ... */
+/* ===== VERSIÓN ALTERNATIVA SIN MARCO ===== */
+.phone--frameless {
+background: transparent;
+border: none;
+padding: 0;
+box-shadow: 
+0 20px 50px rgba(0, 0, 0, 0.3),
+0 0 0 2px rgba(255, 255, 255, 0.1);
+border-radius: 25px;
+}
+
+.phone--frameless::before,
+.phone--frameless::after {
+display: none;
+}
+
+.phone--frameless .phone__screen {
+border-radius: 25px;
+border: 2px solid rgba(255, 255, 255, 0.1);
+box-shadow: 
+0 15px 40px rgba(0, 0, 0, 0.4),
+inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.phone--frameless .phone__content {
+border-radius: 23px;
+}
+
+.phone--frameless .phone__app-image {
+border-radius: 23px;
+}
 
 /* ===== RESPONSIVE OPTIMIZADO ===== */
 @media (max-width: 1024px) {
@@ -1445,44 +1324,8 @@ transform: none;
 }
 
 .hero__phone {
-width: 320px;
-height: 650px;
-}
-
-/* Mantener optimización para tablet */
-.hero__phone-app-image {
-background-size: cover;
-background-position: center top;
-object-fit: cover;
-object-position: center top;
-}
-
-.phone__app-image {
-background-size: cover;
-background-position: center top;
-object-fit: cover;
-object-position: center top;
-}
-
-.feature:nth-child(1) .phone__app-image {
-background: url('../assets/phones/Horario.jpg') center top/cover no-repeat;
-}
-
-.feature:nth-child(2) .phone__app-image {
-background: url('../assets/phones/Estaciones.jpg') center top/cover no-repeat;
-}
-
-.feature:nth-child(3) .phone__app-image {
-background: url('../assets/phones/Calendario.jpg') center top/cover no-repeat;
-}
-
-.feature:nth-child(4) .phone__app-image {
-background: url('../assets/phones/Registro.jpg') center top/cover no-repeat;
-}
-
-/* ===== NOTIFICACIONES ACTUALIZADA PARA TABLET ===== */
-.feature:nth-child(5) .phone__app-image {
-background: url('../assets/phones/Notificaciones.jpg') center top/cover no-repeat;
+width: 300px;
+height: 600px;
 }
 
 .hero__download {
@@ -1507,7 +1350,7 @@ direction: ltr;
 
 .feature__phone {
 width: 280px;
-height: 570px;
+height: 560px;
 }
 
 .contact__grid {
@@ -1517,27 +1360,6 @@ gap: var(--space-xl);
 }
 
 @media (max-width: 768px) {
-/* Cambiar a cover para móvil */
-.hero__phone-app-image {
-background-size: cover !important;
-background-position: center top !important;
-object-fit: cover !important;
-object-position: center top !important;
-}
-
-.phone__app-image {
-background-size: cover !important;
-background-position: center top !important;
-object-fit: cover !important;
-object-position: center top !important;
-}
-
-/* ===== NOTIFICACIONES ACTUALIZADA PARA MÓVIL ===== */
-.feature:nth-child(5) .phone__app-image {
-background: url('../assets/phones/Notificaciones.jpg') center top/cover no-repeat !important;
-}
-
-/* Resto del CSS móvil permanece igual */
 .header {
 padding: var(--space-md) 0;
 }
@@ -1635,8 +1457,8 @@ gap: var(--space-lg);
 }
 
 .hero__phone {
-width: 280px;
-height: 570px;
+width: 260px;
+height: 520px;
 }
 
 .btn--cta {
@@ -1664,8 +1486,8 @@ font-size: 2.2rem;
 }
 
 .feature__phone {
-width: 260px;
-height: 530px;
+width: 240px;
+height: 480px;
 transform: none;
 }
 
@@ -1770,8 +1592,8 @@ border-radius: 12px;
 }
 
 .hero__phone {
-width: 250px;
-height: 510px;
+width: 220px;
+height: 440px;
 }
 
 .download-btn__image {
@@ -1792,43 +1614,26 @@ font-size: 2rem;
 }
 
 .feature__phone {
-width: 220px;
-height: 450px;
+width: 200px;
+height: 400px;
 margin: 0 auto;
 }
 
 .phone {
-border-radius: 45px;
-padding: 6px;
+border-radius: 30px;
+padding: 2px;
 }
 
 .phone__screen {
-border-radius: 39px;
-}
-
-.phone__island {
-width: 100px;
-height: 30px;
-top: 20px;
-}
-
-.phone__status-bar {
-height: 70px;
-padding: 0 25px 12px;
-font-size: 0.7rem;
+border-radius: 28px;
 }
 
 .phone__content {
-padding: 80px 15px 15px;
+border-radius: 28px;
 }
 
 .phone__app-image {
-border-radius: 0 0 35px 35px;
-}
-
-/* ===== NOTIFICACIONES ACTUALIZADA PARA PANTALLAS PEQUEÑAS ===== */
-.feature:nth-child(5) .phone__app-image {
-background: url('../assets/phones/Notificaciones.jpg') center top/cover no-repeat !important;
+border-radius: 28px;
 }
 
 .contact__title {
@@ -1882,182 +1687,17 @@ display: none;
 }
 }
 
-/* ===== ANIMACIONES ULTRA FUTURISTAS ===== */
-@keyframes phone-rainbow-glow {
+/* ===== ANIMACIONES OPTIMIZADAS ===== */
+@keyframes phone-glow {
 0%, 100% {
-opacity: 0.4;
-filter: hue-rotate(0deg) blur(12px);
+opacity: 0.2;
+filter: hue-rotate(0deg) blur(8px);
 transform: scale(1);
 }
-25% {
-opacity: 0.7;
-filter: hue-rotate(90deg) blur(15px);
-transform: scale(1.02);
-}
 50% {
-opacity: 0.6;
+opacity: 0.3;
 filter: hue-rotate(180deg) blur(10px);
 transform: scale(1.01);
-}
-75% {
-opacity: 0.8;
-filter: hue-rotate(270deg) blur(14px);
-transform: scale(1.03);
-}
-}
-
-@keyframes island-pulse {
-0%, 100% {
-box-shadow: 
-inset 0 3px 10px rgba(0, 0, 0, 0.9),
-0 0 20px rgba(0, 212, 255, 0.3);
-border-color: rgba(0, 212, 255, 0.2);
-}
-50% {
-box-shadow: 
-inset 0 3px 10px rgba(0, 0, 0, 0.9),
-0 0 30px rgba(0, 212, 255, 0.5);
-border-color: rgba(0, 212, 255, 0.4);
-}
-}
-
-@keyframes sensor-glow {
-0%, 100% {
-opacity: 0.8;
-transform: translateY(-50%) scale(1);
-box-shadow: 0 0 8px var(--neon-green);
-}
-50% {
-opacity: 1;
-transform: translateY(-50%) scale(1.1);
-box-shadow: 0 0 15px var(--electric-blue);
-}
-}
-
-@keyframes video-bg-flow {
-0%, 100% {
-opacity: 0.3;
-transform: scale(1) rotate(0deg);
-}
-50% {
-opacity: 0.5;
-transform: scale(1.1) rotate(180deg);
-}
-}
-
-@keyframes video-orb-float {
-0%, 100% {
-transform: translate(0, 0) scale(1);
-opacity: 0.4;
-}
-33% {
-transform: translate(20px, -30px) scale(1.2);
-opacity: 0.7;
-}
-66% {
-transform: translate(-30px, 20px) scale(0.8);
-opacity: 0.5;
-}
-}
-
-@keyframes grid-video-drift {
-0% {
-transform: translateX(0) translateY(0);
-}
-100% {
-transform: translateX(80px) translateY(100px);
-}
-}
-
-@keyframes video-shimmer {
-0% {
-left: -100%;
-}
-50% {
-left: 100%;
-}
-100% {
-left: -100%;
-}
-}
-
-@keyframes play-button-pulse {
-0%, 100% {
-transform: scale(1);
-}
-50% {
-transform: scale(1.05);
-}
-}
-
-@keyframes play-pulse-ring {
-0% {
-transform: scale(1);
-opacity: 0.8;
-}
-50% {
-transform: scale(1.2);
-opacity: 0.4;
-}
-100% {
-transform: scale(1.4);
-opacity: 0;
-}
-}
-
-@keyframes crimson-glow-line {
-0%, 100% {
-opacity: 0.8;
-transform: translateX(-50%) scaleX(1);
-}
-50% {
-opacity: 1;
-transform: translateX(-50%) scaleX(1.1);
-}
-}
-
-@keyframes cta-shimmer {
-0% {
-left: -100%;
-}
-50% {
-left: 100%;
-}
-100% {
-left: -100%;
-}
-}
-
-@keyframes breathe {
-0%, 100% {
-transform: scale(1);
-opacity: 0.3;
-}
-50% {
-transform: scale(1.05);
-opacity: 0.5;
-}
-}
-
-@keyframes contact-fadeIn {
-from {
-opacity: 0;
-transform: translateY(30px);
-}
-to {
-opacity: 1;
-transform: translateY(0);
-}
-}
-
-@keyframes contact-slideUp {
-from {
-opacity: 0;
-transform: translateY(40px);
-}
-to {
-opacity: 1;
-transform: translateY(0);
 }
 }
 
@@ -2238,212 +1878,11 @@ transform: scale(1.03);
 
 @keyframes phone-float {
 0%, 100% {
-transform: perspective(1200px) rotateY(-12deg) rotateX(3deg) translateY(0px);
+transform: perspective(1200px) rotateY(-8deg) rotateX(2deg) translateY(0px);
 }
 50% {
-transform: perspective(1200px) rotateY(-12deg) rotateX(3deg) translateY(-15px);
+transform: perspective(1200px) rotateY(-8deg) rotateX(2deg) translateY(-10px);
 }
-}
-
-/* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
-.hero__phone,
-.hero__phone-container,
-.nav__logo,
-.nav__list,
-.btn--primary,
-.feature__phone,
-.contact__channel,
-.contact__channel-icon {
-will-change: transform;
-}
-
-.btn--cta,
-.btn--footer {
-will-change: transform, box-shadow;
-transform: translateZ(0);
-backface-visibility: hidden;
-}
-
-/* ===== ACCESIBILIDAD MEJORADA ===== */
-@media (prefers-reduced-motion: reduce) {
-*,
-*::before,
-*::after {
-animation-duration: 0.01ms !important;
-animation-iteration-count: 1 !important;
-transition-duration: 0.01ms !important;
-}
-
-.nav__logo,
-.nav__list,
-.btn--primary,
-.btn--cta::after,
-.hero__phone-container,
-.hero::before,
-.hero::after,
-.floating-orb-2,
-.floating-orb-3,
-.contact__channel,
-.contact__badge {
-animation: none !important;
-}
-}
-
-.btn:focus,
-.nav__link:focus,
-.nav__logo:focus,
-.contact__channel:focus,
-.contact__channel-btn:focus,
-.faq__question:focus {
-outline: 2px solid var(--starflex-blue);
-outline-offset: 3px;
-border-radius: 6px;
-}
-
-.btn--cta:focus,
-.btn--footer:focus {
-outline: 2px solid var(--starflex-crimson-bright);
-outline-offset: 3px;
-}
-
-/* ===== SELECCIÓN DE TEXTO ===== */
-::selection {
-background: var(--starflex-crimson);
-color: var(--text-primary);
-}
-
-::-moz-selection {
-background: var(--starflex-crimson);
-color: var(--text-primary);
-}
-
-/* ===== ESTADOS DE CARGA ===== */
-.hero__phone[data-loading="true"] {
-background: linear-gradient(90deg, 
-var(--secondary-bg) 25%, 
-var(--accent-bg) 50%, 
-var(--secondary-bg) 75%
-);
-background-size: 200% 100%;
-animation: loading-shimmer 2s infinite;
-}
-
-@keyframes loading-shimmer {
-0% {
-background-position: -200% 0;
-}
-100% {
-background-position: 200% 0;
-}
-}
-
-/* ===== MEJORAS DE CONTRASTE ===== */
-@media (prefers-contrast: high) {
-:root {
---border-subtle: rgba(255, 255, 255, 0.3);
---border-accent: rgba(0, 212, 255, 0.8);
---text-secondary: #f1f5f9;
---text-muted: #cbd5e1;
-}
-}
-
-/* ===== MODO OSCURO FORZADO ===== */
-@media (prefers-color-scheme: dark) {
-:root {
---primary-bg: #000000;
---secondary-bg: #0a0a0a;
---accent-bg: #111111;
-}
-}
-
-/* ===== UTILIDADES FINALES ===== */
-.sr-only {
-position: absolute;
-width: 1px;
-height: 1px;
-padding: 0;
-margin: -1px;
-overflow: hidden;
-clip: rect(0, 0, 0, 0);
-white-space: nowrap;
-border: 0;
-}
-
-.no-scroll {
-overflow: hidden;
-}
-
-/* ===== FALLBACKS PARA NAVEGADORES ANTIGUOS ===== */
-@supports not (backdrop-filter: blur(20px)) {
-.nav__list,
-.nav__toggle,
-.videos__player-container,
-.faq__search,
-.contact__badge {
-background: rgba(21, 25, 34, 0.9);
-}
-}
-
-@supports not (background-clip: text) {
-.hero__title--main,
-.hero__title--highlight,
-.hero__title--amazon,
-.features__title,
-.feature__title {
-color: var(--text-primary);
-}
-
-.hero__title--highlight {
-color: var(--starflex-blue);
-}
-
-.hero__title--amazon {
-color: var(--starflex-orange);
-}
-}
-
-/* ===== PRINT STYLES ===== */
-@media print {
-.hero__phone::after,
-.floating-orb-2,
-.floating-orb-3,
-.bg-canvas {
-display: none;
-}
-
-.hero__phone {
-box-shadow: none;
-border: 2px solid #000;
-}
-
-.hero__phone-content {
-background: #fff;
-color: #000;
-}
-}
-
-/* ===== MEJORAS PARA PANTALLAS DE ALTA DENSIDAD ===== */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-.hero__phone {
-border-width: 2px;
-}
-
-.hero__phone-island {
-border-width: 0.5px;
-}
-}
-
-/* ===== EFECTOS DE TRANSICIÓN SUAVES PARA CAMBIOS DE ESTADO ===== */
-.hero__phone-content * {
-transition: all var(--transition-fast);
-}
-
-.hero__phone-screen {
-contain: layout style paint;
-}
-
-.hero__phone-content {
-contain: layout style;
 }
 
 /* ===== SECCIÓN DE VIDEOS FUTURISTA ===== */
@@ -3882,96 +3321,209 @@ text-transform: uppercase;
 letter-spacing: 1.5px;
 }
 
-/* ===== ESTILOS ADICIONALES PARA VIDEO Y BOTONES FLOTANTES ===== */
-
-/* Video Player Improvements */
-.videos__player-frame {
-position: relative;
-cursor: pointer;
+/* ===== ANIMACIONES ADICIONALES ===== */
+@keyframes video-bg-flow {
+0%, 100% {
+opacity: 0.3;
+transform: scale(1) rotate(0deg);
+}
+50% {
+opacity: 0.5;
+transform: scale(1.1) rotate(180deg);
+}
 }
 
-.videos__player-frame:hover .videos__progress-indicators {
-opacity: 1;
-visibility: visible;
+@keyframes video-orb-float {
+0%, 100% {
+transform: translate(0, 0) scale(1);
+opacity: 0.4;
+}
+33% {
+transform: translate(20px, -30px) scale(1.2
+);
+opacity: 0.7;
+}
+66% {
+transform: translate(-30px, 20px) scale(0.8);
+opacity: 0.5;
+}
 }
 
-.videos__progress-indicators {
+@keyframes grid-video-drift {
+0% {
+transform: translateX(0) translateY(0);
+}
+100% {
+transform: translateX(80px) translateY(100px);
+}
+}
+
+@keyframes video-shimmer {
+0% {
+left: -100%;
+}
+50% {
+left: 100%;
+}
+100% {
+left: -100%;
+}
+}
+
+@keyframes play-button-pulse {
+0%, 100% {
+transform: scale(1);
+}
+50% {
+transform: scale(1.05);
+}
+}
+
+@keyframes play-pulse-ring {
+0% {
+transform: scale(1);
+opacity: 0.8;
+}
+50% {
+transform: scale(1.2);
+opacity: 0.4;
+}
+100% {
+transform: scale(1.4);
 opacity: 0;
-visibility: hidden;
-transition: all 0.3s ease;
+}
 }
 
-.videos__progress-indicators.visible {
+@keyframes crimson-glow-line {
+0%, 100% {
+opacity: 0.8;
+transform: translateX(-50%) scaleX(1);
+}
+50% {
 opacity: 1;
-visibility: visible;
+transform: translateX(-50%) scaleX(1.1);
+}
 }
 
-#play-overlay {
-transition: all 0.3s ease;
+@keyframes cta-shimmer {
+0% {
+left: -100%;
+}
+50% {
+left: 100%;
+}
+100% {
+left: -100%;
+}
 }
 
-#play-overlay.hidden {
-opacity: 0;
-visibility: hidden;
-pointer-events: none;
+@keyframes breathe {
+0%, 100% {
+transform: scale(1);
+opacity: 0.3;
+}
+50% {
+transform: scale(1.05);
+opacity: 0.5;
+}
 }
 
-/* Video Error Notification */
-.video-error-notification {
-animation: slideInRight 0.3s ease-out;
-}
-
-@keyframes slideInRight {
+@keyframes contact-fadeIn {
 from {
-transform: translateX(100%);
 opacity: 0;
+transform: translateY(30px);
 }
 to {
-transform: translateX(0);
 opacity: 1;
+transform: translateY(0);
 }
 }
 
-/* Mejoras de accesibilidad para el video */
-#main-video:focus {
-outline: 2px solid var(--starflex-blue);
-outline-offset: 4px;
+@keyframes contact-slideUp {
+from {
+opacity: 0;
+transform: translateY(40px);
 }
-
-.videos__progress-bar:focus {
-outline: 2px solid var(--starflex-blue);
-outline-offset: 2px;
-}
-
-/* Responsive adjustments for floating buttons */
-@media (max-width: 1024px) {
-.floating-buttons {
-right: 15px;
-bottom: 80px; /* Ajustar para evitar conflictos con navegación móvil */
+to {
+opacity: 1;
+transform: translateY(0);
 }
 }
 
-@media (max-width: 768px) {
-.floating-buttons {
-bottom: 70px;
-}
-
-.floating-btn {
-box-shadow: 0 3px 15px rgba(0, 0, 0, 0.25);
-}
-}
-
-/* Mejoras de performance */
-.floating-btn {
+/* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
+.hero__phone,
+.hero__phone-container,
+.nav__logo,
+.nav__list,
+.btn--primary,
+.feature__phone,
+.contact__channel,
+.contact__channel-icon {
 will-change: transform;
 }
 
-.floating-btn:hover {
+.btn--cta,
+.btn--footer {
 will-change: transform, box-shadow;
+transform: translateZ(0);
+backface-visibility: hidden;
 }
 
-/* Estados de carga para video */
-#main-video[data-loading="true"] {
+/* ===== ACCESIBILIDAD MEJORADA ===== */
+@media (prefers-reduced-motion: reduce) {
+*,
+*::before,
+*::after {
+animation-duration: 0.01ms !important;
+animation-iteration-count: 1 !important;
+transition-duration: 0.01ms !important;
+}
+
+.nav__logo,
+.nav__list,
+.btn--primary,
+.btn--cta::after,
+.hero__phone-container,
+.hero::before,
+.hero::after,
+.floating-orb-2,
+.floating-orb-3,
+.contact__channel,
+.contact__badge {
+animation: none !important;
+}
+}
+
+.btn:focus,
+.nav__link:focus,
+.nav__logo:focus,
+.contact__channel:focus,
+.contact__channel-btn:focus,
+.faq__question:focus {
+outline: 2px solid var(--starflex-blue);
+outline-offset: 3px;
+border-radius: 6px;
+}
+
+.btn--cta:focus,
+.btn--footer:focus {
+outline: 2px solid var(--starflex-crimson-bright);
+outline-offset: 3px;
+}
+
+/* ===== SELECCIÓN DE TEXTO ===== */
+::selection {
+background: var(--starflex-crimson);
+color: var(--text-primary);
+}
+
+::-moz-selection {
+background: var(--starflex-crimson);
+color: var(--text-primary);
+}
+
+/* ===== ESTADOS DE CARGA ===== */
+.hero__phone[data-loading="true"] {
 background: linear-gradient(90deg, 
 var(--secondary-bg) 25%, 
 var(--accent-bg) 50%, 
@@ -3981,52 +3533,337 @@ background-size: 200% 100%;
 animation: loading-shimmer 2s infinite;
 }
 
-/* Mejoras para modo oscuro */
-@media (prefers-color-scheme: dark) {
-.floating-btn__tooltip {
-background: rgba(0, 0, 0, 0.95);
-border: 1px solid rgba(255, 255, 255, 0.1);
+@keyframes loading-shimmer {
+0% {
+background-position: -200% 0;
+}
+100% {
+background-position: 200% 0;
 }
 }
 
-/* Animaciones suaves para todos los elementos interactivos */
-.videos__player-frame *,
-.floating-btn *,
-.floating-btn__tooltip {
-transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-/* Estados de hover mejorados */
-.floating-btn:hover {
-animation-play-state: paused;
-}
-
-/* Mejoras de contraste */
+/* ===== MEJORAS DE CONTRASTE ===== */
 @media (prefers-contrast: high) {
-.floating-btn {
-border: 2px solid rgba(255, 255, 255, 0.3);
+:root {
+--border-subtle: rgba(255, 255, 255, 0.3);
+--border-accent: rgba(0, 212, 255, 0.8);
+--text-secondary: #f1f5f9;
+--text-muted: #cbd5e1;
+}
 }
 
-.floating-btn__tooltip {
-border: 1px solid rgba(255, 255, 255, 0.5);
+/* ===== MODO OSCURO FORZADO ===== */
+@media (prefers-color-scheme: dark) {
+:root {
+--primary-bg: #000000;
+--secondary-bg: #0a0a0a;
+--accent-bg: #111111;
 }
 }
 
-/* Reducir movimiento para usuarios que lo prefieren */
-@media (prefers-reduced-motion: reduce) {
-.floating-btn {
-animation: none;
+/* ===== UTILIDADES FINALES ===== */
+.sr-only {
+position: absolute;
+width: 1px;
+height: 1px;
+padding: 0;
+margin: -1px;
+overflow: hidden;
+clip: rect(0, 0, 0, 0);
+white-space: nowrap;
+border: 0;
 }
 
-.floating-btn:hover {
-transform: scale(1.05);
+.no-scroll {
+overflow: hidden;
 }
 
-.floating-btn__icon {
-transition: none;
+/* ===== FALLBACKS PARA NAVEGADORES ANTIGUOS ===== */
+@supports not (backdrop-filter: blur(20px)) {
+.nav__list,
+.nav__toggle,
+.videos__player-container,
+.faq__search,
+.contact__badge {
+background: rgba(21, 25, 34, 0.9);
+}
 }
 
-.floating-btn:hover .floating-btn__icon {
-transform: scale(1.1);
+@supports not (background-clip: text) {
+.hero__title--main,
+.hero__title--highlight,
+.hero__title--amazon,
+.features__title,
+.feature__title {
+color: var(--text-primary);
+}
+
+.hero__title--highlight {
+color: var(--starflex-blue);
+}
+
+.hero__title--amazon {
+color: var(--starflex-orange);
+}
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+.hero__phone::after,
+.floating-orb-2,
+.floating-orb-3,
+.bg-canvas {
+display: none;
+}
+
+.hero__phone {
+box-shadow: none;
+border: 2px solid #000;
+}
+
+.hero__phone-content {
+background: #fff;
+color: #000;
+}
+}
+
+/* ===== MEJORAS PARA PANTALLAS DE ALTA DENSIDAD ===== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+.hero__phone {
+border-width: 1px;
+}
+}
+
+/* ===== EFECTOS DE TRANSICIÓN SUAVES PARA CAMBIOS DE ESTADO ===== */
+.hero__phone-content * {
+transition: all var(--transition-fast);
+}
+
+.hero__phone-screen {
+contain: layout style paint;
+}
+
+.hero__phone-content {
+contain: layout style;
+}
+
+/* ===== CLASES UTILITARIAS PARA ALTERNAR ESTILOS ===== */
+.phone--clean {
+background: transparent;
+border: none;
+padding: 0;
+box-shadow: 
+0 15px 40px rgba(0, 0, 0, 0.3),
+0 0 0 1px rgba(255, 255, 255, 0.08);
+border-radius: 20px;
+}
+
+.phone--clean::before,
+.phone--clean::after {
+display: none;
+}
+
+.phone--clean .phone__screen {
+border-radius: 20px;
+border: 1px solid rgba(255, 255, 255, 0.08);
+box-shadow: 
+0 10px 30px rgba(0, 0, 0, 0.4),
+inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.phone--clean .phone__content {
+border-radius: 19px;
+}
+
+.phone--clean .phone__app-image {
+border-radius: 19px;
+}
+
+/* ===== HERO PHONE CLEAN VERSION ===== */
+.hero__phone--clean {
+background: transparent;
+border: none;
+padding: 0;
+box-shadow: 
+0 20px 50px rgba(0, 0, 0, 0.4),
+0 0 0 2px rgba(255, 255, 255, 0.08);
+border-radius: 25px;
+}
+
+.hero__phone--clean::before,
+.hero__phone--clean::after {
+display: none;
+}
+
+.hero__phone--clean .hero__phone-screen {
+border-radius: 25px;
+border: 2px solid rgba(255, 255, 255, 0.08);
+box-shadow: 
+0 15px 40px rgba(0, 0, 0, 0.5),
+inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.hero__phone--clean .hero__phone-content {
+border-radius: 23px;
+}
+
+.hero__phone--clean .hero__phone-app-image {
+border-radius: 23px;
+}
+
+/* ===== MEJORAS ESPECÍFICAS PARA IMÁGENES ===== */
+.phone__app-image,
+.hero__phone-app-image {
+/* Optimización para mejor calidad de imagen */
+image-rendering: -webkit-optimize-contrast;
+image-rendering: crisp-edges;
+}
+
+/* ===== RESPONSIVE FINAL OPTIMIZADO ===== */
+@media (max-width: 1200px) {
+.hero__phone {
+width: 300px;
+height: 600px;
+}
+
+.feature__phone {
+width: 280px;
+height: 560px;
+}
+}
+
+@media (max-width: 992px) {
+.hero__phone {
+width: 280px;
+height: 560px;
+}
+
+.feature__phone {
+width: 260px;
+height: 520px;
+}
+}
+
+@media (max-width: 768px) {
+.hero__phone {
+width: 260px;
+height: 520px;
+border-radius: 35px;
+padding: 3px;
+}
+
+.hero__phone-screen {
+border-radius: 32px;
+}
+
+.hero__phone-content {
+border-radius: 32px;
+}
+
+.hero__phone-app-image {
+border-radius: 32px;
+}
+
+.feature__phone {
+width: 240px;
+height: 480px;
+}
+
+.phone {
+border-radius: 30px;
+padding: 2px;
+}
+
+.phone__screen {
+border-radius: 28px;
+}
+
+.phone__content {
+border-radius: 28px;
+}
+
+.phone__app-image {
+border-radius: 28px;
+}
+}
+
+@media (max-width: 480px) {
+.hero__phone {
+width: 220px;
+height: 440px;
+border-radius: 30px;
+padding: 2px;
+}
+
+.hero__phone-screen {
+border-radius: 28px;
+}
+
+.hero__phone-content {
+border-radius: 28px;
+}
+
+.hero__phone-app-image {
+border-radius: 28px;
+}
+
+.feature__phone {
+width: 200px;
+height: 400px;
+}
+
+.phone {
+border-radius: 25px;
+padding: 2px;
+}
+
+.phone__screen {
+border-radius: 23px;
+}
+
+.phone__content {
+border-radius: 23px;
+}
+
+.phone__app-image {
+border-radius: 23px;
+}
+}
+
+/* ===== MEJORAS DE PERFORMANCE FINAL ===== */
+.hero__phone-app-image,
+.phone__app-image {
+transform: translateZ(0);
+backface-visibility: hidden;
+}
+
+/* ===== ESTADOS HOVER MEJORADOS ===== */
+.hero__phone:hover .hero__phone-app-image,
+.phone:hover .phone__app-image {
+transform: scale(1.01);
+}
+
+/* ===== LOADING STATES ===== */
+.phone__app-image[data-loading="true"],
+.hero__phone-app-image[data-loading="true"] {
+background: linear-gradient(90deg, 
+var(--secondary-bg) 25%, 
+var(--accent-bg) 50%, 
+var(--secondary-bg) 75%
+);
+background-size: 200% 100%;
+animation: loading-shimmer 1.5s infinite;
+}
+
+/* ===== FINAL OPTIMIZATIONS ===== */
+@media (max-width: 320px) {
+.hero__phone {
+width: 200px;
+height: 400px;
+}
+
+.feature__phone {
+width: 180px;
+height: 360px;
 }
 }
