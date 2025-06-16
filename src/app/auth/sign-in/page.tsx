@@ -37,11 +37,12 @@ export default function SignInPage() {
     try {
       await signIn(email, password);
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Sign in error:', error);
       
       // Manejar errores específicos de Firebase
-      switch (error.code) {
+      const firebaseError = error as { code?: string };
+      switch (firebaseError.code) {
         case 'auth/user-not-found':
           setError('No existe una cuenta con este email.');
           break;

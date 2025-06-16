@@ -3,7 +3,6 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import {
-  Box,
   Alert,
   Snackbar,
 } from '@mui/material';
@@ -11,7 +10,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import PatientView from '@/components/patients/PatientView';
 import PatientDialog from '@/components/patients/PatientDialog';
-import { usePatient, usePatientActions } from '@/hooks/usePatients';
+import { usePatient } from '@/hooks/usePatients';
 import { useAuth } from '@/context/AuthContext';
 import { User } from '@/types/auth';
 import { FirestoreService } from '@/services/firestore';

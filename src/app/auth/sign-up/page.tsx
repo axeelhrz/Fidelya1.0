@@ -108,10 +108,11 @@ export default function SignUpPage() {
       });
       
       router.push('/auth/verify-email');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Sign up error:', error);
       
-      switch (error.code) {
+      const firebaseError = error as { code?: string };
+      switch (firebaseError.code) {
         case 'auth/email-already-in-use':
           setError('Ya existe una cuenta con este email.');
           break;
