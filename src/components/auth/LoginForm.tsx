@@ -108,7 +108,7 @@ export default function LoginForm() {
 
     try {
       await signInWithCredentials(selectedUser.nombre_completo, password.trim())
-      router.push('/dashboard')
+      router.push('/role-selection')
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión')
     } finally {
@@ -191,10 +191,14 @@ export default function LoginForm() {
               <br />
               <span className="text-white">de Pedidos</span>
             </h1>
-            <p className="text-slate-300 text-lg font-medium">
-              Accede a tu cuenta para gestionar tus almuerzos
-            </p>
-            <div className="flex items-center justify-center space-x-1 mt-2">
+            
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 inline-block border border-white/20 shadow-lg mb-4">
+              <p className="text-white text-lg font-semibold">
+                Bienvenido al sistema de pedidos
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center space-x-1 mt-4">
               <Star className="w-4 h-4 text-yellow-400" />
               <Star className="w-4 h-4 text-yellow-400" />
               <Star className="w-4 h-4 text-yellow-400" />
@@ -203,168 +207,135 @@ export default function LoginForm() {
             </div>
           </div>
 
-          {/* Card Principal */}
+          {/* Card de Login */}
           <Card className="border-0 shadow-2xl glass-card hover-lift animate-slide-in-up">
             <CardContent className="p-8">
-              {/* Status de Conexión */}
-              <div className="mb-8">
-                {connectionStatus === 'checking' && (
-                  <div className="flex items-center justify-center space-x-3 text-sm bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-200">
-                    <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-                    <span className="font-semibold text-blue-700">Conectando con el servidor...</span>
-                    <Zap className="w-4 h-4 text-blue-500 animate-pulse" />
-                  </div>
-                )}
-                {connectionStatus === 'connected' && (
-                  <div className="flex items-center justify-center space-x-3 text-sm bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl p-4 border border-emerald-200">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                    <span className="font-semibold text-emerald-700">Conectado exitosamente</span>
-                    <Sparkles className="w-4 h-4 text-emerald-500 animate-pulse" />
-                  </div>
-                )}
-                {connectionStatus === 'error' && (
-                  <div className="flex items-center justify-center space-x-3 text-sm bg-gradient-to-r from-red-50 to-pink-50 rounded-2xl p-4 border border-red-200">
-                    <AlertCircle className="w-5 h-5 text-red-600" />
-                    <span className="font-semibold text-red-700">Error de conexión</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={checkConnection}
-                      className="text-xs text-red-600 hover:text-red-700 hover:bg-red-100 rounded-full"
-                    >
-                      Reintentar
-                    </Button>
-                  </div>
-                )}
+              {/* Estado de conexión */}
+              <div className="mb-6">
+                <div className={`flex items-center space-x-3 p-4 rounded-2xl ${
+                  connectionStatus === 'connected' ? 'bg-green-100 text-green-800 border border-green-200' :
+                  connectionStatus === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+                  'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                }`}>
+                  {connectionStatus === 'connected' ? (
+                    <CheckCircle2 className="w-5 h-5" />
+                  ) : connectionStatus === 'error' ? (
+                    <AlertCircle className="w-5 h-5" />
+                  ) : (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  )}
+                  <span className="font-semibold">
+                    {connectionStatus === 'connected' ? 'Conectado a la base de datos' :
+                     connectionStatus === 'error' ? 'Error de conexión' :
+                     'Verificando conexión...'}
+                  </span>
+                </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-8">
-                {/* Campo Tu Nombre */}
-                <div className="space-y-4">
-                  <label className="text-sm font-bold text-slate-700 flex items-center space-x-2">
-                    <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                    <span>Tu Nombre</span>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Selector de Usuario */}
+                <div className="space-y-3">
+                  <label className="text-sm font-bold text-slate-900">
+                    Selecciona tu nombre
                   </label>
-
-                  {loadingUsers ? (
-                    <div className="flex items-center justify-center h-16 border-2 border-dashed border-slate-300 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100 animate-shimmer">
-                      <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
-                      <span className="ml-3 text-sm text-slate-600 font-semibold">Cargando trabajadores...</span>
-                    </div>
-                  ) : (
-                    <div className="relative dropdown-container">
-                      <button
-                        type="button"
-                        onClick={() => setShowDropdown(!showDropdown)}
-                        disabled={users.length === 0}
-                        className="w-full h-16 px-6 py-4 border-2 border-slate-200 rounded-2xl bg-white hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 flex items-center justify-between text-left disabled:opacity-50 disabled:cursor-not-allowed group hover:border-orange-300 hover:shadow-lg"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-gradient-to-r from-slate-400 to-slate-600 rounded-2xl flex items-center justify-center group-hover:from-orange-400 group-hover:to-red-500 transition-all duration-300 shadow-lg group-hover:shadow-xl">
-                            <User className="w-6 h-6 text-white" />
+                  
+                  <div className="dropdown-container relative">
+                    <div
+                      onClick={() => !loadingUsers && setShowDropdown(!showDropdown)}
+                      className={`w-full h-14 px-4 py-3 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${
+                        selectedUser 
+                          ? 'border-green-300 bg-green-50 shadow-lg' 
+                          : 'border-slate-300 bg-white hover:border-orange-400 hover:shadow-md'
+                      } ${loadingUsers ? 'cursor-not-allowed opacity-50' : ''}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            selectedUser ? 'bg-green-500' : 'bg-slate-400'
+                          }`}>
+                            <User className="w-5 h-5 text-white" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            {selectedUser ? (
-                              <div>
-                                <p className="text-base font-bold text-slate-900 truncate">{selectedUser.nombre_completo}</p>
-                                <p className="text-sm text-slate-500 font-medium">RUT: {selectedUser.rut}</p>
+                          <span className={`font-semibold ${
+                            selectedUser ? 'text-green-800' : 'text-slate-500'
+                          }`}>
+                            {loadingUsers ? 'Cargando trabajadores...' :
+                             selectedUser ? selectedUser.nombre_completo : 'Selecciona tu nombre...'}
+                          </span>
+                        </div>
+                        {!loadingUsers && (
+                          <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${
+                            showDropdown ? 'rotate-180' : ''
+                          }`} />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dropdown */}
+                    {showDropdown && !loadingUsers && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-slate-200 rounded-2xl shadow-2xl z-50 max-h-80 overflow-y-auto">
+                        {users.length === 0 ? (
+                          <div className="p-6 text-center text-slate-500">
+                            <AlertCircle className="w-8 h-8 mx-auto mb-3 text-slate-400" />
+                            <p className="font-semibold">No hay trabajadores disponibles</p>
+                          </div>
+                        ) : (
+                          users.map((user) => (
+                            <div
+                              key={user.id}
+                              onClick={() => handleUserSelect(user)}
+                              className="p-4 hover:bg-slate-50 cursor-pointer transition-colors duration-200 border-b border-slate-100 last:border-b-0"
+                            >
+                              <div className="flex items-center space-x-4">
+                                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+                                  <User className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-bold text-slate-900">{user.nombre_completo}</p>
+                                  <div className="flex items-center space-x-3 mt-1">
+                                    <span className={`text-xs px-3 py-1 rounded-full border font-semibold ${getTurnoColor(user.turno_habitual)}`}>
+                                      {user.turno_habitual || 'Sin turno'}
+                                    </span>
+                                    <span className={`text-xs px-3 py-1 rounded-full border font-semibold ${getRolColor(user.rol)}`}>
+                                      {user.rol || 'Empleado'}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                            ) : (
-                              <span className="text-base text-slate-500 font-semibold">
-                                {users.length === 0 ? 'No hay trabajadores disponibles' : 'Selecciona tu nombre...'}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <ChevronDown className={`w-6 h-6 text-slate-400 transition-all duration-300 ${showDropdown ? 'rotate-180 text-orange-500 scale-110' : ''}`} />
-                      </button>
-
-                      {showDropdown && users.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-3 bg-white border-2 border-slate-200 rounded-2xl shadow-2xl z-50 max-h-80 overflow-y-auto dropdown-enter-active">
-                          <div className="p-3">
-                            {users.map((user, index) => (
-                              <button
-                                key={user.id}
-                                type="button"
-                                onClick={() => handleUserSelect(user)}
-                                className={`w-full p-4 text-left hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 focus:bg-gradient-to-r focus:from-orange-50 focus:to-red-50 focus:outline-none transition-all duration-300 flex items-center space-x-4 rounded-xl group hover:shadow-md ${
-                                  selectedUser?.id === user.id ? 'bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 shadow-md' : ''
-                                } ${index !== users.length - 1 ? 'border-b border-slate-100' : ''}`}
-                              >
-                                <div className="w-14 h-14 bg-gradient-to-r from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
-                                  <User className="w-7 h-7 text-white" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-bold text-slate-900 truncate text-lg">{user.nombre_completo}</p>
-                                  <div className="flex items-center space-x-2 mt-1">
-                                    <p className="text-sm text-slate-500 font-medium">RUT: {user.rut}</p>
-                                    {user.empresa_id && (
-                                      <div className="flex items-center space-x-1">
-                                        <Building2 className="w-3 h-3 text-slate-400" />
-                                        <span className="text-xs text-slate-400 font-medium">ID: {user.empresa_id}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center space-x-2 mt-2">
-                                    {user.turno_habitual && (
-                                      <span className={`text-xs px-3 py-1 rounded-full border font-bold shadow-sm ${getTurnoColor(user.turno_habitual)}`}>
-                                        {user.turno_habitual}
-                                      </span>
-                                    )}
-                                    {user.rol && (
-                                      <span className={`text-xs px-3 py-1 rounded-full border font-bold shadow-sm ${getRolColor(user.rol)}`}>
-                                        {user.rol}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                {selectedUser?.id === user.id && (
-                                  <CheckCircle2 className="w-6 h-6 text-orange-500 animate-pulse" />
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Campo Contraseña */}
-                <div className="space-y-4">
-                  <label className="text-sm font-bold text-slate-700 flex items-center space-x-2">
-                    <div className="w-6 h-6 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg flex items-center justify-center">
-                      <Lock className="w-4 h-4 text-white" />
-                    </div>
-                    <span>Contraseña</span>
+                {/* Campo de Contraseña */}
+                <div className="space-y-3">
+                  <label htmlFor="password" className="text-sm font-bold text-slate-900">
+                    Contraseña
                   </label>
                   <div className="relative">
-                    <div className="absolute left-5 top-1/2 transform -translate-y-1/2 z-10">
-                      <Shield className="w-6 h-6 text-slate-400" />
-                    </div>
                     <Input
+                      id="password"
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Ingresa tu contraseña"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={`pl-14 pr-14 h-16 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 text-lg font-semibold transition-all duration-300 input-glow ${
-                        password && selectedUser
-                          ? isPasswordCorrect()
-                            ? 'border-emerald-400 bg-gradient-to-r from-emerald-50 to-green-50 focus:border-emerald-500'
-                            : 'border-red-400 bg-gradient-to-r from-red-50 to-pink-50 focus:border-red-500'
-                          : 'hover:border-slate-300 hover:shadow-md'
+                      placeholder="Ingresa tu contraseña"
+                      className={`h-14 pr-12 text-lg font-semibold transition-all duration-300 ${
+                        password && isPasswordCorrect() 
+                          ? 'border-green-400 bg-green-50 text-green-800' 
+                          : password && !isPasswordCorrect()
+                          ? 'border-red-400 bg-red-50 text-red-800'
+                          : 'border-slate-300'
                       }`}
-                      disabled={!selectedUser}
+                      disabled={loading}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-5 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors duration-300 z-10 hover:scale-110"
-                      disabled={!password}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors duration-200"
                     >
-                      {showPassword ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
 
@@ -397,30 +368,29 @@ export default function LoginForm() {
 
                   {/* Validación visual */}
                   {password && selectedUser && (
-                    <div className={`flex items-center space-x-4 p-4 rounded-2xl border shadow-sm ${
-                      isPasswordCorrect()
-                        ? 'text-emerald-700 bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200'
-                        : 'text-red-700 bg-gradient-to-r from-red-50 to-pink-50 border-red-200'
+                    <div className={`flex items-center space-x-2 p-3 rounded-xl ${
+                      isPasswordCorrect() 
+                        ? 'bg-green-100 text-green-800 border border-green-200' 
+                        : 'bg-red-100 text-red-800 border border-red-200'
                     }`}>
                       {isPasswordCorrect() ? (
-                        <CheckCircle2 className="w-6 h-6 flex-shrink-0 animate-pulse" />
+                        <CheckCircle2 className="w-5 h-5" />
                       ) : (
-                        <AlertCircle className="w-6 h-6 flex-shrink-0 animate-pulse" />
+                        <AlertCircle className="w-5 h-5" />
                       )}
-                      <span className="text-base font-bold">
-                        {isPasswordCorrect() ? '¡Contraseña correcta!' : 'Contraseña incorrecta'}
+                      <span className="font-semibold text-sm">
+                        {isPasswordCorrect() ? 'Contraseña correcta' : 'Contraseña incorrecta'}
                       </span>
                     </div>
                   )}
                 </div>
 
-                {/* Error Message */}
+                {/* Error */}
                 {error && (
-                  <div className="p-5 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 text-red-700 rounded-2xl flex items-start space-x-4 animate-slide-in-up shadow-lg">
-                    <AlertCircle className="w-6 h-6 flex-shrink-0 mt-0.5 animate-pulse" />
-                    <div>
-                      <p className="font-bold text-base">Error de autenticación</p>
-                      <p className="text-sm font-medium">{error}</p>
+                  <div className="bg-red-100 border border-red-300 text-red-700 px-6 py-4 rounded-2xl shadow-sm">
+                    <div className="flex items-center space-x-3">
+                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                      <p className="font-semibold">{error}</p>
                     </div>
                   </div>
                 )}
@@ -428,51 +398,50 @@ export default function LoginForm() {
                 {/* Botón de Login */}
                 <Button
                   type="submit"
-                  className="w-full h-16 btn-gradient text-white font-black text-lg rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 animate-glow"
-                  disabled={loading || !selectedUser || !password || connectionStatus !== 'connected'}
+                  disabled={loading || !selectedUser || !password.trim()}
+                  className="w-full h-16 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <div className="flex items-center space-x-3">
                       <Loader2 className="w-6 h-6 animate-spin" />
                       <span>Iniciando sesión...</span>
-                      <Sparkles className="w-5 h-5 animate-pulse" />
                     </div>
                   ) : (
                     <div className="flex items-center space-x-3">
-                      <Shield className="w-6 h-6" />
+                      <Zap className="w-6 h-6" />
                       <span>Iniciar Sesión</span>
-                      <Zap className="w-5 h-5" />
                     </div>
                   )}
                 </Button>
               </form>
 
-              {/* Footer */}
-              <div className="mt-8 text-center space-y-6">
-                <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
-                <p className="text-sm text-slate-600 font-medium">
-                  ¿Problemas para acceder?{' '}
-                  <a href="#" className="text-orange-600 hover:text-orange-700 font-bold underline transition-colors duration-200 hover:scale-105 inline-block">
-                    Contacta al administrador
-                  </a>
-                </p>
-
-                {/* Debug Info (solo en desarrollo) */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="text-xs text-slate-500 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200 shadow-sm">
-                    <p className="font-bold">🔧 Modo desarrollo</p>
-                    <p className="font-medium">Trabajadores cargados: {users.length} | Estado: {connectionStatus}</p>
+              {/* Debug Info */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="mt-6 p-4 bg-slate-100 rounded-xl border border-slate-200">
+                  <p className="text-xs text-slate-600 font-semibold mb-2">🔧 Información de Debug:</p>
+                  <div className="text-xs text-slate-500 space-y-1">
+                    <p>• Trabajadores cargados: {users.length}</p>
+                    <p>• Estado de conexión: {connectionStatus}</p>
+                    <p>• Usuario seleccionado: {selectedUser?.nombre_completo || 'Ninguno'}</p>
+                    <p>• Contraseña esperada: {selectedUser ? getExpectedPassword() : 'N/A'}</p>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Información adicional */}
-          <div className="mt-8 text-center animate-slide-in-up" style={{animationDelay: '0.3s'}}>
-            <div className="inline-flex items-center space-x-3 text-sm text-slate-300 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20 shadow-lg">
-              <Shield className="w-4 h-4" />
-              <span className="font-semibold">Conexión segura</span>
+          {/* Footer */}
+          <div className="text-center mt-8 animate-slide-in-up" style={{animationDelay: '0.3s'}}>
+            <div className="inline-flex items-center space-x-4 text-sm text-slate-300 bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/20 shadow-lg">
+              <div className="flex items-center space-x-2">
+                <Building2 className="w-4 h-4" />
+                <span className="font-semibold">Sistema de Pedidos</span>
+              </div>
+              <div className="w-px h-4 bg-white/30"></div>
+              <div className="flex items-center space-x-2">
+                <Shield className="w-4 h-4" />
+                <span className="font-semibold">Seguro y Confiable</span>
+              </div>
               <Sparkles className="w-4 h-4 animate-pulse" />
             </div>
           </div>
