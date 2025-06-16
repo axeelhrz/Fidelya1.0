@@ -17,7 +17,8 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { EMOTIONAL_STATE_COLORS, EMOTIONAL_TONE_COLORS } from '@/types/patient';
+import { EMOTIONAL_STATE_COLORS } from '@/types/patient';
+import { EMOTIONAL_TONE_COLORS } from '@/types/session';
 import { CHART_COLORS } from '@/types/metrics';
 
 interface EmotionPieChartProps {
