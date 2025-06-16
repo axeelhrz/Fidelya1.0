@@ -902,10 +902,6 @@ transition: transform var(--transition-slow);
 animation: phone-float 8s ease-in-out infinite;
 }
 
-.hero__phone-container:hover {
-transform: perspective(1200px) rotateY(-4deg) rotateX(1deg) scale(1.02);
-}
-
 /* ===== CONTENEDOR PROFESIONAL SIN MARCO ===== */
 .hero__phone {
 width: 320px;
@@ -923,7 +919,7 @@ filter: drop-shadow(0 0 30px rgba(255, 69, 105, 0.15));
 background: #000000;
 }
 
-/* ===== SISTEMA DE PARTÍCULAS DELICADAS ===== */
+/* ===== SISTEMA DE PARTÍCULAS FLOTANTES DELICADAS ===== */
 .particles-container {
 position: absolute;
 top: 0;
@@ -934,12 +930,6 @@ pointer-events: none;
 z-index: 2;
 overflow: hidden;
 border-radius: inherit;
-opacity: 0;
-transition: opacity 0.6s ease;
-}
-
-.hero__phone-container:hover .particles-container,
-.feature__phone:hover .particles-container {
 opacity: 1;
 }
 
@@ -1011,23 +1001,6 @@ object-fit: cover;
 object-position: center;
 /* Optimización de imagen profesional */
 filter: brightness(1.02) contrast(1.05) saturate(1.08);
-}
-
-/* Hover effect sutil y profesional - SIN EFECTOS HOVER TRADICIONALES */
-.hero__phone-container:hover .hero__phone {
-box-shadow: 
-0 30px 90px rgba(0, 0, 0, 0.5),
-0 15px 50px rgba(0, 0, 0, 0.4),
-0 0 0 1px rgba(255, 255, 255, 0.08);
-filter: drop-shadow(0 0 40px rgba(255, 69, 105, 0.2));
-}
-
-.hero__phone-container:hover .hero__phone::before {
-opacity: 0.8;
-}
-
-.hero__phone-container:hover .hero__phone-app-image {
-filter: brightness(1.03) contrast(1.06) saturate(1.1);
 }
 
 /* ===== SECCIÓN CARACTERÍSTICAS MODERNIZADA ===== */
@@ -1221,10 +1194,7 @@ height: 600px;
 margin: 0 auto;
 transform: perspective(1000px) rotateY(2deg) rotateX(-1deg);
 transition: transform var(--transition);
-}
-
-.feature__phone:hover {
-transform: perspective(1000px) rotateY(1deg) rotateX(0deg) scale(1.02);
+animation: feature-phone-float 10s ease-in-out infinite;
 }
 
 /* ===== CONTENEDOR PROFESIONAL PARA FEATURES ===== */
@@ -1363,46 +1333,6 @@ background: url('../assets/phones/Notificaciones.jpg') center/cover no-repeat;
 background: url('../assets/phones/Referidos.jpg') center/cover no-repeat;
 }
 
-/* ===== EFECTOS HOVER PROFESIONALES - SOLO PARTÍCULAS ===== */
-.phone:hover {
-box-shadow: 
-0 25px 70px rgba(0, 0, 0, 0.5),
-0 12px 40px rgba(0, 0, 0, 0.4),
-0 0 0 1px rgba(255, 255, 255, 0.08);
-}
-
-.feature:nth-child(1) .phone:hover {
-filter: drop-shadow(0 0 35px rgba(255, 69, 105, 0.18));
-}
-
-.feature:nth-child(2) .phone:hover {
-filter: drop-shadow(0 0 35px rgba(255, 23, 68, 0.18));
-}
-
-.feature:nth-child(3) .phone:hover {
-filter: drop-shadow(0 0 35px rgba(255, 45, 107, 0.18));
-}
-
-.feature:nth-child(4) .phone:hover {
-filter: drop-shadow(0 0 35px rgba(184, 0, 46, 0.18));
-}
-
-.feature:nth-child(5) .phone:hover {
-filter: drop-shadow(0 0 35px rgba(255, 69, 105, 0.18));
-}
-
-.feature:nth-child(6) .phone:hover {
-filter: drop-shadow(0 0 35px rgba(255, 215, 0, 0.25));
-}
-
-.phone:hover::before {
-opacity: 0.7;
-}
-
-.phone:hover .phone__app-image {
-filter: brightness(1.03) contrast(1.06) saturate(1.1);
-}
-
 /* ===== ANIMACIONES OPTIMIZADAS ===== */
 @keyframes ambient-glow {
 0%, 100% {
@@ -1426,6 +1356,15 @@ transform: scale(1.03);
 }
 }
 
+@keyframes feature-phone-float {
+0%, 100% {
+transform: perspective(1000px) rotateY(2deg) rotateX(-1deg) translateY(0px);
+}
+50% {
+transform: perspective(1000px) rotateY(2deg) rotateX(-1deg) translateY(-8px);
+}
+}
+
 @keyframes reward-shine {
 0%, 100% {
 box-shadow: 
@@ -1438,6 +1377,9 @@ box-shadow:
 inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 }
+
+/* ===== RESTO DEL CSS PERMANECE IGUAL ===== */
+/* Continúo con las demás secciones sin cambios... */
 
 /* ===== SECCIÓN DE VIDEOS FUTURISTA ===== */
 .videos {
@@ -3002,19 +2944,6 @@ transform: translateY(0);
 }
 }
 
-@keyframes reward-shine {
-0%, 100% {
-box-shadow: 
-0 4px 15px rgba(255, 215, 0, 0.4),
-inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-50% {
-box-shadow: 
-0 6px 20px rgba(255, 215, 0, 0.6),
-inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-}
-
 /* ===== RESPONSIVE OPTIMIZADO ===== */
 @media (max-width: 1024px) {
 .hero__container {
@@ -3208,10 +3137,6 @@ height: 480px;
 transform: none;
 }
 
-.feature__phone:hover {
-transform: scale(1.02);
-}
-
 .phone {
 border-radius: 30px;
 }
@@ -3372,7 +3297,6 @@ border-radius: 25px;
 .phone__screen {
 border-radius: 25px;
 }
-
 .phone__content {
 border-radius: 25px;
 }

@@ -3,7 +3,7 @@ let isMenuOpen = false;
 let currentFeature = 0;
 const features = document.querySelectorAll('.feature');
 
-// Variables para el sistema de partículas
+// Variables para el sistema de partículas flotantes
 let particleSystems = [];
 let animationId = null;
 let isReducedMotion = false;
@@ -16,35 +16,34 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeFAQ();
     initializeAnimations();
     initializeIntersectionObserver();
-    initializeParticleSystem();
+    initializeFloatingParticles();
     checkReducedMotion();
 });
 
-// ===== SISTEMA DE PARTÍCULAS DELICADAS ===== 
-class ParticleSystem {
+// ===== SISTEMA DE PARTÍCULAS FLOTANTES DELICADAS ===== 
+class FloatingParticleSystem {
     constructor(container, options = {}) {
         this.container = container;
         this.canvas = null;
         this.ctx = null;
         this.particles = [];
-        this.isActive = false;
+        this.isActive = true;
         this.animationFrame = null;
         
-        // Configuración optimizada
+        // Configuración optimizada para efecto flotante constante
         this.config = {
-            maxParticles: options.maxParticles || 15,
-            particleSize: options.particleSize || { min: 1, max: 3 },
-            speed: options.speed || { min: 0.2, max: 0.8 },
-            opacity: options.opacity || { min: 0.3, max: 0.8 },
+            maxParticles: options.maxParticles || 8,
+            particleSize: options.particleSize || { min: 1, max: 2.5 },
+            speed: options.speed || { min: 0.1, max: 0.4 },
+            opacity: options.opacity || { min: 0.2, max: 0.6 },
             colors: options.colors || [
                 'rgba(255, 69, 105, ',
                 'rgba(255, 23, 68, ',
-                'rgba(184, 0, 46, ',
-                'rgba(255, 107, 157, '
+                'rgba(184, 0, 46, '
             ],
-            spawnRate: options.spawnRate || 0.3,
-            lifetime: options.lifetime || { min: 2000, max: 4000 },
-            direction: options.direction || 'up'
+            spawnRate: options.spawnRate || 0.15,
+            lifetime: options.lifetime || { min: 3000, max: 6000 },
+            direction: 'up'
         };
         
         this.init();
@@ -52,7 +51,7 @@ class ParticleSystem {
     
     init() {
         this.createCanvas();
-        this.setupEventListeners();
+        this.start();
     }
     
     createCanvas() {
@@ -72,6 +71,11 @@ class ParticleSystem {
         particlesContainer.appendChild(this.canvas);
         
         this.resizeCanvas();
+        
+        // Redimensionar canvas en resize
+        window.addEventListener('resize', debounce(() => {
+            this.resizeCanvas();
+        }, 250));
     }
     
     resizeCanvas() {
@@ -86,24 +90,6 @@ class ParticleSystem {
         this.ctx.scale(dpr, dpr);
     }
     
-    setupEventListeners() {
-        // Activar partículas en hover
-        this.container.addEventListener('mouseenter', () => {
-            if (!isReducedMotion) {
-                this.start();
-            }
-        });
-        
-        this.container.addEventListener('mouseleave', () => {
-            this.stop();
-        });
-        
-        // Redimensionar canvas
-        window.addEventListener('resize', debounce(() => {
-            this.resizeCanvas();
-        }, 250));
-    }
-    
     createParticle() {
         const rect = this.container.getBoundingClientRect();
         const config = this.config;
@@ -112,21 +98,21 @@ class ParticleSystem {
             x: Math.random() * rect.width,
             y: rect.height + 10,
             size: Math.random() * (config.particleSize.max - config.particleSize.min) + config.particleSize.min,
-            speedX: (Math.random() - 0.5) * 0.5,
+            speedX: (Math.random() - 0.5) * 0.3,
             speedY: -(Math.random() * (config.speed.max - config.speed.min) + config.speed.min),
             opacity: Math.random() * (config.opacity.max - config.opacity.min) + config.opacity.min,
             color: config.colors[Math.floor(Math.random() * config.colors.length)],
             life: Math.random() * (config.lifetime.max - config.lifetime.min) + config.lifetime.min,
             maxLife: 0,
             rotation: Math.random() * Math.PI * 2,
-            rotationSpeed: (Math.random() - 0.5) * 0.02
+            rotationSpeed: (Math.random() - 0.5) * 0.01
         };
     }
     
     updateParticles() {
         const rect = this.container.getBoundingClientRect();
         
-        // Crear nuevas partículas
+        // Crear nuevas partículas de forma más espaciada
         if (Math.random() < this.config.spawnRate && this.particles.length < this.config.maxParticles) {
             const particle = this.createParticle();
             particle.maxLife = particle.life;
@@ -140,9 +126,9 @@ class ParticleSystem {
             particle.life -= 16; // ~60fps
             particle.rotation += particle.rotationSpeed;
             
-            // Fade out al final de la vida
+            // Fade out suave al final de la vida
             const lifeRatio = particle.life / particle.maxLife;
-            particle.currentOpacity = particle.opacity * Math.max(0, lifeRatio);
+            particle.currentOpacity = particle.opacity * Math.max(0, lifeRatio * 0.8);
             
             // Remover partículas muertas o fuera de pantalla
             return particle.life > 0 && particle.y > -50 && particle.x > -50 && particle.x < rect.width + 50;
@@ -163,15 +149,15 @@ class ParticleSystem {
             this.ctx.globalAlpha = particle.currentOpacity;
             this.ctx.fillStyle = particle.color + particle.currentOpacity + ')';
             
-            // Dibujar partícula con efecto de brillo
+            // Dibujar partícula con efecto de brillo muy sutil
             this.ctx.beginPath();
             this.ctx.arc(0, 0, particle.size, 0, Math.PI * 2);
             this.ctx.fill();
             
-            // Efecto de brillo sutil
-            this.ctx.globalAlpha = particle.currentOpacity * 0.3;
+            // Efecto de brillo muy delicado
+            this.ctx.globalAlpha = particle.currentOpacity * 0.2;
             this.ctx.beginPath();
-            this.ctx.arc(0, 0, particle.size * 1.5, 0, Math.PI * 2);
+            this.ctx.arc(0, 0, particle.size * 1.3, 0, Math.PI * 2);
             this.ctx.fill();
             
             this.ctx.restore();
@@ -179,7 +165,7 @@ class ParticleSystem {
     }
     
     animate() {
-        if (!this.isActive) return;
+        if (!this.isActive || isReducedMotion) return;
         
         this.updateParticles();
         this.renderParticles();
@@ -188,9 +174,8 @@ class ParticleSystem {
     }
     
     start() {
-        if (this.isActive) return;
+        if (!this.isActive || isReducedMotion) return;
         
-        this.isActive = true;
         this.animate();
     }
     
@@ -201,13 +186,15 @@ class ParticleSystem {
             this.animationFrame = null;
         }
         
-        // Fade out gradual
+        // Limpiar partículas gradualmente
         setTimeout(() => {
             if (!this.isActive) {
                 this.particles = [];
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                if (this.ctx) {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
             }
-        }, 1000);
+        }, 2000);
     }
     
     destroy() {
@@ -218,43 +205,43 @@ class ParticleSystem {
     }
 }
 
-// ===== INICIALIZACIÓN DEL SISTEMA DE PARTÍCULAS =====
-function initializeParticleSystem() {
+// ===== INICIALIZACIÓN DEL SISTEMA DE PARTÍCULAS FLOTANTES =====
+function initializeFloatingParticles() {
     // Configuraciones específicas para diferentes secciones
     const configs = {
         hero: {
-            maxParticles: 20,
-            particleSize: { min: 1.5, max: 4 },
-            speed: { min: 0.3, max: 1.0 },
-            opacity: { min: 0.4, max: 0.9 },
-            spawnRate: 0.4
+            maxParticles: 10,
+            particleSize: { min: 1.2, max: 3 },
+            speed: { min: 0.15, max: 0.5 },
+            opacity: { min: 0.3, max: 0.7 },
+            spawnRate: 0.2
         },
         feature: {
-            maxParticles: 12,
-            particleSize: { min: 1, max: 3 },
-            speed: { min: 0.2, max: 0.7 },
-            opacity: { min: 0.3, max: 0.7 },
-            spawnRate: 0.25
+            maxParticles: 6,
+            particleSize: { min: 1, max: 2.5 },
+            speed: { min: 0.1, max: 0.4 },
+            opacity: { min: 0.2, max: 0.6 },
+            spawnRate: 0.12
         }
     };
     
     // Inicializar partículas para el teléfono hero
     const heroPhone = document.querySelector('.hero__phone-container');
     if (heroPhone) {
-        const heroParticles = new ParticleSystem(heroPhone, configs.hero);
+        const heroParticles = new FloatingParticleSystem(heroPhone, configs.hero);
         particleSystems.push(heroParticles);
     }
     
     // Inicializar partículas para teléfonos de características
     const featurePhones = document.querySelectorAll('.feature__phone');
     featurePhones.forEach((phone, index) => {
-        // Configuración específica por feature
+        // Configuración específica por feature con colores únicos
         const featureConfig = {
             ...configs.feature,
             colors: getFeatureColors(index)
         };
         
-        const featureParticles = new ParticleSystem(phone, featureConfig);
+        const featureParticles = new FloatingParticleSystem(phone, featureConfig);
         particleSystems.push(featureParticles);
     });
 }
