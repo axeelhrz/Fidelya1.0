@@ -1,46 +1,50 @@
-export interface Center {
-  id: string;
-  name: string;
-  address: string;
-  phone: string;
-  email: string;
-  logo?: string;
-  settings: CenterSettings;
-  subscription: Subscription;
-  createdAt: Date;
-  updatedAt: Date;
-  isActive: boolean;
+export interface CenterTheme {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  surface: string;
+  text: string;
+  textSecondary: string;
+  border: string;
+  success: string;
+  warning: string;
+  error: string;
+  info: string;
 }
 
 export interface CenterSettings {
+  id: string;
+  name: string;
+  logo?: string;
+  address: string;
+  phone: string;
+  email: string;
+  website?: string;
   theme: {
-    primaryColor: string;
-    secondaryColor: string;
-    logo?: string;
+    light: CenterTheme;
+    dark: CenterTheme;
+    mode: 'light' | 'dark' | 'system';
   };
-  notifications: {
-    email: boolean;
-    whatsapp: boolean;
-    sms: boolean;
+  features: {
+    allowPatientRegistration: boolean;
+    requireEmailVerification: boolean;
+    enableNotifications: boolean;
+    enableVideoSessions: boolean;
   };
-  integrations: {
-    openai: boolean;
-    whatsapp: boolean;
-    notion: boolean;
+  subscription: {
+    plan: 'basic' | 'professional' | 'enterprise';
+    maxUsers: number;
+    maxPatients: number;
+    expiresAt: Date;
   };
-  workingHours: {
-    start: string;
-    end: string;
-    days: string[];
-  };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface Subscription {
-  plan: 'basic' | 'professional' | 'enterprise';
-  status: 'active' | 'inactive' | 'expired';
-  startDate: Date;
-  endDate: Date;
-  features: string[];
-  maxUsers: number;
-  maxPatients: number;
+export interface Center {
+  id: string;
+  name: string;
+  settings: CenterSettings;
+  isActive: boolean;
 }

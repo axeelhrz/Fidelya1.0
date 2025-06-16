@@ -13,28 +13,23 @@ export function useRole() {
   };
 
   const isAdmin = (): boolean => hasRole('admin');
-  const isPsychologist = (): boolean => hasRole('psicologo');
-  const isPatient = (): boolean => hasRole('paciente');
+  const isPsychologist = (): boolean => hasRole('psychologist');
+  const isPatient = (): boolean => hasRole('patient');
 
-  const canAccessModule = (module: string): boolean => {
-    if (!user) return false;
-
-    const permissions = {
-      admin: ['dashboard', 'patients', 'sessions', 'alerts', 'metrics', 'settings', 'subscription'],
-      psicologo: ['dashboard', 'patients', 'sessions', 'alerts', 'metrics'],
-      paciente: ['dashboard', 'sessions'],
-    };
-
-    return permissions[user.role]?.includes(module) || false;
-  };
+  const canAccessAdminFeatures = (): boolean => isAdmin();
+  const canAccessPsychologistFeatures = (): boolean => isAdmin() || isPsychologist();
+  const canAccessPatientData = (): boolean => isAdmin() || isPsychologist();
 
   return {
     user,
+    role: user?.role,
     hasRole,
     hasAnyRole,
     isAdmin,
     isPsychologist,
     isPatient,
-    canAccessModule,
+    canAccessAdminFeatures,
+    canAccessPsychologistFeatures,
+    canAccessPatientData,
   };
 }
