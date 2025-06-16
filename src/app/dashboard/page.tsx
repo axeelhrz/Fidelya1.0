@@ -35,43 +35,72 @@ export default function DashboardPage() {
     }
   }, [user, loading, router])
 
+  // Function to map shift names to the expected database values
+  const mapShiftToTurno = (shiftName: string, startTime?: string): string => {
+    const name = shiftName.toLowerCase()
+    if (name.includes('día') || name.includes('dia') || name.includes('day')) {
+      return 'dia'
+    } else if (name.includes('noche') || name.includes('night')) {
+      return 'noche'
+    }
+    // Default fallback based on time
+    if (startTime && (startTime.includes('06:') || startTime.includes('6:') || startTime.includes('07:') || startTime.includes('7:'))) {
+      return 'dia'
+    } else {
+      return 'noche'
+    }
+  }
+
   const fetchStats = useCallback(async () => {
-    if (!user || !selectedShift) return
+    if (!user || !selectedShift || !profile) return
 
     try {
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
 
-      const { data, error } = await supabase
-        .from('orders')
-        .select('status')
-        .eq('trabajador_id', profile?.id)
-        .eq('shift_id', selectedShift.id)
-        .gte('order_date', startOfMonth.toISOString().split('T')[0])
-        .lte('order_date', endOfMonth.toISOString().split('T')[0])
+      // Map shift name to expected database value
+      const turnoElegido = mapShiftToTurno(selectedShift.name, selectedShift.start_time)
+
+      // Build query using the correct table and field names
+      let query = supabase
+        .from('pedidos')
+        .select('id, created_at')
+        .eq('nombre_trabajador', profile.nombre_completo)
+        .eq('turno_elegido', turnoElegido)
+        .gte('fecha_entrega', startOfMonth.toISOString().split('T')[0])
+        .lte('fecha_entrega', endOfMonth.toISOString().split('T')[0])
+
+      // Only filter by RUT if it exists
+      if (profile.rut) {
+        query = query.eq('rut_trabajador', profile.rut)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
 
       const orders = data || []
+      
+      // Since pedidos table doesn't have status field, all orders are considered confirmed
       setStats({
         totalOrders: orders.length,
-        confirmedOrders: orders.filter((o: { status: string }) => o.status === 'confirmed').length,
-        pendingOrders: orders.filter((o: { status: string }) => o.status === 'pending').length
+        confirmedOrders: orders.length, // All orders in pedidos are confirmed
+        pendingOrders: 0 // No pending orders in current schema
       })
     } catch (error) {
       console.error('Error fetching stats:', error)
     }
-  }, [user, selectedShift, currentDate, profile?.id])
+  }, [user, selectedShift, currentDate, profile])
 
   const getMonthName = (date: Date) => {
     return date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
   }
 
   useEffect(() => {
-    if (user && selectedShift) {
+    if (user && selectedShift && profile) {
       fetchStats()
     }
-  }, [user, selectedShift, currentDate, fetchStats])
+  }, [user, selectedShift, currentDate, fetchStats, profile])
 
   if (loading) {
     return (
