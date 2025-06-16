@@ -9,7 +9,7 @@ import {
   Badge,
   alpha,
 } from '@mui/material';
-import { createElement } from 'react';
+import { createElement, isValidElement } from 'react';
 
 interface SidebarItemProps {
   icon: React.ComponentType | React.ReactNode;
@@ -35,11 +35,19 @@ export default function SidebarItem({
     onClick?.();
   };
 
-  // Render the icon properly - if it's a component, create an element
+  // Render the icon properly
   const renderIcon = () => {
+    // If it's already a valid React element, return it as is
+    if (isValidElement(icon)) {
+      return icon;
+    }
+    
+    // If it's a function/component, create an element from it
     if (typeof icon === 'function') {
       return createElement(icon as React.ComponentType);
     }
+    
+    // Otherwise, return it as is (fallback)
     return icon;
   };
 
@@ -77,9 +85,11 @@ export default function SidebarItem({
         </ListItemIcon>
         <ListItemText 
           primary={label}
-          primaryTypographyProps={{
-            fontWeight: isActive ? 600 : 400,
-            fontSize: '0.875rem',
+          slotProps={{
+            primary: {
+              fontWeight: isActive ? 600 : 400,
+              fontSize: '0.875rem',
+            }
           }}
         />
       </ListItemButton>
