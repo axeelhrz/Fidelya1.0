@@ -5,6 +5,7 @@ export interface Database {
         Row: {
           id: number
           empresa_id: number | null
+          empresa: string | null
           nombre_completo: string
           rut: string
           turno_habitual: string | null
@@ -16,6 +17,7 @@ export interface Database {
         Insert: {
           id?: number
           empresa_id?: number | null
+          empresa?: string | null
           nombre_completo: string
           rut: string
           turno_habitual?: string | null
@@ -27,6 +29,7 @@ export interface Database {
         Update: {
           id?: number
           empresa_id?: number | null
+          empresa?: string | null
           nombre_completo?: string
           rut?: string
           turno_habitual?: string | null
@@ -140,6 +143,12 @@ export type Trabajador = Database['public']['Tables']['trabajadores']['Row']
 export type Shift = Database['public']['Tables']['shifts']['Row']
 export type Order = Database['public']['Tables']['orders']['Row']
 export type Menu = Database['public']['Tables']['menus']['Row']
+
+// Nueva interfaz para empresas
+export interface Empresa {
+  nombre: string
+  trabajadores_count: number
+}
 
 // Alias para compatibilidad
 export type Profile = Trabajador

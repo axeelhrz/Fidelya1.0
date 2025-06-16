@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { Trabajador } from '@/types/database'
+import { Trabajador, Empresa } from '@/types/database'
 
 // Función para generar contraseña automática basada en nombre completo
 export function generatePassword(nombreCompleto: string): string {
@@ -18,6 +18,70 @@ export function generatePassword(nombreCompleto: string): string {
 // Función para obtener el nombre completo (ya viene completo en la BD)
 export function getFullName(trabajador: Trabajador): string {
   return trabajador.nombre_completo
+}
+
+// Función para obtener todas las empresas únicas
+export async function getAllCompanies(): Promise<Empresa[]> {
+  try {
+    console.log('Fetching companies from Supabase...')
+    
+    const { data, error } = await supabase
+      .from('trabajadores')
+      .select('empresa')
+      .eq('activo', true)
+      .not('empresa', 'is', null)
+    
+    if (error) {
+      console.error('Supabase error:', error)
+      throw error
+    }
+    
+    // Agrupar por empresa y contar trabajadores
+    const empresasMap = new Map<string, number>()
+    
+    data?.forEach(row => {
+      if (row.empresa) {
+        const count = empresasMap.get(row.empresa) || 0
+        empresasMap.set(row.empresa, count + 1)
+      }
+    })
+    
+    const empresas: Empresa[] = Array.from(empresasMap.entries()).map(([nombre, trabajadores_count]) => ({
+      nombre,
+      trabajadores_count
+    })).sort((a, b) => a.nombre.localeCompare(b.nombre))
+    
+    console.log('Companies fetched successfully:', empresas.length, 'companies')
+    return empresas
+  } catch (error) {
+    console.error('Error fetching companies:', error)
+    return []
+  }
+}
+
+// Función para obtener trabajadores por empresa
+export async function getUsersByCompany(empresa: string): Promise<Trabajador[]> {
+  try {
+    console.log('Fetching trabajadores by company from Supabase...', empresa)
+    
+    const { data, error } = await supabase
+      .from('trabajadores')
+      .select('*')
+      .eq('activo', true)
+      .eq('empresa', empresa)
+      .order('nombre_completo')
+    
+    if (error) {
+      console.error('Supabase error:', error)
+      throw error
+    }
+    
+    console.log('Trabajadores by company fetched successfully:', data?.length || 0, 'users')
+    return data || []
+  } catch (error) {
+    console.error('Error fetching trabajadores by company:', error)
+    return []
+  }
 }
 
 // Función para obtener todos los trabajadores activos
@@ -87,7 +151,8 @@ export async function signInWithCredentials(nombreCompleto: string, password: st
           trabajador_id: trabajador.id,
           rut: trabajador.rut,
           rol: trabajador.rol,
-          turno_habitual: trabajador.turno_habitual
+          turno_habitual: trabajador.turno_habitual,
+          empresa: trabajador.empresa
         }
       },
       trabajador: trabajador
