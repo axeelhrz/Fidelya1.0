@@ -42,6 +42,23 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
     }
   }, [user, profile, selectedShift, currentDate])
 
+  // Function to map shift names to the expected database values
+  const mapShiftToTurno = (shiftName: string): string => {
+    const name = shiftName.toLowerCase()
+    if (name.includes('día') || name.includes('dia') || name.includes('day')) {
+      return 'dia'
+    } else if (name.includes('noche') || name.includes('night')) {
+      return 'noche'
+    }
+    // Default fallback based on time
+    const startTime = selectedShift?.start_time || ''
+    if (startTime.includes('06:') || startTime.includes('6:') || startTime.includes('07:') || startTime.includes('7:')) {
+      return 'dia'
+    } else {
+      return 'noche'
+    }
+  }
+
   const fetchOrders = async () => {
     if (!user || !profile || !selectedShift) return
 
@@ -50,12 +67,15 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
 
+      // Map shift name to expected database value
+      const turnoElegido = mapShiftToTurno(selectedShift.name)
+
       const { data, error } = await supabase
         .from('pedidos')
         .select('*')
         .eq('nombre_trabajador', profile.nombre_completo)
         .eq('rut_trabajador', profile.rut)
-        .eq('turno_elegido', selectedShift.name)
+        .eq('turno_elegido', turnoElegido)
         .gte('fecha_entrega', startOfMonth.toISOString().split('T')[0])
         .lte('fecha_entrega', endOfMonth.toISOString().split('T')[0])
         .order('fecha_entrega', { ascending: true })

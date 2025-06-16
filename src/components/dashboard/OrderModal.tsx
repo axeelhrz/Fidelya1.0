@@ -48,9 +48,32 @@ export default function OrderModal({
     setError('')
   }, [existingOrder, isOpen, availableMenus])
 
+  // Function to map shift names to the expected database values
+  const mapShiftToTurno = (shiftName: string): string => {
+    const name = shiftName.toLowerCase()
+    if (name.includes('día') || name.includes('dia') || name.includes('day')) {
+      return 'dia'
+    } else if (name.includes('noche') || name.includes('night')) {
+      return 'noche'
+    }
+    // Default fallback based on time
+    const startTime = selectedShift.start_time
+    if (startTime.includes('06:') || startTime.includes('6:') || startTime.includes('07:') || startTime.includes('7:')) {
+      return 'dia'
+    } else {
+      return 'noche'
+    }
+  }
+
   const handleSave = async () => {
     if (!user || !profile || !selectedMenuId.trim()) {
       setError('Por favor selecciona un plato del menú')
+      return
+    }
+
+    // Validate that we have the required profile data
+    if (!profile.rut) {
+      setError('Error: No se encontró el RUT del trabajador. Por favor, contacta al administrador.')
       return
     }
 
@@ -68,10 +91,13 @@ export default function OrderModal({
       const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
       const dayName = dayNames[selectedDate.getDay()]
 
+      // Map shift name to expected database value
+      const turnoElegido = mapShiftToTurno(selectedShift.name)
+
       const pedidoData = {
         nombre_trabajador: profile.nombre_completo,
         rut_trabajador: profile.rut,
-        turno_elegido: selectedShift.name,
+        turno_elegido: turnoElegido,
         fecha_entrega: selectedDate.toISOString().split('T')[0],
         dia_semana: dayName,
         numero_dia: selectedDate.getDate(),
@@ -82,11 +108,14 @@ export default function OrderModal({
         empresa: profile.empresa || ''
       }
 
+      console.log('Saving pedido with data:', pedidoData) // Debug log
+
       if (existingOrder) {
         // Update existing order
         const { error } = await supabase
           .from('pedidos')
           .update({
+            turno_elegido: pedidoData.turno_elegido,
             codigo_opcion: pedidoData.codigo_opcion,
             descripcion_opcion: pedidoData.descripcion_opcion,
             categoria_opcion: pedidoData.categoria_opcion,
