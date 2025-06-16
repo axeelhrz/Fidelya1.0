@@ -11,8 +11,7 @@ import {
   ArrowRight,
   Zap,
   Cpu,
-  Activity,
-  Database
+  Activity
 } from 'lucide-react'
 
 export default function RoleSelection() {
@@ -71,7 +70,7 @@ export default function RoleSelection() {
             <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center animate-pulse">
               <Activity className="w-4 h-4 text-white" />
             </div>
-            <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-gradient-to-r from-emerald-400 to-cyan-500 rounded-full animate-pulse" style={{animationDelay: '1s'}} />
+            <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-gradient-to-r from-emerald-400 to-cyan-500 rounded-full animate-pulse" />
           </div>
           
           <h1 className="text-5xl font-light text-white mb-6 tracking-tight">
@@ -93,7 +92,6 @@ export default function RoleSelection() {
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-cyan-500 rounded-full border-2 border-slate-900 animate-pulse">
                 <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1" />
               </div>
-              <div className="absolute -top-1 -left-1 w-4 h-4 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full animate-pulse" style={{animationDelay: '0.5s'}} />
             </div>
             <div className="text-left">
               <p className="font-bold text-white text-xl mb-1">
@@ -114,28 +112,27 @@ export default function RoleSelection() {
         <div className={`grid gap-10 mb-20 ${canAccessAdmin ? 'md:grid-cols-2 max-w-5xl mx-auto' : 'max-w-lg mx-auto'}`}>
           {/* Portal Empleado */}
           {canAccessEmployee && (
-            <Card className="group relative overflow-hidden border-0 glass-card hover-glow transform-gpu perspective-1000">
+            <Card className="group relative overflow-hidden border-0 glass-card hover-glow transform-gpu">
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-cyan-500/5 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 animate-gradient-rotate" />
               
               <CardContent className="relative p-12 text-center">
-                <div className="relative mb-10 perspective-1000">
+                <div className="relative mb-10">
                   <div className="w-24 h-24 glass-ultra rounded-3xl flex items-center justify-center mx-auto group-hover:scale-110 transition-all duration-500 animate-hologram">
                     <User className="w-12 h-12 text-emerald-400" />
                   </div>
                   <div className="absolute -top-3 -right-3 w-10 h-10 bg-gradient-to-r from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 animate-pulse">
                     <Zap className="w-5 h-5 text-white" />
                   </div>
-                  <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full animate-pulse" style={{animationDelay: '1s'}} />
                 </div>
                 
-                <h2 className="text-3xl font-bold text-slate-900 mb-4 group-hover:text-glow transition-all duration-300">
+                <h2 className="text-3xl font-bold text-slate-900 mb-4">
                   Portal Neural
                   <span className="block text-emerald-600 text-2xl">Empleado</span>
                 </h2>
                 
                 <p className="text-slate-600 mb-10 leading-relaxed font-light text-lg">
-                  Interfaz inteligente con IA predictiva para gestión optimizada de pedidos y análisis de patrones alimentarios
+                  Interfaz inteligente con IA predictiva para gestión optimizada de pedidos
                 </p>
                 
                 <Button
@@ -143,7 +140,6 @@ export default function RoleSelection() {
                   className="w-full btn-futuristic h-16 font-semibold text-lg rounded-2xl group-hover:scale-105 transition-all duration-300 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white shadow-2xl"
                 >
                   <span className="flex items-center justify-center space-x-4">
-                    <Database className="w-6 h-6" />
                     <span>Acceder al Portal</span>
                     <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
                   </span>
@@ -154,28 +150,27 @@ export default function RoleSelection() {
 
           {/* Centro de Control Admin */}
           {canAccessAdmin && (
-            <Card className="group relative overflow-hidden border-0 glass-card hover-glow transform-gpu perspective-1000">
+            <Card className="group relative overflow-hidden border-0 glass-card hover-glow transform-gpu">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-blue-500/5 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 via-blue-400 to-indigo-500 animate-gradient-rotate" />
               
               <CardContent className="relative p-12 text-center">
-                <div className="relative mb-10 perspective-1000">
+                <div className="relative mb-10">
                   <div className="w-24 h-24 glass-ultra rounded-3xl flex items-center justify-center mx-auto group-hover:scale-110 transition-all duration-500 animate-hologram">
                     <Shield className="w-12 h-12 text-purple-400" />
                   </div>
                   <div className="absolute -top-3 -right-3 w-10 h-10 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 animate-pulse">
                     <Zap className="w-5 h-5 text-white" />
                   </div>
-                  <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full animate-pulse" style={{animationDelay: '1s'}} />
                 </div>
                 
-                <h2 className="text-3xl font-bold text-slate-900 mb-4 group-hover:text-glow transition-all duration-300">
+                <h2 className="text-3xl font-bold text-slate-900 mb-4">
                   Centro Neural
                   <span className="block text-purple-600 text-2xl">Administración</span>
                 </h2>
                 
                 <p className="text-slate-600 mb-10 leading-relaxed font-light text-lg">
-                  Dashboard avanzado con machine learning, analytics en tiempo real y control total del ecosistema alimentario
+                  Dashboard avanzado con machine learning y analytics en tiempo real
                 </p>
                 
                 <Button
@@ -183,7 +178,6 @@ export default function RoleSelection() {
                   className="w-full btn-futuristic h-16 font-semibold text-lg rounded-2xl group-hover:scale-105 transition-all duration-300 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-2xl"
                 >
                   <span className="flex items-center justify-center space-x-4">
-                    <Activity className="w-6 h-6" />
                     <span>Acceder al Centro</span>
                     <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
                   </span>
