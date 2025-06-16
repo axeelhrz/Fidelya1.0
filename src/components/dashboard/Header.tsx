@@ -4,15 +4,10 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { 
-  Bell, 
-  Settings, 
   LogOut, 
-  User, 
   ChevronDown,
   Menu,
   X,
-  Shield,
-  Clock,
   Building2
 } from 'lucide-react'
 
@@ -20,7 +15,6 @@ export default function Header() {
   const { user, profile, signOut } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
-  const [notifications] = useState(3) // Placeholder for notifications
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -82,20 +76,6 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Notifications */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="relative hover:bg-slate-100 text-slate-600"
-            >
-              <Bell className="w-5 h-5" />
-              {notifications > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                  {notifications}
-                </span>
-              )}
-            </Button>
-
             {/* User Menu */}
             <div className="relative" ref={menuRef}>
               <button
@@ -150,24 +130,8 @@ export default function Header() {
                     </div>
                   </div>
 
-                  {/* Menu Items */}
-                  <div className="py-2">
-                    <button className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-150">
-                      <User className="w-4 h-4 text-slate-400" />
-                      <span>Mi Perfil</span>
-                    </button>
-                    <button className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-150">
-                      <Settings className="w-4 h-4 text-slate-400" />
-                      <span>Configuración</span>
-                    </button>
-                    <button className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-150">
-                      <Clock className="w-4 h-4 text-slate-400" />
-                      <span>Historial de Pedidos</span>
-                    </button>
-                  </div>
-
                   {/* Sign Out */}
-                  <div className="border-t border-slate-100 pt-2">
+                  <div className="pt-2">
                     <button
                       onClick={handleSignOut}
                       className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
@@ -217,23 +181,6 @@ export default function Header() {
 
               {/* Mobile Menu Items */}
               <div className="space-y-1">
-                <button className="w-full flex items-center space-x-3 px-2 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors duration-150">
-                  <Bell className="w-4 h-4 text-slate-400" />
-                  <span>Notificaciones</span>
-                  {notifications > 0 && (
-                    <span className="ml-auto w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                      {notifications}
-                    </span>
-                  )}
-                </button>
-                <button className="w-full flex items-center space-x-3 px-2 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors duration-150">
-                  <User className="w-4 h-4 text-slate-400" />
-                  <span>Mi Perfil</span>
-                </button>
-                <button className="w-full flex items-center space-x-3 px-2 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors duration-150">
-                  <Settings className="w-4 h-4 text-slate-400" />
-                  <span>Configuración</span>
-                </button>
                 <button
                   onClick={handleSignOut}
                   className="w-full flex items-center space-x-3 px-2 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150"
