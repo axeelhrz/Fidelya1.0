@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { supabase } from '@/lib/supabase'
+import { Pedido, Trabajador } from '@/types/database'
 import { 
   Shield, 
   Users, 
@@ -30,7 +31,9 @@ import {
   FileText,
   TrendingUp,
   User,
-  ChefHat
+  ChefHat,
+  Utensils,
+  Eye
 } from 'lucide-react'
 
 interface AdminStats {
@@ -55,6 +58,19 @@ interface PedidosPorEmpresa {
   trabajadores: string[]
 }
 
+interface PlatoPorTurno {
+  descripcion_opcion: string
+  codigo_opcion: string
+  categoria_opcion: string
+  cantidad: number
+  trabajadores: string[]
+}
+
+interface VistaCocina {
+  dia: PlatoPorTurno[]
+  noche: PlatoPorTurno[]
+}
+
 export default function AdminPage() {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
@@ -70,11 +86,13 @@ export default function AdminPage() {
   const [pedidos, setPedidos] = useState<PedidoCompleto[]>([])
   const [trabajadores, setTrabajadores] = useState<Trabajador[]>([])
   const [pedidosPorEmpresa, setPedidosPorEmpresa] = useState<PedidosPorEmpresa[]>([])
+  const [vistaCocina, setVistaCocina] = useState<VistaCocina>({ dia: [], noche: [] })
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [searchTerm, setSearchTerm] = useState('')
   const [shiftFilter, setShiftFilter] = useState('all')
   const [loadingStats, setLoadingStats] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'companies'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'companies' | 'kitchen'>('overview')
+  const [exportType, setExportType] = useState<'general' | 'kitchen' | 'workers' | 'shifts'>('general')
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -132,7 +150,6 @@ export default function AdminPage() {
     try {
       console.log('Fetching pedidos for date:', selectedDate)
       
-      // Fetch pedidos for selected date with exact column names
       const { data: pedidosData, error: pedidosError } = await supabase
         .from('pedidos')
         .select(`
@@ -160,7 +177,6 @@ export default function AdminPage() {
 
       console.log('Pedidos fetched:', pedidosData?.length || 0)
 
-      // Combine pedidos with trabajador info
       const pedidosCompletos: PedidoCompleto[] = pedidosData?.map(pedido => {
         const trabajadorInfo = trabajadores.find(t => 
           t.nombre_completo === pedido.nombre_trabajador ||
@@ -175,6 +191,7 @@ export default function AdminPage() {
 
       setPedidos(pedidosCompletos)
       calculatePedidosPorEmpresa(pedidosCompletos)
+      calculateVistaCocina(pedidosCompletos)
     } catch (error) {
       console.error('Error fetching pedidos:', error)
     }
@@ -182,7 +199,6 @@ export default function AdminPage() {
 
   const fetchStats = async () => {
     try {
-      // Fetch orders for selected date
       const { data: selectedDateData, error: selectedDateError } = await supabase
         .from('pedidos')
         .select('turno_elegido, empresa')
@@ -190,7 +206,6 @@ export default function AdminPage() {
 
       if (selectedDateError) throw selectedDateError
 
-      // Fetch orders for today
       const today = new Date().toISOString().split('T')[0]
       const { data: todayData, error: todayError } = await supabase
         .from('pedidos')
@@ -199,7 +214,6 @@ export default function AdminPage() {
 
       if (todayError) throw todayError
 
-      // Fetch orders for this month
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
       const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
       
@@ -215,7 +229,6 @@ export default function AdminPage() {
       const diaCount = selectedDateData?.filter(p => p.turno_elegido === 'dia').length || 0
       const nocheCount = selectedDateData?.filter(p => p.turno_elegido === 'noche').length || 0
       
-      // Get unique companies
       const empresasUnicas = new Set(selectedDateData?.map(p => p.empresa).filter(Boolean))
 
       setStats(prev => ({
@@ -269,10 +282,70 @@ export default function AdminPage() {
     setPedidosPorEmpresa(empresasArray)
   }
 
+  const calculateVistaCocina = (pedidosData: PedidoCompleto[]) => {
+    const platosMap = new Map<string, Map<string, { cantidad: number, trabajadores: Set<string>, categoria: string, codigo: string }>>()
+    
+    // Agrupar por turno y luego por plato
+    pedidosData.forEach(pedido => {
+      const turno = pedido.turno_elegido
+      const plato = pedido.descripcion_opcion
+      
+      if (!platosMap.has(turno)) {
+        platosMap.set(turno, new Map())
+      }
+      
+      const turnoMap = platosMap.get(turno)!
+      const current = turnoMap.get(plato) || { 
+        cantidad: 0, 
+        trabajadores: new Set<string>(),
+        categoria: pedido.categoria_opcion,
+        codigo: pedido.codigo_opcion
+      }
+      
+      current.cantidad += 1
+      current.trabajadores.add(pedido.nombre_trabajador)
+      
+      turnoMap.set(plato, current)
+    })
+
+    // Convertir a formato final
+    const dia: PlatoPorTurno[] = []
+    const noche: PlatoPorTurno[] = []
+
+    if (platosMap.has('dia')) {
+      platosMap.get('dia')!.forEach((stats, plato) => {
+        dia.push({
+          descripcion_opcion: plato,
+          codigo_opcion: stats.codigo,
+          categoria_opcion: stats.categoria,
+          cantidad: stats.cantidad,
+          trabajadores: Array.from(stats.trabajadores)
+        })
+      })
+    }
+
+    if (platosMap.has('noche')) {
+      platosMap.get('noche')!.forEach((stats, plato) => {
+        noche.push({
+          descripcion_opcion: plato,
+          codigo_opcion: stats.codigo,
+          categoria_opcion: stats.categoria,
+          cantidad: stats.cantidad,
+          trabajadores: Array.from(stats.trabajadores)
+        })
+      })
+    }
+
+    // Ordenar por categoría y luego por cantidad
+    dia.sort((a, b) => a.categoria_opcion.localeCompare(b.categoria_opcion) || b.cantidad - a.cantidad)
+    noche.sort((a, b) => a.categoria_opcion.localeCompare(b.categoria_opcion) || b.cantidad - a.cantidad)
+
+    setVistaCocina({ dia, noche })
+  }
+
   const getFilteredPedidos = () => {
     let filtered = pedidos
 
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(pedido =>
         pedido.nombre_trabajador.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -284,7 +357,6 @@ export default function AdminPage() {
       )
     }
 
-    // Filter by shift
     if (shiftFilter !== 'all') {
       const turnoFilter = shiftFilter.toLowerCase() === 'día' || shiftFilter.toLowerCase() === 'dia' ? 'dia' : 'noche'
       filtered = filtered.filter(pedido => pedido.turno_elegido === turnoFilter)
@@ -295,50 +367,229 @@ export default function AdminPage() {
 
   const exportData = async () => {
     try {
-      const dataToExport = getFilteredPedidos()
-      
-      // Convert to CSV
-      const headers = [
-        'ID', 'Nombre Trabajador', 'RUT Trabajador', 'Empresa', 'Turno Elegido', 
-        'Fecha Entrega', 'Día Semana', 'Número Día', 'Código Opción', 
-        'Descripción Opción', 'Categoría Opción', 'Notas', 'Fecha Creación',
-        'Rol Trabajador', 'Turno Habitual', 'Estado Trabajador'
-      ]
-      
-      const csvContent = [
-        headers.join(','),
-        ...dataToExport.map(pedido => [
-          pedido.id,
-          `"${pedido.nombre_trabajador}"`,
-          pedido.rut_trabajador || '',
-          `"${pedido.empresa}"`,
-          pedido.turno_elegido === 'dia' ? 'Día' : 'Noche',
-          pedido.fecha_entrega,
-          `"${pedido.dia_semana}"`,
-          pedido.numero_dia,
-          pedido.codigo_opcion,
-          `"${pedido.descripcion_opcion}"`,
-          `"${pedido.categoria_opcion}"`,
-          `"${pedido.notas || ''}"`,
-          new Date(pedido.created_at).toLocaleString('es-ES'),
-          `"${pedido.trabajador_info?.rol || 'N/A'}"`,
-          `"${pedido.trabajador_info?.turno_habitual || 'N/A'}"`,
-          pedido.trabajador_info?.activo ? 'Activo' : 'Inactivo'
-        ].join(','))
-      ].join('\n')
+      let csvContent = ''
+      let filename = ''
+
+      switch (exportType) {
+        case 'kitchen':
+          csvContent = generateKitchenCSV()
+          filename = `vista_cocina_${selectedDate}.csv`
+          break
+        case 'workers':
+          csvContent = generateWorkersCSV()
+          filename = `por_trabajador_${selectedDate}.csv`
+          break
+        case 'shifts':
+          csvContent = generateShiftsCSV()
+          filename = `por_turno_${selectedDate}.csv`
+          break
+        default:
+          csvContent = generateGeneralCSV()
+          filename = `pedidos_general_${selectedDate}.csv`
+      }
 
       // Download file
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
       const link = document.createElement('a')
       const url = URL.createObjectURL(blob)
       link.setAttribute('href', url)
-      link.setAttribute('download', `pedidos_completo_${selectedDate}.csv`)
+      link.setAttribute('download', filename)
       link.style.visibility = 'hidden'
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
     } catch (error) {
       console.error('Error exporting data:', error)
+    }
+  }
+
+  const generateKitchenCSV = () => {
+    const headers = ['VISTA DIARIA PARA COCINA', '', '', '', '']
+    const dateHeader = [`Fecha: ${new Date(selectedDate).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, '', '', '', '']
+    const separator = ['', '', '', '', '']
+    
+    let content = [
+      headers.join(','),
+      dateHeader.join(','),
+      separator.join(','),
+      'PEDIDOS - TURNO DÍA'.split('').join(','),
+      separator.join(',')
+    ]
+
+    if (vistaCocina.dia.length > 0) {
+      const diaHeaders = ['Plato', 'Código', 'Categoría', 'Cantidad', 'Trabajadores']
+      content.push(diaHeaders.join(','))
+      
+      vistaCocina.dia.forEach(plato => {
+        content.push([
+          `"${plato.descripcion_opcion}"`,
+          plato.codigo_opcion,
+          `"${plato.categoria_opcion}"`,
+          plato.cantidad,
+          `"${plato.trabajadores.join(', ')}"`
+        ].join(','))
+      })
+    } else {
+      content.push('No hay pedidos para este turno,,,,')
+    }
+
+    content.push(separator.join(','))
+    content.push('PEDIDOS - TURNO NOCHE'.split('').join(','))
+    content.push(separator.join(','))
+
+    if (vistaCocina.noche.length > 0) {
+      const nocheHeaders = ['Plato', 'Código', 'Categoría', 'Cantidad', 'Trabajadores']
+      content.push(nocheHeaders.join(','))
+      
+      vistaCocina.noche.forEach(plato => {
+        content.push([
+          `"${plato.descripcion_opcion}"`,
+          plato.codigo_opcion,
+          `"${plato.categoria_opcion}"`,
+          plato.cantidad,
+          `"${plato.trabajadores.join(', ')}"`
+        ].join(','))
+      })
+    } else {
+      content.push('No hay pedidos para este turno,,,,')
+    }
+
+    return content.join('\n')
+  }
+
+  const generateWorkersCSV = () => {
+    const headers = ['PEDIDOS POR TRABAJADOR', '', '', '', '', '', '']
+    const dateHeader = [`Fecha: ${new Date(selectedDate).toLocaleDateString('es-ES')}`, '', '', '', '', '', '']
+    const separator = ['', '', '', '', '', '', '']
+    
+    let content = [
+      headers.join(','),
+      dateHeader.join(','),
+      separator.join(',')
+    ]
+
+    const workersHeaders = ['Trabajador', 'RUT', 'Empresa', 'Turno', 'Plato', 'Código', 'Notas']
+    content.push(workersHeaders.join(','))
+
+    const sortedPedidos = [...pedidos].sort((a, b) => 
+      a.nombre_trabajador.localeCompare(b.nombre_trabajador) || 
+      a.turno_elegido.localeCompare(b.turno_elegido)
+    )
+
+    sortedPedidos.forEach(pedido => {
+      content.push([
+        `"${pedido.nombre_trabajador}"`,
+        pedido.rut_trabajador || '',
+        `"${pedido.empresa}"`,
+        pedido.turno_elegido === 'dia' ? 'Día' : 'Noche',
+        `"${pedido.descripcion_opcion}"`,
+        pedido.codigo_opcion,
+        `"${pedido.notas || ''}"`
+      ].join(','))
+    })
+
+    return content.join('\n')
+  }
+
+  const generateShiftsCSV = () => {
+    const headers = ['PEDIDOS POR TURNO', '', '', '', '', '']
+    const dateHeader = [`Fecha: ${new Date(selectedDate).toLocaleDateString('es-ES')}`, '', '', '', '', '']
+    const separator = ['', '', '', '', '', '']
+    
+    let content = [
+      headers.join(','),
+      dateHeader.join(','),
+      separator.join(',')
+    ]
+
+    // Turno Día
+    content.push('TURNO DÍA,,,,,,')
+    content.push(separator.join(','))
+    
+    const diaHeaders = ['Trabajador', 'Empresa', 'Plato', 'Código', 'Categoría', 'Notas']
+    content.push(diaHeaders.join(','))
+
+    const pedidosDia = pedidos.filter(p => p.turno_elegido === 'dia')
+    pedidosDia.forEach(pedido => {
+      content.push([
+        `"${pedido.nombre_trabajador}"`,
+        `"${pedido.empresa}"`,
+        `"${pedido.descripcion_opcion}"`,
+        pedido.codigo_opcion,
+        `"${pedido.categoria_opcion}"`,
+        `"${pedido.notas || ''}"`
+      ].join(','))
+    })
+
+    content.push(separator.join(','))
+    content.push('TURNO NOCHE,,,,,,')
+    content.push(separator.join(','))
+    content.push(diaHeaders.join(','))
+
+    const pedidosNoche = pedidos.filter(p => p.turno_elegido === 'noche')
+    pedidosNoche.forEach(pedido => {
+      content.push([
+        `"${pedido.nombre_trabajador}"`,
+        `"${pedido.empresa}"`,
+        `"${pedido.descripcion_opcion}"`,
+        pedido.codigo_opcion,
+        `"${pedido.categoria_opcion}"`,
+        `"${pedido.notas || ''}"`
+      ].join(','))
+    })
+
+    return content.join('\n')
+  }
+
+  const generateGeneralCSV = () => {
+    const dataToExport = getFilteredPedidos()
+    
+    const headers = [
+      'ID', 'Nombre Trabajador', 'RUT Trabajador', 'Empresa', 'Turno Elegido', 
+      'Fecha Entrega', 'Día Semana', 'Número Día', 'Código Opción', 
+      'Descripción Opción', 'Categoría Opción', 'Notas', 'Fecha Creación',
+      'Rol Trabajador', 'Turno Habitual', 'Estado Trabajador'
+    ]
+    
+    const csvContent = [
+      headers.join(','),
+      ...dataToExport.map(pedido => [
+        pedido.id,
+        `"${pedido.nombre_trabajador}"`,
+        pedido.rut_trabajador || '',
+        `"${pedido.empresa}"`,
+        pedido.turno_elegido === 'dia' ? 'Día' : 'Noche',
+        pedido.fecha_entrega,
+        `"${pedido.dia_semana}"`,
+        pedido.numero_dia,
+        pedido.codigo_opcion,
+        `"${pedido.descripcion_opcion}"`,
+        `"${pedido.categoria_opcion}"`,
+        `"${pedido.notas || ''}"`,
+        new Date(pedido.created_at).toLocaleString('es-ES'),
+        `"${pedido.trabajador_info?.rol || 'N/A'}"`,
+        `"${pedido.trabajador_info?.turno_habitual || 'N/A'}"`,
+        pedido.trabajador_info?.activo ? 'Activo' : 'Inactivo'
+      ].join(','))
+    ].join('\n')
+
+    return csvContent
+  }
+
+  const getCategoryColor = (categoria: string) => {
+    switch (categoria.toLowerCase()) {
+      case 'principal':
+        return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'especial':
+        return 'bg-purple-100 text-purple-800 border-purple-200'
+      case 'dieta_blanda':
+        return 'bg-green-100 text-green-800 border-green-200'
+      case 'vegetariano':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200'
+      case 'postre':
+        return 'bg-pink-100 text-pink-800 border-pink-200'
+      default:
+        return 'bg-slate-100 text-slate-800 border-slate-200'
     }
   }
 
@@ -395,6 +646,16 @@ export default function AdminPage() {
             </div>
           </div>
           <div className="flex items-center space-x-3">
+            <select
+              value={exportType}
+              onChange={(e) => setExportType(e.target.value as any)}
+              className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="general">Exportar General</option>
+              <option value="kitchen">Vista Cocina</option>
+              <option value="workers">Por Trabajador</option>
+              <option value="shifts">Por Turno</option>
+            </select>
             <Button
               onClick={exportData}
               variant="outline"
@@ -426,6 +687,17 @@ export default function AdminPage() {
           >
             <BarChart3 className="w-4 h-4 inline mr-2" />
             Resumen
+          </button>
+          <button
+            onClick={() => setActiveTab('kitchen')}
+            className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'kitchen'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <ChefHat className="w-4 h-4 inline mr-2" />
+            Vista Cocina
           </button>
           <button
             onClick={() => setActiveTab('orders')}
@@ -659,6 +931,144 @@ export default function AdminPage() {
           </>
         )}
 
+        {activeTab === 'kitchen' && (
+          <div className="space-y-6">
+            {/* Vista Cocina Header */}
+            <Card className="bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center space-x-3">
+                  <ChefHat className="w-8 h-8" />
+                  <span>Vista Diaria para Cocina</span>
+                </CardTitle>
+                <p className="text-orange-100">
+                  Resumen de platos agrupados por turno y cantidad - {new Date(selectedDate).toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </p>
+              </CardHeader>
+            </Card>
+
+            {/* Turno Día */}
+            <Card className="bg-white shadow-sm border border-slate-200">
+              <CardHeader className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                <CardTitle className="text-xl flex items-center space-x-3">
+                  <Sun className="w-6 h-6" />
+                  <span>Pedidos - Turno Día</span>
+                  <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                    {vistaCocina.dia.reduce((total, plato) => total + plato.cantidad, 0)} pedidos
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {vistaCocina.dia.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Utensils className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-slate-900 mb-2">No hay pedidos para este turno</h3>
+                    <p className="text-slate-600">No se registraron pedidos para el turno de día</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {vistaCocina.dia.map((plato, index) => (
+                      <div key={index} className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                              {plato.cantidad}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-slate-900 text-lg">{plato.descripcion_opcion}</h4>
+                              <div className="flex items-center space-x-3 mt-1">
+                                <span className="text-sm text-slate-600">Código: {plato.codigo_opcion}</span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(plato.categoria_opcion)}`}>
+                                  {plato.categoria_opcion}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-700 mb-2">Trabajadores ({plato.trabajadores.length}):</p>
+                          <div className="flex flex-wrap gap-2">
+                            {plato.trabajadores.map((trabajador, idx) => (
+                              <span 
+                                key={idx}
+                                className="px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-sm border border-amber-200"
+                              >
+                                {trabajador}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Turno Noche */}
+            <Card className="bg-white shadow-sm border border-slate-200">
+              <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
+                <CardTitle className="text-xl flex items-center space-x-3">
+                  <Moon className="w-6 h-6" />
+                  <span>Pedidos - Turno Noche</span>
+                  <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                    {vistaCocina.noche.reduce((total, plato) => total + plato.cantidad, 0)} pedidos
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {vistaCocina.noche.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Utensils className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-slate-900 mb-2">No hay pedidos para este turno</h3>
+                    <p className="text-slate-600">No se registraron pedidos para el turno de noche</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {vistaCocina.noche.map((plato, index) => (
+                      <div key={index} className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                              {plato.cantidad}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-slate-900 text-lg">{plato.descripcion_opcion}</h4>
+                              <div className="flex items-center space-x-3 mt-1">
+                                <span className="text-sm text-slate-600">Código: {plato.codigo_opcion}</span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(plato.categoria_opcion)}`}>
+                                  {plato.categoria_opcion}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-700 mb-2">Trabajadores ({plato.trabajadores.length}):</p>
+                          <div className="flex flex-wrap gap-2">
+                            {plato.trabajadores.map((trabajador, idx) => (
+                              <span 
+                                key={idx}
+                                className="px-3 py-1 bg-purple-50 text-purple-800 rounded-full text-sm border border-purple-200"
+                              >
+                                {trabajador}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {activeTab === 'orders' && (
           <>
             {/* Filters for Orders */}
@@ -754,7 +1164,7 @@ export default function AdminPage() {
                                   </p>
                                   <p className="text-slate-600">
                                     <span className="font-medium">Empresa:</span> {pedido.empresa}
-                                  </p>
+                                             </p>
                                   <p className="text-slate-600">
                                     <span className="font-medium">Turno habitual:</span> {pedido.trabajador_info?.turno_habitual || 'No especificado'}
                                   </p>
@@ -920,4 +1330,4 @@ export default function AdminPage() {
       </div>
     </div>
   )
-}
+}     
