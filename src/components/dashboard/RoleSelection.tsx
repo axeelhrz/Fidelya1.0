@@ -5,14 +5,12 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
 import { 
-  Utensils, 
-  Settings, 
   User, 
   Shield, 
   LogOut,
   ArrowRight,
-  Star,
-  Sparkles
+  Zap,
+  Cpu
 } from 'lucide-react'
 
 export default function RoleSelection() {
@@ -33,155 +31,157 @@ export default function RoleSelection() {
   }
 
   const isAdmin = profile?.rol?.toLowerCase() === 'admin' || profile?.rol?.toLowerCase() === 'administrador'
-  const canAccessEmployee = true // Todos pueden acceder como empleado
+  const canAccessEmployee = true
   const canAccessAdmin = isAdmin
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Background con gradiente animado */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 animate-gradient"></div>
-      
-      {/* Partículas flotantes */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-20 w-2 h-2 bg-orange-400 rounded-full animate-float opacity-60"></div>
-        <div className="absolute top-40 right-32 w-1 h-1 bg-blue-400 rounded-full animate-float opacity-80" style={{animationDelay: '1s'}}></div>
-        <div className="absolute bottom-32 left-16 w-3 h-3 bg-purple-400 rounded-full animate-float opacity-50" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-60 left-1/3 w-1 h-1 bg-green-400 rounded-full animate-float opacity-70" style={{animationDelay: '3s'}}></div>
-        <div className="absolute bottom-20 right-20 w-2 h-2 bg-pink-400 rounded-full animate-float opacity-60" style={{animationDelay: '4s'}}></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      {/* Geometric Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-32 h-32 border border-slate-200/50 rounded-full"></div>
+        <div className="absolute top-40 right-32 w-24 h-24 border border-slate-200/30 rotate-45"></div>
+        <div className="absolute bottom-32 left-16 w-40 h-40 border border-slate-200/40 rounded-full"></div>
+        <div className="absolute bottom-20 right-20 w-28 h-28 border border-slate-200/60 rotate-12"></div>
       </div>
 
-      {/* Elementos decorativos grandes */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-full blur-3xl animate-pulse-glow"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse-glow" style={{animationDelay: '2s'}}></div>
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-20">
+        {/* Header */}
+        <div className="text-center mb-20">
+          <div className="relative inline-block mb-8">
+            <div className="w-20 h-20 bg-gradient-to-br from-slate-900 to-slate-700 rounded-2xl flex items-center justify-center mx-auto shadow-2xl">
+              <Cpu className="w-10 h-10 text-white" />
+            </div>
+            <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            </div>
+          </div>
+          
+          <h1 className="text-4xl font-light text-slate-900 mb-4 tracking-tight">
+            Sistema de Gestión
+            <span className="block font-semibold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+              Pedidos de Almuerzo
+            </span>
+          </h1>
+          
+          <p className="text-slate-600 text-lg font-light max-w-2xl mx-auto leading-relaxed">
+            Plataforma inteligente para la gestión eficiente de pedidos alimentarios
+          </p>
 
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-4xl">
-          {/* Header */}
-          <div className="text-center mb-12 animate-slide-in-down">
-            <div className="relative inline-block mb-6">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl blur-xl opacity-75 animate-glow"></div>
-              <div className="relative w-24 h-24 bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl flex items-center justify-center shadow-2xl hover-lift">
-                <Utensils className="w-12 h-12 text-white" />
-                <div className="absolute -top-1 -right-1">
-                  <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
-                </div>
+          {/* User Info Card */}
+          <div className="inline-flex items-center space-x-4 bg-white/80 backdrop-blur-sm rounded-2xl px-8 py-4 border border-slate-200/50 shadow-lg mt-8">
+            <div className="relative">
+              <div className="w-12 h-12 bg-gradient-to-br from-slate-800 to-slate-600 rounded-xl flex items-center justify-center text-white font-medium">
+                {profile?.nombre_completo?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U'}
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white"></div>
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-slate-900 text-lg">
+                {profile?.nombre_completo}
+              </p>
+              <div className="flex items-center space-x-3 text-sm text-slate-600">
+                <span className="px-2 py-1 bg-slate-100 rounded-md font-medium">
+                  {profile?.rol || 'Empleado'}
+                </span>
+                <span className="text-slate-400">•</span>
+                <span>{profile?.rut}</span>
               </div>
             </div>
-            
-            <h1 className="text-5xl font-black mb-4">
-              <span className="text-gradient-orange">Plataforma de</span>
-              <br />
-              <span className="text-white">Pedidos de Almuerzo</span>
-            </h1>
-            
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 inline-block border border-white/20 shadow-lg mb-4">
-              <p className="text-white text-lg font-semibold">
-                Bienvenido, <span className="text-gradient-orange">{profile?.nombre_completo}</span>
-              </p>
-            </div>
+          </div>
+        </div>
 
+        {/* Options Grid */}
+        <div className={`grid gap-8 mb-16 ${canAccessAdmin ? 'md:grid-cols-2 max-w-4xl mx-auto' : 'max-w-md mx-auto'}`}>
+          {/* Employee Option */}
+          {canAccessEmployee && (
+            <Card className="group relative overflow-hidden border-0 bg-white/60 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-emerald-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
+              
+              <CardContent className="relative p-10 text-center">
+                <div className="relative mb-8">
+                  <div className="w-20 h-20 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-2xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300">
+                    <User className="w-10 h-10 text-emerald-600" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-emerald-400 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <Zap className="w-4 h-4 text-white" />
+                  </div>
+                </div>
+                
+                <h2 className="text-2xl font-semibold text-slate-900 mb-4">
+                  Portal Empleado
+                </h2>
+                
+                <p className="text-slate-600 mb-8 leading-relaxed font-light">
+                  Interfaz optimizada para la gestión personal de pedidos con seguimiento en tiempo real
+                </p>
+                
+                <Button
+                  onClick={handleEmployeeAccess}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white h-14 font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105"
+                >
+                  <span className="flex items-center justify-center space-x-3">
+                    <span>Acceder al Portal</span>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                  </span>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Admin Option */}
+          {canAccessAdmin && (
+            <Card className="group relative overflow-hidden border-0 bg-white/60 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 to-purple-600"></div>
+              
+              <CardContent className="relative p-10 text-center">
+                <div className="relative mb-8">
+                  <div className="w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-50 rounded-2xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300">
+                    <Shield className="w-10 h-10 text-indigo-600" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-indigo-400 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <Zap className="w-4 h-4 text-white" />
+                  </div>
+                </div>
+                
+                <h2 className="text-2xl font-semibold text-slate-900 mb-4">
+                  Centro de Control
+                </h2>
+                
+                <p className="text-slate-600 mb-8 leading-relaxed font-light">
+                  Dashboard avanzado con analytics, gestión de usuarios y configuración del sistema
+                </p>
+                
+                <Button
+                  onClick={handleAdminAccess}
+                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white h-14 font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105"
+                >
+                  <span className="flex items-center justify-center space-x-3">
+                    <span>Acceder al Centro</span>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                  </span>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="text-center">
+          <div className="inline-flex items-center space-x-6 bg-white/40 backdrop-blur-sm rounded-2xl px-8 py-4 border border-slate-200/50">
+            <div className="flex items-center space-x-2 text-sm text-slate-600">
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+              <span className="font-medium">Sistema Activo</span>
+            </div>
+            <div className="w-px h-4 bg-slate-300"></div>
             <button
               onClick={handleSignOut}
-              className="inline-flex items-center space-x-2 text-slate-300 hover:text-white transition-colors duration-200 text-sm font-medium hover:scale-105"
+              className="flex items-center space-x-2 text-slate-600 hover:text-slate-900 transition-colors text-sm font-medium group"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
               <span>Cerrar Sesión</span>
             </button>
-
-            <div className="flex items-center justify-center space-x-1 mt-4">
-              <Star className="w-4 h-4 text-yellow-400" />
-              <Star className="w-4 h-4 text-yellow-400" />
-              <Star className="w-4 h-4 text-yellow-400" />
-              <Star className="w-4 h-4 text-yellow-400" />
-              <Star className="w-4 h-4 text-yellow-400" />
-            </div>
-          </div>
-
-          {/* Cards de Opciones */}
-          <div className={`grid gap-8 ${canAccessAdmin ? 'md:grid-cols-2' : 'max-w-md mx-auto'} animate-slide-in-up`}>
-            {/* Opción Empleado */}
-            {canAccessEmployee && (
-              <Card className="border-0 shadow-2xl glass-card hover-lift group cursor-pointer transition-all duration-300 hover:scale-105">
-                <CardContent className="p-8 text-center">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="relative w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-3xl flex items-center justify-center shadow-2xl mx-auto group-hover:scale-110 transition-transform duration-300">
-                      <User className="w-10 h-10 text-white" />
-                    </div>
-                  </div>
-                  
-                  <h2 className="text-2xl font-black text-slate-900 mb-3">
-                    Realizar Pedido
-                    <br />
-                    <span className="text-green-600">(Empleado)</span>
-                  </h2>
-                  
-                  <p className="text-slate-600 mb-8 font-medium leading-relaxed">
-                    Accede al sistema de pedidos como si fueras un empleado regular.
-                  </p>
-                  
-                  <Button
-                    onClick={handleEmployeeAccess}
-                    className="w-full h-14 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:scale-105"
-                  >
-                    <span className="flex items-center justify-center space-x-3">
-                      <span>Ir a Pedidos</span>
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-                    </span>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Opción Administrador */}
-            {canAccessAdmin && (
-              <Card className="border-0 shadow-2xl glass-card hover-lift group cursor-pointer transition-all duration-300 hover:scale-105">
-                <CardContent className="p-8 text-center">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="relative w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-3xl flex items-center justify-center shadow-2xl mx-auto group-hover:scale-110 transition-transform duration-300">
-                      <Shield className="w-10 h-10 text-white" />
-                    </div>
-                  </div>
-                  
-                  <h2 className="text-2xl font-black text-slate-900 mb-3">
-                    Panel de
-                    <br />
-                    <span className="text-blue-600">Administración</span>
-                  </h2>
-                  
-                  <p className="text-slate-600 mb-8 font-medium leading-relaxed">
-                    Gestiona pedidos, genera reportes y administra el sistema.
-                  </p>
-                  
-                  <Button
-                    onClick={handleAdminAccess}
-                    className="w-full h-14 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:scale-105"
-                  >
-                    <span className="flex items-center justify-center space-x-3">
-                      <span>Ir al Panel</span>
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-                    </span>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Información del Usuario */}
-          <div className="mt-12 text-center animate-slide-in-up" style={{animationDelay: '0.3s'}}>
-            <div className="inline-flex items-center space-x-4 text-sm text-slate-300 bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/20 shadow-lg">
-              <div className="flex items-center space-x-2">
-                <Shield className="w-4 h-4" />
-                <span className="font-semibold">Rol: {profile?.rol || 'Empleado'}</span>
-              </div>
-              <div className="w-px h-4 bg-white/30"></div>
-              <div className="flex items-center space-x-2">
-                <User className="w-4 h-4" />
-                <span className="font-semibold">RUT: {profile?.rut}</span>
-              </div>
-              <Sparkles className="w-4 h-4 animate-pulse" />
-            </div>
           </div>
         </div>
       </div>

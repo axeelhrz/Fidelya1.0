@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Card, CardContent } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { signInWithCredentials, getAllUsers, generatePassword, testSupabaseConnection } from '@/lib/auth'
 import { Trabajador } from '@/types/database'
 import {
-  Utensils,
+  Building2,
   User,
   ChevronDown,
   Lock,
@@ -17,11 +17,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
-  Shield,
-  Building2,
-  Sparkles,
-  Zap,
-  Star
+  Shield
 } from 'lucide-react'
 
 export default function LoginForm() {
@@ -34,7 +30,6 @@ export default function LoginForm() {
   const [loadingUsers, setLoadingUsers] = useState(true)
   const [error, setError] = useState('')
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
-  const [debugInfo, setDebugInfo] = useState<any>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -106,36 +101,12 @@ export default function LoginForm() {
 
     setLoading(true)
     setError('')
-    setDebugInfo(null)
 
     try {
-      console.log('🔐 Iniciando proceso de login...')
-      console.log('Usuario seleccionado:', selectedUser.nombre_completo)
-      console.log('Contraseña ingresada:', password.trim())
-      
-      const result = await signInWithCredentials(selectedUser.nombre_completo, password.trim())
-      
-      console.log('✅ Login exitoso:', result)
-      setDebugInfo({
-        loginSuccess: true,
-        user: result.data?.user,
-        timestamp: new Date().toISOString()
-      })
-
-      // Pequeña pausa para mostrar el éxito
-      setTimeout(() => {
-        console.log('🚀 Redirigiendo a /role-selection...')
-        router.push('/role-selection')
-      }, 500)
-
+      await signInWithCredentials(selectedUser.nombre_completo, password.trim())
+      router.push('/role-selection')
     } catch (err: any) {
-      console.error('❌ Error en login:', err)
       setError(err.message || 'Error al iniciar sesión')
-      setDebugInfo({
-        loginSuccess: false,
-        error: err.message,
-        timestamp: new Date().toISOString()
-      })
     } finally {
       setLoading(false)
     }
@@ -149,336 +120,229 @@ export default function LoginForm() {
     return password.toUpperCase() === getExpectedPassword()
   }
 
-  const getTurnoColor = (turno: string | null) => {
-    if (!turno) return 'bg-gray-100 text-gray-600 border-gray-200'
-    switch (turno.toLowerCase()) {
-      case 'día':
-      case 'dia':
-        return 'bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-800 border-orange-200'
-      case 'noche':
-        return 'bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 border-indigo-200'
-      case 'mixto':
-        return 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border-purple-200'
-      default:
-        return 'bg-gray-100 text-gray-600 border-gray-200'
-    }
-  }
-
-  const getRolColor = (rol: string | null) => {
-    if (!rol) return 'bg-gray-100 text-gray-600 border-gray-200'
-    switch (rol.toLowerCase()) {
-      case 'admin':
-      case 'administrador':
-        return 'bg-gradient-to-r from-red-100 to-pink-100 text-red-800 border-red-200'
-      case 'supervisor':
-        return 'bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border-blue-200'
-      case 'empleado':
-        return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-200'
-      default:
-        return 'bg-gray-100 text-gray-600 border-gray-200'
-    }
+  const getRoleBadge = (rol: string | null) => {
+    if (!rol) return 'Empleado'
+    return rol.charAt(0).toUpperCase() + rol.slice(1).toLowerCase()
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Background con gradiente animado */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 animate-gradient"></div>
-      
-      {/* Partículas flotantes */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-20 w-2 h-2 bg-orange-400 rounded-full animate-float opacity-60"></div>
-        <div className="absolute top-40 right-32 w-1 h-1 bg-blue-400 rounded-full animate-float opacity-80" style={{animationDelay: '1s'}}></div>
-        <div className="absolute bottom-32 left-16 w-3 h-3 bg-purple-400 rounded-full animate-float opacity-50" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-60 left-1/3 w-1 h-1 bg-green-400 rounded-full animate-float opacity-70" style={{animationDelay: '3s'}}></div>
-        <div className="absolute bottom-20 right-20 w-2 h-2 bg-pink-400 rounded-full animate-float opacity-60" style={{animationDelay: '4s'}}></div>
-      </div>
-
-      {/* Elementos decorativos grandes */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-full blur-3xl animate-pulse-glow"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse-glow" style={{animationDelay: '2s'}}></div>
-
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          {/* Logo y Header */}
-          <div className="text-center mb-8 animate-slide-in-down">
-            <div className="relative inline-block mb-6">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl blur-xl opacity-75 animate-glow"></div>
-              <div className="relative w-24 h-24 bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl flex items-center justify-center shadow-2xl hover-lift">
-                <Utensils className="w-12 h-12 text-white" />
-                <div className="absolute -top-1 -right-1">
-                  <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
-                </div>
-              </div>
-            </div>
-            
-            <h1 className="text-5xl font-black mb-4">
-              <span className="text-gradient-orange">Plataforma</span>
-              <br />
-              <span className="text-white">de Pedidos</span>
-            </h1>
-            
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 inline-block border border-white/20 shadow-lg mb-4">
-              <p className="text-white text-lg font-semibold">
-                Bienvenido al sistema de pedidos
-              </p>
-            </div>
-
-            <div className="flex items-center justify-center space-x-1 mt-4">
-              <Star className="w-4 h-4 text-yellow-400" />
-              <Star className="w-4 h-4 text-yellow-400" />
-              <Star className="w-4 h-4 text-yellow-400" />
-              <Star className="w-4 h-4 text-yellow-400" />
-              <Star className="w-4 h-4 text-yellow-400" />
-            </div>
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-slate-900 rounded-lg flex items-center justify-center mx-auto mb-6">
+            <Building2 className="w-8 h-8 text-white" />
           </div>
+          
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">
+            Iniciar Sesión
+          </h1>
+          <p className="text-slate-600">
+            Sistema de Pedidos de Almuerzo
+          </p>
+        </div>
 
-          {/* Card de Login */}
-          <Card className="border-0 shadow-2xl glass-card hover-lift animate-slide-in-up">
-            <CardContent className="p-8">
-              {/* Estado de conexión */}
-              <div className="mb-6">
-                <div className={`flex items-center space-x-3 p-4 rounded-2xl ${
-                  connectionStatus === 'connected' ? 'bg-green-100 text-green-800 border border-green-200' :
-                  connectionStatus === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
-                  'bg-yellow-100 text-yellow-800 border border-yellow-200'
-                }`}>
-                  {connectionStatus === 'connected' ? (
-                    <CheckCircle2 className="w-5 h-5" />
-                  ) : connectionStatus === 'error' ? (
-                    <AlertCircle className="w-5 h-5" />
-                  ) : (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  )}
-                  <span className="font-semibold">
-                    {connectionStatus === 'connected' ? 'Conectado a la base de datos' :
-                     connectionStatus === 'error' ? 'Error de conexión' :
-                     'Verificando conexión...'}
-                  </span>
-                </div>
-              </div>
+        {/* Login Card */}
+        <Card className="border border-slate-200 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg text-center">Acceso al Sistema</CardTitle>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            {/* Connection Status */}
+            <div className={`flex items-center space-x-2 p-3 rounded-lg text-sm ${
+              connectionStatus === 'connected' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+              connectionStatus === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
+              'bg-slate-50 text-slate-700 border border-slate-200'
+            }`}>
+              {connectionStatus === 'connected' ? (
+                <CheckCircle2 className="w-4 h-4" />
+              ) : connectionStatus === 'error' ? (
+                <AlertCircle className="w-4 h-4" />
+              ) : (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              )}
+              <span className="font-medium">
+                {connectionStatus === 'connected' ? 'Sistema conectado' :
+                 connectionStatus === 'error' ? 'Error de conexión' :
+                 'Conectando...'}
+              </span>
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Selector de Usuario */}
-                <div className="space-y-3">
-                  <label className="text-sm font-bold text-slate-900">
-                    Selecciona tu nombre
-                  </label>
-                  
-                  <div className="dropdown-container relative">
-                    <div
-                      onClick={() => !loadingUsers && setShowDropdown(!showDropdown)}
-                      className={`w-full h-14 px-4 py-3 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${
-                        selectedUser 
-                          ? 'border-green-300 bg-green-50 shadow-lg' 
-                          : 'border-slate-300 bg-white hover:border-orange-400 hover:shadow-md'
-                      } ${loadingUsers ? 'cursor-not-allowed opacity-50' : ''}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                            selectedUser ? 'bg-green-500' : 'bg-slate-400'
-                          }`}>
-                            <User className="w-5 h-5 text-white" />
-                          </div>
-                          <span className={`font-semibold ${
-                            selectedUser ? 'text-green-800' : 'text-slate-500'
-                          }`}>
-                            {loadingUsers ? 'Cargando trabajadores...' :
-                             selectedUser ? selectedUser.nombre_completo : 'Selecciona tu nombre...'}
-                          </span>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* User Selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">
+                  Selecciona tu nombre
+                </label>
+                
+                <div className="dropdown-container relative">
+                  <div
+                    onClick={() => !loadingUsers && setShowDropdown(!showDropdown)}
+                    className={`w-full h-12 px-4 py-3 border rounded-lg cursor-pointer transition-colors ${
+                      selectedUser 
+                        ? 'border-emerald-300 bg-emerald-50' 
+                        : 'border-slate-300 bg-white hover:border-slate-400'
+                    } ${loadingUsers ? 'cursor-not-allowed opacity-50' : ''}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-medium ${
+                          selectedUser ? 'bg-emerald-600' : 'bg-slate-400'
+                        }`}>
+                          {selectedUser ? selectedUser.nombre_completo.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : <User className="w-4 h-4" />}
                         </div>
-                        {!loadingUsers && (
-                          <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${
-                            showDropdown ? 'rotate-180' : ''
-                          }`} />
-                        )}
+                        <span className={`font-medium ${
+                          selectedUser ? 'text-slate-900' : 'text-slate-500'
+                        }`}>
+                          {loadingUsers ? 'Cargando...' :
+                           selectedUser ? selectedUser.nombre_completo : 'Selecciona tu nombre'}
+                        </span>
                       </div>
+                      {!loadingUsers && (
+                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${
+                          showDropdown ? 'rotate-180' : ''
+                        }`} />
+                      )}
                     </div>
+                  </div>
 
-                    {/* Dropdown */}
-                    {showDropdown && !loadingUsers && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-slate-200 rounded-2xl shadow-2xl z-50 max-h-80 overflow-y-auto">
-                        {users.length === 0 ? (
-                          <div className="p-6 text-center text-slate-500">
-                            <AlertCircle className="w-8 h-8 mx-auto mb-3 text-slate-400" />
-                            <p className="font-semibold">No hay trabajadores disponibles</p>
-                          </div>
-                        ) : (
-                          users.map((user) => (
-                            <div
-                              key={user.id}
-                              onClick={() => handleUserSelect(user)}
-                              className="p-4 hover:bg-slate-50 cursor-pointer transition-colors duration-200 border-b border-slate-100 last:border-b-0"
-                            >
-                              <div className="flex items-center space-x-4">
-                                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
-                                  <User className="w-6 h-6 text-white" />
-                                </div>
-                                <div className="flex-1">
-                                  <p className="font-bold text-slate-900">{user.nombre_completo}</p>
-                                  <div className="flex items-center space-x-3 mt-1">
-                                    <span className={`text-xs px-3 py-1 rounded-full border font-semibold ${getTurnoColor(user.turno_habitual)}`}>
-                                      {user.turno_habitual || 'Sin turno'}
-                                    </span>
-                                    <span className={`text-xs px-3 py-1 rounded-full border font-semibold ${getRolColor(user.rol)}`}>
-                                      {user.rol || 'Empleado'}
-                                    </span>
-                                  </div>
+                  {/* Dropdown */}
+                  {showDropdown && !loadingUsers && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                      {users.length === 0 ? (
+                        <div className="p-4 text-center text-slate-500">
+                          <AlertCircle className="w-6 h-6 mx-auto mb-2 text-slate-400" />
+                          <p className="text-sm">No hay trabajadores disponibles</p>
+                        </div>
+                      ) : (
+                        users.map((user) => (
+                          <div
+                            key={user.id}
+                            onClick={() => handleUserSelect(user)}
+                            className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-slate-600 rounded-lg flex items-center justify-center text-white text-sm font-medium">
+                                {user.nombre_completo.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-slate-900">{user.nombre_completo}</p>
+                                <div className="flex items-center space-x-2 text-xs text-slate-500">
+                                  <span>{user.rut}</span>
+                                  <span>•</span>
+                                  <span>{getRoleBadge(user.rol)}</span>
                                 </div>
                               </div>
                             </div>
-                          ))
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Campo de Contraseña */}
-                <div className="space-y-3">
-                  <label htmlFor="password" className="text-sm font-bold text-slate-900">
-                    Contraseña
-                  </label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Ingresa tu contraseña"
-                      className={`h-14 pr-12 text-lg font-semibold transition-all duration-300 ${
-                        password && isPasswordCorrect() 
-                          ? 'border-green-400 bg-green-50 text-green-800' 
-                          : password && !isPasswordCorrect()
-                          ? 'border-red-400 bg-red-50 text-red-800'
-                          : 'border-slate-300'
-                      }`}
-                      disabled={loading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors duration-200"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-
-                  {/* Hint de contraseña */}
-                  {selectedUser && (
-                    <div className="p-5 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl border border-blue-200 shadow-sm">
-                      <div className="flex items-start space-x-4">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                          <Shield className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-base font-bold text-blue-900 mb-2">
-                            Formato de contraseña
-                          </p>
-                          <p className="text-sm text-blue-700 mb-3 font-medium">
-                            Primera letra del nombre + apellido completo (todo en mayúsculas)
-                          </p>
-                          <div className="bg-white rounded-xl p-4 border border-blue-200 shadow-sm">
-                            <p className="text-sm text-slate-600 mb-2 font-medium">
-                              Para <strong className="text-blue-800">{selectedUser.nombre_completo}</strong>:
-                            </p>
-                            <code className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 px-4 py-2 rounded-lg font-mono font-black text-lg border border-blue-200">
-                              {getExpectedPassword()}
-                            </code>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Validación visual */}
-                  {password && selectedUser && (
-                    <div className={`flex items-center space-x-2 p-3 rounded-xl ${
-                      isPasswordCorrect() 
-                        ? 'bg-green-100 text-green-800 border border-green-200' 
-                        : 'bg-red-100 text-red-800 border border-red-200'
-                    }`}>
-                      {isPasswordCorrect() ? (
-                        <CheckCircle2 className="w-5 h-5" />
-                      ) : (
-                        <AlertCircle className="w-5 h-5" />
+                        ))
                       )}
-                      <span className="font-semibold text-sm">
-                        {isPasswordCorrect() ? 'Contraseña correcta' : 'Contraseña incorrecta'}
-                      </span>
                     </div>
                   )}
                 </div>
+              </div>
 
-                {/* Error */}
-                {error && (
-                  <div className="bg-red-100 border border-red-300 text-red-700 px-6 py-4 rounded-2xl shadow-sm">
-                    <div className="flex items-center space-x-3">
-                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                      <p className="font-semibold">{error}</p>
+              {/* Password */}
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium text-slate-700">
+                  Contraseña
+                </label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Ingresa tu contraseña"
+                    className={`h-12 pr-10 ${
+                      password && isPasswordCorrect() 
+                        ? 'border-emerald-300 bg-emerald-50' 
+                        : password && !isPasswordCorrect()
+                        ? 'border-red-300 bg-red-50'
+                        : ''
+                    }`}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                {/* Password Hint */}
+                {selectedUser && (
+                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="flex items-start space-x-2">
+                      <Shield className="w-4 h-4 text-slate-500 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="font-medium text-slate-700 mb-1">Formato de contraseña:</p>
+                        <p className="text-slate-600 mb-2">Primera letra del nombre + apellido completo en mayúsculas</p>
+                        <code className="bg-white px-2 py-1 rounded border text-slate-800 font-mono">
+                          {getExpectedPassword()}
+                        </code>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* Botón de Login */}
-                <Button
-                  type="submit"
-                  disabled={loading || !selectedUser || !password.trim()}
-                  className="w-full h-16 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <div className="flex items-center space-x-3">
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                      <span>Iniciando sesión...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-3">
-                      <Zap className="w-6 h-6" />
-                      <span>Iniciar Sesión</span>
-                    </div>
-                  )}
-                </Button>
-              </form>
-
-              {/* Debug Info */}
-              {(process.env.NODE_ENV === 'development' || debugInfo) && (
-                <div className="mt-6 p-4 bg-slate-100 rounded-xl border border-slate-200">
-                  <p className="text-xs text-slate-600 font-semibold mb-2">🔧 Información de Debug:</p>
-                  <div className="text-xs text-slate-500 space-y-1">
-                    <p>• Trabajadores cargados: {users.length}</p>
-                    <p>• Estado de conexión: {connectionStatus}</p>
-                    <p>• Usuario seleccionado: {selectedUser?.nombre_completo || 'Ninguno'}</p>
-                    <p>• Contraseña esperada: {selectedUser ? getExpectedPassword() : 'N/A'}</p>
-                    <p>• URL actual: {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
-                    {debugInfo && (
-                      <div className="mt-2 p-2 bg-white rounded border">
-                        <p className="font-semibold">Último intento de login:</p>
-                        <pre className="text-xs overflow-auto">
-                          {JSON.stringify(debugInfo, null, 2)}
-                        </pre>
-                      </div>
+                {/* Password Validation */}
+                {password && selectedUser && (
+                  <div className={`flex items-center space-x-2 text-sm ${
+                    isPasswordCorrect() ? 'text-emerald-600' : 'text-red-600'
+                  }`}>
+                    {isPasswordCorrect() ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4" />
                     )}
+                    <span className="font-medium">
+                      {isPasswordCorrect() ? 'Contraseña correcta' : 'Contraseña incorrecta'}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <p className="text-sm font-medium">{error}</p>
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
 
-          {/* Footer */}
-          <div className="text-center mt-8 animate-slide-in-up" style={{animationDelay: '0.3s'}}>
-            <div className="inline-flex items-center space-x-4 text-sm text-slate-300 bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/20 shadow-lg">
-              <div className="flex items-center space-x-2">
-                <Building2 className="w-4 h-4" />
-                <span className="font-semibold">Sistema de Pedidos</span>
-              </div>
-              <div className="w-px h-4 bg-white/30"></div>
-              <div className="flex items-center space-x-2">
-                <Shield className="w-4 h-4" />
-                <span className="font-semibold">Seguro y Confiable</span>
-              </div>
-              <Sparkles className="w-4 h-4 animate-pulse" />
-            </div>
-          </div>
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={loading || !selectedUser || !password.trim()}
+                className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white font-medium disabled:opacity-50"
+              >
+                {loading ? (
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Iniciando sesión...</span>
+                  </div>
+                ) : (
+                  'Iniciar Sesión'
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Footer */}
+        <div className="text-center mt-6">
+          <p className="text-sm text-slate-500">
+            ¿Problemas para acceder?{' '}
+            <a href="#" className="text-slate-700 hover:text-slate-900 font-medium">
+              Contacta al administrador
+            </a>
+          </p>
         </div>
       </div>
     </div>
