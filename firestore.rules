@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Función para verificar autenticación
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Función para verificar que el usuario pertenece al centro
+    function belongsToCenter(centerId) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.centerId == centerId;
+    }
+    
+    // Función para verificar rol
+    function hasRole(role) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+    
+    // Función para verificar múltiples roles
+    function hasAnyRole(roles) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in roles;
+    }
+
+    // Reglas para usuarios
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if hasRole('admin') && belongsToCenter(resource.data.centerId);
+    }
+
+    // Reglas para centros
+    match /centers/{centerId} {
+      allow read, write: if belongsToCenter(centerId) && hasRole('admin');
+    }
+
+    // Reglas para pacientes
+    match /patients/{patientId} {
+      allow read, write: if belongsToCenter(resource.data.centerId) && 
+                           hasAnyRole(['admin', 'psicologo']);
+      allow read: if belongsToCenter(resource.data.centerId) && 
+                    hasRole('paciente') && 
+                    request.auth.uid == patientId;
+    }
+
+    // Reglas para sesiones
+    match /sessions/{sessionId} {
+      allow read, write: if belongsToCenter(resource.data.centerId) && 
+                           hasAnyRole(['admin', 'psicologo']);
+      allow read: if belongsToCenter(resource.data.centerId) && 
+                    hasRole('paciente') && 
+                    resource.data.patientId == request.auth.uid;
+    }
+
+    // Reglas para alertas
+    match /alerts/{alertId} {
+      allow read, write: if belongsToCenter(resource.data.centerId) && 
+                           hasAnyRole(['admin', 'psicologo']);
+    }
+
+    // Reglas para métricas
+    match /metrics/{metricId} {
+      allow read: if belongsToCenter(resource.data.centerId) && 
+                    hasAnyRole(['admin', 'psicologo']);
+      allow write: if belongsToCenter(resource.data.centerId) && 
+                     hasRole('admin');
+    }
+  }
+}
