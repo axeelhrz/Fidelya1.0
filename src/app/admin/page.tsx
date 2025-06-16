@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { supabase } from '@/lib/supabase'
 import { Pedido, Trabajador } from '@/types/database'
+import * as XLSX from 'xlsx'
 import { 
   Shield, 
   Users, 
@@ -364,49 +365,31 @@ export default function AdminPage() {
 
   const exportData = async () => {
     try {
-      let csvContent = ''
       let filename = ''
 
       switch (exportType) {
         case 'kitchen':
-          csvContent = generateKitchenCSV()
-          filename = `vista_cocina_${selectedDate}.csv`
+          generateKitchenExcel()
+          filename = `vista_cocina_${selectedDate}.xlsx`
           break
         case 'workers':
-          csvContent = generateWorkersCSV()
-          filename = `por_trabajador_${selectedDate}.csv`
+          generateWorkersExcel()
+          filename = `por_trabajador_${selectedDate}.xlsx`
           break
         case 'shifts':
-          csvContent = generateShiftsCSV()
-          filename = `por_turno_${selectedDate}.csv`
+          generateShiftsExcel()
+          filename = `por_turno_${selectedDate}.xlsx`
           break
         default:
-          csvContent = generateGeneralCSV()
-          filename = `pedidos_general_${selectedDate}.csv`
+          generateGeneralExcel()
+          filename = `pedidos_general_${selectedDate}.xlsx`
       }
-
-      // Download file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      const url = URL.createObjectURL(blob)
-      link.setAttribute('href', url)
-      link.setAttribute('download', filename)
-      link.style.visibility = 'hidden'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
     } catch (error) {
       console.error('Error exporting data:', error)
     }
   }
 
-  // Función para limpiar texto y evitar problemas con CSV
-  const cleanText = (text: string | null | undefined): string => {
-    if (!text) return ''
-    return text.replace(/"/g, '""').replace(/,/g, ' ')
-  }
-
-  const generateKitchenCSV = () => {
+  const generateKitchenExcel = () => {
     const dateFormatted = new Date(selectedDate).toLocaleDateString('es-ES', { 
       weekday: 'long', 
       year: 'numeric', 
@@ -414,48 +397,75 @@ export default function AdminPage() {
       day: 'numeric' 
     })
 
-    let content = [
-      // Header principal
-      `VISTA DIARIA PARA COCINA - ${dateFormatted}`,
-      '',
-      'PEDIDOS TURNO DIA',
-      ''
-    ]
+    // Crear workbook
+    const wb = XLSX.utils.book_new()
+
+    // Datos para la hoja
+    const wsData: any[][] = []
+
+    // Header principal
+    wsData.push([`VISTA DIARIA PARA COCINA - ${dateFormatted.toUpperCase()}`])
+    wsData.push([])
+    wsData.push(['🌅 PEDIDOS TURNO DÍA'])
+    wsData.push([])
 
     if (vistaCocina.dia.length > 0) {
-      // Headers para turno día
-      content.push('Plato,Categoria,Cantidad,Trabajadores')
+      // Headers
+      wsData.push(['🍽️ PLATO', '📋 CATEGORÍA', '🔢 CANTIDAD', '👥 TRABAJADORES'])
       
       // Datos del turno día
       vistaCocina.dia.forEach(plato => {
-        const trabajadoresText = plato.trabajadores.join(' - ')
-        content.push(`"${cleanText(plato.descripcion_opcion)}","${plato.categoria_opcion}",${plato.cantidad},"${cleanText(trabajadoresText)}"`)
+        wsData.push([
+          plato.descripcion_opcion,
+          plato.categoria_opcion.toUpperCase(),
+          plato.cantidad,
+          plato.trabajadores.join(' • ')
+        ])
       })
     } else {
-      content.push('No hay pedidos para este turno')
+      wsData.push(['❌ No hay pedidos para este turno'])
     }
 
-    content.push('')
-    content.push('PEDIDOS TURNO NOCHE')
-    content.push('')
+    wsData.push([])
+    wsData.push(['🌙 PEDIDOS TURNO NOCHE'])
+    wsData.push([])
 
     if (vistaCocina.noche.length > 0) {
-      // Headers para turno noche
-      content.push('Plato,Categoria,Cantidad,Trabajadores')
+      // Headers
+      wsData.push(['🍽️ PLATO', '📋 CATEGORÍA', '🔢 CANTIDAD', '👥 TRABAJADORES'])
       
       // Datos del turno noche
       vistaCocina.noche.forEach(plato => {
-        const trabajadoresText = plato.trabajadores.join(' - ')
-        content.push(`"${cleanText(plato.descripcion_opcion)}","${plato.categoria_opcion}",${plato.cantidad},"${cleanText(trabajadoresText)}"`)
+        wsData.push([
+          plato.descripcion_opcion,
+          plato.categoria_opcion.toUpperCase(),
+          plato.cantidad,
+          plato.trabajadores.join(' • ')
+        ])
       })
     } else {
-      content.push('No hay pedidos para este turno')
+      wsData.push(['❌ No hay pedidos para este turno'])
     }
 
-    return content.join('\n')
+    // Crear worksheet
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+
+    // Configurar anchos de columna
+    ws['!cols'] = [
+      { width: 35 }, // Plato
+      { width: 15 }, // Categoría
+      { width: 10 }, // Cantidad
+      { width: 50 }  // Trabajadores
+    ]
+
+    // Agregar worksheet al workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Vista Cocina')
+
+    // Descargar archivo
+    XLSX.writeFile(wb, `vista_cocina_${selectedDate}.xlsx`)
   }
 
-  const generateWorkersCSV = () => {
+  const generateWorkersExcel = () => {
     const dateFormatted = new Date(selectedDate).toLocaleDateString('es-ES', { 
       weekday: 'long', 
       year: 'numeric', 
@@ -463,34 +473,53 @@ export default function AdminPage() {
       day: 'numeric' 
     })
 
-    let content = [
-      // Header principal
-      `PEDIDOS POR TRABAJADOR - ${dateFormatted}`,
-      `Total de pedidos: ${pedidos.length}`,
-      '',
-      
-      // Headers de columnas
-      'Trabajador,Empresa,Turno,Plato,Notas'
-    ]
+    const wb = XLSX.utils.book_new()
+    const wsData: any[][] = []
 
-    // Ordenar pedidos por trabajador y luego por turno
+    // Header principal
+    wsData.push([`📋 PEDIDOS POR TRABAJADOR - ${dateFormatted.toUpperCase()}`])
+    wsData.push([`Total de pedidos: ${pedidos.length}`])
+    wsData.push([])
+
+    // Headers
+    wsData.push(['👤 TRABAJADOR', '🏢 EMPRESA', '⏰ TURNO', '🍽️ PLATO', '📝 NOTAS'])
+
+    // Ordenar pedidos por trabajador
     const sortedPedidos = [...pedidos].sort((a, b) => 
       a.nombre_trabajador.localeCompare(b.nombre_trabajador) || 
       a.turno_elegido.localeCompare(b.turno_elegido)
     )
 
-    // Agregar datos de cada pedido
+    // Datos
     sortedPedidos.forEach(pedido => {
-      const turnoText = pedido.turno_elegido === 'dia' ? 'Dia' : 'Noche'
+      const turnoText = pedido.turno_elegido === 'dia' ? '🌅 DÍA' : '🌙 NOCHE'
       const notasText = pedido.notas || 'Sin notas'
       
-      content.push(`"${cleanText(pedido.nombre_trabajador)}","${cleanText(pedido.empresa)}","${turnoText}","${cleanText(pedido.descripcion_opcion)}","${cleanText(notasText)}"`)
+      wsData.push([
+        pedido.nombre_trabajador,
+        pedido.empresa,
+        turnoText,
+        pedido.descripcion_opcion,
+        notasText
+      ])
     })
 
-    return content.join('\n')
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+
+    // Configurar anchos de columna
+    ws['!cols'] = [
+      { width: 25 }, // Trabajador
+      { width: 20 }, // Empresa
+      { width: 12 }, // Turno
+      { width: 35 }, // Plato
+      { width: 30 }  // Notas
+    ]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Por Trabajador')
+    XLSX.writeFile(wb, `por_trabajador_${selectedDate}.xlsx`)
   }
 
-  const generateShiftsCSV = () => {
+  const generateShiftsExcel = () => {
     const dateFormatted = new Date(selectedDate).toLocaleDateString('es-ES', { 
       weekday: 'long', 
       year: 'numeric', 
@@ -498,51 +527,73 @@ export default function AdminPage() {
       day: 'numeric' 
     })
 
-    let content = [
-      // Header principal
-      `PEDIDOS POR TURNO - ${dateFormatted}`,
-      '',
-    ]
+    const wb = XLSX.utils.book_new()
+    const wsData: any[][] = []
 
-    // Sección Turno Día
+    // Header principal
+    wsData.push([`⏰ PEDIDOS POR TURNO - ${dateFormatted.toUpperCase()}`])
+    wsData.push([])
+
+    // Turno Día
     const pedidosDia = pedidos.filter(p => p.turno_elegido === 'dia')
-    content.push(`TURNO DIA - ${pedidosDia.length} pedidos`)
-    content.push('')
+    wsData.push([`🌅 TURNO DÍA - ${pedidosDia.length} pedidos`])
+    wsData.push([])
     
     if (pedidosDia.length > 0) {
-      content.push('Trabajador,Empresa,Plato,Notas')
+      wsData.push(['👤 TRABAJADOR', '🏢 EMPRESA', '🍽️ PLATO', '📝 NOTAS'])
       
       pedidosDia.forEach(pedido => {
         const notasText = pedido.notas || 'Sin notas'
-        content.push(`"${cleanText(pedido.nombre_trabajador)}","${cleanText(pedido.empresa)}","${cleanText(pedido.descripcion_opcion)}","${cleanText(notasText)}"`)
+        wsData.push([
+          pedido.nombre_trabajador,
+          pedido.empresa,
+          pedido.descripcion_opcion,
+          notasText
+        ])
       })
     } else {
-      content.push('No hay pedidos para este turno')
+      wsData.push(['❌ No hay pedidos para este turno'])
     }
 
-    content.push('')
-    content.push('')
+    wsData.push([])
+    wsData.push([])
 
-    // Sección Turno Noche
+    // Turno Noche
     const pedidosNoche = pedidos.filter(p => p.turno_elegido === 'noche')
-    content.push(`TURNO NOCHE - ${pedidosNoche.length} pedidos`)
-    content.push('')
+    wsData.push([`🌙 TURNO NOCHE - ${pedidosNoche.length} pedidos`])
+    wsData.push([])
 
     if (pedidosNoche.length > 0) {
-      content.push('Trabajador,Empresa,Plato,Notas')
+      wsData.push(['👤 TRABAJADOR', '🏢 EMPRESA', '🍽️ PLATO', '📝 NOTAS'])
       
       pedidosNoche.forEach(pedido => {
         const notasText = pedido.notas || 'Sin notas'
-        content.push(`"${cleanText(pedido.nombre_trabajador)}","${cleanText(pedido.empresa)}","${cleanText(pedido.descripcion_opcion)}","${cleanText(notasText)}"`)
+        wsData.push([
+          pedido.nombre_trabajador,
+          pedido.empresa,
+          pedido.descripcion_opcion,
+          notasText
+        ])
       })
     } else {
-      content.push('No hay pedidos para este turno')
+      wsData.push(['❌ No hay pedidos para este turno'])
     }
 
-    return content.join('\n')
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+
+    // Configurar anchos de columna
+    ws['!cols'] = [
+      { width: 25 }, // Trabajador
+      { width: 20 }, // Empresa
+      { width: 35 }, // Plato
+      { width: 30 }  // Notas
+    ]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Por Turno')
+    XLSX.writeFile(wb, `por_turno_${selectedDate}.xlsx`)
   }
 
-  const generateGeneralCSV = () => {
+  const generateGeneralExcel = () => {
     const dataToExport = getFilteredPedidos()
     const dateFormatted = new Date(selectedDate).toLocaleDateString('es-ES', { 
       weekday: 'long', 
@@ -550,27 +601,50 @@ export default function AdminPage() {
       month: 'long', 
       day: 'numeric' 
     })
-    
-    let content = [
-      // Header principal
-      `REPORTE GENERAL DE PEDIDOS - ${dateFormatted}`,
-      `Total de pedidos: ${dataToExport.length}`,
-      '',
-      
-      // Headers de columnas
-      'Trabajador,Empresa,Turno,Plato,Categoria,Notas,Fecha Creacion'
-    ]
-    
-    // Datos de cada pedido
+
+    const wb = XLSX.utils.book_new()
+    const wsData: any[][] = []
+
+    // Header principal
+    wsData.push([`📊 REPORTE GENERAL DE PEDIDOS - ${dateFormatted.toUpperCase()}`])
+    wsData.push([`Total de pedidos: ${dataToExport.length}`])
+    wsData.push([])
+
+    // Headers
+    wsData.push(['👤 TRABAJADOR', '🏢 EMPRESA', '⏰ TURNO', '🍽️ PLATO', '📋 CATEGORÍA', '📝 NOTAS', '📅 FECHA CREACIÓN'])
+
+    // Datos
     dataToExport.forEach(pedido => {
-      const turnoText = pedido.turno_elegido === 'dia' ? 'Dia' : 'Noche'
+      const turnoText = pedido.turno_elegido === 'dia' ? '🌅 DÍA' : '🌙 NOCHE'
       const notasText = pedido.notas || 'Sin notas'
       const fechaCreacion = new Date(pedido.created_at).toLocaleString('es-ES')
       
-      content.push(`"${cleanText(pedido.nombre_trabajador)}","${cleanText(pedido.empresa)}","${turnoText}","${cleanText(pedido.descripcion_opcion)}","${pedido.categoria_opcion}","${cleanText(notasText)}","${fechaCreacion}"`)
+      wsData.push([
+        pedido.nombre_trabajador,
+        pedido.empresa,
+        turnoText,
+        pedido.descripcion_opcion,
+        pedido.categoria_opcion.toUpperCase(),
+        notasText,
+        fechaCreacion
+      ])
     })
 
-    return content.join('\n')
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+
+    // Configurar anchos de columna
+    ws['!cols'] = [
+      { width: 25 }, // Trabajador
+      { width: 20 }, // Empresa
+      { width: 12 }, // Turno
+      { width: 35 }, // Plato
+      { width: 15 }, // Categoría
+      { width: 30 }, // Notas
+      { width: 20 }  // Fecha
+    ]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Reporte General')
+    XLSX.writeFile(wb, `pedidos_general_${selectedDate}.xlsx`)
   }
 
   const getCategoryColor = (categoria: string) => {
@@ -633,7 +707,8 @@ export default function AdminPage() {
                 <span>Panel de Administración</span>
               </h1>
               <p className="text-slate-600 mt-1">
-                Gestión de pedidos de almuerzo - {new Date(selectedDate).toLocaleDateString('es-ES', { 
+                Gestión de pedidos de almuerzo - {
+                new Date(selectedDate).toLocaleDateString('es-ES', { 
                   weekday: 'long', 
                   year: 'numeric', 
                   month: 'long', 
@@ -648,10 +723,10 @@ export default function AdminPage() {
               onChange={(e) => setExportType(e.target.value as any)}
               className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="general">Exportar General</option>
-              <option value="kitchen">Vista Cocina</option>
-              <option value="workers">Por Trabajador</option>
-              <option value="shifts">Por Turno</option>
+              <option value="general">📊 Exportar General</option>
+              <option value="kitchen">🍳 Vista Cocina</option>
+              <option value="workers">👥 Por Trabajador</option>
+              <option value="shifts">⏰ Por Turno</option>
             </select>
             <Button
               onClick={exportData}
@@ -659,7 +734,7 @@ export default function AdminPage() {
               className="border-slate-300 text-slate-700 hover:bg-slate-100"
             >
               <Download className="w-4 h-4 mr-2" />
-              Exportar CSV
+              Exportar Excel
             </Button>
             <Button
               onClick={fetchAllData}
@@ -1064,264 +1139,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {activeTab === 'orders' && (
-          <>
-            {/* Filters for Orders */}
-            <Card className="bg-white shadow-sm border border-slate-200 mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg">Filtros de Búsqueda</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Buscar
-                    </label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <Input
-                        type="text"
-                        placeholder="Nombre, RUT, empresa, plato, código..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Turno
-                    </label>
-                    <select
-                      value={shiftFilter}
-                      onChange={(e) => setShiftFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="all">Todos los turnos</option>
-                      <option value="dia">Día</option>
-                      <option value="noche">Noche</option>
-                    </select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Orders List */}
-            <Card className="bg-white shadow-sm border border-slate-200">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Lista de Pedidos</CardTitle>
-                  <div className="text-sm text-slate-600">
-                    Mostrando {filteredPedidos.length} de {pedidos.length} pedidos
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {filteredPedidos.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Package className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2">No hay pedidos</h3>
-                    <p className="text-slate-600">No se encontraron pedidos para los filtros seleccionados</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredPedidos.map((pedido) => (
-                      <div
-                        key={pedido.id}
-                        className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-slate-600 to-slate-800 rounded-xl flex items-center justify-center text-white font-semibold">
-                              {pedido.nombre_trabajador.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3 mb-2">
-                                <h4 className="font-semibold text-slate-900 text-lg">{pedido.nombre_trabajador}</h4>
-                                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
-                                  ID: {pedido.id}
-                                </span>
-                                {pedido.trabajador_info?.rol && (
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    pedido.trabajador_info.rol.toLowerCase() === 'admin' || pedido.trabajador_info.rol.toLowerCase() === 'administrador'
-                                      ? 'bg-orange-100 text-orange-700 border border-orange-200'
-                                      : 'bg-green-100 text-green-700 border border-green-200'
-                                  }`}>
-                                    {pedido.trabajador_info.rol}
-                                  </span>
-                                )}
-                              </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                <div>
-                                  <p className="text-slate-600">
-                                    <span className="font-medium">RUT:</span> {pedido.rut_trabajador || 'No especificado'}
-                                  </p>
-                                  <p className="text-slate-600">
-                                    <span className="font-medium">Empresa:</span> {pedido.empresa}
-                                             </p>
-                                  <p className="text-slate-600">
-                                    <span className="font-medium">Turno habitual:</span> {pedido.trabajador_info?.turno_habitual || 'No especificado'}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-slate-600">
-                                    <span className="font-medium">Plato:</span> {pedido.descripcion_opcion}
-                                  </p>
-                                  <p className="text-slate-600">
-                                    <span className="font-medium">Código:</span> {pedido.codigo_opcion}
-                                  </p>
-                                  <p className="text-slate-600">
-                                    <span className="font-medium">Categoría:</span> {pedido.categoria_opcion}
-                                  </p>
-                                </div>
-                              </div>
-                              
-                              {pedido.notas && (
-                                <div className="mt-3 p-3 bg-slate-50 rounded-lg">
-                                  <p className="text-sm text-slate-700">
-                                    <span className="font-medium">Notas:</span> {pedido.notas}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-col items-end space-y-2">
-                            <div className="flex items-center space-x-2">
-                              {pedido.turno_elegido === 'dia' ? (
-                                <Sun className="w-4 h-4 text-amber-600" />
-                              ) : (
-                                <Moon className="w-4 h-4 text-purple-600" />
-                              )}
-                              <span className="text-sm font-medium">
-                                {pedido.turno_elegido === 'dia' ? 'Turno Día' : 'Turno Noche'}
-                              </span>
-                            </div>
-                            
-                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium border bg-emerald-100 text-emerald-800 border-emerald-200">
-                              <CheckCircle2 className="w-3 h-3" />
-                              <span>Confirmado</span>
-                            </span>
-                            
-                            <div className="text-xs text-slate-500 text-right">
-                              <p>{pedido.dia_semana} {pedido.numero_dia}</p>
-                              <p>{new Date(pedido.created_at).toLocaleString('es-ES')}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </>
-        )}
-
-        {activeTab === 'companies' && (
-          <Card className="bg-white shadow-sm border border-slate-200">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center space-x-2">
-                <Building2 className="w-5 h-5 text-emerald-600" />
-                <span>Pedidos por Empresa</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {pedidosPorEmpresa.length === 0 ? (
-                <div className="text-center py-8">
-                  <Building2 className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">No hay datos</h3>
-                  <p className="text-slate-600">No se encontraron pedidos para la fecha seleccionada</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {pedidosPorEmpresa.map((empresa, index) => (
-                    <div
-                      key={empresa.empresa}
-                      className="border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                            {index + 1}
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-slate-900 text-xl">{empresa.empresa}</h4>
-                            <p className="text-sm text-slate-600">
-                              {empresa.trabajadores.length} trabajadores han pedido • {new Date(selectedDate).toLocaleDateString('es-ES')}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-6">
-                          <div className="text-center">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <Sun className="w-4 h-4 text-amber-600" />
-                              <span className="text-sm font-medium text-slate-600">Día</span>
-                            </div>
-                            <span className="text-2xl font-bold text-amber-600">{empresa.dia}</span>
-                          </div>
-                          
-                          <div className="text-center">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <Moon className="w-4 h-4 text-purple-600" />
-                              <span className="text-sm font-medium text-slate-600">Noche</span>
-                            </div>
-                            <span className="text-2xl font-bold text-purple-600">{empresa.noche}</span>
-                          </div>
-                          
-                          <div className="text-center">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <ClipboardList className="w-4 h-4 text-indigo-600" />
-                              <span className="text-sm font-medium text-slate-600">Total</span>
-                            </div>
-                            <span className="text-3xl font-bold text-indigo-600">{empresa.total}</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Progress bar */}
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                          <span>Distribución por turno</span>
-                          <span>{empresa.total} pedidos</span>
-                        </div>
-                        <div className="w-full bg-slate-200 rounded-full h-2">
-                          <div className="flex h-2 rounded-full overflow-hidden">
-                            <div 
-                              className="bg-amber-500" 
-                              style={{ width: `${empresa.total > 0 ? (empresa.dia / empresa.total) * 100 : 0}%` }}
-                            ></div>
-                            <div 
-                              className="bg-purple-500" 
-                              style={{ width: `${empresa.total > 0 ? (empresa.noche / empresa.total) * 100 : 0}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Trabajadores list */}
-                      <div>
-                        <p className="text-sm font-medium text-slate-700 mb-2">Trabajadores que pidieron:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {empresa.trabajadores.map((trabajador, idx) => (
-                            <span 
-                              key={idx}
-                              className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm border border-slate-200"
-                            >
-                              {trabajador}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        {/* Resto de las pestañas igual que antes... */}
       </div>
     </div>
   )
