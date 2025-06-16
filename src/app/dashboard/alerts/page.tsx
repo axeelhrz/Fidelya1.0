@@ -5,12 +5,12 @@ import {
   Box,
   Typography,
   Button,
-  Grid,
   Card,
   CardContent,
   CircularProgress,
-  Alert,
+  Alert as MuiAlert,
   Fab,
+  Grid,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -21,7 +21,7 @@ import {
 } from '@mui/icons-material';
 import { useAlerts, useAlertStats } from '@/hooks/useAlerts';
 import { usePatients } from '@/hooks/usePatients';
-import { AlertFilters } from '@/types/alert';
+import { Alert, AlertFilters, AlertFormData } from '@/types/alert';
 import AlertsTable from '@/components/alerts/AlertsTable';
 import AlertFiltersComponent from '@/components/alerts/AlertFilters';
 import AlertDialog from '@/components/alerts/AlertDialog';
@@ -35,12 +35,12 @@ export default function AlertsPage() {
   const { patients } = usePatients();
   const { stats, loading: statsLoading } = useAlertStats();
 
-  const handleCreateAlert = async (alertData) => {
+  const handleCreateAlert = async (alertData: AlertFormData) => {
     await createAlert(alertData);
     setDialogOpen(false);
   };
 
-  const handleEditAlert = (alert) => {
+  const handleEditAlert = (alert: Alert) => {
     setEditingAlert(alert);
     setDialogOpen(true);
   };
@@ -94,9 +94,9 @@ export default function AlertsPage() {
 
       {/* Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <MuiAlert severity="error" sx={{ mb: 3 }}>
           {error}
-        </Alert>
+        </MuiAlert>
       )}
 
       {/* Stats Cards */}

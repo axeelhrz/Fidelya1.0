@@ -21,7 +21,6 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import SessionView from '@/components/sessions/SessionView';
 import SessionDialog from '@/components/sessions/SessionDialog';
 
-import { Session } from '@/types/session';
 import { Patient } from '@/types/patient';
 import { User } from '@/types/auth';
 import { useSession, useSessionActions } from '@/hooks/useSessions';

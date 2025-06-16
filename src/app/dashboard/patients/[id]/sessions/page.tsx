@@ -33,7 +33,6 @@ import SessionDialog from '@/components/sessions/SessionDialog';
 import SessionView from '@/components/sessions/SessionView';
 
 import { Session, EMOTIONAL_TONE_COLORS } from '@/types/session';
-import { Patient } from '@/types/patient';
 import { User } from '@/types/auth';
 import { usePatientSessions } from '@/hooks/useSessions';
 import { usePatient } from '@/hooks/usePatients';
