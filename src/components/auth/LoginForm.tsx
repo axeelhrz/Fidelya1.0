@@ -34,6 +34,7 @@ export default function LoginForm() {
   const [loadingUsers, setLoadingUsers] = useState(true)
   const [error, setError] = useState('')
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
+  const [debugInfo, setDebugInfo] = useState<any>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -105,12 +106,36 @@ export default function LoginForm() {
 
     setLoading(true)
     setError('')
+    setDebugInfo(null)
 
     try {
-      await signInWithCredentials(selectedUser.nombre_completo, password.trim())
-      router.push('/role-selection')
+      console.log('🔐 Iniciando proceso de login...')
+      console.log('Usuario seleccionado:', selectedUser.nombre_completo)
+      console.log('Contraseña ingresada:', password.trim())
+      
+      const result = await signInWithCredentials(selectedUser.nombre_completo, password.trim())
+      
+      console.log('✅ Login exitoso:', result)
+      setDebugInfo({
+        loginSuccess: true,
+        user: result.data?.user,
+        timestamp: new Date().toISOString()
+      })
+
+      // Pequeña pausa para mostrar el éxito
+      setTimeout(() => {
+        console.log('🚀 Redirigiendo a /role-selection...')
+        router.push('/role-selection')
+      }, 500)
+
     } catch (err: any) {
+      console.error('❌ Error en login:', err)
       setError(err.message || 'Error al iniciar sesión')
+      setDebugInfo({
+        loginSuccess: false,
+        error: err.message,
+        timestamp: new Date().toISOString()
+      })
     } finally {
       setLoading(false)
     }
@@ -416,7 +441,7 @@ export default function LoginForm() {
               </form>
 
               {/* Debug Info */}
-              {process.env.NODE_ENV === 'development' && (
+              {(process.env.NODE_ENV === 'development' || debugInfo) && (
                 <div className="mt-6 p-4 bg-slate-100 rounded-xl border border-slate-200">
                   <p className="text-xs text-slate-600 font-semibold mb-2">🔧 Información de Debug:</p>
                   <div className="text-xs text-slate-500 space-y-1">
@@ -424,6 +449,15 @@ export default function LoginForm() {
                     <p>• Estado de conexión: {connectionStatus}</p>
                     <p>• Usuario seleccionado: {selectedUser?.nombre_completo || 'Ninguno'}</p>
                     <p>• Contraseña esperada: {selectedUser ? getExpectedPassword() : 'N/A'}</p>
+                    <p>• URL actual: {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
+                    {debugInfo && (
+                      <div className="mt-2 p-2 bg-white rounded border">
+                        <p className="font-semibold">Último intento de login:</p>
+                        <pre className="text-xs overflow-auto">
+                          {JSON.stringify(debugInfo, null, 2)}
+                        </pre>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

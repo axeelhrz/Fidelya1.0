@@ -10,6 +10,9 @@ interface User {
   user_metadata: {
     full_name: string
     trabajador_id: number
+    rut: string
+    rol: string
+    turno_habitual: string
   }
 }
 
@@ -27,38 +30,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Trabajador | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    checkSession()
-  }, [])
-
   const checkSession = async () => {
     try {
+      setLoading(true)
       const session = await getCurrentSession()
-      if (session) {
+      
+      if (session?.user) {
         setUser(session.user)
-        setProfile(session.trabajador)
+        
+        // Get profile data
+        if (session.trabajador) {
+          setProfile(session.trabajador)
+        } else if (session.user.user_metadata?.trabajador_id) {
+          const profileData = await getProfile(session.user.user_metadata.trabajador_id.toString())
+          setProfile(profileData)
+        }
+      } else {
+        setUser(null)
+        setProfile(null)
       }
     } catch (error) {
       console.error('Error checking session:', error)
+      setUser(null)
+      setProfile(null)
     } finally {
       setLoading(false)
     }
   }
 
   const signOut = async () => {
-    await authSignOut()
-    setUser(null)
-    setProfile(null)
+    try {
+      await authSignOut()
+      setUser(null)
+      setProfile(null)
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
   }
 
-  const value = {
-    user,
-    profile,
-    loading,
-    signOut,
-  }
+  useEffect(() => {
+    checkSession()
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    // Listen for storage changes (for multi-tab support)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'supabase_session') {
+        checkSession()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
+
+  return (
+    <AuthContext.Provider value={{ user, profile, loading, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
