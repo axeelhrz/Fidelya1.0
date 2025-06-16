@@ -28,6 +28,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useRole } from '@/hooks/useRole';
 import SidebarItem from './SidebarItem';
+import EmailVerificationBanner from '@/components/auth/EmailVerificationBanner';
 import { navigationItems } from '@/constants/navigation';
 
 const drawerWidth = 280;
@@ -261,6 +262,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           bgcolor: 'background.default',
         }}
       >
+        {/* Banner de verificación de email */}
+        <EmailVerificationBanner />
+        
         {children}
       </Box>
     </Box>
