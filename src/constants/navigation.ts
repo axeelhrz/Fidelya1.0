@@ -1,72 +1,67 @@
 import { 
   Dashboard as DashboardIcon,
   People as PeopleIcon,
-  Psychology as PsychologyIcon,
-  Assignment as AssignmentIcon,
-  NotificationsActive as NotificationsIcon,
-  BarChart as BarChartIcon,
+  EventNote as EventNoteIcon,
+  Notifications as NotificationsIcon,
+  Analytics as AnalyticsIcon,
   Settings as SettingsIcon,
-  AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
 
 export interface NavigationItem {
   id: string;
   label: string;
   path: string;
-  icon: React.ComponentType;
-  adminOnly?: boolean;
+  icon: any;
   roles?: string[];
+  children?: NavigationItem[];
 }
 
-export const NAVIGATION_ITEMS: NavigationItem[] = [
+export const navigationItems: NavigationItem[] = [
   {
     id: 'dashboard',
     label: 'Dashboard',
     path: '/dashboard',
     icon: DashboardIcon,
-    roles: ['admin', 'psychologist']
   },
   {
     id: 'patients',
     label: 'Pacientes',
     path: '/dashboard/patients',
     icon: PeopleIcon,
-    roles: ['admin', 'psychologist']
+    roles: ['administrator', 'psychologist'],
   },
   {
     id: 'sessions',
-    label: 'Sesiones Clínicas',
+    label: 'Sesiones',
     path: '/dashboard/sessions',
-    icon: PsychologyIcon,
-    roles: ['admin', 'psychologist']
+    icon: EventNoteIcon,
+    roles: ['administrator', 'psychologist'],
   },
   {
     id: 'alerts',
     label: 'Alertas',
     path: '/dashboard/alerts',
     icon: NotificationsIcon,
-    roles: ['admin', 'psychologist']
+    roles: ['administrator', 'psychologist'],
   },
   {
-    id: 'metrics',
+    id: 'analytics',
     label: 'Métricas',
-    path: '/dashboard/metrics',
-    icon: BarChartIcon,
-    roles: ['admin', 'psychologist']
+    path: '/dashboard/analytics',
+    icon: AnalyticsIcon,
+    roles: ['administrator'],
   },
   {
     id: 'settings',
     label: 'Configuración',
     path: '/dashboard/settings',
     icon: SettingsIcon,
-    roles: ['admin']
+    roles: ['administrator'],
   },
-  {
-    id: 'admin',
-    label: 'Administración',
-    path: '/dashboard/admin',
-    icon: AdminIcon,
-    adminOnly: true,
-    roles: ['admin']
-  }
 ];
+
+export const getNavigationForRole = (userRole: string): NavigationItem[] => {
+  return navigationItems.filter(item => 
+    !item.roles || item.roles.includes(userRole)
+  );
+};
