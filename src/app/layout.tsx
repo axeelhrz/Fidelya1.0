@@ -1,42 +1,30 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
-import { theme } from '@/lib/theme';
-import "./globals.css";
+import { ThemeProvider } from '@/context/ThemeContext';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Centro Psicológico - Plataforma Inteligente",
-  description: "Plataforma inteligente para la gestión de centros psicológicos",
+  title: 'Centro Psicológico - Plataforma de Gestión',
+  description: 'Plataforma inteligente para la gestión de centros psicológicos',
+  keywords: 'psicología, terapia, gestión, pacientes, sesiones',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="es">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <AuthProvider>
+      <body className={inter.className}>
+        <AuthProvider>
+          <ThemeProvider>
             {children}
-          </AuthProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
