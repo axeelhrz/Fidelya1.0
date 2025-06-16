@@ -1556,6 +1556,12 @@ function setupImageLazyLoading() {
             return;
         }
         
+        // Configurar logo del navbar (crítico - cargar inmediatamente)
+        const navLogo = document.querySelector('.nav__logo');
+        if (navLogo) {
+            imageOptimizer.loadImageImmediately(navLogo, 'logo');
+        }
+        
         // Configurar imagen del hero (crítica - cargar inmediatamente)
         const heroImage = document.querySelector('.hero__phone-app-image');
         if (heroImage) {
