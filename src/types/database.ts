@@ -97,6 +97,41 @@ export interface Database {
           updated_at?: string
         }
       }
+      menus: {
+        Row: {
+          id: number
+          fecha: string
+          dia_semana: string
+          numero_dia: number
+          codigo_opcion: string
+          descripcion_opcion: string
+          categoria: string
+          activa: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          fecha: string
+          dia_semana: string
+          numero_dia: number
+          codigo_opcion: string
+          descripcion_opcion: string
+          categoria: string
+          activa?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          fecha?: string
+          dia_semana?: string
+          numero_dia?: number
+          codigo_opcion?: string
+          descripcion_opcion?: string
+          categoria?: string
+          activa?: boolean
+          created_at?: string
+        }
+      }
     }
   }
 }
@@ -104,6 +139,7 @@ export interface Database {
 export type Trabajador = Database['public']['Tables']['trabajadores']['Row']
 export type Shift = Database['public']['Tables']['shifts']['Row']
 export type Order = Database['public']['Tables']['orders']['Row']
+export type Menu = Database['public']['Tables']['menus']['Row']
 
 // Alias para compatibilidad
 export type Profile = Trabajador

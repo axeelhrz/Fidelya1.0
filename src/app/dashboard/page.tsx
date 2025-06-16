@@ -9,14 +9,20 @@ import ShiftSelector from '@/components/dashboard/ShiftSelector'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { supabase } from '@/lib/supabase'
-import { Shift } from '@/types/database'
-import { Clock, TrendingUp, Calendar as CalendarIcon } from 'lucide-react'
+import { Shift, Menu } from '@/types/database'
+import { Clock, TrendingUp, Calendar as CalendarIcon, ChefHat } from 'lucide-react'
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth()
+  const { user, profile, loading } = useAuth()
   const router = useRouter()
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null)
   const [showShiftSelector, setShowShiftSelector] = useState(false)
+  const [currentDate, setCurrentDate] = useState(() => {
+    // Mostrar el mes próximo por defecto
+    const nextMonth = new Date()
+    nextMonth.setMonth(nextMonth.getMonth() + 1)
+    return nextMonth
+  })
   const [stats, setStats] = useState({
     totalOrders: 0,
     confirmedOrders: 0,
@@ -33,17 +39,22 @@ export default function DashboardPage() {
     if (user && selectedShift) {
       fetchStats()
     }
-  }, [user, selectedShift])
+  }, [user, selectedShift, currentDate])
 
   const fetchStats = async () => {
     if (!user || !selectedShift) return
 
     try {
+      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+
       const { data, error } = await supabase
         .from('orders')
         .select('status')
-        .eq('user_id', user.id)
+        .eq('trabajador_id', profile?.id)
         .eq('shift_id', selectedShift.id)
+        .gte('order_date', startOfMonth.toISOString().split('T')[0])
+        .lte('order_date', endOfMonth.toISOString().split('T')[0])
 
       if (error) throw error
 
@@ -58,10 +69,17 @@ export default function DashboardPage() {
     }
   }
 
+  const getMonthName = (date: Date) => {
+    return date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-red-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Cargando...</p>
+        </div>
       </div>
     )
   }
@@ -77,59 +95,68 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            ¡Bienvenido de vuelta!
-          </h1>
-          <p className="text-gray-600">
-            Gestiona tus pedidos de almuerzo de manera fácil y eficiente
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                🍽️ Plataforma de Pedidos de Almuerzo
+              </h1>
+              <p className="text-gray-600">
+                Bienvenido, <span className="font-semibold text-orange-600">{profile?.nombre_completo}</span>
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Turno Noche</p>
+              <div className="flex items-center space-x-2 mt-1">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm font-medium text-gray-700">Activo</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Shift Selection */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Clock className="w-5 h-5" />
-              <span>Turno Seleccionado</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                {selectedShift ? (
-                  <div>
-                    <p className="font-semibold text-lg text-gray-900">
-                      {selectedShift.name}
-                    </p>
-                    <p className="text-gray-600">
-                      {selectedShift.start_time} - {selectedShift.end_time}
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <p className="font-semibold text-lg text-gray-900">
-                      No hay turno seleccionado
-                    </p>
-                    <p className="text-gray-600">
-                      Selecciona un turno para comenzar a hacer pedidos
-                    </p>
-                  </div>
-                )}
+        {/* Calendar Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                <CalendarIcon className="w-5 h-5 text-white" />
               </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 capitalize">
+                  Selecciona tus Almuerzos - {getMonthName(currentDate)}
+                </h2>
+                <p className="text-gray-600">
+                  Elige tus almuerzos para cada día del mes próximo
+                </p>
+              </div>
+            </div>
+            
+            {/* Shift Selection */}
+            <div className="flex items-center space-x-4">
+              {selectedShift ? (
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-700">{selectedShift.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {selectedShift.start_time} - {selectedShift.end_time}
+                  </p>
+                </div>
+              ) : null}
+              
               <Button
                 onClick={() => setShowShiftSelector(true)}
-                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
               >
+                <Clock className="w-4 h-4 mr-2" />
                 {selectedShift ? 'Cambiar Turno' : 'Seleccionar Turno'}
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Stats Cards */}
         {selectedShift && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card>
+            <Card className="border-l-4 border-l-blue-500">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -143,7 +170,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-l-4 border-l-green-500">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -157,7 +184,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-l-4 border-l-yellow-500">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -174,7 +201,11 @@ export default function DashboardPage() {
         )}
 
         {/* Calendar */}
-        <Calendar selectedShift={selectedShift} />
+        <Calendar 
+          selectedShift={selectedShift} 
+          currentDate={currentDate}
+          onDateChange={setCurrentDate}
+        />
       </main>
 
       {/* Shift Selector Modal */}

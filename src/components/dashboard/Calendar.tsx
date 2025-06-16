@@ -1,30 +1,34 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/contexts/AuthContext'
-import { Order, Shift } from '@/types/database'
 import OrderModal from './OrderModal'
+import { Order, Shift, Menu } from '@/types/database'
 import { 
   ChevronLeft, 
   ChevronRight, 
   Plus, 
   CheckCircle, 
   Clock, 
-  AlertCircle,
-  Edit
+  AlertCircle, 
+  Edit,
+  ChefHat,
+  Calendar as CalendarIcon
 } from 'lucide-react'
 
 interface CalendarProps {
   selectedShift: Shift | null
+  currentDate: Date
+  onDateChange: (date: Date) => void
 }
 
-export default function Calendar({ selectedShift }: CalendarProps) {
-  const { user } = useAuth()
-  const [currentDate, setCurrentDate] = useState(new Date())
+export default function Calendar({ selectedShift, currentDate, onDateChange }: CalendarProps) {
+  const { user, profile } = useAuth()
   const [orders, setOrders] = useState<Order[]>([])
+  const [menus, setMenus] = useState<Menu[]>([])
   const [loading, setLoading] = useState(true)
   const [showOrderModal, setShowOrderModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -33,11 +37,12 @@ export default function Calendar({ selectedShift }: CalendarProps) {
   useEffect(() => {
     if (user && selectedShift) {
       fetchOrders()
+      fetchMenus()
     }
   }, [user, selectedShift, currentDate])
 
   const fetchOrders = async () => {
-    if (!user || !selectedShift) return
+    if (!user || !selectedShift || !profile) return
 
     try {
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
@@ -46,7 +51,7 @@ export default function Calendar({ selectedShift }: CalendarProps) {
       const { data, error } = await supabase
         .from('orders')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('trabajador_id', profile.id)
         .eq('shift_id', selectedShift.id)
         .gte('order_date', startOfMonth.toISOString().split('T')[0])
         .lte('order_date', endOfMonth.toISOString().split('T')[0])
@@ -55,6 +60,27 @@ export default function Calendar({ selectedShift }: CalendarProps) {
       setOrders(data || [])
     } catch (error) {
       console.error('Error fetching orders:', error)
+    }
+  }
+
+  const fetchMenus = async () => {
+    try {
+      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+
+      const { data, error } = await supabase
+        .from('menus')
+        .select('*')
+        .eq('activa', true)
+        .gte('fecha', startOfMonth.toISOString().split('T')[0])
+        .lte('fecha', endOfMonth.toISOString().split('T')[0])
+        .order('fecha', { ascending: true })
+        .order('categoria', { ascending: true })
+
+      if (error) throw error
+      setMenus(data || [])
+    } catch (error) {
+      console.error('Error fetching menus:', error)
     } finally {
       setLoading(false)
     }
@@ -75,65 +101,60 @@ export default function Calendar({ selectedShift }: CalendarProps) {
       days.push(null)
     }
     
-    // Add days of the month
+    // Add all days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      days.push(day)
+      days.push(new Date(year, month, day))
     }
     
     return days
   }
 
-  const getOrderForDate = (day: number) => {
-    const dateStr = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-      .toISOString().split('T')[0]
-    return orders.find(order => order.order_date === dateStr)
+  const getOrderForDate = (date: Date): Order | null => {
+    const dateStr = date.toISOString().split('T')[0]
+    return orders.find(order => order.order_date === dateStr) || null
+  }
+
+  const getMenusForDate = (date: Date): Menu[] => {
+    const dateStr = date.toISOString().split('T')[0]
+    return menus.filter(menu => menu.fecha === dateStr)
+  }
+
+  const handleDayClick = (date: Date) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    if (date < today) return // No permitir seleccionar días pasados
+
+    const existingOrder = getOrderForDate(date)
+    setSelectedDate(date)
+    setSelectedOrder(existingOrder)
+    setShowOrderModal(true)
+  }
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate)
+    newDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 1 : -1))
+    onDateChange(newDate)
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return <CheckCircle className="w-4 h-4 text-green-500" />
+        return <CheckCircle className="w-4 h-4 text-green-600" />
       case 'pending':
-        return <Clock className="w-4 h-4 text-yellow-500" />
+        return <Clock className="w-4 h-4 text-yellow-600" />
       case 'cancelled':
-        return <AlertCircle className="w-4 h-4 text-red-500" />
+        return <AlertCircle className="w-4 h-4 text-red-600" />
       default:
         return null
     }
   }
 
-  const handleDayClick = (day: number) => {
-    const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    
-    // Don't allow orders for past dates
-    if (clickedDate < today) return
-
-    const existingOrder = getOrderForDate(day)
-    setSelectedDate(clickedDate)
-    setSelectedOrder(existingOrder || null)
-    setShowOrderModal(true)
-  }
-
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentDate(prev => {
-      const newDate = new Date(prev)
-      if (direction === 'prev') {
-        newDate.setMonth(prev.getMonth() - 1)
-      } else {
-        newDate.setMonth(prev.getMonth() + 1)
-      }
-      return newDate
-    })
-  }
-
+  const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
   const monthNames = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ]
-
-  const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
   if (!selectedShift) {
     return (
@@ -155,104 +176,121 @@ export default function Calendar({ selectedShift }: CalendarProps) {
 
   return (
     <>
-      <Card className="h-full">
-        <CardHeader>
+      <Card className="shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-t-lg">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-xl font-bold">
-              Selecciona tus Almuerzos - {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigateMonth('prev')}
+              className="text-white hover:bg-white/20"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            
+            <CardTitle className="text-2xl font-bold text-center">
+              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
             </CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => navigateMonth('prev')}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => navigateMonth('next')}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigateMonth('next')}
+              className="text-white hover:bg-white/20"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </Button>
           </div>
-          <p className="text-sm text-gray-600">
-            Turno seleccionado: <span className="font-medium">{selectedShift.name}</span>
-          </p>
         </CardHeader>
-        <CardContent>
+        
+        <CardContent className="p-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
             <div className="grid grid-cols-7 gap-2">
-              {/* Day headers */}
-              {dayNames.map(day => (
-                <div key={day} className="p-2 text-center text-sm font-medium text-gray-500">
+              {/* Week day headers */}
+              {weekDays.map(day => (
+                <div key={day} className="p-3 text-center font-semibold text-gray-600 bg-gray-50 rounded-lg">
                   {day}
                 </div>
               ))}
               
               {/* Calendar days */}
-              {getDaysInMonth().map((day, index) => {
-                if (day === null) {
-                  return <div key={index} className="p-2" />
+              {getDaysInMonth().map((date, index) => {
+                if (!date) {
+                  return <div key={index} className="p-3 h-32" />
                 }
-
-                const order = getOrderForDate(day)
-                const isToday = new Date().toDateString() === 
-                  new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString()
-                const isPast = new Date(currentDate.getFullYear(), currentDate.getMonth(), day) < 
-                  new Date(new Date().setHours(0, 0, 0, 0))
-
+                
+                const today = new Date()
+                today.setHours(0, 0, 0, 0)
+                const isToday = date.getTime() === today.getTime()
+                const isPast = date < today
+                const order = getOrderForDate(date)
+                const dayMenus = getMenusForDate(date)
+                
                 return (
                   <div
-                    key={day}
-                    className={`relative p-2 min-h-[100px] border rounded-lg transition-all ${
-                      isPast 
-                        ? 'opacity-50 cursor-not-allowed' 
-                        : 'cursor-pointer hover:shadow-md hover:border-gray-300'
-                    } ${
-                      isToday ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
-                    }`}
-                    onClick={() => !isPast && handleDayClick(day)}
+                    key={index}
+                    onClick={() => !isPast && handleDayClick(date)}
+                    className={`
+                      p-3 h-32 border-2 rounded-lg transition-all duration-200 cursor-pointer
+                      ${isPast 
+                        ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-50' 
+                        : 'bg-white border-gray-200 hover:border-orange-300 hover:shadow-md'
+                      }
+                      ${isToday ? 'ring-2 ring-orange-500 border-orange-500' : ''}
+                      ${order ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' : ''}
+                    `}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`text-sm font-medium ${
-                        isToday ? 'text-orange-600' : 'text-gray-900'
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-sm font-bold ${
+                        isToday ? 'text-orange-600' : 
+                        isPast ? 'text-gray-400' : 'text-gray-900'
                       }`}>
-                        {day}
+                        {date.getDate()}
                       </span>
                       {order && getStatusIcon(order.status)}
                     </div>
                     
+                    <div className="space-y-1">
+                      {dayMenus.length > 0 ? (
+                        <div className="space-y-1">
+                          {dayMenus.slice(0, 2).map((menu, idx) => (
+                            <div key={idx} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full truncate">
+                              {menu.descripcion_opcion}
+                            </div>
+                          ))}
+                          {dayMenus.length > 2 && (
+                            <div className="text-xs text-gray-500 text-center">
+                              +{dayMenus.length - 2} más
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-gray-400 text-center">
+                          Sin menú
+                        </div>
+                      )}
+                    </div>
+
                     {order ? (
-                      <div className="text-xs space-y-1">
-                        <p className="font-medium text-gray-900 truncate">
+                      <div className="mt-2">
+                        <div className="text-xs font-medium text-green-800 truncate">
                           {order.menu_item}
-                        </p>
-                        <p className={`capitalize ${
-                          order.status === 'confirmed' ? 'text-green-600' :
-                          order.status === 'pending' ? 'text-yellow-600' :
-                          'text-red-600'
-                        }`}>
-                          {order.status === 'confirmed' ? 'Confirmado' :
-                           order.status === 'pending' ? 'Pendiente' : 'Cancelado'}
-                        </p>
+                        </div>
                         {!isPast && (
-                          <div className="flex items-center justify-center mt-2">
+                          <div className="flex items-center justify-center mt-1">
                             <Edit className="w-3 h-3 text-gray-400" />
                           </div>
                         )}
                       </div>
                     ) : !isPast ? (
-                      <div className="flex items-center justify-center h-12">
+                      <div className="flex items-center justify-center mt-2">
                         <div className="flex flex-col items-center space-y-1">
                           <Plus className="w-4 h-4 text-gray-400" />
-                          <span className="text-xs text-gray-500">Agregar</span>
+                          <span className="text-xs text-gray-500">Pedir</span>
                         </div>
                       </div>
                     ) : null}
@@ -265,18 +303,18 @@ export default function Calendar({ selectedShift }: CalendarProps) {
       </Card>
 
       {/* Order Modal */}
-      {showOrderModal && selectedDate && selectedShift && (
+      {showOrderModal && selectedDate && (
         <OrderModal
           isOpen={showOrderModal}
-          onClose={() => {
-            setShowOrderModal(false)
-            setSelectedDate(null)
-            setSelectedOrder(null)
-          }}
+          onClose={() => setShowOrderModal(false)}
           selectedDate={selectedDate}
           selectedShift={selectedShift}
           existingOrder={selectedOrder}
-          onOrderSaved={fetchOrders}
+          onOrderSaved={() => {
+            fetchOrders()
+            setShowOrderModal(false)
+          }}
+          availableMenus={getMenusForDate(selectedDate)}
         />
       )}
     </>
