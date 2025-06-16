@@ -18,6 +18,12 @@ let isFloatingMenuOpen = false;
 // Variables para el control del navbar
 let lastScrollY = 0;
 let isScrollingDown = false;
+let ticking = false;
+
+// Variables para el navbar responsive
+let touchStartY = 0;
+let touchEndY = 0;
+let isNavbarVisible = true;
 
 // ===== SISTEMA DE TRADUCCIONES ===== 
 const translationData = {
@@ -100,14 +106,14 @@ const translationData = {
         
         // Feature 6: Referidos
         'feature-referrals-title': 'REFERIDOS',
-        'feature-referrals-description': '¡Gana dinero extra refiriendo a otros conductores! Nuestro sistema de referidos te permite obtener recompensas por cada persona que se una a StarFlex usando tu código de referido.',
-        'feature-referrals-item-1': 'por cada referido exitoso',
-        'feature-referrals-item-2': 'Código de referido personalizado único',
-        'feature-referrals-item-3': 'Seguimiento en tiempo real de tus referidos',
-        'feature-referrals-item-4': 'Pagos automáticos semanales',
-        'feature-referrals-item-5': 'Sin límite de referidos - ganancias ilimitadas',
-        'feature-referrals-item-6': 'Dashboard completo de estadísticas',
-        'feature-referrals-item-7': 'Bonos especiales por volumen de referidos',
+        'feature-referrals-description': 'Puede compartir su enlace de referido o su código QR y por cada usuario que se registre con su enlace, usted y el usuario referido gana 1 semana grátis.',
+        'feature-referrals-item-2': 'Llegar',
+        'feature-referrals-item-3': 'Saltar selfie',
+        'feature-referrals-item-4': 'Saltar CAPTCHA-PUZZLE',
+        'feature-referrals-item-5': 'Filtros personalizables',
+        'feature-referrals-item-6': 'Auto búsqueda',
+        'feature-referrals-item-7': 'Notificación persistente',
+        'feature-referrals-item-8': 'Notificación por Llamada Telefónica',
         
         // Videos Section
         'videos-badge': 'Experiencia Visual Inmersiva',
@@ -251,14 +257,14 @@ const translationData = {
         
         // Feature 6: Referrals
         'feature-referrals-title': 'REFERRALS',
-        'feature-referrals-description': 'Earn extra money by referring other drivers! Our referral system allows you to get rewards for each person who joins StarFlex using your referral code.',
-        'feature-referrals-item-1': 'per successful referral',
-        'feature-referrals-item-2': 'Unique personalized referral code',
-        'feature-referrals-item-3': 'Real-time tracking of your referrals',
-        'feature-referrals-item-4': 'Automatic weekly payments',
-        'feature-referrals-item-5': 'No referral limit - unlimited earnings',
-        'feature-referrals-item-6': 'Complete statistics dashboard',
-        'feature-referrals-item-7': 'Special bonuses for referral volume',
+        'feature-referrals-description': 'You can share your referral link or QR code and for each user who registers with your link, you and the referred user earn 1 free week.',
+        'feature-referrals-item-2': 'Arrive',
+        'feature-referrals-item-3': 'Skip selfie',
+        'feature-referrals-item-4': 'Skip CAPTCHA-PUZZLE',
+        'feature-referrals-item-5': 'Customizable filters',
+        'feature-referrals-item-6': 'Auto search',
+        'feature-referrals-item-7': 'Persistent notification',
+        'feature-referrals-item-8': 'Phone Call notification',
         
         // Videos Section
         'videos-badge': 'Immersive Visual Experience',
@@ -327,25 +333,20 @@ const translationData = {
 
 // ===== FUNCIONES DE TRADUCCIÓN =====
 function initializeLanguageSystem() {
-    // Cargar idioma guardado o detectar idioma del navegador
     const savedLanguage = localStorage.getItem('starflex-language');
     const browserLanguage = navigator.language.slice(0, 2);
     
-    // Establecer idioma inicial
     if (savedLanguage && translationData[savedLanguage]) {
         currentLanguage = savedLanguage;
     } else if (translationData[browserLanguage]) {
         currentLanguage = browserLanguage;
     } else {
-        currentLanguage = 'es'; // Español por defecto
+        currentLanguage = 'es';
     }
     
-    // Aplicar traducciones iniciales
     applyTranslations();
     updateLanguageButtons();
     updateFloatingLanguageButton();
-    
-    // Configurar event listeners para los botones de idioma
     setupLanguageToggle();
 }
 
@@ -371,19 +372,12 @@ function switchLanguage(newLanguage) {
     }
     
     currentLanguage = newLanguage;
-    
-    // Guardar preferencia
     localStorage.setItem('starflex-language', newLanguage);
-    
-    // Aplicar traducciones
     applyTranslations();
     updateLanguageButtons();
     updateFloatingLanguageButton();
-    
-    // Actualizar atributo lang del HTML
     document.documentElement.lang = newLanguage;
     
-    // Animación suave para indicar el cambio
     document.body.style.opacity = '0.95';
     setTimeout(() => {
         document.body.style.opacity = '1';
@@ -398,13 +392,11 @@ function applyTranslations() {
         return;
     }
     
-    // Traducir elementos con data-translate
     document.querySelectorAll('[data-translate]').forEach(element => {
         const key = element.getAttribute('data-translate');
         const translation = currentTranslations[key];
         
         if (translation) {
-            // Manejar diferentes tipos de elementos
             if (element.tagName === 'INPUT' && element.type === 'text') {
                 element.placeholder = translation;
             } else if (element.tagName === 'META') {
@@ -417,7 +409,6 @@ function applyTranslations() {
         }
     });
     
-    // Traducir placeholders
     document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
         const key = element.getAttribute('data-translate-placeholder');
         const translation = currentTranslations[key];
@@ -427,7 +418,6 @@ function applyTranslations() {
         }
     });
     
-    // Traducir aria-labels
     document.querySelectorAll('[data-translate-aria]').forEach(element => {
         const key = element.getAttribute('data-translate-aria');
         const translation = currentTranslations[key];
@@ -437,7 +427,6 @@ function applyTranslations() {
         }
     });
     
-    // Traducir alt texts
     document.querySelectorAll('[data-translate-alt]').forEach(element => {
         const key = element.getAttribute('data-translate-alt');
         const translation = currentTranslations[key];
@@ -483,12 +472,10 @@ function initializeFloatingWidget() {
     
     if (!floatingMainBtn || !floatingMenu) return;
     
-    // Toggle del menú flotante
     floatingMainBtn.addEventListener('click', () => {
         toggleFloatingMenu();
     });
     
-    // Toggle de idioma flotante
     if (floatingLanguageToggle) {
         floatingLanguageToggle.addEventListener('click', () => {
             const newLanguage = currentLanguage === 'es' ? 'en' : 'es';
@@ -496,7 +483,6 @@ function initializeFloatingWidget() {
         });
     }
     
-    // Cerrar menú al hacer click fuera
     document.addEventListener('click', (e) => {
         const floatingWidget = document.getElementById('floating-widget');
         if (isFloatingMenuOpen && floatingWidget && !floatingWidget.contains(e.target)) {
@@ -504,7 +490,6 @@ function initializeFloatingWidget() {
         }
     });
     
-    // Cerrar menú con tecla Escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && isFloatingMenuOpen) {
             closeFloatingMenu();
@@ -531,7 +516,6 @@ function openFloatingMenu() {
     floatingMenu.classList.add('active');
     floatingMainBtn.setAttribute('aria-expanded', 'true');
     
-    // Animar entrada de los elementos del menú
     const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
     menuItems.forEach((item, index) => {
         setTimeout(() => {
@@ -552,7 +536,6 @@ function closeFloatingMenu() {
     floatingMenu.classList.remove('active');
     floatingMainBtn.setAttribute('aria-expanded', 'false');
     
-    // Resetear estilos de los elementos del menú
     const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
     menuItems.forEach(item => {
         item.style.transform = '';
@@ -565,10 +548,7 @@ function checkReducedMotion() {
     isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     
     if (isReducedMotion) {
-        // Deshabilitar animaciones complejas
         document.body.classList.add('reduced-motion');
-        
-        // Limpiar sistemas de partículas
         particleSystems.forEach(system => system.destroy());
         particleSystems = [];
         
@@ -587,7 +567,6 @@ class ParticleSystem {
         this.particles = [];
         this.animationId = null;
         
-        // Configuración por defecto
         this.config = {
             particleCount: options.particleCount || 15,
             particleSize: options.particleSize || 2,
@@ -615,7 +594,6 @@ class ParticleSystem {
         this.canvas.className = 'particles-canvas';
         this.ctx = this.canvas.getContext('2d');
         
-        // Crear contenedor si no existe
         let particlesContainer = this.container.querySelector('.particles-container');
         if (!particlesContainer) {
             particlesContainer = document.createElement('div');
@@ -655,30 +633,23 @@ class ParticleSystem {
         
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Actualizar y dibujar partículas
         this.particles.forEach(particle => {
-            // Actualizar posición
             particle.x += particle.vx;
             particle.y += particle.vy;
             
-            // Rebotar en los bordes
             if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
             if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
             
-            // Mantener dentro del canvas
             particle.x = Math.max(0, Math.min(this.canvas.width, particle.x));
             particle.y = Math.max(0, Math.min(this.canvas.height, particle.y));
             
-            // Dibujar partícula
             this.ctx.beginPath();
             this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
             this.ctx.fillStyle = this.config.particleColor.replace('0.3', particle.opacity.toString());
             this.ctx.fill();
         });
         
-        // Dibujar conexiones
         this.drawConnections();
-        
         this.animationId = requestAnimationFrame(() => this.animate());
     }
     
@@ -727,7 +698,6 @@ class ParticleSystem {
 function initializeParticleSystems() {
     if (isReducedMotion) return;
     
-    // Sistema para el teléfono hero
     const heroPhone = document.querySelector('.hero__phone');
     if (heroPhone) {
         const heroParticleSystem = new ParticleSystem(heroPhone, {
@@ -741,7 +711,6 @@ function initializeParticleSystems() {
         particleSystems.push(heroParticleSystem);
     }
     
-    // Sistemas para teléfonos de características
     const featurePhones = document.querySelectorAll('.feature__phone .phone');
     featurePhones.forEach((phone, index) => {
         const colors = [
@@ -765,122 +734,339 @@ function initializeParticleSystems() {
     });
 }
 
-// ===== INICIALIZACIÓN PRINCIPAL =====
-document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar sistema de idiomas
-    initializeLanguageSystem();
-    
-    // Inicializar funcionalidades existentes
-    initializeNavigation();
-    initializeScrollEffects();
-    initializeVideoPlayer();
-    initializeFAQ();
-    initializeAnimations();
-    initializeIntersectionObserver();
-    
-    // Inicializar nuevas funcionalidades
-    initializeParticleSystems();
-    initializeLazyLoading();
-    preloadCriticalResources();
-    initializeAccessibility();
-    initializeFloatingWidget();
-    
-    // Detectar cambios en preferencias de movimiento
-    checkReducedMotion();
-    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    motionQuery.addListener(checkReducedMotion);
-});
-
-// ===== FUNCIONES EXISTENTES (sin cambios) =====
+// ===== NAVEGACIÓN RESPONSIVE MEJORADA =====
 function initializeNavigation() {
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');
     const navLinks = document.querySelectorAll('.nav__link');
+    const header = document.getElementById('header');
     
-    // Toggle del menú móvil
+    // Toggle del menú móvil con animaciones mejoradas
     if (navToggle && navMenu) {
-        navToggle.addEventListener('click', () => {
-            isMenuOpen = !isMenuOpen;
-            navToggle.classList.toggle('active');
-            navMenu.classList.toggle('active');
-            document.body.classList.toggle('no-scroll', isMenuOpen);
+        navToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleMobileMenu();
         });
     }
     
     // Cerrar menú al hacer click en un enlace
     navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (isMenuOpen) {
-                navToggle.classList.remove('active');
-                navMenu.classList.remove('active');
-                document.body.classList.remove('no-scroll');
-                isMenuOpen = false;
-            }
-        });
-    });
-    
-    // Navegación suave
-    navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
+            if (isMenuOpen) {
+                closeMobileMenu();
+            }
+            
+            // Navegación suave mejorada
             e.preventDefault();
             const targetId = link.getAttribute('href');
             const targetSection = document.querySelector(targetId);
             
             if (targetSection) {
-                const headerHeight = 80;
-                const targetPosition = targetSection.offsetTop - headerHeight;
-                
-                window.scrollTo({
-                    top: targetPosition,
-                    behavior: 'smooth'
-                });
-                
-                // Actualizar enlace activo
+                smoothScrollToSection(targetSection);
                 updateActiveNavLink(link);
             }
         });
     });
+    
+    // Cerrar menú con click fuera
+    document.addEventListener('click', (e) => {
+        if (isMenuOpen && navMenu && !navMenu.contains(e.target) && !navToggle.contains(e.target)) {
+            closeMobileMenu();
+        }
+    });
+    
+    // Soporte para gestos táctiles
+    initializeTouchGestures();
+    
+    // Mejorar accesibilidad del teclado
+    initializeKeyboardNavigation();
+}
+
+function toggleMobileMenu() {
+    if (isMenuOpen) {
+        closeMobileMenu();
+    } else {
+        openMobileMenu();
+    }
+}
+
+function openMobileMenu() {
+    const navToggle = document.getElementById('nav-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    const body = document.body;
+    
+    if (!navToggle || !navMenu) return;
+    
+    isMenuOpen = true;
+    
+    // Animaciones de apertura
+    navToggle.classList.add('active');
+    navMenu.classList.add('active');
+    body.classList.add('no-scroll');
+    
+    // Actualizar atributos de accesibilidad
+    navToggle.setAttribute('aria-expanded', 'true');
+    navMenu.setAttribute('aria-hidden', 'false');
+    
+    // Animar enlaces del menú
+    const navLinks = navMenu.querySelectorAll('.nav__link');
+    navLinks.forEach((link, index) => {
+        link.style.opacity = '0';
+        link.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            link.style.transition = 'all 0.3s ease';
+            link.style.opacity = '1';
+            link.style.transform = 'translateY(0)';
+        }, index * 100 + 200);
+    });
+    
+    // Focus en el primer enlace para accesibilidad
+    setTimeout(() => {
+        const firstLink = navMenu.querySelector('.nav__link');
+        if (firstLink) {
+            firstLink.focus();
+        }
+    }, 300);
+}
+
+function closeMobileMenu() {
+    const navToggle = document.getElementById('nav-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    const body = document.body;
+    
+    if (!navToggle || !navMenu) return;
+    
+    isMenuOpen = false;
+    
+    // Animaciones de cierre
+    navToggle.classList.remove('active');
+    navMenu.classList.remove('active');
+    body.classList.remove('no-scroll');
+    
+    // Actualizar atributos de accesibilidad
+    navToggle.setAttribute('aria-expanded', 'false');
+    navMenu.setAttribute('aria-hidden', 'true');
+    
+    // Resetear estilos de los enlaces
+    const navLinks = navMenu.querySelectorAll('.nav__link');
+    navLinks.forEach(link => {
+        link.style.transition = '';
+        link.style.opacity = '';
+        link.style.transform = '';
+    });
+    
+    // Devolver focus al botón toggle
+    navToggle.focus();
+}
+
+function smoothScrollToSection(targetSection) {
+    const headerHeight = window.innerWidth <= 768 ? 70 : 80;
+    const targetPosition = targetSection.offsetTop - headerHeight;
+    
+    // Usar scroll suave nativo si está disponible
+    if ('scrollBehavior' in document.documentElement.style) {
+        window.scrollTo({
+            top: targetPosition,
+            behavior: 'smooth'
+        });
+    } else {
+        // Fallback para navegadores antiguos
+        animateScrollTo(targetPosition, 800);
+    }
+}
+
+function animateScrollTo(targetPosition, duration) {
+    const startPosition = window.pageYOffset;
+    const distance = targetPosition - startPosition;
+    let startTime = null;
+    
+    function animation(currentTime) {
+        if (startTime === null) startTime = currentTime;
+        const timeElapsed = currentTime - startTime;
+        const run = easeInOutQuad(timeElapsed, startPosition, distance, duration);
+        window.scrollTo(0, run);
+        if (timeElapsed < duration) requestAnimationFrame(animation);
+    }
+    
+    function easeInOutQuad(t, b, c, d) {
+        t /= d / 2;
+        if (t < 1) return c / 2 * t * t + b;
+        t--;
+        return -c / 2 * (t * (t - 2) - 1) + b;
+    }
+    
+    requestAnimationFrame(animation);
 }
 
 function updateActiveNavLink(activeLink) {
     document.querySelectorAll('.nav__link').forEach(link => {
         link.classList.remove('active');
+        link.setAttribute('aria-current', 'false');
     });
+    
     activeLink.classList.add('active');
+    activeLink.setAttribute('aria-current', 'page');
 }
 
-// ===== EFECTOS DE SCROLL MODIFICADOS =====
+// ===== GESTOS TÁCTILES PARA MÓVIL =====
+function initializeTouchGestures() {
+    const navMenu = document.getElementById('nav-menu');
+    
+    if (!navMenu) return;
+    
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    
+    navMenu.addEventListener('touchstart', (e) => {
+        if (!isMenuOpen) return;
+        
+        startY = e.touches[0].clientY;
+        isDragging = true;
+        navMenu.style.transition = 'none';
+    }, { passive: true });
+    
+    navMenu.addEventListener('touchmove', (e) => {
+        if (!isDragging || !isMenuOpen) return;
+        
+        currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY;
+        
+        // Solo permitir deslizar hacia arriba para cerrar
+        if (deltaY < 0) {
+            const translateY = Math.abs(deltaY);
+            navMenu.style.transform = `translateY(-${translateY}px)`;
+            navMenu.style.opacity = Math.max(0.3, 1 - (translateY / 200));
+        }
+    }, { passive: true });
+    
+    navMenu.addEventListener('touchend', () => {
+        if (!isDragging || !isMenuOpen) return;
+        
+        isDragging = false;
+        navMenu.style.transition = '';
+        
+        const deltaY = currentY - startY;
+        
+        // Si se deslizó más de 100px hacia arriba, cerrar el menú
+        if (deltaY < -100) {
+            closeMobileMenu();
+        } else {
+            // Restaurar posición original
+            navMenu.style.transform = '';
+            navMenu.style.opacity = '';
+        }
+    }, { passive: true });
+}
+
+// ===== NAVEGACIÓN POR TECLADO MEJORADA =====
+function initializeKeyboardNavigation() {
+    const navMenu = document.getElementById('nav-menu');
+    const navToggle = document.getElementById('nav-toggle');
+    
+    if (!navMenu || !navToggle) return;
+    
+    // Manejo de teclas especiales
+    document.addEventListener('keydown', (e) => {
+        // Escape para cerrar menú
+        if (e.key === 'Escape' && isMenuOpen) {
+            e.preventDefault();
+            closeMobileMenu();
+            return;
+        }
+        
+        // Tab trap cuando el menú está abierto
+        if (e.key === 'Tab' && isMenuOpen) {
+            handleTabTrap(e);
+        }
+        
+        // Enter o Space en el toggle
+        if ((e.key === 'Enter' || e.key === ' ') && e.target === navToggle) {
+            e.preventDefault();
+            toggleMobileMenu();
+        }
+    });
+}
+
+function handleTabTrap(e) {
+    const navMenu = document.getElementById('nav-menu');
+    const focusableElements = navMenu.querySelectorAll(
+        'a[href], button, [tabindex]:not([tabindex="-1"])'
+    );
+    
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+    
+    if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstFocusable) {
+            e.preventDefault();
+            lastFocusable.focus();
+        }
+    } else {
+        // Tab
+        if (document.activeElement === lastFocusable) {
+            e.preventDefault();
+            firstFocusable.focus();
+        }
+    }
+}
+
+// ===== EFECTOS DE SCROLL OPTIMIZADOS =====
 function initializeScrollEffects() {
     const header = document.getElementById('header');
+    let scrollTimeout;
     
+    // Usar Intersection Observer para mejor rendimiento
+    const headerObserver = new IntersectionObserver(
+        (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    header.classList.remove('scrolled');
+                } else {
+                    header.classList.add('scrolled');
+                }
+            });
+        },
+        { 
+            rootMargin: '-80px 0px 0px 0px',
+            threshold: 0
+        }
+    );
+    
+    // Observar el hero section
+    const heroSection = document.querySelector('.hero');
+    if (heroSection) {
+        headerObserver.observe(heroSection);
+    }
+    
+    // Scroll listener optimizado con throttling
     window.addEventListener('scroll', throttle(() => {
-        const scrollY = window.scrollY;
-        
-        // Detectar dirección del scroll
-        if (scrollY > lastScrollY && scrollY > 100) {
-            // Scrolling hacia abajo
-            isScrollingDown = true;
-        } else {
-            // Scrolling hacia arriba
-            isScrollingDown = false;
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                updateActiveNavOnScroll();
+                handleScrollDirection();
+                ticking = false;
+            });
+            ticking = true;
         }
-        
-        lastScrollY = scrollY;
-        
-        // Efecto de header modificado
-        if (header) {
-            if (scrollY > 100) {
-                // Cuando se hace scroll hacia abajo, agregar clase scrolled
-                header.classList.add('scrolled');
-            } else {
-                // En la parte superior, remover clase scrolled
-                header.classList.remove('scrolled');
-            }
-        }
-        
-        // Actualizar navegación activa
-        updateActiveNavOnScroll();
-    }, 16));
+    }, 16), { passive: true });
+}
+
+function handleScrollDirection() {
+    const currentScrollY = window.scrollY;
+    
+    if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling hacia abajo
+        isScrollingDown = true;
+    } else {
+        // Scrolling hacia arriba
+        isScrollingDown = false;
+    }
+    
+    lastScrollY = currentScrollY;
 }
 
 function updateActiveNavOnScroll() {
@@ -894,11 +1080,8 @@ function updateActiveNavOnScroll() {
         
         if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
             const activeLink = document.querySelector(`.nav__link[href="#${sectionId}"]`);
-            if (activeLink) {
-                document.querySelectorAll('.nav__link').forEach(link => {
-                    link.classList.remove('active');
-                });
-                activeLink.classList.add('active');
+            if (activeLink && !activeLink.classList.contains('active')) {
+                updateActiveNavLink(activeLink);
             }
         }
     });
@@ -916,18 +1099,15 @@ function initializeVideoPlayer() {
     
     if (!video || !playOverlay) return;
     
-    // Configurar video
     video.controls = false;
     video.preload = 'metadata';
     
-    // Mostrar duración cuando los metadatos se cargan
     video.addEventListener('loadedmetadata', () => {
         if (durationDisplay) {
             durationDisplay.textContent = formatTime(video.duration);
         }
     });
     
-    // Play/Pause
     playOverlay.addEventListener('click', () => {
         if (video.paused) {
             video.play();
@@ -948,7 +1128,6 @@ function initializeVideoPlayer() {
         }
     });
     
-    // Actualizar progreso
     video.addEventListener('timeupdate', () => {
         if (video.duration) {
             const progress = (video.currentTime / video.duration) * 100;
@@ -961,7 +1140,6 @@ function initializeVideoPlayer() {
         }
     });
     
-    // Control de progreso
     if (progressBar) {
         progressBar.addEventListener('click', (e) => {
             const rect = progressBar.getBoundingClientRect();
@@ -973,7 +1151,6 @@ function initializeVideoPlayer() {
         });
     }
     
-    // Video terminado
     video.addEventListener('ended', () => {
         playOverlay.classList.remove('hidden');
         if (progressIndicators) {
@@ -987,7 +1164,6 @@ function initializeVideoPlayer() {
         }
     });
     
-    // Manejo de errores
     video.addEventListener('error', () => {
         showVideoError();
     });
@@ -1018,7 +1194,6 @@ function initializeFAQ() {
     const searchInput = document.getElementById('faq-search');
     const noResults = document.getElementById('faq-no-results');
     
-    // Toggle FAQ items
     faqItems.forEach(item => {
         const question = item.querySelector('.faq__question');
         const answer = item.querySelector('.faq__answer');
@@ -1027,7 +1202,6 @@ function initializeFAQ() {
             question.addEventListener('click', () => {
                 const isActive = item.classList.contains('active');
                 
-                // Cerrar otros items
                 faqItems.forEach(otherItem => {
                     if (otherItem !== item) {
                         otherItem.classList.remove('active');
@@ -1038,7 +1212,6 @@ function initializeFAQ() {
                     }
                 });
                 
-                // Toggle item actual
                 if (isActive) {
                     item.classList.remove('active');
                     answer.classList.remove('active');
@@ -1052,9 +1225,8 @@ function initializeFAQ() {
         }
     });
     
-    // Búsqueda en FAQ
     if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
+        searchInput.addEventListener('input', debounce((e) => {
             const searchTerm = e.target.value.toLowerCase().trim();
             let visibleItems = 0;
             
@@ -1082,7 +1254,6 @@ function initializeFAQ() {
                 }
             });
             
-            // Mostrar/ocultar mensaje de no resultados
             if (noResults) {
                 if (visibleItems === 0 && searchTerm !== '') {
                     noResults.classList.add('show');
@@ -1090,7 +1261,7 @@ function initializeFAQ() {
                     noResults.classList.remove('show');
                 }
             }
-        });
+        }, 300));
     }
 }
 
@@ -1120,7 +1291,6 @@ function initializeIntersectionObserver() {
             if (entry.isIntersecting) {
                 entry.target.classList.add('in-view');
                 
-                // Animaciones específicas para features
                 if (entry.target.classList.contains('feature')) {
                     animateFeature(entry.target);
                 }
@@ -1128,7 +1298,6 @@ function initializeIntersectionObserver() {
         });
     }, observerOptions);
     
-    // Observar elementos
     const elementsToObserve = document.querySelectorAll('.feature, .faq__item, .contact__channel');
     elementsToObserve.forEach(element => {
         observer.observe(element);
@@ -1186,13 +1355,7 @@ function throttle(func, limit) {
     }
 }
 
-// ===== MANEJO DE ERRORES =====
-window.addEventListener('error', (e) => {
-    console.error('Error en la aplicación:', e.error);
-});
-
 // ===== OPTIMIZACIONES DE RENDIMIENTO =====
-// Lazy loading para imágenes
 function initializeLazyLoading() {
     const images = document.querySelectorAll('img[data-src]');
     
@@ -1210,7 +1373,6 @@ function initializeLazyLoading() {
     images.forEach(img => imageObserver.observe(img));
 }
 
-// Precargar recursos críticos
 function preloadCriticalResources() {
     const criticalImages = [
         './assets/phones/Hero.jpg',
@@ -1230,19 +1392,10 @@ function preloadCriticalResources() {
 
 // ===== ACCESIBILIDAD =====
 function initializeAccessibility() {
-    // Navegación por teclado
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (isMenuOpen) {
-                const navToggle = document.getElementById('nav-toggle');
-                const navMenu = document.getElementById('nav-menu');
-                
-                if (navToggle && navMenu) {
-                    navToggle.classList.remove('active');
-                    navMenu.classList.remove('active');
-                    document.body.classList.remove('no-scroll');
-                    isMenuOpen = false;
-                }
+                closeMobileMenu();
             }
             
             if (isFloatingMenuOpen) {
@@ -1251,57 +1404,81 @@ function initializeAccessibility() {
         }
     });
     
-    // Focus trap para menú móvil
+    // Mejorar navegación por teclado
     const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
     
+    // Indicadores visuales de focus mejorados
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab' && isMenuOpen) {
-            const navMenu = document.getElementById('nav-menu');
-            if (navMenu) {
-                const focusable = navMenu.querySelectorAll(focusableElements);
-                const firstFocusable = focusable[0];
-                const lastFocusable = focusable[focusable.length - 1];
-                
-                if (e.shiftKey) {
-                    if (document.activeElement === firstFocusable) {
-                        lastFocusable.focus();
-                        e.preventDefault();
-                    }
-                } else {
-                    if (document.activeElement === lastFocusable) {
-                        firstFocusable.focus();
-                        e.preventDefault();
-                    }
-                }
-            }
+        if (e.key === 'Tab') {
+            document.body.classList.add('keyboard-navigation');
         }
+    });
+    
+    document.addEventListener('mousedown', () => {
+        document.body.classList.remove('keyboard-navigation');
     });
 }
 
-// ===== LIMPIEZA AL SALIR =====
-window.addEventListener('beforeunload', () => {
-    // Limpiar sistemas de partículas
-    particleSystems.forEach(system => system.destroy());
-    particleSystems = [];
+// ===== INICIALIZACIÓN PRINCIPAL =====
+document.addEventListener('DOMContentLoaded', () => {
+    // Inicializar sistema de idiomas
+    initializeLanguageSystem();
     
-    if (animationId) {
-        cancelAnimationFrame(animationId);
-    }
+    // Inicializar funcionalidades principales
+    initializeNavigation();
+    initializeScrollEffects();
+    initializeVideoPlayer();
+    initializeFAQ();
+    initializeAnimations();
+    initializeIntersectionObserver();
+    
+    // Inicializar funcionalidades adicionales
+    initializeParticleSystems();
+    initializeLazyLoading();
+    preloadCriticalResources();
+    initializeAccessibility();
+    initializeFloatingWidget();
+    
+    // Detectar cambios en preferencias de movimiento
+    checkReducedMotion();
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    motionQuery.addListener(checkReducedMotion);
+    
+    // Optimizaciones adicionales
+    initializePerformanceOptimizations();
 });
 
-// ===== MANEJO DE RESIZE =====
-window.addEventListener('resize', debounce(() => {
-    // Recalcular posiciones si es necesario
-    if (isMenuOpen && window.innerWidth > 768) {
-        const navToggle = document.getElementById('nav-toggle');
-        const navMenu = document.getElementById('nav-menu');
-        
-        if (navToggle && navMenu) {
-            navToggle.classList.remove('active');
-            navMenu.classList.remove('active');
-            document.body.classList.remove('no-scroll');
-            isMenuOpen = false;
-        }
+// ===== OPTIMIZACIONES DE RENDIMIENTO ADICIONALES =====
+function initializePerformanceOptimizations() {
+    // Precargar recursos críticos
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+            preloadCriticalResources();
+        });
+    } else {
+        setTimeout(preloadCriticalResources, 2000);
+    }
+    
+    // Optimizar imágenes de fondo
+    const phoneImages = document.querySelectorAll('.phone__app-image, .hero__phone-app-image');
+    phoneImages.forEach(img => {
+        img.style.willChange = 'transform';
+    });
+    
+    // Limpiar listeners en resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            handleResize();
+        }, 250);
+    });
+}
+
+function handleResize() {
+    // Cerrar menú móvil si se cambia a desktop
+    if (isMenuOpen && window.innerWidth > 1024) {
+        closeMobileMenu();
     }
     
     // Cerrar menú flotante en resize
@@ -1315,4 +1492,36 @@ window.addEventListener('resize', debounce(() => {
             system.resizeCanvas();
         }
     });
-}, 250));
+}
+
+// ===== MANEJO DE ERRORES =====
+window.addEventListener('error', (e) => {
+    console.error('Error en la aplicación:', e.error);
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+    console.error('Promise rechazada:', e.reason);
+});
+
+// ===== LIMPIEZA AL SALIR =====
+window.addEventListener('beforeunload', () => {
+    particleSystems.forEach(system => system.destroy());
+    particleSystems = [];
+    
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+    }
+});
+
+// ===== SOPORTE PARA PWA =====
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('SW registrado:', registration);
+            })
+            .catch(registrationError => {
+                console.log('SW falló:', registrationError);
+            });
+    });
+}
