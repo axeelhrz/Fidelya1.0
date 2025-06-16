@@ -31,6 +31,7 @@ export interface AuthContextType {
   updateProfile: (data: Partial<User>) => Promise<void>;
   sendEmailVerification: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 export interface SignUpData {

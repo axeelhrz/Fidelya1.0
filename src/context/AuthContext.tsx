@@ -8,7 +8,8 @@ import {
   signOut as firebaseSignOut,
   sendEmailVerification as firebaseSendEmailVerification,
   sendPasswordResetEmail,
-  User as FirebaseUser 
+  User as FirebaseUser,
+  reload
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { User, AuthContextType, SignUpData } from '@/types/auth';
@@ -25,18 +26,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         try {
+          // Recargar el usuario para obtener el estado más reciente de emailVerified
+          await reload(firebaseUser);
+          
           // Obtener datos adicionales del usuario desde Firestore
           const userData = await FirestoreService.getUser(firebaseUser.uid);
           
           if (userData) {
-            setUser({
+            const updatedUser = {
               ...userData,
               emailVerified: firebaseUser.emailVerified,
-            });
+            };
+            
+            setUser(updatedUser);
             setAuthStatus('authenticated');
             
-            // Actualizar último login
-            await FirestoreService.updateLastLogin(firebaseUser.uid);
+            // Actualizar el estado de verificación en Firestore si ha cambiado
+            if (userData.emailVerified !== firebaseUser.emailVerified) {
+              await FirestoreService.updateUser(firebaseUser.uid, {
+                emailVerified: firebaseUser.emailVerified,
+              });
+            }
+            
+            // Actualizar último login solo si el email está verificado
+            if (firebaseUser.emailVerified) {
+              await FirestoreService.updateLastLogin(firebaseUser.uid);
+            }
           } else {
             // Usuario no encontrado en Firestore
             setUser(null);
@@ -148,6 +163,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshUser = async () => {
+    if (auth.currentUser) {
+      try {
+        await reload(auth.currentUser);
+        
+        const userData = await FirestoreService.getUser(auth.currentUser.uid);
+        if (userData) {
+          const updatedUser = {
+            ...userData,
+            emailVerified: auth.currentUser.emailVerified,
+          };
+          setUser(updatedUser);
+          
+          // Actualizar Firestore si es necesario
+          if (userData.emailVerified !== auth.currentUser.emailVerified) {
+            await FirestoreService.updateUser(auth.currentUser.uid, {
+              emailVerified: auth.currentUser.emailVerified,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error refreshing user:', error);
+        throw error;
+      }
+    }
+  };
+
   const value: AuthContextType = {
     user,
     loading,
@@ -158,6 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     updateProfile,
     sendEmailVerification,
     resetPassword,
+    refreshUser,
   };
 
   return (
