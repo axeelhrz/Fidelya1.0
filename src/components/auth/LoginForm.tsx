@@ -274,29 +274,29 @@ export default function LoginForm() {
                           : 'border-gray-200 bg-white hover:border-gray-300'
                       } ${loadingCompanies ? 'cursor-not-allowed opacity-50' : ''}`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-medium ${
+                      <div className="flex items-center justify-between h-full">
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-medium flex-shrink-0 ${
                             selectedCompany ? 'bg-orange-600' : 'bg-gray-400'
                           }`}>
-                            {selectedCompany ? <Building2 className="w-5 h-5" /> : <Building2 className="w-5 h-5" />}
+                            <Building2 className="w-4 h-4" />
                           </div>
-                          <div className="text-left">
-                            <span className={`font-medium block ${
+                          <div className="text-left min-w-0 flex-1">
+                            <span className={`font-medium block truncate ${
                               selectedCompany ? 'text-gray-900' : 'text-gray-500'
                             }`}>
                               {loadingCompanies ? 'Cargando empresas...' :
                                selectedCompany ? selectedCompany.nombre : 'Selecciona tu empresa'}
                             </span>
                             {selectedCompany && (
-                              <span className="text-sm text-gray-500">
+                              <span className="text-xs text-gray-500 truncate block">
                                 {selectedCompany.trabajadores_count} trabajadores
                               </span>
                             )}
                           </div>
                         </div>
                         {!loadingCompanies && (
-                          <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${
+                          <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ${
                             showCompanyDropdown ? 'rotate-180' : ''
                           }`} />
                         )}
@@ -316,20 +316,20 @@ export default function LoginForm() {
                             <div
                               key={company.nombre}
                               onClick={() => handleCompanySelect(company)}
-                              className="p-4 hover:bg-orange-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150"
+                              className="p-3 hover:bg-orange-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150"
                             >
                               <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
-                                  <Building2 className="w-5 h-5 text-orange-600" />
+                                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <Building2 className="w-4 h-4 text-orange-600" />
                                 </div>
-                                <div className="flex-1">
-                                  <p className="font-medium text-gray-900">{company.nombre}</p>
-                                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                                    <Users className="w-3 h-3" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-gray-900 truncate">{company.nombre}</p>
+                                  <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                    <Users className="w-3 h-3 flex-shrink-0" />
                                     <span>{company.trabajadores_count} trabajadores</span>
                                   </div>
                                 </div>
-                                <ArrowRight className="w-4 h-4 text-gray-400" />
+                                <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
                               </div>
                             </div>
                           ))
@@ -359,29 +359,29 @@ export default function LoginForm() {
                           : 'border-gray-200 bg-white hover:border-gray-300'
                       } ${loadingUsers ? 'cursor-not-allowed opacity-50' : ''}`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-medium ${
+                      <div className="flex items-center justify-between h-full">
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-medium flex-shrink-0 ${
                             selectedUser ? 'bg-green-600' : 'bg-gray-400'
                           }`}>
-                            {selectedUser ? selectedUser.nombre_completo.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : <User className="w-5 h-5" />}
+                            {selectedUser ? selectedUser.nombre_completo.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : <User className="w-4 h-4" />}
                           </div>
-                          <div className="text-left">
-                            <span className={`font-medium block ${
+                          <div className="text-left min-w-0 flex-1">
+                            <span className={`font-medium block truncate ${
                               selectedUser ? 'text-gray-900' : 'text-gray-500'
                             }`}>
                               {loadingUsers ? 'Cargando trabajadores...' :
                                selectedUser ? selectedUser.nombre_completo : 'Selecciona tu nombre'}
                             </span>
                             {selectedUser && (
-                              <span className="text-sm text-gray-500">
+                              <span className="text-xs text-gray-500 truncate block">
                                 {selectedUser.rut} • {getRoleBadge(selectedUser.rol)}
                               </span>
                             )}
                           </div>
                         </div>
                         {!loadingUsers && (
-                          <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${
+                          <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ${
                             showUserDropdown ? 'rotate-180' : ''
                           }`} />
                         )}
@@ -401,18 +401,18 @@ export default function LoginForm() {
                             <div
                               key={user.id}
                               onClick={() => handleUserSelect(user)}
-                              className="p-4 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150"
+                              className="p-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150"
                             >
                               <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-green-700 text-sm font-medium">
+                                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-green-700 text-xs font-medium flex-shrink-0">
                                   {user.nombre_completo.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                 </div>
-                                <div className="flex-1">
-                                  <p className="font-medium text-gray-900">{user.nombre_completo}</p>
-                                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                                    <span>{user.rut}</span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-gray-900 truncate">{user.nombre_completo}</p>
+                                  <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                    <span className="truncate">{user.rut}</span>
                                     <span>•</span>
-                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getRoleColor(user.rol)}`}>
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium border flex-shrink-0 ${getRoleColor(user.rol)}`}>
                                       {getRoleBadge(user.rol)}
                                     </span>
                                   </div>
@@ -455,24 +455,6 @@ export default function LoginForm() {
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
-
-                  {/* Password Hint */}
-                  {selectedUser && (
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                      <div className="flex items-start space-x-3">
-                        <Shield className="w-5 h-5 text-gray-500 mt-0.5" />
-                        <div className="text-sm">
-                          <p className="font-medium text-gray-700 mb-2">Formato de contraseña:</p>
-                          <p className="text-gray-600 mb-3">Primera letra del nombre + apellido completo en mayúsculas</p>
-                          <div className="bg-white px-3 py-2 rounded-lg border border-gray-200">
-                            <code className="text-gray-800 font-mono font-semibold">
-                              {getExpectedPassword()}
-                            </code>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   {/* Password Validation */}
                   {password && selectedUser && (
