@@ -923,6 +923,35 @@ filter: drop-shadow(0 0 30px rgba(255, 69, 105, 0.15));
 background: #000000;
 }
 
+/* ===== SISTEMA DE PARTÍCULAS DELICADAS ===== */
+.particles-container {
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+pointer-events: none;
+z-index: 2;
+overflow: hidden;
+border-radius: inherit;
+opacity: 0;
+transition: opacity 0.6s ease;
+}
+
+.hero__phone-container:hover .particles-container,
+.feature__phone:hover .particles-container {
+opacity: 1;
+}
+
+.particles-canvas {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+border-radius: inherit;
+}
+
 /* Resplandor ambiental sutil */
 .hero__phone::before {
 content: '';
@@ -984,7 +1013,7 @@ object-position: center;
 filter: brightness(1.02) contrast(1.05) saturate(1.08);
 }
 
-/* Hover effect sutil y profesional */
+/* Hover effect sutil y profesional - SIN EFECTOS HOVER TRADICIONALES */
 .hero__phone-container:hover .hero__phone {
 box-shadow: 
 0 30px 90px rgba(0, 0, 0, 0.5),
@@ -998,7 +1027,7 @@ opacity: 0.8;
 }
 
 .hero__phone-container:hover .hero__phone-app-image {
-filter: brightness(1.05) contrast(1.08) saturate(1.12);
+filter: brightness(1.03) contrast(1.06) saturate(1.1);
 }
 
 /* ===== SECCIÓN CARACTERÍSTICAS MODERNIZADA ===== */
@@ -1334,7 +1363,7 @@ background: url('../assets/phones/Notificaciones.jpg') center/cover no-repeat;
 background: url('../assets/phones/Referidos.jpg') center/cover no-repeat;
 }
 
-/* ===== EFECTOS HOVER PROFESIONALES ===== */
+/* ===== EFECTOS HOVER PROFESIONALES - SOLO PARTÍCULAS ===== */
 .phone:hover {
 box-shadow: 
 0 25px 70px rgba(0, 0, 0, 0.5),
@@ -1371,7 +1400,7 @@ opacity: 0.7;
 }
 
 .phone:hover .phone__app-image {
-filter: brightness(1.05) contrast(1.08) saturate(1.12);
+filter: brightness(1.03) contrast(1.06) saturate(1.1);
 }
 
 /* ===== ANIMACIONES OPTIMIZADAS ===== */
@@ -3642,7 +3671,8 @@ transition-duration: 0.01ms !important;
 .contact__channel,
 .contact__badge,
 .ambient-glow,
-.feature-ambient-glow {
+.feature-ambient-glow,
+.particles-container {
 animation: none !important;
 }
 }
@@ -3767,7 +3797,8 @@ color: var(--starflex-orange);
 .phone::before,
 .floating-orb-2,
 .floating-orb-3,
-.bg-canvas {
+.bg-canvas,
+.particles-container {
 display: none;
 }
 
@@ -3816,13 +3847,6 @@ image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
 transform: translateZ(0);
 backface-visibility: hidden;
-}
-
-/* ===== ESTADOS HOVER MEJORADOS ===== */
-.hero__phone:hover .hero__phone-app-image,
-.phone:hover .phone__app-image {
-transform: scale(1.01);
-filter: brightness(1.03) contrast(1.08) saturate(1.12);
 }
 
 /* ===== LOADING STATES ===== */
