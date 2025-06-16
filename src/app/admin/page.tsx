@@ -78,7 +78,6 @@ pedidosHoy: 0,
 pedidosEsteMes: 0
 })
 const [pedidos, setPedidos] = useState<PedidoCompleto[]>([])
-const [trabajadores, setTrabajadores] = useState<Trabajador[]>([])
 const [pedidosPorEmpresa, setPedidosPorEmpresa] = useState<PedidosPorEmpresa[]>([])
 const [vistaCocina, setVistaCocina] = useState<VistaCocina>({ dia: [], noche: [] })
 const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
@@ -105,7 +104,7 @@ router.push('/dashboard')
 }
 }, [user, profile, loading, router])
 
-const fetchTrabajadores = async () => {
+const fetchTrabajadores = useCallback(async () => {
 try {
 const { data, error } = await supabase
 .from('trabajadores')
@@ -113,13 +112,14 @@ const { data, error } = await supabase
 .eq('activo', true)
 
 if (error) throw error
-setTrabajadores(data || [])
+return data || []
 } catch (error) {
 console.error('Error fetching trabajadores:', error)
+return []
 }
-}
+}, [])
 
-const fetchPedidos = useCallback(async () => {
+const fetchPedidos = useCallback(async (trabajadoresList: Trabajador[]) => {
 try {
 console.log('Fetching pedidos for date:', selectedDate)
 
@@ -151,7 +151,7 @@ throw pedidosError
 console.log('Pedidos fetched:', pedidosData?.length || 0)
 
 const pedidosCompletos: PedidoCompleto[] = pedidosData?.map(pedido => {
-const trabajadorInfo = trabajadores.find(t =>
+const trabajadorInfo = trabajadoresList.find(t =>
 t.nombre_completo === pedido.nombre_trabajador ||
 (pedido.rut_trabajador && t.rut === pedido.rut_trabajador)
 )
@@ -165,12 +165,14 @@ trabajador_info: trabajadorInfo
 setPedidos(pedidosCompletos)
 calculatePedidosPorEmpresa(pedidosCompletos)
 calculateVistaCocina(pedidosCompletos)
+return pedidosCompletos
 } catch (error) {
 console.error('Error fetching pedidos:', error)
+return []
 }
-}, [selectedDate, trabajadores])
+}, [selectedDate])
 
-const fetchStats = useCallback(async () => {
+const fetchStats = useCallback(async (trabajadoresList: Trabajador[]) => {
 try {
 const { data: selectedDateData, error: selectedDateError } = await supabase
 .from('pedidos')
@@ -203,41 +205,48 @@ const diaCount = selectedDateData?.filter(p => p.turno_elegido === 'dia').length
 const nocheCount = selectedDateData?.filter(p => p.turno_elegido === 'noche').length || 0
 const empresasUnicas = new Set(selectedDateData?.map(p => p.empresa).filter(Boolean))
 
-setStats(prev => ({
-...prev,
+setStats({
 totalPedidos: total,
 pedidosDia: diaCount,
 pedidosNoche: nocheCount,
 empresasActivas: empresasUnicas.size,
-trabajadoresActivos: trabajadores.length,
+trabajadoresActivos: trabajadoresList.length,
 pedidosHoy: todayData?.length || 0,
 pedidosEsteMes: monthData?.length || 0
-}))
+})
 } catch (error) {
 console.error('Error fetching stats:', error)
 }
-}, [selectedDate, trabajadores.length])
+}, [selectedDate])
 
 const fetchAllData = useCallback(async () => {
 setLoadingStats(true)
 try {
+const trabajadoresList = await fetchTrabajadores()
 await Promise.all([
-fetchTrabajadores(),
-fetchPedidos(),
-fetchStats()
+fetchPedidos(trabajadoresList),
+fetchStats(trabajadoresList)
 ])
 } catch (error) {
 console.error('Error fetching data:', error)
 } finally {
 setLoadingStats(false)
 }
-}, [fetchPedidos, fetchStats])
+}, [fetchTrabajadores, fetchPedidos, fetchStats])
 
+// Separate useEffect for initial load
 useEffect(() => {
 if (user && profile) {
 fetchAllData()
 }
-}, [user, profile, selectedDate, fetchAllData])
+}, [user, profile, fetchAllData])
+
+// Separate useEffect for date changes
+useEffect(() => {
+if (user && profile && selectedDate) {
+fetchAllData()
+}
+}, [selectedDate, user, profile, fetchAllData])
 
 const calculatePedidosPorEmpresa = (pedidosData: PedidoCompleto[]) => {
 const empresasMap = new Map<string, { total: number, dia: number, noche: number, trabajadores: Set<string> }>()
