@@ -4108,4 +4108,475 @@ box-sizing: border-box;
 .feature__phone {
 contain: layout style;
 }
+/* ===== BOTÓN SECUNDARIO PARA REFERIDOS ===== */
+.btn--feature {
+display: inline-flex;
+align-items: center;
+gap: var(--space-sm);
+padding: var(--space-md) var(--space-xl);
+background: transparent;
+border: 2px solid #ffd700;
+color: #ffd700;
+text-decoration: none;
+border-radius: 15px;
+font-weight: 600;
+font-size: 1rem;
+transition: all var(--transition);
+text-transform: uppercase;
+letter-spacing: 0.5px;
+position: relative;
+z-index: 2;
+overflow: hidden;
+}
+
+.btn--feature::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, 
+transparent, 
+rgba(255, 215, 0, 0.2), 
+transparent
+);
+transition: left 0.6s ease;
+z-index: -1;
+}
+
+.btn--feature:hover {
+background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+border-color: #ffd700;
+color: #1a1a1a;
+transform: translateY(-2px);
+box-shadow: 
+0 8px 25px rgba(255, 215, 0, 0.4),
+0 0 30px rgba(255, 215, 0, 0.3);
+text-shadow: none;
+}
+
+.btn--feature:hover::before {
+left: 100%;
+}
+
+.btn__arrow {
+font-size: 1.2rem;
+transition: all var(--transition);
+font-weight: bold;
+}
+
+.btn--feature:hover .btn__arrow {
+transform: translateX(3px);
+}
+
+/* ===== RESPLANDOR ESPECÍFICO PARA FEATURE REFERIDOS ===== */
+.feature:nth-child(6) .phone {
+filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.15));
+}
+
+.feature:nth-child(6) .phone:hover {
+filter: drop-shadow(0 0 35px rgba(255, 215, 0, 0.25));
+}
+
+.feature:nth-child(6) .phone::before {
+background: radial-gradient(ellipse, 
+rgba(255, 215, 0, 0.1) 0%,
+rgba(255, 193, 7, 0.05) 40%,
+transparent 70%
+);
+}
+
+/* ===== ANIMACIONES ESPECÍFICAS PARA REFERIDOS ===== */
+@keyframes golden-glow {
+0%, 100% {
+box-shadow: 
+0 4px 15px rgba(255, 215, 0, 0.2),
+inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+50% {
+box-shadow: 
+0 6px 20px rgba(255, 215, 0, 0.4),
+inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+}
+
+@keyframes bounce-gentle {
+0%, 100% {
+transform: translateY(0px);
+}
+50% {
+transform: translateY(-3px);
+}
+}
+
+@keyframes golden-pulse {
+0%, 100% {
+box-shadow: 
+0 0 15px rgba(255, 215, 0, 0.6),
+0 0 30px rgba(255, 215, 0, 0.3);
+transform: scale(1);
+}
+50% {
+box-shadow: 
+0 0 20px rgba(255, 215, 0, 0.8),
+0 0 40px rgba(255, 215, 0, 0.5);
+transform: scale(1.1);
+}
+}
+
+@keyframes price-shine {
+0%, 100% {
+box-shadow: 
+0 4px 15px rgba(255, 215, 0, 0.4),
+inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+50% {
+box-shadow: 
+0 6px 20px rgba(255, 215, 0, 0.6),
+inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+}
+
+@keyframes cta-shimmer-gold {
+0% {
+left: -100%;
+}
+50% {
+left: 100%;
+}
+100% {
+left: -100%;
+}
+}
+
+/* ===== RESPONSIVE PARA FEATURE REFERIDOS ===== */
+@media (max-width: 768px) {
+.feature--referrals {
+padding: var(--space-2xl);
+margin: var(--space-xl) 0;
+}
+
+.feature__badge {
+font-size: 0.75rem;
+padding: var(--space-xs) var(--space-md);
+}
+
+.feature__list-highlight {
+font-size: 1rem;
+padding: var(--space-xs) var(--space-sm);
+}
+
+.feature__cta {
+padding: var(--space-lg);
+}
+
+.feature__cta-text {
+font-size: 1rem;
+}
+
+.btn--feature {
+padding: var(--space-sm) var(--space-lg);
+font-size: 0.9rem;
+}
+}
+
+@media (max-width: 480px) {
+.feature--referrals {
+padding: var(--space-xl);
+}
+
+.feature__badge {
+font-size: 0.7rem;
+padding: var(--space-xs) var(--space-sm);
+gap: var(--space-xs);
+}
+
+.feature__list-highlight {
+font-size: 0.95rem;
+padding: 2px var(--space-xs);
+}
+
+.feature__cta {
+padding: var(--space-md);
+}
+
+.feature__cta-text {
+font-size: 0.95rem;
+}
+
+.btn--feature {
+padding: var(--space-xs) var(--space-md);
+font-size: 0.85rem;
+}
+}
+
+/* ===== MEJORAS ADICIONALES PARA INTEGRACIÓN ===== */
+.feature--referrals .feature__title {
+background: linear-gradient(135deg, 
+#ffd700 0%, 
+#ffed4e 50%, 
+#ffc107 100%
+);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.2));
+}
+
+.feature--referrals .feature__description {
+color: var(--text-secondary);
+font-size: 1.2rem;
+line-height: 1.7;
+}
+
+/* ===== EFECTOS HOVER MEJORADOS PARA REFERIDOS ===== */
+.feature--referrals:hover {
+background: linear-gradient(135deg, 
+rgba(255, 215, 0, 0.05) 0%, 
+rgba(255, 69, 105, 0.03) 50%, 
+rgba(184, 0, 46, 0.04) 100%
+);
+border-color: rgba(255, 215, 0, 0.2);
+transform: translateY(-5px);
+box-shadow: 
+0 20px 40px rgba(0, 0, 0, 0.2),
+0 0 30px rgba(255, 215, 0, 0.1);
+}
+
+.feature--referrals:hover::before {
+background: 
+radial-gradient(circle at 20% 20%, rgba(255, 215, 0, 0.08) 0%, transparent 50%),
+radial-gradient(circle at 80% 80%, rgba(255, 69, 105, 0.05) 0%, transparent 50%);
+}
+
+/* ===== ESTADOS DE ACCESIBILIDAD PARA REFERIDOS ===== */
+.btn--feature:focus {
+outline: 2px solid #ffd700;
+outline-offset: 3px;
+border-radius: 6px;
+}
+
+.feature__badge:focus {
+outline: 2px solid #ffd700;
+outline-offset: 2px;
+}
+
+/* ===== FALLBACKS PARA NAVEGADORES ANTIGUOS ===== */
+@supports not (background-clip: text) {
+.feature--referrals .feature__title {
+color: #ffd700;
+}
+
+.feature__list-highlight {
+color: #1a1a1a;
+background: #ffd700;
+}
+}
+
+/* ===== PRINT STYLES PARA REFERIDOS ===== */
+@media print {
+.feature--referrals {
+background: none;
+border: 2px solid #000;
+}
+
+.feature__badge,
+.feature__list-highlight {
+background: #ddd;
+color: #000;
+}
+
+.btn--feature {
+border: 2px solid #000;
+color: #000;
+}
+}
+
+/* ===== OPTIMIZACIONES DE PERFORMANCE PARA REFERIDOS ===== */
+.feature--referrals {
+will-change: transform;
+transform: translateZ(0);
+backface-visibility: hidden;
+}
+
+.feature__badge,
+.feature__list-highlight,
+.btn--feature {
+will-change: transform, box-shadow;
+}
+
+/* ===== ESTADOS DE CARGA PARA REFERIDOS ===== */
+.feature--referrals[data-loading="true"] {
+opacity: 0.7;
+pointer-events: none;
+}
+
+.feature--referrals[data-loading="true"]::after {
+content: '';
+position: absolute;
+top: 50%;
+left: 50%;
+width: 40px;
+height: 40px;
+margin: -20px 0 0 -20px;
+border: 3px solid rgba(255, 215, 0, 0.3);
+border-top: 3px solid #ffd700;
+border-radius: 50%;
+animation: spin 1s linear infinite;
+z-index: 10;
+}
+
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+
+/* ===== MEJORAS FINALES DE INTEGRACIÓN PARA REFERIDOS ===== */
+.feature--referrals .phone__app-image {
+filter: brightness(1.03) contrast(1.06) saturate(1.1);
+}
+
+.feature--referrals:hover .phone__app-image {
+filter: brightness(1.05) contrast(1.08) saturate(1.15);
+}
+
+/* ===== VARIACIONES DE TEMA PARA REFERIDOS ===== */
+@media (prefers-color-scheme: light) {
+.feature--referrals {
+background: linear-gradient(135deg, 
+rgba(255, 215, 0, 0.1) 0%, 
+rgba(255, 193, 7, 0.05) 100%
+);
+}
+
+.feature__badge {
+background: linear-gradient(135deg, 
+rgba(255, 215, 0, 0.2) 0%, 
+rgba(255, 193, 7, 0.15) 100%
+);
+}
+}
+
+/* ===== MODO DE ALTO CONTRASTE PARA REFERIDOS ===== */
+@media (prefers-contrast: high) {
+.feature--referrals {
+border-width: 2px;
+border-color: #ffd700;
+}
+
+.feature__badge {
+border-width: 2px;
+background: #ffd700;
+color: #000;
+}
+
+.feature__list-highlight {
+background: #ffd700;
+color: #000;
+border: 1px solid #000;
+}
+
+.btn--feature {
+border-width: 3px;
+}
+}
+
+/* ===== REDUCCIÓN DE MOVIMIENTO PARA REFERIDOS ===== */
+@media (prefers-reduced-motion: reduce) {
+.feature__badge,
+.feature__list-highlight,
+.btn--feature,
+.feature--referrals::before {
+animation: none !important;
+}
+
+.feature--referrals:hover {
+transform: none;
+}
+}
+
+/* ===== ESTILOS FINALES DE LIMPIEZA ===== */
+.feature--referrals * {
+box-sizing: border-box;
+}
+
+.feature--referrals .feature__content {
+contain: layout style;
+}
+
+/* ===== INTEGRACIÓN CON EL RESTO DE FEATURES ===== */
+.feature:nth-child(6) {
+/* Asegurar que la feature de referidos tenga el mismo comportamiento base */
+opacity: 0;
+transform: translateY(50px);
+position: relative;
+}
+
+.feature:nth-child(6).in-view {
+animation: slideInUp 1s ease-out forwards;
+}
+
+/* ===== AJUSTES ESPECÍFICOS PARA LA IMAGEN DE REFERIDOS ===== */
+.feature:nth-child(6) .phone__app-image {
+background: url('../assets/phones/Referidos.jpg') center/cover no-repeat;
+background-size: cover;
+background-position: center;
+/* Optimización específica para la imagen de referidos */
+filter: brightness(1.02) contrast(1.05) saturate(1.08) hue-rotate(5deg);
+}
+
+.feature:nth-child(6):hover .phone__app-image {
+filter: brightness(1.05) contrast(1.08) saturate(1.12) hue-rotate(5deg);
+}
+
+/* ===== EFECTOS DE TRANSICIÓN SUAVES ESPECÍFICOS ===== */
+.feature--referrals .feature__list-item {
+transition: all var(--transition);
+}
+
+.feature--referrals .feature__list-item:hover {
+color: #ffd700;
+transform: translateX(8px);
+}
+
+.feature--referrals .feature__list-item:hover::before {
+background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+transform: scale(1.2);
+}
+
+/* ===== ÚLTIMOS AJUSTES DE RESPONSIVE ===== */
+@media (max-width: 1200px) {
+.feature--referrals {
+padding: var(--space-2xl);
+}
+}
+
+@media (max-width: 992px) {
+.feature--referrals {
+padding: var(--space-xl);
+}
+
+.feature__cta {
+padding: var(--space-lg);
+}
+}
+
+@media (max-width: 320px) {
+.feature--referrals {
+padding: var(--space-lg);
+margin: var(--space-lg) 0;
+}
+
+.feature__badge {
+font-size: 0.65rem;
+padding: 2px var(--space-xs);
+}
+
+.feature__list-highlight {
+font-size: 0.9rem;
+padding: 1px 4px;
+}
+}
 
