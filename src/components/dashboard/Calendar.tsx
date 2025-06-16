@@ -16,7 +16,8 @@ import {
   AlertCircle, 
   Edit,
   ChefHat,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Package
 } from 'lucide-react'
 
 interface CalendarProps {
@@ -140,9 +141,9 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return <CheckCircle className="w-4 h-4 text-green-600" />
+        return <CheckCircle className="w-4 h-4 text-emerald-600" />
       case 'pending':
-        return <Clock className="w-4 h-4 text-yellow-600" />
+        return <Clock className="w-4 h-4 text-amber-600" />
       case 'cancelled':
         return <AlertCircle className="w-4 h-4 text-red-600" />
       default:
@@ -150,7 +151,20 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
     }
   }
 
-  const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'bg-emerald-50 border-emerald-200'
+      case 'pending':
+        return 'bg-amber-50 border-amber-200'
+      case 'cancelled':
+        return 'bg-red-50 border-red-200'
+      default:
+        return 'bg-slate-50 border-slate-200'
+    }
+  }
+
+  const weekDays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
   const monthNames = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -158,15 +172,17 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
 
   if (!selectedShift) {
     return (
-      <Card className="h-full">
+      <Card className="bg-white shadow-sm border border-slate-200">
         <CardContent className="flex items-center justify-center h-96">
           <div className="text-center">
-            <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
               Selecciona un turno
             </h3>
-            <p className="text-gray-600">
-              Primero debes seleccionar un turno para ver tus pedidos
+            <p className="text-slate-600 max-w-sm">
+              Para comenzar a gestionar tus pedidos, primero debes seleccionar tu turno de trabajo
             </p>
           </div>
         </CardContent>
@@ -176,27 +192,32 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
 
   return (
     <>
-      <Card className="shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-t-lg">
+      <Card className="bg-white shadow-sm border border-slate-200">
+        <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigateMonth('prev')}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 rounded-xl"
             >
               <ChevronLeft className="w-5 h-5" />
             </Button>
             
-            <CardTitle className="text-2xl font-bold text-center">
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </CardTitle>
+            <div className="text-center">
+              <CardTitle className="text-2xl font-bold">
+                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+              </CardTitle>
+              <p className="text-indigo-100 text-sm mt-1">
+                Gestiona tus pedidos de almuerzo
+              </p>
+            </div>
             
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigateMonth('next')}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 rounded-xl"
             >
               <ChevronRight className="w-5 h-5" />
             </Button>
@@ -206,97 +227,108 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
         <CardContent className="p-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+              <div className="text-center">
+                <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-slate-600">Cargando calendario...</p>
+              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-7 gap-2">
+            <div className="space-y-4">
               {/* Week day headers */}
-              {weekDays.map(day => (
-                <div key={day} className="p-3 text-center font-semibold text-gray-600 bg-gray-50 rounded-lg">
-                  {day}
-                </div>
-              ))}
+              <div className="grid grid-cols-7 gap-2">
+                {weekDays.map(day => (
+                  <div key={day} className="p-3 text-center font-semibold text-slate-700 bg-slate-50 rounded-xl border border-slate-200">
+                    <span className="hidden sm:block">{day}</span>
+                    <span className="sm:hidden">{day.slice(0, 3)}</span>
+                  </div>
+                ))}
+              </div>
               
               {/* Calendar days */}
-              {getDaysInMonth().map((date, index) => {
-                if (!date) {
-                  return <div key={index} className="p-3 h-32" />
-                }
-                
-                const today = new Date()
-                today.setHours(0, 0, 0, 0)
-                const isToday = date.getTime() === today.getTime()
-                const isPast = date < today
-                const order = getOrderForDate(date)
-                const dayMenus = getMenusForDate(date)
-                
-                return (
-                  <div
-                    key={index}
-                    onClick={() => !isPast && handleDayClick(date)}
-                    className={`
-                      p-3 h-32 border-2 rounded-lg transition-all duration-200 cursor-pointer
-                      ${isPast 
-                        ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-50' 
-                        : 'bg-white border-gray-200 hover:border-orange-300 hover:shadow-md'
-                      }
-                      ${isToday ? 'ring-2 ring-orange-500 border-orange-500' : ''}
-                      ${order ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' : ''}
-                    `}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`text-sm font-bold ${
-                        isToday ? 'text-orange-600' : 
-                        isPast ? 'text-gray-400' : 'text-gray-900'
-                      }`}>
-                        {date.getDate()}
-                      </span>
-                      {order && getStatusIcon(order.status)}
-                    </div>
-                    
-                    <div className="space-y-1">
-                      {dayMenus.length > 0 ? (
-                        <div className="space-y-1">
-                          {dayMenus.slice(0, 2).map((menu, idx) => (
-                            <div key={idx} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full truncate">
-                              {menu.descripcion_opcion}
-                            </div>
-                          ))}
-                          {dayMenus.length > 2 && (
-                            <div className="text-xs text-gray-500 text-center">
-                              +{dayMenus.length - 2} más
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-xs text-gray-400 text-center">
-                          Sin menú
-                        </div>
-                      )}
-                    </div>
-
-                    {order ? (
-                      <div className="mt-2">
-                        <div className="text-xs font-medium text-green-800 truncate">
-                          {order.menu_item}
-                        </div>
-                        {!isPast && (
-                          <div className="flex items-center justify-center mt-1">
-                            <Edit className="w-3 h-3 text-gray-400" />
+              <div className="grid grid-cols-7 gap-2">
+                {getDaysInMonth().map((date, index) => {
+                  if (!date) {
+                    return <div key={index} className="p-3 h-32" />
+                  }
+                  
+                  const today = new Date()
+                  today.setHours(0, 0, 0, 0)
+                  const isToday = date.getTime() === today.getTime()
+                  const isPast = date < today
+                  const order = getOrderForDate(date)
+                  const dayMenus = getMenusForDate(date)
+                  
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => !isPast && handleDayClick(date)}
+                      className={`
+                        p-3 h-32 border-2 rounded-xl transition-all duration-200 cursor-pointer
+                        ${isPast 
+                          ? 'bg-slate-50 border-slate-200 cursor-not-allowed opacity-60' 
+                          : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-md hover:scale-105'
+                        }
+                        ${isToday ? 'ring-2 ring-indigo-500 border-indigo-500 shadow-md' : ''}
+                        ${order ? `${getStatusColor(order.status)} shadow-sm` : ''}
+                      `}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-sm font-bold ${
+                          isToday ? 'text-indigo-600' : 
+                          isPast ? 'text-slate-400' : 'text-slate-900'
+                        }`}>
+                          {date.getDate()}
+                        </span>
+                        {order && getStatusIcon(order.status)}
+                      </div>
+                      
+                      <div className="space-y-1">
+                        {dayMenus.length > 0 ? (
+                          <div className="space-y-1">
+                            {dayMenus.slice(0, 2).map((menu, idx) => (
+                              <div key={idx} className="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-lg truncate font-medium">
+                                {menu.descripcion_opcion}
+                              </div>
+                            ))}
+                            {dayMenus.length > 2 && (
+                              <div className="text-xs text-slate-500 text-center font-medium">
+                                +{dayMenus.length - 2} opciones más
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center text-xs text-slate-400">
+                            <Package className="w-3 h-3 mr-1" />
+                            Sin menú
                           </div>
                         )}
                       </div>
-                    ) : !isPast ? (
-                      <div className="flex items-center justify-center mt-2">
-                        <div className="flex flex-col items-center space-y-1">
-                          <Plus className="w-4 h-4 text-gray-400" />
-                          <span className="text-xs text-gray-500">Pedir</span>
+
+                      {order ? (
+                        <div className="mt-2">
+                          <div className="text-xs font-medium text-slate-800 truncate">
+                            {order.menu_item}
+                          </div>
+                          {!isPast && (
+                            <div className="flex items-center justify-center mt-1">
+                              <Edit className="w-3 h-3 text-slate-400" />
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ) : null}
-                  </div>
-                )
-              })}
+                      ) : !isPast ? (
+                        <div className="flex items-center justify-center mt-2">
+                          <div className="flex flex-col items-center space-y-1">
+                            <div className="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center">
+                              <Plus className="w-4 h-4 text-indigo-600" />
+                            </div>
+                            <span className="text-xs text-slate-600 font-medium">Pedir</span>
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
         </CardContent>

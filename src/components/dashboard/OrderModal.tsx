@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Order, Shift, Menu } from '@/types/database'
-import { X, Save, Trash2, Loader2, ChefHat } from 'lucide-react'
+import { X, Save, Trash2, Loader2, ChefHat, Calendar, Clock, FileText } from 'lucide-react'
 
 interface OrderModalProps {
   isOpen: boolean
@@ -50,13 +50,13 @@ export default function OrderModal({
 
   const handleSave = async () => {
     if (!user || !profile || !selectedMenuId.trim()) {
-      setError('Por favor selecciona un plato')
+      setError('Por favor selecciona un plato del menú')
       return
     }
 
     const selectedMenu = availableMenus.find(menu => menu.id.toString() === selectedMenuId)
     if (!selectedMenu) {
-      setError('Menú no válido')
+      setError('Menú seleccionado no válido')
       return
     }
 
@@ -153,66 +153,99 @@ export default function OrderModal({
   const groupedMenus = groupMenusByCategory()
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <CardHeader className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white shadow-2xl border-0">
+        <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <ChefHat className="w-6 h-6" />
-              <CardTitle className="text-xl">
-                {existingOrder ? 'Editar Pedido' : 'Nuevo Pedido'}
-              </CardTitle>
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <ChefHat className="w-5 h-5" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold">
+                  {existingOrder ? 'Editar Pedido' : 'Nuevo Pedido de Almuerzo'}
+                </CardTitle>
+                <p className="text-indigo-100 text-sm">
+                  Selecciona tu almuerzo para el día elegido
+                </p>
+              </div>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 rounded-xl"
             >
               <X className="w-5 h-5" />
             </Button>
           </div>
-          <div className="text-orange-100">
-            <p className="capitalize">{dateStr}</p>
-            <p>Turno: {selectedShift.name}</p>
-          </div>
         </CardHeader>
 
         <CardContent className="p-6 space-y-6">
+          {/* Date and Shift Info */}
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Fecha</p>
+                  <p className="font-semibold text-slate-900 capitalize">{dateStr}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Turno</p>
+                  <p className="font-semibold text-slate-900">{selectedShift.name}</p>
+                  <p className="text-xs text-slate-500">{selectedShift.start_time} - {selectedShift.end_time}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {availableMenus.length === 0 ? (
-            <div className="text-center py-8">
-              <ChefHat className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <ChefHat className="w-8 h-8 text-slate-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
                 No hay menú disponible
               </h3>
-              <p className="text-gray-600">
-                No se ha configurado menú para este día
+              <p className="text-slate-600 max-w-sm mx-auto">
+                No se ha configurado un menú para este día. Contacta al administrador para más información.
               </p>
             </div>
           ) : (
             <>
               {/* Menu Selection */}
               <div className="space-y-4">
-                <label className="text-sm font-bold text-gray-900 flex items-center space-x-2">
-                  <ChefHat className="w-4 h-4" />
-                  <span>Selecciona tu plato</span>
-                </label>
+                <div className="flex items-center space-x-2">
+                  <ChefHat className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-lg font-semibold text-slate-900">Menú del Día</h3>
+                </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {Object.entries(groupedMenus).map(([categoria, menus]) => (
-                    <div key={categoria} className="space-y-2">
-                      <h4 className="font-semibold text-gray-800 text-sm uppercase tracking-wide border-b border-gray-200 pb-1">
-                        {categoria}
-                      </h4>
-                      <div className="grid gap-2">
+                    <div key={categoria} className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                        <h4 className="font-semibold text-slate-800 uppercase tracking-wide text-sm">
+                          {categoria}
+                        </h4>
+                      </div>
+                      <div className="grid gap-3">
                         {menus.map((menu) => (
                           <label
                             key={menu.id}
                             className={`
-                              flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200
+                              group flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200
                               ${selectedMenuId === menu.id.toString()
-                                ? 'border-orange-500 bg-orange-50 shadow-md'
-                                : 'border-gray-200 hover:border-orange-300 hover:bg-orange-25'
+                                ? 'border-indigo-500 bg-indigo-50 shadow-md ring-2 ring-indigo-500/20'
+                                : 'border-slate-200 hover:border-indigo-300 hover:bg-indigo-25 hover:shadow-sm'
                               }
                             `}
                           >
@@ -226,19 +259,19 @@ export default function OrderModal({
                             />
                             <div className="flex-1">
                               <div className="flex items-center justify-between">
-                                <span className="font-medium text-gray-900">
+                                <span className="font-medium text-slate-900 group-hover:text-indigo-900">
                                   {menu.descripcion_opcion}
                                 </span>
-                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                                <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium border border-slate-200">
                                   {menu.codigo_opcion}
                                 </span>
                               </div>
                             </div>
                             <div className={`
-                              w-5 h-5 rounded-full border-2 ml-3 flex items-center justify-center
+                              w-5 h-5 rounded-full border-2 ml-4 flex items-center justify-center transition-all duration-200
                               ${selectedMenuId === menu.id.toString()
-                                ? 'border-orange-500 bg-orange-500'
-                                : 'border-gray-300'
+                                ? 'border-indigo-500 bg-indigo-500 scale-110'
+                                : 'border-slate-300 group-hover:border-indigo-400'
                               }
                             `}>
                               {selectedMenuId === menu.id.toString() && (
@@ -254,16 +287,19 @@ export default function OrderModal({
               </div>
 
               {/* Notes */}
-              <div className="space-y-2">
-                <label htmlFor="notes" className="text-sm font-medium text-gray-700">
-                  Notas adicionales (opcional)
-                </label>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <FileText className="w-5 h-5 text-slate-600" />
+                  <label htmlFor="notes" className="text-sm font-semibold text-slate-900">
+                    Notas adicionales (opcional)
+                  </label>
+                </div>
                 <textarea
                   id="notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Ej: Sin cebolla, extra salsa..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                  placeholder="Ej: Sin cebolla, extra salsa, sin picante..."
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none transition-all duration-200"
                   rows={3}
                 />
               </div>
@@ -272,22 +308,28 @@ export default function OrderModal({
 
           {/* Error */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
-              {error}
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-start space-x-3">
+              <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <X className="w-3 h-3 text-white" />
+              </div>
+              <div>
+                <p className="font-medium">Error</p>
+                <p className="text-sm">{error}</p>
+              </div>
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-between pt-6 border-t border-slate-200">
             {existingOrder && (
               <Button
                 onClick={handleDelete}
                 disabled={loading}
                 variant="destructive"
-                className="bg-red-500 hover:bg-red-600"
+                className="bg-red-500 hover:bg-red-600 text-white shadow-sm"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Eliminar
+                Eliminar Pedido
               </Button>
             )}
             
@@ -296,6 +338,7 @@ export default function OrderModal({
                 onClick={onClose}
                 variant="outline"
                 disabled={loading}
+                className="border-slate-300 text-slate-700 hover:bg-slate-50"
               >
                 Cancelar
               </Button>
@@ -303,17 +346,17 @@ export default function OrderModal({
               <Button
                 onClick={handleSave}
                 disabled={loading || !selectedMenuId.trim() || availableMenus.length === 0}
-                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Guardando...
+                    {existingOrder ? 'Actualizando...' : 'Guardando...'}
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    {existingOrder ? 'Actualizar' : 'Guardar'}
+                    {existingOrder ? 'Actualizar Pedido' : 'Guardar Pedido'}
                   </>
                 )}
               </Button>
