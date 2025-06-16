@@ -23,17 +23,12 @@ import {
   Settings,
   Logout,
   Psychology,
-  Dashboard,
-  People,
-  EventNote,
-  Warning,
-  Analytics,
   AccountCircle,
 } from '@mui/icons-material';
 import { useAuth } from '@/context/AuthContext';
 import { useRole } from '@/hooks/useRole';
 import SidebarItem from './SidebarItem';
-import { NAVIGATION_ITEMS } from '@/constants/navigation';
+import { navigationItems } from '@/constants/navigation';
 
 const drawerWidth = 280;
 
@@ -71,7 +66,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const filteredNavItems = NAVIGATION_ITEMS.filter(item => {
+  const filteredNavItems = navigationItems.filter(item => {
     if (item.adminOnly && !canAccessAdminFeatures()) {
       return false;
     }
