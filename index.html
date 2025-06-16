@@ -40,9 +40,24 @@
     <!-- Header Futurista Flotante -->
     <header class="header" id="header">
         <nav class="nav">
-            <!-- Logo flotante limpio -->
-            <div class="nav__brand">
-                <div class="nav__logo" tabindex="0" role="button" aria-label="Starflex Logo"></div>
+            <!-- Lado izquierdo: Logo y Toggle de idioma -->
+            <div class="nav__left">
+                <!-- Logo flotante limpio -->
+                <div class="nav__brand">
+                    <div class="nav__logo" tabindex="0" role="button" aria-label="Starflex Logo"></div>
+                </div>
+                
+                <!-- Toggle de idioma -->
+                <div class="language-toggle" id="language-toggle">
+                    <button class="language-btn" data-lang="es" aria-label="Cambiar a Español">
+                        <span class="language-flag">🇪🇸</span>
+                        <span class="language-text">ES</span>
+                    </button>
+                    <button class="language-btn" data-lang="en" aria-label="Switch to English">
+                        <span class="language-flag">🇺🇸</span>
+                        <span class="language-text">EN</span>
+                    </button>
+                </div>
             </div>
             
             <!-- Navegación centrada ultra futurista -->
@@ -56,24 +71,9 @@
                 </ul>
             </div>
             
-            <!-- Controles de idioma y CTA -->
-            <div class="nav__controls">
-                <!-- Toggle de idioma -->
-                <div class="language-toggle" id="language-toggle">
-                    <button class="language-btn" data-lang="es" aria-label="Cambiar a Español">
-                        <span class="language-flag">🇪🇸</span>
-                        <span class="language-text">ES</span>
-                    </button>
-                    <button class="language-btn" data-lang="en" aria-label="Switch to English">
-                        <span class="language-flag">🇺🇸</span>
-                        <span class="language-text">EN</span>
-                    </button>
-                </div>
-                
-                <!-- Botón CTA flotante -->
-                <div class="nav__cta">
-                    <a href="https://starflex.web.app/" class="btn btn--primary" data-translate="nav-cta">Comienza tu prueba gratuita</a>
-                </div>
+            <!-- Botón CTA flotante (lado derecho) -->
+            <div class="nav__cta">
+                <a href="https://starflex.web.app/" class="btn btn--primary" data-translate="nav-cta">Comienza tu prueba gratuita</a>
             </div>
             
             <!-- Toggle móvil flotante -->
