@@ -69,7 +69,7 @@ export interface Database {
         Row: {
           id: number
           nombre_trabajador: string
-          rut_trabajador: string
+          rut_trabajador: string | null
           turno_elegido: string
           fecha_entrega: string
           dia_semana: string
@@ -84,7 +84,7 @@ export interface Database {
         Insert: {
           id?: number
           nombre_trabajador: string
-          rut_trabajador: string
+          rut_trabajador?: string | null
           turno_elegido: string
           fecha_entrega: string
           dia_semana: string
@@ -99,7 +99,7 @@ export interface Database {
         Update: {
           id?: number
           nombre_trabajador?: string
-          rut_trabajador?: string
+          rut_trabajador?: string | null
           turno_elegido?: string
           fecha_entrega?: string
           dia_semana?: string
