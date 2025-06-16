@@ -9,9 +9,10 @@ import {
   Badge,
   alpha,
 } from '@mui/material';
+import { createElement } from 'react';
 
 interface SidebarItemProps {
-  icon: React.ReactNode;
+  icon: React.ComponentType | React.ReactNode;
   label: string;
   path: string;
   badge?: number;
@@ -33,6 +34,16 @@ export default function SidebarItem({
     router.push(path);
     onClick?.();
   };
+
+  // Render the icon properly - if it's a component, create an element
+  const renderIcon = () => {
+    if (typeof icon === 'function') {
+      return createElement(icon as React.ComponentType);
+    }
+    return icon;
+  };
+
+  const iconElement = renderIcon();
 
   return (
     <ListItem disablePadding sx={{ mb: 0.5 }}>
@@ -58,10 +69,10 @@ export default function SidebarItem({
         >
           {badge ? (
             <Badge badgeContent={badge} color="error">
-              {icon}
+              {iconElement}
             </Badge>
           ) : (
-            icon
+            iconElement
           )}
         </ListItemIcon>
         <ListItemText 
