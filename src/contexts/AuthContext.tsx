@@ -13,6 +13,7 @@ interface User {
     rut: string
     rol: string
     turno_habitual: string
+    empresa: string
   }
 }
 

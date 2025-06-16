@@ -11,11 +11,14 @@ import {
   ArrowRight,
   ChefHat,
   Settings,
-  Clock
+  Clock,
+  Building2,
+  Crown,
+  Users
 } from 'lucide-react'
 
 export default function RoleSelection() {
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, signOut, loading } = useAuth()
   const router = useRouter()
 
   const handleEmployeeAccess = () => {
@@ -31,9 +34,60 @@ export default function RoleSelection() {
     router.push('/login')
   }
 
+  // Verificar si el usuario es admin
   const isAdmin = profile?.rol?.toLowerCase() === 'admin' || profile?.rol?.toLowerCase() === 'administrador'
   const canAccessEmployee = true
   const canAccessAdmin = isAdmin
+
+  // Función para obtener las iniciales del usuario
+  const getUserInitials = () => {
+    if (!profile?.nombre_completo) return 'U'
+    const names = profile.nombre_completo.split(' ')
+    return names.length >= 2 
+      ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
+      : names[0][0].toUpperCase()
+  }
+
+  // Función para obtener el color del rol
+  const getRoleColor = (rol: string | null) => {
+    switch (rol?.toLowerCase()) {
+      case 'admin':
+      case 'administrador':
+        return 'bg-orange-100 text-orange-700 border-orange-200'
+      case 'supervisor':
+        return 'bg-blue-100 text-blue-700 border-blue-200'
+      default:
+        return 'bg-green-100 text-green-700 border-green-200'
+    }
+  }
+
+  // Función para obtener el nombre del rol
+  const getRoleName = (rol: string | null) => {
+    if (!rol) return 'Empleado'
+    switch (rol.toLowerCase()) {
+      case 'admin':
+      case 'administrador':
+        return 'Administrador'
+      case 'supervisor':
+        return 'Supervisor'
+      default:
+        return 'Empleado'
+    }
+  }
+
+  // Mostrar loading si aún está cargando
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <ChefHat className="w-8 h-8 text-white" />
+          </div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-green-50">
@@ -67,18 +121,31 @@ export default function RoleSelection() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center space-x-4 bg-white rounded-2xl px-6 py-4 shadow-sm border border-gray-100 mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center text-gray-700 font-semibold text-lg shadow-inner">
-              {profile?.nombre_completo?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U'}
+              {getUserInitials()}
             </div>
             <div className="text-left">
               <h2 className="text-xl font-semibold text-gray-900 mb-1">
-                ¡Bienvenido, {profile?.nombre_completo?.split(' ')[0]}!
+                ¡Bienvenido, {profile?.nombre_completo?.split(' ')[0] || 'Usuario'}!
               </h2>
               <div className="flex items-center space-x-3 text-sm">
-                <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full font-medium">
-                  {profile?.rol || 'Empleado'}
+                <span className={`px-3 py-1 rounded-full font-medium border ${getRoleColor(profile?.rol || null)}`}>
+                  {getRoleName(profile?.rol || null)}
                 </span>
-                <span className="text-gray-400">•</span>
-                <span className="text-gray-600">{profile?.rut}</span>
+                {profile?.empresa && (
+                  <>
+                    <span className="text-gray-400">•</span>
+                    <div className="flex items-center space-x-1 text-gray-600">
+                      <Building2 className="w-3 h-3" />
+                      <span>{profile.empresa}</span>
+                    </div>
+                  </>
+                )}
+                {profile?.rut && (
+                  <>
+                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-600">{profile.rut}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -133,8 +200,11 @@ export default function RoleSelection() {
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-orange-500" />
               
               <CardContent className="p-8 text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform duration-300">
+                <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform duration-300 relative">
                   <Settings className="w-10 h-10 text-orange-600" />
+                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                    <Crown className="w-3 h-3 text-white" />
+                  </div>
                 </div>
                 
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -166,6 +236,46 @@ export default function RoleSelection() {
           )}
         </div>
 
+        {/* User Info Card */}
+        {profile && (
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del usuario</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <User className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Nombre completo</p>
+                  <p className="font-medium text-gray-900">{profile.nombre_completo}</p>
+                </div>
+              </div>
+              
+              {profile.empresa && (
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Empresa</p>
+                    <p className="font-medium text-gray-900">{profile.empresa}</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Rol</p>
+                  <p className="font-medium text-gray-900">{getRoleName(profile.rol)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Status Footer */}
         <div className="text-center">
           <div className="inline-flex items-center space-x-4 bg-white rounded-xl px-6 py-4 shadow-sm border border-gray-100">
@@ -175,8 +285,16 @@ export default function RoleSelection() {
             </div>
             <div className="w-px h-4 bg-gray-200" />
             <span className="text-sm text-gray-500">
-              Conectado como {profile?.rol || 'Empleado'}
+              Conectado como {getRoleName(profile?.rol || null)}
             </span>
+            {profile?.empresa && (
+              <>
+                <div className="w-px h-4 bg-gray-200" />
+                <span className="text-sm text-gray-500">
+                  {profile.empresa}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>
