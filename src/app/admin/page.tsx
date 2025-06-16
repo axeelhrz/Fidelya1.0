@@ -26,7 +26,10 @@ import {
   AlertCircle,
   Package,
   Sun,
-  Moon
+  Moon,
+  Building2,
+  FileText,
+  TrendingUp
 } from 'lucide-react'
 
 interface AdminStats {
@@ -34,6 +37,15 @@ interface AdminStats {
   pedidosDia: number
   pedidosNoche: number
   empresasActivas: number
+  pedidosHoy: number
+  pedidosEsteMes: number
+}
+
+interface PedidosPorEmpresa {
+  empresa: string
+  total: number
+  dia: number
+  noche: number
 }
 
 export default function AdminPage() {
@@ -43,12 +55,16 @@ export default function AdminPage() {
     totalPedidos: 0,
     pedidosDia: 0,
     pedidosNoche: 0,
-    empresasActivas: 0
+    empresasActivas: 0,
+    pedidosHoy: 0,
+    pedidosEsteMes: 0
   })
+  const [pedidosPorEmpresa, setPedidosPorEmpresa] = useState<PedidosPorEmpresa[]>([])
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [searchTerm, setSearchTerm] = useState('')
   const [shiftFilter, setShiftFilter] = useState('all')
   const [loadingStats, setLoadingStats] = useState(true)
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'companies'>('overview')
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -70,6 +86,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (user && profile) {
       fetchStats()
+      fetchPedidosPorEmpresa()
     }
   }, [user, profile, selectedDate])
 
@@ -77,34 +94,140 @@ export default function AdminPage() {
     try {
       setLoadingStats(true)
 
-      // Fetch total orders for selected date
-      const { data: totalData, error: totalError } = await supabase
+      // Fetch orders for selected date
+      const { data: selectedDateData, error: selectedDateError } = await supabase
         .from('pedidos')
         .select('turno_elegido, empresa')
         .eq('fecha_entrega', selectedDate)
 
-      if (totalError) {
-        console.error('Error fetching stats:', totalError)
-        throw totalError
-      }
+      if (selectedDateError) throw selectedDateError
 
-      const total = totalData?.length || 0
-      const diaCount = totalData?.filter(p => p.turno_elegido.toLowerCase().includes('día') || p.turno_elegido.toLowerCase().includes('dia')).length || 0
-      const nocheCount = totalData?.filter(p => p.turno_elegido.toLowerCase().includes('noche')).length || 0
+      // Fetch orders for today
+      const today = new Date().toISOString().split('T')[0]
+      const { data: todayData, error: todayError } = await supabase
+        .from('pedidos')
+        .select('id')
+        .eq('fecha_entrega', today)
+
+      if (todayError) throw todayError
+
+      // Fetch orders for this month
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
+      const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
+      
+      const { data: monthData, error: monthError } = await supabase
+        .from('pedidos')
+        .select('id')
+        .gte('fecha_entrega', startOfMonth)
+        .lte('fecha_entrega', endOfMonth)
+
+      if (monthError) throw monthError
+
+      const total = selectedDateData?.length || 0
+      const diaCount = selectedDateData?.filter(p => p.turno_elegido === 'dia').length || 0
+      const nocheCount = selectedDateData?.filter(p => p.turno_elegido === 'noche').length || 0
       
       // Get unique companies
-      const empresasUnicas = new Set(totalData?.map(p => p.empresa).filter(Boolean))
+      const empresasUnicas = new Set(selectedDateData?.map(p => p.empresa).filter(Boolean))
 
       setStats({
         totalPedidos: total,
         pedidosDia: diaCount,
         pedidosNoche: nocheCount,
-        empresasActivas: empresasUnicas.size
+        empresasActivas: empresasUnicas.size,
+        pedidosHoy: todayData?.length || 0,
+        pedidosEsteMes: monthData?.length || 0
       })
     } catch (error) {
       console.error('Error fetching stats:', error)
     } finally {
       setLoadingStats(false)
+    }
+  }
+
+  const fetchPedidosPorEmpresa = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pedidos')
+        .select('empresa, turno_elegido')
+        .eq('fecha_entrega', selectedDate)
+
+      if (error) throw error
+
+      // Group by company
+      const empresasMap = new Map<string, { total: number, dia: number, noche: number }>()
+      
+      data?.forEach(pedido => {
+        if (pedido.empresa) {
+          const current = empresasMap.get(pedido.empresa) || { total: 0, dia: 0, noche: 0 }
+          current.total += 1
+          if (pedido.turno_elegido === 'dia') {
+            current.dia += 1
+          } else if (pedido.turno_elegido === 'noche') {
+            current.noche += 1
+          }
+          empresasMap.set(pedido.empresa, current)
+        }
+      })
+
+      const empresasArray = Array.from(empresasMap.entries()).map(([empresa, stats]) => ({
+        empresa,
+        ...stats
+      })).sort((a, b) => b.total - a.total)
+
+      setPedidosPorEmpresa(empresasArray)
+    } catch (error) {
+      console.error('Error fetching pedidos por empresa:', error)
+    }
+  }
+
+  const exportData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pedidos')
+        .select('*')
+        .eq('fecha_entrega', selectedDate)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      // Convert to CSV
+      const headers = [
+        'ID', 'Nombre Trabajador', 'RUT', 'Empresa', 'Turno', 
+        'Fecha Entrega', 'Día Semana', 'Código Opción', 
+        'Descripción Opción', 'Categoría', 'Notas', 'Fecha Creación'
+      ]
+      
+      const csvContent = [
+        headers.join(','),
+        ...data.map(pedido => [
+          pedido.id,
+          `"${pedido.nombre_trabajador}"`,
+          pedido.rut_trabajador || '',
+          `"${pedido.empresa}"`,
+          pedido.turno_elegido === 'dia' ? 'Día' : 'Noche',
+          pedido.fecha_entrega,
+          `"${pedido.dia_semana}"`,
+          pedido.codigo_opcion,
+          `"${pedido.descripcion_opcion}"`,
+          `"${pedido.categoria_opcion}"`,
+          `"${pedido.notas || ''}"`,
+          new Date(pedido.created_at).toLocaleString('es-ES')
+        ].join(','))
+      ].join('\n')
+
+      // Download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `pedidos_${selectedDate}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (error) {
+      console.error('Error exporting data:', error)
     }
   }
 
@@ -149,136 +272,404 @@ export default function AdminPage() {
                 <span>Panel de Administración</span>
               </h1>
               <p className="text-slate-600 mt-1">
-                Bienvenido, {profile.nombre_completo?.split(' ')[0]}
+                Gestión de pedidos de almuerzo - {new Date(selectedDate).toLocaleDateString('es-ES', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
               </p>
             </div>
           </div>
-          <Button
-            onClick={fetchStats}
-            disabled={loadingStats}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+          <div className="flex items-center space-x-3">
+            <Button
+              onClick={exportData}
+              variant="outline"
+              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Exportar CSV
+            </Button>
+            <Button
+              onClick={() => {
+                fetchStats()
+                fetchPedidosPorEmpresa()
+              }}
+              disabled={loadingStats}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loadingStats ? 'animate-spin' : ''}`} />
+              Actualizar
+            </Button>
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="flex space-x-1 mb-8 bg-slate-100 p-1 rounded-xl">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'overview'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loadingStats ? 'animate-spin' : ''}`} />
-            Actualizar
-          </Button>
+            <BarChart3 className="w-4 h-4 inline mr-2" />
+            Resumen
+          </button>
+          <button
+            onClick={() => setActiveTab('orders')}
+            className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'orders'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <ClipboardList className="w-4 h-4 inline mr-2" />
+            Lista de Pedidos
+          </button>
+          <button
+            onClick={() => setActiveTab('companies')}
+            className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'companies'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Building2 className="w-4 h-4 inline mr-2" />
+            Por Empresa
+          </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white shadow-sm border border-slate-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Total Pedidos</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.totalPedidos}</p>
-                </div>
-                <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-                  <ClipboardList className="w-6 h-6 text-indigo-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-sm border border-slate-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Turno Día</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.pedidosDia}</p>
-                </div>
-                <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-                  <Sun className="w-6 h-6 text-amber-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-sm border border-slate-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Turno Noche</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.pedidosNoche}</p>
-                </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <Moon className="w-6 h-6 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-sm border border-slate-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Empresas Activas</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.empresasActivas}</p>
-                </div>
-                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                  <Users className="w-6 h-6 text-emerald-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters */}
+        {/* Date Selector */}
         <Card className="bg-white shadow-sm border border-slate-200 mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Filtros de Búsqueda</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Fecha
-                </label>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="w-5 h-5 text-slate-600" />
+                  <label className="text-sm font-medium text-slate-700">
+                    Fecha de consulta:
+                  </label>
+                </div>
                 <Input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full"
+                  className="w-auto"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Buscar
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    type="text"
-                    placeholder="Nombre, RUT, empresa..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Turno
-                </label>
-                <select
-                  value={shiftFilter}
-                  onChange={(e) => setShiftFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="all">Todos los turnos</option>
-                  <option value="día">Día</option>
-                  <option value="noche">Noche</option>
-                </select>
+              <div className="text-sm text-slate-600">
+                Última actualización: {new Date().toLocaleTimeString('es-ES')}
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Orders List */}
-        <OrdersList
-          selectedDate={selectedDate}
-          searchTerm={searchTerm}
-          shiftFilter={shiftFilter}
-        />
+        {/* Content based on active tab */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+              <Card className="bg-white shadow-sm border border-slate-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-600">Total Fecha</p>
+                      <p className="text-2xl font-bold text-slate-900">{stats.totalPedidos}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                      <ClipboardList className="w-6 h-6 text-indigo-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow-sm border border-slate-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-600">Turno Día</p>
+                      <p className="text-2xl font-bold text-slate-900">{stats.pedidosDia}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                      <Sun className="w-6 h-6 text-amber-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow-sm border border-slate-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-600">Turno Noche</p>
+                      <p className="text-2xl font-bold text-slate-900">{stats.pedidosNoche}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                      <Moon className="w-6 h-6 text-purple-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow-sm border border-slate-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-600">Empresas</p>
+                      <p className="text-2xl font-bold text-slate-900">{stats.empresasActivas}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-emerald-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow-sm border border-slate-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-600">Hoy</p>
+                      <p className="text-2xl font-bold text-slate-900">{stats.pedidosHoy}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <Clock className="w-6 h-6 text-blue-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow-sm border border-slate-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-600">Este Mes</p>
+                      <p className="text-2xl font-bold text-slate-900">{stats.pedidosEsteMes}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-rose-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-white shadow-sm border border-slate-200">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center space-x-2">
+                    <BarChart3 className="w-5 h-5 text-indigo-600" />
+                    <span>Distribución por Turno</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-amber-500 rounded-full"></div>
+                        <span className="text-sm font-medium">Turno Día</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-lg font-bold">{stats.pedidosDia}</span>
+                        <span className="text-sm text-slate-500 ml-2">
+                          ({stats.totalPedidos > 0 ? Math.round((stats.pedidosDia / stats.totalPedidos) * 100) : 0}%)
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
+                        <span className="text-sm font-medium">Turno Noche</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-lg font-bold">{stats.pedidosNoche}</span>
+                        <span className="text-sm text-slate-500 ml-2">
+                          ({stats.totalPedidos > 0 ? Math.round((stats.pedidosNoche / stats.totalPedidos) * 100) : 0}%)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow-sm border border-slate-200">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center space-x-2">
+                    <TrendingUp className="w-5 h-5 text-emerald-600" />
+                    <span>Resumen Rápido</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-slate-600">Pedidos totales del día:</span>
+                      <span className="font-semibold">{stats.totalPedidos}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-slate-600">Empresas participantes:</span>
+                      <span className="font-semibold">{stats.empresasActivas}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-slate-600">Promedio por empresa:</span>
+                      <span className="font-semibold">
+                        {stats.empresasActivas > 0 ? Math.round(stats.totalPedidos / stats.empresasActivas) : 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-slate-600">Turno más activo:</span>
+                      <span className="font-semibold">
+                        {stats.pedidosDia > stats.pedidosNoche ? 'Día' : stats.pedidosNoche > stats.pedidosDia ? 'Noche' : 'Empate'}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
+
+        {activeTab === 'orders' && (
+          <>
+            {/* Filters for Orders */}
+            <Card className="bg-white shadow-sm border border-slate-200 mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg">Filtros de Búsqueda</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Buscar
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        type="text"
+                        placeholder="Nombre, RUT, empresa, plato..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Turno
+                    </label>
+                    <select
+                      value={shiftFilter}
+                      onChange={(e) => setShiftFilter(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="all">Todos los turnos</option>
+                      <option value="dia">Día</option>
+                      <option value="noche">Noche</option>
+                    </select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Orders List */}
+            <OrdersList
+              selectedDate={selectedDate}
+              searchTerm={searchTerm}
+              shiftFilter={shiftFilter}
+            />
+          </>
+        )}
+
+        {activeTab === 'companies' && (
+          <Card className="bg-white shadow-sm border border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center space-x-2">
+                <Building2 className="w-5 h-5 text-emerald-600" />
+                <span>Pedidos por Empresa</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {pedidosPorEmpresa.length === 0 ? (
+                <div className="text-center py-8">
+                  <Building2 className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">No hay datos</h3>
+                  <p className="text-slate-600">No se encontraron pedidos para la fecha seleccionada</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {pedidosPorEmpresa.map((empresa, index) => (
+                    <div
+                      key={empresa.empresa}
+                      className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-slate-900 text-lg">{empresa.empresa}</h4>
+                            <p className="text-sm text-slate-600">
+                              Total de pedidos para {new Date(selectedDate).toLocaleDateString('es-ES')}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-6">
+                          <div className="text-center">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <Sun className="w-4 h-4 text-amber-600" />
+                              <span className="text-sm font-medium text-slate-600">Día</span>
+                            </div>
+                            <span className="text-2xl font-bold text-amber-600">{empresa.dia}</span>
+                          </div>
+                          
+                          <div className="text-center">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <Moon className="w-4 h-4 text-purple-600" />
+                              <span className="text-sm font-medium text-slate-600">Noche</span>
+                            </div>
+                            <span className="text-2xl font-bold text-purple-600">{empresa.noche}</span>
+                          </div>
+                          
+                          <div className="text-center">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <ClipboardList className="w-4 h-4 text-indigo-600" />
+                              <span className="text-sm font-medium text-slate-600">Total</span>
+                            </div>
+                            <span className="text-3xl font-bold text-indigo-600">{empresa.total}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Progress bar */}
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                          <span>Distribución por turno</span>
+                          <span>{empresa.total} pedidos</span>
+                        </div>
+                        <div className="w-full bg-slate-200 rounded-full h-2">
+                          <div className="flex h-2 rounded-full overflow-hidden">
+                            <div 
+                              className="bg-amber-500" 
+                              style={{ width: `${empresa.total > 0 ? (empresa.dia / empresa.total) * 100 : 0}%` }}
+                            ></div>
+                            <div 
+                              className="bg-purple-500" 
+                              style={{ width: `${empresa.total > 0 ? (empresa.noche / empresa.total) * 100 : 0}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
