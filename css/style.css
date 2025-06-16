@@ -17,12 +17,15 @@
 --starflex-red: #e6002d;
 --starflex-purple: #8b5cf6;
 --starflex-cyan: #ff1744;
-/* Colores rojizos futuristas */
+/* Colores rojizos futuristas MEJORADOS */
 --starflex-crimson: #b8002e;
 --starflex-crimson-light: #d4003a;
 --starflex-crimson-dark: #9c0025;
 --starflex-crimson-glow: #ff1744;
 --starflex-crimson-bright: #ff4569;
+--starflex-crimson-ultra: #ff0844;
+--starflex-crimson-neon: #ff2d6b;
+--starflex-crimson-electric: #ff1155;
 /* Nuevos colores futuristas para el celular */
 --neon-green: #39ff14;
 --neon-pink: #ff073a;
@@ -43,21 +46,25 @@
 --glow-subtle: 0 0 20px rgba(255, 69, 105, 0.2);
 --glow-medium: 0 0 30px rgba(255, 69, 105, 0.3);
 --glow-strong: 0 0 40px rgba(255, 69, 105, 0.4);
-/* Efectos neón rojizos */
+/* Efectos neón rojizos MEJORADOS */
 --neon-crimson: 0 0 25px rgba(184, 0, 46, 0.6);
 --neon-crimson-strong: 0 0 45px rgba(184, 0, 46, 0.8);
 --neon-crimson-ultra: 0 0 65px rgba(255, 23, 68, 0.9);
 --neon-crimson-pulse: 0 0 35px rgba(255, 69, 105, 0.7);
+--neon-crimson-electric: 0 0 50px rgba(255, 17, 85, 0.8);
+--neon-crimson-plasma: 0 0 80px rgba(255, 8, 68, 0.6);
 /* Sombras avanzadas */
 --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.15);
 --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.2);
 --shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.25);
 --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.3);
 --shadow-2xl: 0 35px 70px rgba(0, 0, 0, 0.4);
-/* Sombras rojizas */
+/* Sombras rojizas MEJORADAS */
 --shadow-crimson: 0 15px 40px rgba(184, 0, 46, 0.4);
 --shadow-crimson-hover: 0 25px 60px rgba(184, 0, 46, 0.6);
 --shadow-crimson-ultra: 0 30px 80px rgba(255, 23, 68, 0.5);
+--shadow-crimson-electric: 0 20px 50px rgba(255, 17, 85, 0.7);
+--shadow-crimson-plasma: 0 35px 90px rgba(255, 8, 68, 0.4);
 /* Tipografía */
 --font-primary: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
 --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
@@ -886,7 +893,7 @@ box-shadow: var(--glow-subtle);
 animation: pulse-gentle 3s infinite;
 }
 
-/* ===== TELÉFONO HERO OPTIMIZADO - MARCO LIMPIO ===== */
+/* ===== TELÉFONO HERO CON MARCO ROJIZO ATRACTIVO ===== */
 .hero__media {
 display: flex;
 justify-content: center;
@@ -906,68 +913,112 @@ animation: phone-float 8s ease-in-out infinite;
 transform: perspective(1200px) rotateY(-4deg) rotateX(1deg) scale(1.02);
 }
 
-/* ===== MARCO SIMPLIFICADO Y OPTIMIZADO ===== */
+/* ===== MARCO ROJIZO FUTURISTA ÚNICO ===== */
 .hero__phone {
 width: 320px;
 height: 640px;
-background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
+background: transparent;
 border-radius: 45px;
-padding: 4px;
+padding: 8px;
 position: relative;
-overflow: hidden;
-border: 2px solid #2c2c2e;
+overflow: visible;
+/* Marco rojizo principal con múltiples capas */
+border: 3px solid transparent;
+background: 
+linear-gradient(var(--primary-bg), var(--primary-bg)) padding-box,
+linear-gradient(135deg, 
+var(--starflex-crimson-electric) 0%,
+var(--starflex-crimson-ultra) 25%,
+var(--starflex-crimson-neon) 50%,
+var(--starflex-crimson-bright) 75%,
+var(--starflex-crimson-electric) 100%
+) border-box;
 box-shadow: 
-0 25px 60px rgba(0, 0, 0, 0.6),
-0 0 0 1px rgba(255, 255, 255, 0.03),
-inset 0 1px 0 rgba(255, 255, 255, 0.05);
+/* Sombra principal profunda */
+0 30px 80px rgba(0, 0, 0, 0.7),
+/* Resplandor rojizo interior */
+inset 0 0 0 1px rgba(255, 17, 85, 0.3),
+/* Resplandor rojizo exterior múltiple */
+var(--neon-crimson-electric),
+var(--shadow-crimson-plasma),
+/* Resplandor adicional para profundidad */
+0 0 100px rgba(255, 8, 68, 0.4),
+0 0 150px rgba(255, 23, 68, 0.2);
 }
 
-/* Marco metálico simplificado */
+/* Anillo exterior rojizo pulsante */
 .hero__phone::before {
 content: '';
 position: absolute;
-top: -2px;
-left: -2px;
-right: -2px;
-bottom: -2px;
-background: linear-gradient(145deg, 
-#3a3a3c 0%, 
-#2c2c2e 50%, 
-#1c1c1e 100%
+top: -15px;
+left: -15px;
+right: -15px;
+bottom: -15px;
+background: linear-gradient(45deg, 
+var(--starflex-crimson-electric) 0%,
+var(--starflex-crimson-ultra) 25%,
+transparent 50%,
+var(--starflex-crimson-neon) 75%,
+var(--starflex-crimson-electric) 100%
 );
-border-radius: 47px;
-z-index: -1;
+border-radius: 60px;
+z-index: -2;
+opacity: 0.6;
+animation: crimson-ring-pulse 4s ease-in-out infinite;
+filter: blur(12px);
 }
 
-/* Resplandor sutil */
+/* Resplandor dinámico exterior */
 .hero__phone::after {
 content: '';
 position: absolute;
-top: -8px;
-left: -8px;
-right: -8px;
-bottom: -8px;
-background: linear-gradient(45deg, 
-var(--starflex-blue) 0%,
-var(--starflex-purple) 50%,
-var(--starflex-cyan) 100%
+top: -25px;
+left: -25px;
+right: -25px;
+bottom: -25px;
+background: radial-gradient(ellipse, 
+var(--starflex-crimson-electric) 0%,
+var(--starflex-crimson-ultra) 30%,
+transparent 70%
 );
-border-radius: 53px;
-z-index: -2;
-opacity: 0.2;
-animation: phone-glow 6s ease-in-out infinite;
-filter: blur(8px);
+border-radius: 70px;
+z-index: -3;
+opacity: 0.4;
+animation: crimson-aura-flow 6s ease-in-out infinite;
+filter: blur(20px);
 }
 
-/* ===== PANTALLA OPTIMIZADA ===== */
+/* ===== PANTALLA CON EFECTO ROJIZO SUTIL ===== */
 .hero__phone-screen {
 width: 100%;
 height: 100%;
 background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
-border-radius: 41px;
+border-radius: 37px;
 overflow: hidden;
 position: relative;
-border: 1px solid rgba(255, 255, 255, 0.02);
+border: 2px solid rgba(255, 17, 85, 0.2);
+box-shadow: 
+inset 0 0 50px rgba(0, 0, 0, 0.8),
+inset 0 0 0 1px rgba(255, 17, 85, 0.1);
+}
+
+/* Resplandor interior de la pantalla */
+.hero__phone-screen::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: linear-gradient(135deg, 
+rgba(255, 17, 85, 0.05) 0%,
+transparent 30%,
+transparent 70%,
+rgba(255, 8, 68, 0.03) 100%
+);
+border-radius: 35px;
+z-index: 1;
+pointer-events: none;
 }
 
 /* ===== CONTENIDO SIN INTERFERENCIAS ===== */
@@ -977,24 +1028,47 @@ height: 100%;
 position: relative;
 overflow: hidden;
 background: #000000;
-border-radius: 41px;
+border-radius: 35px;
 }
 
 /* ===== IMAGEN HERO OPTIMIZADA ===== */
 .hero__phone-app-image {
 width: 100%;
 height: 100%;
-border-radius: 41px;
+border-radius: 35px;
 position: absolute;
 top: 0;
 left: 0;
-z-index: 1;
+z-index: 2;
 transition: all var(--transition);
 background: url('../assets/phones/Hero.jpg') center/cover no-repeat;
 background-size: cover;
 background-position: center;
 object-fit: cover;
 object-position: center;
+/* Efecto de resplandor sutil en la imagen */
+filter: brightness(1.05) contrast(1.1);
+}
+
+/* Hover effect para el teléfono hero */
+.hero__phone-container:hover .hero__phone {
+box-shadow: 
+0 35px 90px rgba(0, 0, 0, 0.8),
+inset 0 0 0 1px rgba(255, 17, 85, 0.4),
+var(--neon-crimson-ultra),
+var(--shadow-crimson-plasma),
+0 0 120px rgba(255, 8, 68, 0.6),
+0 0 180px rgba(255, 23, 68, 0.3);
+}
+
+.hero__phone-container:hover .hero__phone::before {
+opacity: 0.8;
+animation-duration: 2s;
+}
+
+.hero__phone-container:hover .hero__phone::after {
+opacity: 0.6;
+animation-duration: 3s;
 }
 
 /* ===== SECCIÓN CARACTERÍSTICAS MODERNIZADA ===== */
@@ -1158,7 +1232,7 @@ color: var(--text-primary);
 transform: translateX(5px);
 }
 
-/* ===== TELÉFONOS DE CARACTERÍSTICAS - MARCOS LIMPIOS ===== */
+/* ===== TELÉFONOS DE CARACTERÍSTICAS CON MARCOS ROJIZOS ÚNICOS ===== */
 .feature__phone {
 position: relative;
 width: 300px;
@@ -1172,64 +1246,230 @@ transition: transform var(--transition);
 transform: perspective(1000px) rotateY(1deg) rotateX(0deg) scale(1.02);
 }
 
-/* ===== MARCO SIMPLIFICADO PARA FEATURES ===== */
+/* ===== MARCOS ROJIZOS ÚNICOS PARA CADA FEATURE ===== */
 .phone {
 width: 100%;
 height: 100%;
-background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
+background: transparent;
 border-radius: 40px;
-padding: 3px;
-box-shadow: 
-0 20px 50px rgba(0, 0, 0, 0.4),
-0 0 0 1px rgba(255, 255, 255, 0.03);
+padding: 6px;
 position: relative;
-overflow: hidden;
-border: 2px solid #2c2c2e;
+overflow: visible;
+border: 2px solid transparent;
+transition: all var(--transition);
 }
 
-.phone::before {
-content: '';
-position: absolute;
-top: -2px;
-left: -2px;
-right: -2px;
-bottom: -2px;
-background: linear-gradient(145deg, 
-#3a3a3c 0%, 
-#2c2c2e 50%, 
-#1c1c1e 100%
-);
-border-radius: 42px;
-z-index: -1;
+/* Feature 1: Horario - Marco Rojizo Eléctrico */
+.feature:nth-child(1) .phone {
+background: 
+linear-gradient(var(--primary-bg), var(--primary-bg)) padding-box,
+linear-gradient(45deg, 
+var(--starflex-crimson-electric) 0%,
+var(--starflex-crimson-ultra) 50%,
+var(--starflex-crimson-electric) 100%
+) border-box;
+box-shadow: 
+0 25px 60px rgba(0, 0, 0, 0.6),
+var(--neon-crimson-electric),
+0 0 80px rgba(255, 17, 85, 0.4);
 }
 
-.phone::after {
+.feature:nth-child(1) .phone::before {
 content: '';
 position: absolute;
-top: -6px;
-left: -6px;
-right: -6px;
-bottom: -6px;
+top: -10px;
+left: -10px;
+right: -10px;
+bottom: -10px;
 background: linear-gradient(45deg, 
-var(--starflex-blue), 
-var(--starflex-purple), 
-var(--starflex-cyan),
-var(--starflex-blue)
+var(--starflex-crimson-electric), 
+transparent, 
+var(--starflex-crimson-ultra)
 );
-border-radius: 46px;
-z-index: -2;
-opacity: 0.15;
+border-radius: 50px;
+z-index: -1;
+opacity: 0.4;
+animation: electric-pulse 3s ease-in-out infinite;
+filter: blur(8px);
+}
+
+/* Feature 2: Estaciones - Marco Rojizo Plasma */
+.feature:nth-child(2) .phone {
+background: 
+linear-gradient(var(--primary-bg), var(--primary-bg)) padding-box,
+linear-gradient(135deg, 
+var(--starflex-crimson-ultra) 0%,
+var(--starflex-crimson-neon) 25%,
+var(--starflex-crimson-electric) 50%,
+var(--starflex-crimson-neon) 75%,
+var(--starflex-crimson-ultra) 100%
+) border-box;
+box-shadow: 
+0 25px 60px rgba(0, 0, 0, 0.6),
+var(--neon-crimson-ultra),
+var(--shadow-crimson-plasma);
+}
+
+.feature:nth-child(2) .phone::before {
+content: '';
+position: absolute;
+top: -12px;
+left: -12px;
+right: -12px;
+bottom: -12px;
+background: radial-gradient(ellipse, 
+var(--starflex-crimson-ultra) 0%,
+var(--starflex-crimson-neon) 40%,
+transparent 70%
+);
+border-radius: 52px;
+z-index: -1;
+opacity: 0.5;
+animation: plasma-flow 4s ease-in-out infinite;
+filter: blur(10px);
+}
+
+/* Feature 3: Calendario - Marco Rojizo Neón */
+.feature:nth-child(3) .phone {
+background: 
+linear-gradient(var(--primary-bg), var(--primary-bg)) padding-box,
+linear-gradient(90deg, 
+var(--starflex-crimson-neon) 0%,
+var(--starflex-crimson-bright) 50%,
+var(--starflex-crimson-neon) 100%
+) border-box;
+box-shadow: 
+0 25px 60px rgba(0, 0, 0, 0.6),
+var(--neon-crimson-pulse),
+0 0 60px rgba(255, 45, 107, 0.5);
+}
+
+.feature:nth-child(3) .phone::before {
+content: '';
+position: absolute;
+top: -8px;
+left: -8px;
+right: -8px;
+bottom: -8px;
+background: linear-gradient(90deg, 
+var(--starflex-crimson-neon), 
+transparent, 
+var(--starflex-crimson-bright), 
+transparent, 
+var(--starflex-crimson-neon)
+);
+border-radius: 48px;
+z-index: -1;
+opacity: 0.6;
+animation: neon-wave 2.5s ease-in-out infinite;
 filter: blur(6px);
 }
 
-/* ===== PANTALLA LIMPIA ===== */
+/* Feature 4: Registro - Marco Rojizo Dinámico */
+.feature:nth-child(4) .phone {
+background: 
+linear-gradient(var(--primary-bg), var(--primary-bg)) padding-box,
+linear-gradient(225deg, 
+var(--starflex-crimson) 0%,
+var(--starflex-crimson-electric) 25%,
+var(--starflex-crimson-ultra) 50%,
+var(--starflex-crimson-electric) 75%,
+var(--starflex-crimson) 100%
+) border-box;
+box-shadow: 
+0 25px 60px rgba(0, 0, 0, 0.6),
+var(--shadow-crimson-electric),
+0 0 70px rgba(184, 0, 46, 0.6);
+}
+
+.feature:nth-child(4) .phone::before {
+content: '';
+position: absolute;
+top: -14px;
+left: -14px;
+right: -14px;
+bottom: -14px;
+background: conic-gradient(
+var(--starflex-crimson-electric) 0deg,
+transparent 90deg,
+var(--starflex-crimson-ultra) 180deg,
+transparent 270deg,
+var(--starflex-crimson-electric) 360deg
+);
+border-radius: 54px;
+z-index: -1;
+opacity: 0.4;
+animation: dynamic-spin 5s linear infinite;
+filter: blur(12px);
+}
+
+/* Feature 5: Notificaciones - Marco Rojizo Pulsante */
+.feature:nth-child(5) .phone {
+background: 
+linear-gradient(var(--primary-bg), var(--primary-bg)) padding-box,
+linear-gradient(180deg, 
+var(--starflex-crimson-bright) 0%,
+var(--starflex-crimson-neon) 25%,
+var(--starflex-crimson-ultra) 50%,
+var(--starflex-crimson-neon) 75%,
+var(--starflex-crimson-bright) 100%
+) border-box;
+box-shadow: 
+0 25px 60px rgba(0, 0, 0, 0.6),
+var(--neon-crimson-strong),
+0 0 90px rgba(255, 69, 105, 0.5);
+}
+
+.feature:nth-child(5) .phone::before {
+content: '';
+position: absolute;
+top: -16px;
+left: -16px;
+right: -16px;
+bottom: -16px;
+background: radial-gradient(circle, 
+var(--starflex-crimson-bright) 0%,
+var(--starflex-crimson-neon) 30%,
+transparent 60%
+);
+border-radius: 56px;
+z-index: -1;
+opacity: 0.7;
+animation: notification-pulse 1.5s ease-in-out infinite;
+filter: blur(14px);
+}
+
+/* ===== PANTALLAS LIMPIAS CON EFECTOS ROJIZOS SUTILES ===== */
 .phone__screen {
 width: 100%;
 height: 100%;
 background: #000000;
-border-radius: 37px;
+border-radius: 34px;
 overflow: hidden;
 position: relative;
+border: 1px solid rgba(255, 17, 85, 0.15);
+box-shadow: 
+inset 0 0 30px rgba(0, 0, 0, 0.8),
+inset 0 0 0 1px rgba(255, 17, 85, 0.08);
+}
+
+/* Resplandor interior sutil para todas las pantallas */
+.phone__screen::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: linear-gradient(135deg, 
+rgba(255, 17, 85, 0.03) 0%,
+transparent 25%,
+transparent 75%,
+rgba(255, 8, 68, 0.02) 100%
+);
+border-radius: 34px;
+z-index: 1;
+pointer-events: none;
 }
 
 /* ===== CONTENIDO SIN ELEMENTOS QUE INTERFIEREN ===== */
@@ -1238,24 +1478,26 @@ width: 100%;
 height: 100%;
 overflow: hidden;
 background: #000000;
-border-radius: 37px;
+border-radius: 34px;
 }
 
 /* ===== IMÁGENES OPTIMIZADAS PARA TODAS LAS PANTALLAS ===== */
 .phone__app-image {
 width: 100%;
 height: 100%;
-border-radius: 37px;
+border-radius: 34px;
 position: absolute;
 top: 0;
 left: 0;
-z-index: 1;
+z-index: 2;
 transition: all var(--transition);
 object-fit: cover;
 object-position: center;
 background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
+/* Mejora sutil de brillo para complementar el marco rojizo */
+filter: brightness(1.02) contrast(1.05) saturate(1.1);
 }
 
 /* ===== IMÁGENES ESPECÍFICAS OPTIMIZADAS ===== */
@@ -1279,609 +1521,148 @@ background: url('../assets/phones/Registro.jpg') center/cover no-repeat;
 background: url('../assets/phones/Notificaciones.jpg') center/cover no-repeat;
 }
 
-/* ===== VERSIÓN ALTERNATIVA SIN MARCO ===== */
-.phone--frameless {
-background: transparent;
-border: none;
-padding: 0;
+/* ===== EFECTOS HOVER MEJORADOS PARA CADA MARCO ===== */
+.feature:nth-child(1) .phone:hover {
 box-shadow: 
-0 20px 50px rgba(0, 0, 0, 0.3),
-0 0 0 2px rgba(255, 255, 255, 0.1);
-border-radius: 25px;
+0 30px 70px rgba(0, 0, 0, 0.7),
+var(--neon-crimson-ultra),
+0 0 100px rgba(255, 17, 85, 0.6);
 }
 
-.phone--frameless::before,
-.phone--frameless::after {
-display: none;
-}
-
-.phone--frameless .phone__screen {
-border-radius: 25px;
-border: 2px solid rgba(255, 255, 255, 0.1);
+.feature:nth-child(2) .phone:hover {
 box-shadow: 
-0 15px 40px rgba(0, 0, 0, 0.4),
-inset 0 1px 0 rgba(255, 255, 255, 0.05);
+0 30px 70px rgba(0, 0, 0, 0.7),
+var(--shadow-crimson-plasma),
+0 0 120px rgba(255, 8, 68, 0.5);
 }
 
-.phone--frameless .phone__content {
-border-radius: 23px;
+.feature:nth-child(3) .phone:hover {
+box-shadow: 
+0 30px 70px rgba(0, 0, 0, 0.7),
+var(--neon-crimson-pulse),
+0 0 80px rgba(255, 45, 107, 0.7);
 }
 
-.phone--frameless .phone__app-image {
-border-radius: 23px;
+.feature:nth-child(4) .phone:hover {
+box-shadow: 
+0 30px 70px rgba(0, 0, 0, 0.7),
+var(--shadow-crimson-electric),
+0 0 90px rgba(184, 0, 46, 0.8);
 }
 
-/* ===== RESPONSIVE OPTIMIZADO ===== */
-@media (max-width: 1024px) {
-.hero__container {
-grid-template-columns: 1fr;
-gap: var(--space-3xl);
-text-align: center;
+.feature:nth-child(5) .phone:hover {
+box-shadow: 
+0 30px 70px rgba(0, 0, 0, 0.7),
+var(--neon-crimson-strong),
+0 0 110px rgba(255, 69, 105, 0.6);
 }
 
-.hero__phone-container {
-transform: none;
-}
-
-.hero__phone {
-width: 300px;
-height: 600px;
-}
-
-.hero__download {
-justify-content: center;
-}
-
-.btn--cta {
-min-width: 200px;
-padding: var(--space-md) var(--space-xl);
-font-size: 0.95rem;
-}
-
-.feature {
-grid-template-columns: 1fr;
-gap: var(--space-xl);
-text-align: center;
-}
-
-.feature:nth-child(even) {
-direction: ltr;
-}
-
-.feature__phone {
-width: 280px;
-height: 560px;
-}
-
-.contact__grid {
-grid-template-columns: repeat(2, 1fr);
-gap: var(--space-xl);
-}
-}
-
-@media (max-width: 768px) {
-.header {
-padding: var(--space-md) 0;
-}
-
-.nav {
-padding: 0 var(--space-lg);
-}
-
-.nav__logo {
-width: 50px;
-height: 50px;
-}
-
-.nav__menu {
-position: fixed;
-top: 0;
-left: -100%;
-width: 100%;
-height: 100vh;
-background: rgba(10, 13, 20, 0.98);
-backdrop-filter: blur(30px);
-flex-direction: column;
-justify-content: center;
-align-items: center;
-transition: left 0.4s ease;
-transform: none;
-pointer-events: auto;
-z-index: 999;
-}
-
-.nav__menu.active {
-left: 0;
-}
-
-.nav__list {
-flex-direction: column;
-gap: var(--space-3xl);
-background: transparent;
-border: none;
-padding: 0;
-box-shadow: none;
-animation: none;
-}
-
-.nav__link {
-font-size: 1.3rem;
-padding: var(--space-lg) var(--space-2xl);
-text-align: center;
-border-radius: 15px;
-background: rgba(21, 25, 34, 0.6);
-border: 1px solid rgba(255, 255, 255, 0.1);
-min-width: 220px;
-backdrop-filter: blur(15px);
-}
-
-.nav__toggle {
-display: flex;
-}
-
-.container {
-padding: 0 var(--space-lg);
-}
-
-.hero {
-min-height: 90vh;
-}
-
-.hero__container {
-gap: var(--space-2xl);
-}
-
-.hero__title {
-font-size: clamp(2.2rem, 7vw, 4rem);
-margin-bottom: var(--space-lg);
-}
-
-.hero__company-description {
-font-size: 1rem;
-padding: var(--space-lg);
-margin-bottom: var(--space-lg);
-}
-
-.hero__company-description-text {
-margin-left: var(--space-lg);
-}
-
-.hero__subtitle {
-font-size: 1.1rem;
-margin-bottom: var(--space-xl);
-}
-
-.hero__download {
-flex-direction: column;
-gap: var(--space-lg);
-}
-
-.hero__phone {
-width: 260px;
-height: 520px;
-}
-
-.btn--cta {
-min-width: 180px;
-padding: var(--space-md) var(--space-lg);
-font-size: 0.9rem;
-border-radius: 14px;
-}
-
-.download-btn__image {
-height: 50px;
-}
-
-.download-btn--app-store .download-btn__image {
-height: 50px;
-min-width: 150px;
-}
-
-.features__title {
-font-size: clamp(2rem, 5vw, 3.5rem);
-}
-
-.feature__title {
-font-size: 2.2rem;
-}
-
-.feature__phone {
-width: 240px;
-height: 480px;
-transform: none;
-}
-
-.feature__phone:hover {
-transform: scale(1.02);
-}
-
-.contact {
-padding: var(--space-5xl) 0;
-}
-
-.contact__title {
-font-size: clamp(2.2rem, 6vw, 3.5rem);
-margin-bottom: var(--space-lg);
-}
-
-.contact__subtitle {
-font-size: 1.1rem;
-margin-bottom: var(--space-4xl);
-}
-
-.contact__grid {
-grid-template-columns: 1fr;
-gap: var(--space-lg);
-padding: 0 var(--space-lg);
-}
-
-.contact__channel {
-padding: var(--space-xl);
-}
-
-.contact__channel-icon {
-width: 70px;
-height: 70px;
-}
-
-.contact__channel-icon svg {
-width: 32px;
-height: 32px;
-}
-
-.contact__channel-title {
-font-size: 1.2rem;
-}
-
-.contact__channel-description {
-font-size: 0.95rem;
-}
-
-.contact__footer-content {
-flex-direction: column;
-gap: var(--space-xl);
-text-align: center;
-}
-
-.btn--footer {
-min-width: 160px;
-padding: var(--space-sm) var(--space-lg);
-font-size: 0.9rem;
-}
-}
-
-@media (max-width: 480px) {
-.nav__logo {
-width: 45px;
-height: 45px;
-}
-
-.nav__list {
-gap: var(--space-2xl);
-}
-
-.nav__link {
-font-size: 1.1rem;
-min-width: 200px;
-padding: var(--space-md) var(--space-xl);
-}
-
-.hero__title {
-font-size: clamp(2rem, 6vw, 3.2rem);
-line-height: 0.95;
-}
-
-.hero__company-description {
-font-size: 0.95rem;
-padding: var(--space-md);
-}
-
-.hero__company-description-text {
-margin-left: var(--space-md);
-}
-
-.hero__subtitle {
-font-size: 1rem;
-}
-
-.btn--cta {
-min-width: 160px;
-padding: var(--space-sm) var(--space-md);
-font-size: 0.85rem;
-border-radius: 12px;
-}
-
-.hero__phone {
-width: 220px;
-height: 440px;
-}
-
-.download-btn__image {
-height: 45px;
-}
-
-.download-btn--app-store .download-btn__image {
-height: 45px;
-min-width: 135px;
-}
-
-.features__title {
-font-size: 2.5rem;
-}
-
-.feature__title {
-font-size: 2rem;
-}
-
-.feature__phone {
-width: 200px;
-height: 400px;
-margin: 0 auto;
-}
-
-.phone {
-border-radius: 30px;
-padding: 2px;
-}
-
-.phone__screen {
-border-radius: 28px;
-}
-
-.phone__content {
-border-radius: 28px;
-}
-
-.phone__app-image {
-border-radius: 28px;
-}
-
-.contact__title {
-font-size: clamp(1.8rem, 5vw, 2.8rem);
-}
-
-.contact__subtitle {
-font-size: 1rem;
-}
-
-.contact__channel {
-padding: var(--space-lg);
-}
-
-.contact__channel-icon {
-width: 60px;
-height: 60px;
-}
-
-.contact__channel-icon svg {
-width: 28px;
-height: 28px;
-}
-
-.contact__channel-title {
-font-size: 1.1rem;
-}
-
-.contact__channel-description {
-font-size: 0.9rem;
-}
-
-.contact__channel-btn {
-padding: var(--space-sm) var(--space-md);
-font-size: 0.85rem;
-}
-
-.btn--footer {
-min-width: 140px;
-padding: var(--space-xs) var(--space-md);
-font-size: 0.85rem;
-}
-
-/* Ocultar algunos elementos decorativos en pantallas muy pequeñas */
-.hero .floating-orb-3 {
-display: none;
-}
-
-.contact__orb--3 {
-display: none;
-}
-}
-
-/* ===== ANIMACIONES OPTIMIZADAS ===== */
-@keyframes phone-glow {
+/* ===== ANIMACIONES ROJIZAS ÚNICAS ===== */
+@keyframes crimson-ring-pulse {
 0%, 100% {
-opacity: 0.2;
-filter: hue-rotate(0deg) blur(8px);
-transform: scale(1);
+opacity: 0.6;
+transform: scale(1) rotate(0deg);
 }
 50% {
-opacity: 0.3;
-filter: hue-rotate(180deg) blur(10px);
-transform: scale(1.01);
+opacity: 0.9;
+transform: scale(1.05) rotate(180deg);
 }
 }
 
-@keyframes slideInUp {
-from {
-opacity: 0;
-transform: translateY(50px);
-}
-to {
-opacity: 1;
-transform: translateY(0);
-}
-}
-
-/* ===== ANIMACIONES EXISTENTES MEJORADAS ===== */
-@keyframes logo-gentle-float {
+@keyframes crimson-aura-flow {
 0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-6px);
-}
-}
-
-@keyframes nav-gentle-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-4px);
-}
-}
-
-@keyframes cta-gentle-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-5px);
-}
-}
-
-@keyframes download-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-3px);
-}
-}
-
-@keyframes aurora-flow {
-0%, 100% { 
-transform: translateY(0px) rotate(0deg); 
 opacity: 0.4;
-}
-50% { 
-transform: translateY(-30px) rotate(180deg); 
-opacity: 0.6;
-}
-}
-
-@keyframes grid-drift {
-0% { 
-transform: translateX(0) translateY(0); 
-}
-100% { 
-transform: translateX(60px) translateY(80px); 
-}
-}
-
-@keyframes hero-glow {
-0%, 100% {
-opacity: 0.6;
 transform: scale(1);
-}
-50% {
-opacity: 0.8;
-transform: scale(1.05);
-}
-}
-
-@keyframes floating-orb-1 {
-0%, 100% {
-transform: translate(0, 0) scale(1);
-opacity: 0.6;
+filter: blur(20px) hue-rotate(0deg);
 }
 33% {
-transform: translate(30px, -20px) scale(1.1);
-opacity: 0.8;
+opacity: 0.7;
+transform: scale(1.1);
+filter: blur(25px) hue-rotate(15deg);
 }
 66% {
-transform: translate(-20px, 30px) scale(0.9);
-opacity: 0.7;
+opacity: 0.5;
+transform: scale(0.95);
+filter: blur(15px) hue-rotate(-10deg);
 }
 }
 
-@keyframes floating-orb-2 {
+@keyframes electric-pulse {
 0%, 100% {
-transform: translate(0, 0) scale(1);
+opacity: 0.4;
+transform: scale(1);
+}
+50% {
+opacity: 0.8;
+transform: scale(1.1);
+}
+}
+
+@keyframes plasma-flow {
+0%, 100% {
+opacity: 0.5;
+transform: scale(1) rotate(0deg);
+filter: blur(10px) hue-rotate(0deg);
+}
+25% {
+opacity: 0.8;
+transform: scale(1.15) rotate(90deg);
+filter: blur(15px) hue-rotate(20deg);
+}
+50% {
+opacity: 0.6;
+transform: scale(0.9) rotate(180deg);
+filter: blur(8px) hue-rotate(40deg);
+}
+75% {
+opacity: 0.9;
+transform: scale(1.05) rotate(270deg);
+filter: blur(12px) hue-rotate(60deg);
+}
+}
+
+@keyframes neon-wave {
+0%, 100% {
+opacity: 0.6;
+transform: translateX(0) scaleX(1);
+}
+50% {
+opacity: 1;
+transform: translateX(5px) scaleX(1.05);
+}
+}
+
+@keyframes dynamic-spin {
+0% {
+transform: rotate(0deg) scale(1);
+opacity: 0.4;
+}
+25% {
+transform: rotate(90deg) scale(1.1);
+opacity: 0.7;
+}
+50% {
+transform: rotate(180deg) scale(0.95);
 opacity: 0.5;
 }
-33% {
-transform: translate(-25px, 20px) scale(1.2);
-opacity: 0.7;
+75% {
+transform: rotate(270deg) scale(1.05);
+opacity: 0.8;
 }
-66% {
-transform: translate(20px, -25px) scale(0.8);
-opacity: 0.6;
-}
-}
-
-@keyframes floating-orb-3 {
-0%, 100% {
-transform: translate(0, 0) scale(1);
+100% {
+transform: rotate(360deg) scale(1);
 opacity: 0.4;
 }
-50% {
-transform: translate(15px, -15px) scale(1.3);
-opacity: 0.6;
-}
 }
 
-@keyframes fadeInUp {
-from {
-opacity: 0;
-transform: translateY(40px);
-}
-to {
-opacity: 1;
-transform: translateY(0);
-}
-}
-
-@keyframes fadeInRight {
-from {
-opacity: 0;
-transform: translateX(40px);
-}
-to {
-opacity: 1;
-transform: translateX(0);
-}
-}
-
-@keyframes pulse-gentle {
+@keyframes notification-pulse {
 0%, 100% {
-transform: scale(1);
-opacity: 1;
-}
-50% {
-transform: scale(1.2);
-opacity: 0.8;
-}
-}
-
-@keyframes glow-line {
-0%, 100% {
-opacity: 0.8;
-transform: scaleX(1);
-}
-50% {
-opacity: 1;
-transform: scaleX(1.05);
-}
-}
-
-@keyframes crimson-pulse {
-0%, 100% {
-opacity: 0.3;
-transform: scale(1);
-}
-50% {
 opacity: 0.7;
-transform: scale(1.03);
-}
-}
-
-@keyframes phone-float {
-0%, 100% {
-transform: perspective(1200px) rotateY(-8deg) rotateX(2deg) translateY(0px);
+transform: scale(1);
 }
 50% {
-transform: perspective(1200px) rotateY(-8deg) rotateX(2deg) translateY(-10px);
+opacity: 1;
+transform: scale(1.2);
 }
 }
 
@@ -3339,8 +3120,7 @@ transform: translate(0, 0) scale(1);
 opacity: 0.4;
 }
 33% {
-transform: translate(20px, -30px) scale(1.2
-);
+transform: translate(20px, -30px) scale(1.2);
 opacity: 0.7;
 }
 66% {
@@ -3450,6 +3230,625 @@ transform: translateY(0);
 }
 }
 
+/* ===== RESPONSIVE OPTIMIZADO ===== */
+@media (max-width: 1024px) {
+.hero__container {
+grid-template-columns: 1fr;
+gap: var(--space-3xl);
+text-align: center;
+}
+
+.hero__phone-container {
+transform: none;
+}
+
+.hero__phone {
+width: 300px;
+height: 600px;
+}
+
+.hero__download {
+justify-content: center;
+}
+
+.btn--cta {
+min-width: 200px;
+padding: var(--space-md) var(--space-xl);
+font-size: 0.95rem;
+}
+
+.feature {
+grid-template-columns: 1fr;
+gap: var(--space-xl);
+text-align: center;
+}
+
+.feature:nth-child(even) {
+direction: ltr;
+}
+
+.feature__phone {
+width: 280px;
+height: 560px;
+}
+
+.contact__grid {
+grid-template-columns: repeat(2, 1fr);
+gap: var(--space-xl);
+}
+}
+
+@media (max-width: 768px) {
+.header {
+padding: var(--space-md) 0;
+}
+
+.nav {
+padding: 0 var(--space-lg);
+}
+
+.nav__logo {
+width: 50px;
+height: 50px;
+}
+
+.nav__menu {
+position: fixed;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100vh;
+background: rgba(10, 13, 20, 0.98);
+backdrop-filter: blur(30px);
+flex-direction: column;
+justify-content: center;
+align-items: center;
+transition: left 0.4s ease;
+transform: none;
+pointer-events: auto;
+z-index: 999;
+}
+
+.nav__menu.active {
+left: 0;
+}
+
+.nav__list {
+flex-direction: column;
+gap: var(--space-3xl);
+background: transparent;
+border: none;
+padding: 0;
+box-shadow: none;
+animation: none;
+}
+
+.nav__link {
+font-size: 1.3rem;
+padding: var(--space-lg) var(--space-2xl);
+text-align: center;
+border-radius: 15px;
+background: rgba(21, 25, 34, 0.6);
+border: 1px solid rgba(255, 255, 255, 0.1);
+min-width: 220px;
+backdrop-filter: blur(15px);
+}
+
+.nav__toggle {
+display: flex;
+}
+
+.container {
+padding: 0 var(--space-lg);
+}
+
+.hero {
+min-height: 90vh;
+}
+
+.hero__container {
+gap: var(--space-2xl);
+}
+
+.hero__title {
+font-size: clamp(2.2rem, 7vw, 4rem);
+margin-bottom: var(--space-lg);
+}
+
+.hero__company-description {
+font-size: 1rem;
+padding: var(--space-lg);
+margin-bottom: var(--space-lg);
+}
+
+.hero__company-description-text {
+margin-left: var(--space-lg);
+}
+
+.hero__subtitle {
+font-size: 1.1rem;
+margin-bottom: var(--space-xl);
+}
+
+.hero__download {
+flex-direction: column;
+gap: var(--space-lg);
+}
+
+.hero__phone {
+width: 260px;
+height: 520px;
+border-radius: 35px;
+padding: 6px;
+}
+
+.hero__phone-screen {
+border-radius: 29px;
+}
+
+.hero__phone-content {
+border-radius: 29px;
+}
+
+.hero__phone-app-image {
+border-radius: 29px;
+}
+
+.btn--cta {
+min-width: 180px;
+padding: var(--space-md) var(--space-lg);
+font-size: 0.9rem;
+border-radius: 14px;
+}
+
+.download-btn__image {
+height: 50px;
+}
+
+.download-btn--app-store .download-btn__image {
+height: 50px;
+min-width: 150px;
+}
+
+.features__title {
+font-size: clamp(2rem, 5vw, 3.5rem);
+}
+
+.feature__title {
+font-size: 2.2rem;
+}
+
+.feature__phone {
+width: 240px;
+height: 480px;
+transform: none;
+}
+
+.feature__phone:hover {
+transform: scale(1.02);
+}
+
+.phone {
+border-radius: 30px;
+padding: 4px;
+}
+
+.phone__screen {
+border-radius: 26px;
+}
+
+.phone__content {
+border-radius: 26px;
+}
+
+.phone__app-image {
+border-radius: 26px;
+}
+
+.contact {
+padding: var(--space-5xl) 0;
+}
+
+.contact__title {
+font-size: clamp(2.2rem, 6vw, 3.5rem);
+margin-bottom: var(--space-lg);
+}
+
+.contact__subtitle {
+font-size: 1.1rem;
+margin-bottom: var(--space-4xl);
+}
+
+.contact__grid {
+grid-template-columns: 1fr;
+gap: var(--space-lg);
+padding: 0 var(--space-lg);
+}
+
+.contact__channel {
+padding: var(--space-xl);
+}
+
+.contact__channel-icon {
+width: 70px;
+height: 70px;
+}
+
+.contact__channel-icon svg {
+width: 32px;
+height: 32px;
+}
+
+.contact__channel-title {
+font-size: 1.2rem;
+}
+
+.contact__channel-description {
+font-size: 0.95rem;
+}
+
+.contact__footer-content {
+flex-direction: column;
+gap: var(--space-xl);
+text-align: center;
+}
+
+.btn--footer {
+min-width: 160px;
+padding: var(--space-sm) var(--space-lg);
+font-size: 0.9rem;
+}
+}
+
+@media (max-width: 480px) {
+.nav__logo {
+width: 45px;
+height: 45px;
+}
+
+.nav__list {
+gap: var(--space-2xl);
+}
+
+.nav__link {
+font-size: 1.1rem;
+min-width: 200px;
+padding: var(--space-md) var(--space-xl);
+}
+
+.hero__title {
+font-size: clamp(2rem, 6vw, 3.2rem);
+line-height: 0.95;
+}
+
+.hero__company-description {
+font-size: 0.95rem;
+padding: var(--space-md);
+}
+
+.hero__company-description-text {
+margin-left: var(--space-md);
+}
+
+.hero__subtitle {
+font-size: 1rem;
+}
+
+.btn--cta {
+min-width: 160px;
+padding: var(--space-sm) var(--space-md);
+font-size: 0.85rem;
+border-radius: 12px;
+}
+
+.hero__phone {
+width: 220px;
+height: 440px;
+border-radius: 30px;
+padding: 4px;
+}
+
+.hero__phone-screen {
+border-radius: 26px;
+}
+
+.hero__phone-content {
+border-radius: 26px;
+}
+
+.hero__phone-app-image {
+border-radius: 26px;
+}
+
+.download-btn__image {
+height: 45px;
+}
+
+.download-btn--app-store .download-btn__image {
+height: 45px;
+min-width: 135px;
+}
+
+.features__title {
+font-size: 2.5rem;
+}
+
+.feature__title {
+font-size: 2rem;
+}
+
+.feature__phone {
+width: 200px;
+height: 400px;
+margin: 0 auto;
+}
+
+.phone {
+border-radius: 25px;
+padding: 3px;
+}
+
+.phone__screen {
+border-radius: 22px;
+}
+
+.phone__content {
+border-radius: 22px;
+}
+
+.phone__app-image {
+border-radius: 22px;
+}
+
+.contact__title {
+font-size: clamp(1.8rem, 5vw, 2.8rem);
+}
+
+.contact__subtitle {
+font-size: 1rem;
+}
+
+.contact__channel {
+padding: var(--space-lg);
+}
+
+.contact__channel-icon {
+width: 60px;
+height: 60px;
+}
+
+.contact__channel-icon svg {
+width: 28px;
+height: 28px;
+}
+
+.contact__channel-title {
+font-size: 1.1rem;
+}
+
+.contact__channel-description {
+font-size: 0.9rem;
+}
+
+.contact__channel-btn {
+padding: var(--space-sm) var(--space-md);
+font-size: 0.85rem;
+}
+
+.btn--footer {
+min-width: 140px;
+padding: var(--space-xs) var(--space-md);
+font-size: 0.85rem;
+}
+
+/* Ocultar algunos elementos decorativos en pantallas muy pequeñas */
+.hero .floating-orb-3 {
+display: none;
+}
+
+.contact__orb--3 {
+display: none;
+}
+}
+
+/* ===== ANIMACIONES OPTIMIZADAS ===== */
+@keyframes phone-glow {
+0%, 100% {
+opacity: 0.2;
+filter: hue-rotate(0deg) blur(8px);
+transform: scale(1);
+}
+50% {
+opacity: 0.3;
+filter: hue-rotate(180deg) blur(10px);
+transform: scale(1.01);
+}
+}
+
+@keyframes slideInUp {
+from {
+opacity: 0;
+transform: translateY(50px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+/* ===== ANIMACIONES EXISTENTES MEJORADAS ===== */
+@keyframes logo-gentle-float {
+0%, 100% {
+transform: translateY(0px);
+}
+50% {
+transform: translateY(-6px);
+}
+}
+
+@keyframes nav-gentle-float {
+0%, 100% {
+transform: translateY(0px);
+}
+50% {
+transform: translateY(-4px);
+}
+}
+
+@keyframes cta-gentle-float {
+0%, 100% {
+transform: translateY(0px);
+}
+50% {
+transform: translateY(-5px);
+}
+}
+
+@keyframes download-float {
+0%, 100% {
+transform: translateY(0px);
+}
+50% {
+transform: translateY(-3px);
+}
+}
+
+@keyframes aurora-flow {
+0%, 100% { 
+transform: translateY(0px) rotate(0deg); 
+opacity: 0.4;
+}
+50% { 
+transform: translateY(-30px) rotate(180deg); 
+opacity: 0.6;
+}
+}
+
+@keyframes grid-drift {
+0% { 
+transform: translateX(0) translateY(0); 
+}
+100% { 
+transform: translateX(60px) translateY(80px); 
+}
+}
+
+@keyframes hero-glow {
+0%, 100% {
+opacity: 0.6;
+transform: scale(1);
+}
+50% {
+opacity: 0.8;
+transform: scale(1.05);
+}
+}
+
+@keyframes floating-orb-1 {
+0%, 100% {
+transform: translate(0, 0) scale(1);
+opacity: 0.6;
+}
+33% {
+transform: translate(30px, -20px) scale(1.1);
+opacity: 0.8;
+}
+66% {
+transform: translate(-20px, 30px) scale(0.9);
+opacity: 0.7;
+}
+}
+
+@keyframes floating-orb-2 {
+0%, 100% {
+transform: translate(0, 0) scale(1);
+opacity: 0.5;
+}
+33% {
+transform: translate(-25px, 20px) scale(1.2);
+opacity: 0.7;
+}
+66% {
+transform: translate(20px, -25px) scale(0.8);
+opacity: 0.6;
+}
+}
+
+@keyframes floating-orb-3 {
+0%, 100% {
+transform: translate(0, 0) scale(1);
+opacity: 0.4;
+}
+50% {
+transform: translate(15px, -15px) scale(1.3);
+opacity: 0.6;
+}
+}
+
+@keyframes fadeInUp {
+from {
+opacity: 0;
+transform: translateY(40px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+@keyframes fadeInRight {
+from {
+opacity: 0;
+transform: translateX(40px);
+}
+to {
+opacity: 1;
+transform: translateX(0);
+}
+}
+
+@keyframes pulse-gentle {
+0%, 100% {
+transform: scale(1);
+opacity: 1;
+}
+50% {
+transform: scale(1.2);
+opacity: 0.8;
+}
+}
+
+@keyframes glow-line {
+0%, 100% {
+opacity: 0.8;
+transform: scaleX(1);
+}
+50% {
+opacity: 1;
+transform: scaleX(1.05);
+}
+}
+
+@keyframes crimson-pulse {
+0%, 100% {
+opacity: 0.3;
+transform: scale(1);
+}
+50% {
+opacity: 0.7;
+transform: scale(1.03);
+}
+}
+
+@keyframes phone-float {
+0%, 100% {
+transform: perspective(1200px) rotateY(-8deg) rotateX(2deg) translateY(0px);
+}
+50% {
+transform: perspective(1200px) rotateY(-8deg) rotateX(2deg) translateY(-10px);
+}
+}
+
 /* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
 .hero__phone,
 .hero__phone-container,
@@ -3489,7 +3888,14 @@ transition-duration: 0.01ms !important;
 .floating-orb-2,
 .floating-orb-3,
 .contact__channel,
-.contact__badge {
+.contact__badge,
+.crimson-ring-pulse,
+.crimson-aura-flow,
+.electric-pulse,
+.plasma-flow,
+.neon-wave,
+.dynamic-spin,
+.notification-pulse {
 animation: none !important;
 }
 }
@@ -3610,18 +4016,22 @@ color: var(--starflex-orange);
 /* ===== PRINT STYLES ===== */
 @media print {
 .hero__phone::after,
+.hero__phone::before,
+.phone::before,
 .floating-orb-2,
 .floating-orb-3,
 .bg-canvas {
 display: none;
 }
 
-.hero__phone {
+.hero__phone,
+.phone {
 box-shadow: none;
 border: 2px solid #000;
 }
 
-.hero__phone-content {
+.hero__phone-content,
+.phone__content {
 background: #fff;
 color: #000;
 }
@@ -3629,86 +4039,26 @@ color: #000;
 
 /* ===== MEJORAS PARA PANTALLAS DE ALTA DENSIDAD ===== */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-.hero__phone {
+.hero__phone,
+.phone {
 border-width: 1px;
 }
 }
 
 /* ===== EFECTOS DE TRANSICIÓN SUAVES PARA CAMBIOS DE ESTADO ===== */
-.hero__phone-content * {
+.hero__phone-content *,
+.phone__content * {
 transition: all var(--transition-fast);
 }
 
-.hero__phone-screen {
+.hero__phone-screen,
+.phone__screen {
 contain: layout style paint;
 }
 
-.hero__phone-content {
+.hero__phone-content,
+.phone__content {
 contain: layout style;
-}
-
-/* ===== CLASES UTILITARIAS PARA ALTERNAR ESTILOS ===== */
-.phone--clean {
-background: transparent;
-border: none;
-padding: 0;
-box-shadow: 
-0 15px 40px rgba(0, 0, 0, 0.3),
-0 0 0 1px rgba(255, 255, 255, 0.08);
-border-radius: 20px;
-}
-
-.phone--clean::before,
-.phone--clean::after {
-display: none;
-}
-
-.phone--clean .phone__screen {
-border-radius: 20px;
-border: 1px solid rgba(255, 255, 255, 0.08);
-box-shadow: 
-0 10px 30px rgba(0, 0, 0, 0.4),
-inset 0 1px 0 rgba(255, 255, 255, 0.03);
-}
-
-.phone--clean .phone__content {
-border-radius: 19px;
-}
-
-.phone--clean .phone__app-image {
-border-radius: 19px;
-}
-
-/* ===== HERO PHONE CLEAN VERSION ===== */
-.hero__phone--clean {
-background: transparent;
-border: none;
-padding: 0;
-box-shadow: 
-0 20px 50px rgba(0, 0, 0, 0.4),
-0 0 0 2px rgba(255, 255, 255, 0.08);
-border-radius: 25px;
-}
-
-.hero__phone--clean::before,
-.hero__phone--clean::after {
-display: none;
-}
-
-.hero__phone--clean .hero__phone-screen {
-border-radius: 25px;
-border: 2px solid rgba(255, 255, 255, 0.08);
-box-shadow: 
-0 15px 40px rgba(0, 0, 0, 0.5),
-inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.hero__phone--clean .hero__phone-content {
-border-radius: 23px;
-}
-
-.hero__phone--clean .hero__phone-app-image {
-border-radius: 23px;
 }
 
 /* ===== MEJORAS ESPECÍFICAS PARA IMÁGENES ===== */
@@ -3717,122 +4067,6 @@ border-radius: 23px;
 /* Optimización para mejor calidad de imagen */
 image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
-}
-
-/* ===== RESPONSIVE FINAL OPTIMIZADO ===== */
-@media (max-width: 1200px) {
-.hero__phone {
-width: 300px;
-height: 600px;
-}
-
-.feature__phone {
-width: 280px;
-height: 560px;
-}
-}
-
-@media (max-width: 992px) {
-.hero__phone {
-width: 280px;
-height: 560px;
-}
-
-.feature__phone {
-width: 260px;
-height: 520px;
-}
-}
-
-@media (max-width: 768px) {
-.hero__phone {
-width: 260px;
-height: 520px;
-border-radius: 35px;
-padding: 3px;
-}
-
-.hero__phone-screen {
-border-radius: 32px;
-}
-
-.hero__phone-content {
-border-radius: 32px;
-}
-
-.hero__phone-app-image {
-border-radius: 32px;
-}
-
-.feature__phone {
-width: 240px;
-height: 480px;
-}
-
-.phone {
-border-radius: 30px;
-padding: 2px;
-}
-
-.phone__screen {
-border-radius: 28px;
-}
-
-.phone__content {
-border-radius: 28px;
-}
-
-.phone__app-image {
-border-radius: 28px;
-}
-}
-
-@media (max-width: 480px) {
-.hero__phone {
-width: 220px;
-height: 440px;
-border-radius: 30px;
-padding: 2px;
-}
-
-.hero__phone-screen {
-border-radius: 28px;
-}
-
-.hero__phone-content {
-border-radius: 28px;
-}
-
-.hero__phone-app-image {
-border-radius: 28px;
-}
-
-.feature__phone {
-width: 200px;
-height: 400px;
-}
-
-.phone {
-border-radius: 25px;
-padding: 2px;
-}
-
-.phone__screen {
-border-radius: 23px;
-}
-
-.phone__content {
-border-radius: 23px;
-}
-
-.phone__app-image {
-border-radius: 23px;
-}
-}
-
-/* ===== MEJORAS DE PERFORMANCE FINAL ===== */
-.hero__phone-app-image,
-.phone__app-image {
 transform: translateZ(0);
 backface-visibility: hidden;
 }
@@ -3841,6 +4075,7 @@ backface-visibility: hidden;
 .hero__phone:hover .hero__phone-app-image,
 .phone:hover .phone__app-image {
 transform: scale(1.01);
+filter: brightness(1.03) contrast(1.08) saturate(1.15);
 }
 
 /* ===== LOADING STATES ===== */
@@ -3860,10 +4095,41 @@ animation: loading-shimmer 1.5s infinite;
 .hero__phone {
 width: 200px;
 height: 400px;
+border-radius: 25px;
+padding: 3px;
+}
+
+.hero__phone-screen {
+border-radius: 22px;
+}
+
+.hero__phone-content {
+border-radius: 22px;
+}
+
+.hero__phone-app-image {
+border-radius: 22px;
 }
 
 .feature__phone {
 width: 180px;
 height: 360px;
+}
+
+.phone {
+border-radius: 20px;
+padding: 2px;
+}
+
+.phone__screen {
+border-radius: 18px;
+}
+
+.phone__content {
+border-radius: 18px;
+}
+
+.phone__app-image {
+border-radius: 18px;
 }
 }
