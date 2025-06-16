@@ -4,15 +4,27 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { supabase } from '@/lib/supabase'
-import { getAllUsers, testSupabaseConnection, getFullName, generatePassword } from '@/lib/auth'
+import { getAllUsers, testSupabaseConnection, generatePassword } from '@/lib/auth'
 import { Trabajador } from '@/types/database'
+
+interface DebugInfo {
+  status?: number
+  statusText?: string
+  error?: Error | string | null
+  dataLength?: number
+  url?: string
+  sampleFields?: string[]
+  expectedFields?: string[]
+  rlsTest?: 'passed' | 'failed'
+  sampleData?: Partial<Trabajador>[]
+}
 
 export default function SupabaseTest() {
   const [trabajadores, setTrabajadores] = useState<Trabajador[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [connectionStatus, setConnectionStatus] = useState('')
-  const [debugInfo, setDebugInfo] = useState<any>(null)
+  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null)
 
   const testConnection = async () => {
     setLoading(true)
@@ -33,10 +45,10 @@ export default function SupabaseTest() {
       setTrabajadores(trabajadoresList)
       setConnectionStatus(`✅ Conexión exitosa - ${trabajadoresList.length} trabajadores encontrados`)
 
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err))
       setConnectionStatus('❌ Error de conexión')
-      setDebugInfo(err)
+      setDebugInfo({ error: err instanceof Error ? err.message : String(err) })
     } finally {
       setLoading(false)
     }
@@ -73,8 +85,8 @@ export default function SupabaseTest() {
 
       setTrabajadores(data || [])
       setConnectionStatus(`✅ Query directo exitoso - ${data?.length || 0} trabajadores`)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err))
       setConnectionStatus('❌ Error en query directo')
       console.error('Direct query error:', err)
     } finally {
@@ -105,10 +117,10 @@ export default function SupabaseTest() {
       setConnectionStatus('✅ Políticas RLS configuradas correctamente')
       setDebugInfo({ rlsTest: 'passed', sampleData: data })
 
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err))
       setConnectionStatus('❌ Error en políticas RLS')
-      setDebugInfo({ rlsTest: 'failed', error: err })
+      setDebugInfo({ rlsTest: 'failed', error: err instanceof Error ? err : String(err) })
     } finally {
       setLoading(false)
     }

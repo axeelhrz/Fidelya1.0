@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/dashboard/Header'
 import Calendar from '@/components/dashboard/Calendar'
 import ShiftSelector from '@/components/dashboard/ShiftSelector'
 import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { supabase } from '@/lib/supabase'
-import { Shift, Menu } from '@/types/database'
-import { Clock, TrendingUp, Calendar as CalendarIcon, ChefHat, Users, CheckCircle2 } from 'lucide-react'
+import { Shift } from '@/types/database'
+import { Clock, Calendar as CalendarIcon, ChefHat, Users, CheckCircle2 } from 'lucide-react'
 
 export default function DashboardPage() {
   const { user, profile, loading } = useAuth()
@@ -35,13 +35,7 @@ export default function DashboardPage() {
     }
   }, [user, loading, router])
 
-  useEffect(() => {
-    if (user && selectedShift) {
-      fetchStats()
-    }
-  }, [user, selectedShift, currentDate])
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     if (!user || !selectedShift) return
 
     try {
@@ -67,11 +61,17 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Error fetching stats:', error)
     }
-  }
+  }, [user, selectedShift, currentDate, profile?.id])
 
   const getMonthName = (date: Date) => {
     return date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
   }
+
+  useEffect(() => {
+    if (user && selectedShift) {
+      fetchStats()
+    }
+  }, [user, selectedShift, currentDate, fetchStats])
 
   if (loading) {
     return (

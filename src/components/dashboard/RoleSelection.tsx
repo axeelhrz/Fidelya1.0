@@ -14,11 +14,10 @@ import {
   Clock,
   Building2,
   Crown,
-  Users
 } from 'lucide-react'
 
 export default function RoleSelection() {
-  const { user, profile, signOut, loading } = useAuth()
+  const { profile, signOut, loading } = useAuth()
   const router = useRouter()
 
   const handleEmployeeAccess = () => {

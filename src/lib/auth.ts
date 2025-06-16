@@ -160,6 +160,11 @@ export async function signInWithCredentials(nombreCompleto: string, password: st
     
     localStorage.setItem('supabase_session', JSON.stringify(sessionData))
     
+    // Disparar evento personalizado para notificar al AuthContext
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('sessionUpdated'))
+    }
+    
     return { data: sessionData, error: null }
   } catch (error) {
     console.error('Error in signInWithCredentials:', error)
@@ -170,7 +175,7 @@ export async function signInWithCredentials(nombreCompleto: string, password: st
 // Función para verificar la conexión con Supabase
 export async function testSupabaseConnection(): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('trabajadores')
       .select('count')
       .limit(1)
@@ -204,14 +209,20 @@ export async function getCurrentSession() {
 // Función para cerrar sesión
 export async function signOut() {
   localStorage.removeItem('supabase_session')
+  
+  // Disparar evento personalizado para notificar al AuthContext
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('sessionUpdated'))
+  }
+  
   window.location.href = '/login'
 }
 
-export async function signInWithEmail(email: string, password: string) {
+export async function signInWithEmail() {
   throw new Error('Login por email no implementado en este sistema')
 }
 
-export async function signUpWithEmail(email: string, password: string, fullName: string) {
+export async function signUpWithEmail() {
   throw new Error('Registro no implementado en este sistema')
 }
 

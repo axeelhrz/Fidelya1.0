@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -11,13 +12,11 @@ import {
   Building2,
   User,
   ChevronDown,
-  Lock,
   Eye,
   EyeOff,
   AlertCircle,
   CheckCircle2,
   Loader2,
-  Shield,
   ArrowLeft,
   ChefHat,
   Users,
@@ -48,10 +47,7 @@ export default function LoginForm() {
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
   
   const router = useRouter()
-
-  useEffect(() => {
-    checkConnection()
-  }, [])
+  const { refreshSession } = useAuth()
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -66,7 +62,7 @@ export default function LoginForm() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const checkConnection = async () => {
+  const checkConnection = useCallback(async () => {
     setConnectionStatus('checking')
     const isConnected = await testSupabaseConnection()
     setConnectionStatus(isConnected ? 'connected' : 'error')
@@ -77,7 +73,7 @@ export default function LoginForm() {
       setLoadingCompanies(false)
       setError('No se pudo conectar con la base de datos')
     }
-  }
+  }, [])
 
   const fetchCompanies = async () => {
     try {
@@ -90,8 +86,8 @@ export default function LoginForm() {
       } else {
         setCompanies(companiesList)
       }
-    } catch (error: any) {
-      setError(`Error al cargar empresas: ${error.message}`)
+    } catch (error: unknown) {
+      setError(`Error al cargar empresas: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
       setLoadingCompanies(false)
     }
@@ -108,12 +104,16 @@ export default function LoginForm() {
       } else {
         setUsers(usersList)
       }
-    } catch (error: any) {
-      setError(`Error al cargar trabajadores: ${error.message}`)
+    } catch (error: unknown) {
+      setError(`Error al cargar trabajadores: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
       setLoadingUsers(false)
     }
   }
+
+  useEffect(() => {
+    checkConnection()
+  }, [checkConnection])
 
   const handleCompanySelect = async (company: Empresa) => {
     setSelectedCompany(company)
@@ -157,9 +157,13 @@ export default function LoginForm() {
 
     try {
       await signInWithCredentials(selectedUser.nombre_completo, password.trim())
+      
+      // Actualizar el contexto de autenticación inmediatamente
+      await refreshSession()
+      
       router.push('/role-selection')
-    } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al iniciar sesión')
     } finally {
       setLoading(false)
     }

@@ -41,7 +41,7 @@ export default function ShiftSelector({ selectedShift, onShiftSelect, onClose }:
 
       if (error) throw error
       setShifts(data || [])
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Error al cargar los turnos')
       console.error('Error fetching shifts:', err)
     } finally {

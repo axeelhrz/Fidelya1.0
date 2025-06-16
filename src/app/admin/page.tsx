@@ -1,7 +1,7 @@
 'use client'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -13,27 +13,21 @@ Shield,
 Users,
 ClipboardList,
 BarChart3,
-Settings,
 ArrowLeft,
 Crown,
-Filter,
 Search,
 Download,
 RefreshCw,
 Calendar,
 Clock,
 CheckCircle2,
-AlertCircle,
 Package,
 Sun,
 Moon,
 Building2,
-FileText,
 TrendingUp,
-User,
 ChefHat,
 Utensils,
-Eye
 } from 'lucide-react'
 
 interface AdminStats {
@@ -111,27 +105,6 @@ router.push('/dashboard')
 }
 }, [user, profile, loading, router])
 
-useEffect(() => {
-if (user && profile) {
-fetchAllData()
-}
-}, [user, profile, selectedDate])
-
-const fetchAllData = async () => {
-setLoadingStats(true)
-try {
-await Promise.all([
-fetchTrabajadores(),
-fetchPedidos(),
-fetchStats()
-])
-} catch (error) {
-console.error('Error fetching data:', error)
-} finally {
-setLoadingStats(false)
-}
-}
-
 const fetchTrabajadores = async () => {
 try {
 const { data, error } = await supabase
@@ -146,7 +119,7 @@ console.error('Error fetching trabajadores:', error)
 }
 }
 
-const fetchPedidos = async () => {
+const fetchPedidos = useCallback(async () => {
 try {
 console.log('Fetching pedidos for date:', selectedDate)
 
@@ -195,9 +168,9 @@ calculateVistaCocina(pedidosCompletos)
 } catch (error) {
 console.error('Error fetching pedidos:', error)
 }
-}
+}, [selectedDate, trabajadores])
 
-const fetchStats = async () => {
+const fetchStats = useCallback(async () => {
 try {
 const { data: selectedDateData, error: selectedDateError } = await supabase
 .from('pedidos')
@@ -243,7 +216,28 @@ pedidosEsteMes: monthData?.length || 0
 } catch (error) {
 console.error('Error fetching stats:', error)
 }
+}, [selectedDate, trabajadores.length])
+
+const fetchAllData = useCallback(async () => {
+setLoadingStats(true)
+try {
+await Promise.all([
+fetchTrabajadores(),
+fetchPedidos(),
+fetchStats()
+])
+} catch (error) {
+console.error('Error fetching data:', error)
+} finally {
+setLoadingStats(false)
 }
+}, [fetchPedidos, fetchStats])
+
+useEffect(() => {
+if (user && profile) {
+fetchAllData()
+}
+}, [user, profile, selectedDate, fetchAllData])
 
 const calculatePedidosPorEmpresa = (pedidosData: PedidoCompleto[]) => {
 const empresasMap = new Map<string, { total: number, dia: number, noche: number, trabajadores: Set<string> }>()
@@ -363,24 +357,18 @@ return filtered
 
 const exportData = async () => {
 try {
-let filename = ''
-
 switch (exportType) {
 case 'kitchen':
 generateKitchenExcel()
-filename = `vista_cocina_${selectedDate}.xlsx`
 break
 case 'workers':
 generateWorkersExcel()
-filename = `por_trabajador_${selectedDate}.xlsx`
 break
 case 'shifts':
 generateShiftsExcel()
-filename = `por_turno_${selectedDate}.xlsx`
 break
 default:
 generateGeneralExcel()
-filename = `pedidos_general_${selectedDate}.xlsx`
 }
 } catch (error) {
 console.error('Error exporting data:', error)
@@ -399,7 +387,7 @@ day: 'numeric'
 const wb = XLSX.utils.book_new()
 
 // Datos para la hoja
-const wsData: any[][] = []
+const wsData: (string | number)[][] = []
 
 // Header principal
 wsData.push([`VISTA DIARIA PARA COCINA - ${dateFormatted.toUpperCase()}`])
@@ -470,7 +458,7 @@ day: 'numeric'
 })
 
 const wb = XLSX.utils.book_new()
-const wsData: any[][] = []
+const wsData: (string | number)[][] = []
 
 // Header principal
 wsData.push([`📋 PEDIDOS POR TRABAJADOR - ${dateFormatted.toUpperCase()}`])
@@ -524,7 +512,7 @@ day: 'numeric'
 })
 
 const wb = XLSX.utils.book_new()
-const wsData: any[][] = []
+const wsData: (string | number)[][] = []
 
 // Header principal
 wsData.push([`⏰ PEDIDOS POR TURNO - ${dateFormatted.toUpperCase()}`])
@@ -597,7 +585,7 @@ day: 'numeric'
 })
 
 const wb = XLSX.utils.book_new()
-const wsData: any[][] = []
+const wsData: (string | number)[][] = []
 
 // Header principal
 wsData.push([`📊 REPORTE GENERAL DE PEDIDOS - ${dateFormatted.toUpperCase()}`])
@@ -714,7 +702,7 @@ day: 'numeric'
 <div className="flex items-center space-x-3">
 <select
 value={exportType}
-onChange={(e) => setExportType(e.target.value as any)}
+onChange={(e) => setExportType(e.target.value as 'general' | 'kitchen' | 'workers' | 'shifts')}
 className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
 >
 <option value="general">📊 Exportar General</option>

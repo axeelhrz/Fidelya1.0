@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 
 export default function Header() {
-  const { user, profile, signOut } = useAuth()
+  const { profile, signOut } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -41,7 +41,7 @@ export default function Header() {
       : names[0][0].toUpperCase()
   }
 
-  const getRoleBadgeColor = (rol: string | null) => {
+  const getRoleBadgeColor = (rol: string | null | undefined) => {
     switch (rol?.toLowerCase()) {
       case 'admin':
       case 'administrador':

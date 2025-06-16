@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -13,17 +13,30 @@ import {
   Plus, 
   CheckCircle, 
   Clock, 
-  AlertCircle, 
   Edit,
-  ChefHat,
   Calendar as CalendarIcon,
-  Package
 } from 'lucide-react'
 
 interface CalendarProps {
   selectedShift: Shift | null
   currentDate: Date
   onDateChange: (date: Date) => void
+}
+
+// Function to map shift names to the expected database values
+const mapShiftToTurno = (shiftName: string, startTime?: string): string => {
+  const name = shiftName.toLowerCase()
+  if (name.includes('día') || name.includes('dia') || name.includes('day')) {
+    return 'dia'
+  } else if (name.includes('noche') || name.includes('night')) {
+    return 'noche'
+  }
+  // Default fallback based on time
+  if (startTime && (startTime.includes('06:') || startTime.includes('6:') || startTime.includes('07:') || startTime.includes('7:'))) {
+    return 'dia'
+  } else {
+    return 'noche'
+  }
 }
 
 export default function Calendar({ selectedShift, currentDate, onDateChange }: CalendarProps) {
@@ -35,31 +48,7 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedOrder, setSelectedOrder] = useState<Pedido | null>(null)
 
-  useEffect(() => {
-    if (user && profile && selectedShift) {
-      fetchOrders()
-      fetchMenus()
-    }
-  }, [user, profile, selectedShift, currentDate])
-
-  // Function to map shift names to the expected database values
-  const mapShiftToTurno = (shiftName: string): string => {
-    const name = shiftName.toLowerCase()
-    if (name.includes('día') || name.includes('dia') || name.includes('day')) {
-      return 'dia'
-    } else if (name.includes('noche') || name.includes('night')) {
-      return 'noche'
-    }
-    // Default fallback based on time
-    const startTime = selectedShift?.start_time || ''
-    if (startTime.includes('06:') || startTime.includes('6:') || startTime.includes('07:') || startTime.includes('7:')) {
-      return 'dia'
-    } else {
-      return 'noche'
-    }
-  }
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     if (!user || !profile || !selectedShift) return
 
     try {
@@ -68,8 +57,8 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
 
       // Map shift name to expected database value
-      const turnoElegido = mapShiftToTurno(selectedShift.name)
-
+      // Map shift name to expected database value
+      const turnoElegido = mapShiftToTurno(selectedShift.name, selectedShift.start_time)
       // Build query - use nombre_trabajador as primary identifier
       let query = supabase
         .from('pedidos')
@@ -98,9 +87,9 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, profile, selectedShift, currentDate])
 
-  const fetchMenus = async () => {
+  const fetchMenus = useCallback(async () => {
     try {
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
@@ -121,7 +110,14 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentDate])
+
+  useEffect(() => {
+    if (selectedShift) {
+      fetchOrders()
+      fetchMenus()
+    }
+  }, [selectedShift, currentDate, user, profile, fetchOrders, fetchMenus])
 
   const getDaysInMonth = () => {
     const year = currentDate.getFullYear()
@@ -174,12 +170,12 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
     onDateChange(newDate)
   }
 
-  const getStatusIcon = (order: Pedido) => {
+  const getStatusIcon = () => {
     // Since pedidos table doesn't have status, we'll show a confirmed icon for existing orders
     return <CheckCircle className="w-4 h-4 text-emerald-600" />
   }
 
-  const getStatusColor = (order: Pedido) => {
+  const getStatusColor = () => {
     // Since pedidos table doesn't have status, we'll use a default confirmed style
     return 'bg-emerald-50 border-emerald-200'
   }
@@ -291,7 +287,7 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
                             : 'bg-slate-50 cursor-not-allowed opacity-40'
                         }
                         ${isToday ? 'ring-2 ring-indigo-500 border-indigo-500' : ''}
-                        ${order ? getStatusColor(order) : ''}
+                        ${order ? getStatusColor() : ''}
                       `}
                       onClick={() => !isPast && hasMenus && handleDayClick(date)}
                     >
@@ -311,7 +307,7 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
                         <div className="flex-1 flex items-center justify-center">
                           {order ? (
                             <div className="flex items-center space-x-1">
-                              {getStatusIcon(order)}
+                              {getStatusIcon()}
                               <Edit className="w-3 h-3 text-slate-500" />
                             </div>
                           ) : hasMenus && !isPast ? (

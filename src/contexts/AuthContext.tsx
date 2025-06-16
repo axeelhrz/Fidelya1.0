@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { getCurrentSession, getCurrentUser, getProfile, signOut as authSignOut } from '@/lib/auth'
+import { getCurrentSession, getProfile, signOut as authSignOut } from '@/lib/auth'
 import { Trabajador } from '@/types/database'
 
 interface User {
@@ -22,6 +22,7 @@ interface AuthContextType {
   profile: Trabajador | null
   loading: boolean
   signOut: () => Promise<void>
+  refreshSession: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -59,6 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const refreshSession = async () => {
+    await checkSession()
+  }
+
   const signOut = async () => {
     try {
       await authSignOut()
@@ -79,12 +84,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    // Listen for custom events (for same-tab updates)
+    const handleSessionUpdate = () => {
+      checkSession()
+    }
+
     window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
+    window.addEventListener('sessionUpdated', handleSessionUpdate)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('sessionUpdated', handleSessionUpdate)
+    }
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshSession }}>
       {children}
     </AuthContext.Provider>
   )

@@ -1,19 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
 import { Pedido } from '@/types/database'
 import { 
   CheckCircle2, 
-  Clock, 
-  AlertCircle, 
-  User,
   Package,
-  Calendar,
-  Filter,
-  Search
 } from 'lucide-react'
 
 interface OrdersListProps {
@@ -25,13 +18,8 @@ interface OrdersListProps {
 export default function OrdersList({ selectedDate, searchTerm, shiftFilter }: OrdersListProps) {
   const [orders, setOrders] = useState<Pedido[]>([])
   const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
 
-  useEffect(() => {
-    fetchOrders()
-  }, [selectedDate, searchTerm, shiftFilter])
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -72,12 +60,11 @@ export default function OrdersList({ selectedDate, searchTerm, shiftFilter }: Or
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedDate, searchTerm, shiftFilter])
 
-  const getStatusIcon = () => {
-    // Since pedidos table doesn't have status, we'll show confirmed icon
-    return <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-  }
+  useEffect(() => {
+    fetchOrders()
+  }, [fetchOrders])
 
   const getStatusColor = () => {
     // Since pedidos table doesn't have status, we'll use confirmed style
@@ -150,13 +137,9 @@ export default function OrdersList({ selectedDate, searchTerm, shiftFilter }: Or
                   
                   <div className="flex items-center space-x-3">
                     <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor()}`}>
-                      {getStatusIcon()}
+                      <CheckCircle2 className="w-3 h-3" />
                       <span>{getStatusText()}</span>
                     </span>
-                    
-                    <div className="text-xs text-slate-500">
-                      {order.dia_semana} {order.numero_dia}
-                    </div>
                   </div>
                 </div>
               </div>
