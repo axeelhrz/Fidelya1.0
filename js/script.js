@@ -12,6 +12,9 @@ let isReducedMotion = false;
 let currentLanguage = 'es';
 const translations = {};
 
+// Variables para el botón flotante
+let isFloatingMenuOpen = false;
+
 // ===== SISTEMA DE TRADUCCIONES ===== 
 const translationData = {
     es: {
@@ -336,6 +339,7 @@ function initializeLanguageSystem() {
     // Aplicar traducciones iniciales
     applyTranslations();
     updateLanguageButtons();
+    updateFloatingLanguageButton();
     
     // Configurar event listeners para los botones de idioma
     setupLanguageToggle();
@@ -370,6 +374,7 @@ function switchLanguage(newLanguage) {
     // Aplicar traducciones
     applyTranslations();
     updateLanguageButtons();
+    updateFloatingLanguageButton();
     
     // Actualizar atributo lang del HTML
     document.documentElement.lang = newLanguage;
@@ -450,6 +455,104 @@ function updateLanguageButtons() {
         } else {
             button.classList.remove('active');
         }
+    });
+}
+
+function updateFloatingLanguageButton() {
+    const floatingLanguageText = document.getElementById('floating-language-text');
+    const floatingLanguageTooltip = document.querySelector('#floating-language-toggle .floating-widget__tooltip');
+    
+    if (floatingLanguageText) {
+        floatingLanguageText.textContent = currentLanguage.toUpperCase();
+    }
+    
+    if (floatingLanguageTooltip) {
+        floatingLanguageTooltip.textContent = currentLanguage === 'es' ? 'Cambiar idioma' : 'Change language';
+    }
+}
+
+// ===== FUNCIONES DEL BOTÓN FLOTANTE =====
+function initializeFloatingWidget() {
+    const floatingMainBtn = document.getElementById('floating-main-btn');
+    const floatingMenu = document.getElementById('floating-menu');
+    const floatingLanguageToggle = document.getElementById('floating-language-toggle');
+    
+    if (!floatingMainBtn || !floatingMenu) return;
+    
+    // Toggle del menú flotante
+    floatingMainBtn.addEventListener('click', () => {
+        toggleFloatingMenu();
+    });
+    
+    // Toggle de idioma flotante
+    if (floatingLanguageToggle) {
+        floatingLanguageToggle.addEventListener('click', () => {
+            const newLanguage = currentLanguage === 'es' ? 'en' : 'es';
+            switchLanguage(newLanguage);
+        });
+    }
+    
+    // Cerrar menú al hacer click fuera
+    document.addEventListener('click', (e) => {
+        const floatingWidget = document.getElementById('floating-widget');
+        if (isFloatingMenuOpen && floatingWidget && !floatingWidget.contains(e.target)) {
+            closeFloatingMenu();
+        }
+    });
+    
+    // Cerrar menú con tecla Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isFloatingMenuOpen) {
+            closeFloatingMenu();
+        }
+    });
+}
+
+function toggleFloatingMenu() {
+    if (isFloatingMenuOpen) {
+        closeFloatingMenu();
+    } else {
+        openFloatingMenu();
+    }
+}
+
+function openFloatingMenu() {
+    const floatingMainBtn = document.getElementById('floating-main-btn');
+    const floatingMenu = document.getElementById('floating-menu');
+    
+    if (!floatingMainBtn || !floatingMenu) return;
+    
+    isFloatingMenuOpen = true;
+    floatingMainBtn.classList.add('active');
+    floatingMenu.classList.add('active');
+    floatingMainBtn.setAttribute('aria-expanded', 'true');
+    
+    // Animar entrada de los elementos del menú
+    const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
+    menuItems.forEach((item, index) => {
+        setTimeout(() => {
+            item.style.transform = 'translateY(0) scale(1)';
+            item.style.opacity = '1';
+        }, index * 100);
+    });
+}
+
+function closeFloatingMenu() {
+    const floatingMainBtn = document.getElementById('floating-main-btn');
+    const floatingMenu = document.getElementById('floating-menu');
+    
+    if (!floatingMainBtn || !floatingMenu) return;
+    
+    isFloatingMenuOpen = false;
+    floatingMainBtn.classList.remove('active');
+    floatingMenu.classList.remove('active');
+    floatingMainBtn.setAttribute('aria-expanded', 'false');
+    
+    // Resetear estilos de los elementos del menú
+    const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
+    menuItems.forEach(item => {
+        item.style.transform = '';
+        item.style.opacity = '';
     });
 }
 
@@ -676,6 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeLazyLoading();
     preloadCriticalResources();
     initializeAccessibility();
+    initializeFloatingWidget();
     
     // Detectar cambios en preferencias de movimiento
     checkReducedMotion();
@@ -1113,15 +1217,21 @@ function preloadCriticalResources() {
 function initializeAccessibility() {
     // Navegación por teclado
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && isMenuOpen) {
-            const navToggle = document.getElementById('nav-toggle');
-            const navMenu = document.getElementById('nav-menu');
+        if (e.key === 'Escape') {
+            if (isMenuOpen) {
+                const navToggle = document.getElementById('nav-toggle');
+                const navMenu = document.getElementById('nav-menu');
+                
+                if (navToggle && navMenu) {
+                    navToggle.classList.remove('active');
+                    navMenu.classList.remove('active');
+                    document.body.classList.remove('no-scroll');
+                    isMenuOpen = false;
+                }
+            }
             
-            if (navToggle && navMenu) {
-                navToggle.classList.remove('active');
-                navMenu.classList.remove('active');
-                document.body.classList.remove('no-scroll');
-                isMenuOpen = false;
+            if (isFloatingMenuOpen) {
+                closeFloatingMenu();
             }
         }
     });
@@ -1177,6 +1287,11 @@ window.addEventListener('resize', debounce(() => {
             document.body.classList.remove('no-scroll');
             isMenuOpen = false;
         }
+    }
+    
+    // Cerrar menú flotante en resize
+    if (isFloatingMenuOpen) {
+        closeFloatingMenu();
     }
     
     // Redimensionar canvas de partículas
