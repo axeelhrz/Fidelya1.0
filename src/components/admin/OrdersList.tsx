@@ -42,7 +42,9 @@ export default function OrdersList({ selectedDate, searchTerm, shiftFilter }: Or
         .order('created_at', { ascending: false })
 
       if (shiftFilter && shiftFilter !== 'all') {
-        query = query.ilike('turno_elegido', `%${shiftFilter}%`)
+        // Map filter to database values
+        const turnoFilter = shiftFilter.toLowerCase() === 'día' || shiftFilter.toLowerCase() === 'dia' ? 'dia' : 'noche'
+        query = query.eq('turno_elegido', turnoFilter)
       }
 
       const { data, error } = await query
@@ -58,7 +60,7 @@ export default function OrdersList({ selectedDate, searchTerm, shiftFilter }: Or
       if (searchTerm) {
         filteredOrders = filteredOrders.filter(order =>
           order.nombre_trabajador.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.rut_trabajador.includes(searchTerm) ||
+          (order.rut_trabajador && order.rut_trabajador.includes(searchTerm)) ||
           order.descripcion_opcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.empresa.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -131,7 +133,8 @@ export default function OrdersList({ selectedDate, searchTerm, shiftFilter }: Or
                     <div>
                       <h4 className="font-semibold text-slate-900">{order.nombre_trabajador}</h4>
                       <p className="text-sm text-slate-600">
-                        {order.rut_trabajador} • {order.turno_elegido} • {order.empresa}
+                        {order.rut_trabajador ? `${order.rut_trabajador} • ` : ''}
+                        {order.turno_elegido === 'dia' ? 'Turno Día' : 'Turno Noche'} • {order.empresa}
                       </p>
                       <p className="text-sm font-medium text-slate-800 mt-1">
                         {order.descripcion_opcion} ({order.codigo_opcion})

@@ -70,15 +70,22 @@ export default function Calendar({ selectedShift, currentDate, onDateChange }: C
       // Map shift name to expected database value
       const turnoElegido = mapShiftToTurno(selectedShift.name)
 
-      const { data, error } = await supabase
+      // Build query - use nombre_trabajador as primary identifier
+      let query = supabase
         .from('pedidos')
         .select('*')
         .eq('nombre_trabajador', profile.nombre_completo)
-        .eq('rut_trabajador', profile.rut)
         .eq('turno_elegido', turnoElegido)
         .gte('fecha_entrega', startOfMonth.toISOString().split('T')[0])
         .lte('fecha_entrega', endOfMonth.toISOString().split('T')[0])
         .order('fecha_entrega', { ascending: true })
+
+      // Only filter by RUT if it exists
+      if (profile.rut) {
+        query = query.eq('rut_trabajador', profile.rut)
+      }
+
+      const { data, error } = await query
 
       if (error) {
         console.error('Error fetching orders:', error)

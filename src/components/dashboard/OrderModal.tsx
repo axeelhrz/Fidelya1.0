@@ -71,12 +71,6 @@ export default function OrderModal({
       return
     }
 
-    // Validate that we have the required profile data
-    if (!profile.rut) {
-      setError('Error: No se encontró el RUT del trabajador. Por favor, contacta al administrador.')
-      return
-    }
-
     const selectedMenu = availableMenus.find(menu => menu.id.toString() === selectedMenuId)
     if (!selectedMenu) {
       setError('Menú seleccionado no válido')
@@ -96,7 +90,7 @@ export default function OrderModal({
 
       const pedidoData = {
         nombre_trabajador: profile.nombre_completo,
-        rut_trabajador: profile.rut,
+        rut_trabajador: profile.rut || null, // RUT no es obligatorio
         turno_elegido: turnoElegido,
         fecha_entrega: selectedDate.toISOString().split('T')[0],
         dia_semana: dayName,
