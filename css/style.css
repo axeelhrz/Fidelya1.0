@@ -567,8 +567,7 @@ background: var(--starflex-crimson-bright);
 box-shadow: 0 0 10px var(--starflex-crimson-glow);
 }
 
-.nav__toggle.
-active {
+.nav__toggle.active {
 background: rgba(15, 20, 30, 0.95);
 border-color: var(--starflex-crimson-bright);
 box-shadow: 
