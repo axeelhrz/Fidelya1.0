@@ -1,13 +1,13 @@
 /* ===== VARIABLES FUTURISTAS OPTIMIZADAS ===== */
 :root {
-/* Colores principales - FONDO MENOS OPACO */
---primary-bg: rgba(10, 15, 26, 0.85);     /* Más transparente */
---secondary-bg: rgba(15, 20, 25, 0.80);   /* Más transparente */
---accent-bg: rgba(26, 31, 46, 0.75);      /* Más transparente */
---glass-bg: rgba(15, 20, 41, 0.4);        /* Mucho más transparente */
---glass-bg-light: rgba(255, 255, 255, 0.03);
---glass-bg-medium: rgba(255, 255, 255, 0.05);
---glass-bg-strong: rgba(255, 255, 255, 0.08);
+/* Colores principales - FONDO MENOS NEGRO */
+--primary-bg: #1a1f2e;        /* Gris azulado oscuro en lugar de negro */
+--secondary-bg: #242938;      /* Gris azulado medio */
+--accent-bg: #2d3748;         /* Gris azulado más claro */
+--glass-bg: rgba(26, 31, 46, 0.7);
+--glass-bg-light: rgba(255, 255, 255, 0.05);
+--glass-bg-medium: rgba(255, 255, 255, 0.08);
+--glass-bg-strong: rgba(255, 255, 255, 0.12);
 
 /* Colores de marca Starflex */
 --starflex-blue: #ff4569;
@@ -108,12 +108,12 @@ box-sizing: border-box;
 html {
 scroll-behavior: smooth;
 font-size: 16px;
-background: #000000;  /* Fondo negro sólido para el HTML */
+background: #1a1f2e;  /* Gris azulado oscuro en lugar de negro */
 }
 
 body {
 font-family: var(--font-primary);
-background: transparent;  /* Fondo transparente para el body */
+background: var(--primary-bg);  /* Usa la variable actualizada */
 color: var(--text-primary);
 line-height: 1.5;
 overflow-x: hidden;
@@ -677,8 +677,8 @@ left: 0;
 right: 0;
 bottom: 0;
 background: 
-radial-gradient(ellipse at 25% 25%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),  /* Cambiado a azul */
-radial-gradient(ellipse at 75% 75%, rgba(99, 102, 241, 0.03) 0%, transparent 50%);  /* Cambiado a azul */
+radial-gradient(ellipse at 25% 25%, rgba(59, 130, 246, 0.04) 0%, transparent 60%),  /* Cambiado a azul */
+radial-gradient(ellipse at 75% 75%, rgba(99, 102, 241, 0.03) 0%, transparent 60%);  /* Cambiado a azul */
 z-index: -1;
 animation: mobile-menu-glow 8s ease-in-out infinite;
 }
@@ -821,7 +821,7 @@ font-size: 0.75rem;
 }
 }
 
-/* ===== FONDO FUTURISTA AVANZADO - ACTUALIZADO CON TONOS AZULADOS ===== */
+/* ===== FONDO FUTURISTA AVANZADO ===== */
 .bg-canvas {
 position: fixed;
 top: 0;
@@ -831,11 +831,6 @@ height: 100%;
 pointer-events: none;
 z-index: 0;
 overflow: hidden;
-background: linear-gradient(135deg, 
-rgba(10, 15, 26, 0.6) 0%,     /* Mucho más transparente */
-rgba(15, 20, 25, 0.5) 50%,    /* Mucho más transparente */
-rgba(26, 31, 46, 0.4) 100%    /* Mucho más transparente */
-);
 }
 
 .bg-canvas::before {
@@ -846,10 +841,10 @@ left: -50%;
 width: 200%;
 height: 200%;
 background: 
-radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),  /* Más sutil */
-radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.02) 0%, transparent 50%),  /* Más sutil */
-radial-gradient(circle at 40% 40%, rgba(6, 182, 212, 0.015) 0%, transparent 50%),  /* Más sutil */
-radial-gradient(circle at 60% 80%, rgba(14, 165, 233, 0.01) 0%, transparent 50%);  /* Más sutil */
+radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
+radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.04) 0%, transparent 50%),
+radial-gradient(circle at 40% 40%, rgba(6, 182, 212, 0.03) 0%, transparent 50%),
+radial-gradient(circle at 60% 80%, rgba(14, 165, 233, 0.02) 0%, transparent 50%);
 animation: aurora-flow 45s ease-in-out infinite;
 }
 
@@ -861,21 +856,22 @@ left: 0;
 width: 100%;
 height: 100%;
 background-image: 
-linear-gradient(45deg, transparent 24%, rgba(59, 130, 246, 0.008) 25%, rgba(59, 130, 246, 0.008) 26%, transparent 27%),  /* Mucho más sutil */
-linear-gradient(-45deg, transparent 24%, rgba(99, 102, 241, 0.005) 25%, rgba(99, 102, 241, 0.005) 26%, transparent 27%);  /* Mucho más sutil */
+linear-gradient(45deg, transparent 24%, rgba(59, 130, 246, 0.015) 25%, rgba(59, 130, 246, 0.015) 26%, transparent 27%),
+linear-gradient(-45deg, transparent 24%, rgba(99, 102, 241, 0.01) 25%, rgba(99, 102, 241, 0.01) 26%, transparent 27%);
 background-size: 60px 60px, 80px 80px;
-opacity: 0.2;  /* Reducida la opacidad */
+opacity: 0.4;
 animation: grid-drift 120s linear infinite;
 }
 
-/* ===== HERO SECTION MEJORADO CON TONOS AZULADOS ===== */
+/* ===== HERO SECTION MEJORADO ===== */
 .hero {
 min-height: 100vh;
 display: flex;
 align-items: center;
 position: relative;
 z-index: 2;
-background: transparent;  /* Completamente transparente */
+background: 
+linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
 overflow: hidden;
 padding-top: calc(var(--navbar-height) + var(--space-xl));
 }
@@ -969,7 +965,7 @@ border: 1px solid var(--border-accent);
 border-radius: 25px;
 font-size: 0.8rem;
 font-weight: 600;
-color: var(--starflex-crimson-bright);
+color: var(--starflex-blue);
 margin-bottom: var(--space-xl);
 position: relative;
 overflow: hidden;
@@ -1547,7 +1543,8 @@ border-radius: 30px;
 .features {
 padding: var(--space-6xl) 0;
 position: relative;
-background: transparent;  /* Completamente transparente */
+background: 
+linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--primary-bg) 100%);
 overflow: hidden;
 }
 
@@ -1902,7 +1899,8 @@ background-image: url('../assets/phones/Referidos.avif');
 .videos {
 padding: var(--space-6xl) 0;
 position: relative;
-background: transparent;  /* Completamente transparente */
+background: 
+linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--primary-bg) 100%);
 overflow: hidden;
 }
 
@@ -1955,7 +1953,6 @@ box-shadow: var(--glow-subtle);
 font-size: 1rem;
 color: var(--starflex-crimson-bright);
 animation: pulse-gentle 3s infinite;
-text-shadow: 0 0 10px var(--starflex-crimson-glow);
 }
 
 .videos__title {
@@ -2528,7 +2525,8 @@ var(--shadow-lg),
 .faq {
     padding: var(--space-6xl) 0;
     position: relative;
-    background: transparent;  /* Completamente transparente */
+    background: 
+        linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--primary-bg) 100%);
     overflow: hidden;
 }
 
@@ -2828,7 +2826,8 @@ var(--shadow-lg),
 .contact {
     padding: var(--space-6xl) 0;
     position: relative;
-    background: transparent;  /* Completamente transparente */
+    background: 
+        linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--primary-bg) 100%);
     overflow: hidden;
 }
 
@@ -3998,7 +3997,7 @@ font-size: 2.2rem;
 .feature__phone {
 width: 240px;
 height: 480px;
-transform: none;
+margin: 0 auto;
 }
 
 .phone {
