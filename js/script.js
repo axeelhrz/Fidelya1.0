@@ -19,6 +19,9 @@ let ticking = false;
 let touchStartY = 0;
 let touchEndY = 0;
 let isNavbarVisible = true;
+// Variables para el video hero
+let heroVideo = null;
+let heroVideoLoaded = false;
 
 // ===== CONFIGURACIÓN GLOBAL =====
 const CONFIG = {
@@ -67,6 +70,16 @@ const CONFIG = {
                 avif: './assets/GooglePlay.avif',
             }
         }
+    },
+    
+    // Configuración del video hero
+    VIDEO_CONFIG: {
+        heroVideoPath: './assets/Hero.mp4',
+        autoplay: true,
+        muted: true,
+        loop: true,
+        playsinline: true,
+        preload: 'auto'
     }
 };
 
@@ -537,8 +550,294 @@ class ImageOptimizer {
     }
 }
 
+// ===== CLASE PARA MANEJO DEL VIDEO HERO =====
+class HeroVideoManager {
+    constructor() {
+        this.video = null;
+        this.fallbackElement = null;
+        this.isLoaded = false;
+        this.isPlaying = false;
+        this.retryCount = 0;
+        this.maxRetries = 3;
+        this.init();
+    }
+    
+    init() {
+        this.video = document.getElementById('hero-video');
+        this.fallbackElement = document.querySelector('.hero__phone-video-fallback');
+        
+        if (!this.video) {
+            console.warn('Video hero no encontrado');
+            return;
+        }
+        
+        this.setupVideoEvents();
+        this.setupVideoAttributes();
+        this.attemptVideoLoad();
+    }
+    
+    setupVideoAttributes() {
+        if (!this.video) return;
+        
+        // Configurar atributos del video
+        this.video.autoplay = CONFIG.VIDEO_CONFIG.autoplay;
+        this.video.muted = CONFIG.VIDEO_CONFIG.muted;
+        this.video.loop = CONFIG.VIDEO_CONFIG.loop;
+        this.video.playsInline = CONFIG.VIDEO_CONFIG.playsinline;
+        this.video.preload = CONFIG.VIDEO_CONFIG.preload;
+        
+        // Asegurar que el video esté silenciado para autoplay
+        this.video.muted = true;
+        this.video.volume = 0;
+        
+        // Configurar poster como fallback
+        if (!this.video.poster) {
+            this.video.poster = './assets/phones/Hero.jpg';
+        }
+    }
+    
+    setupVideoEvents() {
+        if (!this.video) return;
+        
+        // Evento cuando el video puede empezar a reproducirse
+        this.video.addEventListener('canplay', () => {
+            console.log('Video hero: Puede reproducirse');
+            this.handleVideoReady();
+        });
+        
+        // Evento cuando el video está completamente cargado
+        this.video.addEventListener('canplaythrough', () => {
+            console.log('Video hero: Completamente cargado');
+            this.isLoaded = true;
+            this.hideLoadingState();
+        });
+        
+        // Evento cuando el video empieza a reproducirse
+        this.video.addEventListener('play', () => {
+            console.log('Video hero: Reproduciendo');
+            this.isPlaying = true;
+            this.hideLoadingState();
+            this.hideFallback();
+        });
+        
+        // Evento cuando el video se pausa
+        this.video.addEventListener('pause', () => {
+            console.log('Video hero: Pausado');
+            this.isPlaying = false;
+        });
+        
+        // Evento de error
+        this.video.addEventListener('error', (e) => {
+            console.error('Error en video hero:', e);
+            this.handleVideoError();
+        });
+        
+        // Evento cuando el video se carga
+        this.video.addEventListener('loadstart', () => {
+            console.log('Video hero: Iniciando carga');
+            this.showLoadingState();
+        });
+        
+        // Evento cuando hay datos suficientes para reproducir
+        this.video.addEventListener('loadeddata', () => {
+            console.log('Video hero: Datos cargados');
+            this.attemptAutoplay();
+        });
+        
+        // Evento cuando el video está listo para reproducir sin interrupciones
+        this.video.addEventListener('loadedmetadata', () => {
+            console.log('Video hero: Metadatos cargados');
+        });
+        
+        // Evento cuando el video se detiene por falta de datos
+        this.video.addEventListener('waiting', () => {
+            console.log('Video hero: Esperando datos');
+            this.showLoadingState();
+        });
+        
+        // Evento cuando el video puede continuar después de waiting
+        this.video.addEventListener('playing', () => {
+            console.log('Video hero: Continuando reproducción');
+            this.hideLoadingState();
+        });
+    }
+    
+    attemptVideoLoad() {
+        if (!this.video) return;
+        
+        // Mostrar estado de carga
+        this.showLoadingState();
+        
+        // Intentar cargar el video
+        try {
+            this.video.load();
+        } catch (error) {
+            console.error('Error al cargar video hero:', error);
+            this.handleVideoError();
+        }
+    }
+    
+    handleVideoReady() {
+        if (!this.video) return;
+        
+        // Intentar reproducir automáticamente
+        this.attemptAutoplay();
+    }
+    
+    async attemptAutoplay() {
+        if (!this.video || this.isPlaying) return;
+        
+        try {
+            // Asegurar que esté silenciado para autoplay
+            this.video.muted = true;
+            this.video.volume = 0;
+            
+            // Intentar reproducir
+            const playPromise = this.video.play();
+            
+            if (playPromise !== undefined) {
+                await playPromise;
+                console.log('Video hero: Autoplay exitoso');
+                this.isPlaying = true;
+                this.hideLoadingState();
+                this.hideFallback();
+            }
+        } catch (error) {
+            console.warn('Video hero: Autoplay falló:', error);
+            this.handleAutoplayFailure();
+        }
+    }
+    
+    handleAutoplayFailure() {
+        console.log('Video hero: Autoplay no permitido, mostrando fallback');
+        this.showFallback();
+        this.hideLoadingState();
+        
+        // Intentar reproducir cuando el usuario interactúe
+        this.setupUserInteractionHandler();
+    }
+    
+    setupUserInteractionHandler() {
+        const handleUserInteraction = async () => {
+            try {
+                if (this.video && !this.isPlaying) {
+                    await this.video.play();
+                    this.hideFallback();
+                    console.log('Video hero: Reproduciendo después de interacción del usuario');
+                }
+            } catch (error) {
+                console.warn('Video hero: Error al reproducir después de interacción:', error);
+            }
+            
+            // Remover listeners después del primer intento
+            document.removeEventListener('click', handleUserInteraction);
+            document.removeEventListener('touchstart', handleUserInteraction);
+        };
+        
+        document.addEventListener('click', handleUserInteraction, { once: true });
+        document.addEventListener('touchstart', handleUserInteraction, { once: true });
+    }
+    
+    handleVideoError() {
+        console.error('Video hero: Error crítico, mostrando fallback permanente');
+        this.showFallback();
+        this.hideLoadingState();
+        
+        // Marcar el video como error
+        if (this.video) {
+            this.video.classList.add('error');
+        }
+        
+        // Intentar recargar si no hemos excedido los reintentos
+        if (this.retryCount < this.maxRetries) {
+            this.retryCount++;
+            console.log(`Video hero: Reintentando carga (${this.retryCount}/${this.maxRetries})`);
+            setTimeout(() => {
+                this.attemptVideoLoad();
+            }, 2000 * this.retryCount); // Delay incremental
+        }
+    }
+    
+    showLoadingState() {
+        if (this.video) {
+            this.video.classList.add('loading');
+        }
+        
+        const phoneContainer = document.querySelector('.hero__phone');
+        if (phoneContainer) {
+            phoneContainer.setAttribute('data-loading', 'true');
+        }
+    }
+    
+    hideLoadingState() {
+        if (this.video) {
+            this.video.classList.remove('loading');
+        }
+        
+        const phoneContainer = document.querySelector('.hero__phone');
+        if (phoneContainer) {
+            phoneContainer.removeAttribute('data-loading');
+        }
+    }
+    
+    showFallback() {
+        if (this.fallbackElement) {
+            this.fallbackElement.style.display = 'block';
+            this.fallbackElement.style.zIndex = '2';
+        }
+        
+        if (this.video) {
+            this.video.style.zIndex = '0';
+        }
+    }
+    
+    hideFallback() {
+        if (this.fallbackElement) {
+            this.fallbackElement.style.display = 'none';
+            this.fallbackElement.style.zIndex = '0';
+        }
+        
+        if (this.video) {
+            this.video.style.zIndex = '1';
+        }
+    }
+    
+    // Método público para pausar el video
+    pause() {
+        if (this.video && this.isPlaying) {
+            this.video.pause();
+        }
+    }
+    
+    // Método público para reproducir el video
+    async play() {
+        if (this.video && !this.isPlaying) {
+            try {
+                await this.video.play();
+            } catch (error) {
+                console.warn('Error al reproducir video hero:', error);
+            }
+        }
+    }
+    
+    // Método público para verificar si el video está reproduciéndose
+    isVideoPlaying() {
+        return this.isPlaying;
+    }
+    
+    // Método para limpiar recursos
+    destroy() {
+        if (this.video) {
+            this.video.pause();
+            this.video.removeAttribute('src');
+            this.video.load();
+        }
+    }
+}
+
 // ===== INICIALIZACIÓN GLOBAL =====
 let imageOptimizer;
+let heroVideoManager;
 
 // ===== FUNCIONES DE TRADUCCIÓN =====
 function initializeLanguageSystem() {
@@ -759,6 +1058,11 @@ function checkReducedMotion() {
         if (animationId) {
             cancelAnimationFrame(animationId);
         }
+        
+        // Pausar video hero si está en movimiento reducido
+        if (heroVideoManager) {
+            heroVideoManager.pause();
+        }
     }
 }
 
@@ -913,7 +1217,8 @@ function initializeParticleSystems() {
     
     const featurePhones = document.querySelectorAll('.feature__phone .phone');
     featurePhones.forEach((phone, index) => {
-        const colors = [
+        
+const colors = [
             'rgba(255, 69, 105, 0.2)',
             'rgba(255, 23, 68, 0.2)',
             'rgba(255, 45, 107, 0.2)',
@@ -1039,6 +1344,11 @@ function openMobileMenu() {
     
     isMenuOpen = true;
     
+    // Pausar video hero cuando se abre el menú para mejor rendimiento
+    if (heroVideoManager && heroVideoManager.isVideoPlaying()) {
+        heroVideoManager.pause();
+    }
+    
     // Animaciones de apertura
     navToggle.classList.add('active');
     navMenu.classList.add('active');
@@ -1077,6 +1387,11 @@ function closeMobileMenu() {
     if (!navToggle || !navMenu) return;
     
     isMenuOpen = false;
+    
+    // Reanudar video hero cuando se cierra el menú
+    if (heroVideoManager && !heroVideoManager.isVideoPlaying() && !isReducedMotion) {
+        heroVideoManager.play();
+    }
     
     // Animaciones de cierre
     navToggle.classList.remove('active');
@@ -1244,7 +1559,7 @@ function handleTabTrap(e) {
     }
 }
 
-// ===== EFECTOS DE SCROLL OPTIMIZADOS (SIN CAMBIOS EN HEADER) =====
+// ===== EFECTOS DE SCROLL OPTIMIZADOS =====
 function initializeScrollEffects() {
     // Scroll listener optimizado con throttling para navegación activa
     window.addEventListener('scroll', throttle(() => {
@@ -1252,6 +1567,7 @@ function initializeScrollEffects() {
             requestAnimationFrame(() => {
                 updateActiveNavOnScroll();
                 handleScrollDirection();
+                handleVideoVisibility();
                 ticking = false;
             });
             ticking = true;
@@ -1271,6 +1587,23 @@ function handleScrollDirection() {
     }
     
     lastScrollY = currentScrollY;
+}
+
+function handleVideoVisibility() {
+    if (!heroVideoManager) return;
+    
+    const heroSection = document.querySelector('.hero');
+    if (!heroSection) return;
+    
+    const rect = heroSection.getBoundingClientRect();
+    const isVisible = rect.bottom > 0 && rect.top < window.innerHeight;
+    
+    // Pausar video cuando no está visible para ahorrar recursos
+    if (!isVisible && heroVideoManager.isVideoPlaying()) {
+        heroVideoManager.pause();
+    } else if (isVisible && !heroVideoManager.isVideoPlaying() && !isReducedMotion) {
+        heroVideoManager.play();
+    }
 }
 
 function updateActiveNavOnScroll() {
@@ -1545,10 +1878,10 @@ function setupImageLazyLoading() {
             imageOptimizer.loadImageImmediately(navLogo, 'logo');
         }
         
-        // Configurar imagen del hero (crítica - cargar inmediatamente)
-        const heroImage = document.querySelector('.hero__phone-app-image');
-        if (heroImage) {
-            imageOptimizer.loadImageImmediately(heroImage, 'hero');
+        // Configurar imagen del hero fallback (crítica - cargar inmediatamente)
+        const heroFallbackImage = document.querySelector('.hero__phone-video-fallback .hero__phone-app-image');
+        if (heroFallbackImage) {
+            imageOptimizer.loadImageImmediately(heroFallbackImage, 'hero');
         }
         
         // Configurar imágenes de características (lazy loading)
@@ -1641,6 +1974,13 @@ function preloadCriticalResources() {
         link.href = src;
         document.head.appendChild(link);
     });
+    
+    // Precargar video hero
+    const videoLink = document.createElement('link');
+    videoLink.rel = 'preload';
+    videoLink.as = 'video';
+    videoLink.href = CONFIG.VIDEO_CONFIG.heroVideoPath;
+    document.head.appendChild(videoLink);
 }
 
 // ===== ACCESIBILIDAD =====
@@ -1683,10 +2023,15 @@ function initializePerformanceOptimizations() {
     }
     
     // Optimizar imágenes de fondo
-    const phoneImages = document.querySelectorAll('.phone__app-image, .hero__phone-app-image');
+    const phoneImages = document.querySelectorAll('.phone__app-image, .hero__phone-video-fallback .hero__phone-app-image');
     phoneImages.forEach(img => {
         img.style.willChange = 'transform';
     });
+    
+    // Optimizar video hero
+    if (heroVideoManager && heroVideoManager.video) {
+        heroVideoManager.video.style.willChange = 'transform';
+    }
     
     // Limpiar listeners en resize
     let resizeTimeout;
@@ -1715,12 +2060,38 @@ function handleResize() {
             system.resizeCanvas();
         }
     });
+    
+    // Reinicializar video hero si es necesario
+    if (heroVideoManager && window.innerWidth <= 768) {
+        // En móvil, asegurar que el video esté optimizado
+        heroVideoManager.setupVideoAttributes();
+    }
+}
+
+// ===== MANEJO DE VISIBILIDAD DE PÁGINA =====
+function initializePageVisibilityHandling() {
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            // Página oculta - pausar video para ahorrar recursos
+            if (heroVideoManager && heroVideoManager.isVideoPlaying()) {
+                heroVideoManager.pause();
+            }
+        } else {
+            // Página visible - reanudar video si no está en movimiento reducido
+            if (heroVideoManager && !heroVideoManager.isVideoPlaying() && !isReducedMotion) {
+                heroVideoManager.play();
+            }
+        }
+    });
 }
 
 // ===== INICIALIZACIÓN PRINCIPAL =====
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializar optimizador de imágenes
     imageOptimizer = new ImageOptimizer();
+    
+    // Inicializar video hero
+    heroVideoManager = new HeroVideoManager();
     
     // Inicializar sistema de idiomas
     initializeLanguageSystem();
@@ -1739,6 +2110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     preloadCriticalResources();
     initializeAccessibility();
     initializeFloatingWidget();
+    initializePageVisibilityHandling();
     
     // Configurar lazy loading para imágenes
     setupImageLazyLoading();
@@ -1750,11 +2122,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Optimizaciones adicionales
     initializePerformanceOptimizations();
+    
+    console.log('StarFlex Landing Page inicializada con video hero');
 });
 
 // ===== MANEJO DE ERRORES =====
 window.addEventListener('error', (e) => {
     console.error('Error en la aplicación:', e.error);
+    
+    // Si hay error con el video, mostrar fallback
+    if (e.error && e.error.message && e.error.message.includes('video')) {
+        if (heroVideoManager) {
+            heroVideoManager.handleVideoError();
+        }
+    }
 });
 
 window.addEventListener('unhandledrejection', (e) => {
@@ -1763,10 +2144,17 @@ window.addEventListener('unhandledrejection', (e) => {
 
 // ===== LIMPIEZA AL SALIR =====
 window.addEventListener('beforeunload', () => {
+    // Limpiar sistemas de partículas
     particleSystems.forEach(system => system.destroy());
     particleSystems = [];
+    
     if (animationId) {
         cancelAnimationFrame(animationId);
+    }
+    
+    // Limpiar video hero
+    if (heroVideoManager) {
+        heroVideoManager.destroy();
     }
 });
 
@@ -1782,3 +2170,4 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+

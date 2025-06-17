@@ -25,9 +25,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="./assets/icon.png">
     
     <!-- Preload de recursos críticos -->
-    <link rel="preload" href="./assets/phones/Hero.avif" as="image" type="image/avif">
-    <link rel="preload" href="./assets/phones/Hero.webp" as="image" type="image/webp">
-    <link rel="preload" href="./assets/phones/Hero.jpg" as="image" type="image/jpeg">
+    <link rel="preload" href="./assets/Hero.mp4" as="video" type="video/mp4">
     <link rel="preload" href="./assets/logo.avif" as="image" type="image/avif">
     <link rel="preload" href="./assets/logo.webp" as="image" type="image/webp">
     <link rel="preload" href="./assets/logo.png" as="image" type="image/png">
@@ -167,15 +165,32 @@
                     </div>
                 </div>
 
-                <!-- iPhone Optimizado con Sistema de Imágenes Modernas -->
+                <!-- iPhone Optimizado con Video Hero -->
                 <div class="hero__media">
                     <div class="hero__phone-container">
                         <div class="hero__phone">
                             <!-- Pantalla limpia sin elementos que interfieren -->
                             <div class="hero__phone-screen">
-                                <!-- Contenido de la app optimizado -->
+                                <!-- Contenido de la app optimizado con video -->
                                 <div class="hero__phone-content">
-                                    <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex"></div>
+                                    <video 
+                                        class="hero__phone-video" 
+                                        id="hero-video"
+                                        autoplay 
+                                        muted 
+                                        loop 
+                                        playsinline
+                                        preload="auto"
+                                        poster="./assets/phones/Hero.jpg"
+                                        role="img" 
+                                        aria-label="Video demostrativo de la interfaz principal de StarFlex"
+                                    >
+                                        <source src="./assets/Hero.mp4" type="video/mp4">
+                                        <!-- Fallback para navegadores sin soporte de video -->
+                                        <div class="hero__phone-video-fallback">
+                                            <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex"></div>
+                                        </div>
+                                    </video>
                                 </div>
                             </div>
                         </div>
@@ -454,7 +469,8 @@
             <div class="videos__cta">
                 <div class="videos__cta-content">
                     <h3 class="videos__cta-title" data-translate="videos-cta-title">¿Listo para Transformar tus Ganancias?</h3>
-                    <p class="videos__cta-description" data-translate="videos-cta-description">
+                    <p class="videos__cta-description" data-translate="
+videos-cta-description">
                         Únete a más de 15,000 conductores que ya están maximizando sus ingresos con StarFlex
                     </p>
                     <div class="videos__cta-buttons">
