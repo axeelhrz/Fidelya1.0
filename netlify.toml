@@ -1,0 +1,36 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NEXT_TELEMETRY_DISABLED = "1"
+  NODE_VERSION = "18"
+  # Asegurarse que las variables de entorno estén disponibles
+  NEXT_PUBLIC_SUPABASE_URL = "${NEXT_PUBLIC_SUPABASE_URL}"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+  NEXT_PUBLIC_APP_URL = "${NEXT_PUBLIC_APP_URL}"
+  GETNET_LOGIN = "${GETNET_LOGIN}"
+  GETNET_SECRET = "${GETNET_SECRET}"
+  GETNET_BASE_URL = "${GETNET_BASE_URL}"
+  SUPABASE_SERVICE_ROLE_KEY = "${SUPABASE_SERVICE_ROLE_KEY}"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Configuración explícita para Next.js
+[functions]
+  # Asegurarse de que las funciones serverless de Next.js se manejen correctamente
+  node_bundler = "esbuild"
+  external_node_modules = ["@supabase/supabase-js"]
+
+# API routes específicas
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/nextjs-server/api/:splat"
+  status = 200
+
+# Redirección para todas las demás rutas
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/nextjs-server/:splat"
+  status = 200

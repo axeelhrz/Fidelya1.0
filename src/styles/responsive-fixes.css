@@ -1,0 +1,62 @@
+/* Mejoras de responsividad global */
+
+/* Mejoras para selects y dropdowns en móviles */
+@media (max-width: 640px) {
+  /* Hacer que los elementos select ocupen la pantalla completa en móvil */
+  [data-radix-popper-content-wrapper] {
+    max-width: calc(100vw - 20px) !important;
+    min-width: calc(100vw - 20px) !important;
+    width: calc(100vw - 20px) !important;
+    transform: translateX(-50%) !important;
+    left: 50% !important;
+  }
+
+  /* Hacer que los elementos del dropdown sean más fáciles de tocar */
+  [role="option"] {
+    padding: 10px !important;
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  /* Aumentar tamaño de fuente para mejor legibilidad */
+  .mobile-text {
+    font-size: 16px !important;
+  }
+}
+
+/* Mejoras para la visualización del menú */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .menu-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .menu-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Mejorar la legibilidad de texto en móviles */
+@media (max-width: 640px) {
+  html {
+    font-size: 16px;
+  }
+  
+  /* Aumentar el tamaño de los elementos interactivos para facilitar el toque */
+  button, 
+  [role="button"],
+  a,
+  input,
+  select,
+  .select-trigger {
+    min-height: 44px !important;
+  }
+}
