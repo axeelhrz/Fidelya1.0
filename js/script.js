@@ -9,8 +9,11 @@ let isReducedMotion = false;
 // Variables para el sistema de idiomas
 let currentLanguage = 'es';
 const translations = {};
-// Variables para el botón flotante
+// Variables para el botón flotante mejorado
 let isFloatingMenuOpen = false;
+let floatingMenuTimeout = null;
+let magneticEffect = false;
+let lastMousePosition = { x: 0, y: 0 };
 // Variables para el control del navbar
 let lastScrollY = 0;
 let isScrollingDown = false;
@@ -28,6 +31,15 @@ const CONFIG = {
     // Configuración de animaciones
     ANIMATION_DURATION: 300,
     SCROLL_THRESHOLD: 100,
+    
+    // Configuración del botón flotante
+    FLOATING_WIDGET: {
+        MAGNETIC_DISTANCE: 100,
+        AUTO_CLOSE_DELAY: 5000,
+        HOVER_DELAY: 200,
+        ANIMATION_DURATION: 800,
+        STAGGER_DELAY: 150
+    },
     
     // Configuración de imágenes optimizadas
     IMAGE_FORMATS: {
@@ -829,9 +841,398 @@ class HeroVideoManager {
     }
 }
 
+// ===== CLASE PARA BOTÓN FLOTANTE MEJORADO =====
+class FloatingWidgetManager {
+    constructor() {
+        this.isOpen = false;
+        this.mainBtn = null;
+        this.menu = null;
+        this.menuItems = [];
+        this.autoCloseTimeout = null;
+        this.magneticEffect = false;
+        this.lastMousePosition = { x: 0, y: 0 };
+        this.isAnimating = false;
+        this.init();
+    }
+    
+    init() {
+        this.mainBtn = document.getElementById('floating-main-btn');
+        this.menu = document.getElementById('floating-menu');
+        this.menuItems = Array.from(document.querySelectorAll('.floating-widget__menu-item'));
+        
+        if (!this.mainBtn || !this.menu) {
+            console.warn('Elementos del botón flotante no encontrados');
+            return;
+        }
+        
+        this.setupEventListeners();
+        this.setupMagneticEffect();
+        this.setupAccessibility();
+        
+        console.log('FloatingWidgetManager inicializado');
+    }
+    
+    setupEventListeners() {
+        // Click en el botón principal
+        this.mainBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggle();
+        });
+        
+        // Hover en el botón principal
+        this.mainBtn.addEventListener('mouseenter', () => {
+            this.onMainButtonHover(true);
+        });
+        
+        this.mainBtn.addEventListener('mouseleave', () => {
+            this.onMainButtonHover(false);
+        });
+        
+        // Click fuera del widget para cerrar
+        document.addEventListener('click', (e) => {
+            if (this.isOpen && !this.isClickInsideWidget(e.target)) {
+                this.close();
+            }
+        });
+        
+        // Escape para cerrar
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen) {
+                this.close();
+            }
+        });
+        
+        // Eventos en elementos del menú
+        this.menuItems.forEach((item, index) => {
+            item.addEventListener('mouseenter', () => {
+                this.onMenuItemHover(item, true);
+            });
+            
+            item.addEventListener('mouseleave', () => {
+                this.onMenuItemHover(item, false);
+            });
+            
+            item.addEventListener('click', (e) => {
+                this.onMenuItemClick(item, e);
+            });
+        });
+        
+        // Auto-cerrar después de un tiempo
+        this.menu.addEventListener('mouseenter', () => {
+            this.clearAutoCloseTimeout();
+        });
+        
+        this.menu.addEventListener('mouseleave', () => {
+            if (this.isOpen) {
+                this.setAutoCloseTimeout();
+            }
+        });
+    }
+    
+    setupMagneticEffect() {
+        if (isReducedMotion) return;
+        
+        const widget = document.querySelector('.floating-widget');
+        if (!widget) return;
+        
+        document.addEventListener('mousemove', (e) => {
+            if (this.isAnimating) return;
+            
+            this.lastMousePosition = { x: e.clientX, y: e.clientY };
+            
+            const rect = this.mainBtn.getBoundingClientRect();
+            const btnCenterX = rect.left + rect.width / 2;
+            const btnCenterY = rect.top + rect.height / 2;
+            
+            const distance = Math.sqrt(
+                Math.pow(e.clientX - btnCenterX, 2) + 
+                Math.pow(e.clientY - btnCenterY, 2)
+            );
+            
+            if (distance < CONFIG.FLOATING_WIDGET.MAGNETIC_DISTANCE) {
+                this.applyMagneticEffect(e.clientX, e.clientY, btnCenterX, btnCenterY, distance);
+            } else {
+                this.resetMagneticEffect();
+            }
+        });
+    }
+    
+    applyMagneticEffect(mouseX, mouseY, btnCenterX, btnCenterY, distance) {
+        if (!this.magneticEffect) {
+            this.magneticEffect = true;
+            this.mainBtn.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        }
+        
+        const maxOffset = 15;
+        const strength = Math.max(0, 1 - (distance / CONFIG.FLOATING_WIDGET.MAGNETIC_DISTANCE));
+        
+        const offsetX = (mouseX - btnCenterX) * strength * 0.3;
+        const offsetY = (mouseY - btnCenterY) * strength * 0.3;
+        
+        const clampedOffsetX = Math.max(-maxOffset, Math.min(maxOffset, offsetX));
+        const clampedOffsetY = Math.max(-maxOffset, Math.min(maxOffset, offsetY));
+        
+        this.mainBtn.style.transform = `translate(${clampedOffsetX}px, ${clampedOffsetY}px)`;
+    }
+    
+    resetMagneticEffect() {
+        if (this.magneticEffect) {
+            this.magneticEffect = false;
+            this.mainBtn.style.transform = '';
+            setTimeout(() => {
+                this.mainBtn.style.transition = '';
+            }, 300);
+        }
+    }
+    
+    setupAccessibility() {
+        // ARIA labels
+        this.mainBtn.setAttribute('aria-label', 'Abrir menú de contacto');
+        this.mainBtn.setAttribute('aria-expanded', 'false');
+        this.mainBtn.setAttribute('aria-haspopup', 'true');
+        
+        // Roles
+        this.menu.setAttribute('role', 'menu');
+        this.menuItems.forEach(item => {
+            item.setAttribute('role', 'menuitem');
+        });
+        
+        // Navegación por teclado
+        this.mainBtn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggle();
+            }
+        });
+        
+        this.menuItems.forEach((item, index) => {
+            item.addEventListener('keydown', (e) => {
+                this.handleMenuKeyNavigation(e, index);
+            });
+        });
+    }
+    
+    handleMenuKeyNavigation(e, currentIndex) {
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                const nextIndex = (currentIndex + 1) % this.menuItems.length;
+                this.menuItems[nextIndex].focus();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                const prevIndex = currentIndex === 0 ? this.menuItems.length - 1 : currentIndex - 1;
+                this.menuItems[prevIndex].focus();
+                break;
+            case 'Escape':
+                e.preventDefault();
+                this.close();
+                this.mainBtn.focus();
+                break;
+            case 'Enter':
+            case ' ':
+                e.preventDefault();
+                this.menuItems[currentIndex].click();
+                break;
+        }
+    }
+    
+    toggle() {
+        if (this.isOpen) {
+            this.close();
+        } else {
+            this.open();
+        }
+    }
+    
+    open() {
+        if (this.isOpen || this.isAnimating) return;
+        
+        this.isAnimating = true;
+        this.isOpen = true;
+        
+        // Actualizar estados
+        this.mainBtn.classList.add('active');
+        this.menu.classList.add('active');
+        this.mainBtn.setAttribute('aria-expanded', 'true');
+        
+        // Animar elementos del menú con retraso escalonado
+        this.menuItems.forEach((item, index) => {
+            setTimeout(() => {
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0) scale(1) rotate(0deg)';
+                
+                // Agregar efecto de rebote
+                setTimeout(() => {
+                    item.style.transform = 'translateY(-3px) scale(1.05) rotate(1deg)';
+                    setTimeout(() => {
+                        item.style.transform = 'translateY(0) scale(1) rotate(0deg)';
+                    }, 150);
+                }, 100);
+            }, index * CONFIG.FLOATING_WIDGET.STAGGER_DELAY);
+        });
+        
+        // Configurar auto-cierre
+        this.setAutoCloseTimeout();
+        
+        // Finalizar animación
+        setTimeout(() => {
+            this.isAnimating = false;
+            // Focus en el primer elemento del menú para accesibilidad
+            if (this.menuItems.length > 0) {
+                this.menuItems[0].focus();
+            }
+        }, CONFIG.FLOATING_WIDGET.ANIMATION_DURATION);
+        
+        console.log('Menú flotante abierto');
+    }
+    
+    close() {
+        if (!this.isOpen || this.isAnimating) return;
+        
+        this.isAnimating = true;
+        this.isOpen = false;
+        
+        // Limpiar timeout
+        this.clearAutoCloseTimeout();
+        
+        // Actualizar estados
+        this.mainBtn.classList.remove('active');
+        this.menu.classList.remove('active');
+        this.mainBtn.setAttribute('aria-expanded', 'false');
+        
+        // Animar cierre de elementos del menú
+        this.menuItems.forEach((item, index) => {
+            setTimeout(() => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(30px) scale(0.7) rotate(-10deg)';
+            }, index * 50);
+        });
+        
+        // Finalizar animación
+        setTimeout(() => {
+            this.isAnimating = false;
+            // Resetear estilos
+            this.menuItems.forEach(item => {
+                item.style.opacity = '';
+                item.style.transform = '';
+            });
+        }, CONFIG.FLOATING_WIDGET.ANIMATION_DURATION);
+        
+        console.log('Menú flotante cerrado');
+    }
+    
+    onMainButtonHover(isHovering) {
+        if (isHovering) {
+            // Efecto de hover en el botón principal
+            this.mainBtn.style.transform = this.magneticEffect ? 
+                this.mainBtn.style.transform : 'scale(1.1) rotate(5deg)';
+        } else {
+            if (!this.magneticEffect) {
+                this.mainBtn.style.transform = '';
+            }
+        }
+    }
+    
+    onMenuItemHover(item, isHovering) {
+        if (isHovering) {
+            // Pausar animación flotante durante hover
+            item.style.animationPlayState = 'paused';
+            
+            // Efecto de hover
+            item.style.transform = 'translateY(-8px) scale(1.2) rotate(5deg)';
+            
+            // Mostrar tooltip con retraso
+            setTimeout(() => {
+                const tooltip = item.querySelector('.floating-widget__tooltip');
+                if (tooltip && item.matches(':hover')) {
+                    tooltip.style.opacity = '1';
+                    tooltip.style.visibility = 'visible';
+                    tooltip.style.transform = 'translateY(-50%) translateX(0)';
+                }
+            }, CONFIG.FLOATING_WIDGET.HOVER_DELAY);
+        } else {
+            // Reanudar animación flotante
+            item.style.animationPlayState = 'running';
+            
+            // Resetear transform
+            item.style.transform = '';
+            
+            // Ocultar tooltip
+            const tooltip = item.querySelector('.floating-widget__tooltip');
+            if (tooltip) {
+                tooltip.style.opacity = '0';
+                tooltip.style.visibility = 'hidden';
+                tooltip.style.transform = 'translateY(-50%) translateX(10px)';
+            }
+        }
+    }
+    
+    onMenuItemClick(item, event) {
+        // Efecto de click
+        item.style.transform = 'translateY(-5px) scale(1.1) rotate(2deg)';
+        
+        // Animación de rebote
+        setTimeout(() => {
+            item.style.transform = 'translateY(-12px) scale(1.25) rotate(-2deg)';
+            setTimeout(() => {
+                item.style.transform = 'translateY(-8px) scale(1.2) rotate(5deg)';
+            }, 150);
+        }, 100);
+        
+        // Cerrar menú después del click
+        setTimeout(() => {
+            this.close();
+        }, 300);
+        
+        console.log('Click en elemento del menú:', item.getAttribute('aria-label'));
+    }
+    
+    setAutoCloseTimeout() {
+        this.clearAutoCloseTimeout();
+        this.autoCloseTimeout = setTimeout(() => {
+            if (this.isOpen) {
+                this.close();
+            }
+        }, CONFIG.FLOATING_WIDGET.AUTO_CLOSE_DELAY);
+    }
+    
+    clearAutoCloseTimeout() {
+        if (this.autoCloseTimeout) {
+            clearTimeout(this.autoCloseTimeout);
+            this.autoCloseTimeout = null;
+        }
+    }
+    
+    isClickInsideWidget(target) {
+        const widget = document.querySelector('.floating-widget');
+        return widget && widget.contains(target);
+    }
+    
+    // Método público para obtener el estado
+    getState() {
+        return {
+            isOpen: this.isOpen,
+            isAnimating: this.isAnimating,
+            magneticEffect: this.magneticEffect
+        };
+    }
+    
+    // Método para limpiar recursos
+    destroy() {
+        this.clearAutoCloseTimeout();
+        this.resetMagneticEffect();
+        
+        // Remover event listeners si es necesario
+        // (En este caso, los listeners se limpiarán automáticamente al recargar la página)
+    }
+}
+
 // ===== INICIALIZACIÓN GLOBAL =====
 let imageOptimizer;
 let heroVideoManager;
+let floatingWidgetManager;
 
 // ===== FUNCIONES DE TRADUCCIÓN =====
 function initializeLanguageSystem() {
@@ -942,75 +1343,36 @@ function updateLanguageButtons() {
     }
 }
 
-// ===== FUNCIONES DEL BOTÓN FLOTANTE =====
+// ===== FUNCIONES DEL BOTÓN FLOTANTE (LEGACY - MANTENIDAS POR COMPATIBILIDAD) =====
 function initializeFloatingWidget() {
-    const floatingMainBtn = document.getElementById('floating-main-btn');
-    const floatingMenu = document.getElementById('floating-menu');
+    // Crear instancia del nuevo manager
+    floatingWidgetManager = new FloatingWidgetManager();
     
-    if (!floatingMainBtn || !floatingMenu) return;
+    // Mantener variables globales para compatibilidad
+    isFloatingMenuOpen = false;
     
-    floatingMainBtn.addEventListener('click', () => {
-        toggleFloatingMenu();
-    });
-    
-    document.addEventListener('click', (e) => {
-        const floatingWidget = document.getElementById('floating-widget');
-        if (isFloatingMenuOpen && floatingWidget && !floatingWidget.contains(e.target)) {
-            closeFloatingMenu();
-        }
-    });
-    
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && isFloatingMenuOpen) {
-            closeFloatingMenu();
-        }
-    });
+    console.log('Sistema de botón flotante inicializado');
 }
 
 function toggleFloatingMenu() {
-    if (isFloatingMenuOpen) {
-        closeFloatingMenu();
-    } else {
-        openFloatingMenu();
+    if (floatingWidgetManager) {
+        floatingWidgetManager.toggle();
+        isFloatingMenuOpen = floatingWidgetManager.getState().isOpen;
     }
 }
 
 function openFloatingMenu() {
-    const floatingMainBtn = document.getElementById('floating-main-btn');
-    const floatingMenu = document.getElementById('floating-menu');
-    
-    if (!floatingMainBtn || !floatingMenu) return;
-    
-    isFloatingMenuOpen = true;
-    floatingMainBtn.classList.add('active');
-    floatingMenu.classList.add('active');
-    floatingMainBtn.setAttribute('aria-expanded', 'true');
-    
-    const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
-    menuItems.forEach((item, index) => {
-        setTimeout(() => {
-            item.style.transform = 'translateY(0) scale(1)';
-            item.style.opacity = '1';
-        }, index * 100);
-    });
+    if (floatingWidgetManager) {
+        floatingWidgetManager.open();
+        isFloatingMenuOpen = true;
+    }
 }
 
 function closeFloatingMenu() {
-    const floatingMainBtn = document.getElementById('floating-main-btn');
-    const floatingMenu = document.getElementById('floating-menu');
-    
-    if (!floatingMainBtn || !floatingMenu) return;
-    
-    isFloatingMenuOpen = false;
-    floatingMainBtn.classList.remove('active');
-    floatingMenu.classList.remove('active');
-    floatingMainBtn.setAttribute('aria-expanded', 'false');
-    
-    const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
-    menuItems.forEach(item => {
-        item.style.transform = '';
-        item.style.opacity = '';
-    });
+    if (floatingWidgetManager) {
+        floatingWidgetManager.close();
+        isFloatingMenuOpen = false;
+    }
 }
 
 // ===== DETECCIÓN DE PREFERENCIAS DE MOVIMIENTO =====
@@ -1556,8 +1918,7 @@ function initializeFAQ() {
     
     if (searchInput) {
         searchInput.addEventListener('input', debounce((e) => {
-            const searchTerm = e.target.value.toLowerCase
-().trim();
+            const searchTerm = e.target.value.toLowerCase().trim();
             let visibleItems = 0;
             
             faqItems.forEach(item => {
@@ -1773,8 +2134,8 @@ function initializeAccessibility() {
             if (isMenuOpen) {
                 closeMobileMenu();
             }
-            if (isFloatingMenuOpen) {
-                closeFloatingMenu();
+            if (floatingWidgetManager && floatingWidgetManager.getState().isOpen) {
+                floatingWidgetManager.close();
             }
         }
     });
@@ -1833,8 +2194,8 @@ function handleResize() {
     }
     
     // Cerrar menú flotante en resize
-    if (isFloatingMenuOpen) {
-        closeFloatingMenu();
+    if (floatingWidgetManager && floatingWidgetManager.getState().isOpen) {
+        floatingWidgetManager.close();
     }
     
     // Reinicializar video hero si es necesario
@@ -1884,7 +2245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeLazyLoading();
     preloadCriticalResources();
     initializeAccessibility();
-    initializeFloatingWidget();
+    initializeFloatingWidget(); // Inicializar el nuevo sistema de botón flotante
     initializePageVisibilityHandling();
     
     // Configurar lazy loading para imágenes
@@ -1898,7 +2259,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Optimizaciones adicionales
     initializePerformanceOptimizations();
     
-    console.log('StarFlex Landing Page inicializada con toggle de idioma en header y iconos de apps corregidos');
+    console.log('StarFlex Landing Page inicializada con botón flotante mejorado y animaciones espectaculares');
 });
 
 // ===== MANEJO DE ERRORES =====
@@ -1922,6 +2283,11 @@ window.addEventListener('beforeunload', () => {
     // Limpiar video hero
     if (heroVideoManager) {
         heroVideoManager.destroy();
+    }
+    
+    // Limpiar botón flotante
+    if (floatingWidgetManager) {
+        floatingWidgetManager.destroy();
     }
 });
 
