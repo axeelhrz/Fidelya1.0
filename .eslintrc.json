@@ -1,14 +1,8 @@
 {
-  "extends": "next/core-web-vitals",
-  "root": true,
-  "ignorePatterns": ["**/*"],
+  "extends": ["next/core-web-vitals", "prettier"],
+  "plugins": ["react-hooks"],
   "rules": {
-    "@typescript-eslint/no-unused-vars": "off",
-    "@typescript-eslint/no-explicit-any": "off",
-    "react/no-unescaped-entities": "off",
-    "@typescript-eslint/no-empty-object-type": "off",
-    "react-hooks/exhaustive-deps": "off",
-    "@typescript-eslint/ban-types": "off",
-    "react/jsx-no-target-blank": "off"
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
   }
 }

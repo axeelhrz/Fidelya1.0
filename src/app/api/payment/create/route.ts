@@ -1,222 +1,328 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
+import { GetNetPaymentRequest, GetNetPaymentResponse } from '@/services/paymentService'
+import * as crypto from 'crypto'
 
-// Función para verificar si estamos en fase de compilación o en tiempo de ejecución
-function isRuntimeEnvironment() {
-  return typeof window === 'undefined' && process.env.NODE_ENV === 'production';
+// Configuración de GetNet corregida
+const GETNET_CONFIG = {
+  apiUrl: process.env.GETNET_BASE_URL || 'https://checkout.getnet.cl',
+  testApiUrl: 'https://checkout.test.getnet.cl',
+  login: process.env.GETNET_LOGIN || '',
+  secret: process.env.GETNET_SECRET || '',
+  environment: process.env.GETNET_ENVIRONMENT || 'test'
 }
 
-// Solo registramos las variables si estamos en tiempo de ejecución, no en build time
-if (isRuntimeEnvironment()) {
-  console.log('Variables de entorno cargadas en runtime:', {
-    GETNET_LOGIN: process.env.GETNET_LOGIN,
-    GETNET_SECRET: process.env.GETNET_SECRET?.substring(0, 3) + '...',
-    GETNET_BASE_URL: process.env.GETNET_BASE_URL,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL
-  });
+// Interface para la autenticación de GetNet según manual
+interface GetNetAuth {
+  login: string
+  tranKey: string
+  nonce: string
+  seed: string
 }
-// Durante la compilación no mostraremos estos valores
 
-export async function POST(req: NextRequest) {
+// Interface para el request completo de GetNet
+interface GetNetWebCheckoutRequest {
+  auth: GetNetAuth
+  locale: string
+  buyer: {
+    name: string
+    surname: string
+    email: string
+    document: string
+    documentType: string
+    mobile: string
+  }
+  payment: {
+    reference: string
+    description: string
+    amount: {
+      currency: string
+      total: number
+    }
+  }
+  expiration: string
+  ipAddress: string
+  userAgent: string
+  returnUrl: string
+  cancelUrl: string
+  notifyUrl: string
+}
+
+// Interface para la respuesta de GetNet
+interface GetNetSessionResponse {
+  status: {
+    status: string
+    message: string
+    reason?: string | number
+    date?: string
+  }
+  requestId?: string
+  processUrl?: string
+}
+
+export async function POST(request: NextRequest) {
   try {
-    // 1. Extraer datos de la solicitud
-    const { transactionId, montoTotal, orderData } = await req.json()
-    console.log('Solicitud de pago recibida:', { transactionId, montoTotal, orderDataPresent: !!orderData })
+    const body: GetNetPaymentRequest = await request.json()
+    
+    console.log('Creating GetNet Web Checkout session:', body)
 
-    // 2. Verificar variables de entorno
-    if (!process.env.GETNET_LOGIN || !process.env.GETNET_SECRET || !process.env.GETNET_BASE_URL || !process.env.NEXT_PUBLIC_APP_URL) {
-      console.error('Variables de entorno faltantes:', { 
-        login: !!process.env.GETNET_LOGIN, 
-        secret: !!process.env.GETNET_SECRET,
-        baseUrl: !!process.env.GETNET_BASE_URL,
-        appUrl: !!process.env.NEXT_PUBLIC_APP_URL
+    // Validar datos requeridos
+    if (!body.amount || !body.orderId || !body.customerEmail) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Datos incompletos: amount, orderId y customerEmail son requeridos' 
+        },
+        { status: 400 }
+      )
+    }
+
+    // Validar configuración de GetNet
+    if (!GETNET_CONFIG.login || !GETNET_CONFIG.secret) {
+      console.error('GetNet configuration missing:', {
+        hasLogin: !!GETNET_CONFIG.login,
+        hasSecret: !!GETNET_CONFIG.secret,
+        environment: GETNET_CONFIG.environment
       })
-      return NextResponse.json({
-        error: 'Configuración de GetNet incompleta',
-        missingVars: {
-          login: !process.env.GETNET_LOGIN,
-          secret: !process.env.GETNET_SECRET,
-          baseUrl: !process.env.GETNET_BASE_URL,
-          appUrl: !process.env.NEXT_PUBLIC_APP_URL
-        }
-      }, { status: 500 })
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Configuración de pago no disponible' 
+        },
+        { status: 500 }
+      )
     }
 
-    // 3. Generar credenciales de autenticación exactamente como lo indica GetNet
-    
-    // Credenciales
-    const login = process.env.GETNET_LOGIN || '';
-    const secretKey = process.env.GETNET_SECRET || '';
-    
-    console.log('Credenciales:', { 
-      login, 
-      secretKeyLength: secretKey.length,
-      secretKeyStart: secretKey.substring(0, 3) + '...' 
-    });
-    
-    // Generar seed con formato ISO-8601 en UTC exacto sin manipulaciones
-    // IMPORTANTE: Usando el tiempo exacto actual, siguiendo requerimientos de GetNet
-    const seedDate = new Date();
-    
-    // Usar formato ISO completo con UTC (Z) sin manipular offsetes manualmente
-    // GetNet compara contra UTC, no contra hora local de Chile
-    const seed = seedDate.toISOString();
-    
-    // Debug de tiempo para diagnóstico
-    console.log('⏰ Diagnóstico de tiempo:');
-    console.log('- Seed enviado a GetNet (UTC):', seed);
-    console.log('- Formato correcto según GetNet: ISO-8601 con Z');
-    console.log('- Sin manipulaciones manuales ni offsetes estáticos');
-    console.log('- Hora actual del sistema:', new Date().toISOString());
-    
-    // Generar nonce como bytes aleatorios y luego Base64
-    const rawNonce = crypto.randomBytes(16);
-    const nonce = rawNonce.toString('base64');
-    
-    // Generar tranKey concatenando rawNonce, seed y secretKey, luego SHA-256 y Base64
-    const hash = crypto.createHash('sha256')
-      .update(Buffer.concat([rawNonce, Buffer.from(seed), Buffer.from(secretKey)]))
-      .digest();
-    const tranKey = hash.toString('base64');
-    
-    // Imprimir datos de autenticación para depuración
-    console.log('Datos de autenticación:', {
-      login,
-      seed,
-      nonce: nonce.substring(0, 10) + '...',
-      tranKeyLength: tranKey.length
-    });
+    // Determinar URL de API según el ambiente
+    const baseUrl = GETNET_CONFIG.environment === 'production' 
+      ? GETNET_CONFIG.apiUrl 
+      : GETNET_CONFIG.testApiUrl
 
-    // 4. Construir carga útil
-    const payload = {
-      auth: { login, tranKey, nonce, seed },
-      payment: {
-        reference: transactionId,
-        description: `Pedido Casino TX ${transactionId}`,
-        amount: { currency: 'CLP', total: montoTotal }
+    // Extraer nombre y apellido del customerName
+    const fullName = body.customerName || body.customerEmail.split('@')[0]
+    const nameParts = fullName.split(' ')
+    const firstName = nameParts[0] || 'Cliente'
+    const lastName = nameParts.slice(1).join(' ') || 'Usuario'
+
+    // Generar fecha de expiración (5 minutos desde ahora) en formato correcto
+    const expirationDate = new Date()
+    expirationDate.setMinutes(expirationDate.getMinutes() + 5)
+    // Formato ISO8601 con timezone de Chile
+    const expiration = expirationDate.toISOString().replace('Z', '-04:00')
+
+    // Obtener IP del cliente (convertir IPv6 localhost a IPv4)
+    let clientIP = request.headers.get('x-forwarded-for') || 
+                   request.headers.get('x-real-ip') || 
+                   '127.0.0.1'
+    
+    // Convertir ::1 (IPv6 localhost) a 127.0.0.1 (IPv4 localhost)
+    if (clientIP === '::1' || clientIP === '::ffff:127.0.0.1') {
+      clientIP = '127.0.0.1'
+    }
+
+    // Obtener User Agent
+    const userAgent = request.headers.get('user-agent') || 'CasinoEscolar/1.0'
+
+    // Generar autenticación ANTES de crear el payload
+    const auth = generateGetNetAuth(GETNET_CONFIG.login, GETNET_CONFIG.secret)
+
+    // MEJORAR URLs de retorno para incluir parámetros necesarios
+    const baseReturnUrl = body.returnUrl || `${request.nextUrl.origin}/payment/return`
+    const returnUrlWithParams = `${baseReturnUrl}?reference=${body.orderId}&orderId=${body.orderId}`
+    const cancelUrlWithParams = `${request.nextUrl.origin}/mi-pedido?cancelled=true&reference=${body.orderId}`
+
+    // Preparar request completo según manual oficial de GetNet Web Checkout
+    const checkoutRequest: GetNetWebCheckoutRequest = {
+      auth: auth,
+      locale: 'es_CL',
+      buyer: {
+        name: firstName,
+        surname: lastName,
+        email: body.customerEmail,
+        document: '11111111-9', // RUT por defecto para testing
+        documentType: 'CLRUT',
+        mobile: '56999999999' // Teléfono por defecto para testing
       },
-      // Fecha de expiración coherente con el seed: formato ISO en UTC
-      // 15 minutos desde el momento actual, sin manipulaciones manuales
-      expiration: new Date(seedDate.getTime() + 15 * 60 * 1000).toISOString(), // 15 minutos en formato UTC
-      // Añadimos parámetros a la URL de retorno para identificar la transacción
-      // El requestId será agregado automáticamente por GetNet a la URL
-      returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/result?transactionId=${transactionId}`,
-      // Omitir pantalla de resultado y redirigir directamente a returnUrl
-      skipResult: true,
-      ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
-      userAgent: req.headers.get('user-agent'),
-      // Añadir configuración adicional que podría requerir GetNet
-      locale: 'es_CL'
+      payment: {
+        reference: body.orderId,
+        description: body.description || `Pedido Casino Escolar #${body.orderId}`,
+        amount: {
+          currency: 'CLP',
+          total: Math.round(body.amount)
+        }
+      },
+      expiration: expiration,
+      ipAddress: clientIP,
+      userAgent: userAgent,
+      returnUrl: returnUrlWithParams,
+      cancelUrl: cancelUrlWithParams,
+      notifyUrl: body.notifyUrl || `${request.nextUrl.origin}/api/payment/notify`
     }
 
-    console.log('Enviando solicitud a GetNet:', {
-      url: `${process.env.GETNET_BASE_URL}/api/session/`,
-      payload
+    console.log('GetNet Web Checkout request prepared:', {
+      ...checkoutRequest,
+      auth: { 
+        login: auth.login,
+        tranKey: '[HIDDEN]',
+        nonce: auth.nonce,
+        seed: auth.seed
+      },
+      endpoint: `${baseUrl}/api/session/`
     })
 
-    // 5. Enviar solicitud a GetNet
-    // Asegurarnos de que la URL está bien formada
-    if (!process.env.GETNET_BASE_URL) {
-      throw new Error('URL base de GetNet no disponible')
-    }
-    
-    const getnetApiUrl = `${process.env.GETNET_BASE_URL}/api/session/`
-    console.log('URL completa de API GetNet:', getnetApiUrl)
-    
-    const response = await fetch(
-      getnetApiUrl,
-      { 
-        method: 'POST', 
-        headers: {'Content-Type':'application/json'}, 
-        body: JSON.stringify(payload) 
-      }
-    )
+    // Llamar a la API de GetNet Web Checkout
+    const getNetResponse = await fetch(`${baseUrl}/api/session/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'CasinoEscolar/1.0'
+      },
+      body: JSON.stringify(checkoutRequest)
+    })
 
-    // 6. Procesar respuesta
-    const responseText = await response.text()
-    console.log('Respuesta raw de GetNet:', responseText)
-    
-    // Intentar parsear como JSON si es posible
-    let data
+    let getNetData: GetNetSessionResponse
     try {
-      data = JSON.parse(responseText)
-      console.log('Respuesta JSON de GetNet:', data)
+      getNetData = await getNetResponse.json()
     } catch (parseError) {
-      console.error('No se pudo parsear la respuesta como JSON:', parseError)
-      return NextResponse.json({ 
-        error: 'Respuesta no válida de GetNet', 
-        responseText 
-      }, { status: 500 })
+      console.error('Error parsing GetNet response:', parseError)
+      const responseText = await getNetResponse.text()
+      console.error('Raw GetNet response:', responseText)
+      
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Error en la respuesta del proveedor de pagos (${getNetResponse.status})` 
+        },
+        { status: 500 }
+      )
     }
     
-    // Verificar si hay error
-    if (!response.ok) {
-      // Extraer mensaje de error de manera segura
-      let errorMessage = 'Error en la API de GetNet';
+    console.log('GetNet Web Checkout API response:', {
+      status: getNetResponse.status,
+      statusText: getNetResponse.statusText,
+      data: getNetData
+    })
+
+    if (!getNetResponse.ok) {
+      // Manejar diferentes tipos de errores de GetNet
+      let errorMessage = 'Error del proveedor de pagos'
       
-      try {
-        if (data.status && data.status.status) {
-          errorMessage = `GetNet status: ${data.status.status}`;
-        } else if (data.error) {
-          errorMessage = typeof data.error === 'string'
-            ? data.error
-            : JSON.stringify(data.error);
-        } else if (data.message) {
-          errorMessage = data.message;
-        }
-      } catch (e) {
-        console.error('Error al procesar mensaje de error:', e);
+      if (getNetResponse.status === 404) {
+        errorMessage = 'Servicio de pagos no disponible temporalmente'
+      } else if (getNetResponse.status === 401) {
+        // Error de autenticación - proporcionar más detalles
+        const authError = getNetData?.status?.message || 'Error de autenticación'
+        console.error('GetNet authentication failed:', {
+          login: GETNET_CONFIG.login,
+          hasSecret: !!GETNET_CONFIG.secret,
+          authError: authError,
+          reason: getNetData?.status?.reason
+        })
+        errorMessage = `Error de autenticación: ${authError}`
+      } else if (getNetResponse.status === 400) {
+        errorMessage = getNetData?.status?.message || 'Datos de pago inválidos'
+      } else if (getNetData?.status?.message) {
+        errorMessage = getNetData.status.message
       }
-      
-      console.error('Error en respuesta de GetNet:', JSON.stringify(data, null, 2));
-      
-      return NextResponse.json({ 
-        error: errorMessage,
-        statusCode: response.status,
-        statusText: response.statusText
-      }, { status: response.status });
-    }
-    
-    // 7. Validar datos recibidos
-    if (!data.processUrl) {
-      console.error('Respuesta de GetNet no contiene processUrl:', data)
-      
-      // Devolver toda la respuesta para depuración
-      return NextResponse.json({ 
-        error: 'Respuesta inválida de GetNet', 
-        data, 
-        responseStatus: response.status,
-        responseStatusText: response.statusText
-      }, { status: 200 })
+
+      throw new Error(`${errorMessage} (${getNetResponse.status})`)
     }
 
-    // 8. Guardamos los datos del pedido en localStorage en el cliente
-    // En vez de usar supabase directamente, lo manejaremos desde el webhook 
-    // con una implementación posterior
-    if (orderData && Array.isArray(orderData) && orderData.length > 0) {
-      console.log(`Recibidos ${orderData.length} registros de pedido para transaction_id: ${transactionId}`);
-      // No hacemos nada en el servidor con estos datos por ahora
-      // Para debugging
-      console.log('Los datos del pedido serán procesados por el webhook cuando reciba la notificación de GetNet');
+    // Procesar respuesta exitosa de GetNet Web Checkout
+    if (getNetData.status?.status === 'OK' && getNetData.processUrl) {
+      const response: GetNetPaymentResponse = {
+        success: true,
+        paymentId: getNetData.requestId || body.orderId,
+        redirectUrl: getNetData.processUrl,
+        transactionId: getNetData.requestId
+      }
+
+      console.log('GetNet Web Checkout session created successfully:', response)
+      return NextResponse.json(response)
     } else {
-      console.warn('No se recibieron datos de pedido');
+      // Si la respuesta no indica éxito claramente
+      const errorMsg = getNetData.status?.message || 'Respuesta inesperada del proveedor de pagos'
+      console.error('GetNet Web Checkout failed:', getNetData)
+      throw new Error(errorMsg)
+    }
+
+  } catch (error) {
+    console.error('Error creating GetNet Web Checkout session:', error)
+    
+    // Proporcionar mensaje de error más específico
+    let errorMessage = 'Error interno del servidor'
+    
+    if (error instanceof Error) {
+      if (error.message.includes('fetch')) {
+        errorMessage = 'No se pudo conectar con el proveedor de pagos'
+      } else if (error.message.includes('ENOTFOUND')) {
+        errorMessage = 'Servicio de pagos no disponible. Verificando configuración...'
+      } else if (error.message.includes('404')) {
+        errorMessage = 'Servicio de pagos no disponible. Por favor, intenta más tarde.'
+      } else if (error.message.includes('401') || error.message.includes('autenticación')) {
+        errorMessage = 'Error de configuración del sistema de pagos'
+      } else {
+        errorMessage = error.message
+      }
     }
     
-    // 9. Devolver resultado
-    // Devolver processUrl, requestId y el returnUrl que debe usar el Lightbox
-    const result = {
-      processUrl: data.processUrl,
-      requestId: data.requestId,
-      originalTransactionId: transactionId,
-      // Instrucción para el Lightbox: returnUrl con ambos parámetros y skipResult
-      returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/result?transactionId=${transactionId}&requestId=${data.requestId}`,
-      skipResult: true
-    }
-    return NextResponse.json(result)
-  } catch (e: any) {
-    console.error("Error completo de GetNet CREATE:", e)
-    return NextResponse.json({ 
-      error: e.message || 'Error al procesar la solicitud de pago' 
-    }, { status: 500 })
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: errorMessage
+      },
+      { status: 500 }
+    )
   }
+}
+
+// Generar autenticación según manual de GetNet (páginas 11-12)
+// CORREGIDO: Implementación exacta según documentación
+function generateGetNetAuth(login: string, secretKey: string): GetNetAuth {
+  try {
+    // 1. Generar nonce (16 bytes aleatorios en base64)
+    const nonceBytes = crypto.randomBytes(16)
+    const nonce = nonceBytes.toString('base64')
+    
+    // 2. Generar seed (timestamp actual en ISO8601 UTC)
+    const seed = new Date().toISOString()
+    
+    // 3. Crear tranKey según fórmula exacta del manual:
+    // tranKey = Base64(SHA256(nonce + seed + secretKey))
+    // IMPORTANTE: nonce debe ser los bytes originales, no la versión base64
+    const tranKeyInput = Buffer.concat([
+      nonceBytes,  // nonce como bytes originales
+      Buffer.from(seed, 'utf8'),
+      Buffer.from(secretKey, 'utf8')
+    ])
+    
+    const tranKeyHash = crypto.createHash('sha256').update(tranKeyInput).digest()
+    const tranKey = tranKeyHash.toString('base64')
+    
+    console.log('Generated GetNet auth (corrected):', {
+      login,
+      nonce: nonce.substring(0, 10) + '...',
+      seed,
+      tranKey: tranKey.substring(0, 10) + '...',
+      secretKeyLength: secretKey.length
+    })
+    
+    return {
+      login,
+      tranKey,
+      nonce,
+      seed
+    }
+  } catch (error) {
+    console.error('Error generating GetNet auth:', error)
+    throw new Error('Error al generar autenticación de seguridad')
+  }
+}
+
+// Manejar otros métodos HTTP
+export async function GET() {
+  return NextResponse.json(
+    { error: 'Método no permitido' },
+    { status: 405 }
+  )
 }

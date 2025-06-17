@@ -1,196 +1,93 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-import type { User, UserProfile } from '@/types/database';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
+import { doc, getDoc } from 'firebase/firestore'
+import { auth, db } from '@/app/lib/firebase'
+import { User } from '@/types/panel'
 
-interface AuthState {
-  user: User | null;
-  profile: UserProfile | null;
-  loading: boolean;
-  error: string | null;
+interface ChildData {
+  id?: string
+  name?: string
+  nombre?: string
+  curso?: string
+  class?: string
+  rut?: string
+  active?: boolean
+  age?: number
+  edad?: number
+  level?: string
 }
 
-export function useAuth() {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    profile: null,
-    loading: true,
-    error: null
-  });
+interface UseAuthReturn {
+  user: User | null
+  isLoading: boolean
+  isAuthenticated: boolean
+}
+
+export default function useAuth(): UseAuthReturn {
+  const router = useRouter()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    try {
-      // TODO: Implementar autenticación con Supabase
-      // Por ahora, simular estado no autenticado
-      setState({
-        user: null,
-        profile: null,
-        loading: false,
-        error: null
-      });
-    } catch (error) {
-      console.error('Error initializing auth:', error);
-      setState({
-        user: null,
-        profile: null,
-        loading: false,
-        error: 'Error initializing authentication'
-      });
-    }
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
+          if (userDoc.exists()) {
+            const userData = userDoc.data()
+            
+            // Mapear y limpiar los datos de los hijos
+            const children = (userData.children || userData.hijos || []).map((child: ChildData) => ({
+              id: child.id || Date.now().toString(),
+              name: child.name || child.nombre || '',
+              curso: child.curso || child.class || '',
+              rut: child.rut || null, // Usar null en lugar de undefined
+              active: child.active !== undefined ? child.active : true,
+              age: child.age || child.edad || 0,
+              edad: child.edad || child.age || 0,
+              level: child.level || 'Lower School'
+            })).filter((child: ChildData & { name: string }) => child.name.trim() !== '')
+            
+            // Mapear los datos del usuario al formato esperado
+            const mappedUser: User = {
+              id: firebaseUser.uid,
+              email: userData.email || firebaseUser.email || '',
+              firstName: userData.firstName || userData.nombre || '',
+              lastName: userData.lastName || userData.apellido || '',
+              tipoUsuario: userData.tipoUsuario || userData.userType || 'apoderado',
+              children: children,
+              active: userData.active !== false,
+              createdAt: userData.createdAt?.toDate() || new Date(),
+              phone: userData.phone || null // Usar null en lugar de undefined
+            }
+            
+            setUser(mappedUser)
+          } else {
+            // Usuario no encontrado en Firestore
+            setUser(null)
+            router.push('/auth/registro')
+          }
+        } catch (error) {
+          console.error('Error al obtener datos del usuario:', error)
+          setUser(null)
+          router.push('/auth/login')
+        }
+      } else {
+        setUser(null)
+        router.push('/auth/login')
+      }
+      setIsLoading(false)
+    })
 
-  // Función para hacer login
-  const signIn = async (email: string, password: string) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-
-    try {
-      // TODO: Implementar login con Supabase
-      console.log('Login attempt:', email);
-      
-      // Simulación temporal - simular éxito para testing
-      const mockUser: User = {
-        id: '1',
-        email: email,
-        fullName: 'Usuario de Prueba',
-        phone: '+56 9 1234 5678',
-        role: 'user',
-        isActive: true,
-        loginCount: 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      const mockProfile: UserProfile = {
-        id: '1',
-        email: email,
-        fullName: 'Usuario de Prueba',
-        phone: '+56 9 1234 5678',
-        role: 'user',
-        isActive: true,
-        lastLogin: new Date().toISOString(),
-        loginCount: 1,
-        students: []
-      };
-
-      setState({
-        user: mockUser,
-        profile: mockProfile,
-        loading: false,
-        error: null
-      });
-
-      return { success: true, data: { user: mockUser as any, profile: mockProfile as any } };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
-      return { success: false, error: errorMessage };
-    }
-  };
-
-  // Función para registrarse
-  const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-
-    try {
-      // TODO: Implementar registro con Supabase
-      console.log('Signup attempt:', email, fullName);
-      
-      // Simulación temporal - simular éxito para testing
-      const mockUser: User = {
-        id: '2',
-        email: email,
-        fullName: fullName,
-        phone: phone,
-        role: 'user',
-        isActive: true,
-        loginCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      const mockProfile: UserProfile = {
-        id: '2',
-        email: email,
-        fullName: fullName,
-        phone: phone || '',
-        role: 'user',
-        isActive: true,
-        lastLogin: null,
-        loginCount: 0,
-        students: []
-      };
-
-      setState({
-        user: mockUser,
-        profile: mockProfile,
-        loading: false,
-        error: null
-      });
-
-      return { success: true, data: { user: mockUser as any, profile: mockProfile as any } };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
-      return { success: false, error: errorMessage };
-    }
-  };
-
-  // Función para hacer logout
-  const signOut = async () => {
-    setState(prev => ({ ...prev, loading: true }));
-
-    try {
-      // TODO: Implementar logout con Supabase
-      setState({
-        user: null,
-        profile: null,
-        loading: false,
-        error: null
-      });
-
-      return { success: true };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
-      return { success: false, error: errorMessage };
-    }
-  };
-
-  // Función para actualizar perfil
-  const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!state.user) return { success: false, error: 'No hay usuario autenticado' };
-
-    setState(prev => ({ ...prev, loading: true, error: null }));
-
-    try {
-      // TODO: Implementar actualización de perfil con Supabase
-      console.log('Profile update:', updates);
-      
-      // Simulación temporal
-      const updatedProfile = state.profile ? { ...state.profile, ...updates } : null;
-      
-      setState(prev => ({ 
-        ...prev, 
-        profile: updatedProfile,
-        loading: false 
-      }));
-      
-      return { success: true, data: updatedProfile };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
-      return { success: false, error: errorMessage };
-    }
-  };
+    return () => unsubscribe()
+  }, [router])
 
   return {
-    ...state,
-    signIn,
-    signUp,
-    signOut,
-    updateProfile,
-    isAuthenticated: !!state.user,
-    isAdmin: state.profile?.role === 'admin' || state.profile?.role === 'super_admin',
-    isSuperAdmin: state.profile?.role === 'super_admin'
-  };
+    user,
+    isLoading,
+    isAuthenticated: !!user
+  }
 }

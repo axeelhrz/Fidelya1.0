@@ -1,484 +1,527 @@
-"use client";
+"use client"
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { AdminLayout } from '@/components/admin/AdminLayout'
+import { OrdersFilters } from '@/components/admin/pedidos/OrdersFilters'
+import { OrdersMetrics } from '@/components/admin/pedidos/OrdersMetrics'
+import { OrdersTable } from '@/components/admin/pedidos/OrdersTable'
+import { OrderDetailModal } from '@/components/admin/pedidos/OrderDetailModal'
+import { DailyMenuSummary } from '@/components/admin/pedidos/DailyMenuSummary'
+import { GeneratePDFButton } from '@/components/admin/pedidos/GeneratePDFButton'
+import { useAdminAuth } from '@/hooks/useAdminAuth'
+import { useAdminOrders } from '@/hooks/useAdminOrders'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AlertTriangle, RefreshCw, FileText, Calendar, Clock, CheckCircle, XCircle, AlertCircle, ChefHat, BarChart3 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { useToast } from '@/hooks/use-toast'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  ShoppingCart,
-  Search,
-  Download,
-  Eye,
-  Package,
-  CreditCard,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Filter,
-  Calendar,
-  User,
-  DollarSign,
-  TrendingUp,
-  MoreHorizontal,
-  ArrowUpRight,
-  Sparkles
-} from 'lucide-react';
+export default function AdminPedidosPage() {
+  const { adminUser, isLoading: authLoading } = useAdminAuth()
+  const { toast } = useToast()
+  const {
+    orders,
+    metrics,
+    isLoading,
+    error,
+    filters,
+    updateFilters,
+    refreshOrders,
+    updateOrderStatus,
+    deleteOrder
+  } = useAdminOrders()
 
-interface Order {
-  id: string;
-  studentName: string;
-  guardianName: string;
-  menuItem: string;
-  category: 'almuerzo' | 'colacion';
-  deliveryDate: string;
-  quantity: number;
-  unitPrice: number;
-  totalAmount: number;
-  status: 'pending' | 'confirmed' | 'paid' | 'cancelled' | 'delivered';
-  paymentStatus: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
-  createdAt: string;
-  transactionId?: string;
-}
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('overview')
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.22, 1, 0.36, 1]
-    }
-  }
-};
-
-const MetricCard = ({ 
-  label, 
-  value, 
-  change, 
-  icon: Icon, 
-  color = "neutral",
-  delay = 0 
-}: {
-  label: string;
-  value: string | number;
-  change?: string;
-  icon: any;
-  color?: string;
-  delay?: number;
-}) => {
-  const colors = {
-    neutral: "bg-white border-gray-100 text-gray-900",
-    blue: "bg-blue-50/50 border-blue-100 text-blue-900",
-    green: "bg-emerald-50/50 border-emerald-100 text-emerald-900",
-    amber: "bg-amber-50/50 border-amber-100 text-amber-900",
-    red: "bg-red-50/50 border-red-100 text-red-900"
-  };
-
-  return (
-    <motion.div
-      variants={itemVariants}
-      transition={{ delay }}
-      whileHover={{ y: -2, transition: { duration: 0.2 } }}
-    >
-      <Card className={`${colors[color]} border backdrop-blur-sm hover:shadow-lg hover:shadow-black/5 transition-all duration-300`}>
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Icon className="w-4 h-4 opacity-60" />
-                <span className="text-sm font-medium opacity-70">{label}</span>
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl font-semibold tracking-tight">{value}</p>
-                {change && (
-                  <p className="text-xs opacity-60 flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3" />
-                    {change}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-};
-
-const OrderCard = ({ 
-  order, 
-  onView, 
-  delay = 0 
-}: { 
-  order: Order; 
-  onView: (order: Order) => void; 
-  delay?: number;
-}) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'confirmed': return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'paid': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'delivered': return 'bg-green-50 text-green-700 border-green-200';
-      case 'cancelled': return 'bg-red-50 text-red-700 border-red-200';
-      default: return 'bg-gray-50 text-gray-700 border-gray-200';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending': return <Clock className="w-3 h-3" />;
-      case 'confirmed': return <CheckCircle className="w-3 h-3" />;
-      case 'paid': return <CreditCard className="w-3 h-3" />;
-      case 'delivered': return <Package className="w-3 h-3" />;
-      case 'cancelled': return <XCircle className="w-3 h-3" />;
-      default: return <Clock className="w-3 h-3" />;
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP'
-    }).format(amount);
-  };
-
-  return (
-    <motion.div
-      variants={itemVariants}
-      transition={{ delay }}
-      whileHover={{ y: -1, transition: { duration: 0.2 } }}
-    >
-      <Card className="bg-white border border-gray-100 hover:shadow-lg hover:shadow-black/5 transition-all duration-300 group">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="space-y-3 flex-1">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-900">{order.studentName}</h3>
-                  <p className="text-sm text-gray-500">{order.guardianName}</p>
-                </div>
-                <Badge className={`${getStatusColor(order.status)} border text-xs font-medium`}>
-                  {getStatusIcon(order.status)}
-                  <span className="ml-1 capitalize">{order.status}</span>
-                </Badge>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{order.menuItem}</span>
-                  <span className="text-sm font-medium">{formatCurrency(order.totalAmount)}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>{new Date(order.deliveryDate).toLocaleDateString('es-CL')}</span>
-                  <span className="capitalize">{order.category}</span>
-                </div>
-              </div>
-            </div>
-            
-            <Button
-              size="sm"
-              variant="ghost"
-              className="opacity-0 group-hover:opacity-100 transition-opacity ml-4"
-              onClick={() => onView(order)}
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-};
-
-export default function PedidosPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
-
-  const mockOrders: Order[] = [];
-
+  // Actualizar datos cada 30 segundos
   useEffect(() => {
-    loadOrders();
-  }, []);
+    const interval = setInterval(() => {
+      refreshOrders()
+    }, 30000)
 
-  const loadOrders = async () => {
+    return () => clearInterval(interval)
+  }, [refreshOrders])
+
+  const handleViewDetail = (orderId: string) => {
+    setSelectedOrderId(orderId)
+    setIsDetailModalOpen(true)
+  }
+
+  const handleCloseDetail = () => {
+    setSelectedOrderId(null)
+    setIsDetailModalOpen(false)
+  }
+
+  const handleStatusUpdate = async (orderId: string, status: 'pending' | 'paid' | 'cancelled') => {
     try {
-      setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      setOrders(mockOrders);
+      await updateOrderStatus(orderId, status)
+      toast({
+        title: "Estado actualizado",
+        description: `El pedido ha sido marcado como ${
+          status === 'paid' ? 'pagado' : 
+          status === 'cancelled' ? 'cancelado' : 'pendiente'
+        }.`,
+      })
     } catch (error) {
-      console.error('Error loading orders:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error updating order status:', error)
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado del pedido.",
+        variant: "destructive",
+      })
     }
-  };
+  }
 
-  if (loading) {
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este pedido? Esta acción no se puede deshacer.')) {
+      return
+    }
+
+    try {
+      await deleteOrder(orderId)
+      toast({
+        title: "Pedido eliminado",
+        description: "El pedido ha sido eliminado correctamente.",
+      })
+    } catch (error) {
+      console.error('Error deleting order:', error)
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el pedido.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleQuickFilter = (status: 'all' | 'pending' | 'paid' | 'cancelled') => {
+    updateFilters({ status })
+  }
+
+  // Calcular contadores para filtros rápidos basados en datos actuales
+  const getFilterCounts = () => {
+    if (!metrics) {
+      return {
+        all: orders.length,
+        pending: 0,
+        paid: 0,
+        cancelled: 0
+      }
+    }
+
+    return {
+      all: metrics.totalOrders,
+      pending: metrics.pendingOrders,
+      paid: metrics.paidOrders,
+      cancelled: metrics.cancelledOrders
+    }
+  }
+
+  const filterCounts = getFilterCounts()
+
+  // Loading state para autenticación
+  if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50/30">
-        <div className="text-center space-y-6">
-          <div className="relative">
-            <div className="w-12 h-12 border-2 border-gray-200 rounded-full"></div>
-            <div className="w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-gray-900 font-medium">Cargando pedidos</p>
-            <p className="text-sm text-gray-500">Preparando la información más reciente</p>
+      <AdminLayout>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="loading-spinner w-8 h-8 mx-auto mb-4"></div>
+              <p className="text-slate-600 dark:text-slate-400 text-clean">
+                Verificando autenticación...
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-    );
+      </AdminLayout>
+    )
+  }
+
+  // No autorizado
+  if (!adminUser) {
+    return (
+      <AdminLayout>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+          <div className="flex items-center justify-center min-h-screen">
+            <Card className="shadow-soft-lg border-0 bg-white dark:bg-slate-800 max-w-md mx-auto">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 text-elegant mb-2">
+                  Acceso no autorizado
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400 text-clean">
+                  No tienes permisos para acceder a esta sección.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </AdminLayout>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/30">
-      <motion.div 
-        className="max-w-7xl mx-auto p-8 space-y-8"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Header */}
-        <motion.div variants={itemVariants} className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <ShoppingCart className="w-4 h-4 text-white" />
-            </div>
-            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
-              Pedidos
-            </h1>
-          </div>
-          <p className="text-gray-600 max-w-2xl leading-relaxed">
-            Gestiona cada solicitud con precisión y cuidado, transformando necesidades en experiencias satisfactorias.
-          </p>
-        </motion.div>
+    <AdminLayout>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-8">
+            {/* Encabezado mejorado */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              {/* Título principal */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20 shadow-soft">
+                    <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 text-elegant">
+                      Gestión de Pedidos
+                    </h1>
+                    <p className="text-slate-600 dark:text-slate-400 text-clean mt-1">
+                      Administra y supervisa todos los pedidos del casino escolar
+                    </p>
+                  </div>
+                </div>
 
-        {/* Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          <MetricCard
-            label="Total"
-            value={0}
-            icon={ShoppingCart}
-            color="neutral"
-            delay={0.1}
-          />
-          <MetricCard
-            label="Pendientes"
-            value={0}
-            icon={Clock}
-            color="amber"
-            delay={0.15}
-          />
-          <MetricCard
-            label="Confirmados"
-            value={0}
-            icon={CheckCircle}
-            color="blue"
-            delay={0.2}
-          />
-          <MetricCard
-            label="Entregados"
-            value={0}
-            icon={Package}
-            color="green"
-            delay={0.25}
-          />
-          <MetricCard
-            label="Ingresos"
-            value="$0"
-            icon={DollarSign}
-            color="green"
-            delay={0.3}
-          />
-        </div>
-
-        {/* Controls */}
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white/70 backdrop-blur-sm border border-gray-100">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Buscar por estudiante o apoderado..."
-                    className="pl-10 bg-white/50 border-gray-200 focus:bg-white transition-colors"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                {/* Acciones rápidas */}
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={refreshOrders}
+                    variant="outline"
+                    disabled={isLoading}
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    Actualizar
+                  </Button>
+                  
+                  <GeneratePDFButton
+                    orders={orders}
+                    metrics={metrics}
+                    weekStart={filters.weekStart || ''}
+                    adminUser={adminUser}
+                    filters={{
+                      status: filters.status,
+                      userType: filters.userType,
+                      searchTerm: filters.searchTerm
+                    }}
                   />
                 </div>
-                
-                <div className="flex gap-3">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-40 bg-white/50 border-gray-200">
-                      <SelectValue placeholder="Estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="pending">Pendientes</SelectItem>
-                      <SelectItem value="confirmed">Confirmados</SelectItem>
-                      <SelectItem value="paid">Pagados</SelectItem>
-                      <SelectItem value="delivered">Entregados</SelectItem>
-                      <SelectItem value="cancelled">Cancelados</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Button variant="outline" className="bg-white/50 border-gray-200 hover:bg-white">
-                    <Filter className="w-4 h-4" />
-                  </Button>
-                  
-                  <Button variant="outline" className="bg-white/50 border-gray-200 hover:bg-white">
-                    <Download className="w-4 h-4" />
-                  </Button>
-                </div>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
-        {/* Content */}
-        <AnimatePresence mode="wait">
-          {orders.length === 0 ? (
-            <motion.div
-              key="empty"
-              variants={itemVariants}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-            >
-              <Card className="bg-white/70 backdrop-blur-sm border border-gray-100">
-                <CardContent className="p-12">
-                  <div className="text-center space-y-6">
-                    <div className="relative mx-auto w-24 h-24">
-                      <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
-                        <ShoppingCart className="w-10 h-10 text-gray-400" />
+              {/* Información de la semana actual */}
+              {filters.weekStart && (
+                <Card className="border-0 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 shadow-soft">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <div>
+                          <p className="font-medium text-slate-800 dark:text-slate-100 text-clean">
+                            Semana seleccionada
+                          </p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 text-clean">
+                            {format(new Date(filters.weekStart), "'Semana del' d 'de' MMMM yyyy", { locale: es })}
+                          </p>
+                        </div>
                       </div>
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                        <Sparkles className="w-3 h-3 text-white" />
+                      
+                      <div className="flex items-center gap-4">
+                        <Badge variant="outline" className="bg-white dark:bg-slate-800">
+                          {filterCounts.all} pedidos
+                        </Badge>
+                        {metrics && (
+                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                            ${metrics.totalRevenue.toLocaleString()} CLP
+                          </Badge>
+                        )}
                       </div>
                     </div>
-                    
-                    <div className="space-y-3">
-                      <h3 className="text-xl font-semibold text-gray-900">
-                        Esperando los primeros pedidos
-                      </h3>
-                      <p className="text-gray-600 max-w-md mx-auto leading-relaxed">
-                        Este espacio se llenará de vida cuando los usuarios comiencen a realizar sus solicitudes alimentarias.
-                      </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Filtros rápidos por estado */}
+              <Card className="border-0 bg-white dark:bg-slate-800 shadow-soft">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Filtros rápidos:
+                      </span>
                     </div>
-                    
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0">
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Configurar Menús
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Button
+                        variant={filters.status === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleQuickFilter('all')}
+                        className="text-xs"
+                      >
+                        <FileText className="w-3 h-3 mr-1" />
+                        Todos ({filterCounts.all})
                       </Button>
-                      <Button variant="outline" className="bg-white/50 border-gray-200 hover:bg-white">
-                        <User className="w-4 h-4 mr-2" />
-                        Gestionar Usuarios
+                      <Button
+                        variant={filters.status === 'pending' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleQuickFilter('pending')}
+                        className={`text-xs ${
+                          filters.status === 'pending' 
+                            ? 'bg-amber-600 hover:bg-amber-700' 
+                            : 'text-amber-600 border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                        }`}
+                      >
+                        <Clock className="w-3 h-3 mr-1" />
+                        Pendientes ({filterCounts.pending})
+                        {(metrics?.criticalPendingOrders || 0) > 0 && (
+                          <Badge variant="destructive" className="ml-1 text-xs animate-pulse">
+                            {metrics?.criticalPendingOrders}
+                          </Badge>
+                        )}
+                      </Button>
+                      <Button
+                        variant={filters.status === 'paid' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleQuickFilter('paid')}
+                        className={`text-xs ${
+                          filters.status === 'paid' 
+                            ? 'bg-emerald-600 hover:bg-emerald-700' 
+                            : 'text-emerald-600 border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                        }`}
+                      >
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Pagados ({filterCounts.paid})
+                      </Button>
+                      <Button
+                        variant={filters.status === 'cancelled' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleQuickFilter('cancelled')}
+                        className={`text-xs ${
+                          filters.status === 'cancelled' 
+                            ? 'bg-red-600 hover:bg-red-700' 
+                            : 'text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20'
+                        }`}
+                      >
+                        <XCircle className="w-3 h-3 mr-1" />
+                        Cancelados ({filterCounts.cancelled})
                       </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
-          ) : (
-            <motion.div
-              key="orders"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-            >
-              {orders.map((order, index) => (
-                <OrderCard
-                  key={order.id}
-                  order={order}
-                  onView={(order) => {
-                    setSelectedOrder(order);
-                    setIsDetailDialogOpen(true);
-                  }}
-                  delay={index * 0.05}
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        {/* Order Detail Dialog */}
-        <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-          <DialogContent className="max-w-lg bg-white/95 backdrop-blur-sm border border-gray-200">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold">Detalles del Pedido</DialogTitle>
-            </DialogHeader>
-            {selectedOrder && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-500">Estudiante</p>
-                    <p className="font-medium">{selectedOrder.studentName}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-500">Apoderado</p>
-                    <p className="font-medium">{selectedOrder.guardianName}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-500">Menú</p>
-                    <p className="font-medium">{selectedOrder.menuItem}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-500">Total</p>
-                    <p className="font-medium">
-                      {new Intl.NumberFormat('es-CL', {
-                        style: 'currency',
-                        currency: 'CLP'
-                      }).format(selectedOrder.totalAmount)}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <Button className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border-0">
-                    Confirmar
-                  </Button>
-                  <Button variant="outline" className="flex-1 bg-white/50 border-gray-200 hover:bg-white">
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
+            {/* Estado de error */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Alert variant="destructive" className="shadow-soft">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>{error}</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={refreshOrders}
+                      className="ml-4"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Reintentar
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              </motion.div>
             )}
-          </DialogContent>
-        </Dialog>
-      </motion.div>
-    </div>
-  );
+
+            {/* Alerta para pedidos críticos */}
+            {metrics && (metrics.criticalPendingOrders || 0) > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 shadow-soft">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>
+                      <strong>{metrics.criticalPendingOrders}</strong> pedidos llevan más de 3 días pendientes de pago
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="destructive" className="animate-pulse">
+                        Requiere atención
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuickFilter('pending')}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        Ver pendientes
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+
+            {/* Tabs principales */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+                <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:grid-cols-3">
+                  <TabsTrigger value="overview" className="flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4" />
+                    <span className="hidden sm:inline">Vista General</span>
+                    <span className="sm:hidden">General</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="kitchen" className="flex items-center gap-2">
+                    <ChefHat className="w-4 h-4" />
+                    <span className="hidden sm:inline">Resúmenes Cocina</span>
+                    <span className="sm:hidden">Cocina</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="orders" className="flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    <span className="hidden sm:inline">Lista de Pedidos</span>
+                    <span className="sm:hidden">Pedidos</span>
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Vista General */}
+                <TabsContent value="overview" className="space-y-6">
+                  {/* Métricas */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <OrdersMetrics 
+                      metrics={metrics} 
+                      isLoading={isLoading} 
+                    />
+                  </motion.div>
+
+                  {/* Filtros */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <OrdersFilters
+                      filters={filters}
+                      onFiltersChange={updateFilters}
+                      totalResults={orders.length}
+                    />
+                  </motion.div>
+                </TabsContent>
+
+                {/* Resúmenes para Cocina */}
+                <TabsContent value="kitchen" className="space-y-6">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <DailyMenuSummary
+                      orders={orders}
+                      weekStart={filters.weekStart || ''}
+                      adminUser={adminUser}
+                    />
+                  </motion.div>
+                </TabsContent>
+
+                {/* Lista de Pedidos */}
+                <TabsContent value="orders" className="space-y-6">
+                  {/* Filtros */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <OrdersFilters
+                      filters={filters}
+                      onFiltersChange={updateFilters}
+                      totalResults={orders.length}
+                    />
+                  </motion.div>
+
+                  {/* Tabla de pedidos */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <OrdersTable
+                      orders={orders}
+                      isLoading={isLoading}
+                      onViewDetail={handleViewDetail}
+                      onUpdateStatus={handleStatusUpdate}
+                      onDeleteOrder={handleDeleteOrder}
+                    />
+                  </motion.div>
+
+                  {/* Estado vacío */}
+                  {!isLoading && !error && orders.length === 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="max-w-2xl mx-auto"
+                    >
+                      <Card className="shadow-soft-lg border-0 bg-white dark:bg-slate-800">
+                        <CardContent className="p-12 text-center">
+                          <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-soft">
+                            <FileText className="w-10 h-10 text-slate-400 dark:text-slate-500" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-3 text-elegant">
+                            No hay pedidos
+                          </h3>
+                          <p className="text-slate-600 dark:text-slate-400 text-clean mb-6">
+                            No se encontraron pedidos con los filtros aplicados. 
+                            Intenta ajustar los criterios de búsqueda.
+                          </p>
+                          <Button
+                            onClick={() => updateFilters({ 
+                              userType: 'all', 
+                              status: 'all', 
+                              searchTerm: '',
+                              day: undefined 
+                            })}
+                            variant="outline"
+                          >
+                            Limpiar filtros
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </motion.div>
+
+            {/* Modal de detalle */}
+            <OrderDetailModal
+              orderId={selectedOrderId}
+              isOpen={isDetailModalOpen}
+              onClose={handleCloseDetail}
+              onStatusUpdate={handleStatusUpdate}
+            />
+          </div>
+        </div>
+      </div>
+    </AdminLayout>
+  )
 }

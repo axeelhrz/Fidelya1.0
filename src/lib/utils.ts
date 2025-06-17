@@ -5,25 +5,40 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/**
- * Formatea un número como moneda
- * @param valor El valor a formatear
- * @returns El valor formateado como string
- */
-export function formatoMoneda(valor: number | undefined | null): string {
-  // Si el valor es undefined o null, mostrar 0
-  if (valor === undefined || valor === null) {
-    return '0';
-  }
-  
-  // Intentar formatear el número
+// Helper para crear fecha local desde string YYYY-MM-DD sin problemas de zona horaria
+export function createLocalDate(dateString: string): Date {
   try {
-    return valor.toLocaleString('es-CL', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
+    const [year, month, day] = dateString.split('-').map(Number)
+    if (!year || !month || !day || month < 1 || month > 12 || day < 1 || day > 31) {
+      throw new Error(`Invalid date components: ${dateString}`)
+    }
+    
+    // Crear fecha local (sin conversión de zona horaria)
+    const date = new Date(year, month - 1, day)
+    
+    // Verificar que la fecha creada es válida
+    if (isNaN(date.getTime())) {
+      throw new Error(`Invalid date created: ${dateString}`)
+    }
+    
+    return date
   } catch (error) {
-    console.error('Error al formatear valor como moneda:', error);
-    return '0';
+    console.error('Error creating local date:', dateString, error)
+    // Último recurso: fecha actual
+    return new Date()
+  }
+}
+
+// Helper para formatear fecha local a formato abreviado
+export function formatDateShort(dateString: string): string {
+  try {
+    const date = createLocalDate(dateString)
+    return date.toLocaleDateString('es-CL', {
+      day: 'numeric',
+      month: 'short'
+    })
+  } catch (error) {
+    console.error('Error formatting date short:', dateString, error)
+    return dateString
   }
 }

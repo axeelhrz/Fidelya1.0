@@ -1,174 +1,328 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
-import { createClient } from '@supabase/supabase-js'
+import { OrderService } from '@/services/orderService'
 
-// Inicialización segura para la fase de compilación
-// Solo se creará el cliente real en tiempo de ejecución, no durante la construcción
-let supabaseInstance: ReturnType<typeof createClient> | null = null;
-
-// Función para obtener el cliente de Supabase (inicialización diferida)
-function getSupabaseClient() {
-  // Si ya tenemos una instancia, la devolvemos
-  if (supabaseInstance) return supabaseInstance;
-  
-  // Solo inicializamos en runtime, no en build time
-  if (typeof window === 'undefined') { // Estamos en el servidor
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    // IMPORTANTE: Debug de la clave de servicio (solo sus primeros caracteres por seguridad)
-    console.log('VERIFICACIÓN DE CLAVES SUPABASE:', {
-      url: supabaseUrl ? 'configurada' : 'NO CONFIGURADA',
-      serviceKey: supabaseServiceKey ? `configurada (primeros caracteres: ${supabaseServiceKey.substring(0, 3)}...)` : 'NO CONFIGURADA'
-    });
-    
-    // En tiempo de ejecución, estas variables deberían estar configuradas
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('CRÍTICO: Variables de entorno de Supabase no están configuradas correctamente');
-      console.error('ASEGÚRATE de que SUPABASE_SERVICE_ROLE_KEY está definida en el entorno');
-      // Durante la fase de build, creamos un cliente con valores vacíos que no será usado realmente
-      return createClient('https://placeholder-during-build.supabase.co', 'placeholder-key-during-build');
-    }
-    
-    // Crear la instancia real con las credenciales usando SUPABASE_SERVICE_ROLE_KEY
-    console.log('Creando cliente Supabase con clave de servicio (rol de servicio)');
-    supabaseInstance = createClient(supabaseUrl, supabaseServiceKey);
-    return supabaseInstance;
+// Interface para notificaciones de GetNet según su documentación
+interface GetNetNotification {
+  status: {
+    status: string
+    message: string
+    reason?: string | number
+    date: string
   }
-  
-  // Proporcionar un cliente temporal durante la compilación
-  return createClient('https://placeholder-during-build.supabase.co', 'placeholder-key-during-build');
+  requestId?: string | number
+  reference?: string // Este es nuestro orderId
+  signature?: string
+  authorization?: string
+  receipt?: string
+  franchise?: string
+  franchiseName?: string
+  bank?: string
+  bankName?: string
+  internalReference?: number
+  paymentMethod?: string
+  paymentMethodName?: string
+  issuerName?: string
+  amount?: {
+    from?: {
+      currency: string
+      total: number
+    }
+    to?: {
+      currency: string
+      total: number
+    }
+  }
+  authorization_code?: string
+  transaction?: {
+    transactionID?: string
+    cus?: string
+    reference?: string
+    description?: string
+  }
+  // Campos adicionales alternativos que puede enviar GetNet
+  order_id?: string
+  orderId?: string
+  state?: string
+  transaction_id?: string
+  transactionId?: string
+  // Campos adicionales que puede enviar GetNet
+  [key: string]: unknown
 }
 
-export async function POST(req: NextRequest) {
-  console.log('=== NOTIFICACIÓN DE GETNET RECIBIDA ===');
-  console.log('Headers:', Object.fromEntries(req.headers.entries()));
-  
+export async function POST(request: NextRequest) {
   try {
-    // Capturar el cuerpo completo para depuración
-    const bodyText = await req.text()
-    console.log('===== INICIO CUERPO NOTIFICACIÓN =====');
-    console.log(bodyText);
-    console.log('===== FIN CUERPO NOTIFICACIÓN =====');
+    console.log('=== WEBHOOK GETNET RECEIVED ===')
     
-    // Intentar parsear como JSON
-    let data
+    // Leer el cuerpo de la petición
+    const rawBody = await request.text()
+    console.log('Raw webhook body:', rawBody)
+    
+    let notificationData: GetNetNotification
     try {
-      data = JSON.parse(bodyText)
-    } catch (e) {
-      console.error('Error al parsear notificación JSON:', e)
-      return NextResponse.json({ error: 'JSON inválido' }, { status: 200 }) // Siempre 200 para que no reintente
+      notificationData = JSON.parse(rawBody)
+    } catch (parseError) {
+      console.error('Error parsing webhook JSON:', parseError)
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Invalid JSON format' 
+        },
+        { status: 400 }
+      )
     }
     
-    const { requestId, status, reference, date } = data
-    
-    console.log('Datos de notificación procesados:', { requestId, status, reference, date })
-    
-    // Validar que los campos necesarios estén presentes
-    if (!requestId || !status || !reference) {
-      console.error('Datos de notificación incompletos:', data)
-      return NextResponse.json({ error: 'Datos incompletos' }, { status: 200 })
-    }
-    
-    // (Opcional) validar firma:
-    // const sig = req.headers.get('x-getnet-signature')
-    // const expected = crypto.createHash('sha1')
-    //   .update(requestId + status.status + date + process.env.GETNET_SECRET)
-    //   .digest('hex')
-    // if (sig !== expected) return NextResponse.json({ error: 'Firma inválida' }, { status: 200 })
+    console.log('Parsed GetNet notification:', JSON.stringify(notificationData, null, 2))
 
-    // Verificar el estado del pago
-    // Determinar el estado del pago basado en la respuesta de GetNet
-    let estadoPago = 'pendiente';
-    
-    if (status) {
-      if (status.status === 'APPROVED') {
-        estadoPago = 'pagado';
-        console.log('Pago APROBADO para transacción:', reference);
-      } else if (status.status === 'REJECTED') {
-        estadoPago = 'rechazado';
-        console.log('Pago RECHAZADO para transacción:', reference);
-      } else if (status.status === 'PENDING') {
-        estadoPago = 'pendiente';
-        console.log('Pago PENDIENTE para transacción:', reference);
-      } else {
-        estadoPago = 'error';
-        console.log('Estado de pago DESCONOCIDO:', status.status);
+    // Extraer información clave de la notificación
+    const orderId = notificationData.reference || 
+                   notificationData.transaction?.reference ||
+                   notificationData.order_id ||
+                   notificationData.orderId
+
+    const paymentStatus = notificationData.status?.status || 
+                         notificationData.state ||
+                         (notificationData as Record<string, unknown>).status
+
+    const requestId = notificationData.requestId?.toString() || 
+                     notificationData.transaction?.transactionID ||
+                     notificationData.transaction_id ||
+                     notificationData.transactionId
+
+    console.log('Extracted data:', {
+      orderId,
+      paymentStatus,
+      requestId,
+      statusMessage: notificationData.status?.message
+    })
+
+    // Validar que tenemos los datos mínimos requeridos
+    if (!orderId) {
+      console.error('Missing orderId in notification')
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Missing order reference' 
+        },
+        { status: 400 }
+      )
+    }
+
+    if (!paymentStatus) {
+      console.error('Missing payment status in notification')
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Missing payment status' 
+        },
+        { status: 400 }
+      )
+    }
+
+    console.log(`Processing payment notification for order ${orderId}: ${paymentStatus}`)
+
+    // Obtener el pedido de Firebase
+    const order = await OrderService.getOrderById(orderId)
+    if (!order) {
+      console.error(`Order not found: ${orderId}`)
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Order not found' 
+        },
+        { status: 404 }
+      )
+    }
+
+    console.log('Found order:', {
+      id: order.id,
+      currentStatus: order.status,
+      total: order.total,
+      userId: order.userId
+    })
+
+    // Procesar según el estado del pago - CORREGIDO PARA GETNET
+    let orderUpdateData: Partial<typeof order> = {}
+
+    // Normalizar el estado para comparación (más específico)
+    const normalizedStatus = typeof paymentStatus === 'string' ? paymentStatus.toUpperCase().trim() : String(paymentStatus).toUpperCase().trim()
+
+    console.log('Normalized payment status:', normalizedStatus)
+
+    // ESTADOS DE PAGO EXITOSO - AMPLIADO
+    if (normalizedStatus === 'OK' || 
+        normalizedStatus === 'APPROVED' || 
+        normalizedStatus === 'PAID' || 
+        normalizedStatus === 'COMPLETED' || 
+        normalizedStatus === 'SUCCESS' ||
+        normalizedStatus === 'APROBADA' ||
+        normalizedStatus === 'EXITOSO' ||
+        normalizedStatus === 'SUCCESSFUL' ||
+        normalizedStatus === 'CONFIRMED' ||
+        normalizedStatus === 'CONFIRMADO') {
+      
+      // Pago exitoso
+      console.log(`✅ Payment APPROVED for order ${orderId}`)
+      orderUpdateData = {
+        status: 'pagado',
+        paidAt: new Date(),
+        paymentId: requestId || notificationData.requestId?.toString() || 'getnet_payment',
+        metadata: {
+          version: order.metadata?.version || '1.0',
+          source: order.metadata?.source || 'webhook',
+          ...order.metadata,
+          paymentMethod: notificationData.paymentMethodName || notificationData.franchiseName || 'GetNet',
+          authorization: notificationData.authorization || notificationData.authorization_code || null,
+          franchise: notificationData.franchiseName || null,
+          bank: notificationData.bankName || null,
+          receipt: notificationData.receipt || null,
+          processedAt: new Date().toISOString(),
+          webhookData: JSON.stringify({
+            requestId: notificationData.requestId,
+            status: notificationData.status,
+            amount: notificationData.amount,
+            originalStatus: paymentStatus
+          })
+        }
       }
-    } else {
-      console.log(`Pago NO APROBADO para transacción ${reference}, estado:`, status);
-    }
-
-    try {
-      // CRÍTICO: La 'reference' enviada por GetNet es NUESTRO transaction_id interno
-      // que enviamos originalmente en el campo payment.reference
-      console.log('IMPORTANTE: Procesando notificación de GetNet - la reference es nuestro transaction_id:', reference);
-      console.log('Estado de pago asignado por GetNet:', estadoPago);
+    } 
+    // ESTADOS DE PAGO FALLIDO
+    else if (normalizedStatus === 'FAILED' || 
+               normalizedStatus === 'REJECTED' || 
+               normalizedStatus === 'CANCELLED' || 
+               normalizedStatus === 'DECLINED' ||
+               normalizedStatus === 'RECHAZADA' ||
+               normalizedStatus === 'CANCELADA' ||
+               normalizedStatus === 'FALLIDA' ||
+               normalizedStatus === 'ERROR' ||
+               normalizedStatus === 'DENIED' ||
+               normalizedStatus === 'DENEGADA') {
       
-      // ENFOQUE RECOMENDADO: Los pedidos ya están creados con estado "pendiente"
-      // Ahora solo debemos ACTUALIZAR su estado según la respuesta de GetNet
-      
-      // Buscar en la tabla principal de pedidos por nuestro transaction_id (que es el valor de reference)
-      const { data: existingOrders, error: existingError } = await getSupabaseClient()
-        .from('pedidos')
-        .select('id, estado_pago')
-        .eq('transaction_id', reference);
-      
-      if (existingError) {
-        console.error('Error consultando pedidos existentes:', existingError);
-        return NextResponse.json({ error: 'Error consultando base de datos' }, { status: 200 });
+      // Pago fallido
+      console.log(`❌ Payment FAILED for order ${orderId}: ${notificationData.status?.message}`)
+      orderUpdateData = {
+        status: 'cancelado',
+        metadata: {
+          version: order.metadata?.version || '1.0',
+          source: order.metadata?.source || 'webhook',
+          ...order.metadata,
+          failureReason: notificationData.status?.message || 'Payment failed',
+          failureCode: notificationData.status?.reason || null,
+          processedAt: new Date().toISOString(),
+          webhookData: JSON.stringify({
+            requestId: notificationData.requestId,
+            status: notificationData.status,
+            amount: notificationData.amount,
+            originalStatus: paymentStatus
+          })
+        }
       }
-
-      // Si encontramos pedidos existentes, actualizamos su estado
-      if (existingOrders && existingOrders.length > 0) {
-        console.log(`${existingOrders.length} pedidos encontrados con el transaction_id ${reference}, actualizando estado de "pendiente" a "${estadoPago}"`);
-        
-        // Actualizar estado de pedidos existentes (solo el campo estado_pago)
-        const { data: updatedOrders, error: updateError } = await getSupabaseClient()
-          .from('pedidos')
-          .update({ estado_pago: estadoPago })
-          .eq('transaction_id', reference)
-          .select();
-          
-        if (updateError) {
-          console.error('Error actualizando estado de pedidos:', updateError);
-          return NextResponse.json({ error: 'Error actualizando pedidos' }, { status: 200 });
-        } else {
-          console.log(`${updatedOrders?.length || 0} pedidos actualizados de "pendiente" a "${estadoPago}"`);
-          return NextResponse.json({ 
-            success: true, 
-            message: `Pedidos actualizados a estado ${estadoPago}`,
-            count: updatedOrders?.length || 0
-          }, { status: 200 });
+    } 
+    // ESTADOS DE PAGO PENDIENTE
+    else if (normalizedStatus === 'PENDING' || 
+               normalizedStatus === 'PROCESSING' ||
+               normalizedStatus === 'PENDIENTE' ||
+               normalizedStatus === 'PROCESANDO' ||
+               normalizedStatus === 'IN_PROGRESS' ||
+               normalizedStatus === 'EN_PROCESO') {
+      
+        // Pago pendiente
+        console.log(`⏳ Payment PENDING for order ${orderId}`)
+        orderUpdateData = {
+          status: 'procesando_pago',
+          metadata: {
+            version: order.metadata?.version || '1.0',
+            source: order.metadata?.source || 'webhook',
+            ...order.metadata,
+            pendingReason: notificationData.status?.message || 'Payment processing',
+            processedAt: new Date().toISOString(),
+            webhookData: JSON.stringify({
+              requestId: notificationData.requestId,
+              status: notificationData.status,
+              amount: notificationData.amount,
+              originalStatus: paymentStatus
+            })
+          }
         }
       } else {
-        // ANOMALÍA: No encontramos pedidos con ese transaction_id
-        console.warn(`ALERTA: No se encontraron pedidos con el transaction_id ${reference}`);
-        console.warn('Esto puede indicar un problema en el flujo de creación de pedidos');
-        console.warn('Asegúrate de que los pedidos se insertan correctamente con estado "pendiente" antes del pago');
+        // Estado desconocido - MEJORADO
+        console.log(`⚠️ Unknown payment status for order ${orderId}: ${paymentStatus}`)
+        console.log('Available status fields:', {
+          'status.status': notificationData.status?.status,
+          'state': notificationData.state,
+          'status': (notificationData as Record<string, unknown>).status,
+          'all_keys': Object.keys(notificationData)
+        })
         
-        // Reportar el problema pero responder con éxito para evitar reintentos
-        return NextResponse.json({ 
-          warning: true, 
-          message: `No se encontraron pedidos con transaction_id ${reference}` 
-        }, { status: 200 });
-      }
-    } catch (processingError) {
-      console.error('Error procesando la notificación de pago:', processingError);
+        orderUpdateData = {
+          metadata: {
+            version: order.metadata?.version || '1.0',
+            source: order.metadata?.source || 'webhook',
+            ...order.metadata,
+            unknownStatus: String(paymentStatus),
+            unknownMessage: notificationData.status?.message,
+            processedAt: new Date().toISOString(),
+            webhookData: JSON.stringify({
+              requestId: notificationData.requestId,
+              status: notificationData.status,
+              amount: notificationData.amount,
+              originalStatus: paymentStatus,
+              fullNotification: notificationData
+            })
+          }
+        }
     }
-    // Siempre devolver 200 para que GetNet no reintente
-    return NextResponse.json({ success: true, reference }, { status: 200 })
-  } catch (e) {
-    console.error("Error en webhook de GetNet:", e)
-    // Registrar detalles para depuración
-    try {
-      const headers = Object.fromEntries(req.headers.entries())
-      console.error("Headers de la solicitud:", headers)
-    } catch (headerError) {
-      console.error("Error al obtener headers:", headerError)
+
+    // Actualizar el pedido en Firebase
+    if (Object.keys(orderUpdateData).length > 0) {
+      console.log('Updating order with data:', {
+        orderId,
+        newStatus: orderUpdateData.status,
+        paymentId: orderUpdateData.paymentId,
+        updateFields: Object.keys(orderUpdateData)
+      })
+      
+      await OrderService.updateOrder(orderId, orderUpdateData)
+      console.log(`✅ Order ${orderId} updated successfully to status: ${orderUpdateData.status || 'metadata only'}`)
+    } else {
+      console.log('No update data generated for order')
     }
+
+    // Responder a GetNet con confirmación
+    const response = { 
+      success: true, 
+      message: 'Notification processed successfully',
+      orderId: orderId,
+      status: orderUpdateData.status || order.status,
+      originalStatus: paymentStatus,
+      normalizedStatus: normalizedStatus,
+      timestamp: new Date().toISOString()
+    }
+
+    console.log('Webhook response:', response)
+    console.log('=== WEBHOOK PROCESSING COMPLETE ===')
+
+    return NextResponse.json(response)
+
+  } catch (error) {
+    console.error('❌ Error processing GetNet notification:', error)
     
-    // Siempre devolver 200 para que GetNet no reintente
-    return NextResponse.json({ success: false, error: 'Error interno' }, { status: 200 })
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Internal server error',
+        timestamp: new Date().toISOString()
+      },
+      { status: 500 }
+    )
   }
+}
+
+// Manejar método GET para verificaciones de webhook
+export async function GET() {
+  return NextResponse.json({ 
+    status: 'ok', 
+    service: 'getnet-payment-notification',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  })
 }
