@@ -971,6 +971,45 @@ function initializeNavigation() {
     const navLinks = document.querySelectorAll('.nav__link');
     const header = document.getElementById('header');
     
+    // ===== FUNCIONALIDAD DEL LOGO COMO ENLACE =====
+    const navLogo = document.querySelector('.nav__logo');
+    if (navLogo) {
+        navLogo.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Cerrar menú móvil si está abierto
+            if (isMenuOpen) {
+                closeMobileMenu();
+            }
+            
+            // Scroll suave a la sección inicio
+            const inicioSection = document.querySelector('#inicio');
+            if (inicioSection) {
+                smoothScrollToSection(inicioSection);
+                
+                // Actualizar enlace activo
+                const homeLink = document.querySelector('.nav__link[href="#inicio"]');
+                if (homeLink) {
+                    updateActiveNavLink(homeLink);
+                }
+            }
+        });
+        
+        // Agregar cursor pointer y accesibilidad
+        navLogo.style.cursor = 'pointer';
+        navLogo.setAttribute('tabindex', '0');
+        navLogo.setAttribute('role', 'button');
+        navLogo.setAttribute('aria-label', 'Ir al inicio');
+        
+        // Soporte para teclado
+        navLogo.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navLogo.click();
+            }
+        });
+    }
+    
     // Toggle del menú móvil con animaciones mejoradas
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', (e) => {
@@ -1235,35 +1274,9 @@ function handleTabTrap(e) {
     }
 }
 
-// ===== EFECTOS DE SCROLL OPTIMIZADOS =====
+// ===== EFECTOS DE SCROLL OPTIMIZADOS (SIN CAMBIOS EN HEADER) =====
 function initializeScrollEffects() {
-    const header = document.getElementById('header');
-    let scrollTimeout;
-    
-    // Usar Intersection Observer para mejor rendimiento
-    const headerObserver = new IntersectionObserver(
-        (entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    header.classList.remove('scrolled');
-                } else {
-                    header.classList.add('scrolled');
-                }
-            });
-        },
-        {
-            rootMargin: '-80px 0px 0px 0px',
-            threshold: 0
-        }
-    );
-    
-    // Observar el hero section
-    const heroSection = document.querySelector('.hero');
-    if (heroSection) {
-        headerObserver.observe(heroSection);
-    }
-    
-    // Scroll listener optimizado con throttling
+    // Scroll listener optimizado con throttling para navegación activa
     window.addEventListener('scroll', throttle(() => {
         if (!ticking) {
             requestAnimationFrame(() => {
