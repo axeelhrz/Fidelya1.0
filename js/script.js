@@ -293,6 +293,8 @@ const translationData = {
         'feature-referrals-item-1': 'Unique referral link',
         'feature-referrals-item-2': 'Referral rewards',
         'feature-referrals-item-3': 'Referral QR code',
+        'feature-referrals-item-4': 'Earn 1 week free for each referral',
+        'feature-referrals-item-5': 'Track your referrals in real time',
         // Videos Section
         'videos-badge': 'Immersive Visual Experience',
         'videos-title-main': 'SEE STARFLEX',
@@ -354,7 +356,6 @@ const translationData = {
         'footer-cta-trial': '3 days free'
     }
 };
-
 // ===== CLASE PARA OPTIMIZACIÓN DE IMÁGENES =====
 class ImageOptimizer {
     constructor() {
@@ -1019,14 +1020,6 @@ function openFloatingMenu() {
             item.style.opacity = '1';
         }, index * 100);
     });
-    
-    // Focus en el primer enlace para accesibilidad
-    setTimeout(() => {
-        const firstLink = floatingMenu.querySelector('.floating-widget__menu-item');
-        if (firstLink) {
-            firstLink.focus();
-        }
-    }, 300);
 }
 
 function closeFloatingMenu() {
@@ -1217,8 +1210,7 @@ function initializeParticleSystems() {
     
     const featurePhones = document.querySelectorAll('.feature__phone .phone');
     featurePhones.forEach((phone, index) => {
-        
-const colors = [
+        const colors = [
             'rgba(255, 69, 105, 0.2)',
             'rgba(255, 23, 68, 0.2)',
             'rgba(255, 45, 107, 0.2)',
