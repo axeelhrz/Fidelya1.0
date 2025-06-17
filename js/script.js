@@ -356,6 +356,7 @@ const translationData = {
         'footer-cta-trial': '3 days free'
     }
 };
+
 // ===== CLASE PARA OPTIMIZACIÓN DE IMÁGENES =====
 class ImageOptimizer {
     constructor() {
@@ -847,17 +848,59 @@ function initializeLanguageSystem() {
     
     applyTranslations();
     updateLanguageButtons();
-    updateFloatingLanguageButton();
     setupLanguageToggle();
 }
 
 function setupLanguageToggle() {
-    const languageButtons = document.querySelectorAll('.language-btn');
+    const languageBtn = document.getElementById('language-toggle-btn');
+    const languageOptions = document.querySelectorAll('.language-option');
     
-    languageButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
+    if (languageBtn) {
+        // Manejar hover para mostrar dropdown
+        const languageToggle = document.querySelector('.language-toggle');
+        const languageDropdown = document.querySelector('.language-dropdown');
+        
+        let hoverTimeout;
+        
+        if (languageToggle && languageDropdown) {
+            languageToggle.addEventListener('mouseenter', () => {
+                clearTimeout(hoverTimeout);
+                languageDropdown.style.opacity = '1';
+                languageDropdown.style.visibility = 'visible';
+                languageDropdown.style.transform = 'translateY(0)';
+                languageBtn.classList.add('active');
+            });
+            
+            languageToggle.addEventListener('mouseleave', () => {
+                hoverTimeout = setTimeout(() => {
+                    languageDropdown.style.opacity = '0';
+                    languageDropdown.style.visibility = 'hidden';
+                    languageDropdown.style.transform = 'translateY(-10px)';
+                    languageBtn.classList.remove('active');
+                }, 150);
+            });
+            
+            // Mantener dropdown abierto cuando se hace hover sobre él
+            languageDropdown.addEventListener('mouseenter', () => {
+                clearTimeout(hoverTimeout);
+            });
+            
+            languageDropdown.addEventListener('mouseleave', () => {
+                hoverTimeout = setTimeout(() => {
+                    languageDropdown.style.opacity = '0';
+                    languageDropdown.style.visibility = 'hidden';
+                    languageDropdown.style.transform = 'translateY(-10px)';
+                    languageBtn.classList.remove('active');
+                }, 150);
+            });
+        }
+    }
+    
+    // Manejar clicks en opciones de idioma
+    languageOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
             e.preventDefault();
-            const selectedLanguage = button.getAttribute('data-lang');
+            const selectedLanguage = option.getAttribute('data-lang');
             if (selectedLanguage && selectedLanguage !== currentLanguage) {
                 switchLanguage(selectedLanguage);
             }
@@ -876,14 +919,24 @@ function switchLanguage(newLanguage) {
     
     applyTranslations();
     updateLanguageButtons();
-    updateFloatingLanguageButton();
     
     document.documentElement.lang = newLanguage;
     
+    // Efecto visual suave al cambiar idioma
     document.body.style.opacity = '0.95';
     setTimeout(() => {
         document.body.style.opacity = '1';
     }, 150);
+    
+    // Cerrar dropdown después del cambio
+    const languageDropdown = document.querySelector('.language-dropdown');
+    const languageBtn = document.getElementById('language-toggle-btn');
+    if (languageDropdown && languageBtn) {
+        languageDropdown.style.opacity = '0';
+        languageDropdown.style.visibility = 'hidden';
+        languageDropdown.style.transform = 'translateY(-10px)';
+        languageBtn.classList.remove('active');
+    }
 }
 
 function applyTranslations() {
@@ -937,48 +990,36 @@ function applyTranslations() {
 }
 
 function updateLanguageButtons() {
-    const languageButtons = document.querySelectorAll('.language-btn');
-    languageButtons.forEach(button => {
-        const buttonLang = button.getAttribute('data-lang');
-        if (buttonLang === currentLanguage) {
-            button.classList.add('active');
+    const languageText = document.getElementById('language-text');
+    const languageOptions = document.querySelectorAll('.language-option');
+    
+    if (languageText) {
+        languageText.textContent = currentLanguage.toUpperCase();
+    }
+    
+    // Actualizar estado activo de las opciones
+    languageOptions.forEach(option => {
+        const optionLang = option.getAttribute('data-lang');
+        if (optionLang === currentLanguage) {
+            option.style.background = 'var(--glass-bg-medium)';
+            option.style.color = 'var(--starflex-crimson-bright)';
         } else {
-            button.classList.remove('active');
+            option.style.background = 'transparent';
+            option.style.color = 'var(--text-secondary)';
         }
     });
-}
-
-function updateFloatingLanguageButton() {
-    const floatingLanguageText = document.getElementById('floating-language-text');
-    const floatingLanguageTooltip = document.querySelector('#floating-language-toggle .floating-widget__tooltip');
-    
-    if (floatingLanguageText) {
-        floatingLanguageText.textContent = currentLanguage.toUpperCase();
-    }
-    
-    if (floatingLanguageTooltip) {
-        floatingLanguageTooltip.textContent = currentLanguage === 'es' ? 'Cambiar idioma' : 'Change language';
-    }
 }
 
 // ===== FUNCIONES DEL BOTÓN FLOTANTE =====
 function initializeFloatingWidget() {
     const floatingMainBtn = document.getElementById('floating-main-btn');
     const floatingMenu = document.getElementById('floating-menu');
-    const floatingLanguageToggle = document.getElementById('floating-language-toggle');
     
     if (!floatingMainBtn || !floatingMenu) return;
     
     floatingMainBtn.addEventListener('click', () => {
         toggleFloatingMenu();
     });
-    
-    if (floatingLanguageToggle) {
-        floatingLanguageToggle.addEventListener('click', () => {
-            const newLanguage = currentLanguage === 'es' ? 'en' : 'es';
-            switchLanguage(newLanguage);
-        });
-    }
     
     document.addEventListener('click', (e) => {
         const floatingWidget = document.getElementById('floating-widget');
@@ -2115,7 +2156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Optimizaciones adicionales
     initializePerformanceOptimizations();
     
-    console.log('StarFlex Landing Page inicializada con video hero');
+    console.log('StarFlex Landing Page inicializada con botón de idioma mejorado');
 });
 
 // ===== MANEJO DE ERRORES =====
