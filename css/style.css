@@ -446,8 +446,13 @@ top: 0;
 left: -100%;
 width: 100%;
 height: 100%;
-background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+background: linear-gradient(90deg, 
+transparent, 
+rgba(255, 255, 255, 0.2), 
+transparent
+);
 transition: left 0.6s ease;
+z-index: 1;
 }
 
 .btn--primary:hover {
@@ -843,26 +848,20 @@ z-index: 1;
 position: absolute;
 top: 60%;
 right: 15%;
-width: 200px;
-height: 200px;
-background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
-border-radius: 50%;
-filter: blur(30px);
-animation: floating-orb-2 18s ease-in-out infinite;
-z-index: 1;
+width: 150px;
+height: 150px;
+background: radial-gradient(circle, rgba(184, 0, 46, 0.25) 0%, transparent 70%);
+animation-delay: 0s;
 }
 
 .hero .floating-orb-3 {
 position: absolute;
 bottom: 20%;
 left: 20%;
-width: 150px;
-height: 150px;
-background: radial-gradient(circle, rgba(6, 255, 165, 0.06) 0%, transparent 70%);
-border-radius: 50%;
-filter: blur(25px);
-animation: floating-orb-3 12s ease-in-out infinite;
-z-index: 1;
+width: 120px;
+height: 120px;
+background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
+animation-delay: 7s;
 }
 
 .container {
@@ -956,7 +955,7 @@ position: relative;
 margin-bottom: var(--space-sm);
 font-weight: 900;
 text-shadow: var(--neon-crimson);
-filter: drop-shadow(0 0 20px rgba(255, 69, 105, 0.4));
+filter: drop-shadow(0 0 20px rgba(184, 0, 46, 0.4));
 }
 
 .hero__title--highlight::after {
@@ -1112,7 +1111,7 @@ width: 100%;
 height: 100%;
 background: linear-gradient(90deg, 
 transparent, 
-rgba(255, 255, 255, 0.3), 
+rgba(184, 0, 46, 0.05), 
 transparent
 );
 transition: left 0.6s ease;
@@ -1197,7 +1196,7 @@ display: inline-block;
 transition: all var(--transition);
 position: relative;
 border-radius: 15px;
-overflow: hidden;
+overflow: visible;
 text-decoration: none;
 cursor: pointer;
 filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
@@ -1206,6 +1205,12 @@ animation: download-float 6s ease-in-out infinite;
 padding: 0;
 border: none;
 background: transparent;
+width: auto;
+height: auto;
+min-width: auto;
+min-height: auto;
+max-width: none;
+max-height: none;
 }
 
 .download-btn:hover {
@@ -1233,14 +1238,42 @@ object-position: center;
 clip-path: none;
 mask: none;
 overflow: visible;
+/* Propiedades específicas para evitar distorsión */
+aspect-ratio: auto;
+/* Eliminar cualquier limitación de contenido */
+max-width: none;
+max-height: none;
+min-width: auto;
+min-height: auto;
 }
 
+/* Reglas específicas para Google Play - NUEVA SECCIÓN */
+.download-btn:not(.download-btn--app-store) .download-btn__image {
+height: 60px;
+width: auto;
+min-width: 180px;
+/* Propiedades específicas para Google Play */
+object-fit: contain;
+object-position: center;
+/* Eliminar cualquier recorte específico */
+border-radius: 12px;
+overflow: visible;
+/* Asegurar que el logo de Google Play se muestre completo */
+padding: 0;
+margin: 0;
+/* Eliminar cualquier transformación que pueda causar recorte */
+transform: none;
+clip: none;
+}
+
+/* Reglas específicas para App Store */
 .download-btn--app-store .download-btn__image {
 height: 60px;
 width: auto;
 min-width: 180px;
 /* Asegurar que el logo de App Store se muestre completo */
 object-fit: contain;
+object-position: center;
 }
 
 .download-btn:hover .download-btn__image {
@@ -1248,131 +1281,110 @@ box-shadow:
 0 8px 25px rgba(0, 0, 0, 0.3),
 0 0 0 1px rgba(255, 255, 255, 0.1),
 0 0 20px rgba(0, 212, 255, 0.2);
-}
-
-.hero__trust {
-display: flex;
-align-items: center;
-gap: var(--space-sm);
-font-size: 0.9rem;
-color: var(--text-muted);
-font-family: var(--font-mono);
-font-weight: 500;
-}
-
-.hero__trust::before {
-content: '';
-width: 10px;
-height: 10px;
-background: var(--starflex-cyan);
-border-radius: 50%;
-display: inline-block;
-margin-right: var(--space-sm);
-box-shadow: var(--glow-subtle);
-animation: pulse-gentle 3s infinite;
-}
-
-/* ===== TELÉFONO HERO OPTIMIZADO CON IMÁGENES MODERNAS ===== */
-.hero__media {
-display: flex;
-justify-content: center;
-align-items: center;
-position: relative;
-animation: fadeInRight 1s ease-out 0.3s both;
-}
-
-.hero__phone-container {
-position: relative;
-transform: perspective(1200px) rotateY(-8deg) rotateX(2deg);
-transition: transform var(--transition-slow);
-animation: phone-float 8s ease-in-out infinite;
-}
-
-.hero__phone {
-width: 320px;
-height: 640px;
-position: relative;
-overflow: hidden;
-border-radius: 45px;
-box-shadow: 
-0 25px 80px rgba(0, 0, 0, 0.4),
-0 10px 40px rgba(0, 0, 0, 0.3),
-0 0 0 1px rgba(255, 255, 255, 0.05);
-filter: drop-shadow(0 0 30px rgba(255, 69, 105, 0.15));
-background: #000000;
-}
-
-.hero__phone::before {
-content: '';
-position: absolute;
-top: -20px;
-left: -20px;
-right: -20px;
-bottom: -20px;
-background: radial-gradient(ellipse, 
-rgba(255, 69, 105, 0.1) 0%,
-rgba(255, 23, 68, 0.05) 40%,
-transparent 70%
-);
-border-radius: 65px;
-z-index: -1;
-opacity: 0.6;
-animation: ambient-glow 8s ease-in-out infinite;
-filter: blur(25px);
-}
-
-.hero__phone-screen {
-width: 100%;
-height: 100%;
-background: #000000;
-border-radius: 45px;
-overflow: hidden;
-position: relative;
-border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.hero__phone-content {
-width: 100%;
-height: 100%;
-position: relative;
-overflow: hidden;
-background: #000000;
-border-radius: 45px;
-}
-
-/* ===== IMAGEN DEL HERO OPTIMIZADA CON FORMATOS MODERNOS ===== */
-.hero__phone-app-image {
-width: 100%;
-height: 100%;
-border-radius: 45px;
-position: absolute;
-top: 0;
-left: 0;
-z-index: 1;
-transition: all var(--transition);
-background-size: cover;
-background-position: center;
-background-repeat: no-repeat;
-object-fit: cover;
+/* Mantener las propiedades de contenido en hover */
+object-fit: contain;
 object-position: center;
-filter: brightness(1.02) contrast(1.05) saturate(1.08);
-/* Fallback para navegadores sin soporte de formatos modernos */
-background-image: url('../assets/phones/Hero.jpg');
-/* Optimización de renderizado */
-image-rendering: -webkit-optimize-contrast;
-image-rendering: crisp-edges;
+overflow: visible;
+}
+
+/* ===== RESPONSIVE PARA BOTONES DE DESCARGA ===== */
+@media (max-width: 768px) {
+.download-btn__image {
+height: 50px;
+}
+
+.download-btn:not(.download-btn--app-store) .download-btn__image {
+height: 50px;
+min-width: 150px;
+}
+
+.download-btn--app-store .download-btn__image {
+height: 50px;
+min-width: 150px;
+}
+}
+
+@media (max-width: 480px) {
+.download-btn__image {
+height: 45px;
+}
+
+.download-btn:not(.download-btn--app-store) .download-btn__image {
+height: 45px;
+min-width: 135px;
+}
+
+.download-btn--app-store .download-btn__image {
+height: 45px;
+min-width: 135px;
+}
+}
+
+/* ===== CORRECCIÓN ADICIONAL PARA IMÁGENES DE DESCARGA ===== */
+/* Asegurar que las imágenes de descarga no tengan restricciones de contenedor */
+.hero__download .download-btn {
+/* Eliminar cualquier restricción del contenedor padre */
+flex-shrink: 0;
+flex-grow: 0;
+/* Asegurar que el contenedor no limite la imagen */
+overflow: visible;
+contain: none;
+}
+
+.hero__download .download-btn__image {
+/* Propiedades específicas para evitar recortes */
+contain: none;
+isolation: auto;
+/* Asegurar renderizado completo */
+will-change: auto;
+backface-visibility: visible;
+/* Eliminar cualquier optimización que pueda causar recortes */
 transform: translateZ(0);
-backface-visibility: hidden;
 }
 
-/* Soporte para WebP */
-.webp .hero__phone-app-image {
-background-image: url('../assets/phones/Hero.webp');
+/* ===== FALLBACK PARA NAVEGADORES ANTIGUOS ===== */
+@supports not (object-fit: contain) {
+.download-btn__image {
+/* Fallback para navegadores sin soporte de object-fit */
+width: auto;
+height: 60px;
+max-width: none;
+}
 }
 
-/* Soporte para AVIF */
-.avif .hero__phone-app-image {
-background-image: url('../assets/phones/Hero.avif');
+/* ===== OPTIMIZACIÓN ESPECÍFICA PARA GOOGLE PLAY ===== */
+/* Selector más específico para Google Play */
+.hero__download a[href*="play.google.com"] .download-btn__image {
+/* Propiedades específicas para el logo de Google Play */
+height: 60px;
+width: auto;
+min-width: 180px;
+object-fit: contain;
+object-position: center;
+border-radius: 12px;
+overflow: visible;
+/* Eliminar cualquier recorte específico */
+clip-path: none;
+mask: none;
+transform: none;
+/* Asegurar que no haya distorsión */
+aspect-ratio: auto;
+vertical-align: top;
+}
+
+/* Responsive para Google Play específico */
+@media (max-width: 768px) {
+.hero__download a[href*="play.google.com"] .download-btn__image {
+height: 50px;
+min-width: 150px;
+}
+}
+
+@media (max-width: 480px) {
+.hero__download a[href*="play.google.com"] .download-btn__image {
+height: 45px;
+min-width: 135px;
+}
 }
 
 /* ===== SECCIÓN CARACTERÍSTICAS CON IMÁGENES OPTIMIZADAS ===== */
@@ -1649,6 +1661,10 @@ image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
 transform: translateZ(0);
 backface-visibility: hidden;
+/* Optimización para carga progresiva */
+background-attachment: scroll;
+background-blend-mode: normal;
+isolation: isolate;
 }
 
 /* Fallbacks para navegadores sin soporte de formatos modernos */
@@ -2084,7 +2100,7 @@ border-radius: 50%;
 box-shadow: 
 var(--shadow-crimson),
 var(--neon-crimson),
-inset 0 2px 0 rgba(255, 255, 255, 0.2);
+inset 0 2px 0 rgba(255, 255, 255, 0.15);
 transition: all var(--transition);
 animation: play-button-pulse 3s ease-in-out infinite;
 }
@@ -2095,7 +2111,7 @@ box-shadow:
 var(--shadow-crimson-hover),
 var(--neon-crimson-strong),
 var(--neon-crimson-ultra),
-inset 0 2px 0 rgba(255, 255, 255, 0.3);
+inset 0 2px 0 rgba(255, 255, 255, 0.25);
 }
 
 .videos__play-icon {
