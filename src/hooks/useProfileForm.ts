@@ -202,10 +202,7 @@ export function useProfileForm(): UseProfileFormReturn {
           updatedChild.edad = value as number
         }
         
-        // Si se cambia el nivel, limpiar el curso para que el usuario seleccione uno nuevo
-        if (field === 'level') {
-          updatedChild.curso = ''
-        }
+        // Si se cambia el nivel, NO limpiar el curso - permitir que el usuario mantenga lo que escribió
         
         return updatedChild
       }
@@ -279,14 +276,16 @@ export function useProfileForm(): UseProfileFormReturn {
           if (!child.edad || child.edad < 1 || child.edad > 18) {
             newErrors[`child_${child.id}_edad`] = `Edad del hijo ${index + 1} debe estar entre 1 y 18 años`
           }
+          
+          // VALIDACIÓN SIMPLIFICADA DEL CURSO - solo verificar que no esté vacío
           if (!safeTrim(child.curso)) {
             newErrors[`child_${child.id}_curso`] = `Curso del hijo ${index + 1} es requerido`
-          } else if (!validateCourseFormat(child.curso, child.level)) {
-            newErrors[`child_${child.id}_curso`] = `Formato de curso inválido para hijo ${index + 1}. Debe seguir el formato del nivel seleccionado.`
           }
+          
           if (!child.level || !SCHOOL_LEVELS.includes(child.level)) {
             newErrors[`child_${child.id}_level`] = `Nivel educativo del hijo ${index + 1} es requerido`
           }
+          
           // Validar RUT si se proporciona
           if (child.rut && safeTrim(child.rut)) {
             const rutRegex = /^[0-9]+-[0-9kK]$/
