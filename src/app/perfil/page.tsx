@@ -349,141 +349,155 @@ export default function PerfilPage() {
                 </CardContent>
               </Card>
 
-              {/* Gestión de hijos - Solo para apoderados */}
-              {user.tipoUsuario === 'apoderado' && (
-                <Card className="panel-card">
-                  <CardHeader className="panel-card-header">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center space-x-2">
-                        <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        <span>Mis hijos registrados</span>
-                      </CardTitle>
-                      <Button
-                        onClick={addChild}
-                        size="sm"
-                        className="btn-panel-primary"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Agregar hijo
-                      </Button>
+              {/* Gestión de hijos - Para apoderados y funcionarios */}
+              <Card className="panel-card">
+                <CardHeader className="panel-card-header">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center space-x-2">
+                      <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      <span>
+                        {user.tipoUsuario === 'apoderado' 
+                          ? 'Mis hijos registrados' 
+                          : 'Mis hijos registrados (opcional)'
+                        }
+                      </span>
+                    </CardTitle>
+                    <Button
+                      onClick={addChild}
+                      size="sm"
+                      className="btn-panel-primary"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Agregar hijo
+                    </Button>
+                  </div>
+                  {user.tipoUsuario === 'funcionario' && (
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
+                      Como funcionario, puedes agregar información de tus hijos para gestionar también sus menús además del tuyo.
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent className="panel-card-content">
+                  {children.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Users className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                      <p className="text-slate-500 dark:text-slate-400">
+                        {user.tipoUsuario === 'apoderado' 
+                          ? 'No tienes hijos registrados' 
+                          : 'No tienes hijos registrados'
+                        }
+                      </p>
+                      <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
+                        {user.tipoUsuario === 'apoderado'
+                          ? 'Agrega la información de tus hijos para gestionar sus pedidos'
+                          : 'Agrega la información de tus hijos para gestionar sus pedidos además del tuyo'
+                        }
+                      </p>
                     </div>
-                  </CardHeader>
-                  <CardContent className="panel-card-content">
-                    {children.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Users className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                        <p className="text-slate-500 dark:text-slate-400">
-                          No tienes hijos registrados
-                        </p>
-                        <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-                          Agrega la información de tus hijos para gestionar sus pedidos
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {children.map((child, index) => (
-                          <motion.div
-                            key={child.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-800/50"
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center space-x-2">
-                                <h4 className="font-medium text-slate-800 dark:text-slate-200">
-                                  Hijo {index + 1}
-                                </h4>
-                                {child.level && (
-                                  <Badge variant="outline" className="text-xs">
-                                    <GraduationCap className="w-3 h-3 mr-1" />
-                                    {getSchoolLevelLabel(child.level)}
-                                  </Badge>
-                                )}
-                              </div>
-                              <Button
-                                onClick={() => removeChild(child.id)}
-                                variant="ghost"
-                                size="sm"
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  ) : (
+                    <div className="space-y-4">
+                      {children.map((child, index) => (
+                        <motion.div
+                          key={child.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-800/50"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2">
+                              <h4 className="font-medium text-slate-800 dark:text-slate-200">
+                                Hijo {index + 1}
+                              </h4>
+                              {child.level && (
+                                <Badge variant="outline" className="text-xs">
+                                  <GraduationCap className="w-3 h-3 mr-1" />
+                                  {getSchoolLevelLabel(child.level)}
+                                </Badge>
+                              )}
+                            </div>
+                            <Button
+                              onClick={() => removeChild(child.id)}
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="md:col-span-2">
+                              <label className="label-educational">
+                                Nombre completo *
+                              </label>
+                              <Input
+                                value={child.name}
+                                onChange={(e) => updateChild(child.id, 'name', e.target.value)}
+                                placeholder="Nombre del hijo/a"
+                                className={errors[`child_${child.id}_name`] ? 'border-red-500' : ''}
+                              />
+                              {errors[`child_${child.id}_name`] && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  {errors[`child_${child.id}_name`]}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="label-educational">
+                                Edad *
+                              </label>
+                              <Input
+                                type="number"
+                                min="1"
+                                max="18"
+                                value={child.edad || ''}
+                                onChange={(e) => updateChild(child.id, 'edad', parseInt(e.target.value) || 0)}
+                                placeholder="Edad"
+                                className={errors[`child_${child.id}_edad`] ? 'border-red-500' : ''}
+                              />
+                              {errors[`child_${child.id}_edad`] && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  {errors[`child_${child.id}_edad`]}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="label-educational">
+                                Curso *
+                              </label>
+                              <Input
+                                value={child.curso}
+                                onChange={(e) => updateChild(child.id, 'curso', e.target.value)}
+                                placeholder="Ej: 3° Básico A"
+                                className={errors[`child_${child.id}_curso`] ? 'border-red-500' : ''}
+                              />
+                              {errors[`child_${child.id}_curso`] && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  {errors[`child_${child.id}_curso`]}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="label-educational">
+                                Nivel
+                              </label>
+                              <select
+                                value={child.level}
+                                onChange={(e) => updateChild(child.id, 'level', e.target.value as 'basico' | 'medio')}
+                                className="select-educational"
                               >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                                <option value="basico">Básico</option>
+                                <option value="medio">Medio</option>
+                              </select>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <div className="md:col-span-2">
-                                <label className="label-educational">
-                                  Nombre completo *
-                                </label>
-                                <Input
-                                  value={child.name}
-                                  onChange={(e) => updateChild(child.id, 'name', e.target.value)}
-                                  placeholder="Nombre del hijo/a"
-                                  className={errors[`child_${child.id}_name`] ? 'border-red-500' : ''}
-                                />
-                                {errors[`child_${child.id}_name`] && (
-                                  <p className="text-red-500 text-sm mt-1">
-                                    {errors[`child_${child.id}_name`]}
-                                  </p>
-                                )}
-                              </div>
-                              <div>
-                                <label className="label-educational">
-                                  Edad *
-                                </label>
-                                <Input
-                                  type="number"
-                                  min="1"
-                                  max="18"
-                                  value={child.edad || ''}
-                                  onChange={(e) => updateChild(child.id, 'edad', parseInt(e.target.value) || 0)}
-                                  placeholder="Edad"
-                                  className={errors[`child_${child.id}_edad`] ? 'border-red-500' : ''}
-                                />
-                                {errors[`child_${child.id}_edad`] && (
-                                  <p className="text-red-500 text-sm mt-1">
-                                    {errors[`child_${child.id}_edad`]}
-                                  </p>
-                                )}
-                              </div>
-                              <div>
-                                <label className="label-educational">
-                                  Curso *
-                                </label>
-                                <Input
-                                  value={child.curso}
-                                  onChange={(e) => updateChild(child.id, 'curso', e.target.value)}
-                                  placeholder="Ej: 3° Básico A"
-                                  className={errors[`child_${child.id}_curso`] ? 'border-red-500' : ''}
-                                />
-                                {errors[`child_${child.id}_curso`] && (
-                                  <p className="text-red-500 text-sm mt-1">
-                                    {errors[`child_${child.id}_curso`]}
-                                  </p>
-                                )}
-                              </div>
-                              <div>
-                                <label className="label-educational">
-                                  Nivel
-                                </label>
-                                <select
-                                  value={child.level}
-                                  onChange={(e) => updateChild(child.id, 'level', e.target.value as 'basico' | 'medio')}
-                                  className="select-educational"
-                                >
-                                  <option value="basico">Básico</option>
-                                  <option value="medio">Medio</option>
-                                </select>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
             {/* Sidebar */}
@@ -628,14 +642,15 @@ export default function PerfilPage() {
                         Mantén tu correo actualizado para recibir notificaciones importantes.
                       </p>
                     </div>
-                    {user.tipoUsuario === 'apoderado' && (
-                      <div className="flex items-start space-x-2">
-                        <Users className="w-4 h-4 mt-0.5 text-blue-600" />
-                        <p>
-                          La información de tus hijos es necesaria para gestionar sus pedidos de almuerzo.
-                        </p>
-                      </div>
-                    )}
+                    <div className="flex items-start space-x-2">
+                      <Users className="w-4 h-4 mt-0.5 text-blue-600" />
+                      <p>
+                        {user.tipoUsuario === 'apoderado'
+                          ? 'La información de tus hijos es necesaria para gestionar sus pedidos de almuerzo.'
+                          : 'Puedes agregar información de tus hijos para gestionar sus pedidos además del tuyo.'
+                        }
+                      </p>
+                    </div>
                     <div className="flex items-start space-x-2">
                       <Clock className="w-4 h-4 mt-0.5 text-blue-600" />
                       <p>
