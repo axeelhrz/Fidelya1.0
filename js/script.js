@@ -156,9 +156,11 @@ const translationData = {
         // Feature 6: Referidos
         'feature-referrals-title': 'REFERIDOS',
         'feature-referrals-description': 'Comparte StarFlex con otros conductores y ambos ganan. Nuestro sistema de referidos te permite obtener beneficios por cada nuevo usuario que invites a la plataforma.',
-        'feature-referrals-item-1': 'Enlace único de referido',
-        'feature-referrals-item-2': 'Recompensas por referidos',
-        'feature-referrals-item-3': 'Código QR de referido',
+        'feature-referrals-item-1': 'Enlace único de referido personalizado',
+        'feature-referrals-item-2': 'Recompensas por referidos exitosos',
+        'feature-referrals-item-3': 'Código QR para invitaciones rápidas',
+        'feature-referrals-item-4': 'Gana 1 semana gratis por cada referido',
+        'feature-referrals-item-5': 'Seguimiento de referidos en tiempo real',
         // Videos Section
         'videos-badge': 'Experiencia Visual Inmersiva',
         'videos-title-main': 'VE STARFLEX',
@@ -388,8 +390,6 @@ class ImageOptimizer {
         );
         
         await Promise.all(promises);
-        
-        // Siempre agregar JPEG y PNG como fallbacks
         
         console.log('Formatos soportados:', Array.from(this.supportedFormats));
     }
@@ -853,59 +853,14 @@ function initializeLanguageSystem() {
 
 function setupLanguageToggle() {
     const languageBtn = document.getElementById('nav-language-toggle');
-    const languageOptions = document.querySelectorAll('.language-option');
     
     if (languageBtn) {
-        // Manejar hover para mostrar dropdown
-        const languageToggle = document.querySelector('.language-toggle');
-        const languageDropdown = document.querySelector('.language-dropdown');
-        
-        let hoverTimeout;
-        
-        if (languageToggle && languageDropdown) {
-            languageToggle.addEventListener('mouseenter', () => {
-                clearTimeout(hoverTimeout);
-                languageDropdown.style.opacity = '1';
-                languageDropdown.style.visibility = 'visible';
-                languageDropdown.style.transform = 'translateY(0)';
-                languageBtn.classList.add('active');
-            });
-            
-            languageToggle.addEventListener('mouseleave', () => {
-                hoverTimeout = setTimeout(() => {
-                    languageDropdown.style.opacity = '0';
-                    languageDropdown.style.visibility = 'hidden';
-                    languageDropdown.style.transform = 'translateY(-10px)';
-                    languageBtn.classList.remove('active');
-                }, 150);
-            });
-            
-            // Mantener dropdown abierto cuando se hace hover sobre él
-            languageDropdown.addEventListener('mouseenter', () => {
-                clearTimeout(hoverTimeout);
-            });
-            
-            languageDropdown.addEventListener('mouseleave', () => {
-                hoverTimeout = setTimeout(() => {
-                    languageDropdown.style.opacity = '0';
-                    languageDropdown.style.visibility = 'hidden';
-                    languageDropdown.style.transform = 'translateY(-10px)';
-                    languageBtn.classList.remove('active');
-                }, 150);
-            });
-        }
-    }
-    
-    // Manejar clicks en opciones de idioma
-    languageOptions.forEach(option => {
-        option.addEventListener('click', (e) => {
-            e.preventDefault();
-            const selectedLanguage = option.getAttribute('data-lang');
-            if (selectedLanguage && selectedLanguage !== currentLanguage) {
-                switchLanguage(selectedLanguage);
-            }
+        languageBtn.addEventListener('click', () => {
+            // Alternar entre español e inglés
+            const newLanguage = currentLanguage === 'es' ? 'en' : 'es';
+            switchLanguage(newLanguage);
         });
-    });
+    }
 }
 
 function switchLanguage(newLanguage) {
@@ -927,16 +882,6 @@ function switchLanguage(newLanguage) {
     setTimeout(() => {
         document.body.style.opacity = '1';
     }, 150);
-    
-    // Cerrar dropdown después del cambio
-    const languageDropdown = document.querySelector('.language-dropdown');
-    const languageBtn = document.getElementById('nav-language-toggle');
-    if (languageDropdown && languageBtn) {
-        languageDropdown.style.opacity = '0';
-        languageDropdown.style.visibility = 'hidden';
-        languageDropdown.style.transform = 'translateY(-10px)';
-        languageBtn.classList.remove('active');
-    }
 }
 
 function applyTranslations() {
@@ -991,23 +936,10 @@ function applyTranslations() {
 
 function updateLanguageButtons() {
     const languageText = document.getElementById('nav-language-text');
-    const languageOptions = document.querySelectorAll('.language-option');
     
     if (languageText) {
         languageText.textContent = currentLanguage.toUpperCase();
     }
-    
-    // Actualizar estado activo de las opciones
-    languageOptions.forEach(option => {
-        const optionLang = option.getAttribute('data-lang');
-        if (optionLang === currentLanguage) {
-            option.style.background = 'var(--glass-bg-medium)';
-            option.style.color = 'var(--starflex-crimson-bright)';
-        } else {
-            option.style.background = 'transparent';
-            option.style.color = 'var(--text-secondary)';
-        }
-    });
 }
 
 // ===== FUNCIONES DEL BOTÓN FLOTANTE =====
@@ -1098,178 +1030,6 @@ function checkReducedMotion() {
             heroVideoManager.pause();
         }
     }
-}
-
-// ===== SISTEMA DE PARTÍCULAS FLOTANTES DELICADAS =====
-class ParticleSystem {
-    constructor(container, options = {}) {
-        this.container = container;
-        this.canvas = null;
-        this.ctx = null;
-        this.particles = [];
-        this.animationId = null;
-        
-        this.config = {
-            particleCount: options.particleCount || 15,
-            particleSize: options.particleSize || 2,
-            particleSpeed: options.particleSpeed || 0.5,
-            particleColor: options.particleColor || 'rgba(255, 69, 105, 0.3)',
-            connectionDistance: options.connectionDistance || 100,
-            connectionOpacity: options.connectionOpacity || 0.1,
-            ...options
-        };
-        
-        this.init();
-    }
-    
-    init() {
-        if (isReducedMotion) return;
-        
-        this.createCanvas();
-        this.createParticles();
-        this.animate();
-        this.setupResize();
-    }
-    
-    createCanvas() {
-        this.canvas = document.createElement('canvas');
-        this.canvas.className = 'particles-canvas';
-        this.ctx = this.canvas.getContext('2d');
-        
-        let particlesContainer = this.container.querySelector('.particles-container');
-        if (!particlesContainer) {
-            particlesContainer = document.createElement('div');
-            particlesContainer.className = 'particles-container';
-            this.container.appendChild(particlesContainer);
-        }
-        
-        particlesContainer.appendChild(this.canvas);
-        this.resizeCanvas();
-    }
-    
-    resizeCanvas() {
-        if (!this.canvas || !this.container) return;
-        
-        const rect = this.container.getBoundingClientRect();
-        this.canvas.width = rect.width;
-        this.canvas.height = rect.height;
-    }
-    
-    createParticles() {
-        this.particles = [];
-        for (let i = 0; i < this.config.particleCount; i++) {
-            this.particles.push({
-                x: Math.random() * this.canvas.width,
-                y: Math.random() * this.canvas.height,
-                vx: (Math.random() - 0.5) * this.config.particleSpeed,
-                vy: (Math.random() - 0.5) * this.config.particleSpeed,
-                size: Math.random() * this.config.particleSize + 1,
-                opacity: Math.random() * 0.5 + 0.2
-            });
-        }
-    }
-    
-    animate() {
-        if (isReducedMotion) return;
-        
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        this.particles.forEach(particle => {
-            particle.x += particle.vx;
-            particle.y += particle.vy;
-            
-            if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
-            if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
-            
-            particle.x = Math.max(0, Math.min(this.canvas.width, particle.x));
-            particle.y = Math.max(0, Math.min(this.canvas.height, particle.y));
-            
-            this.ctx.beginPath();
-            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            this.ctx.fillStyle = this.config.particleColor.replace('0.3', particle.opacity.toString());
-            this.ctx.fill();
-        });
-        
-        this.drawConnections();
-        this.animationId = requestAnimationFrame(() => this.animate());
-    }
-    
-    drawConnections() {
-        for (let i = 0; i < this.particles.length; i++) {
-            for (let j = i + 1; j < this.particles.length; j++) {
-                const dx = this.particles[i].x - this.particles[j].x;
-                const dy = this.particles[i].y - this.particles[j].y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < this.config.connectionDistance) {
-                    const opacity = (1 - distance / this.config.connectionDistance) * this.config.connectionOpacity;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(this.particles[i].x, this.particles[i].y);
-                    this.ctx.lineTo(this.particles[j].x, this.particles[j].y);
-                    this.ctx.strokeStyle = `rgba(255, 69, 105, ${opacity})`;
-                    this.ctx.lineWidth = 1;
-                    this.ctx.stroke();
-                }
-            }
-        }
-    }
-    
-    setupResize() {
-        const resizeObserver = new ResizeObserver(() => {
-            this.resizeCanvas();
-            this.createParticles();
-        });
-        resizeObserver.observe(this.container);
-    }
-    
-    destroy() {
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-        }
-        if (this.canvas && this.canvas.parentNode) {
-            this.canvas.parentNode.removeChild(this.canvas);
-        }
-    }
-}
-
-// ===== INICIALIZACIÓN DE SISTEMAS DE PARTÍCULAS =====
-function initializeParticleSystems() {
-    if (isReducedMotion) return;
-    
-    const heroPhone = document.querySelector('.hero__phone');
-    if (heroPhone) {
-        const heroParticleSystem = new ParticleSystem(heroPhone, {
-            particleCount: 12,
-            particleSize: 1.5,
-            particleSpeed: 0.3,
-            particleColor: 'rgba(255, 69, 105, 0.25)',
-            connectionDistance: 80,
-            connectionOpacity: 0.08
-        });
-        particleSystems.push(heroParticleSystem);
-    }
-    
-    const featurePhones = document.querySelectorAll('.feature__phone .phone');
-    featurePhones.forEach((phone, index) => {
-        const colors = [
-            'rgba(255, 69, 105, 0.2)',
-            'rgba(255, 23, 68, 0.2)',
-            'rgba(255, 45, 107, 0.2)',
-            'rgba(184, 0, 46, 0.2)',
-            'rgba(255, 69, 105, 0.2)',
-            'rgba(255, 215, 0, 0.25)'
-        ];
-        
-        const particleSystem = new ParticleSystem(phone, {
-            particleCount: 8,
-            particleSize: 1,
-            particleSpeed: 0.2,
-            particleColor: colors[index % colors.length],
-            connectionDistance: 60,
-            connectionOpacity: 0.06
-        });
-        particleSystems.push(particleSystem);
-    });
 }
 
 // ===== NAVEGACIÓN RESPONSIVE MEJORADA =====
@@ -1796,7 +1556,8 @@ function initializeFAQ() {
     
     if (searchInput) {
         searchInput.addEventListener('input', debounce((e) => {
-            const searchTerm = e.target.value.toLowerCase().trim();
+            const searchTerm = e.target.value.toLowerCase
+().trim();
             let visibleItems = 0;
             
             faqItems.forEach(item => {
@@ -1825,9 +1586,9 @@ function initializeFAQ() {
             
             if (noResults) {
                 if (visibleItems === 0 && searchTerm !== '') {
-                    noResults.classList.add('show');
+                    noResults.classList.add('visible');
                 } else {
-                    noResults.classList.remove('show');
+                    noResults.classList.remove('visible');
                 }
             }
         }, 300));
@@ -1933,17 +1694,6 @@ function setupImageLazyLoading() {
                 imageOptimizer.observeImage(img, imageKeys[index]);
             }
         });
-        
-        // Configurar botones de descarga
-        const appleBtn = document.querySelector('.download-btn--app-store .download-btn__image');
-        const googleBtn = document.querySelector('.download-btn:not(.download-btn--app-store) .download-btn__image');
-        
-        if (appleBtn) {
-            imageOptimizer.loadImageImmediately(appleBtn, 'downloads.apple');
-        }
-        if (googleBtn) {
-            imageOptimizer.loadImageImmediately(googleBtn, 'downloads.google');
-        }
     };
     
     waitForOptimizer();
@@ -2087,13 +1837,6 @@ function handleResize() {
         closeFloatingMenu();
     }
     
-    // Redimensionar canvas de partículas
-    particleSystems.forEach(system => {
-        if (system.resizeCanvas) {
-            system.resizeCanvas();
-        }
-    });
-    
     // Reinicializar video hero si es necesario
     if (heroVideoManager && window.innerWidth <= 768) {
         // En móvil, asegurar que el video esté optimizado
@@ -2138,7 +1881,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeIntersectionObserver();
     
     // Inicializar funcionalidades adicionales
-    initializeParticleSystems();
     initializeLazyLoading();
     preloadCriticalResources();
     initializeAccessibility();
@@ -2156,7 +1898,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Optimizaciones adicionales
     initializePerformanceOptimizations();
     
-    console.log('StarFlex Landing Page inicializada con botón de idioma mejorado');
+    console.log('StarFlex Landing Page inicializada con toggle de idioma en header y iconos de apps corregidos');
 });
 
 // ===== MANEJO DE ERRORES =====
@@ -2177,14 +1919,6 @@ window.addEventListener('unhandledrejection', (e) => {
 
 // ===== LIMPIEZA AL SALIR =====
 window.addEventListener('beforeunload', () => {
-    // Limpiar sistemas de partículas
-    particleSystems.forEach(system => system.destroy());
-    particleSystems = [];
-    
-    if (animationId) {
-        cancelAnimationFrame(animationId);
-    }
-    
     // Limpiar video hero
     if (heroVideoManager) {
         heroVideoManager.destroy();
