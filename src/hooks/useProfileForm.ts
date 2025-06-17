@@ -6,7 +6,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '@/app/lib/firebase'
 import useAuth from '@/hooks/useAuth'
 import { Child } from '@/types/panel'
-import { SchoolLevel, migrateCourseFormat, validateCourseFormat, SCHOOL_LEVELS } from '@/lib/courseUtils'
+import { SchoolLevel, migrateCourseFormat, SCHOOL_LEVELS } from '@/lib/courseUtils'
 
 interface ProfileFormData {
   firstName: string

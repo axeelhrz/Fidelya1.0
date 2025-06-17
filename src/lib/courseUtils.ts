@@ -72,9 +72,9 @@ export function getCoursesForLevel(level: SchoolLevel): string[] {
 }
 
 // Función para validar formato de curso - AHORA MÁS FLEXIBLE
-export function validateCourseFormat(curso: string, level?: SchoolLevel): boolean {
+export function validateCourseFormat(curso: string): boolean {
   // Solo validar que no esté vacío
-  return curso && curso.trim().length > 0
+  return !!(curso && curso.trim().length > 0)
 }
 
 // Función para generar sugerencias de curso basadas en el nivel
