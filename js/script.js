@@ -155,14 +155,10 @@ const translationData = {
         'feature-notifications-item-7': 'Filtros avanzados de notificación',
         // Feature 6: Referidos
         'feature-referrals-title': 'REFERIDOS',
-        'feature-referrals-description': 'Puede compartir su enlace de referido o su código QR y por cada usuario que se registre con su enlace, usted y el usuario referido gana 1 semana grátis.',
-        'feature-referrals-item-2': 'Llegar',
-        'feature-referrals-item-3': 'Saltar selfie',
-        'feature-referrals-item-4': 'Saltar CAPTCHA-PUZZLE',
-        'feature-referrals-item-5': 'Filtros personalizables',
-        'feature-referrals-item-6': 'Auto búsqueda',
-        'feature-referrals-item-7': 'Notificación persistente',
-        'feature-referrals-item-8': 'Notificación por Llamada Telefónica',
+        'feature-referrals-description': 'Comparte StarFlex con otros conductores y ambos ganan. Nuestro sistema de referidos te permite obtener beneficios por cada nuevo usuario que invites a la plataforma.',
+        'feature-referrals-item-1': 'Enlace único de referido',
+        'feature-referrals-item-2': 'Recompensas por referidos',
+        'feature-referrals-item-3': 'Código QR de referido',
         // Videos Section
         'videos-badge': 'Experiencia Visual Inmersiva',
         'videos-title-main': 'VE STARFLEX',
@@ -293,14 +289,10 @@ const translationData = {
         'feature-notifications-item-7': 'Advanced notification filters',
         // Feature 6: Referrals
         'feature-referrals-title': 'REFERRALS',
-        'feature-referrals-description': 'You can share your referral link or QR code and for each user who registers with your link, you and the referred user earn 1 free week.',
-        'feature-referrals-item-2': 'Arrive',
-        'feature-referrals-item-3': 'Skip selfie',
-        'feature-referrals-item-4': 'Skip CAPTCHA-PUZZLE',
-        'feature-referrals-item-5': 'Customizable filters',
-        'feature-referrals-item-6': 'Auto search',
-        'feature-referrals-item-7': 'Persistent notification',
-        'feature-referrals-item-8': 'Phone Call notification',
+        'feature-referrals-description': 'Share StarFlex with other drivers and both earn. Our referral system allows you to get benefits for each new user you invite to the platform.',
+        'feature-referrals-item-1': 'Unique referral link',
+        'feature-referrals-item-2': 'Referral rewards',
+        'feature-referrals-item-3': 'Referral QR code',
         // Videos Section
         'videos-badge': 'Immersive Visual Experience',
         'videos-title-main': 'SEE STARFLEX',
@@ -1027,6 +1019,14 @@ function openFloatingMenu() {
             item.style.opacity = '1';
         }, index * 100);
     });
+    
+    // Focus en el primer enlace para accesibilidad
+    setTimeout(() => {
+        const firstLink = floatingMenu.querySelector('.floating-widget__menu-item');
+        if (firstLink) {
+            firstLink.focus();
+        }
+    }, 300);
 }
 
 function closeFloatingMenu() {
@@ -2170,4 +2170,3 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-
