@@ -1,11 +1,10 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 // Crear un componente Alert simple en línea en vez de importarlo
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Users, GraduationCap } from "lucide-react"
 import type { GuardianData } from "../hooks/useProfileForm"
 
 interface GuardianInfoFormProps {
@@ -72,15 +71,46 @@ export function GuardianInfoForm({ formData, onChange }: GuardianInfoFormProps) 
       
       {/* Alerta para funcionarios */}
       {showStaffAlert && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-md p-4 mt-4">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 text-blue-800 rounded-xl p-6 mt-4">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-blue-500 mr-2" />
-            <div>
-              <h4 className="font-medium mb-1">Información para funcionarios</h4>
-              <div className="text-sm">
-                Como funcionario, debe agregarse a sí mismo como estudiante en la sección "Estudiantes" a continuación.
-                Por favor, incluya su nombre y el curso donde da clases o cualquier curso válido.
-                Esto es necesario para realizar pedidos de almuerzo y colación en el sistema.
+            <AlertCircle className="h-6 w-6 text-blue-500 mr-3 flex-shrink-0 mt-0.5" />
+            <div className="space-y-3">
+              <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                <GraduationCap className="h-5 w-5" />
+                Información para funcionarios
+              </h4>
+              
+              <div className="space-y-3 text-sm">
+                <div className="bg-white/60 rounded-lg p-4 border border-blue-100">
+                  <h5 className="font-medium mb-2 flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Como funcionario, usted puede:
+                  </h5>
+                  <ul className="space-y-2 ml-6">
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-600 font-bold">•</span>
+                      <span><strong>Agregarse a sí mismo</strong> como funcionario en la sección &quot;Estudiantes&quot; para realizar pedidos de almuerzo y colación</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-600 font-bold">•</span>
+                      <span><strong>Agregar a sus hijos</strong> como estudiantes normales si también es apoderado</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
+                  <h5 className="font-medium mb-2 text-emerald-800">💰 Precios diferenciados:</h5>
+                  <ul className="space-y-1 ml-4 text-emerald-700">
+                    <li>• <strong>Funcionarios:</strong> Precio especial para personal del colegio</li>
+                    <li>• <strong>Estudiantes:</strong> Precio regular para alumnos</li>
+                  </ul>
+                </div>
+                
+                <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                  <p className="text-amber-800">
+                    <strong>Importante:</strong> Al agregarse como funcionario, incluya su nombre completo y el curso/área donde trabaja (ej: &quot;Secretaría&quot;, &quot;1° Básico&quot;, &quot;Biblioteca&quot;, etc.)
+                  </p>
+                </div>
               </div>
             </div>
           </div>

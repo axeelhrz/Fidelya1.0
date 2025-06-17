@@ -25,11 +25,47 @@ import {
   Award,
   BookOpen,
   Heart,
-  Settings
+  Settings,
+  Briefcase,
+  UserCheck,
+  Baby
 } from "lucide-react"
 
-// Mock data estructurado
-const mockUserData = {
+// Interfaces
+interface Estudiante {
+  id: string;
+  nombre: string;
+  curso: string;
+  letra: string;
+  nivel: string;
+  userType: 'estudiante' | 'funcionario';
+  fechaNacimiento: string;
+  activo: boolean;
+}
+
+interface Estadisticas {
+  pedidosRealizados: number;
+  montoTotal: number;
+  calificacionPromedio: number;
+  estudiantesActivos: number;
+  funcionariosActivos?: number;
+}
+
+interface UserData {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono: string;
+  direccion: string;
+  fechaRegistro: string;
+  rol: string;
+  isStaff: boolean;
+  estudiantes: Estudiante[];
+  estadisticas: Estadisticas;
+}
+
+// Mock data estructurado con funcionarios y estudiantes
+const mockUserData: UserData = {
   id: '1',
   nombre: 'María Elena Rodríguez',
   email: 'maria.rodriguez@email.com',
@@ -37,6 +73,7 @@ const mockUserData = {
   direccion: 'Av. Las Condes 1234, Las Condes, Santiago',
   fechaRegistro: '2024-01-15',
   rol: 'Apoderado',
+  isStaff: true, // Es funcionario
   estudiantes: [
     {
       id: 'est-1',
@@ -44,6 +81,7 @@ const mockUserData = {
       curso: '5',
       letra: 'A',
       nivel: 'Básica',
+      userType: 'estudiante',
       fechaNacimiento: '2014-03-15',
       activo: true
     },
@@ -53,7 +91,18 @@ const mockUserData = {
       curso: '3',
       letra: 'B',
       nivel: 'Básica',
+      userType: 'estudiante',
       fechaNacimiento: '2016-08-22',
+      activo: true
+    },
+    {
+      id: 'func-1',
+      nombre: 'María Elena Rodríguez',
+      curso: 'Secretaría',
+      letra: 'Administrativa',
+      nivel: 'Básica',
+      userType: 'funcionario',
+      fechaNacimiento: '1985-05-10',
       activo: true
     }
   ],
@@ -61,7 +110,8 @@ const mockUserData = {
     pedidosRealizados: 47,
     montoTotal: 234500,
     calificacionPromedio: 4.8,
-    estudiantesActivos: 2
+    estudiantesActivos: 2,
+    funcionariosActivos: 1
   }
 }
 
@@ -101,7 +151,7 @@ const animations = {
   }
 }
 
-function ProfileHeader({ userData }: { userData: any }) {
+function ProfileHeader({ userData }: { userData: UserData }) {
   return (
     <motion.div
       variants={animations.card}
@@ -115,7 +165,11 @@ function ProfileHeader({ userData }: { userData: any }) {
       <div className="relative z-10 p-8 text-white">
         <div className="flex items-center gap-6">
           <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-xl">
-            <User className="w-12 h-12 text-white" />
+            {userData.isStaff ? (
+              <Briefcase className="w-12 h-12 text-white" />
+            ) : (
+              <User className="w-12 h-12 text-white" />
+            )}
           </div>
           <div className="flex-1">
             <h1 className="text-3xl font-bold mb-2">{userData.nombre}</h1>
@@ -124,6 +178,12 @@ function ProfileHeader({ userData }: { userData: any }) {
                 <Shield className="w-3 h-3 mr-1" />
                 {userData.rol}
               </Badge>
+              {userData.isStaff && (
+                <Badge className="bg-emerald-500/80 text-white border-emerald-400/50">
+                  <Briefcase className="w-3 h-3 mr-1" />
+                  Funcionario
+                </Badge>
+              )}
               <span className="text-sm">
                 Miembro desde {new Date(userData.fechaRegistro).toLocaleDateString('es-ES', { 
                   year: 'numeric', 
@@ -145,7 +205,7 @@ function ProfileHeader({ userData }: { userData: any }) {
   )
 }
 
-function StatsCards({ stats }: { stats: any }) {
+function StatsCards({ stats, isStaff }: { stats: Estadisticas, isStaff: boolean }) {
   const statsData = [
     {
       icon: BookOpen,
@@ -163,11 +223,18 @@ function StatsCards({ stats }: { stats: any }) {
     },
     {
       icon: Users,
-      label: 'Estudiantes activos',
+      label: isStaff ? 'Estudiantes activos' : 'Estudiantes',
       value: stats.estudiantesActivos,
       color: 'from-purple-500 to-purple-600',
       suffix: ''
     },
+    ...(isStaff ? [{
+      icon: Briefcase,
+      label: 'Como funcionario',
+      value: stats.funcionariosActivos || 0,
+      color: 'from-orange-500 to-red-500',
+      suffix: ''
+    }] : []),
     {
       icon: Award,
       label: 'Calificación',
@@ -184,7 +251,7 @@ function StatsCards({ stats }: { stats: any }) {
       animate="visible"
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
     >
-      {statsData.map((stat, index) => (
+      {statsData.map((stat) => (
         <motion.div key={stat.label} variants={animations.item}>
           <Card className="bg-white/90 backdrop-blur-xl border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 rounded-2xl">
             <CardContent className="p-6 text-center">
@@ -204,7 +271,7 @@ function StatsCards({ stats }: { stats: any }) {
 }
 
 function PersonalInfoCard({ userData, isEditing, onEdit, onSave, onCancel }: {
-  userData: any,
+  userData: UserData,
   isEditing: boolean,
   onEdit: () => void,
   onSave: () => void,
@@ -212,8 +279,8 @@ function PersonalInfoCard({ userData, isEditing, onEdit, onSave, onCancel }: {
 }) {
   const [formData, setFormData] = useState(userData)
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev: any) => ({ ...prev, [field]: value }))
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData((prev: UserData) => ({ ...prev, [field]: value }))
   }
 
   return (
@@ -288,6 +355,19 @@ function PersonalInfoCard({ userData, isEditing, onEdit, onSave, onCancel }: {
                     />
                   </div>
                 </div>
+                <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl">
+                  <input
+                    type="checkbox"
+                    id="isStaff"
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    checked={formData.isStaff || false}
+                    onChange={(e) => handleInputChange('isStaff', e.target.checked)}
+                  />
+                  <Label htmlFor="isStaff" className="flex items-center gap-2">
+                    <Briefcase className="w-4 h-4" />
+                    Soy funcionario del colegio
+                  </Label>
+                </div>
                 <div className="flex justify-end">
                   <Button onClick={onSave} className="rounded-xl">
                     <Save className="w-4 h-4 mr-2" />
@@ -327,6 +407,15 @@ function PersonalInfoCard({ userData, isEditing, onEdit, onSave, onCancel }: {
                     <p className="text-gray-900">{userData.direccion}</p>
                   </div>
                 </div>
+                {userData.isStaff && (
+                  <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-xl">
+                    <Briefcase className="w-5 h-5 text-orange-600" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Tipo de usuario</p>
+                      <p className="text-gray-900 font-medium">Funcionario del colegio</p>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -336,21 +425,37 @@ function PersonalInfoCard({ userData, isEditing, onEdit, onSave, onCancel }: {
   )
 }
 
-function StudentsCard({ estudiantes }: { estudiantes: any[] }) {
+function StudentsCard({ estudiantes, isStaff }: { estudiantes: Estudiante[], isStaff: boolean }) {
   const [students, setStudents] = useState(estudiantes)
   const [isEditing, setIsEditing] = useState(false)
 
   const addStudent = () => {
-    const newStudent = {
+    const newStudent: Estudiante = {
       id: `est-${Date.now()}`,
       nombre: '',
       curso: '',
       letra: '',
       nivel: 'Básica',
+      userType: 'estudiante' as const,
       fechaNacimiento: '',
       activo: true
     }
     setStudents([...students, newStudent])
+    setIsEditing(true)
+  }
+
+  const addStaffMember = () => {
+    const newStaff: Estudiante = {
+      id: `func-${Date.now()}`,
+      nombre: '',
+      curso: '',
+      letra: '',
+      nivel: 'Básica',
+      userType: 'funcionario' as const,
+      fechaNacimiento: '',
+      activo: true
+    }
+    setStudents([...students, newStaff])
     setIsEditing(true)
   }
 
@@ -364,16 +469,30 @@ function StudentsCard({ estudiantes }: { estudiantes: any[] }) {
     ))
   }
 
+  const studentCount = students.filter(s => s.userType === 'estudiante').length
+  const staffCount = students.filter(s => s.userType === 'funcionario').length
+
   return (
     <motion.div variants={animations.item}>
       <Card className="bg-white/90 backdrop-blur-xl border-white/30 shadow-xl rounded-2xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-purple-600" />
-              Estudiantes ({students.length})
+              <Users className="w-5 h-5 text-purple-600" />
+              Gestión de Usuarios ({students.length})
             </CardTitle>
-            <p className="text-gray-600 mt-1">Información de los estudiantes a cargo</p>
+            <div className="flex items-center gap-4 mt-2">
+              <div className="flex items-center gap-1 text-sm text-gray-600">
+                <Baby className="w-4 h-4 text-blue-500" />
+                <span>{studentCount} estudiantes</span>
+              </div>
+              {isStaff && (
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <Briefcase className="w-4 h-4 text-orange-500" />
+                  <span>{staffCount} funcionarios</span>
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex gap-2">
             <Button
@@ -381,9 +500,23 @@ function StudentsCard({ estudiantes }: { estudiantes: any[] }) {
               size="sm"
               onClick={addStudent}
               className="rounded-xl"
+              title="Agregar estudiante (hijo)"
             >
+              <Baby className="w-4 h-4 mr-1" />
               <Plus className="w-4 h-4" />
             </Button>
+            {isStaff && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={addStaffMember}
+                className="rounded-xl bg-orange-50 hover:bg-orange-100 border-orange-200"
+                title="Agregarse como funcionario"
+              >
+                <Briefcase className="w-4 h-4 mr-1" />
+                <Plus className="w-4 h-4" />
+              </Button>
+            )}
             <Button
               variant={isEditing ? "destructive" : "outline"}
               size="sm"
@@ -396,115 +529,170 @@ function StudentsCard({ estudiantes }: { estudiantes: any[] }) {
         </CardHeader>
         <CardContent className="space-y-4">
           <AnimatePresence>
-            {students.map((student, index) => (
-              <motion.div
-                key={student.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="p-6 bg-gradient-to-r from-slate-50 to-blue-50 rounded-2xl border border-slate-200"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                      {student.nombre ? student.nombre.charAt(0).toUpperCase() : index + 1}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg">
-                        {student.nombre || `Estudiante ${index + 1}`}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {student.curso}° {student.letra} - {student.nivel}
-                        </Badge>
-                        {student.activo && (
-                          <Badge className="bg-emerald-100 text-emerald-700 text-xs">
-                            Activo
-                          </Badge>
+            {students.map((student, index) => {
+              const isStaffMember = student.userType === 'funcionario'
+              
+              return (
+                <motion.div
+                  key={student.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className={`p-6 rounded-2xl border ${
+                    isStaffMember 
+                      ? 'bg-gradient-to-r from-orange-50 to-red-50 border-orange-200' 
+                      : 'bg-gradient-to-r from-slate-50 to-blue-50 border-slate-200'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg ${
+                        isStaffMember 
+                          ? 'bg-gradient-to-br from-orange-500 to-red-600' 
+                          : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                      }`}>
+                        {isStaffMember ? (
+                          <Briefcase className="w-6 h-6" />
+                        ) : (
+                          student.nombre ? student.nombre.charAt(0).toUpperCase() : index + 1
                         )}
                       </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900 text-lg">
+                          {student.nombre || (isStaffMember ? 'Funcionario' : `Estudiante ${index + 1}`)}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs ${
+                              isStaffMember 
+                                ? 'bg-orange-100 text-orange-700 border-orange-300' 
+                                : 'bg-blue-100 text-blue-700 border-blue-300'
+                            }`}
+                          >
+                            {isStaffMember ? (
+                              <>
+                                <Briefcase className="w-3 h-3 mr-1" />
+                                {student.curso} - {student.letra}
+                              </>
+                            ) : (
+                              <>
+                                <GraduationCap className="w-3 h-3 mr-1" />
+                                {student.curso}° {student.letra} - {student.nivel}
+                              </>
+                            )}
+                          </Badge>
+                          {student.activo && (
+                            <Badge className="bg-emerald-100 text-emerald-700 text-xs">
+                              Activo
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                     </div>
+                    {isEditing && students.length > 1 && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => removeStudent(student.id)}
+                        className="rounded-xl"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
-                  {isEditing && students.length > 1 && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeStudent(student.id)}
-                      className="rounded-xl"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
 
-                {isEditing ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <Label htmlFor={`nombre-${student.id}`}>Nombre</Label>
-                      <Input
-                        id={`nombre-${student.id}`}
-                        value={student.nombre}
-                        onChange={(e) => updateStudent(student.id, 'nombre', e.target.value)}
-                        className="rounded-xl"
-                        placeholder="Nombre completo"
-                      />
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                          <Label htmlFor={`nombre-${student.id}`}>Nombre</Label>
+                          <Input
+                            id={`nombre-${student.id}`}
+                            value={student.nombre}
+                            onChange={(e) => updateStudent(student.id, 'nombre', e.target.value)}
+                            className="rounded-xl"
+                            placeholder={isStaffMember ? "Nombre del funcionario" : "Nombre completo"}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`curso-${student.id}`}>
+                            {isStaffMember ? 'Área/Departamento' : 'Curso'}
+                          </Label>
+                          <Input
+                            id={`curso-${student.id}`}
+                            value={student.curso}
+                            onChange={(e) => updateStudent(student.id, 'curso', e.target.value)}
+                            className="rounded-xl"
+                            placeholder={isStaffMember ? "Ej: Secretaría, Biblioteca" : "1-12"}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`letra-${student.id}`}>
+                            {isStaffMember ? 'Cargo/Función' : 'Letra'}
+                          </Label>
+                          <Input
+                            id={`letra-${student.id}`}
+                            value={student.letra}
+                            onChange={(e) => updateStudent(student.id, 'letra', e.target.value)}
+                            className="rounded-xl"
+                            placeholder={isStaffMember ? "Ej: Administrativa, Docente" : "A, B, C..."}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`fecha-${student.id}`}>Fecha Nacimiento</Label>
+                          <Input
+                            id={`fecha-${student.id}`}
+                            type="date"
+                            value={student.fechaNacimiento}
+                            onChange={(e) => updateStudent(student.id, 'fechaNacimiento', e.target.value)}
+                            className="rounded-xl"
+                          />
+                        </div>
+                      </div>
+                      
+                      {isStaffMember && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                          <p className="text-sm text-amber-800">
+                            <strong>Funcionario:</strong> Este usuario tendrá acceso a precios especiales para personal del colegio.
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <Label htmlFor={`curso-${student.id}`}>Curso</Label>
-                      <Input
-                        id={`curso-${student.id}`}
-                        value={student.curso}
-                        onChange={(e) => updateStudent(student.id, 'curso', e.target.value)}
-                        className="rounded-xl"
-                        placeholder="1-12"
-                      />
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-600">
+                          Nacimiento: {new Date(student.fechaNacimiento).toLocaleDateString('es-ES')}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isStaffMember ? (
+                          <Briefcase className="w-4 h-4 text-gray-500" />
+                        ) : (
+                          <BookOpen className="w-4 h-4 text-gray-500" />
+                        )}
+                        <span className="text-sm text-gray-600">
+                          {isStaffMember ? 'Área:' : 'Nivel:'} {student.nivel}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isStaffMember ? (
+                          <UserCheck className="w-4 h-4 text-gray-500" />
+                        ) : (
+                          <GraduationCap className="w-4 h-4 text-gray-500" />
+                        )}
+                        <span className="text-sm text-gray-600">
+                          {isStaffMember ? 'Cargo:' : 'Curso:'} {student.curso} {student.letra}
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor={`letra-${student.id}`}>Letra</Label>
-                      <Input
-                        id={`letra-${student.id}`}
-                        value={student.letra}
-                        onChange={(e) => updateStudent(student.id, 'letra', e.target.value)}
-                        className="rounded-xl"
-                        placeholder="A, B, C..."
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`fecha-${student.id}`}>Fecha Nacimiento</Label>
-                      <Input
-                        id={`fecha-${student.id}`}
-                        type="date"
-                        value={student.fechaNacimiento}
-                        onChange={(e) => updateStudent(student.id, 'fechaNacimiento', e.target.value)}
-                        className="rounded-xl"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">
-                        Nacimiento: {new Date(student.fechaNacimiento).toLocaleDateString('es-ES')}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">
-                        Nivel: {student.nivel}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <GraduationCap className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">
-                        Curso: {student.curso}° {student.letra}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            ))}
+                  )}
+                </motion.div>
+              )
+            })}
           </AnimatePresence>
 
           {isEditing && (
@@ -558,7 +746,7 @@ export default function ProfilePage() {
         </motion.div>
 
         {/* Stats */}
-        <StatsCards stats={mockUserData.estadisticas} />
+        <StatsCards stats={mockUserData.estadisticas} isStaff={mockUserData.isStaff} />
 
         {/* Main content */}
         <motion.div
@@ -576,8 +764,8 @@ export default function ProfilePage() {
             onCancel={() => setIsEditingPersonal(false)}
           />
 
-          {/* Students */}
-          <StudentsCard estudiantes={mockUserData.estudiantes} />
+          {/* Students and Staff */}
+          <StudentsCard estudiantes={mockUserData.estudiantes} isStaff={mockUserData.isStaff} />
 
           {/* Quick actions */}
           <motion.div variants={animations.item}>

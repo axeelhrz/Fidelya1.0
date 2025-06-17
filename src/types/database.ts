@@ -72,7 +72,7 @@ export interface PaymentTransaction {
   currency: string;
   paymentMethod?: string;
   paymentStatus: PaymentStatus;
-  gatewayResponse?: any;
+  gatewayResponse?: Record<string, unknown>;
   gatewayTransactionId?: string;
   paymentUrl?: string;
   expiresAt?: string;
@@ -100,6 +100,7 @@ export interface UserProfile {
   lastLogin: string | null;
   loginCount: number;
   students: Student[];
+  isStaff?: boolean; // Nuevo campo para identificar funcionarios
 }
 
 export interface StudentFormData {
@@ -122,12 +123,25 @@ export interface WeeklyMenuSelection {
 export interface OrderSummaryItem {
   studentId: string;
   studentName: string;
+  studentType: UserType; // Nuevo campo para distinguir tipo
   date: string;
   menuType: 'almuerzo' | 'colacion';
   menuItem: MenuItem;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+}
+
+// Nuevos tipos para manejo de precios diferenciados
+export interface PricingInfo {
+  studentPrice: number;
+  staffPrice: number;
+  userType: UserType;
+  finalPrice: number;
+}
+
+export interface MenuItemWithPricing extends MenuItem {
+  pricing: PricingInfo;
 }
 
 // API Response types
@@ -137,3 +151,17 @@ export interface ApiResponse<T = unknown> {
   error?: string;
   message?: string;
 }
+
+// Utilidades para cálculo de precios
+export const calculatePrice = (menuItem: MenuItem, userType: UserType): number => {
+  return userType === 'funcionario' ? menuItem.priceStaff : menuItem.priceStudent;
+};
+
+export const getPricingInfo = (menuItem: MenuItem, userType: UserType): PricingInfo => {
+  return {
+    studentPrice: menuItem.priceStudent,
+    staffPrice: menuItem.priceStaff,
+    userType,
+    finalPrice: calculatePrice(menuItem, userType)
+  };
+};

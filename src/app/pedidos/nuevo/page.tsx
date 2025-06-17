@@ -17,7 +17,11 @@ import {
   ShoppingCart,
   Star,
   ArrowLeft,
-  Check
+  Check,
+  Briefcase,
+  DollarSign,
+  Users,
+  Baby
 } from 'lucide-react'
 
 // Types
@@ -27,13 +31,15 @@ interface Student {
   curso: string;
   letra: string;
   nivel: string;
+  userType: 'estudiante' | 'funcionario';
   avatar: string;
 }
 
 interface MenuOption {
   id: string;
   nombre: string;
-  precio: number;
+  priceStudent: number;
+  priceStaff: number;
   descripcion: string;
   rating: number;
 }
@@ -47,7 +53,7 @@ interface MockMenuOptions {
   [key: string]: DayMenuOptions;
 }
 
-// Mock data
+// Mock data con estudiantes y funcionarios
 const mockStudents: Student[] = [
   {
     id: '1',
@@ -55,6 +61,7 @@ const mockStudents: Student[] = [
     curso: '5',
     letra: 'A',
     nivel: 'Básica',
+    userType: 'estudiante',
     avatar: 'AG'
   },
   {
@@ -63,6 +70,7 @@ const mockStudents: Student[] = [
     curso: '3',
     letra: 'B',
     nivel: 'Básica',
+    userType: 'estudiante',
     avatar: 'CL'
   },
   {
@@ -71,33 +79,136 @@ const mockStudents: Student[] = [
     curso: '7',
     letra: 'A',
     nivel: 'Media',
+    userType: 'estudiante',
     avatar: 'MF'
+  },
+  {
+    id: '4',
+    nombre: 'Prof. Juan Pérez',
+    curso: 'Matemáticas',
+    letra: 'Docente',
+    nivel: 'Media',
+    userType: 'funcionario',
+    avatar: 'JP'
+  },
+  {
+    id: '5',
+    nombre: 'Sra. Carmen Ruiz',
+    curso: 'Secretaría',
+    letra: 'Administrativa',
+    nivel: 'Básica',
+    userType: 'funcionario',
+    avatar: 'CR'
   }
 ]
 
 const mockMenuOptions: MockMenuOptions = {
   '2024-01-15': {
     almuerzo: [
-      { id: 'a1', nombre: 'Pollo al horno con verduras', precio: 3500, descripcion: 'Pollo jugoso con mix de verduras asadas', rating: 4.8 },
-      { id: 'a2', nombre: 'Pasta con salsa boloñesa', precio: 3200, descripcion: 'Pasta fresca con salsa de carne casera', rating: 4.6 },
-      { id: 'a3', nombre: 'Ensalada César completa', precio: 2800, descripcion: 'Lechuga, pollo, crutones y aderezo César', rating: 4.4 }
+      { 
+        id: 'a1', 
+        nombre: 'Pollo al horno con verduras', 
+        priceStudent: 3500, 
+        priceStaff: 2800, 
+        descripcion: 'Pollo jugoso con mix de verduras asadas', 
+        rating: 4.8 
+      },
+      { 
+        id: 'a2', 
+        nombre: 'Pasta con salsa boloñesa', 
+        priceStudent: 3200, 
+        priceStaff: 2600, 
+        descripcion: 'Pasta fresca con salsa de carne casera', 
+        rating: 4.6 
+      },
+      { 
+        id: 'a3', 
+        nombre: 'Ensalada César completa', 
+        priceStudent: 2800, 
+        priceStaff: 2200, 
+        descripcion: 'Lechuga, pollo, crutones y aderezo César', 
+        rating: 4.4 
+      }
     ],
     colacion: [
-      { id: 'c1', nombre: 'Sándwich de pavo', precio: 1800, descripcion: 'Pan integral con pavo, palta y tomate', rating: 4.7 },
-      { id: 'c2', nombre: 'Yogurt con granola', precio: 1500, descripcion: 'Yogurt natural con granola y frutas', rating: 4.5 },
-      { id: 'c3', nombre: 'Fruta de temporada', precio: 1200, descripcion: 'Selección de frutas frescas del día', rating: 4.3 }
+      { 
+        id: 'c1', 
+        nombre: 'Sándwich de pavo', 
+        priceStudent: 1800, 
+        priceStaff: 1400, 
+        descripcion: 'Pan integral con pavo, palta y tomate', 
+        rating: 4.7 
+      },
+      { 
+        id: 'c2', 
+        nombre: 'Yogurt con granola', 
+        priceStudent: 1500, 
+        priceStaff: 1200, 
+        descripcion: 'Yogurt natural con granola y frutas', 
+        rating: 4.5 
+      },
+      { 
+        id: 'c3', 
+        nombre: 'Fruta de temporada', 
+        priceStudent: 1200, 
+        priceStaff: 1000, 
+        descripcion: 'Selección de frutas frescas del día', 
+        rating: 4.3 
+      }
     ]
   },
   '2024-01-16': {
     almuerzo: [
-      { id: 'a4', nombre: 'Pescado a la plancha', precio: 3800, descripcion: 'Salmón fresco con quinoa y vegetales', rating: 4.9 },
-      { id: 'a5', nombre: 'Arroz con pollo', precio: 3300, descripcion: 'Arroz amarillo con pollo y verduras', rating: 4.5 },
-      { id: 'a6', nombre: 'Hamburguesa saludable', precio: 3600, descripcion: 'Carne magra con pan integral y ensalada', rating: 4.2 }
+      { 
+        id: 'a4', 
+        nombre: 'Pescado a la plancha', 
+        priceStudent: 3800, 
+        priceStaff: 3000, 
+        descripcion: 'Salmón fresco con quinoa y vegetales', 
+        rating: 4.9 
+      },
+      { 
+        id: 'a5', 
+        nombre: 'Arroz con pollo', 
+        priceStudent: 3300, 
+        priceStaff: 2700, 
+        descripcion: 'Arroz amarillo con pollo y verduras', 
+        rating: 4.5 
+      },
+      { 
+        id: 'a6', 
+        nombre: 'Hamburguesa saludable', 
+        priceStudent: 3600, 
+        priceStaff: 2900, 
+        descripcion: 'Carne magra con pan integral y ensalada', 
+        rating: 4.2 
+      }
     ],
     colacion: [
-      { id: 'c4', nombre: 'Wrap de atún', precio: 1900, descripcion: 'Tortilla integral con atún y vegetales', rating: 4.6 },
-      { id: 'c5', nombre: 'Smoothie de frutas', precio: 1600, descripcion: 'Batido natural de frutas mixtas', rating: 4.8 },
-      { id: 'c6', nombre: 'Galletas integrales', precio: 1300, descripcion: 'Galletas caseras con avena y pasas', rating: 4.1 }
+      { 
+        id: 'c4', 
+        nombre: 'Wrap de atún', 
+        priceStudent: 1900, 
+        priceStaff: 1500, 
+        descripcion: 'Tortilla integral con atún y vegetales', 
+        rating: 4.6 
+      },
+      { 
+        id: 'c5', 
+        nombre: 'Smoothie de frutas', 
+        priceStudent: 1600, 
+        priceStaff: 1300, 
+        descripcion: 'Batido natural de frutas mixtas', 
+        rating: 4.8 
+      },
+      { 
+        id: 'c6', 
+        nombre: 'Galletas integrales', 
+        priceStudent: 1300, 
+        priceStaff: 1100, 
+        descripcion: 'Galletas caseras con avena y pasas', 
+        rating: 4.1 
+      }
     ]
   }
 }
@@ -157,19 +268,25 @@ export default function NuevoPedidoPage() {
 
   const calculateTotal = () => {
     let total = 0
-    Object.values(selectedMenus).forEach(studentMenus => {
+    Object.entries(selectedMenus).forEach(([studentId, studentMenus]) => {
+      const student = mockStudents.find(s => s.id === studentId)
+      const isStaff = student?.userType === 'funcionario'
+      
       Object.values(studentMenus).forEach(dayMenus => {
         if (dayMenus.almuerzo) {
-          // Find price in mock data
           Object.values(mockMenuOptions).forEach(dayOptions => {
             const almuerzoOption = dayOptions.almuerzo.find(opt => opt.id === dayMenus.almuerzo)
-            if (almuerzoOption) total += almuerzoOption.precio
+            if (almuerzoOption) {
+              total += isStaff ? almuerzoOption.priceStaff : almuerzoOption.priceStudent
+            }
           })
         }
         if (dayMenus.colacion) {
           Object.values(mockMenuOptions).forEach(dayOptions => {
             const colacionOption = dayOptions.colacion.find(opt => opt.id === dayMenus.colacion)
-            if (colacionOption) total += colacionOption.precio
+            if (colacionOption) {
+              total += isStaff ? colacionOption.priceStaff : colacionOption.priceStudent
+            }
           })
         }
       })
@@ -188,6 +305,10 @@ export default function NuevoPedidoPage() {
         }
       }
     }))
+  }
+
+  const getPrice = (option: MenuOption, userType: 'estudiante' | 'funcionario') => {
+    return userType === 'funcionario' ? option.priceStaff : option.priceStudent
   }
 
   const progressStats = getProgressStats()
@@ -246,7 +367,7 @@ export default function NuevoPedidoPage() {
                       {currentStep === 'confirmation' && "Pedido Confirmado"}
                     </CardTitle>
                     <p className="text-blue-100 mt-1">
-                      {currentStep === 'selection' && "Selecciona los estudiantes para el pedido"}
+                      {currentStep === 'selection' && "Selecciona estudiantes y funcionarios para el pedido"}
                       {currentStep === 'menu' && "Elige los menús para cada día"}
                       {currentStep === 'summary' && "Revisa tu pedido antes de confirmar"}
                       {currentStep === 'confirmation' && "Tu pedido ha sido procesado exitosamente"}
@@ -267,7 +388,7 @@ export default function NuevoPedidoPage() {
                         Progreso del pedido
                       </span>
                       <span className="text-sm font-bold text-white">
-                        {progressStats.completed}/{progressStats.total} estudiantes
+                        {progressStats.completed}/{progressStats.total} usuarios
                       </span>
                     </div>
                     <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
@@ -277,7 +398,7 @@ export default function NuevoPedidoPage() {
                         animate={{ width: `${progressStats.percentage}%` }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
                       />
-                    </div>
+                                        </div>
                   </motion.div>
                 )}
 
@@ -289,7 +410,7 @@ export default function NuevoPedidoPage() {
                   className="flex items-center justify-center mt-6 space-x-4"
                 >
                   {[
-                    { key: 'selection', label: 'Estudiantes', icon: GraduationCap },
+                    { key: 'selection', label: 'Usuarios', icon: Users },
                     { key: 'menu', label: 'Menús', icon: Utensils },
                     { key: 'summary', label: 'Resumen', icon: CheckCircle },
                     { key: 'confirmation', label: 'Confirmación', icon: Check }
@@ -342,10 +463,19 @@ export default function NuevoPedidoPage() {
                         </div>
                         <div>
                           <h3 className="font-semibold text-gray-900 mb-2">¿Cómo funciona?</h3>
-                          <p className="text-gray-600 text-sm leading-relaxed">
-                            Selecciona los estudiantes para los que deseas hacer pedidos. Luego podrás elegir 
-                            los menús específicos para cada día de la semana.
+                          <p className="text-gray-600 text-sm leading-relaxed mb-3">
+                            Selecciona estudiantes y funcionarios para los que deseas hacer pedidos. Los precios se ajustarán automáticamente según el tipo de usuario.
                           </p>
+                          <div className="flex items-center gap-4 text-sm">
+                            <div className="flex items-center gap-2 bg-blue-100 px-3 py-1 rounded-lg">
+                              <Baby className="w-4 h-4 text-blue-600" />
+                              <span className="text-blue-800 font-medium">Estudiantes: Precio regular</span>
+                            </div>
+                            <div className="flex items-center gap-2 bg-orange-100 px-3 py-1 rounded-lg">
+                              <Briefcase className="w-4 h-4 text-orange-600" />
+                              <span className="text-orange-800 font-medium">Funcionarios: Precio especial</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
@@ -355,6 +485,7 @@ export default function NuevoPedidoPage() {
                       {mockStudents.map((student) => {
                         const isSelected = selectedStudents.includes(student.id)
                         const completionStatus = getStudentCompletionStatus(student.id)
+                        const isStaff = student.userType === 'funcionario'
 
                         return (
                           <motion.div
@@ -367,7 +498,9 @@ export default function NuevoPedidoPage() {
                               ${isSelected 
                                 ? completionStatus === 'completed'
                                   ? 'border-emerald-200 bg-gradient-to-r from-emerald-50 to-green-50'
-                                  : 'border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50'
+                                  : isStaff 
+                                    ? 'border-orange-200 bg-gradient-to-r from-orange-50 to-red-50'
+                                    : 'border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50'
                                 : 'border-gray-200 hover:border-gray-300 bg-white'
                               }
                             `}>
@@ -381,7 +514,9 @@ export default function NuevoPedidoPage() {
                                     className={`
                                       w-6 h-6 rounded-lg border-2 flex items-center justify-center cursor-pointer
                                       ${isSelected 
-                                        ? 'bg-blue-600 border-blue-600' 
+                                        ? isStaff 
+                                          ? 'bg-orange-600 border-orange-600'
+                                          : 'bg-blue-600 border-blue-600'
                                         : 'border-gray-300 hover:border-blue-400'
                                       }
                                     `}
@@ -400,22 +535,62 @@ export default function NuevoPedidoPage() {
                                   </motion.div>
 
                                   {/* Student avatar */}
-                                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                                    {student.avatar}
+                                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg ${
+                                    isStaff 
+                                      ? 'bg-gradient-to-br from-orange-500 to-red-600' 
+                                      : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                                  }`}>
+                                    {isStaff ? (
+                                      <Briefcase className="w-6 h-6" />
+                                    ) : (
+                                      student.avatar
+                                    )}
                                   </div>
 
                                   {/* Student info */}
                                   <div>
-                                    <h3 className="font-bold text-gray-900 text-lg">
-                                      {student.nombre}
-                                    </h3>
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h3 className="font-bold text-gray-900 text-lg">
+                                        {student.nombre}
+                                      </h3>
+                                      <Badge 
+                                        variant="outline" 
+                                        className={`text-xs ${
+                                          isStaff 
+                                            ? 'bg-orange-100 text-orange-700 border-orange-300' 
+                                            : 'bg-blue-100 text-blue-700 border-blue-300'
+                                        }`}
+                                      >
+                                        {isStaff ? (
+                                          <>
+                                            <Briefcase className="w-3 h-3 mr-1" />
+                                            Funcionario
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Baby className="w-3 h-3 mr-1" />
+                                            Estudiante
+                                          </>
+                                        )}
+                                      </Badge>
+                                    </div>
                                     <p className="text-gray-600 text-sm">
-                                      {student.curso}° {student.letra} • {student.nivel}
+                                      {student.curso} {student.letra} • {student.nivel}
                                     </p>
                                   </div>
                                 </div>
 
                                 <div className="flex items-center gap-3">
+                                  {/* Price indicator */}
+                                  <div className={`px-3 py-1 rounded-lg text-xs font-medium ${
+                                    isStaff 
+                                      ? 'bg-orange-100 text-orange-700' 
+                                      : 'bg-blue-100 text-blue-700'
+                                  }`}>
+                                    <DollarSign className="w-3 h-3 inline mr-1" />
+                                    {isStaff ? 'Precio especial' : 'Precio regular'}
+                                  </div>
+
                                   {/* Status badge */}
                                   {isSelected && (
                                     <motion.div
@@ -494,6 +669,7 @@ export default function NuevoPedidoPage() {
                         
                         const isActive = currentStudentMenu === studentId
                         const hasSelections = selectedMenus[studentId] && Object.keys(selectedMenus[studentId]).length > 0
+                        const isStaff = student.userType === 'funcionario'
                         
                         return (
                           <Button
@@ -503,14 +679,26 @@ export default function NuevoPedidoPage() {
                             className={`
                               relative px-4 py-2 rounded-xl transition-all duration-300
                               ${isActive 
-                                ? 'bg-blue-600 text-white shadow-lg' 
-                                : 'hover:bg-blue-50 hover:border-blue-300'
+                                ? isStaff 
+                                  ? 'bg-orange-600 text-white shadow-lg' 
+                                  : 'bg-blue-600 text-white shadow-lg'
+                                : isStaff
+                                  ? 'hover:bg-orange-50 hover:border-orange-300'
+                                  : 'hover:bg-blue-50 hover:border-blue-300'
                               }
                             `}
                           >
                             <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                                {student.avatar.charAt(0)}
+                              <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-white text-xs font-bold ${
+                                isStaff 
+                                  ? 'bg-gradient-to-br from-orange-500 to-red-600' 
+                                  : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                              }`}>
+                                {isStaff ? (
+                                  <Briefcase className="w-3 h-3" />
+                                ) : (
+                                  student.avatar.charAt(0)
+                                )}
                               </div>
                               <span>{student.nombre.split(' ')[0]}</span>
                               {hasSelections && (
@@ -528,117 +716,173 @@ export default function NuevoPedidoPage() {
                         variants={itemVariants}
                         className="space-y-6"
                       >
-                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">
-                            Selecciona menús para {mockStudents.find(s => s.id === currentStudentMenu)?.nombre}
-                          </h3>
-                          <p className="text-gray-600">
-                            Elige almuerzo y/o colación para cada día de la semana
-                          </p>
-                        </div>
+                        {(() => {
+                          const currentStudent = mockStudents.find(s => s.id === currentStudentMenu)
+                          const isStaff = currentStudent?.userType === 'funcionario'
+                          
+                          return (
+                            <div className={`rounded-2xl p-6 ${
+                              isStaff 
+                                ? 'bg-gradient-to-r from-orange-50 to-red-50' 
+                                : 'bg-gradient-to-r from-blue-50 to-purple-50'
+                            }`}>
+                              <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                {isStaff ? (
+                                  <Briefcase className="w-5 h-5 text-orange-600" />
+                                ) : (
+                                  <GraduationCap className="w-5 h-5 text-blue-600" />
+                                )}
+                                Selecciona menús para {currentStudent?.nombre}
+                              </h3>
+                              <div className="flex items-center gap-4">
+                                <p className="text-gray-600">
+                                  Elige almuerzo y/o colación para cada día de la semana
+                                </p>
+                                <Badge className={`${
+                                  isStaff 
+                                    ? 'bg-orange-100 text-orange-700' 
+                                    : 'bg-blue-100 text-blue-700'
+                                }`}>
+                                  {isStaff ? 'Precios especiales funcionario' : 'Precios estudiante'}
+                                </Badge>
+                              </div>
+                            </div>
+                          )
+                        })()}
 
                         {/* Week days */}
                         <div className="space-y-6">
-                          {weekDays.map(day => (
-                            <Card key={day.key} className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl overflow-hidden">
-                              <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 py-4">
-                                <div className="flex items-center gap-3">
-                                  <Calendar className="w-5 h-5 text-blue-600" />
+                          {weekDays.map(day => {
+                            const currentStudent = mockStudents.find(s => s.id === currentStudentMenu)
+                            const isStaff = currentStudent?.userType === 'funcionario'
+                            
+                            return (
+                              <Card key={day.key} className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl overflow-hidden">
+                                <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 py-4">
+                                  <div className="flex items-center gap-3">
+                                    <Calendar className="w-5 h-5 text-blue-600" />
+                                    <div>
+                                      <CardTitle className="text-lg">{day.name}</CardTitle>
+                                      <p className="text-sm text-gray-600">{day.date}</p>
+                                    </div>
+                                  </div>
+                                </CardHeader>
+                                <CardContent className="p-6 space-y-6">
+                                  {/* Almuerzo options */}
                                   <div>
-                                    <CardTitle className="text-lg">{day.name}</CardTitle>
-                                    <p className="text-sm text-gray-600">{day.date}</p>
-                                  </div>
-                                </div>
-                              </CardHeader>
-                              <CardContent className="p-6 space-y-6">
-                                {/* Almuerzo options */}
-                                <div>
-                                  <div className="flex items-center gap-2 mb-4">
-                                    <Utensils className="w-5 h-5 text-orange-600" />
-                                    <h4 className="font-semibold text-gray-900">Almuerzo</h4>
-                                  </div>
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {mockMenuOptions[day.key]?.almuerzo.map(option => {
-                                      const isSelected = selectedMenus[currentStudentMenu]?.[day.key]?.almuerzo === option.id
-                                      
-                                      return (
-                                        <motion.div
-                                          key={option.id}
-                                          whileHover={{ y: -2 }}
-                                          className={`
-                                            p-4 rounded-xl border-2 cursor-pointer transition-all duration-300
-                                            ${isSelected 
-                                              ? 'border-blue-500 bg-blue-50 shadow-lg' 
-                                              : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
-                                            }
-                                          `}
-                                          onClick={() => selectMenu(currentStudentMenu, day.key, 'almuerzo', option.id)}
-                                        >
-                                          <div className="flex items-start justify-between mb-2">
-                                            <h5 className="font-medium text-gray-900 text-sm">{option.nombre}</h5>
-                                            <div className="flex items-center gap-1">
-                                              <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                                              <span className="text-xs text-gray-600">{option.rating}</span>
+                                    <div className="flex items-center gap-2 mb-4">
+                                      <Utensils className="w-5 h-5 text-orange-600" />
+                                      <h4 className="font-semibold text-gray-900">Almuerzo</h4>
+                                      {isStaff && (
+                                        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700">
+                                          Precio funcionario
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                      {mockMenuOptions[day.key]?.almuerzo.map(option => {
+                                        const isSelected = selectedMenus[currentStudentMenu]?.[day.key]?.almuerzo === option.id
+                                        const price = getPrice(option, currentStudent?.userType || 'estudiante')
+                                        
+                                        return (
+                                          <motion.div
+                                            key={option.id}
+                                            whileHover={{ y: -2 }}
+                                            className={`
+                                              p-4 rounded-xl border-2 cursor-pointer transition-all duration-300
+                                              ${isSelected 
+                                                ? 'border-blue-500 bg-blue-50 shadow-lg' 
+                                                : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
+                                              }
+                                            `}
+                                            onClick={() => selectMenu(currentStudentMenu, day.key, 'almuerzo', option.id)}
+                                          >
+                                            <div className="flex items-start justify-between mb-2">
+                                              <h5 className="font-medium text-gray-900 text-sm">{option.nombre}</h5>
+                                              <div className="flex items-center gap-1">
+                                                <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                                                <span className="text-xs text-gray-600">{option.rating}</span>
+                                              </div>
                                             </div>
-                                          </div>
-                                          <p className="text-xs text-gray-600 mb-3">{option.descripcion}</p>
-                                          <div className="flex items-center justify-between">
-                                            <span className="font-bold text-blue-600">${option.precio.toLocaleString()}</span>
-                                            {isSelected && (
-                                              <CheckCircle className="w-5 h-5 text-blue-600" />
-                                            )}
-                                          </div>
-                                        </motion.div>
-                                      )
-                                    })}
+                                            <p className="text-xs text-gray-600 mb-3">{option.descripcion}</p>
+                                            <div className="flex items-center justify-between">
+                                              <div className="flex flex-col">
+                                                <span className="font-bold text-blue-600">${price.toLocaleString()}</span>
+                                                {isStaff && (
+                                                  <span className="text-xs text-gray-500 line-through">
+                                                    ${option.priceStudent.toLocaleString()}
+                                                  </span>
+                                                )}
+                                              </div>
+                                              {isSelected && (
+                                                <CheckCircle className="w-5 h-5 text-blue-600" />
+                                              )}
+                                            </div>
+                                          </motion.div>
+                                        )
+                                      })}
+                                    </div>
                                   </div>
-                                </div>
 
-                                {/* Colación options */}
-                                <div>
-                                  <div className="flex items-center gap-2 mb-4">
-                                    <Coffee className="w-5 h-5 text-purple-600" />
-                                    <h4 className="font-semibold text-gray-900">Colación</h4>
-                                  </div>
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {mockMenuOptions[day.key]?.colacion.map(option => {
-                                      const isSelected = selectedMenus[currentStudentMenu]?.[day.key]?.colacion === option.id
-                                      
-                                      return (
-                                        <motion.div
-                                          key={option.id}
-                                          whileHover={{ y: -2 }}
-                                          className={`
-                                            p-4 rounded-xl border-2 cursor-pointer transition-all duration-300
-                                            ${isSelected 
-                                              ? 'border-purple-500 bg-purple-50 shadow-lg' 
-                                              : 'border-gray-200 hover:border-purple-300 hover:shadow-md'
-                                            }
-                                          `}
-                                          onClick={() => selectMenu(currentStudentMenu, day.key, 'colacion', option.id)}
-                                        >
-                                          <div className="flex items-start justify-between mb-2">
-                                            <h5 className="font-medium text-gray-900 text-sm">{option.nombre}</h5>
-                                            <div className="flex items-center gap-1">
-                                              <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                                              <span className="text-xs text-gray-600">{option.rating}</span>
+                                  {/* Colación options */}
+                                  <div>
+                                    <div className="flex items-center gap-2 mb-4">
+                                      <Coffee className="w-5 h-5 text-purple-600" />
+                                      <h4 className="font-semibold text-gray-900">Colación</h4>
+                                      {isStaff && (
+                                        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700">
+                                          Precio funcionario
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                      {mockMenuOptions[day.key]?.colacion.map(option => {
+                                        const isSelected = selectedMenus[currentStudentMenu]?.[day.key]?.colacion === option.id
+                                        const price = getPrice(option, currentStudent?.userType || 'estudiante')
+                                        
+                                        return (
+                                          <motion.div
+                                            key={option.id}
+                                            whileHover={{ y: -2 }}
+                                            className={`
+                                              p-4 rounded-xl border-2 cursor-pointer transition-all duration-300
+                                              ${isSelected 
+                                                ? 'border-purple-500 bg-purple-50 shadow-lg' 
+                                                : 'border-gray-200 hover:border-purple-300 hover:shadow-md'
+                                              }
+                                            `}
+                                            onClick={() => selectMenu(currentStudentMenu, day.key, 'colacion', option.id)}
+                                          >
+                                            <div className="flex items-start justify-between mb-2">
+                                              <h5 className="font-medium text-gray-900 text-sm">{option.nombre}</h5>
+                                              <div className="flex items-center gap-1">
+                                                <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                                                <span className="text-xs text-gray-600">{option.rating}</span>
+                                              </div>
                                             </div>
-                                          </div>
-                                          <p className="text-xs text-gray-600 mb-3">{option.descripcion}</p>
-                                          <div className="flex items-center justify-between">
-                                            <span className="font-bold text-purple-600">${option.precio.toLocaleString()}</span>
-                                            {isSelected && (
-                                              <CheckCircle className="w-5 h-5 text-purple-600" />
-                                            )}
-                                          </div>
-                                        </motion.div>
-                                      )
-                                    })}
+                                            <p className="text-xs text-gray-600 mb-3">{option.descripcion}</p>
+                                            <div className="flex items-center justify-between">
+                                              <div className="flex flex-col">
+                                                <span className="font-bold text-purple-600">${price.toLocaleString()}</span>
+                                                {isStaff && (
+                                                  <span className="text-xs text-gray-500 line-through">
+                                                    ${option.priceStudent.toLocaleString()}
+                                                  </span>
+                                                )}
+                                              </div>
+                                              {isSelected && (
+                                                <CheckCircle className="w-5 h-5 text-purple-600" />
+                                              )}
+                                            </div>
+                                          </motion.div>
+                                        )
+                                      })}
+                                    </div>
                                   </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
+                                </CardContent>
+                              </Card>
+                            )
+                          })}
                         </div>
                       </motion.div>
                     )}
@@ -702,16 +946,35 @@ export default function NuevoPedidoPage() {
                         const student = mockStudents.find(s => s.id === studentId)
                         if (!student) return null
 
+                        const isStaff = student.userType === 'funcionario'
+
                         return (
                           <Card key={studentId} className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl">
                             <CardHeader className="pb-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                                  {student.avatar.charAt(0)}
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold ${
+                                  isStaff 
+                                    ? 'bg-gradient-to-br from-orange-500 to-red-600' 
+                                    : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                                }`}>
+                                  {isStaff ? (
+                                    <Briefcase className="w-5 h-5" />
+                                  ) : (
+                                    student.avatar.charAt(0)
+                                  )}
                                 </div>
                                 <div>
-                                  <CardTitle className="text-lg">{student.nombre}</CardTitle>
-                                  <p className="text-sm text-gray-600">{student.curso}° {student.letra}</p>
+                                  <div className="flex items-center gap-2">
+                                    <CardTitle className="text-lg">{student.nombre}</CardTitle>
+                                    <Badge className={`text-xs ${
+                                      isStaff 
+                                        ? 'bg-orange-100 text-orange-700' 
+                                        : 'bg-blue-100 text-blue-700'
+                                    }`}>
+                                      {isStaff ? 'Funcionario' : 'Estudiante'}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-sm text-gray-600">{student.curso} {student.letra}</p>
                                 </div>
                               </div>
                             </CardHeader>
@@ -729,8 +992,11 @@ export default function NuevoPedidoPage() {
                                           <span className="text-gray-600">
                                             🍽️ {mockMenuOptions[date]?.almuerzo.find(opt => opt.id === dayMenus.almuerzo)?.nombre}
                                           </span>
-                                          <span className="font-medium text-blue-600">
-                                            ${mockMenuOptions[date]?.almuerzo.find(opt => opt.id === dayMenus.almuerzo)?.precio.toLocaleString()}
+                                          <span className={`font-medium ${isStaff ? 'text-orange-600' : 'text-blue-600'}`}>
+                                            ${(() => {
+                                              const almuerzoOption = mockMenuOptions[date]?.almuerzo.find(opt => opt.id === dayMenus.almuerzo);
+                                              return almuerzoOption ? getPrice(almuerzoOption, student.userType).toLocaleString() : '0';
+                                            })()}
                                           </span>
                                         </div>
                                       )}
@@ -739,8 +1005,11 @@ export default function NuevoPedidoPage() {
                                           <span className="text-gray-600">
                                             ☕ {mockMenuOptions[date]?.colacion.find(opt => opt.id === dayMenus.colacion)?.nombre}
                                           </span>
-                                          <span className="font-medium text-purple-600">
-                                            ${mockMenuOptions[date]?.colacion.find(opt => opt.id === dayMenus.colacion)?.precio.toLocaleString()}
+                                          <span className={`font-medium ${isStaff ? 'text-orange-600' : 'text-purple-600'}`}>
+                                            ${(() => {
+                                              const colacionOption = mockMenuOptions[date]?.colacion.find(opt => opt.id === dayMenus.colacion);
+                                              return colacionOption ? getPrice(colacionOption, student.userType).toLocaleString() : '0';
+                                            })()}
                                           </span>
                                         </div>
                                       )}
@@ -841,3 +1110,4 @@ export default function NuevoPedidoPage() {
     </div>
   )
 }
+
