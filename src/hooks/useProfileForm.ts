@@ -6,7 +6,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '@/app/lib/firebase'
 import useAuth from '@/hooks/useAuth'
 import { Child } from '@/types/panel'
-import { SchoolLevel, migrateCourseFormat, validateCourseFormat } from '@/lib/courseUtils'
+import { SchoolLevel, migrateCourseFormat, validateCourseFormat, SCHOOL_LEVELS } from '@/lib/courseUtils'
 
 interface ProfileFormData {
   firstName: string
@@ -184,7 +184,7 @@ export function useProfileForm(): UseProfileFormReturn {
       active: true,
       edad: 0,
       age: 0,
-      level: 'Lower School'
+      level: 'Lower School' // Usar el nuevo sistema de niveles
       // Note: rut is omitted instead of being undefined
     }
     setChildren(prev => [...prev, newChild])
@@ -284,7 +284,7 @@ export function useProfileForm(): UseProfileFormReturn {
           } else if (!validateCourseFormat(child.curso, child.level)) {
             newErrors[`child_${child.id}_curso`] = `Formato de curso inválido para hijo ${index + 1}. Debe seguir el formato del nivel seleccionado.`
           }
-          if (!child.level) {
+          if (!child.level || !SCHOOL_LEVELS.includes(child.level)) {
             newErrors[`child_${child.id}_level`] = `Nivel educativo del hijo ${index + 1} es requerido`
           }
           // Validar RUT si se proporciona
