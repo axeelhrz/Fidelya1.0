@@ -1182,7 +1182,7 @@ position: relative;
 z-index: 2;
 }
 
-/* ===== BOTONES DE DESCARGA OPTIMIZADOS ===== */
+/* ===== BOTONES DE DESCARGA OPTIMIZADOS - CORRECCIÓN ESPECÍFICA ===== */
 .hero__download {
 display: flex;
 gap: var(--space-xl);
@@ -1196,21 +1196,15 @@ display: inline-block;
 transition: all var(--transition);
 position: relative;
 border-radius: 15px;
-overflow: visible;
+overflow: hidden; /* Volver a hidden para mantener el diseño */
 text-decoration: none;
 cursor: pointer;
 filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
 animation: download-float 6s ease-in-out infinite;
-/* Eliminar cualquier recorte que pueda estar causando el problema */
+/* Eliminar propiedades que causan problema de layout */
 padding: 0;
 border: none;
 background: transparent;
-width: auto;
-height: auto;
-min-width: auto;
-min-height: auto;
-max-width: none;
-max-height: none;
 }
 
 .download-btn:hover {
@@ -1223,7 +1217,7 @@ height: 60px;
 width: auto;
 display: block;
 transition: all var(--transition);
-/* Corregir el problema de bordes cortados */
+/* Corregir el problema de bordes cortados manteniendo estabilidad */
 border-radius: 12px;
 box-shadow: 
 0 4px 15px rgba(0, 0, 0, 0.2),
@@ -1231,39 +1225,21 @@ box-shadow:
 /* Optimización de imágenes con múltiples formatos */
 image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
-/* Asegurar que la imagen se muestre completa */
+/* Asegurar que la imagen se muestre completa sin afectar layout */
 object-fit: contain;
 object-position: center;
-/* Eliminar cualquier recorte */
-clip-path: none;
-mask: none;
-overflow: visible;
-/* Propiedades específicas para evitar distorsión */
-aspect-ratio: auto;
-/* Eliminar cualquier limitación de contenido */
-max-width: none;
-max-height: none;
-min-width: auto;
-min-height: auto;
+/* Eliminar propiedades que pueden causar problema de layout */
 }
 
-/* Reglas específicas para Google Play - NUEVA SECCIÓN */
-.download-btn:not(.download-btn--app-store) .download-btn__image {
+/* Reglas específicas para Google Play */
+.download-btn--google-play .download-btn__image {
 height: 60px;
 width: auto;
 min-width: 180px;
 /* Propiedades específicas para Google Play */
 object-fit: contain;
 object-position: center;
-/* Eliminar cualquier recorte específico */
 border-radius: 12px;
-overflow: visible;
-/* Asegurar que el logo de Google Play se muestre completo */
-padding: 0;
-margin: 0;
-/* Eliminar cualquier transformación que pueda causar recorte */
-transform: none;
-clip: none;
 }
 
 /* Reglas específicas para App Store */
@@ -1281,10 +1257,6 @@ box-shadow:
 0 8px 25px rgba(0, 0, 0, 0.3),
 0 0 0 1px rgba(255, 255, 255, 0.1),
 0 0 20px rgba(0, 212, 255, 0.2);
-/* Mantener las propiedades de contenido en hover */
-object-fit: contain;
-object-position: center;
-overflow: visible;
 }
 
 /* ===== RESPONSIVE PARA BOTONES DE DESCARGA ===== */
@@ -1293,7 +1265,7 @@ overflow: visible;
 height: 50px;
 }
 
-.download-btn:not(.download-btn--app-store) .download-btn__image {
+.download-btn--google-play .download-btn__image {
 height: 50px;
 min-width: 150px;
 }
@@ -1309,7 +1281,7 @@ min-width: 150px;
 height: 45px;
 }
 
-.download-btn:not(.download-btn--app-store) .download-btn__image {
+.download-btn--google-play .download-btn__image {
 height: 45px;
 min-width: 135px;
 }
@@ -1352,8 +1324,8 @@ max-width: none;
 }
 }
 
-/* ===== OPTIMIZACIÓN ESPECÍFICA PARA GOOGLE PLAY ===== */
-/* Selector más específico para Google Play */
+/* ===== OPTIMIZACIÓN ESPECÍFICA PARA GOOGLE PLAY - SIMPLIFICADA ===== */
+/* Selector más específico para Google Play sin propiedades problemáticas */
 .hero__download a[href*="play.google.com"] .download-btn__image {
 /* Propiedades específicas para el logo de Google Play */
 height: 60px;
@@ -1362,14 +1334,6 @@ min-width: 180px;
 object-fit: contain;
 object-position: center;
 border-radius: 12px;
-overflow: visible;
-/* Eliminar cualquier recorte específico */
-clip-path: none;
-mask: none;
-transform: none;
-/* Asegurar que no haya distorsión */
-aspect-ratio: auto;
-vertical-align: top;
 }
 
 /* Responsive para Google Play específico */
@@ -1385,6 +1349,109 @@ min-width: 150px;
 height: 45px;
 min-width: 135px;
 }
+}
+
+/* ===== TELÉFONO HERO OPTIMIZADO CON IMÁGENES MODERNAS ===== */
+.hero__media {
+display: flex;
+justify-content: center;
+align-items: center;
+position: relative;
+animation: fadeInRight 1s ease-out 0.3s both;
+}
+
+.hero__phone-container {
+position: relative;
+transform: perspective(1200px) rotateY(-8deg) rotateX(2deg);
+transition: transform var(--transition-slow);
+animation: phone-float 8s ease-in-out infinite;
+}
+
+.hero__phone {
+width: 320px;
+height: 640px;
+position: relative;
+overflow: hidden;
+border-radius: 45px;
+box-shadow: 
+0 25px 80px rgba(0, 0, 0, 0.4),
+0 10px 40px rgba(0, 0, 0, 0.3),
+0 0 0 1px rgba(255, 255, 255, 0.05);
+filter: drop-shadow(0 0 30px rgba(255, 69, 105, 0.15));
+background: #000000;
+}
+
+.hero__phone::before {
+content: '';
+position: absolute;
+top: -20px;
+left: -20px;
+right: -20px;
+bottom: -20px;
+background: radial-gradient(ellipse, 
+rgba(255, 69, 105, 0.1) 0%,
+rgba(255, 23, 68, 0.05) 40%,
+transparent 70%
+);
+border-radius: 65px;
+z-index: -1;
+opacity: 0.6;
+animation: ambient-glow 8s ease-in-out infinite;
+filter: blur(25px);
+}
+
+.hero__phone-screen {
+width: 100%;
+height: 100%;
+background: #000000;
+border-radius: 45px;
+overflow: hidden;
+position: relative;
+border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hero__phone-content {
+width: 100%;
+height: 100%;
+position: relative;
+overflow: hidden;
+background: #000000;
+border-radius: 45px;
+}
+
+/* ===== IMAGEN DEL HERO OPTIMIZADA CON FORMATOS MODERNOS ===== */
+.hero__phone-app-image {
+width: 100%;
+height: 100%;
+border-radius: 45px;
+position: absolute;
+top: 0;
+left: 0;
+z-index: 1;
+transition: all var(--transition);
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+object-fit: cover;
+object-position: center;
+filter: brightness(1.02) contrast(1.05) saturate(1.08);
+/* Fallback para navegadores sin soporte de formatos modernos */
+background-image: url('../assets/phones/Hero.jpg');
+/* Optimización de renderizado */
+image-rendering: -webkit-optimize-contrast;
+image-rendering: crisp-edges;
+transform: translateZ(0);
+backface-visibility: hidden;
+}
+
+/* Soporte para WebP */
+.webp .hero__phone-app-image {
+background-image: url('../assets/phones/Hero.webp');
+}
+
+/* Soporte para AVIF */
+.avif .hero__phone-app-image {
+background-image: url('../assets/phones/Hero.avif');
 }
 
 /* ===== SECCIÓN CARACTERÍSTICAS CON IMÁGENES OPTIMIZADAS ===== */
@@ -3733,7 +3800,6 @@ padding-top: calc(var(--navbar-height-mobile) + var(--space-lg));
 }
 
 .hero__container {
-grid-template-columns: 1fr;
 gap: var(--space-3xl);
 text-align: center;
 }
@@ -3775,6 +3841,7 @@ height: 560px;
 .contact__grid {
 grid-template-columns: repeat(2, 1fr);
 gap: var(--space-xl);
+padding: 0 var(--space-lg);
 }
 }
 
@@ -3845,6 +3912,11 @@ border-radius: 14px;
 
 .download-btn__image {
 height: 50px;
+}
+
+.download-btn--google-play .download-btn__image {
+height: 50px;
+min-width: 150px;
 }
 
 .download-btn--app-store .download-btn__image {
@@ -4022,6 +4094,11 @@ border-radius: 30px;
 
 .download-btn__image {
 height: 45px;
+}
+
+.download-btn--google-play .download-btn__image {
+height: 45px;
+min-width: 135px;
 }
 
 .download-btn--app-store .download-btn__image {
@@ -4352,140 +4429,5 @@ background-image: url('../assets/logo@2x.webp');
 /* Soporte para AVIF en alta densidad */
 .avif .nav__logo {
 background-image: url('../assets/logo@2x.avif');
-}
-}
-
-/* ===== EFECTOS DE TRANSICIÓN SUAVES PARA CAMBIOS DE ESTADO ===== */
-.hero__phone-content *,
-.phone__content * {
-transition: all var(--transition-fast);
-}
-
-.hero__phone-screen,
-.phone__screen {
-contain: layout style paint;
-}
-
-.hero__phone-content,
-.phone__content {
-contain: layout style;
-}
-
-/* ===== MEJORAS ESPECÍFICAS PARA IMÁGENES OPTIMIZADAS ===== */
-.phone__app-image,
-.hero__phone-app-image {
-image-rendering: -webkit-optimize-contrast;
-image-rendering: crisp-edges;
-transform: translateZ(0);
-backface-visibility: hidden;
-/* Optimización para carga progresiva */
-background-attachment: scroll;
-background-blend-mode: normal;
-isolation: isolate;
-}
-
-/* ===== ESTADOS FINALES DE CARGA ===== */
-.hero__phone.loaded .hero__phone-app-image,
-.phone.loaded .phone__app-image {
-opacity: 1;
-transform: scale(1) translateZ(0);
-}
-
-.hero__phone.loading .hero__phone-app-image,
-.phone.loading .phone__app-image {
-opacity: 0.7;
-transform: scale(0.98) translateZ(0);
-}
-
-/* ===== CLEANUP Y OPTIMIZACIÓN FINAL ===== */
-.hero__phone *,
-.phone * {
-box-sizing: border-box;
-}
-
-.hero__phone-container,
-.feature__phone {
-contain: layout style;
-}
-
-/* ===== SOPORTE PARA DETECCIÓN DE FORMATOS DE IMAGEN ===== */
-.no-avif .avif .hero__phone-app-image,
-.no-avif .avif .phone__app-image,
-.no-avif .avif .nav__logo {
-background-image: inherit;
-}
-
-.no-webp .webp .hero__phone-app-image,
-.no-webp .webp .phone__app-image,
-.no-webp .webp .nav__logo {
-background-image: inherit;
-}
-
-/* ===== MEJORAS FINALES DE INTEGRACIÓN ===== */
-.hero__phone,
-.phone {
-background-blend-mode: normal;
-isolation: isolate;
-}
-
-.hero__phone-app-image,
-.phone__app-image {
-image-rendering: optimizeQuality;
--webkit-font-smoothing: antialiased;
--moz-osx-font-smoothing: grayscale;
-}
-
-/* ===== ESTADOS FINALES ===== */
-.hero__phone.loaded .hero__phone-app-image,
-.phone.loaded .phone__app-image {
-opacity: 1;
-transform: scale(1) translateZ(0);
-}
-
-.hero__phone.loading .hero__phone-app-image,
-.phone.loading .phone__app-image {
-opacity: 0.7;
-transform: scale(0.98) translateZ(0);
-}
-
-/* ===== OPTIMIZACIÓN FINAL PARA RENDIMIENTO ===== */
-@media (max-width: 320px) {
-.hero__phone {
-width: 200px;
-height: 400px;
-border-radius: 25px;
-}
-
-.hero__phone-screen {
-border-radius: 25px;
-}
-
-.hero__phone-content {
-border-radius: 25px;
-}
-
-.hero__phone-app-image {
-border-radius: 25px;
-}
-
-.feature__phone {
-width: 180px;
-height: 360px;
-}
-
-.phone {
-border-radius: 20px;
-}
-
-.phone__screen {
-border-radius: 20px;
-}
-
-.phone__content {
-border-radius: 20px;
-}
-
-.phone__app-image {
-border-radius: 20px;
 }
 }
