@@ -852,7 +852,7 @@ function initializeLanguageSystem() {
 }
 
 function setupLanguageToggle() {
-    const languageBtn = document.getElementById('language-toggle-btn');
+    const languageBtn = document.getElementById('nav-language-toggle');
     const languageOptions = document.querySelectorAll('.language-option');
     
     if (languageBtn) {
@@ -930,7 +930,7 @@ function switchLanguage(newLanguage) {
     
     // Cerrar dropdown después del cambio
     const languageDropdown = document.querySelector('.language-dropdown');
-    const languageBtn = document.getElementById('language-toggle-btn');
+    const languageBtn = document.getElementById('nav-language-toggle');
     if (languageDropdown && languageBtn) {
         languageDropdown.style.opacity = '0';
         languageDropdown.style.visibility = 'hidden';
@@ -990,7 +990,7 @@ function applyTranslations() {
 }
 
 function updateLanguageButtons() {
-    const languageText = document.getElementById('language-text');
+    const languageText = document.getElementById('nav-language-text');
     const languageOptions = document.querySelectorAll('.language-option');
     
     if (languageText) {

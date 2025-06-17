@@ -1485,11 +1485,11 @@ z-index: 1;
 .features__header {
 text-align: center;
 margin-bottom: var(--space-5xl);
+position: relative;
+z-index: 3;
 opacity: 0;
 transform: translateY(30px);
 animation: fadeInUp 1s ease-out 0.2s forwards;
-position: relative;
-z-index: 3;
 }
 
 .features__title {
@@ -1529,6 +1529,7 @@ color: var(--text-secondary);
 max-width: 700px;
 margin: 0 auto;
 line-height: 1.6;
+font-weight: 400;
 }
 
 .features__grid {
@@ -2305,17 +2306,6 @@ animation: none !important;
 }
 }
 
-/* ===== SELECCIÓN DE TEXTO ===== */
-::selection {
-background: var(--starflex-crimson);
-color: var(--text-primary);
-}
-
-::-moz-selection {
-background: var(--starflex-crimson);
-color: var(--text-primary);
-}
-
 /* ===== ESTADOS DE CARGA PARA VIDEO ===== */
 .hero__phone[data-loading="true"] {
 background: linear-gradient(90deg, 
@@ -2635,7 +2625,7 @@ top: 60%;
 right: 15%;
 width: 150px;
 height: 150px;
-background: radial-gradient(circle, rgba(184, 0, 46, 0.25) 0%, transparent 70%);
+background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%);
 animation-delay: 7s;
 }
 
@@ -2644,7 +2634,7 @@ bottom: 20%;
 left: 20%;
 width: 120px;
 height: 120px;
-background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
+background: radial-gradient(circle, rgba(0, 212, 255, 0.2) 0%, transparent 70%);
 animation-delay: 14s;
 }
 
@@ -3155,6 +3145,7 @@ transform: scale(1.4);
 opacity: 0;
 }
 }
+
 
 @keyframes crimson-glow-line {
 0%, 100% {
@@ -4034,28 +4025,9 @@ left: -100%;
     color: #0088cc;
 }
 
-.floating-widget__language:hover {
-    border-color: var(--starflex-crimson-bright);
-    box-shadow: 
-        var(--shadow-lg),
-        0 0 20px var(--starflex-crimson-glow);
-}
-
-.floating-widget__language:hover .floating-widget__language-text {
-    color: var(--starflex-crimson-bright);
-}
-
 .floating-widget__icon {
     width: 24px;
     height: 24px;
-    transition: all var(--transition);
-}
-
-.floating-widget__language-text {
-    font-size: 0.9rem;
-    font-weight: 700;
-    font-family: var(--font-mono);
-    color: var(--text-secondary);
     transition: all var(--transition);
 }
 
@@ -4266,6 +4238,7 @@ left: -100%;
     .contact__grid {
         grid-template-columns: 1fr;
         gap: var(--space-xl);
+        text-align: center;
     }
 
     .contact__channel {
