@@ -28,7 +28,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { SchoolLevelSelector } from '@/components/ui/school-level-selector'
-import { CourseSelector } from '@/components/ui/course-selector'
 import { Navbar } from '@/components/panel/Navbar'
 import useAuth from '@/hooks/useAuth'
 import { useProfileForm } from '@/hooks/useProfileForm'
@@ -508,7 +507,7 @@ export default function PerfilPage() {
 
                             {/* Nivel educativo */}
                             <div>
-                              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                 Nivel educativo *
                               </label>
                               <SchoolLevelSelector
@@ -524,17 +523,15 @@ export default function PerfilPage() {
                               )}
                             </div>
                             
-                            {/* Curso */}
+                            {/* Curso - COMPLETAMENTE LIBRE */}
                             <div>
                               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                 Curso *
                               </label>
-                              <CourseSelector
-                                level={child.level}
+                              <Input
                                 value={child.curso}
-                                onValueChange={(value) => updateChild(child.id, 'curso', value)}
-                                placeholder="Selecciona un curso"
-                                allowCustom={true}
+                                onChange={(e) => updateChild(child.id, 'curso', e.target.value)}
+                                placeholder="Ej: 3° Básico A, 1° Medio B, Kinder A, etc."
                                 className={`transition-all duration-200 ${errors[`child_${child.id}_curso`] ? 'border-red-500 focus:border-red-500' : 'focus:border-blue-500'}`}
                               />
                               {errors[`child_${child.id}_curso`] && (
@@ -542,10 +539,7 @@ export default function PerfilPage() {
                                   {errors[`child_${child.id}_curso`]}
                                 </p>
                               )}
-                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                Puedes seleccionar de la lista o escribir un curso personalizado
-                              </p>
-                            </div>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1"></p>                            </div>
                           </div>
                         </motion.div>
                       ))}
@@ -745,7 +739,7 @@ export default function PerfilPage() {
                     <div className="flex items-start space-x-3">
                       <GraduationCap className="w-4 h-4 mt-0.5 text-blue-600 flex-shrink-0" />
                       <p>
-                        Los niveles educativos incluyen Pre School, Lower School, Middle School y High School.
+                        El campo &quot;Curso&quot; es completamente libre. Puedes escribir cualquier curso, grado o nivel que necesites.
                       </p>
                     </div>
                     <div className="flex items-start space-x-3">
@@ -764,3 +758,4 @@ export default function PerfilPage() {
     </div>
   )
 }
+
