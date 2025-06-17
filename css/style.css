@@ -26,6 +26,13 @@
 --starflex-crimson-glow: #ff1744;
 --starflex-crimson-bright: #ff4569;
 
+/* NUEVOS EFECTOS NEÓN ROJOS */
+--neon-red: 0 0 20px rgba(220, 38, 127, 0.6);
+--neon-red-medium: 0 0 30px rgba(220, 38, 127, 0.7);
+--neon-red-strong: 0 0 40px rgba(220, 38, 127, 0.8);
+--neon-red-ultra: 0 0 60px rgba(220, 38, 127, 0.9);
+--neon-red-pulse: 0 0 35px rgba(255, 69, 105, 0.7);
+
 /* Nuevos colores futuristas para el celular */
 --neon-green: #39ff14;
 --neon-pink: #ff073a;
@@ -491,12 +498,13 @@ text-transform: uppercase;
 letter-spacing: 0.5px;
 }
 
+/* ===== BOTÓN CTA FLOTANTE CON NEÓN ROJO ===== */
 .btn--primary {
 background: linear-gradient(135deg, var(--starflex-crimson) 0%, var(--starflex-crimson-bright) 100%);
 color: white;
 box-shadow: 
 var(--shadow-crimson),
-var(--neon-crimson);
+var(--neon-red);  /* Neón rojo base */
 border: 2px solid rgba(255, 69, 105, 0.4);
 animation: cta-gentle-float 7s ease-in-out infinite;
 }
@@ -521,8 +529,8 @@ z-index: 1;
 transform: translateY(-4px) scale(1.05);
 box-shadow: 
 var(--shadow-lg),
-0 0 35px rgba(220, 38, 127, 0.5),    /* Cambiado a rojizo */
-0 0 60px rgba(184, 0, 46, 0.3);      /* Cambiado a rojizo */
+var(--neon-red-strong),     /* Neón rojo intenso */
+var(--neon-red-ultra);      /* Neón rojo ultra */
 }
 
 .btn--primary:hover::before {
@@ -578,7 +586,7 @@ transition: left 0.6s ease;
 border-color: var(--border-accent);
 box-shadow: 
 0 10px 30px rgba(0, 0, 0, 0.4),
-0 0 30px rgba(220, 38, 127, 0.3);  /* Cambiado a rojizo */
+var(--neon-red-medium);     /* Neón rojo medio */
 transform: translateY(-2px);
 }
 
@@ -1163,7 +1171,7 @@ var(--starflex-crimson-bright) 100%
 );
 box-shadow: 
 var(--shadow-crimson),
-var(--neon-crimson),
+var(--neon-red),            /* Neón rojo base */
 inset 0 1px 0 rgba(255, 255, 255, 0.15);
 border: 2px solid rgba(255, 69, 105, 0.4);
 color: #ffffff;
@@ -1213,8 +1221,8 @@ animation: crimson-pulse 4s ease-in-out infinite;
 transform: translateY(-4px) scale(1.05);
 box-shadow: 
 var(--shadow-crimson-hover),
-var(--neon-crimson-strong),
-var(--neon-crimson-ultra),
+var(--neon-red-strong),     /* Neón rojo intenso */
+var(--neon-red-ultra),      /* Neón rojo ultra */
 inset 0 1px 0 rgba(255, 255, 255, 0.25);
 border-color: rgba(255, 69, 105, 0.7);
 text-shadow: 0 0 20px rgba(255, 255, 255, 0.9);
@@ -1280,7 +1288,16 @@ background: transparent;
 
 .download-btn:hover {
 transform: translateY(-5px) scale(1.05);
-filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.4)) brightness(1.1);
+filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.4)) 
+        drop-shadow(0 0 20px rgba(220, 38, 127, 0.6))  /* Neón rojo */
+        brightness(1.1);
+}
+
+.download-btn:hover .download-btn__image {
+box-shadow: 
+0 8px 25px rgba(0, 0, 0, 0.3),
+0 0 0 1px rgba(255, 255, 255, 0.1),
+var(--neon-red-medium);     /* Neón rojo medio */
 }
 
 .download-btn__image {
@@ -1313,20 +1330,6 @@ width: auto;
 min-width: 180px;
 object-fit: contain;
 object-position: center;
-}
-
-.download-btn:hover .download-btn__image {
-box-shadow: 
-0 8px 25px rgba(0, 0, 0, 0.3),
-0 0 0 1px rgba(255, 255, 255, 0.1),
-0 0 20px rgba(220, 38, 127, 0.4);    /* Cambiado a rojizo */
-}
-
-.hero__trust {
-text-align: center;
-font-size: 1rem;
-color: var(--text-muted);
-font-weight: 500;
 }
 
 /* ===== TELÉFONO HERO OPTIMIZADO CON VIDEO ===== */
@@ -2518,7 +2521,7 @@ color: white;
 transform: translateY(-2px);
 box-shadow: 
 var(--shadow-lg),
-0 0 25px rgba(220, 38, 127, 0.4);    /* Cambiado a rojizo */
+var(--neon-red-medium);     /* Neón rojo medio */
 }
 
 /* ===== SECCIÓN FAQ FUTURISTA ===== */
@@ -2618,7 +2621,8 @@ var(--shadow-lg),
     border-color: var(--border-accent);
     box-shadow: 
         var(--shadow-lg),
-        0 0 0 3px rgba(220, 38, 127, 0.1);   /* Cambiado a rojizo */
+        0 0 0 3px rgba(220, 38, 127, 0.1),
+        var(--neon-red);            /* Neón rojo base */
 }
 
 .faq__search::placeholder {
@@ -2682,7 +2686,7 @@ var(--shadow-lg),
     border-color: var(--border-accent);
     box-shadow: 
         var(--shadow-lg),
-        0 0 20px rgba(220, 38, 127, 0.1);    /* Cambiado a rojizo */
+        var(--neon-red);            /* Neón rojo base */
     transform: translateY(-2px);
 }
 
@@ -2690,7 +2694,7 @@ var(--shadow-lg),
     border-color: var(--starflex-blue);
     box-shadow: 
         var(--shadow-lg),
-        0 0 25px rgba(220, 38, 127, 0.2);    /* Cambiado a rojizo */
+        var(--neon-red-medium);     /* Neón rojo medio */
 }
 
 .faq__question {
@@ -3032,7 +3036,7 @@ var(--shadow-lg),
     transform: translateY(-5px);
     box-shadow: 
         var(--shadow-lg),
-        0 0 25px rgba(220, 38, 127, 0.15);   /* Cambiado a rojizo */
+        var(--neon-red-medium);     /* Neón rojo medio */
 }
 
 .contact__channel:hover::before {
@@ -3177,7 +3181,7 @@ var(--shadow-lg),
     transform: translateY(-2px);
     box-shadow: 
         var(--shadow-md),
-        0 0 20px rgba(220, 38, 127, 0.3);    /* Cambiado a rojizo */
+        var(--neon-red-medium);     /* Neón rojo medio */
 }
 
 .contact__channel-arrow {
@@ -3342,7 +3346,7 @@ var(--shadow-lg),
     border-color: var(--border-accent);
     box-shadow: 
         var(--shadow-lg),
-        0 0 20px rgba(220, 38, 127, 0.2);    /* Cambiado a rojizo */
+        var(--neon-red);            /* Neón rojo base */
 }
 
 .floating-widget__menu-item:hover::before {
@@ -3431,58 +3435,41 @@ var(--shadow-lg),
     overflow: hidden;
     box-shadow: 
         var(--shadow-crimson),
-        var(--neon-crimson);
+        var(--neon-red);            /* Neón rojo base */
     animation: floating-main-pulse 4s ease-in-out infinite;
-}
-
-.floating-widget__main-btn::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg, 
-        var(--starflex-crimson-glow), 
-        var(--starflex-crimson-bright), 
-        var(--starflex-crimson-glow)
-    );
-    border-radius: 50%;
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    animation: floating-ring-pulse 4s ease-in-out infinite;
 }
 
 .floating-widget__main-btn:hover {
     transform: scale(1.1);
     box-shadow: 
         var(--shadow-crimson-hover),
-        var(--neon-crimson-strong),
-        var(--neon-crimson-ultra);
+        var(--neon-red-strong),     /* Neón rojo intenso */
+        var(--neon-red-ultra);      /* Neón rojo ultra */
 }
 
-.floating-widget__main-btn:hover::before {
-    opacity: 1;
-}
-
-.floating-widget__main-btn.active {
-    transform: rotate(45deg);
-    background: linear-gradient(135deg, 
-        var(--starflex-blue) 0%, 
-        var(--starflex-cyan) 100%
-    );
+/* ===== BOTONES SECUNDARIOS CON NEÓN ROJO ===== */
+.btn--secondary:hover {
+    background: var(--starflex-blue);
+    color: white;
+    transform: translateY(-2px);
     box-shadow: 
         var(--shadow-lg),
-        0 0 30px rgba(0, 212, 255, 0.4);
+        var(--neon-red-medium);     /* Neón rojo medio */
 }
 
-.floating-widget__main-icon {
-    width: 28px;
-    height: 28px;
-    color: white;
-    transition: all var(--transition);
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+.btn--cta-video:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 
+        var(--shadow-crimson-hover),
+        var(--neon-red-strong);     /* Neón rojo intenso */
+}
+
+/* ===== EFECTOS ADICIONALES CON NEÓN ROJO ===== */
+.nav__language-toggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--starflex-crimson-bright);
+    box-shadow: var(--neon-red);  /* Neón rojo base */
+    transform: translateY(-1px);
 }
 
 /* ===== ANIMACIONES OPTIMIZADAS ===== */
@@ -4098,10 +4085,6 @@ padding: var(--space-md);
 font-size: 1rem;
 }
 
-.faq__answer-content {
-padding: 0 var(--space-md) var(--space-md);
-}
-
 .contact__title {
 font-size: 2.2rem;
 }
@@ -4230,7 +4213,7 @@ background-position: 200% 0;
 @media (prefers-contrast: high) {
 :root {
 --border-subtle: rgba(255, 255, 255, 0.3);
---border-accent: rgba(0, 212, 255, 0.8);
+--border-accent: rgba(0, 212, 246, 0.8);
 --text-secondary: #f1f5f9;
 --text-muted: #cbd5e1;
 }
