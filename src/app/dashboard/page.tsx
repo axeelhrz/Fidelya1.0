@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Box,
   Grid,
@@ -77,7 +77,7 @@ function StatCard({
 
   if (loading) {
     return (
-      <Card sx={{ height: '100%', minHeight: 140 }}>
+      <Card sx={{ height: '100%', minHeight: 140, flex: '1 1 250px' }}>
         <CardContent>
           <Box display="flex" alignItems="center" justifyContent="space-between">
             <Box flexGrow={1}>
@@ -109,6 +109,7 @@ function StatCard({
       sx={{ 
         height: '100%', 
         minHeight: 140,
+        flex: '1 1 250px',
         borderLeft: `4px solid ${getColorValue()}`,
         transition: 'all 0.3s ease',
         '&:hover': {
@@ -499,6 +500,7 @@ function UpcomingAppointments() {
 export default function DashboardPage() {
   const { user } = useAuth();
   const theme = useTheme();
+  const [tabValue, setTabValue] = useState(0);
 
   // Configurar filtros para métricas (últimos 30 días)
   const metricsFilters = useMemo(() => ({
@@ -566,6 +568,10 @@ export default function DashboardPage() {
     ];
   }, [comparison]);
 
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
   return (
     <ProtectedRoute requiredRoles={['admin', 'psychologist']}>
       <DashboardLayout>
@@ -588,154 +594,197 @@ export default function DashboardPage() {
           )}
 
           {/* Estadísticas principales */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 3, 
+              mb: 4 
+            }}
+          >
             {statsCards.map((card, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index}>
-                <StatCard
-                  title={card.title}
-                  value={card.value}
-                  icon={card.icon}
-                  color={card.color}
-                  trend={card.trend}
-                  subtitle={card.subtitle}
-                  loading={metricsLoading}
-                />
-              </Grid>
+              <StatCard
+                key={index}
+                title={card.title}
+                value={card.value}
+                icon={card.icon}
+                color={card.color}
+                trend={card.trend}
+                subtitle={card.subtitle}
+                loading={metricsLoading}
+              />
             ))}
-          </Grid>
+          </Box>
 
-          {/* Contenido principal */}
-          <Grid container spacing={3}>
-            {/* Sesiones de hoy */}
-            <Grid item xs={12} lg={6}>
-              <TodaySessions />
-            </Grid>
+          {/* Tabs para diferentes vistas */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs value={tabValue} onChange={handleTabChange} aria-label="dashboard tabs">
+              <Tab icon={<Dashboard />} label="Resumen" />
+              <Tab icon={<Analytics />} label="Análisis" />
+              <Tab icon={<Assessment />} label="Rendimiento" />
+            </Tabs>
+          </Box>
 
-            {/* Alertas recientes */}
-            <Grid item xs={12} lg={6}>
-              <RecentAlerts />
-            </Grid>
+          {/* Contenido según la tab seleccionada */}
+          {tabValue === 0 && (
+            <Box>
+              {/* Primera fila: Sesiones de hoy y Alertas recientes */}
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 3, 
+                  mb: 3,
+                  '& > *': {
+                    flex: '1 1 400px',
+                    minWidth: '400px'
+                  }
+                }}
+              >
+                <TodaySessions />
+                <RecentAlerts />
+              </Box>
 
-            {/* Gráfico de sesiones en el tiempo */}
-            <Grid item xs={12} lg={8}>
-              {comparison?.current.metrics ? (
-                <SessionsLineChart
-                  data={comparison.current.metrics.sessionsOverTime}
-                  title="Sesiones en los Últimos 30 Días"
-                  loading={metricsLoading}
-                  height={300}
-                  showArea={true}
-                  color={theme.palette.primary.main}
-                />
-              ) : (
-                <Card sx={{ height: 400 }}>
-                  <CardContent>
-                    <Skeleton variant="text" width="40%" height={32} />
-                    <Skeleton variant="rectangular" width="100%" height={300} sx={{ mt: 2 }} />
-                  </CardContent>
-                </Card>
-              )}
-            </Grid>
-
-            {/* Próximas citas */}
-            <Grid item xs={12} lg={4}>
-              <UpcomingAppointments />
-            </Grid>
-
-            {/* Distribución emocional */}
-            <Grid item xs={12} lg={6}>
-              {comparison?.current.metrics ? (
-                <EmotionPieChart
-                  data={comparison.current.metrics.emotionalDistribution}
-                  title="Distribución de Estados Emocionales"
-                  loading={metricsLoading}
-                  height={300}
-                />
-              ) : (
-                <Card sx={{ height: 400 }}>
-                  <CardContent>
-                    <Skeleton variant="text" width="40%" height={32} />
-                    <Skeleton variant="circular" width={200} height={200} sx={{ mx: 'auto', mt: 2 }} />
-                  </CardContent>
-                </Card>
-              )}
-            </Grid>
-
-            {/* Métricas de riesgo */}
-            <Grid item xs={12} lg={6}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    Evaluación de Riesgo
-                  </Typography>
-                  
-                  {metricsLoading ? (
-                    <Box>
-                      {[1, 2, 3].map((item) => (
-                        <Box key={item} display="flex" alignItems="center" mb={2}>
-                          <Skeleton variant="circular" width={40} height={40} sx={{ mr: 2 }} />
-                          <Box flexGrow={1}>
-                            <Skeleton variant="text" width="60%" />
-                            <Skeleton variant="text" width="40%" />
-                          </Box>
-                        </Box>
-                      ))}
-                    </Box>
-                  ) : comparison?.current.metrics ? (
-                    <Box>
-                      <Box display="flex" alignItems="center" mb={2}>
-                        <Avatar sx={{ bgcolor: alpha(theme.palette.error.main, 0.1), color: 'error.main', mr: 2 }}>
-                          <Warning />
-                        </Avatar>
-                        <Box>
-                          <Typography variant="h6" color="error.main">
-                            {comparison.current.metrics.highRiskPatients}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Pacientes de alto riesgo
-                          </Typography>
-                        </Box>
-                      </Box>
-                      
-                      <Box display="flex" alignItems="center" mb={2}>
-                        <Avatar sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1), color: 'warning.main', mr: 2 }}>
-                          <Psychology />
-                        </Avatar>
-                        <Box>
-                          <Typography variant="h6" color="warning.main">
-                            {comparison.current.metrics.mediumRiskPatients}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Pacientes de riesgo medio
-                          </Typography>
-                        </Box>
-                      </Box>
-                      
-                      <Box display="flex" alignItems="center">
-                        <Avatar sx={{ bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', mr: 2 }}>
-                          <CheckCircle />
-                        </Avatar>
-                        <Box>
-                          <Typography variant="h6" color="success.main">
-                            {comparison.current.metrics.lowRiskPatients}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Pacientes de bajo riesgo
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Box>
+              {/* Segunda fila: Gráfico de sesiones y Próximas citas */}
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 3,
+                  alignItems: 'stretch'
+                }}
+              >
+                <Box sx={{ flex: '2 1 600px', minWidth: '600px' }}>
+                  {comparison?.current.metrics ? (
+                    <SessionsLineChart
+                      data={comparison.current.metrics.sessionsOverTime}
+                      title="Sesiones en los Últimos 30 Días"
+                      loading={metricsLoading}
+                      height={300}
+                      showArea={true}
+                      color={theme.palette.primary.main}
+                    />
                   ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      No hay datos de evaluación de riesgo disponibles
-                    </Typography>
+                    <Card sx={{ height: 400 }}>
+                      <CardContent>
+                        <Skeleton variant="text" width="40%" height={32} />
+                        <Skeleton variant="rectangular" width="100%" height={300} sx={{ mt: 2 }} />
+                      </CardContent>
+                    </Card>
                   )}
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+                </Box>
+
+                <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+                  <UpcomingAppointments />
+                </Box>
+              </Box>
+            </Box>
+          )}
+
+          {tabValue === 1 && (
+            <Box>
+              {/* Primera fila: Resumen ejecutivo y Distribución emocional */}
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 3, 
+                  mb: 3,
+                  alignItems: 'stretch'
+                }}
+              >
+                <Box sx={{ flex: '2 1 600px', minWidth: '600px' }}>
+                  {comparison?.current.metrics ? (
+                    <ExecutiveSummary
+                      metrics={comparison.current.metrics}
+                      comparison={comparison.comparison}
+                      loading={metricsLoading}
+                    />
+                  ) : (
+                    <Card sx={{ height: 400 }}>
+                      <CardContent>
+                        <Skeleton variant="text" width="40%" height={32} />
+                        <Skeleton variant="rectangular" width="100%" height={300} sx={{ mt: 2 }} />
+                      </CardContent>
+                    </Card>
+                  )}
+                </Box>
+
+                <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+                  {comparison?.current.metrics ? (
+                    <EmotionPieChart
+                      data={comparison.current.metrics.emotionalDistribution}
+                      title="Estados Emocionales"
+                      loading={metricsLoading}
+                      height={300}
+                    />
+                  ) : (
+                    <Card sx={{ height: 400 }}>
+                      <CardContent>
+                        <Skeleton variant="text" width="40%" height={32} />
+                        <Skeleton variant="circular" width={200} height={200} sx={{ mx: 'auto', mt: 2 }} />
+                      </CardContent>
+                    </Card>
+                  )}
+                </Box>
+              </Box>
+
+              {/* Segunda fila: Gráfico de pacientes nuevos */}
+              <Box>
+                {comparison?.current.metrics ? (
+                  <SessionsLineChart
+                    data={comparison.current.metrics.patientsOverTime}
+                    title="Pacientes Nuevos en los Últimos 30 Días"
+                    loading={metricsLoading}
+                    height={250}
+                    showArea={false}
+                    color={theme.palette.secondary.main}
+                  />
+                ) : (
+                  <Card sx={{ height: 350 }}>
+                    <CardContent>
+                      <Skeleton variant="text" width="40%" height={32} />
+                      <Skeleton variant="rectangular" width="100%" height={250} sx={{ mt: 2 }} />
+                    </CardContent>
+                  </Card>
+                )}
+              </Box>
+            </Box>
+          )}
+
+          {tabValue === 2 && (
+            <Box>
+              {comparison?.current.metrics ? (
+                <PerformanceMetrics
+                  metrics={comparison.current.metrics}
+                  loading={metricsLoading}
+                />
+              ) : (
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: 3,
+                    '& > *': {
+                      flex: '1 1 300px',
+                      minWidth: '300px'
+                    }
+                  }}
+                >
+                  {[1, 2, 3].map((item) => (
+                    <Card key={item}>
+                      <CardContent>
+                        <Skeleton variant="text" width="40%" height={32} />
+                        <Skeleton variant="rectangular" width="100%" height={200} sx={{ mt: 2 }} />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          )}
         </Box>
       </DashboardLayout>
     </ProtectedRoute>
   );
-}s
+}
