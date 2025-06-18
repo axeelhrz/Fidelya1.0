@@ -18,7 +18,9 @@ import {
   Skeleton,
   Alert,
   useTheme,
-  alpha
+  alpha,
+  Tabs,
+  Tab
 } from '@mui/material';
 import {
   People,
@@ -33,7 +35,10 @@ import {
   Notifications,
   CheckCircle,
   Schedule,
-  Person
+  Person,
+  Dashboard,
+  Analytics,
+  Assessment
 } from '@mui/icons-material';
 import { useAuth } from '@/context/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -41,6 +46,8 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import DashboardCard from '@/components/metrics/DashboardCard';
 import SessionsLineChart from '@/components/metrics/SessionsLineChart';
 import EmotionPieChart from '@/components/metrics/EmotionPieChart';
+import ExecutiveSummary from '@/components/dashboard/ExecutiveSummary';
+import PerformanceMetrics from '@/components/dashboard/PerformanceMetrics';
 import { useMetrics, useComparativeMetrics } from '@/hooks/useMetrics';
 import { useSessions } from '@/hooks/useSessions';
 import { useAlerts } from '@/hooks/useAlerts';
@@ -731,4 +738,4 @@ export default function DashboardPage() {
       </DashboardLayout>
     </ProtectedRoute>
   );
-}
+}s
