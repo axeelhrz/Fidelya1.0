@@ -1,20 +1,18 @@
 'use client';
 
-import { useState } from 'react';
 import {
   Box,
   Card,
   CardContent,
   Typography,
-  Grid,
   Chip,
   Avatar,
-  Divider,
   Button,
   IconButton,
   Alert,
   List,
   ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Paper,
@@ -25,9 +23,6 @@ import {
   Edit,
   CalendarToday,
   Psychology,
-  Phone,
-  Email,
-  LocationOn,
   Warning,
   EventNote,
   ArrowBack,
@@ -66,8 +61,15 @@ export default function PatientView({
           <Skeleton variant="text" width={200} height={32} />
         </Box>
         
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={8}>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: 3,
+            alignItems: 'flex-start'
+          }}
+        >
+          <Box sx={{ flex: '2 1 500px', minWidth: '500px' }}>
             <Card>
               <CardContent>
                 <Skeleton variant="text" width={150} height={24} sx={{ mb: 2 }} />
@@ -79,8 +81,8 @@ export default function PatientView({
                 ))}
               </CardContent>
             </Card>
-          </Grid>
-          <Grid item xs={12} md={4}>
+          </Box>
+          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
             <Card>
               <CardContent>
                 <Skeleton variant="text" width={120} height={24} sx={{ mb: 2 }} />
@@ -89,8 +91,8 @@ export default function PatientView({
                 ))}
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Box>
     );
   }
@@ -143,65 +145,74 @@ export default function PatientView({
         </Button>
       </Box>
 
-      <Grid container spacing={3}>
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: 3,
+          alignItems: 'flex-start'
+        }}
+      >
         {/* Información Principal */}
-        <Grid item xs={12} md={8}>
+        <Box sx={{ flex: '2 1 500px', minWidth: '500px' }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" fontWeight="bold" gutterBottom color="primary">
                 Información Personal
               </Typography>
               
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Box mb={2}>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Nombre Completo
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {patient.fullName}
-                    </Typography>
-                  </Box>
-                </Grid>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 2,
+                  '& > *': {
+                    flex: '1 1 250px',
+                    minWidth: '250px'
+                  }
+                }}
+              >
+                <Box mb={2}>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Nombre Completo
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    {patient.fullName}
+                  </Typography>
+                </Box>
                 
-                <Grid item xs={12} sm={6}>
-                  <Box mb={2}>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Fecha de Nacimiento
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {format(new Date(patient.birthDate), 'dd/MM/yyyy', { locale: es })} ({age} años)
-                    </Typography>
-                  </Box>
-                </Grid>
+                <Box mb={2}>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Fecha de Nacimiento
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    {format(new Date(patient.birthDate), 'dd/MM/yyyy', { locale: es })} ({age} años)
+                  </Typography>
+                </Box>
                 
-                <Grid item xs={12} sm={6}>
-                  <Box mb={2}>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Género
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {GENDER_LABELS[patient.gender]}
-                    </Typography>
-                  </Box>
-                </Grid>
+                <Box mb={2}>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Género
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    {GENDER_LABELS[patient.gender]}
+                  </Typography>
+                </Box>
                 
-                <Grid item xs={12} sm={6}>
-                  <Box mb={2}>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Estado Emocional Actual
-                    </Typography>
-                    <Chip
-                      label={patient.emotionalState}
-                      sx={{
-                        bgcolor: EMOTIONAL_STATE_COLORS[patient.emotionalState],
-                        color: 'white',
-                        fontWeight: 'bold'
-                      }}
-                    />
-                  </Box>
-                </Grid>
-              </Grid>
+                <Box mb={2}>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Estado Emocional Actual
+                  </Typography>
+                  <Chip
+                    label={patient.emotionalState}
+                    sx={{
+                      bgcolor: EMOTIONAL_STATE_COLORS[patient.emotionalState],
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}
+                  />
+                </Box>
+              </Box>
             </CardContent>
           </Card>
 
@@ -236,37 +247,43 @@ export default function PatientView({
                 </Box>
               )}
 
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Fecha de Alta
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {format(new Date(patient.createdAt), 'dd/MM/yyyy', { locale: es })}
-                    </Typography>
-                  </Box>
-                </Grid>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 2,
+                  '& > *': {
+                    flex: '1 1 250px',
+                    minWidth: '250px'
+                  }
+                }}
+              >
+                <Box>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Fecha de Alta
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    {format(patient.createdAt instanceof Date ? patient.createdAt : patient.createdAt.toDate(), 'dd/MM/yyyy', { locale: es })}
+                  </Typography>
+                </Box>
                 
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Estado del Paciente
-                    </Typography>
-                    <Chip
-                      label={
-                        patient.status === 'active' ? 'Activo' :
-                        patient.status === 'inactive' ? 'Inactivo' : 'Dado de alta'
-                      }
-                      color={
-                        patient.status === 'active' ? 'success' :
-                        patient.status === 'inactive' ? 'warning' : 'default'
-                      }
-                      variant="outlined"
-                    />
-                  </Box>
-                </Grid>
-              </Grid>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Estado del Paciente
+                  </Typography>
+                  <Chip
+                    label={
+                      patient.status === 'active' ? 'Activo' :
+                      patient.status === 'inactive' ? 'Inactivo' : 'Dado de alta'
+                    }
+                    color={
+                      patient.status === 'active' ? 'success' :
+                      patient.status === 'inactive' ? 'warning' : 'default'
+                    }
+                    variant="outlined"
+                  />
+                </Box>
+              </Box>
             </CardContent>
           </Card>
 
@@ -281,10 +298,10 @@ export default function PatientView({
               </Alert>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
         {/* Panel Lateral */}
-        <Grid item xs={12} md={4}>
+        <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
           {/* Psicólogo Asignado */}
           <Card sx={{ mb: 3 }}>
             <CardContent>
@@ -367,32 +384,35 @@ export default function PatientView({
               <Typography variant="h6" fontWeight="bold" gutterBottom color="primary">
                 Acciones Rápidas
               </Typography>
-              
               <List dense>
-                <ListItem button>
-                  <ListItemIcon>
-                    <EventNote color="primary" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="Nueva Sesión"
-                    secondary="Programar sesión"
-                  />
+                <ListItem disablePadding>
+                  <ListItemButton>
+                    <ListItemIcon>
+                      <EventNote color="primary" />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="Nueva Sesión"
+                      secondary="Programar sesión"
+                    />
+                  </ListItemButton>
                 </ListItem>
                 
-                <ListItem button>
-                  <ListItemIcon>
-                    <Warning color="warning" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="Crear Alerta"
-                    secondary="Añadir alerta clínica"
-                  />
+                <ListItem disablePadding>
+                  <ListItemButton>
+                    <ListItemIcon>
+                      <Warning color="warning" />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="Crear Alerta"
+                      secondary="Añadir alerta clínica"
+                    />
+                  </ListItemButton>
                 </ListItem>
               </List>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 }

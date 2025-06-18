@@ -86,8 +86,8 @@ export default function PatientsTable({
   };
 
   const sortedPatients = [...patients].sort((a, b) => {
-    let aValue: any = a[sortField];
-    let bValue: any = b[sortField];
+    let aValue: string | number | Date = a[sortField] ?? '';
+    let bValue: string | number | Date = b[sortField] ?? '';
 
     if (sortField === 'createdAt') {
       aValue = new Date(aValue).getTime();
