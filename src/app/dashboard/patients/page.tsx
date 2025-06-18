@@ -19,6 +19,7 @@ import {
   alpha,
   useTheme,
   Skeleton,
+  keyframes,
 } from '@mui/material';
 import {
   Add,
@@ -42,8 +43,19 @@ import { Patient, PatientFilters as PatientFiltersType } from '@/types/patient';
 import { User } from '@/types/auth';
 import { FirestoreService } from '@/services/firestore';
 
-// Componente para tarjetas de métricas compactas y atractivas
-function CompactMetricCard({ 
+// Animación de flotación suave
+const float = keyframes`
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(1deg); }
+`;
+
+const pulse = keyframes`
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+`;
+
+// Componente para tarjetas de métricas con forma de nube
+function CloudMetricCard({ 
   title, 
   value, 
   subtitle,
@@ -67,32 +79,37 @@ function CompactMetricCard({
       case 'primary': 
         return {
           main: theme.palette.primary.main,
-          light: alpha(theme.palette.primary.main, 0.1),
+          light: alpha(theme.palette.primary.main, 0.15),
           dark: theme.palette.primary.dark,
+          gradient: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.main, 0.8)} 50%, ${theme.palette.primary.dark} 100%)`,
         };
       case 'success': 
         return {
           main: theme.palette.success.main,
-          light: alpha(theme.palette.success.main, 0.1),
+          light: alpha(theme.palette.success.main, 0.15),
           dark: theme.palette.success.dark,
+          gradient: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${alpha(theme.palette.success.main, 0.8)} 50%, ${theme.palette.success.dark} 100%)`,
         };
       case 'info': 
         return {
           main: theme.palette.info.main,
-          light: alpha(theme.palette.info.main, 0.1),
+          light: alpha(theme.palette.info.main, 0.15),
           dark: theme.palette.info.dark,
+          gradient: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${alpha(theme.palette.info.main, 0.8)} 50%, ${theme.palette.info.dark} 100%)`,
         };
       case 'secondary': 
         return {
           main: theme.palette.secondary.main,
-          light: alpha(theme.palette.secondary.main, 0.1),
+          light: alpha(theme.palette.secondary.main, 0.15),
           dark: theme.palette.secondary.dark,
+          gradient: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${alpha(theme.palette.secondary.main, 0.8)} 50%, ${theme.palette.secondary.dark} 100%)`,
         };
       default: 
         return {
           main: theme.palette.primary.main,
-          light: alpha(theme.palette.primary.main, 0.1),
+          light: alpha(theme.palette.primary.main, 0.15),
           dark: theme.palette.primary.dark,
+          gradient: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.main, 0.8)} 50%, ${theme.palette.primary.dark} 100%)`,
         };
     }
   };
@@ -101,183 +118,286 @@ function CompactMetricCard({
 
   if (loading) {
     return (
-      <Paper
+      <Box
         sx={{
-          p: 2.5,
-          height: 140,
-          borderRadius: 3,
-          background: theme.palette.mode === 'dark' 
-            ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
-            : 'linear-gradient(145deg, #ffffff 0%, #fafbff 100%)',
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          height: 160,
           position: 'relative',
-          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={2}>
-          <Box flex={1}>
-            <Skeleton variant="text" width="70%" height={14} />
+        <Box
+          sx={{
+            width: '100%',
+            height: '100%',
+            background: theme.palette.mode === 'dark' 
+              ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
+              : 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+            borderRadius: '60% 40% 40% 20% / 70% 50% 30% 25%',
+            border: `2px solid ${alpha(theme.palette.divider, 0.1)}`,
+            position: 'relative',
+            overflow: 'hidden',
+            p: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Box display="flex" alignItems="flex-start" justifyContent="space-between">
+            <Skeleton variant="text" width="60%" height={14} />
+            <Skeleton variant="circular" width={36} height={36} />
           </Box>
-          <Skeleton variant="circular" width={40} height={40} />
+          <Box textAlign="center">
+            <Skeleton variant="text" width="50%" height={36} sx={{ mx: 'auto', mb: 1 }} />
+            <Skeleton variant="text" width="80%" height={12} sx={{ mx: 'auto' }} />
+          </Box>
+          <Box display="flex" justifyContent="center">
+            <Skeleton variant="rectangular" width="50%" height={18} sx={{ borderRadius: 2 }} />
+          </Box>
         </Box>
-        <Box mb={1.5}>
-          <Skeleton variant="text" width="50%" height={32} />
-        </Box>
-        <Skeleton variant="text" width="80%" height={12} />
-        <Box mt={1}>
-          <Skeleton variant="rectangular" width="60%" height={20} sx={{ borderRadius: 1.5 }} />
-        </Box>
-      </Paper>
+      </Box>
     );
   }
 
   return (
-    <Paper
+    <Box
       sx={{
-        p: 2.5,
-        height: 140,
-        borderRadius: 3,
-        background: theme.palette.mode === 'dark' 
-          ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
-          : 'linear-gradient(145deg, #ffffff 0%, #fafbff 100%)',
-        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        height: 160,
         position: 'relative',
-        overflow: 'hidden',
-        cursor: 'pointer',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: theme.palette.mode === 'dark'
-            ? `0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px ${alpha(colorConfig.main, 0.2)}`
-            : `0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 0 0 1px ${alpha(colorConfig.main, 0.2)}`,
-          '& .metric-icon': {
-            transform: 'scale(1.1)',
-            background: `linear-gradient(135deg, ${colorConfig.main} 0%, ${colorConfig.dark} 100%)`,
-            color: 'white',
-          },
-          '& .metric-value': {
-            color: colorConfig.main,
-          }
-        },
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          background: `linear-gradient(90deg, ${colorConfig.main} 0%, ${colorConfig.dark} 100%)`,
-        }
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        animation: `${float} 6s ease-in-out infinite`,
+        animationDelay: `${Math.random() * 2}s`, // Delay aleatorio para cada tarjeta
       }}
     >
-      {/* Header compacto */}
-      <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={2}>
-        <Typography 
-          variant="caption" 
-          color="text.secondary"
-          sx={{ 
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            fontSize: '0.7rem',
-            lineHeight: 1.2,
-            flex: 1,
-          }}
-        >
-          {title}
-        </Typography>
+      <Box
+        sx={{
+          width: '100%',
+          height: '100%',
+          background: theme.palette.mode === 'dark' 
+            ? `linear-gradient(145deg, #1e293b 0%, #334155 100%)`
+            : `linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)`,
+          borderRadius: '60% 40% 40% 20% / 70% 50% 30% 25%', // Forma de nube orgánica
+          border: `2px solid ${alpha(colorConfig.main, 0.2)}`,
+          boxShadow: theme.palette.mode === 'dark'
+            ? `0 8px 32px ${alpha(colorConfig.main, 0.15)}, inset 0 1px 0 ${alpha('white', 0.1)}`
+            : `0 8px 32px ${alpha(colorConfig.main, 0.15)}, inset 0 1px 0 ${alpha('white', 0.8)}`,
+          position: 'relative',
+          overflow: 'hidden',
+          cursor: 'pointer',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          p: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          '&:hover': {
+            transform: 'translateY(-8px) scale(1.03)',
+            borderColor: colorConfig.main,
+            boxShadow: theme.palette.mode === 'dark'
+              ? `0 20px 40px ${alpha(colorConfig.main, 0.25)}, inset 0 1px 0 ${alpha('white', 0.2)}`
+              : `0 20px 40px ${alpha(colorConfig.main, 0.25)}, inset 0 1px 0 ${alpha('white', 1)}`,
+            animation: `${pulse} 2s ease-in-out infinite`,
+            '& .cloud-icon': {
+              transform: 'scale(1.2) rotate(10deg)',
+              background: colorConfig.gradient,
+              color: 'white',
+            },
+            '& .cloud-value': {
+              color: colorConfig.main,
+              transform: 'scale(1.1)',
+            },
+            '& .cloud-glow': {
+              opacity: 1,
+              transform: 'scale(1.2)',
+            }
+          },
+          // Efectos de brillo interno
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: '10%',
+            left: '15%',
+            width: '30%',
+            height: '20%',
+            background: `radial-gradient(ellipse, ${alpha('white', theme.palette.mode === 'dark' ? 0.1 : 0.4)} 0%, transparent 70%)`,
+            borderRadius: '50%',
+            pointerEvents: 'none',
+          },
+          // Partículas flotantes
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: '20%',
+            right: '20%',
+            width: '8px',
+            height: '8px',
+            background: alpha(colorConfig.main, 0.3),
+            borderRadius: '50%',
+            animation: `${float} 4s ease-in-out infinite reverse`,
+            pointerEvents: 'none',
+          }
+        }}
+      >
+        {/* Efecto de brillo de fondo */}
         <Box
-          className="metric-icon"
+          className="cloud-glow"
           sx={{
-            width: 40,
-            height: 40,
-            borderRadius: 2,
-            background: colorConfig.light,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: colorConfig.main,
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            flexShrink: 0,
+            position: 'absolute',
+            inset: -20,
+            background: `radial-gradient(circle, ${alpha(colorConfig.main, 0.1)} 0%, transparent 70%)`,
+            borderRadius: '50%',
+            opacity: 0,
+            transition: 'all 0.4s ease',
+            pointerEvents: 'none',
+            zIndex: -1,
           }}
-        >
-          {icon}
-        </Box>
-      </Box>
+        />
 
-      {/* Valor principal compacto */}
-      <Box mb={1.5}>
-        <Typography 
-          className="metric-value"
-          variant="h4" 
-          component="div" 
-          sx={{ 
-            fontWeight: 800,
-            fontFamily: 'Poppins, sans-serif',
-            color: 'text.primary',
-            lineHeight: 1,
-            transition: 'color 0.3s ease',
-            fontSize: '1.75rem',
-          }}
-        >
-          {value}
-        </Typography>
-      </Box>
-
-      {/* Información adicional */}
-      <Box display="flex" alignItems="center" justifyContent="space-between">
-        {subtitle && (
+        {/* Header con título e ícono */}
+        <Box display="flex" alignItems="flex-start" justifyContent="space-between">
           <Typography 
             variant="caption" 
             color="text.secondary"
             sx={{ 
-              fontWeight: 500,
-              fontSize: '0.75rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.15em',
+              fontSize: '0.65rem',
+              lineHeight: 1.2,
               flex: 1,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              textShadow: theme.palette.mode === 'dark' ? 'none' : `0 1px 2px ${alpha('white', 0.8)}`,
             }}
           >
-            {subtitle}
+            {title}
           </Typography>
-        )}
-        
-        {trend && (
           <Box
+            className="cloud-icon"
             sx={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: colorConfig.light,
               display: 'flex',
               alignItems: 'center',
-              gap: 0.5,
-              px: 1,
-              py: 0.5,
-              borderRadius: 1.5,
-              background: trend.value >= 0 
-                ? alpha(theme.palette.success.main, 0.1)
-                : alpha(theme.palette.error.main, 0.1),
-              ml: 1,
+              justifyContent: 'center',
+              color: colorConfig.main,
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               flexShrink: 0,
+              boxShadow: `0 4px 12px ${alpha(colorConfig.main, 0.2)}`,
+              border: `1px solid ${alpha(colorConfig.main, 0.2)}`,
             }}
           >
-            {trend.value >= 0 ? (
-              <ArrowUpward sx={{ fontSize: 12, color: 'success.main' }} />
-            ) : (
-              <ArrowDownward sx={{ fontSize: 12, color: 'error.main' }} />
-            )}
+            {icon}
+          </Box>
+        </Box>
+
+        {/* Valor principal centrado */}
+        <Box textAlign="center" sx={{ my: 1 }}>
+          <Typography 
+            className="cloud-value"
+            variant="h3" 
+            component="div" 
+            sx={{ 
+              fontWeight: 900,
+              fontFamily: 'Poppins, sans-serif',
+              color: 'text.primary',
+              lineHeight: 1,
+              transition: 'all 0.3s ease',
+              fontSize: '2rem',
+              textShadow: theme.palette.mode === 'dark' 
+                ? `0 2px 8px ${alpha(colorConfig.main, 0.3)}`
+                : `0 2px 4px ${alpha('black', 0.1)}`,
+              mb: 0.5,
+            }}
+          >
+            {value}
+          </Typography>
+          {subtitle && (
             <Typography 
               variant="caption" 
-              sx={{
-                fontWeight: 700,
-                color: trend.value >= 0 ? 'success.main' : 'error.main',
+              color="text.secondary"
+              sx={{ 
+                fontWeight: 500,
                 fontSize: '0.7rem',
+                display: 'block',
+                opacity: 0.8,
               }}
             >
-              {Math.abs(trend.value)}%
+              {subtitle}
             </Typography>
+          )}
+        </Box>
+
+        {/* Indicador de tendencia flotante */}
+        {trend && (
+          <Box display="flex" justifyContent="center">
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                px: 1.5,
+                py: 0.5,
+                borderRadius: '20px',
+                background: trend.value >= 0 
+                  ? `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.15)} 0%, ${alpha(theme.palette.success.main, 0.05)} 100%)`
+                  : `linear-gradient(135deg, ${alpha(theme.palette.error.main, 0.15)} 0%, ${alpha(theme.palette.error.main, 0.05)} 100%)`,
+                border: `1px solid ${alpha(trend.value >= 0 ? theme.palette.success.main : theme.palette.error.main, 0.3)}`,
+                backdropFilter: 'blur(10px)',
+                boxShadow: `0 4px 12px ${alpha(trend.value >= 0 ? theme.palette.success.main : theme.palette.error.main, 0.2)}`,
+              }}
+            >
+              {trend.value >= 0 ? (
+                <ArrowUpward sx={{ fontSize: 14, color: 'success.main' }} />
+              ) : (
+                <ArrowDownward sx={{ fontSize: 14, color: 'error.main' }} />
+              )}
+              <Typography 
+                variant="caption" 
+                sx={{
+                  fontWeight: 800,
+                  color: trend.value >= 0 ? 'success.main' : 'error.main',
+                  fontSize: '0.7rem',
+                  textShadow: `0 1px 2px ${alpha('white', 0.8)}`,
+                }}
+              >
+                {Math.abs(trend.value)}%
+              </Typography>
+            </Box>
           </Box>
         )}
+
+        {/* Partículas decorativas adicionales */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: '15%',
+            left: '10%',
+            width: '4px',
+            height: '4px',
+            background: alpha(colorConfig.main, 0.4),
+            borderRadius: '50%',
+            animation: `${float} 5s ease-in-out infinite`,
+            animationDelay: '1s',
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '60%',
+            right: '15%',
+            width: '6px',
+            height: '6px',
+            background: alpha(colorConfig.main, 0.2),
+            borderRadius: '50%',
+            animation: `${float} 7s ease-in-out infinite reverse`,
+            animationDelay: '2s',
+          }}
+        />
       </Box>
-    </Paper>
+    </Box>
   );
 }
 
@@ -493,7 +613,7 @@ export default function PatientsPage() {
               </Box>
             </Fade>
 
-            {/* Métricas Compactas */}
+            {/* Métricas en Forma de Nube */}
             <Slide direction="up" in timeout={800}>
               <Box>
                 <Box 
@@ -504,40 +624,40 @@ export default function PatientsPage() {
                       sm: 'repeat(2, 1fr)',
                       lg: 'repeat(4, 1fr)'
                     },
-                    gap: 2.5,
-                    mb: 1
+                    gap: 3,
+                    mb: 2
                   }}
                 >
-                  <CompactMetricCard
+                  <CloudMetricCard
                     title="Total"
                     value={statsLoading ? '...' : stats?.total || 0}
                     subtitle="Pacientes registrados"
-                    icon={<People sx={{ fontSize: 22 }} />}
+                    icon={<People sx={{ fontSize: 20 }} />}
                     color="primary"
                     loading={statsLoading}
                   />
-                  <CompactMetricCard
+                  <CloudMetricCard
                     title="Activos"
                     value={statsLoading ? '...' : stats?.active || 0}
                     subtitle={`${activePercentage}% del total`}
-                    icon={<TrendingUp sx={{ fontSize: 22 }} />}
+                    icon={<TrendingUp sx={{ fontSize: 20 }} />}
                     color="success"
                     trend={{ value: 12, label: 'este mes' }}
                     loading={statsLoading}
                   />
-                  <CompactMetricCard
+                  <CloudMetricCard
                     title="Profesionales"
                     value={psychologists.length}
                     subtitle="Psicólogos disponibles"
-                    icon={<Psychology sx={{ fontSize: 22 }} />}
+                    icon={<Psychology sx={{ fontSize: 20 }} />}
                     color="info"
                     loading={statsLoading}
                   />
-                  <CompactMetricCard
+                  <CloudMetricCard
                     title="Edad Media"
                     value={statsLoading ? '...' : `${averageAge}a`}
                     subtitle="Promedio general"
-                    icon={<HealthAndSafety sx={{ fontSize: 22 }} />}
+                    icon={<HealthAndSafety sx={{ fontSize: 20 }} />}
                     color="secondary"
                     loading={statsLoading}
                   />
