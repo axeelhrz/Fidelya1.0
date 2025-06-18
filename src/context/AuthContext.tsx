@@ -21,11 +21,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
+  const [mounted, setMounted] = useState(false);
+
+  // Evitar problemas de hidratación
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        try {
+      try {
+        if (firebaseUser) {
           // Recargar el usuario para obtener el estado más reciente de emailVerified
           await reload(firebaseUser);
           
@@ -57,20 +65,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
             setAuthStatus('unauthenticated');
           }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
+        } else {
           setUser(null);
           setAuthStatus('unauthenticated');
         }
-      } else {
+      } catch (error) {
+        console.error('Error fetching user data:', error);
         setUser(null);
         setAuthStatus('unauthenticated');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [mounted]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -202,6 +211,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     resetPassword,
     refreshUser,
   };
+
+  // No renderizar el contexto hasta que esté montado
+  if (!mounted) {
+    return <>{children}</>;
+  }
 
   return (
     <AuthContext.Provider value={value}>
