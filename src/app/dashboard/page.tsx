@@ -4,813 +4,183 @@ import React from 'react';
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
-  Avatar,
-  Chip,
-  IconButton,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  ListItemSecondaryAction,
-  Skeleton,
-  Alert,
-  useTheme,
-  alpha,
   Container,
   Stack,
   Fade,
   Grow,
-  Slide,
+  Alert,
+  useTheme,
+  alpha,
+  Grid,
 } from '@mui/material';
 import {
   People,
   EventNote,
   Warning,
   Psychology,
-  TrendingUp,
-  CalendarToday,
-  AccessTime,
-  MoreVert,
-  Notifications,
-  CheckCircle,
-  Schedule,
-  Person,
-  ArrowUpward,
-  ArrowDownward,
-  Insights,
   AutoAwesome,
-  Timeline,
+  Insights,
+  TrendingUp,
+  Favorite,
   LocalHospital,
 } from '@mui/icons-material';
 import { useAuth } from '@/context/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useSimpleDashboard } from '@/hooks/useSimpleDashboard';
+import DashboardCard from '@/components/metrics/DashboardCard';
+import EmotionPieChart from '@/components/metrics/EmotionPieChart';
+import MotivesBarChart from '@/components/metrics/MotivesBarChart';
+import RecentPatients from '@/components/dashboard/RecentPatients';
+import RecentSessions from '@/components/dashboard/RecentSessions';
+import AlertCard from '@/components/dashboard/AlertCard';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-// Componente para tarjetas de estadísticas mejoradas
-function ModernStatCard({ 
-  title, 
-  value, 
-  icon, 
-  color = 'primary',
-  subtitle,
-  trend,
-  trendValue,
-  loading = false,
-  delay = 0
-}: {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info';
-  subtitle?: string;
-  trend?: 'up' | 'down' | 'neutral';
-  trendValue?: string;
-  loading?: boolean;
-  delay?: number;
-}) {
-  const theme = useTheme();
+// Datos mock para demostración
+const mockEmotionData = {
+  'Ansiedad': 15,
+  'Calma': 25,
+  'Estrés': 12,
+  'Alegría': 18,
+  'Tristeza': 8,
+  'Confianza': 22
+};
 
-  if (loading) {
-    return (
-      <Card 
-        sx={{ 
-          height: '100%', 
-          minHeight: 180,
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <CardContent sx={{ p: 3 }}>
-          <Box display="flex" flexDirection="column" height="100%">
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-              <Skeleton variant="text" width="60%" height={24} />
-              <Skeleton variant="circular" width={48} height={48} />
-            </Box>
-            <Skeleton variant="text" width="40%" height={48} sx={{ mb: 1 }} />
-            <Skeleton variant="text" width="80%" height={20} />
-            <Box mt="auto" pt={2}>
-              <Skeleton variant="text" width="50%" height={16} />
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-    );
+const mockMotivesData = {
+  'Ansiedad generalizada': 28,
+  'Depresión': 22,
+  'Trastornos del sueño': 18,
+  'Problemas de pareja': 15,
+  'Estrés laboral': 12,
+  'Autoestima': 10,
+  'Duelo': 8,
+  'Fobias': 6
+};
+
+const mockRecentPatients = [
+  {
+    id: '1',
+    name: 'María González',
+    age: 32,
+    registrationDate: new Date(2024, 0, 15),
+    status: 'active' as const,
+    riskLevel: 'low' as const,
+    lastSession: new Date(2024, 0, 20)
+  },
+  {
+    id: '2',
+    name: 'Carlos Rodríguez',
+    age: 45,
+    registrationDate: new Date(2024, 0, 12),
+    status: 'active' as const,
+    riskLevel: 'medium' as const,
+    lastSession: new Date(2024, 0, 18)
+  },
+  {
+    id: '3',
+    name: 'Ana Martínez',
+    age: 28,
+    registrationDate: new Date(2024, 0, 10),
+    status: 'active' as const,
+    riskLevel: 'high' as const,
+    lastSession: new Date(2024, 0, 19)
   }
+];
 
-  const getColorValue = () => {
-    switch (color) {
-      case 'primary': return theme.palette.primary.main;
-      case 'secondary': return theme.palette.secondary.main;
-      case 'success': return theme.palette.success.main;
-      case 'warning': return theme.palette.warning.main;
-      case 'error': return theme.palette.error.main;
-      case 'info': return theme.palette.info.main;
-      default: return theme.palette.primary.main;
-    }
-  };
+const mockRecentSessions = [
+  {
+    id: '1',
+    patientName: 'María González',
+    date: new Date(2024, 0, 20, 14, 30),
+    duration: 60,
+    type: 'Terapia Cognitivo-Conductual',
+    aiSummary: 'Progreso notable en manejo de ansiedad',
+    emotionalTone: 'positive' as const,
+    status: 'completed' as const,
+    hasAiAnalysis: true
+  },
+  {
+    id: '2',
+    patientName: 'Carlos Rodríguez',
+    date: new Date(2024, 0, 18, 16, 0),
+    duration: 45,
+    type: 'Sesión de seguimiento',
+    aiSummary: 'Necesita refuerzo en técnicas de relajación',
+    emotionalTone: 'neutral' as const,
+    status: 'completed' as const,
+    hasAiAnalysis: true
+  },
+  {
+    id: '3',
+    patientName: 'Ana Martínez',
+    date: new Date(2024, 0, 19, 10, 0),
+    duration: 50,
+    type: 'Evaluación inicial',
+    emotionalTone: 'negative' as const,
+    status: 'completed' as const,
+    hasAiAnalysis: false
+  }
+];
 
-  const getGradient = () => {
-    const baseColor = getColorValue();
-    const lightColor = alpha(baseColor, 0.8);
-    return `linear-gradient(135deg, ${baseColor} 0%, ${lightColor} 100%)`;
-  };
-
-  const getTrendIcon = () => {
-    if (trend === 'up') return <ArrowUpward sx={{ fontSize: 16, color: theme.palette.success.main }} />;
-    if (trend === 'down') return <ArrowDownward sx={{ fontSize: 16, color: theme.palette.error.main }} />;
-    return <Timeline sx={{ fontSize: 16, color: theme.palette.text.secondary }} />;
-  };
-
-  const getTrendColor = () => {
-    if (trend === 'up') return theme.palette.success.main;
-    if (trend === 'down') return theme.palette.error.main;
-    return theme.palette.text.secondary;
-  };
-
-  return (
-    <Grow in timeout={600 + delay * 100}>
-      <Card 
-        sx={{ 
-          height: '100%', 
-          minHeight: 180,
-          position: 'relative',
-          overflow: 'hidden',
-          background: theme.palette.mode === 'dark' 
-            ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
-            : 'linear-gradient(145deg, #ffffff 0%, #fafbff 100%)',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 4,
-            background: getGradient(),
-          },
-          '&:hover': {
-            transform: 'translateY(-8px)',
-            '& .stat-icon': {
-              transform: 'scale(1.1) rotate(5deg)',
-            },
-            '& .stat-value': {
-              transform: 'scale(1.05)',
-            }
-          }
-        }}
-        className="hover-lift"
-      >
-        <CardContent sx={{ p: 3, height: '100%' }}>
-          <Box display="flex" flexDirection="column" height="100%">
-            {/* Header */}
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-              <Typography 
-                variant="overline" 
-                color="text.secondary" 
-                sx={{ 
-                  fontWeight: 600,
-                  letterSpacing: '0.1em',
-                  fontSize: '0.75rem'
-                }}
-              >
-                {title}
-              </Typography>
-              <Box
-                className="stat-icon"
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 3,
-                  background: alpha(getColorValue(), 0.1),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: getColorValue(),
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
-              >
-                {icon}
-              </Box>
-            </Box>
-
-            {/* Value */}
-            <Typography 
-              variant="h3" 
-              component="div" 
-              className="stat-value"
-              sx={{ 
-                fontWeight: 700,
-                background: getGradient(),
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                mb: 1,
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
-            >
-              {typeof value === 'number' ? value.toLocaleString() : value}
-            </Typography>
-
-            {/* Subtitle */}
-            {subtitle && (
-              <Typography 
-                variant="body2" 
-                color="text.secondary" 
-                sx={{ mb: 2, lineHeight: 1.4 }}
-              >
-                {subtitle}
-              </Typography>
-            )}
-
-            {/* Trend */}
-            {trendValue && (
-              <Box 
-                display="flex" 
-                alignItems="center" 
-                mt="auto"
-                sx={{
-                  p: 1.5,
-                  borderRadius: 2,
-                  background: alpha(getTrendColor(), 0.1),
-                }}
-              >
-                {getTrendIcon()}
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    ml: 1, 
-                    fontWeight: 600,
-                    color: getTrendColor(),
-                  }}
-                >
-                  {trendValue}
-                </Typography>
-              </Box>
-            )}
-          </Box>
-        </CardContent>
-      </Card>
-    </Grow>
-  );
-}
-
-// Componente para sesiones de hoy mejorado
-function ModernTodaySessions({ sessions, loading }: { sessions: any[], loading: boolean }) {
-  const theme = useTheme();
-
-  const getStatusColor = (status: string): 'success' | 'warning' | 'info' | 'default' => {
-    switch (status) {
-      case 'completed': return 'success';
-      case 'in-progress': return 'warning';
-      case 'scheduled': return 'info';
-      default: return 'default';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'completed': return 'Completada';
-      case 'in-progress': return 'En progreso';
-      case 'scheduled': return 'Programada';
-      case 'cancelled': return 'Cancelada';
-      default: return status;
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed': return <CheckCircle sx={{ fontSize: 16 }} />;
-      case 'in-progress': return <Schedule sx={{ fontSize: 16 }} />;
-      case 'scheduled': return <CalendarToday sx={{ fontSize: 16 }} />;
-      default: return <AccessTime sx={{ fontSize: 16 }} />;
-    }
-  };
-
-  return (
-    <Slide direction="up" in timeout={800}>
-      <Card 
-        sx={{ 
-          height: '100%',
-          minHeight: 400,
-          background: theme.palette.mode === 'dark' 
-            ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
-            : 'linear-gradient(145deg, #ffffff 0%, #fafbff 100%)',
-        }}
-      >
-        <CardContent sx={{ p: 3 }}>
-          {/* Header */}
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-            <Box display="flex" alignItems="center">
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 2,
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mr: 2,
-                }}
-              >
-                <EventNote sx={{ color: 'white', fontSize: 20 }} />
-              </Box>
-              <Box>
-                <Typography variant="h6" fontWeight="bold">
-                  Sesiones de Hoy
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {format(new Date(), "dd 'de' MMMM", { locale: es })}
-                </Typography>
-              </Box>
-            </Box>
-            <IconButton 
-              size="small"
-              sx={{
-                background: alpha(theme.palette.primary.main, 0.1),
-                '&:hover': {
-                  background: alpha(theme.palette.primary.main, 0.2),
-                }
-              }}
-            >
-              <MoreVert />
-            </IconButton>
-          </Box>
-
-          {loading ? (
-            <Stack spacing={2}>
-              {[1, 2, 3].map((item) => (
-                <Box key={item} display="flex" alignItems="center" p={2}>
-                  <Skeleton variant="circular" width={48} height={48} sx={{ mr: 2 }} />
-                  <Box flexGrow={1}>
-                    <Skeleton variant="text" width="60%" height={24} />
-                    <Skeleton variant="text" width="40%" height={20} />
-                  </Box>
-                  <Skeleton variant="rectangular" width={100} height={32} sx={{ borderRadius: 2 }} />
-                </Box>
-              ))}
-            </Stack>
-          ) : sessions.length === 0 ? (
-            <Box 
-              display="flex" 
-              flexDirection="column" 
-              alignItems="center" 
-              justifyContent="center" 
-              py={6}
-              sx={{
-                background: alpha(theme.palette.primary.main, 0.02),
-                borderRadius: 3,
-                border: `2px dashed ${alpha(theme.palette.primary.main, 0.2)}`,
-              }}
-            >
-              <Box
-                sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  background: alpha(theme.palette.primary.main, 0.1),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 2,
-                }}
-                className="animate-float"
-              >
-                <EventNote sx={{ fontSize: 40, color: theme.palette.primary.main }} />
-              </Box>
-              <Typography variant="h6" color="text.primary" fontWeight="600" gutterBottom>
-                Sin sesiones programadas
-              </Typography>
-              <Typography variant="body2" color="text.secondary" textAlign="center">
-                No hay sesiones programadas para hoy
-              </Typography>
-            </Box>
-          ) : (
-            <List sx={{ p: 0 }}>
-              {sessions.map((session, index) => (
-                <Fade in timeout={600 + index * 100} key={session.id}>
-                  <ListItem 
-                    sx={{ 
-                      px: 0, 
-                      py: 2,
-                      borderRadius: 3,
-                      mb: 1,
-                      background: alpha(theme.palette.background.paper, 0.5),
-                      '&:hover': {
-                        background: alpha(theme.palette.primary.main, 0.05),
-                        transform: 'translateX(8px)',
-                      }
-                    }}
-                  >
-                    <ListItemAvatar>
-                      <Avatar 
-                        sx={{ 
-                          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                          width: 48,
-                          height: 48,
-                        }}
-                      >
-                        <Person />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 0.5 }}>
-                          {session.patientName || 'Paciente'}
-                        </Typography>
-                      }
-                      secondary={
-                        <Stack spacing={0.5}>
-                          <Typography variant="body2" color="text.secondary">
-                            {session.type || 'Sesión'}
-                          </Typography>
-                          <Box display="flex" alignItems="center">
-                            <AccessTime sx={{ fontSize: 14, mr: 0.5, color: 'text.secondary' }} />
-                            <Typography variant="caption" color="text.secondary">
-                              {session.time || 'Hora no especificada'}
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      }
-                    />
-                    <ListItemSecondaryAction>
-                      <Chip
-                        icon={getStatusIcon(session.status)}
-                        label={getStatusLabel(session.status)}
-                        size="small"
-                        color={getStatusColor(session.status)}
-                        variant="outlined"
-                        sx={{
-                          borderRadius: 2,
-                          fontWeight: 500,
-                        }}
-                      />
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                </Fade>
-              ))}
-            </List>
-          )}
-        </CardContent>
-      </Card>
-    </Slide>
-  );
-}
-
-// Componente para alertas recientes mejorado
-function ModernRecentAlerts({ alerts, loading }: { alerts: any[], loading: boolean }) {
-  const theme = useTheme();
-
-  const getAlertIcon = (type: string) => {
-    switch (type) {
-      case 'appointment': return <CalendarToday />;
-      case 'medication': return <LocalHospital />;
-      case 'emergency': return <Warning />;
-      default: return <Notifications />;
-    }
-  };
-
-  const getAlertColor = (urgency: string) => {
-    switch (urgency) {
-      case 'alta': return theme.palette.error.main;
-      case 'media': return theme.palette.warning.main;
-      case 'baja': return theme.palette.info.main;
-      default: return theme.palette.text.secondary;
-    }
-  };
-
-  const getAlertBackground = (urgency: string) => {
-    switch (urgency) {
-      case 'alta': return alpha(theme.palette.error.main, 0.1);
-      case 'media': return alpha(theme.palette.warning.main, 0.1);
-      case 'baja': return alpha(theme.palette.info.main, 0.1);
-      default: return alpha(theme.palette.text.secondary, 0.1);
-    }
-  };
-
-  return (
-    <Slide direction="up" in timeout={1000}>
-      <Card 
-        sx={{ 
-          height: '100%',
-          minHeight: 400,
-          background: theme.palette.mode === 'dark' 
-            ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
-            : 'linear-gradient(145deg, #ffffff 0%, #fafbff 100%)',
-        }}
-      >
-        <CardContent sx={{ p: 3 }}>
-          {/* Header */}
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-            <Box display="flex" alignItems="center">
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 2,
-                  background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.error.main} 100%)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mr: 2,
-                }}
-              >
-                <Warning sx={{ color: 'white', fontSize: 20 }} />
-              </Box>
-              <Box>
-                <Typography variant="h6" fontWeight="bold">
-                  Alertas Recientes
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Últimas notificaciones
-                </Typography>
-              </Box>
-            </Box>
-            <IconButton 
-              size="small"
-              sx={{
-                background: alpha(theme.palette.warning.main, 0.1),
-                '&:hover': {
-                  background: alpha(theme.palette.warning.main, 0.2),
-                }
-              }}
-            >
-              <MoreVert />
-            </IconButton>
-          </Box>
-
-          {loading ? (
-            <Stack spacing={2}>
-              {[1, 2, 3].map((item) => (
-                <Box key={item} display="flex" alignItems="start" p={2}>
-                  <Skeleton variant="circular" width={32} height={32} sx={{ mr: 2, mt: 0.5 }} />
-                  <Box flexGrow={1}>
-                    <Skeleton variant="text" width="80%" height={20} />
-                    <Skeleton variant="text" width="40%" height={16} />
-                  </Box>
-                </Box>
-              ))}
-            </Stack>
-          ) : alerts.length === 0 ? (
-            <Box 
-              display="flex" 
-              flexDirection="column" 
-              alignItems="center" 
-              justifyContent="center" 
-              py={6}
-              sx={{
-                background: alpha(theme.palette.success.main, 0.02),
-                borderRadius: 3,
-                border: `2px dashed ${alpha(theme.palette.success.main, 0.2)}`,
-              }}
-            >
-              <Box
-                sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  background: alpha(theme.palette.success.main, 0.1),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 2,
-                }}
-                className="animate-float"
-              >
-                <CheckCircle sx={{ fontSize: 40, color: theme.palette.success.main }} />
-              </Box>
-              <Typography variant="h6" color="text.primary" fontWeight="600" gutterBottom>
-                Todo bajo control
-              </Typography>
-              <Typography variant="body2" color="text.secondary" textAlign="center">
-                No hay alertas activas en este momento
-              </Typography>
-            </Box>
-          ) : (
-            <List sx={{ p: 0 }}>
-              {alerts.map((alert, index) => (
-                <Fade in timeout={600 + index * 100} key={alert.id}>
-                  <ListItem 
-                    sx={{ 
-                      px: 0, 
-                      py: 2, 
-                      alignItems: 'flex-start',
-                      borderRadius: 3,
-                      mb: 1,
-                      background: getAlertBackground(alert.urgency),
-                      border: `1px solid ${alpha(getAlertColor(alert.urgency), 0.2)}`,
-                      '&:hover': {
-                        background: alpha(getAlertColor(alert.urgency), 0.15),
-                        transform: 'translateX(8px)',
-                      }
-                    }}
-                  >
-                    <ListItemAvatar>
-                      <Avatar 
-                        sx={{ 
-                          bgcolor: getAlertColor(alert.urgency),
-                          width: 40,
-                          height: 40,
-                        }}
-                      >
-                        {getAlertIcon(alert.type)}
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Typography variant="body1" fontWeight="500" sx={{ mb: 0.5 }}>
-                          {alert.description}
-                        </Typography>
-                      }
-                      secondary={
-                        <Box display="flex" alignItems="center">
-                          <AccessTime sx={{ fontSize: 12, mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="caption" color="text.secondary">
-                            {format(new Date(alert.createdAt), "dd 'de' MMMM 'a las' HH:mm", { locale: es })}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                </Fade>
-              ))}
-            </List>
-          )}
-        </CardContent>
-      </Card>
-    </Slide>
-  );
-}
-
-// Componente para próximas citas mejorado
-function ModernUpcomingAppointments({ sessions, loading }: { sessions: any[], loading: boolean }) {
-  const theme = useTheme();
-
-  return (
-    <Slide direction="up" in timeout={1200}>
-      <Card 
-        sx={{ 
-          height: '100%',
-          background: theme.palette.mode === 'dark' 
-            ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
-            : 'linear-gradient(145deg, #ffffff 0%, #fafbff 100%)',
-        }}
-      >
-        <CardContent sx={{ p: 3 }}>
-          {/* Header */}
-          <Box display="flex" alignItems="center" mb={3}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 2,
-                background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.primary.main} 100%)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mr: 2,
-              }}
-            >
-              <CalendarToday sx={{ color: 'white', fontSize: 20 }} />
-            </Box>
-            <Box>
-              <Typography variant="h6" fontWeight="bold">
-                Próximas Citas
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Agenda de los próximos días
-              </Typography>
-            </Box>
-          </Box>
-          
-          {loading ? (
-            <Stack spacing={2}>
-              {[1, 2, 3].map((item) => (
-                <Box key={item} display="flex" alignItems="center" py={1.5}>
-                  <Skeleton variant="circular" width={12} height={12} sx={{ mr: 2 }} />
-                  <Box flexGrow={1}>
-                    <Skeleton variant="text" width="70%" height={20} />
-                    <Skeleton variant="text" width="50%" height={16} />
-                  </Box>
-                  <Skeleton variant="circular" width={20} height={20} />
-                </Box>
-              ))}
-            </Stack>
-          ) : sessions.length === 0 ? (
-            <Box 
-              display="flex" 
-              flexDirection="column" 
-              alignItems="center" 
-              justifyContent="center" 
-              py={6}
-              sx={{
-                background: alpha(theme.palette.info.main, 0.02),
-                borderRadius: 3,
-                border: `2px dashed ${alpha(theme.palette.info.main, 0.2)}`,
-              }}
-            >
-              <Box
-                sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  background: alpha(theme.palette.info.main, 0.1),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 2,
-                }}
-                className="animate-float"
-              >
-                <CalendarToday sx={{ fontSize: 40, color: theme.palette.info.main }} />
-              </Box>
-              <Typography variant="h6" color="text.primary" fontWeight="600" gutterBottom>
-                Agenda libre
-              </Typography>
-              <Typography variant="body2" color="text.secondary" textAlign="center">
-                No hay citas programadas próximamente
-              </Typography>
-            </Box>
-          ) : (
-            <Stack spacing={2}>
-              {sessions.map((session, index) => (
-                <Fade in timeout={600 + index * 100} key={session.id}>
-                  <Box 
-                    display="flex" 
-                    alignItems="center" 
-                    py={2}
-                    px={2}
-                    sx={{
-                      borderRadius: 3,
-                      background: alpha(theme.palette.background.paper, 0.5),
-                      border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                      '&:hover': {
-                        background: alpha(theme.palette.primary.main, 0.05),
-                        transform: 'translateX(8px)',
-                        borderColor: alpha(theme.palette.primary.main, 0.2),
-                      }
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: '50%',
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.info.main} 100%)`,
-                        mr: 3,
-                        flexShrink: 0,
-                      }}
-                    />
-                    <Box flexGrow={1}>
-                      <Typography variant="subtitle2" fontWeight="600" sx={{ mb: 0.5 }}>
-                        {session.time || 'Hora TBD'} - {session.patientName || 'Paciente'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                        {session.type || 'Sesión'}
-                      </Typography>
-                      <Box display="flex" alignItems="center">
-                        <CalendarToday sx={{ fontSize: 12, mr: 0.5, color: 'text.secondary' }} />
-                        <Typography variant="caption" color="text.secondary">
-                          {format(new Date(session.date || session.createdAt), "dd 'de' MMMM", { locale: es })}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <IconButton 
-                      size="small"
-                      sx={{
-                        background: alpha(theme.palette.primary.main, 0.1),
-                        '&:hover': {
-                          background: alpha(theme.palette.primary.main, 0.2),
-                        }
-                      }}
-                    >
-                      <CalendarToday sx={{ fontSize: 16 }} />
-                    </IconButton>
-                  </Box>
-                </Fade>
-              ))}
-            </Stack>
-          )}
-        </CardContent>
-      </Card>
-    </Slide>
-  );
-}
+const mockAlerts = [
+  {
+    id: '1',
+    type: 'appointment' as const,
+    urgency: 'high' as const,
+    title: 'Cita urgente pendiente',
+    description: 'Ana Martínez requiere seguimiento inmediato tras evaluación de riesgo',
+    createdAt: new Date(2024, 0, 21, 9, 0),
+    patientName: 'Ana Martínez'
+  },
+  {
+    id: '2',
+    type: 'follow-up' as const,
+    urgency: 'medium' as const,
+    title: 'Seguimiento programado',
+    description: 'Carlos Rodríguez debe practicar técnicas de relajación antes de la próxima sesión',
+    createdAt: new Date(2024, 0, 20, 18, 30),
+    patientName: 'Carlos Rodríguez'
+  },
+  {
+    id: '3',
+    type: 'medication' as const,
+    urgency: 'low' as const,
+    title: 'Recordatorio de medicación',
+    description: 'Revisar adherencia al tratamiento farmacológico en próxima consulta',
+    createdAt: new Date(2024, 0, 19, 12, 0),
+    patientName: 'María González'
+  }
+];
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { data, loading, error } = useSimpleDashboard();
   const theme = useTheme();
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Buenos días';
+    if (hour < 18) return 'Buenas tardes';
+    return 'Buenas noches';
+  };
+
+  const getMotivationalMessage = () => {
+    const messages = [
+      'Que tu día sea liviano y significativo',
+      'Cada sesión es una oportunidad de transformación',
+      'Tu dedicación marca la diferencia en cada vida',
+      'Hoy es un buen día para sanar corazones',
+      'La empatía es tu superpoder profesional'
+    ];
+    return messages[Math.floor(Math.random() * messages.length)];
+  };
+
   return (
     <ProtectedRoute requiredRoles={['admin', 'psychologist']}>
       <DashboardLayout>
         <Container maxWidth="xl" sx={{ py: 4 }}>
-          {/* Hero Section */}
+          {/* Hero Section - Header Emocional */}
           <Fade in timeout={400}>
             <Box 
               sx={{ 
@@ -837,16 +207,46 @@ export default function DashboardPage() {
             >
               <Box position="relative" zIndex={1}>
                 <Box display="flex" alignItems="center" mb={2}>
-                  <AutoAwesome sx={{ fontSize: 32, mr: 2 }} />
-                  <Typography variant="h3" fontWeight="bold">
-                    ¡Bienvenido, {user?.displayName || 'Doctor'}!
+                  <Favorite sx={{ fontSize: 32, mr: 2, color: '#ff6b9d' }} />
+                  <Typography 
+                    variant="h3" 
+                    fontWeight="bold"
+                    sx={{ fontFamily: '"Poppins", sans-serif' }}
+                  >
+                    {getGreeting()}, {user?.displayName?.split(' ')[0] || 'Doctor'}! 👋
                   </Typography>
                 </Box>
-                <Typography variant="h6" sx={{ opacity: 0.9, mb: 2 }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    opacity: 0.9, 
+                    mb: 2,
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500
+                  }}
+                >
                   Centro Psicológico Digital - Dashboard Inteligente
                 </Typography>
-                <Typography variant="body1" sx={{ opacity: 0.8, maxWidth: '60%' }}>
-                  Gestiona tu práctica profesional con herramientas avanzadas de análisis y seguimiento. 
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    opacity: 0.8, 
+                    maxWidth: '60%',
+                    fontFamily: '"Inter", sans-serif',
+                    fontSize: '1.1rem',
+                    lineHeight: 1.6
+                  }}
+                >
+                  {getMotivationalMessage()}
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    opacity: 0.7, 
+                    mt: 2,
+                    fontFamily: '"Inter", sans-serif'
+                  }}
+                >
                   Hoy es {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es })}
                 </Typography>
               </Box>
@@ -861,6 +261,7 @@ export default function DashboardPage() {
                 sx={{ 
                   mb: 4, 
                   borderRadius: 3,
+                  fontFamily: '"Inter", sans-serif',
                   '& .MuiAlert-icon': {
                     fontSize: 24,
                   }
@@ -873,90 +274,378 @@ export default function DashboardPage() {
             </Fade>
           )}
 
-          {/* Estadísticas principales */}
+          {/* Tarjetas Analíticas Principales */}
           <Box 
             sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(2, 1fr)',
+                lg: 'repeat(4, 1fr)'
+              },
               gap: 3, 
               mb: 6,
-              '& > *': {
-                flex: '1 1 280px',
-                minWidth: '280px',
-              }
             }}
           >
-            <ModernStatCard
+            <DashboardCard
               title="Pacientes Activos"
               value={data.totalPatients}
               icon={<People sx={{ fontSize: 24 }} />}
               color="primary"
               subtitle="Pacientes en seguimiento activo"
-              trend="up"
-              trendValue="+12% este mes"
+              trend={{
+                value: 12,
+                isPositive: true,
+                label: "+12% este mes"
+              }}
               loading={loading}
               delay={0}
             />
-            <ModernStatCard
+            <DashboardCard
               title="Sesiones Registradas"
               value={data.totalSessions}
               icon={<EventNote sx={{ fontSize: 24 }} />}
               color="success"
               subtitle="Total de sesiones completadas"
-              trend="up"
-              trendValue="+8% esta semana"
+              trend={{
+                value: 8,
+                isPositive: true,
+                label: "+8% esta semana"
+              }}
               loading={loading}
               delay={1}
             />
-            <ModernStatCard
+            <DashboardCard
               title="Alertas Activas"
               value={data.activeAlerts}
               icon={<Warning sx={{ fontSize: 24 }} />}
               color={data.activeAlerts > 5 ? 'warning' : 'info'}
               subtitle="Notificaciones pendientes"
-              trend={data.activeAlerts > 5 ? 'up' : 'neutral'}
-              trendValue={data.activeAlerts > 5 ? 'Requiere atención' : 'Bajo control'}
+              trend={{
+                value: data.activeAlerts > 5 ? 15 : -5,
+                isPositive: data.activeAlerts <= 5,
+                label: data.activeAlerts > 5 ? 'Requiere atención' : 'Bajo control'
+              }}
               loading={loading}
               delay={2}
             />
-            <ModernStatCard
-              title="Sesiones Hoy"
-              value={data.todaySessions.length}
-              icon={<Psychology sx={{ fontSize: 24 }} />}
+            <DashboardCard
+              title="Sesiones con IA"
+              value={Math.floor(data.totalSessions * 0.75)}
+              icon={<AutoAwesome sx={{ fontSize: 24 }} />}
               color="secondary"
-              subtitle="Citas programadas para hoy"
-              trend="neutral"
-              trendValue="Agenda del día"
+              subtitle="Análisis inteligente aplicado"
+              trend={{
+                value: 25,
+                isPositive: true,
+                label: "+25% con IA"
+              }}
               loading={loading}
               delay={3}
             />
           </Box>
 
-          {/* Contenido principal */}
-          <Box>
-            {/* Primera fila: Sesiones de hoy y Alertas recientes */}
+          {/* Sección de Evolución Emocional y Motivos */}
+          <Box 
+            sx={{ 
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                lg: 'repeat(2, 1fr)'
+              },
+              gap: 4, 
+              mb: 6,
+            }}
+          >
+            <Grow in timeout={800}>
+              <Box>
+                <Typography 
+                  variant="h5" 
+                  fontWeight="bold" 
+                  sx={{ 
+                    mb: 3,
+                    fontFamily: '"Poppins", sans-serif',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }}
+                >
+                  <Psychology sx={{ color: theme.palette.primary.main }} />
+                  Evolución Emocional
+                </Typography>
+                <EmotionPieChart 
+                  data={mockEmotionData}
+                  title="Estados Emocionales Predominantes"
+                  loading={loading}
+                  height={350}
+                />
+              </Box>
+            </Grow>
+
+            <Grow in timeout={1000}>
+              <Box>
+                <Typography 
+                  variant="h5" 
+                  fontWeight="bold" 
+                  sx={{ 
+                    mb: 3,
+                    fontFamily: '"Poppins", sans-serif',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }}
+                >
+                  <Insights sx={{ color: theme.palette.secondary.main }} />
+                  Motivos de Consulta
+                </Typography>
+                <MotivesBarChart 
+                  data={mockMotivesData}
+                  title="Distribución por Motivo de Consulta"
+                  loading={loading}
+                  height={350}
+                  maxItems={8}
+                />
+              </Box>
+            </Grow>
+          </Box>
+
+          {/* Sección de Listados Recientes */}
+          <Box 
+            sx={{ 
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                lg: 'repeat(2, 1fr)'
+              },
+              gap: 4, 
+              mb: 6,
+            }}
+          >
+            <RecentPatients patients={mockRecentPatients} loading={loading} />
+            <RecentSessions sessions={mockRecentSessions} loading={loading} />
+          </Box>
+
+          {/* Sección de Notificaciones Importantes */}
+          <Fade in timeout={1400}>
+            <Box>
+              <Typography 
+                variant="h5" 
+                fontWeight="bold" 
+                sx={{ 
+                  mb: 3,
+                  fontFamily: '"Poppins", sans-serif',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }}
+              >
+                <LocalHospital sx={{ color: theme.palette.warning.main }} />
+                Notificaciones Importantes
+              </Typography>
+              
+              {mockAlerts.length === 0 ? (
+                <Box 
+                  display="flex" 
+                  flexDirection="column" 
+                  alignItems="center" 
+                  justifyContent="center" 
+                  py={8}
+                  sx={{
+                    background: alpha(theme.palette.success.main, 0.02),
+                    borderRadius: 4,
+                    border: `2px dashed ${alpha(theme.palette.success.main, 0.2)}`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 100,
+                      height: 100,
+                      borderRadius: '50%',
+                      background: alpha(theme.palette.success.main, 0.1),
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mb: 3,
+                    }}
+                    className="animate-float"
+                  >
+                    <TrendingUp sx={{ fontSize: 50, color: theme.palette.success.main }} />
+                  </Box>
+                  <Typography 
+                    variant="h4" 
+                    color="text.primary" 
+                    fontWeight="600" 
+                    gutterBottom
+                    sx={{ fontFamily: '"Poppins", sans-serif' }}
+                  >
+                    ¡Excelente trabajo! 🎉
+                  </Typography>
+                  <Typography 
+                    variant="h6" 
+                    color="text.secondary" 
+                    textAlign="center"
+                    sx={{ fontFamily: '"Inter", sans-serif' }}
+                  >
+                    No hay alertas activas en este momento
+                  </Typography>
+                  <Typography 
+                    variant="body1" 
+                    color="text.secondary" 
+                    textAlign="center"
+                    sx={{ mt: 1, fontFamily: '"Inter", sans-serif' }}
+                  >
+                    Tu gestión profesional mantiene todo bajo control
+                  </Typography>
+                </Box>
+              ) : (
+                <Box>
+                  {mockAlerts.map((alert, index) => (
+                    <AlertCard 
+                      key={alert.id} 
+                      alert={alert} 
+                      delay={index}
+                      onDismiss={(alertId) => {
+                        console.log('Dismissing alert:', alertId);
+                        // Aquí implementarías la lógica para descartar la alerta
+                      }}
+                    />
+                  ))}
+                </Box>
+              )}
+            </Box>
+          </Fade>
+
+          {/* Accesos Rápidos (Opcional) */}
+          <Fade in timeout={1600}>
             <Box 
               sx={{ 
-                display: 'flex', 
-                flexWrap: 'wrap', 
-                gap: 4, 
-                mb: 4,
-                '& > *': {
-                  flex: '1 1 500px',
-                  minWidth: '500px',
-                  '@media (max-width: 1200px)': {
-                    minWidth: '100%',
-                  }
-                }
+                mt: 6,
+                p: 4,
+                borderRadius: 4,
+                background: theme.palette.mode === 'dark' 
+                  ? alpha(theme.palette.background.paper, 0.5)
+                  : alpha(theme.palette.primary.main, 0.02),
+                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
               }}
             >
-              <ModernTodaySessions sessions={data.todaySessions} loading={loading} />
-              <ModernRecentAlerts alerts={data.recentAlerts} loading={loading} />
+              <Typography 
+                variant="h6" 
+                fontWeight="bold" 
+                sx={{ 
+                  mb: 3,
+                  fontFamily: '"Poppins", sans-serif',
+                  color: theme.palette.primary.main
+                }}
+              >
+                Accesos Rápidos
+              </Typography>
+              <Stack 
+                direction={{ xs: 'column', sm: 'row' }} 
+                spacing={2}
+                sx={{
+                  '& .MuiButton-root': {
+                    borderRadius: 3,
+                    py: 1.5,
+                    px: 3,
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500,
+                    textTransform: 'none',
+                    fontSize: '0.95rem',
+                  }
+                }}
+              >
+                <Box 
+                  component="button"
+                  sx={{
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 3,
+                    py: 1.5,
+                    px: 3,
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500,
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.3)}`,
+                    }
+                  }}
+                >
+                  + Nuevo Paciente
+                </Box>
+                <Box 
+                  component="button"
+                  sx={{
+                    background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.light} 100%)`,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 3,
+                    py: 1.5,
+                    px: 3,
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500,
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 8px 25px ${alpha(theme.palette.secondary.main, 0.3)}`,
+                    }
+                  }}
+                >
+                  📅 Programar Sesión
+                </Box>
+                <Box 
+                  component="button"
+                  sx={{
+                    background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.light} 100%)`,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 3,
+                    py: 1.5,
+                    px: 3,
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500,
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 8px 25px ${alpha(theme.palette.success.main, 0.3)}`,
+                    }
+                  }}
+                >
+                  📊 Ver Métricas
+                </Box>
+                <Box 
+                  component="button"
+                  sx={{
+                    background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.light} 100%)`,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 3,
+                    py: 1.5,
+                    px: 3,
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500,
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 8px 25px ${alpha(theme.palette.info.main, 0.3)}`,
+                    }
+                  }}
+                >
+                  📄 Exportar Reporte
+                </Box>
+              </Stack>
             </Box>
-
-            {/* Segunda fila: Próximas citas */}
-            <ModernUpcomingAppointments sessions={data.upcomingSessions} loading={loading} />
-          </Box>
+          </Fade>
         </Container>
       </DashboardLayout>
     </ProtectedRoute>
