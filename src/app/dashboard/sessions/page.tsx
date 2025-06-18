@@ -5,7 +5,6 @@ import {
   Box,
   Typography,
   Button,
-  Grid,
   Card,
   CardContent,
   Alert,
@@ -32,7 +31,6 @@ import SessionDialog from '@/components/sessions/SessionDialog';
 import SessionView from '@/components/sessions/SessionView';
 
 import { Session, SessionFilters as SessionFiltersType } from '@/types/session';
-import { Patient } from '@/types/patient';
 import { User } from '@/types/auth';
 import { useSessions, useSessionActions } from '@/hooks/useSessions';
 import { usePatients } from '@/hooks/usePatients';
@@ -49,7 +47,7 @@ interface StatCardProps {
 
 function StatCard({ title, value, icon, color, subtitle }: StatCardProps) {
   return (
-    <Card>
+    <Card sx={{ height: '100%' }}>
       <CardContent>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box>
@@ -145,7 +143,7 @@ export default function SessionsPage() {
         severity: 'success'
       });
       refresh();
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al reprocesar el análisis de IA',
@@ -165,7 +163,7 @@ export default function SessionsPage() {
         severity: 'success'
       });
       refresh();
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al eliminar la sesión',
@@ -229,42 +227,45 @@ export default function SessionsPage() {
           </Box>
 
           {/* Estadísticas */}
-          <Grid container spacing={3} mb={3}>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                title="Total de Sesiones"
-                value={stats.total}
-                icon={<PsychologyIcon sx={{ fontSize: 40 }} />}
-                color="primary.main"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                title="Completadas"
-                value={stats.completed}
-                icon={<CheckCircleIcon sx={{ fontSize: 40 }} />}
-                color="success.main"
-                subtitle={`${stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}% del total`}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                title="Programadas"
-                value={stats.scheduled}
-                icon={<ScheduleIcon sx={{ fontSize: 40 }} />}
-                color="info.main"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                title="Con Análisis IA"
-                value={stats.withAI}
-                icon={<TrendingUpIcon sx={{ fontSize: 40 }} />}
-                color="secondary.main"
-                subtitle={`${stats.total > 0 ? Math.round((stats.withAI / stats.total) * 100) : 0}% analizadas`}
-              />
-            </Grid>
-          </Grid>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 3, 
+              mb: 3,
+              '& > *': {
+                flex: '1 1 250px',
+                minWidth: '250px'
+              }
+            }}
+          >
+            <StatCard
+              title="Total de Sesiones"
+              value={stats.total}
+              icon={<PsychologyIcon sx={{ fontSize: 40 }} />}
+              color="primary.main"
+            />
+            <StatCard
+              title="Completadas"
+              value={stats.completed}
+              icon={<CheckCircleIcon sx={{ fontSize: 40 }} />}
+              color="success.main"
+              subtitle={`${stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}% del total`}
+            />
+            <StatCard
+              title="Programadas"
+              value={stats.scheduled}
+              icon={<ScheduleIcon sx={{ fontSize: 40 }} />}
+              color="info.main"
+            />
+            <StatCard
+              title="Con Análisis IA"
+              value={stats.withAI}
+              icon={<TrendingUpIcon sx={{ fontSize: 40 }} />}
+              color="secondary.main"
+              subtitle={`${stats.total > 0 ? Math.round((stats.withAI / stats.total) * 100) : 0}% analizadas`}
+            />
+          </Box>
 
           {/* Filtros */}
           <Box mb={3}>
