@@ -17,7 +17,22 @@ import {
   Chip,
   Alert,
   CircularProgress,
+  Stack,
+  Paper,
+  Divider,
+  alpha,
+  useTheme,
+  Fade,
 } from '@mui/material';
+import {
+  PersonAdd,
+  Edit,
+  Close,
+  Save,
+  Psychology,
+  CalendarToday,
+  Mood,
+} from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -53,6 +68,7 @@ export default function PatientDialog({
   patient,
   psychologists
 }: PatientDialogProps) {
+  const theme = useTheme();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { createPatient, updatePatient, loading } = usePatientActions();
 
@@ -79,6 +95,7 @@ export default function PatientDialog({
   });
 
   const selectedEmotionalState = watch('emotionalState');
+  const selectedBirthDate = watch('birthDate');
 
   useEffect(() => {
     if (patient && isEditing) {
@@ -148,44 +165,100 @@ export default function PatientDialog({
         maxWidth="md"
         fullWidth
         PaperProps={{
-          sx: { minHeight: '70vh' }
+          sx: {
+            borderRadius: 4,
+            minHeight: '70vh',
+            background: theme.palette.mode === 'dark' 
+              ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
+              : 'linear-gradient(145deg, #ffffff 0%, #fafbff 100%)',
+          }
         }}
       >
-        <DialogTitle>
-          <Typography variant="h5" fontWeight="bold">
-            {isEditing ? 'Editar Paciente' : 'Nuevo Paciente'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {isEditing ? 'Modifica los datos del paciente' : 'Completa la información del nuevo paciente'}
-          </Typography>
+        <DialogTitle sx={{ pb: 2 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                borderRadius: 3,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+              }}
+            >
+              {isEditing ? <Edit sx={{ fontSize: 24 }} /> : <PersonAdd sx={{ fontSize: 24 }} />}
+            </Box>
+            <Box>
+              <Typography 
+                variant="h5" 
+                fontWeight={700}
+                sx={{ 
+                  fontFamily: 'Poppins, sans-serif',
+                  color: 'text.primary'
+                }}
+              >
+                {isEditing ? 'Editar Paciente' : 'Nuevo Paciente'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {isEditing ? 'Modifica los datos del paciente' : 'Completa la información del nuevo paciente'}
+              </Typography>
+            </Box>
+          </Stack>
         </DialogTitle>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogContent>
+          <DialogContent sx={{ px: 3 }}>
             {submitError && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {submitError}
-              </Alert>
-            )}
-
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {/* Información Personal */}
-              <Box>
-                <Typography variant="h6" gutterBottom color="primary">
-                  Información Personal
-                </Typography>
-
-                {/* Nombre y Género */}
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                    mb: 2,
-                    alignItems: 'flex-start'
+              <Fade in>
+                <Alert 
+                  severity="error" 
+                  sx={{ 
+                    mb: 3,
+                    borderRadius: 3,
+                    '& .MuiAlert-message': {
+                      fontWeight: 500
+                    }
                   }}
                 >
-                  <Box sx={{ flex: '2 1 300px', minWidth: '300px' }}>
+                  {submitError}
+                </Alert>
+              </Fade>
+            )}
+
+            <Stack spacing={4}>
+              {/* Información Personal */}
+              <Paper 
+                sx={{ 
+                  p: 3, 
+                  borderRadius: 3,
+                  background: alpha(theme.palette.background.paper, 0.5),
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                }}
+              >
+                <Stack spacing={3}>
+                  <Box display="flex" alignItems="center" spacing={2}>
+                    <Typography 
+                      variant="h6" 
+                      fontWeight={600} 
+                      color="primary"
+                      sx={{ fontFamily: 'Poppins, sans-serif' }}
+                    >
+                      Información Personal
+                    </Typography>
+                  </Box>
+
+                  <Stack 
+                    direction={{ xs: 'column', md: 'row' }} 
+                    spacing={2}
+                    sx={{
+                      '& > *': {
+                        flex: 1,
+                        minWidth: { xs: '100%', md: 200 }
+                      }
+                    }}
+                  >
                     <Controller
                       name="fullName"
                       control={control}
@@ -197,12 +270,15 @@ export default function PatientDialog({
                           error={!!errors.fullName}
                           helperText={errors.fullName?.message}
                           disabled={loading}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 3,
+                            }
+                          }}
                         />
                       )}
                     />
-                  </Box>
 
-                  <Box sx={{ flex: '1 1 150px', minWidth: '150px' }}>
                     <Controller
                       name="gender"
                       control={control}
@@ -213,6 +289,7 @@ export default function PatientDialog({
                             {...field}
                             label="Género"
                             disabled={loading}
+                            sx={{ borderRadius: 3 }}
                           >
                             {GENDERS.map((gender) => (
                               <MenuItem key={gender} value={gender}>
@@ -228,118 +305,149 @@ export default function PatientDialog({
                         </FormControl>
                       )}
                     />
-                  </Box>
-                </Box>
+                  </Stack>
 
-                {/* Fecha de nacimiento y Edad */}
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                    alignItems: 'center'
-                  }}
-                >
-                  <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
-                    <Controller
-                      name="birthDate"
-                      control={control}
-                      render={({ field }) => (
-                        <DatePicker
-                          {...field}
-                          label="Fecha de Nacimiento"
-                          value={field.value ? new Date(field.value) : null}
-                          onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
-                          disabled={loading}
-                          slotProps={{
-                            textField: {
-                              fullWidth: true,
-                              error: !!errors.birthDate,
-                              helperText: errors.birthDate?.message,
-                            }
+                  <Stack 
+                    direction={{ xs: 'column', md: 'row' }} 
+                    spacing={2}
+                    alignItems="center"
+                  >
+                    <Box sx={{ flex: 1, minWidth: { xs: '100%', md: 250 } }}>
+                      <Controller
+                        name="birthDate"
+                        control={control}
+                        render={({ field }) => (
+                          <DatePicker
+                            {...field}
+                            label="Fecha de Nacimiento"
+                            value={field.value ? new Date(field.value) : null}
+                            onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
+                            disabled={loading}
+                            slotProps={{
+                              textField: {
+                                fullWidth: true,
+                                error: !!errors.birthDate,
+                                helperText: errors.birthDate?.message,
+                                sx: {
+                                  '& .MuiOutlinedInput-root': {
+                                    borderRadius: 3,
+                                  }
+                                }
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    </Box>
+
+                    {selectedBirthDate && (
+                      <Fade in>
+                        <Paper
+                          sx={{
+                            p: 2,
+                            borderRadius: 3,
+                            background: alpha(theme.palette.info.main, 0.1),
+                            border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
+                            minWidth: 120,
+                            textAlign: 'center'
                           }}
-                        />
-                      )}
-                    />
-                  </Box>
-
-                  <Box sx={{ flex: '1 1 150px', minWidth: '150px' }}>
-                    <Typography variant="body1" sx={{ p: 2, textAlign: 'center' }}>
-                      Edad: {watch('birthDate') ? calculateAge(watch('birthDate')) : '--'} años
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
+                        >
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                            Edad
+                          </Typography>
+                          <Typography variant="h6" fontWeight={600} color="info.main">
+                            {calculateAge(selectedBirthDate)} años
+                          </Typography>
+                        </Paper>
+                      </Fade>
+                    )}
+                  </Stack>
+                </Stack>
+              </Paper>
 
               {/* Información Clínica */}
-              <Box>
-                <Typography variant="h6" gutterBottom color="primary">
-                  Información Clínica
-                </Typography>
-
-                {/* Estado emocional y chip */}
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                    mb: 2,
-                    alignItems: 'center'
-                  }}
-                >
-                  <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
-                    <Controller
-                      name="emotionalState"
-                      control={control}
-                      render={({ field }) => (
-                        <FormControl fullWidth error={!!errors.emotionalState}>
-                          <InputLabel>Estado Emocional</InputLabel>
-                          <Select
-                            {...field}
-                            label="Estado Emocional"
-                            disabled={loading}
-                          >
-                            {EMOTIONAL_STATES.map((state) => (
-                              <MenuItem key={state} value={state}>
-                                <Box display="flex" alignItems="center">
-                                  <Box
-                                    sx={{
-                                      width: 12,
-                                      height: 12,
-                                      borderRadius: '50%',
-                                      bgcolor: EMOTIONAL_STATE_COLORS[state],
-                                      mr: 1
-                                    }}
-                                  />
-                                  {state}
-                                </Box>
-                              </MenuItem>
-                            ))}
-                          </Select>
-                          {errors.emotionalState && (
-                            <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                              {errors.emotionalState.message}
-                            </Typography>
-                          )}
-                        </FormControl>
-                      )}
-                    />
+              <Paper 
+                sx={{ 
+                  p: 3, 
+                  borderRadius: 3,
+                  background: alpha(theme.palette.background.paper, 0.5),
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                }}
+              >
+                <Stack spacing={3}>
+                  <Box display="flex" alignItems="center" spacing={2}>
+                    <Typography 
+                      variant="h6" 
+                      fontWeight={600} 
+                      color="primary"
+                      sx={{ fontFamily: 'Poppins, sans-serif' }}
+                    >
+                      Información Clínica
+                    </Typography>
                   </Box>
 
-                  <Box sx={{ flex: '0 0 auto' }}>
-                    <Chip
-                      label={selectedEmotionalState}
-                      sx={{
-                        bgcolor: EMOTIONAL_STATE_COLORS[selectedEmotionalState],
-                        color: 'white',
-                        fontWeight: 'bold'
-                      }}
-                    />
-                  </Box>
-                </Box>
+                  <Stack 
+                    direction={{ xs: 'column', md: 'row' }} 
+                    spacing={2}
+                    alignItems="center"
+                  >
+                    <Box sx={{ flex: 1, minWidth: { xs: '100%', md: 250 } }}>
+                      <Controller
+                        name="emotionalState"
+                        control={control}
+                        render={({ field }) => (
+                          <FormControl fullWidth error={!!errors.emotionalState}>
+                            <InputLabel>Estado Emocional</InputLabel>
+                            <Select
+                              {...field}
+                              label="Estado Emocional"
+                              disabled={loading}
+                              sx={{ borderRadius: 3 }}
+                            >
+                              {EMOTIONAL_STATES.map((state) => (
+                                <MenuItem key={state} value={state}>
+                                  <Stack direction="row" spacing={1} alignItems="center">
+                                    <Box
+                                      sx={{
+                                        width: 12,
+                                        height: 12,
+                                        borderRadius: '50%',
+                                        bgcolor: EMOTIONAL_STATE_COLORS[state],
+                                      }}
+                                    />
+                                    {state}
+                                  </Stack>
+                                </MenuItem>
+                              ))}
+                            </Select>
+                            {errors.emotionalState && (
+                              <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                                {errors.emotionalState.message}
+                              </Typography>
+                            )}
+                          </FormControl>
+                        )}
+                      />
+                    </Box>
 
-                {/* Motivo de consulta */}
-                <Box sx={{ mb: 2 }}>
+                    <Fade in>
+                      <Paper
+                        sx={{
+                          p: 2,
+                          borderRadius: 3,
+                          background: `linear-gradient(135deg, ${EMOTIONAL_STATE_COLORS[selectedEmotionalState]} 0%, ${alpha(EMOTIONAL_STATE_COLORS[selectedEmotionalState], 0.8)} 100%)`,
+                          minWidth: 140,
+                          textAlign: 'center'
+                        }}
+                      >
+                        <Mood sx={{ fontSize: 20, color: 'white', mb: 0.5 }} />
+                        <Typography variant="body2" fontWeight={600} sx={{ color: 'white' }}>
+                          {selectedEmotionalState}
+                        </Typography>
+                      </Paper>
+                    </Fade>
+                  </Stack>
+
                   <Controller
                     name="motivoConsulta"
                     control={control}
@@ -353,13 +461,15 @@ export default function PatientDialog({
                         error={!!errors.motivoConsulta}
                         helperText={errors.motivoConsulta?.message}
                         disabled={loading}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 3,
+                          }
+                        }}
                       />
                     )}
                   />
-                </Box>
 
-                {/* Observaciones */}
-                <Box>
                   <Controller
                     name="observaciones"
                     control={control}
@@ -374,27 +484,48 @@ export default function PatientDialog({
                         helperText={errors.observaciones?.message}
                         disabled={loading}
                         placeholder="Observaciones adicionales sobre el paciente..."
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 3,
+                          }
+                        }}
                       />
                     )}
                   />
-                </Box>
-              </Box>
+                </Stack>
+              </Paper>
 
               {/* Asignación y Programación */}
-              <Box>
-                <Typography variant="h6" gutterBottom color="primary">
-                  Asignación y Programación
-                </Typography>
+              <Paper 
+                sx={{ 
+                  p: 3, 
+                  borderRadius: 3,
+                  background: alpha(theme.palette.background.paper, 0.5),
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                }}
+              >
+                <Stack spacing={3}>
+                  <Box display="flex" alignItems="center" spacing={2}>
+                    <Typography 
+                      variant="h6" 
+                      fontWeight={600} 
+                      color="primary"
+                      sx={{ fontFamily: 'Poppins, sans-serif' }}
+                    >
+                      Asignación y Programación
+                    </Typography>
+                  </Box>
 
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                    alignItems: 'flex-start'
-                  }}
-                >
-                  <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
+                  <Stack 
+                    direction={{ xs: 'column', md: 'row' }} 
+                    spacing={2}
+                    sx={{
+                      '& > *': {
+                        flex: 1,
+                        minWidth: { xs: '100%', md: 250 }
+                      }
+                    }}
+                  >
                     <Controller
                       name="assignedPsychologist"
                       control={control}
@@ -405,19 +536,23 @@ export default function PatientDialog({
                             {...field}
                             label="Psicólogo Asignado"
                             disabled={loading}
+                            sx={{ borderRadius: 3 }}
                           >
                             {psychologists.map((psychologist) => (
                               <MenuItem key={psychologist.uid} value={psychologist.uid}>
-                                <Box>
-                                  <Typography variant="body2" fontWeight="medium">
-                                    {psychologist.displayName}
-                                  </Typography>
-                                  {psychologist.specialization && (
-                                    <Typography variant="caption" color="text.secondary">
-                                      {psychologist.specialization}
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                  <Psychology sx={{ fontSize: 18, color: 'primary.main' }} />
+                                  <Box>
+                                    <Typography variant="body2" fontWeight={500}>
+                                      {psychologist.displayName}
                                     </Typography>
-                                  )}
-                                </Box>
+                                    {psychologist.specialization && (
+                                      <Typography variant="caption" color="text.secondary">
+                                        {psychologist.specialization}
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                </Stack>
                               </MenuItem>
                             ))}
                           </Select>
@@ -429,9 +564,7 @@ export default function PatientDialog({
                         </FormControl>
                       )}
                     />
-                  </Box>
 
-                  <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
                     <Controller
                       name="nextSession"
                       control={control}
@@ -448,22 +581,38 @@ export default function PatientDialog({
                               fullWidth: true,
                               error: !!errors.nextSession,
                               helperText: errors.nextSession?.message,
+                              InputProps: {
+                                startAdornment: (
+                                  <CalendarToday sx={{ fontSize: 18, color: 'text.secondary', mr: 1 }} />
+                                ),
+                              },
+                              sx: {
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: 3,
+                                }
+                              }
                             }
                           }}
                         />
                       )}
                     />
-                  </Box>
-                </Box>
-              </Box>
-            </Box>
+                  </Stack>
+                </Stack>
+              </Paper>
+            </Stack>
           </DialogContent>
 
-          <DialogActions sx={{ p: 3, pt: 1 }}>
+          <DialogActions sx={{ p: 3, pt: 2 }}>
             <Button
               onClick={handleClose}
               disabled={loading}
-              color="inherit"
+              sx={{
+                borderRadius: 3,
+                textTransform: 'none',
+                fontWeight: 500,
+                px: 3,
+                py: 1.5,
+              }}
             >
               Cancelar
             </Button>
@@ -471,9 +620,20 @@ export default function PatientDialog({
               type="submit"
               variant="contained"
               disabled={loading}
-              startIcon={loading ? <CircularProgress size={20} /> : null}
+              startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+              sx={{
+                borderRadius: 3,
+                textTransform: 'none',
+                fontWeight: 600,
+                px: 4,
+                py: 1.5,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`,
+                '&:hover': {
+                  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.9)} 0%, ${theme.palette.primary.main} 100%)`,
+                }
+              }}
             >
-              {loading ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear Paciente')}
+              {loading ? 'Guardando...' : (isEditing ? 'Actualizar Paciente' : 'Crear Paciente')}
             </Button>
           </DialogActions>
         </form>

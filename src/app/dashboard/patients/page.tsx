@@ -5,22 +5,28 @@ import {
   Box,
   Typography,
   Button,
-  Card,
-  CardContent,
+  Paper,
   Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Fab,
   Snackbar,
+  Container,
+  Stack,
+  Fade,
+  Slide,
+  alpha,
+  useTheme,
 } from '@mui/material';
 import {
   Add,
   People,
   TrendingUp,
   Psychology,
-  Warning,
+  HealthAndSafety,
+  Download,
+  PersonAdd,
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -33,58 +39,151 @@ import { Patient, PatientFilters as PatientFiltersType } from '@/types/patient';
 import { User } from '@/types/auth';
 import { FirestoreService } from '@/services/firestore';
 
-// Componente para tarjetas de estadísticas
-function StatCard({ 
+// Componente para tarjetas de métricas clínicas
+function ClinicalMetricCard({ 
   title, 
   value, 
+  subtitle,
   icon, 
   color = 'primary',
-  subtitle 
+  trend,
+  loading = false
 }: {
   title: string;
   value: string | number;
-  icon: React.ReactNode;
-  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
   subtitle?: string;
+  icon: React.ReactNode;
+  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info';
+  trend?: { value: number; label: string };
+  loading?: boolean;
 }) {
+  const theme = useTheme();
+
+  const getColorValue = () => {
+    switch (color) {
+      case 'primary': return theme.palette.primary.main;
+      case 'secondary': return theme.palette.secondary.main;
+      case 'success': return theme.palette.success.main;
+      case 'warning': return theme.palette.warning.main;
+      case 'error': return theme.palette.error.main;
+      case 'info': return theme.palette.info.main;
+      default: return theme.palette.primary.main;
+    }
+  };
+
   return (
-    <Card sx={{ height: '100%' }}>
-      <CardContent>
+    <Paper
+      sx={{
+        p: 3,
+        height: '100%',
+        borderRadius: 4,
+        background: theme.palette.mode === 'dark' 
+          ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
+          : 'linear-gradient(145deg, #ffffff 0%, #fafbff 100%)',
+        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        position: 'relative',
+        overflow: 'hidden',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: theme.palette.mode === 'dark'
+            ? '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)'
+            : '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+        },
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 4,
+          background: `linear-gradient(90deg, ${getColorValue()} 0%, ${alpha(getColorValue(), 0.6)} 100%)`,
+        }
+      }}
+    >
+      <Stack spacing={2} height="100%">
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box>
-            <Typography color="text.secondary" gutterBottom variant="body2">
-              {title}
-            </Typography>
-            <Typography variant="h4" component="div" fontWeight="bold">
-              {value}
-            </Typography>
-            {subtitle && (
-              <Typography variant="body2" color="text.secondary">
-                {subtitle}
-              </Typography>
-            )}
-          </Box>
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ 
+              fontWeight: 500,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              fontSize: '0.75rem'
+            }}
+          >
+            {title}
+          </Typography>
           <Box
             sx={{
-              bgcolor: `${color}.main`,
-              color: 'white',
-              borderRadius: 2,
-              p: 1.5,
+              width: 48,
+              height: 48,
+              borderRadius: 3,
+              background: `linear-gradient(135deg, ${alpha(getColorValue(), 0.1)} 0%, ${alpha(getColorValue(), 0.05)} 100%)`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              color: getColorValue(),
             }}
           >
             {icon}
           </Box>
         </Box>
-      </CardContent>
-    </Card>
+
+        <Box>
+          <Typography 
+            variant="h3" 
+            component="div" 
+            sx={{ 
+              fontWeight: 700,
+              fontFamily: 'Poppins, sans-serif',
+              color: 'text.primary',
+              mb: 0.5
+            }}
+          >
+            {loading ? '...' : value}
+          </Typography>
+          {subtitle && (
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+              sx={{ fontWeight: 400 }}
+            >
+              {subtitle}
+            </Typography>
+          )}
+        </Box>
+
+        {trend && (
+          <Box display="flex" alignItems="center" mt="auto">
+            <Box
+              sx={{
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 2,
+                background: trend.value >= 0 
+                  ? alpha(theme.palette.success.main, 0.1)
+                  : alpha(theme.palette.error.main, 0.1),
+                color: trend.value >= 0 
+                  ? theme.palette.success.main
+                  : theme.palette.error.main,
+              }}
+            >
+              <Typography variant="caption" fontWeight={600}>
+                {trend.value >= 0 ? '+' : ''}{trend.value}% {trend.label}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+      </Stack>
+    </Paper>
   );
 }
 
 export default function PatientsPage() {
   const { user } = useAuth();
+  const theme = useTheme();
   const [filters, setFilters] = useState<PatientFiltersType>({});
   const [psychologists, setPsychologists] = useState<User[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -138,7 +237,6 @@ export default function PatientsPage() {
   };
 
   const handleViewPatient = (patient: Patient) => {
-    // Navegar a la vista individual del paciente
     window.location.href = `/dashboard/patients/${patient.id}`;
   };
 
@@ -149,14 +247,14 @@ export default function PatientsPage() {
       await deletePatient(patientToDelete.id);
       setSnackbar({
         open: true,
-        message: 'Paciente eliminado correctamente',
+        message: 'Paciente marcado como inactivo correctamente',
         severity: 'success'
       });
       refresh();
     } catch {
       setSnackbar({
         open: true,
-        message: 'Error al eliminar el paciente',
+        message: 'Error al procesar la solicitud',
         severity: 'error'
       });
     } finally {
@@ -168,7 +266,7 @@ export default function PatientsPage() {
   const handleDialogSuccess = () => {
     setSnackbar({
       open: true,
-      message: selectedPatient ? 'Paciente actualizado correctamente' : 'Paciente creado correctamente',
+      message: selectedPatient ? 'Paciente actualizado correctamente' : 'Paciente registrado correctamente',
       severity: 'success'
     });
     refresh();
@@ -202,162 +300,257 @@ export default function PatientsPage() {
   return (
     <ProtectedRoute requiredRoles={['admin', 'psychologist']}>
       <DashboardLayout>
-        <Box>
-          {/* Encabezado */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-            <Box>
-              <Typography variant="h4" fontWeight="bold" gutterBottom>
-                Gestión de Pacientes
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Administra y supervisa la información de tus pacientes
-              </Typography>
-            </Box>
-            <Box display="flex" gap={2}>
-              <Button
-                variant="outlined"
-                onClick={exportToCSV}
-                disabled={patients.length === 0}
-              >
-                Exportar CSV
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={handleCreatePatient}
-              >
-                Nuevo Paciente
-              </Button>
-            </Box>
-          </Box>
+        <Container maxWidth={false} sx={{ py: 4 }}>
+          <Stack spacing={4}>
+            {/* Encabezado Clínico */}
+            <Fade in timeout={600}>
+              <Box>
+                <Stack spacing={1} mb={2}>
+                  <Typography 
+                    variant="h4" 
+                    sx={{ 
+                      fontWeight: 700,
+                      fontFamily: 'Poppins, sans-serif',
+                      color: 'text.primary',
+                      letterSpacing: '-0.02em'
+                    }}
+                  >
+                    Pacientes
+                  </Typography>
+                  <Typography 
+                    variant="body1" 
+                    color="text.secondary"
+                    sx={{ 
+                      fontWeight: 400,
+                      lineHeight: 1.6,
+                      maxWidth: 600
+                    }}
+                  >
+                    Visualiza, filtra y gestiona la ficha clínica de tus pacientes. 
+                    Mantén un registro completo y organizado de cada caso.
+                  </Typography>
+                </Stack>
 
-          {/* Estadísticas */}
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: 3, 
-              mb: 4,
-              '& > *': {
-                flex: '1 1 250px',
-                minWidth: '250px'
-              }
-            }}
-          >
-            <StatCard
-              title="Total Pacientes"
-              value={statsLoading ? '...' : stats?.total || 0}
-              icon={<People />}
-              color="primary"
+                <Stack 
+                  direction={{ xs: 'column', sm: 'row' }} 
+                  spacing={2} 
+                  alignItems={{ xs: 'stretch', sm: 'center' }}
+                  justifyContent="space-between"
+                >
+                  <Box />
+                  <Stack direction="row" spacing={2}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<Download />}
+                      onClick={exportToCSV}
+                      disabled={patients.length === 0}
+                      sx={{
+                        borderRadius: 3,
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        px: 3,
+                        py: 1.5,
+                        borderColor: alpha(theme.palette.primary.main, 0.3),
+                        '&:hover': {
+                          borderColor: theme.palette.primary.main,
+                          background: alpha(theme.palette.primary.main, 0.05),
+                        }
+                      }}
+                    >
+                      Exportar Datos
+                    </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={<PersonAdd />}
+                      onClick={handleCreatePatient}
+                      sx={{
+                        borderRadius: 3,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        px: 4,
+                        py: 1.5,
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`,
+                        boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                        '&:hover': {
+                          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.9)} 0%, ${theme.palette.primary.main} 100%)`,
+                          transform: 'translateY(-2px)',
+                          boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+                        }
+                      }}
+                    >
+                      Nuevo Paciente
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Box>
+            </Fade>
+
+            {/* Métricas Clínicas */}
+            <Slide direction="up" in timeout={800}>
+              <Box>
+                <Stack 
+                  direction={{ xs: 'column', sm: 'row' }} 
+                  spacing={3}
+                  sx={{
+                    '& > *': {
+                      flex: 1,
+                      minWidth: { xs: '100%', sm: 250 }
+                    }
+                  }}
+                >
+                  <ClinicalMetricCard
+                    title="Total de Pacientes"
+                    value={statsLoading ? '...' : stats?.total || 0}
+                    subtitle="Registrados en el sistema"
+                    icon={<People sx={{ fontSize: 24 }} />}
+                    color="primary"
+                    loading={statsLoading}
+                  />
+                  <ClinicalMetricCard
+                    title="Pacientes Activos"
+                    value={statsLoading ? '...' : stats?.active || 0}
+                    subtitle={`${Math.round(((stats?.active || 0) / (stats?.total || 1)) * 100)}% del total`}
+                    icon={<TrendingUp sx={{ fontSize: 24 }} />}
+                    color="success"
+                    trend={{ value: 12, label: 'este mes' }}
+                    loading={statsLoading}
+                  />
+                  <ClinicalMetricCard
+                    title="Profesionales"
+                    value={psychologists.length}
+                    subtitle="Psicólogos disponibles"
+                    icon={<Psychology sx={{ fontSize: 24 }} />}
+                    color="info"
+                    loading={statsLoading}
+                  />
+                  <ClinicalMetricCard
+                    title="Edad Promedio"
+                    value={statsLoading ? '...' : `${Math.round(stats?.averageAge || 0)} años`}
+                    subtitle="Promedio general"
+                    icon={<HealthAndSafety sx={{ fontSize: 24 }} />}
+                    color="secondary"
+                    loading={statsLoading}
+                  />
+                </Stack>
+              </Box>
+            </Slide>
+
+            {/* Filtros Clínicos */}
+            <Slide direction="up" in timeout={1000}>
+              <Box>
+                <PatientFilters
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  psychologists={psychologists}
+                />
+              </Box>
+            </Slide>
+
+            {/* Tabla de Pacientes */}
+            <Slide direction="up" in timeout={1200}>
+              <Box>
+                <PatientsTable
+                  patients={patients}
+                  psychologists={psychologists}
+                  loading={loading}
+                  error={error}
+                  onEdit={handleEditPatient}
+                  onDelete={handleDeletePatient}
+                  onView={handleViewPatient}
+                />
+              </Box>
+            </Slide>
+
+            {/* Diálogo de Paciente */}
+            <PatientDialog
+              open={dialogOpen}
+              onClose={() => setDialogOpen(false)}
+              onSuccess={handleDialogSuccess}
+              patient={selectedPatient}
+              psychologists={psychologists}
             />
-            <StatCard
-              title="Pacientes Activos"
-              value={statsLoading ? '...' : stats?.active || 0}
-              icon={<TrendingUp />}
-              color="success"
-              subtitle={`${Math.round(((stats?.active || 0) / (stats?.total || 1)) * 100)}% del total`}
-            />
-            <StatCard
-              title="Psicólogos"
-              value={psychologists.length}
-              icon={<Psychology />}
-              color="secondary"
-            />
-            <StatCard
-              title="Edad Promedio"
-              value={statsLoading ? '...' : `${stats?.averageAge || 0} años`}
-              icon={<Warning />}
-              color="warning"
-            />
-          </Box>
 
-          {/* Filtros */}
-          <PatientFilters
-            filters={filters}
-            onFiltersChange={setFilters}
-            psychologists={psychologists}
-          />
-
-          {/* Tabla de pacientes */}
-          <PatientsTable
-            patients={patients}
-            psychologists={psychologists}
-            loading={loading}
-            error={error}
-            onEdit={handleEditPatient}
-            onDelete={handleDeletePatient}
-            onView={handleViewPatient}
-          />
-
-          {/* FAB para crear paciente en móvil */}
-          <Fab
-            color="primary"
-            aria-label="add"
-            sx={{
-              position: 'fixed',
-              bottom: 16,
-              right: 16,
-              display: { xs: 'flex', md: 'none' }
-            }}
-            onClick={handleCreatePatient}
-          >
-            <Add />
-          </Fab>
-
-          {/* Diálogo de paciente */}
-          <PatientDialog
-            open={dialogOpen}
-            onClose={() => setDialogOpen(false)}
-            onSuccess={handleDialogSuccess}
-            patient={selectedPatient}
-            psychologists={psychologists}
-          />
-
-          {/* Diálogo de confirmación de eliminación */}
-          <Dialog
-            open={deleteDialogOpen}
-            onClose={() => setDeleteDialogOpen(false)}
-          >
-            <DialogTitle>Confirmar Eliminación</DialogTitle>
-            <DialogContent>
-              <Typography>
-                ¿Estás seguro de que deseas eliminar al paciente{' '}
-                <strong>{patientToDelete?.fullName}</strong>?
-              </Typography>
-              <Alert severity="warning" sx={{ mt: 2 }}>
-                Esta acción marcará al paciente como inactivo. Los datos no se eliminarán permanentemente.
-              </Alert>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setDeleteDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button
-                onClick={confirmDelete}
-                color="error"
-                variant="contained"
-                disabled={actionLoading}
-              >
-                {actionLoading ? 'Eliminando...' : 'Eliminar'}
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Snackbar para notificaciones */}
-          <Snackbar
-            open={snackbar.open}
-            autoHideDuration={6000}
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-          >
-            <Alert
-              onClose={() => setSnackbar({ ...snackbar, open: false })}
-              severity={snackbar.severity}
-              sx={{ width: '100%' }}
+            {/* Diálogo de Confirmación de Eliminación */}
+            <Dialog
+              open={deleteDialogOpen}
+              onClose={() => setDeleteDialogOpen(false)}
+              PaperProps={{
+                sx: {
+                  borderRadius: 4,
+                  minWidth: 400,
+                }
+              }}
             >
-              {snackbar.message}
-            </Alert>
-          </Snackbar>
-        </Box>
+              <DialogTitle sx={{ pb: 1 }}>
+                <Typography variant="h6" fontWeight={600}>
+                  Confirmar Acción
+                </Typography>
+              </DialogTitle>
+              <DialogContent>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  ¿Estás seguro de que deseas marcar como inactivo al paciente{' '}
+                  <strong>{patientToDelete?.fullName}</strong>?
+                </Typography>
+                <Alert 
+                  severity="info" 
+                  sx={{ 
+                    borderRadius: 2,
+                    '& .MuiAlert-message': {
+                      fontSize: '0.875rem'
+                    }
+                  }}
+                >
+                  Esta acción marcará al paciente como inactivo. Los datos se conservarán para consultas futuras.
+                </Alert>
+              </DialogContent>
+              <DialogActions sx={{ p: 3, pt: 1 }}>
+                <Button 
+                  onClick={() => setDeleteDialogOpen(false)}
+                  sx={{ 
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 500
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={confirmDelete}
+                  variant="contained"
+                  color="warning"
+                  disabled={actionLoading}
+                  sx={{ 
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600
+                  }}
+                >
+                  {actionLoading ? 'Procesando...' : 'Marcar como Inactivo'}
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            {/* Notificaciones */}
+            <Snackbar
+              open={snackbar.open}
+              autoHideDuration={6000}
+              onClose={() => setSnackbar({ ...snackbar, open: false })}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+              <Alert
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                severity={snackbar.severity}
+                sx={{ 
+                  width: '100%',
+                  borderRadius: 3,
+                  fontWeight: 500
+                }}
+              >
+                {snackbar.message}
+              </Alert>
+            </Snackbar>
+          </Stack>
+        </Container>
       </DashboardLayout>
     </ProtectedRoute>
   );
