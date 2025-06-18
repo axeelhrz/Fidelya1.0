@@ -21,17 +21,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
-  const [mounted, setMounted] = useState(false);
-
-  // Evitar problemas de hidratación
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    if (!mounted) return;
+    let isMounted = true;
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (!isMounted) return;
+
       try {
         if (firebaseUser) {
           // Recargar el usuario para obtener el estado más reciente de emailVerified
@@ -40,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Obtener datos adicionales del usuario desde Firestore
           const userData = await FirestoreService.getUser(firebaseUser.uid);
           
-          if (userData) {
+          if (userData && isMounted) {
             const updatedUser = {
               ...userData,
               emailVerified: firebaseUser.emailVerified,
@@ -60,26 +57,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (firebaseUser.emailVerified) {
               await FirestoreService.updateLastLogin(firebaseUser.uid);
             }
-          } else {
+          } else if (isMounted) {
             // Usuario no encontrado en Firestore
             setUser(null);
             setAuthStatus('unauthenticated');
           }
-        } else {
+        } else if (isMounted) {
           setUser(null);
           setAuthStatus('unauthenticated');
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
-        setUser(null);
-        setAuthStatus('unauthenticated');
+        if (isMounted) {
+          setUser(null);
+          setAuthStatus('unauthenticated');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
       }
     });
 
-    return () => unsubscribe();
-  }, [mounted]);
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -212,9 +217,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser,
   };
 
-  // No renderizar el contexto hasta que esté montado
-  if (!mounted) {
-    return <>{children}</>;
+  // No renderizar el contexto hasta que esté inicializado
+  if (!initialized) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        fontFamily: 'system-ui, sans-serif'
+      }}>
+        <div style={{
+          textAlign: 'center'
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #3498db',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }} />
+          <p style={{ color: '#666', margin: 0 }}>Inicializando aplicación...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

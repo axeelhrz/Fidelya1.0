@@ -14,9 +14,6 @@ import {
 import {
   Add as AddIcon,
   Notifications as NotificationsIcon,
-  Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
-  AutoAwesome as AutoAwesomeIcon,
 } from '@mui/icons-material';
 import { useAlerts, useAlertStats } from '@/hooks/useAlerts';
 import { usePatients } from '@/hooks/usePatients';
@@ -25,6 +22,8 @@ import AlertsTable from '@/components/alerts/AlertsTable';
 import AlertFiltersComponent from '@/components/alerts/AlertFilters';
 import AlertDialog from '@/components/alerts/AlertDialog';
 import DashboardCard from '@/components/metrics/DashboardCard';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { DashboardCard as DashboardCardType } from '@/types/metrics';
 
 export default function AlertsPage() {
@@ -123,96 +122,104 @@ export default function AlertsPage() {
 
   if (loading && alerts.length === 0) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-          <CircularProgress size={60} />
-        </Box>
-      </Container>
+      <ProtectedRoute requiredRoles={['admin', 'psychologist']}>
+        <DashboardLayout>
+          <Container maxWidth="xl" sx={{ py: 4 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+              <CircularProgress size={60} />
+            </Box>
+          </Container>
+        </DashboardLayout>
+      </ProtectedRoute>
     );
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <NotificationsIcon sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
-          <Box>
-            <Typography variant="h4" component="h1" fontWeight="bold">
-              Alertas Clínicas
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
-              Gestión y seguimiento de alertas del sistema
-            </Typography>
+    <ProtectedRoute requiredRoles={['admin', 'psychologist']}>
+      <DashboardLayout>
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          {/* Header */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <NotificationsIcon sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
+              <Box>
+                <Typography variant="h4" component="h1" fontWeight="bold">
+                  Alertas Clínicas
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary">
+                  Gestión y seguimiento de alertas del sistema
+                </Typography>
+              </Box>
+            </Box>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setDialogOpen(true)}
+              sx={{ px: 3, py: 1.5 }}
+            >
+              Nueva Alerta
+            </Button>
           </Box>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setDialogOpen(true)}
-          sx={{ px: 3, py: 1.5 }}
-        >
-          Nueva Alerta
-        </Button>
-      </Box>
 
-      {/* Error Alert */}
-      {error && (
-        <Box sx={{ mb: 4 }}>
-          <MuiAlert severity="error">
-            {error}
-          </MuiAlert>
-        </Box>
-      )}
+          {/* Error Alert */}
+          {error && (
+            <Box sx={{ mb: 4 }}>
+              <MuiAlert severity="error">
+                {error}
+              </MuiAlert>
+            </Box>
+          )}
 
-      {/* Stats Cards - Grid uniforme igual que métricas */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {statsCards.map((card) => (
-          <Grid item xs={12} sm={6} md={4} lg={2} key={card.id}>
-            <DashboardCard card={card} loading={statsLoading} />
+          {/* Stats Cards - Grid uniforme igual que métricas */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            {statsCards.map((card) => (
+              <Grid item xs={12} sm={6} md={4} lg={2} key={card.id}>
+                <DashboardCard card={card} loading={statsLoading} />
+              </Grid>
+            ))}
           </Grid>
-        ))}
-      </Grid>
 
-      {/* Filters */}
-      <Box sx={{ mb: 4 }}>
-        <AlertFiltersComponent
-          filters={filters}
-          onFiltersChange={setFilters}
-          onClearFilters={clearFilters}
-        />
-      </Box>
+          {/* Filters */}
+          <Box sx={{ mb: 4 }}>
+            <AlertFiltersComponent
+              filters={filters}
+              onFiltersChange={setFilters}
+              onClearFilters={clearFilters}
+            />
+          </Box>
 
-      {/* Alerts Table */}
-      <Box sx={{ mb: 4 }}>
-        <AlertsTable
-          alerts={alerts}
-          patients={patients}
-          onEdit={handleEditAlert}
-          onResolve={handleResolveAlert}
-          onCancel={handleCancelAlert}
-          onDelete={handleDeleteAlert}
-          loading={loading}
-        />
-      </Box>
+          {/* Alerts Table */}
+          <Box sx={{ mb: 4 }}>
+            <AlertsTable
+              alerts={alerts}
+              patients={patients}
+              onEdit={handleEditAlert}
+              onResolve={handleResolveAlert}
+              onCancel={handleCancelAlert}
+              onDelete={handleDeleteAlert}
+              loading={loading}
+            />
+          </Box>
 
-      {/* Floating Action Button */}
-      <Fab
-        color="primary"
-        aria-label="add"
-        sx={{ position: 'fixed', bottom: 24, right: 24 }}
-        onClick={() => setDialogOpen(true)}
-      >
-        <AddIcon />
-      </Fab>
+          {/* Floating Action Button */}
+          <Fab
+            color="primary"
+            aria-label="add"
+            sx={{ position: 'fixed', bottom: 24, right: 24 }}
+            onClick={() => setDialogOpen(true)}
+          >
+            <AddIcon />
+          </Fab>
 
-      {/* Alert Dialog */}
-      <AlertDialog
-        open={dialogOpen}
-        onClose={handleCloseDialog}
-        onSave={handleCreateAlert}
-        alert={editingAlert}
-      />
-    </Container>
+          {/* Alert Dialog */}
+          <AlertDialog
+            open={dialogOpen}
+            onClose={handleCloseDialog}
+            onSave={handleCreateAlert}
+            alert={editingAlert}
+          />
+        </Container>
+      </DashboardLayout>
+    </ProtectedRoute>
   );
 }

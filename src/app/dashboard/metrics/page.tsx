@@ -252,11 +252,13 @@ export default function MetricsPage() {
 
   if (loading && !metrics) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRoles={['admin', 'psychologist']}>
         <DashboardLayout>
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-            <CircularProgress size={60} />
-          </Box>
+          <Container maxWidth="xl" sx={{ py: 4 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+              <CircularProgress size={60} />
+            </Box>
+          </Container>
         </DashboardLayout>
       </ProtectedRoute>
     );
@@ -264,22 +266,24 @@ export default function MetricsPage() {
 
   if (error) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRoles={['admin', 'psychologist']}>
         <DashboardLayout>
-          <Alert severity="error" sx={{ m: 3 }}>
-            Error al cargar las métricas: {error}
-          </Alert>
+          <Container maxWidth="xl" sx={{ py: 4 }}>
+            <Alert severity="error">
+              Error al cargar las métricas: {error}
+            </Alert>
+          </Container>
         </DashboardLayout>
       </ProtectedRoute>
     );
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requiredRoles={['admin', 'psychologist']}>
       <DashboardLayout>
-        <Box sx={{ p: 3 }}>
+        <Container maxWidth="xl" sx={{ py: 4 }}>
           {/* Encabezado */}
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
             <Analytics sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
             <Box>
               <Typography variant="h4" component="h1" fontWeight="bold">
@@ -292,49 +296,33 @@ export default function MetricsPage() {
           </Box>
 
           {/* Barra de filtros */}
-          <FiltersToolbar
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            onExport={handleExport}
-            onRefresh={handleRefresh}
-            professionals={professionals}
-            patients={patients}
-            loading={loading || comparisonLoading}
-          />
+          <Box sx={{ mb: 4 }}>
+            <FiltersToolbar
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              onExport={handleExport}
+              onRefresh={handleRefresh}
+              professionals={professionals}
+              patients={patients}
+              loading={loading || comparisonLoading}
+            />
+          </Box>
 
           {metrics ? (
             <>
-              {/* Tarjetas de métricas principales */}
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
-                  gap: 3, 
-                  mb: 4,
-                  '& > *': {
-                    flex: '1 1 200px',
-                    minWidth: '200px',
-                    maxWidth: '300px'
-                  }
-                }}
-              >
+              {/* Tarjetas de métricas principales - Grid uniforme */}
+              <Grid container spacing={3} sx={{ mb: 4 }}>
                 {dashboardCards.map((card) => (
-                  <DashboardCard key={card.id} card={card} loading={loading} />
+                  <Grid item xs={12} sm={6} md={4} lg={2} key={card.id}>
+                    <DashboardCard card={card} loading={loading} />
+                  </Grid>
                 ))}
-              </Box>
+              </Grid>
 
               {/* Gráficos principales */}
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
-                  gap: 3, 
-                  mb: 4,
-                  alignItems: 'stretch'
-                }}
-              >
+              <Grid container spacing={3} sx={{ mb: 4 }}>
                 {/* Gráfico de sesiones en el tiempo */}
-                <Box sx={{ flex: '2 1 500px', minWidth: '500px' }}>
+                <Grid item xs={12} lg={8}>
                   <SessionsLineChart
                     data={metrics.sessionsOverTime}
                     title="Sesiones Registradas por Día"
@@ -342,40 +330,32 @@ export default function MetricsPage() {
                     showArea={true}
                     color="#1976d2"
                   />
-                </Box>
+                </Grid>
 
                 {/* Distribución emocional */}
-                <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+                <Grid item xs={12} lg={4}>
                   <EmotionPieChart
                     data={metrics.emotionalDistribution}
                     title="Distribución Emocional"
                     loading={loading}
                   />
-                </Box>
-              </Box>
+                </Grid>
+              </Grid>
 
               {/* Gráficos secundarios */}
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
-                  gap: 3, 
-                  mb: 4,
-                  alignItems: 'stretch'
-                }}
-              >
+              <Grid container spacing={3} sx={{ mb: 4 }}>
                 {/* Motivos de consulta */}
-                <Box sx={{ flex: '1 1 400px', minWidth: '400px' }}>
+                <Grid item xs={12} lg={6}>
                   <MotivesBarChart
                     data={metrics.motivesDistribution}
                     title="Motivos de Consulta Más Frecuentes"
                     loading={loading}
                     maxItems={8}
                   />
-                </Box>
+                </Grid>
 
                 {/* Gráfico de pacientes nuevos */}
-                <Box sx={{ flex: '1 1 400px', minWidth: '400px' }}>
+                <Grid item xs={12} lg={6}>
                   <SessionsLineChart
                     data={metrics.patientsOverTime}
                     title="Pacientes Nuevos por Día"
@@ -383,43 +363,37 @@ export default function MetricsPage() {
                     showArea={false}
                     color="#2e7d32"
                   />
-                </Box>
-              </Box>
+                </Grid>
+              </Grid>
 
               {/* Información adicional */}
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
-                  gap: 3,
-                  '& > *': {
-                    flex: '1 1 300px',
-                    minWidth: '300px'
-                  }
-                }}
-              >
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                    Período analizado
-                  </Typography>
-                  <Typography variant="body2">
-                    {format(metrics.periodStart, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })} - {' '}
-                    {format(metrics.periodEnd, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })}
-                  </Typography>
-                </Alert>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Alert severity="info">
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                      Período analizado
+                    </Typography>
+                    <Typography variant="body2">
+                      {format(metrics.periodStart, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })} - {' '}
+                      {format(metrics.periodEnd, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })}
+                    </Typography>
+                  </Alert>
+                </Grid>
 
-                <Alert severity="success">
-                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                    Última actualización
-                  </Typography>
-                  <Typography variant="body2">
-                    {format(metrics.calculatedAt, 'dd/MM/yyyy \'a las\' HH:mm', { locale: es })}
-                  </Typography>
-                </Alert>
-              </Box>
+                <Grid item xs={12} md={6}>
+                  <Alert severity="success">
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                      Última actualización
+                    </Typography>
+                    <Typography variant="body2">
+                      {format(metrics.calculatedAt, 'dd/MM/yyyy \'a las\' HH:mm', { locale: es })}
+                    </Typography>
+                  </Alert>
+                </Grid>
+              </Grid>
             </>
           ) : (
-            <Alert severity="info" sx={{ mt: 3 }}>
+            <Alert severity="info">
               No hay datos disponibles para el período seleccionado. 
               Ajusta los filtros para ver las métricas.
             </Alert>
@@ -431,8 +405,8 @@ export default function MetricsPage() {
             aria-label="refresh"
             sx={{
               position: 'fixed',
-              bottom: 16,
-              right: 16
+              bottom: 24,
+              right: 24
             }}
             onClick={handleRefresh}
             disabled={loading}
@@ -454,7 +428,7 @@ export default function MetricsPage() {
               {snackbar.message}
             </Alert>
           </Snackbar>
-        </Box>
+        </Container>
       </DashboardLayout>
     </ProtectedRoute>
   );
