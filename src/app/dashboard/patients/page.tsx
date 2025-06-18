@@ -41,7 +41,7 @@ import { Patient, PatientFilters as PatientFiltersType } from '@/types/patient';
 import { User } from '@/types/auth';
 import { FirestoreService } from '@/services/firestore';
 
-// Componente para tarjetas de métricas clínicas mejoradas
+// Componente para tarjetas de métricas clínicas optimizadas
 function ClinicalMetricCard({ 
   title, 
   value, 
@@ -102,8 +102,8 @@ function ClinicalMetricCard({
     return (
       <Paper
         sx={{
-          p: 4,
-          height: 200, // Altura fija para uniformidad
+          p: 3,
+          height: 220, // Altura aumentada para mejor contenido
           borderRadius: 4,
           background: theme.palette.mode === 'dark' 
             ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
@@ -113,17 +113,19 @@ function ClinicalMetricCard({
           overflow: 'hidden',
         }}
       >
-        <Stack spacing={3} height="100%">
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Skeleton variant="text" width="60%" height={20} />
-            <Skeleton variant="circular" width={56} height={56} />
+        <Stack spacing={2.5} height="100%">
+          <Box display="flex" alignItems="flex-start" justifyContent="space-between">
+            <Box flex={1}>
+              <Skeleton variant="text" width="85%" height={16} />
+            </Box>
+            <Skeleton variant="circular" width={52} height={52} />
+          </Box>
+          <Box flex={1} display="flex" flexDirection="column" justifyContent="center">
+            <Skeleton variant="text" width="60%" height={44} sx={{ mb: 1 }} />
+            <Skeleton variant="text" width="90%" height={16} />
           </Box>
           <Box>
-            <Skeleton variant="text" width="40%" height={48} />
-            <Skeleton variant="text" width="80%" height={16} />
-          </Box>
-          <Box mt="auto">
-            <Skeleton variant="rectangular" width="50%" height={24} sx={{ borderRadius: 2 }} />
+            <Skeleton variant="rectangular" width="65%" height={28} sx={{ borderRadius: 2 }} />
           </Box>
         </Stack>
       </Paper>
@@ -133,8 +135,8 @@ function ClinicalMetricCard({
   return (
     <Paper
       sx={{
-        p: 4,
-        height: 200, // Altura fija para uniformidad
+        p: 3,
+        height: 220, // Altura aumentada para mejor contenido
         borderRadius: 4,
         background: theme.palette.mode === 'dark' 
           ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
@@ -178,10 +180,15 @@ function ClinicalMetricCard({
         }
       }}
     >
-      <Stack spacing={2} height="100%" justifyContent="space-between">
-        {/* Header con título e ícono */}
-        <Box display="flex" alignItems="flex-start" justifyContent="space-between">
-          <Box flex={1}>
+      <Stack spacing={2} height="100%">
+        {/* Header con título e ícono - Altura fija */}
+        <Box 
+          display="flex" 
+          alignItems="flex-start" 
+          justifyContent="space-between"
+          sx={{ minHeight: 52 }} // Altura mínima para consistencia
+        >
+          <Box flex={1} sx={{ pr: 1 }}>
             <Typography 
               variant="body2" 
               color="text.secondary"
@@ -190,8 +197,9 @@ function ClinicalMetricCard({
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
                 fontSize: '0.75rem',
-                lineHeight: 1.2,
-                mb: 0.5
+                lineHeight: 1.3,
+                wordBreak: 'break-word', // Evita cortes abruptos
+                hyphens: 'auto', // Permite guiones automáticos
               }}
             >
               {title}
@@ -200,8 +208,8 @@ function ClinicalMetricCard({
           <Box
             className="metric-icon"
             sx={{
-              width: 56,
-              height: 56,
+              width: 52,
+              height: 52,
               borderRadius: 3,
               background: colorConfig.light,
               display: 'flex',
@@ -210,6 +218,7 @@ function ClinicalMetricCard({
               color: colorConfig.main,
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               position: 'relative',
+              flexShrink: 0, // No se encoge
               '&::before': {
                 content: '""',
                 position: 'absolute',
@@ -228,8 +237,14 @@ function ClinicalMetricCard({
           </Box>
         </Box>
 
-        {/* Valor principal */}
-        <Box>
+        {/* Valor principal - Área flexible */}
+        <Box 
+          flex={1} 
+          display="flex" 
+          flexDirection="column" 
+          justifyContent="center"
+          sx={{ minHeight: 80 }} // Altura mínima para el contenido principal
+        >
           <Typography 
             className="metric-value"
             variant="h3" 
@@ -238,10 +253,13 @@ function ClinicalMetricCard({
               fontWeight: 800,
               fontFamily: 'Poppins, sans-serif',
               color: 'text.primary',
-              lineHeight: 1,
+              lineHeight: 1.1,
               mb: 1,
               transition: 'color 0.3s ease',
-              fontSize: { xs: '2rem', sm: '2.5rem' }
+              fontSize: { xs: '1.75rem', sm: '2.25rem' },
+              wordBreak: 'break-word', // Evita desbordamiento
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
           >
             {value}
@@ -252,8 +270,14 @@ function ClinicalMetricCard({
               color="text.secondary"
               sx={{ 
                 fontWeight: 500,
-                lineHeight: 1.3,
-                fontSize: '0.875rem'
+                lineHeight: 1.4,
+                fontSize: '0.875rem',
+                wordBreak: 'break-word',
+                overflow: 'hidden',
+                display: '-webkit-box',
+                WebkitLineClamp: 2, // Máximo 2 líneas
+                WebkitBoxOrient: 'vertical',
+                textOverflow: 'ellipsis',
               }}
             >
               {subtitle}
@@ -261,9 +285,15 @@ function ClinicalMetricCard({
           )}
         </Box>
 
-        {/* Indicador de tendencia */}
-        {trend && (
-          <Box display="flex" alignItems="center" mt="auto">
+        {/* Indicador de tendencia - Altura fija */}
+        <Box 
+          sx={{ 
+            minHeight: 32, // Altura mínima para consistencia
+            display: 'flex',
+            alignItems: 'flex-end'
+          }}
+        >
+          {trend ? (
             <Paper
               elevation={0}
               sx={{
@@ -277,12 +307,14 @@ function ClinicalMetricCard({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
+                maxWidth: '100%', // No excede el ancho del contenedor
               }}
             >
               <Circle 
                 sx={{ 
                   fontSize: 8, 
-                  color: trend.value >= 0 ? theme.palette.success.main : theme.palette.error.main 
+                  color: trend.value >= 0 ? theme.palette.success.main : theme.palette.error.main,
+                  flexShrink: 0 // No se encoge
                 }} 
               />
               <Typography 
@@ -290,14 +322,19 @@ function ClinicalMetricCard({
                 sx={{
                   fontWeight: 700,
                   color: trend.value >= 0 ? theme.palette.success.main : theme.palette.error.main,
-                  fontSize: '0.75rem'
+                  fontSize: '0.75rem',
+                  whiteSpace: 'nowrap', // Evita salto de línea
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
                 }}
               >
                 {trend.value >= 0 ? '+' : ''}{trend.value}% {trend.label}
               </Typography>
             </Paper>
-          </Box>
-        )}
+          ) : (
+            <Box sx={{ height: 32 }} /> // Espacio reservado para mantener altura
+          )}
+        </Box>
       </Stack>
     </Paper>
   );
@@ -342,6 +379,15 @@ export default function PatientsPage() {
 
     loadPsychologists();
   }, [user?.centerId]);
+
+  // Calcular métricas mejoradas
+  const calculatePercentage = (value: number, total: number) => {
+    if (total === 0) return 0;
+    return Math.round((value / total) * 100);
+  };
+
+  const activePercentage = calculatePercentage(stats?.active || 0, stats?.total || 1);
+  const averageAge = Math.round(stats?.averageAge || 0);
 
   const handleCreatePatient = () => {
     setSelectedPatient(null);
@@ -507,7 +553,7 @@ export default function PatientsPage() {
               </Box>
             </Fade>
 
-            {/* Métricas Clínicas Mejoradas */}
+            {/* Métricas Clínicas Optimizadas */}
             <Slide direction="up" in timeout={800}>
               <Box>
                 <Box 
@@ -523,18 +569,18 @@ export default function PatientsPage() {
                   }}
                 >
                   <ClinicalMetricCard
-                    title="Total de Pacientes"
+                    title="Total Pacientes"
                     value={statsLoading ? '...' : stats?.total || 0}
                     subtitle="Registrados en el sistema"
-                    icon={<People sx={{ fontSize: 28 }} />}
+                    icon={<People sx={{ fontSize: 26 }} />}
                     color="primary"
                     loading={statsLoading}
                   />
                   <ClinicalMetricCard
                     title="Pacientes Activos"
                     value={statsLoading ? '...' : stats?.active || 0}
-                    subtitle={`${Math.round(((stats?.active || 0) / (stats?.total || 1)) * 100)}% del total`}
-                    icon={<TrendingUp sx={{ fontSize: 28 }} />}
+                    subtitle={`${activePercentage}% del total registrado`}
+                    icon={<TrendingUp sx={{ fontSize: 26 }} />}
                     color="success"
                     trend={{ value: 12, label: 'este mes' }}
                     loading={statsLoading}
@@ -543,15 +589,15 @@ export default function PatientsPage() {
                     title="Profesionales"
                     value={psychologists.length}
                     subtitle="Psicólogos disponibles"
-                    icon={<Psychology sx={{ fontSize: 28 }} />}
+                    icon={<Psychology sx={{ fontSize: 26 }} />}
                     color="info"
                     loading={statsLoading}
                   />
                   <ClinicalMetricCard
                     title="Edad Promedio"
-                    value={statsLoading ? '...' : `${Math.round(stats?.averageAge || 0)} años`}
-                    subtitle="Promedio general"
-                    icon={<HealthAndSafety sx={{ fontSize: 28 }} />}
+                    value={statsLoading ? '...' : `${averageAge} años`}
+                    subtitle="Promedio de todos los pacientes"
+                    icon={<HealthAndSafety sx={{ fontSize: 26 }} />}
                     color="secondary"
                     loading={statsLoading}
                   />
