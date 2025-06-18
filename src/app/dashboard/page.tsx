@@ -514,9 +514,12 @@ export default function DashboardPage() {
   const { comparison, loading: metricsLoading, error: metricsError } = useComparativeMetrics(metricsFilters);
   const { patients, loading: patientsLoading } = usePatients({ status: 'active' });
 
-  // Preparar datos para las tarjetas de estadísticas
+  // Preparar datos para las tarjetas de estadísticas con validación defensiva
   const statsCards = useMemo(() => {
-    if (!comparison?.current.metrics) return [];
+    // Validación defensiva: verificar que comparison y current.metrics existan
+    if (!comparison?.current?.metrics) {
+      return [];
+    }
 
     const current = comparison.current.metrics;
     const comp = comparison.comparison;
@@ -524,10 +527,10 @@ export default function DashboardPage() {
     return [
       {
         title: 'Pacientes Activos',
-        value: current.totalActivePatients,
+        value: current.totalActivePatients || 0,
         icon: <People />,
         color: 'primary' as const,
-        trend: comp ? {
+        trend: comp?.totalActivePatients ? {
           value: comp.totalActivePatients.change,
           isPositive: comp.totalActivePatients.change >= 0,
           period: 'mes anterior'
@@ -535,11 +538,11 @@ export default function DashboardPage() {
       },
       {
         title: 'Sesiones del Mes',
-        value: current.totalSessions,
+        value: current.totalSessions || 0,
         icon: <EventNote />,
         color: 'success' as const,
-        subtitle: `${current.averageSessionsPerPatient.toFixed(1)} promedio por paciente`,
-        trend: comp ? {
+        subtitle: `${(current.averageSessionsPerPatient || 0).toFixed(1)} promedio por paciente`,
+        trend: comp?.totalSessions ? {
           value: comp.totalSessions.change,
           isPositive: comp.totalSessions.change >= 0,
           period: 'mes anterior'
@@ -547,18 +550,18 @@ export default function DashboardPage() {
       },
       {
         title: 'Alertas Activas',
-        value: current.activeAlerts,
+        value: current.activeAlerts || 0,
         icon: <Warning />,
-        color: current.activeAlerts > 5 ? 'warning' : 'info',
-        subtitle: `${current.resolvedAlerts} resueltas`
+        color: (current.activeAlerts || 0) > 5 ? 'warning' : 'info',
+        subtitle: `${current.resolvedAlerts || 0} resueltas`
       },
       {
         title: 'Tasa de Seguimiento',
-        value: `${current.followUpRate}%`,
+        value: `${(current.followUpRate || 0).toFixed(1)}%`,
         icon: <Psychology />,
-        color: current.followUpRate >= 70 ? 'success' : 'warning',
+        color: (current.followUpRate || 0) >= 70 ? 'success' : 'warning',
         subtitle: 'Pacientes con 2+ sesiones',
-        trend: comp ? {
+        trend: comp?.followUpRate ? {
           value: comp.followUpRate.change,
           isPositive: comp.followUpRate.change >= 0,
           period: 'mes anterior'
@@ -570,6 +573,34 @@ export default function DashboardPage() {
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
+
+  // Mostrar estado de carga inicial
+  if (metricsLoading && !comparison) {
+    return (
+      <ProtectedRoute requiredRoles={['admin', 'psychologist']}>
+        <DashboardLayout>
+          <Box>
+            <Box mb={4}>
+              <Skeleton variant="text" width="40%" height={40} />
+              <Skeleton variant="text" width="60%" height={24} />
+            </Box>
+            
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 4 }}>
+              {[1, 2, 3, 4].map((item) => (
+                <StatCard
+                  key={item}
+                  title=""
+                  value=""
+                  icon={<People />}
+                  loading={true}
+                />
+              ))}
+            </Box>
+          </Box>
+        </DashboardLayout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute requiredRoles={['admin', 'psychologist']}>
@@ -601,18 +632,31 @@ export default function DashboardPage() {
               mb: 4 
             }}
           >
-            {statsCards.map((card, index) => (
-              <StatCard
-                key={index}
-                title={card.title}
-                value={card.value}
-                icon={card.icon}
-                color={card.color}
-                trend={card.trend}
-                subtitle={card.subtitle}
-                loading={metricsLoading}
-              />
-            ))}
+            {statsCards.length > 0 ? (
+              statsCards.map((card, index) => (
+                <StatCard
+                  key={index}
+                  title={card.title}
+                  value={card.value}
+                  icon={card.icon}
+                  color={card.color}
+                  trend={card.trend}
+                  subtitle={card.subtitle}
+                  loading={metricsLoading}
+                />
+              ))
+            ) : (
+              // Mostrar skeletons si no hay datos
+              [1, 2, 3, 4].map((item) => (
+                <StatCard
+                  key={item}
+                  title=""
+                  value=""
+                  icon={<People />}
+                  loading={true}
+                />
+              ))
+            )}
           </Box>
 
           {/* Tabs para diferentes vistas */}
@@ -654,9 +698,9 @@ export default function DashboardPage() {
                 }}
               >
                 <Box sx={{ flex: '2 1 600px', minWidth: '600px' }}>
-                  {comparison?.current.metrics ? (
+                  {comparison?.current?.metrics ? (
                     <SessionsLineChart
-                      data={comparison.current.metrics.sessionsOverTime}
+                      data={comparison.current.metrics.sessionsOverTime || []}
                       title="Sesiones en los Últimos 30 Días"
                       loading={metricsLoading}
                       height={300}
@@ -693,7 +737,7 @@ export default function DashboardPage() {
                 }}
               >
                 <Box sx={{ flex: '2 1 600px', minWidth: '600px' }}>
-                  {comparison?.current.metrics ? (
+                  {comparison?.current?.metrics ? (
                     <ExecutiveSummary
                       metrics={comparison.current.metrics}
                       comparison={comparison.comparison}
@@ -710,9 +754,9 @@ export default function DashboardPage() {
                 </Box>
 
                 <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
-                  {comparison?.current.metrics ? (
+                  {comparison?.current?.metrics ? (
                     <EmotionPieChart
-                      data={comparison.current.metrics.emotionalDistribution}
+                      data={comparison.current.metrics.emotionalDistribution || {}}
                       title="Estados Emocionales"
                       loading={metricsLoading}
                       height={300}
@@ -730,9 +774,9 @@ export default function DashboardPage() {
 
               {/* Segunda fila: Gráfico de pacientes nuevos */}
               <Box>
-                {comparison?.current.metrics ? (
+                {comparison?.current?.metrics ? (
                   <SessionsLineChart
-                    data={comparison.current.metrics.patientsOverTime}
+                    data={comparison.current.metrics.patientsOverTime || []}
                     title="Pacientes Nuevos en los Últimos 30 Días"
                     loading={metricsLoading}
                     height={250}
@@ -753,7 +797,7 @@ export default function DashboardPage() {
 
           {tabValue === 2 && (
             <Box>
-              {comparison?.current.metrics ? (
+              {comparison?.current?.metrics ? (
                 <PerformanceMetrics
                   metrics={comparison.current.metrics}
                   loading={metricsLoading}
