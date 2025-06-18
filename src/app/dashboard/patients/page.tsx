@@ -182,8 +182,8 @@ function CloudMetricCard({
           borderRadius: '60% 40% 40% 20% / 70% 50% 30% 25%', // Forma de nube orgánica
           border: `2px solid ${alpha(colorConfig.main, 0.2)}`,
           boxShadow: theme.palette.mode === 'dark'
-            ? `0 8px 32px ${alpha(colorConfig.main, 0.15)}, inset 0 1px 0 ${alpha('white', 0.1)}`
-            : `0 8px 32px ${alpha(colorConfig.main, 0.15)}, inset 0 1px 0 ${alpha('white', 0.8)}`,
+            ? `0 8px 32px ${alpha(colorConfig.main, 0.15)}, inset 0 1px 0 ${alpha('#ffffff', 0.1)}`
+            : `0 8px 32px ${alpha(colorConfig.main, 0.15)}, inset 0 1px 0 ${alpha('#ffffff', 0.8)}`,
           position: 'relative',
           overflow: 'hidden',
           cursor: 'pointer',
@@ -196,13 +196,13 @@ function CloudMetricCard({
             transform: 'translateY(-8px) scale(1.03)',
             borderColor: colorConfig.main,
             boxShadow: theme.palette.mode === 'dark'
-              ? `0 20px 40px ${alpha(colorConfig.main, 0.25)}, inset 0 1px 0 ${alpha('white', 0.2)}`
-              : `0 20px 40px ${alpha(colorConfig.main, 0.25)}, inset 0 1px 0 ${alpha('white', 1)}`,
+              ? `0 20px 40px ${alpha(colorConfig.main, 0.25)}, inset 0 1px 0 ${alpha('#ffffff', 0.2)}`
+              : `0 20px 40px ${alpha(colorConfig.main, 0.25)}, inset 0 1px 0 ${alpha('#ffffff', 1)}`,
             animation: `${pulse} 2s ease-in-out infinite`,
             '& .cloud-icon': {
               transform: 'scale(1.2) rotate(10deg)',
               background: colorConfig.gradient,
-              color: 'white',
+              color: '#ffffff',
             },
             '& .cloud-value': {
               color: colorConfig.main,
@@ -221,7 +221,7 @@ function CloudMetricCard({
             left: '15%',
             width: '30%',
             height: '20%',
-            background: `radial-gradient(ellipse, ${alpha('white', theme.palette.mode === 'dark' ? 0.1 : 0.4)} 0%, transparent 70%)`,
+            background: `radial-gradient(ellipse, ${alpha('#ffffff', theme.palette.mode === 'dark' ? 0.1 : 0.4)} 0%, transparent 70%)`,
             borderRadius: '50%',
             pointerEvents: 'none',
           },
@@ -267,7 +267,7 @@ function CloudMetricCard({
               fontSize: '0.65rem',
               lineHeight: 1.2,
               flex: 1,
-              textShadow: theme.palette.mode === 'dark' ? 'none' : `0 1px 2px ${alpha('white', 0.8)}`,
+              textShadow: theme.palette.mode === 'dark' ? 'none' : `0 1px 2px ${alpha('#ffffff', 0.8)}`,
             }}
           >
             {title}
@@ -308,7 +308,7 @@ function CloudMetricCard({
               fontSize: '2rem',
               textShadow: theme.palette.mode === 'dark' 
                 ? `0 2px 8px ${alpha(colorConfig.main, 0.3)}`
-                : `0 2px 4px ${alpha('black', 0.1)}`,
+                : `0 2px 4px ${alpha('#000000', 0.1)}`,
               mb: 0.5,
             }}
           >
@@ -360,7 +360,7 @@ function CloudMetricCard({
                   fontWeight: 800,
                   color: trend.value >= 0 ? 'success.main' : 'error.main',
                   fontSize: '0.7rem',
-                  textShadow: `0 1px 2px ${alpha('white', 0.8)}`,
+                  textShadow: `0 1px 2px ${alpha('#ffffff', 0.8)}`,
                 }}
               >
                 {Math.abs(trend.value)}%
