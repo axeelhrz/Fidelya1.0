@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Animación para el spinner de carga */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Estilos base para evitar problemas de hidratación */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevenir flash de contenido sin estilo */
+.no-fouc {
+  visibility: hidden;
+}
+
+.no-fouc.loaded {
+  visibility: visible;
+}
+
+/* Estilos para componentes de Material-UI */
+.MuiCssBaseline-root {
+  color-scheme: light dark;
+}
+
+/* Animaciones suaves para transiciones */
+* {
+  box-sizing: border-box;
+}
+
+/* Estilos para el modo oscuro */
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+/* Optimizaciones de rendimiento */
+.MuiPaper-root {
+  will-change: transform;
+}
+
+.MuiCard-root {
+  will-change: transform;
+}
+
+/* Estilos para prevenir layout shift */
+.loading-skeleton {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Estilos para mejorar la accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Estilos para focus visible */
+.js-focus-visible :focus:not(.focus-visible) {
+  outline: none;
+}
+
+/* Estilos para scrollbars personalizados */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
