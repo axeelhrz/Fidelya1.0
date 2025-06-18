@@ -121,15 +121,15 @@ function ModernStatCard({
   };
 
   const getTrendIcon = () => {
-    if (trend === 'up') return <ArrowUpward sx={{ fontSize: 16, color: 'success.main' }} />;
-    if (trend === 'down') return <ArrowDownward sx={{ fontSize: 16, color: 'error.main' }} />;
-    return <Timeline sx={{ fontSize: 16, color: 'text.secondary' }} />;
+    if (trend === 'up') return <ArrowUpward sx={{ fontSize: 16, color: theme.palette.success.main }} />;
+    if (trend === 'down') return <ArrowDownward sx={{ fontSize: 16, color: theme.palette.error.main }} />;
+    return <Timeline sx={{ fontSize: 16, color: theme.palette.text.secondary }} />;
   };
 
   const getTrendColor = () => {
-    if (trend === 'up') return 'success.main';
-    if (trend === 'down') return 'error.main';
-    return 'text.secondary';
+    if (trend === 'up') return theme.palette.success.main;
+    if (trend === 'down') return theme.palette.error.main;
+    return theme.palette.text.secondary;
   };
 
   return (
@@ -241,8 +241,11 @@ function ModernStatCard({
                 {getTrendIcon()}
                 <Typography 
                   variant="caption" 
-                  color={getTrendColor()}
-                  sx={{ ml: 1, fontWeight: 600 }}
+                  sx={{ 
+                    ml: 1, 
+                    fontWeight: 600,
+                    color: getTrendColor(),
+                  }}
                 >
                   {trendValue}
                 </Typography>
@@ -377,7 +380,7 @@ function ModernTodaySessions({ sessions, loading }: { sessions: any[], loading: 
                 }}
                 className="animate-float"
               >
-                <EventNote sx={{ fontSize: 40, color: 'primary.main' }} />
+                <EventNote sx={{ fontSize: 40, color: theme.palette.primary.main }} />
               </Box>
               <Typography variant="h6" color="text.primary" fontWeight="600" gutterBottom>
                 Sin sesiones programadas
@@ -578,7 +581,7 @@ function ModernRecentAlerts({ alerts, loading }: { alerts: any[], loading: boole
                 }}
                 className="animate-float"
               >
-                <CheckCircle sx={{ fontSize: 40, color: 'success.main' }} />
+                <CheckCircle sx={{ fontSize: 40, color: theme.palette.success.main }} />
               </Box>
               <Typography variant="h6" color="text.primary" fontWeight="600" gutterBottom>
                 Todo bajo control
@@ -723,7 +726,7 @@ function ModernUpcomingAppointments({ sessions, loading }: { sessions: any[], lo
                 }}
                 className="animate-float"
               >
-                <CalendarToday sx={{ fontSize: 40, color: 'info.main' }} />
+                <CalendarToday sx={{ fontSize: 40, color: theme.palette.info.main }} />
               </Box>
               <Typography variant="h6" color="text.primary" fontWeight="600" gutterBottom>
                 Agenda libre
