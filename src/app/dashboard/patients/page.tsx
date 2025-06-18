@@ -28,7 +28,8 @@ import {
   HealthAndSafety,
   Download,
   PersonAdd,
-  Circle,
+  ArrowUpward,
+  ArrowDownward,
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -41,8 +42,8 @@ import { Patient, PatientFilters as PatientFiltersType } from '@/types/patient';
 import { User } from '@/types/auth';
 import { FirestoreService } from '@/services/firestore';
 
-// Componente para tarjetas de métricas clínicas optimizadas
-function ClinicalMetricCard({ 
+// Componente para tarjetas de métricas compactas y atractivas
+function CompactMetricCard({ 
   title, 
   value, 
   subtitle,
@@ -67,31 +68,31 @@ function ClinicalMetricCard({
         return {
           main: theme.palette.primary.main,
           light: alpha(theme.palette.primary.main, 0.1),
-          gradient: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`
+          dark: theme.palette.primary.dark,
         };
       case 'success': 
         return {
           main: theme.palette.success.main,
           light: alpha(theme.palette.success.main, 0.1),
-          gradient: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${alpha(theme.palette.success.main, 0.8)} 100%)`
+          dark: theme.palette.success.dark,
         };
       case 'info': 
         return {
           main: theme.palette.info.main,
           light: alpha(theme.palette.info.main, 0.1),
-          gradient: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${alpha(theme.palette.info.main, 0.8)} 100%)`
+          dark: theme.palette.info.dark,
         };
       case 'secondary': 
         return {
           main: theme.palette.secondary.main,
           light: alpha(theme.palette.secondary.main, 0.1),
-          gradient: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${alpha(theme.palette.secondary.main, 0.8)} 100%)`
+          dark: theme.palette.secondary.dark,
         };
       default: 
         return {
           main: theme.palette.primary.main,
           light: alpha(theme.palette.primary.main, 0.1),
-          gradient: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`
+          dark: theme.palette.primary.dark,
         };
     }
   };
@@ -102,9 +103,9 @@ function ClinicalMetricCard({
     return (
       <Paper
         sx={{
-          p: 3,
-          height: 220, // Altura aumentada para mejor contenido
-          borderRadius: 4,
+          p: 2.5,
+          height: 140,
+          borderRadius: 3,
           background: theme.palette.mode === 'dark' 
             ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
             : 'linear-gradient(145deg, #ffffff 0%, #fafbff 100%)',
@@ -113,21 +114,19 @@ function ClinicalMetricCard({
           overflow: 'hidden',
         }}
       >
-        <Stack spacing={2.5} height="100%">
-          <Box display="flex" alignItems="flex-start" justifyContent="space-between">
-            <Box flex={1}>
-              <Skeleton variant="text" width="85%" height={16} />
-            </Box>
-            <Skeleton variant="circular" width={52} height={52} />
+        <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={2}>
+          <Box flex={1}>
+            <Skeleton variant="text" width="70%" height={14} />
           </Box>
-          <Box flex={1} display="flex" flexDirection="column" justifyContent="center">
-            <Skeleton variant="text" width="60%" height={44} sx={{ mb: 1 }} />
-            <Skeleton variant="text" width="90%" height={16} />
-          </Box>
-          <Box>
-            <Skeleton variant="rectangular" width="65%" height={28} sx={{ borderRadius: 2 }} />
-          </Box>
-        </Stack>
+          <Skeleton variant="circular" width={40} height={40} />
+        </Box>
+        <Box mb={1.5}>
+          <Skeleton variant="text" width="50%" height={32} />
+        </Box>
+        <Skeleton variant="text" width="80%" height={12} />
+        <Box mt={1}>
+          <Skeleton variant="rectangular" width="60%" height={20} sx={{ borderRadius: 1.5 }} />
+        </Box>
       </Paper>
     );
   }
@@ -135,24 +134,26 @@ function ClinicalMetricCard({
   return (
     <Paper
       sx={{
-        p: 3,
-        height: 220, // Altura aumentada para mejor contenido
-        borderRadius: 4,
+        p: 2.5,
+        height: 140,
+        borderRadius: 3,
         background: theme.palette.mode === 'dark' 
           ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
           : 'linear-gradient(145deg, #ffffff 0%, #fafbff 100%)',
         border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         position: 'relative',
         overflow: 'hidden',
         cursor: 'pointer',
         '&:hover': {
-          transform: 'translateY(-8px) scale(1.02)',
+          transform: 'translateY(-4px)',
           boxShadow: theme.palette.mode === 'dark'
-            ? `0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px ${alpha(colorConfig.main, 0.1)}`
-            : `0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px ${alpha(colorConfig.main, 0.1)}`,
+            ? `0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px ${alpha(colorConfig.main, 0.2)}`
+            : `0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 0 0 1px ${alpha(colorConfig.main, 0.2)}`,
           '& .metric-icon': {
-            transform: 'scale(1.1) rotate(5deg)',
+            transform: 'scale(1.1)',
+            background: `linear-gradient(135deg, ${colorConfig.main} 0%, ${colorConfig.dark} 100%)`,
+            color: 'white',
           },
           '& .metric-value': {
             color: colorConfig.main,
@@ -164,178 +165,118 @@ function ClinicalMetricCard({
           top: 0,
           left: 0,
           right: 0,
-          height: 4,
-          background: colorConfig.gradient,
-        },
-        '&::after': {
-          content: '""',
-          position: 'absolute',
-          top: -50,
-          right: -50,
-          width: 100,
-          height: 100,
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${alpha(colorConfig.main, 0.05)} 0%, transparent 70%)`,
-          pointerEvents: 'none',
+          height: 3,
+          background: `linear-gradient(90deg, ${colorConfig.main} 0%, ${colorConfig.dark} 100%)`,
         }
       }}
     >
-      <Stack spacing={2} height="100%">
-        {/* Header con título e ícono - Altura fija */}
-        <Box 
-          display="flex" 
-          alignItems="flex-start" 
-          justifyContent="space-between"
-          sx={{ minHeight: 52 }} // Altura mínima para consistencia
-        >
-          <Box flex={1} sx={{ pr: 1 }}>
-            <Typography 
-              variant="body2" 
-              color="text.secondary"
-              sx={{ 
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                fontSize: '0.75rem',
-                lineHeight: 1.3,
-                wordBreak: 'break-word', // Evita cortes abruptos
-                hyphens: 'auto', // Permite guiones automáticos
-              }}
-            >
-              {title}
-            </Typography>
-          </Box>
-          <Box
-            className="metric-icon"
-            sx={{
-              width: 52,
-              height: 52,
-              borderRadius: 3,
-              background: colorConfig.light,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: colorConfig.main,
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              position: 'relative',
-              flexShrink: 0, // No se encoge
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                inset: 0,
-                borderRadius: 3,
-                background: colorConfig.gradient,
-                opacity: 0,
-                transition: 'opacity 0.3s ease',
-              },
-              '&:hover::before': {
-                opacity: 0.1,
-              }
-            }}
-          >
-            {icon}
-          </Box>
-        </Box>
-
-        {/* Valor principal - Área flexible */}
-        <Box 
-          flex={1} 
-          display="flex" 
-          flexDirection="column" 
-          justifyContent="center"
-          sx={{ minHeight: 80 }} // Altura mínima para el contenido principal
-        >
-          <Typography 
-            className="metric-value"
-            variant="h3" 
-            component="div" 
-            sx={{ 
-              fontWeight: 800,
-              fontFamily: 'Poppins, sans-serif',
-              color: 'text.primary',
-              lineHeight: 1.1,
-              mb: 1,
-              transition: 'color 0.3s ease',
-              fontSize: { xs: '1.75rem', sm: '2.25rem' },
-              wordBreak: 'break-word', // Evita desbordamiento
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {value}
-          </Typography>
-          {subtitle && (
-            <Typography 
-              variant="body2" 
-              color="text.secondary"
-              sx={{ 
-                fontWeight: 500,
-                lineHeight: 1.4,
-                fontSize: '0.875rem',
-                wordBreak: 'break-word',
-                overflow: 'hidden',
-                display: '-webkit-box',
-                WebkitLineClamp: 2, // Máximo 2 líneas
-                WebkitBoxOrient: 'vertical',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {subtitle}
-            </Typography>
-          )}
-        </Box>
-
-        {/* Indicador de tendencia - Altura fija */}
-        <Box 
+      {/* Header compacto */}
+      <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={2}>
+        <Typography 
+          variant="caption" 
+          color="text.secondary"
           sx={{ 
-            minHeight: 32, // Altura mínima para consistencia
-            display: 'flex',
-            alignItems: 'flex-end'
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            fontSize: '0.7rem',
+            lineHeight: 1.2,
+            flex: 1,
           }}
         >
-          {trend ? (
-            <Paper
-              elevation={0}
+          {title}
+        </Typography>
+        <Box
+          className="metric-icon"
+          sx={{
+            width: 40,
+            height: 40,
+            borderRadius: 2,
+            background: colorConfig.light,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: colorConfig.main,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </Box>
+      </Box>
+
+      {/* Valor principal compacto */}
+      <Box mb={1.5}>
+        <Typography 
+          className="metric-value"
+          variant="h4" 
+          component="div" 
+          sx={{ 
+            fontWeight: 800,
+            fontFamily: 'Poppins, sans-serif',
+            color: 'text.primary',
+            lineHeight: 1,
+            transition: 'color 0.3s ease',
+            fontSize: '1.75rem',
+          }}
+        >
+          {value}
+        </Typography>
+      </Box>
+
+      {/* Información adicional */}
+      <Box display="flex" alignItems="center" justifyContent="space-between">
+        {subtitle && (
+          <Typography 
+            variant="caption" 
+            color="text.secondary"
+            sx={{ 
+              fontWeight: 500,
+              fontSize: '0.75rem',
+              flex: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {subtitle}
+          </Typography>
+        )}
+        
+        {trend && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              px: 1,
+              py: 0.5,
+              borderRadius: 1.5,
+              background: trend.value >= 0 
+                ? alpha(theme.palette.success.main, 0.1)
+                : alpha(theme.palette.error.main, 0.1),
+              ml: 1,
+              flexShrink: 0,
+            }}
+          >
+            {trend.value >= 0 ? (
+              <ArrowUpward sx={{ fontSize: 12, color: 'success.main' }} />
+            ) : (
+              <ArrowDownward sx={{ fontSize: 12, color: 'error.main' }} />
+            )}
+            <Typography 
+              variant="caption" 
               sx={{
-                px: 2,
-                py: 1,
-                borderRadius: 3,
-                background: trend.value >= 0 
-                  ? `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.1)} 0%, ${alpha(theme.palette.success.main, 0.05)} 100%)`
-                  : `linear-gradient(135deg, ${alpha(theme.palette.error.main, 0.1)} 0%, ${alpha(theme.palette.error.main, 0.05)} 100%)`,
-                border: `1px solid ${alpha(trend.value >= 0 ? theme.palette.success.main : theme.palette.error.main, 0.2)}`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                maxWidth: '100%', // No excede el ancho del contenedor
+                fontWeight: 700,
+                color: trend.value >= 0 ? 'success.main' : 'error.main',
+                fontSize: '0.7rem',
               }}
             >
-              <Circle 
-                sx={{ 
-                  fontSize: 8, 
-                  color: trend.value >= 0 ? theme.palette.success.main : theme.palette.error.main,
-                  flexShrink: 0 // No se encoge
-                }} 
-              />
-              <Typography 
-                variant="caption" 
-                sx={{
-                  fontWeight: 700,
-                  color: trend.value >= 0 ? theme.palette.success.main : theme.palette.error.main,
-                  fontSize: '0.75rem',
-                  whiteSpace: 'nowrap', // Evita salto de línea
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {trend.value >= 0 ? '+' : ''}{trend.value}% {trend.label}
-              </Typography>
-            </Paper>
-          ) : (
-            <Box sx={{ height: 32 }} /> // Espacio reservado para mantener altura
-          )}
-        </Box>
-      </Stack>
+              {Math.abs(trend.value)}%
+            </Typography>
+          </Box>
+        )}
+      </Box>
     </Paper>
   );
 }
@@ -380,7 +321,7 @@ export default function PatientsPage() {
     loadPsychologists();
   }, [user?.centerId]);
 
-  // Calcular métricas mejoradas
+  // Calcular métricas optimizadas
   const calculatePercentage = (value: number, total: number) => {
     if (total === 0) return 0;
     return Math.round((value / total) * 100);
@@ -473,7 +414,7 @@ export default function PatientsPage() {
             {/* Encabezado Clínico */}
             <Fade in timeout={600}>
               <Box>
-                <Stack spacing={1} mb={2}>
+                <Stack spacing={1} mb={3}>
                   <Typography 
                     variant="h4" 
                     sx={{ 
@@ -494,8 +435,7 @@ export default function PatientsPage() {
                       maxWidth: 600
                     }}
                   >
-                    Visualiza, filtra y gestiona la ficha clínica de tus pacientes. 
-                    Mantén un registro completo y organizado de cada caso.
+                    Gestiona la información clínica de tus pacientes de forma eficiente y organizada.
                   </Typography>
                 </Stack>
 
@@ -525,7 +465,7 @@ export default function PatientsPage() {
                         }
                       }}
                     >
-                      Exportar Datos
+                      Exportar
                     </Button>
                     <Button
                       variant="contained"
@@ -553,7 +493,7 @@ export default function PatientsPage() {
               </Box>
             </Fade>
 
-            {/* Métricas Clínicas Optimizadas */}
+            {/* Métricas Compactas */}
             <Slide direction="up" in timeout={800}>
               <Box>
                 <Box 
@@ -564,40 +504,40 @@ export default function PatientsPage() {
                       sm: 'repeat(2, 1fr)',
                       lg: 'repeat(4, 1fr)'
                     },
-                    gap: 3,
+                    gap: 2.5,
                     mb: 1
                   }}
                 >
-                  <ClinicalMetricCard
-                    title="Total Pacientes"
+                  <CompactMetricCard
+                    title="Total"
                     value={statsLoading ? '...' : stats?.total || 0}
-                    subtitle="Registrados en el sistema"
-                    icon={<People sx={{ fontSize: 26 }} />}
+                    subtitle="Pacientes registrados"
+                    icon={<People sx={{ fontSize: 22 }} />}
                     color="primary"
                     loading={statsLoading}
                   />
-                  <ClinicalMetricCard
-                    title="Pacientes Activos"
+                  <CompactMetricCard
+                    title="Activos"
                     value={statsLoading ? '...' : stats?.active || 0}
-                    subtitle={`${activePercentage}% del total registrado`}
-                    icon={<TrendingUp sx={{ fontSize: 26 }} />}
+                    subtitle={`${activePercentage}% del total`}
+                    icon={<TrendingUp sx={{ fontSize: 22 }} />}
                     color="success"
                     trend={{ value: 12, label: 'este mes' }}
                     loading={statsLoading}
                   />
-                  <ClinicalMetricCard
+                  <CompactMetricCard
                     title="Profesionales"
                     value={psychologists.length}
                     subtitle="Psicólogos disponibles"
-                    icon={<Psychology sx={{ fontSize: 26 }} />}
+                    icon={<Psychology sx={{ fontSize: 22 }} />}
                     color="info"
                     loading={statsLoading}
                   />
-                  <ClinicalMetricCard
-                    title="Edad Promedio"
-                    value={statsLoading ? '...' : `${averageAge} años`}
-                    subtitle="Promedio de todos los pacientes"
-                    icon={<HealthAndSafety sx={{ fontSize: 26 }} />}
+                  <CompactMetricCard
+                    title="Edad Media"
+                    value={statsLoading ? '...' : `${averageAge}a`}
+                    subtitle="Promedio general"
+                    icon={<HealthAndSafety sx={{ fontSize: 22 }} />}
                     color="secondary"
                     loading={statsLoading}
                   />
