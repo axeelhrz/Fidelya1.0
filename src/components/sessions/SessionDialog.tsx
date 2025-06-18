@@ -12,7 +12,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Grid,
   Typography,
   Box,
   Chip,
@@ -38,7 +37,6 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Session, SessionFormData, SESSION_TYPES, SESSION_STATUSES, SESSION_TYPE_LABELS, SESSION_STATUS_LABELS } from '@/types/session';
-import { Patient } from '@/types/patient';
 import { sessionFormSchema, validateNotesQuality, getSessionDurationSuggestion } from '@/lib/validations/session';
 import { useSessionActions } from '@/hooks/useSessions';
 import { usePatients } from '@/hooks/usePatients';
@@ -149,11 +147,6 @@ export default function SessionDialog({
     }
   };
 
-  const getPatientName = (patientId: string) => {
-    const patient = patients.find(p => p.id === patientId);
-    return patient?.fullName || 'Paciente no encontrado';
-  };
-
   const getQualityColor = (score: number) => {
     if (score >= 80) return 'success';
     if (score >= 60) return 'warning';
@@ -182,138 +175,151 @@ export default function SessionDialog({
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent dividers>
-            <Grid container spacing={3}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {/* Información básica */}
-              <Grid item xs={12}>
+              <Box>
                 <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <ScheduleIcon />
                   Información Básica
                 </Typography>
-              </Grid>
 
-              <Grid item xs={12} md={6}>
-                <Controller
-                  name="patientId"
-                  control={control}
-                  render={({ field }) => (
-                    <FormControl fullWidth error={!!errors.patientId}>
-                      <InputLabel>Paciente</InputLabel>
-                      <Select {...field} label="Paciente">
-                        {patients.map((patient) => (
-                          <MenuItem key={patient.id} value={patient.id}>
-                            <Box display="flex" alignItems="center" gap={1}>
-                              <PersonIcon fontSize="small" />
-                              {patient.fullName}
-                            </Box>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      {errors.patientId && (
-                        <Typography variant="caption" color="error">
-                          {errors.patientId.message}
-                        </Typography>
-                      )}
-                    </FormControl>
-                  )}
-                />
-              </Grid>
+                {/* Primera fila: Paciente y Fecha */}
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: 2, 
+                    mb: 2,
+                    '& > *': {
+                      flex: '1 1 250px',
+                      minWidth: '250px'
+                    }
+                  }}
+                >
+                  <Controller
+                    name="patientId"
+                    control={control}
+                    render={({ field }) => (
+                      <FormControl error={!!errors.patientId}>
+                        <InputLabel>Paciente</InputLabel>
+                        <Select {...field} label="Paciente">
+                          {patients.map((patient) => (
+                            <MenuItem key={patient.id} value={patient.id}>
+                              <Box display="flex" alignItems="center" gap={1}>
+                                <PersonIcon fontSize="small" />
+                                {patient.fullName}
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {errors.patientId && (
+                          <Typography variant="caption" color="error">
+                            {errors.patientId.message}
+                          </Typography>
+                        )}
+                      </FormControl>
+                    )}
+                  />
 
-              <Grid item xs={12} md={6}>
-                <Controller
-                  name="date"
-                  control={control}
-                  render={({ field }) => (
-                    <DateTimePicker
-                      label="Fecha y Hora"
-                      value={new Date(field.value)}
-                      onChange={(date) => field.onChange(date?.toISOString())}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          error: !!errors.date,
-                          helperText: errors.date?.message
-                        }
-                      }}
-                    />
-                  )}
-                />
-              </Grid>
+                  <Controller
+                    name="date"
+                    control={control}
+                    render={({ field }) => (
+                      <DateTimePicker
+                        label="Fecha y Hora"
+                        value={new Date(field.value)}
+                        onChange={(date) => field.onChange(date?.toISOString())}
+                        slotProps={{
+                          textField: {
+                            error: !!errors.date,
+                            helperText: errors.date?.message
+                          }
+                        }}
+                      />
+                    )}
+                  />
+                </Box>
 
-              <Grid item xs={12} md={4}>
-                <Controller
-                  name="type"
-                  control={control}
-                  render={({ field }) => (
-                    <FormControl fullWidth error={!!errors.type}>
-                      <InputLabel>Tipo de Sesión</InputLabel>
-                      <Select {...field} label="Tipo de Sesión">
-                        {SESSION_TYPES.map((type) => (
-                          <MenuItem key={type} value={type}>
-                            {SESSION_TYPE_LABELS[type]}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      {errors.type && (
-                        <Typography variant="caption" color="error">
-                          {errors.type.message}
-                        </Typography>
-                      )}
-                    </FormControl>
-                  )}
-                />
-              </Grid>
+                {/* Segunda fila: Tipo, Estado y Duración */}
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: 2,
+                    '& > *': {
+                      flex: '1 1 200px',
+                      minWidth: '200px'
+                    }
+                  }}
+                >
+                  <Controller
+                    name="type"
+                    control={control}
+                    render={({ field }) => (
+                      <FormControl error={!!errors.type}>
+                        <InputLabel>Tipo de Sesión</InputLabel>
+                        <Select {...field} label="Tipo de Sesión">
+                          {SESSION_TYPES.map((type) => (
+                            <MenuItem key={type} value={type}>
+                              {SESSION_TYPE_LABELS[type]}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {errors.type && (
+                          <Typography variant="caption" color="error">
+                            {errors.type.message}
+                          </Typography>
+                        )}
+                      </FormControl>
+                    )}
+                  />
 
-              <Grid item xs={12} md={4}>
-                <Controller
-                  name="status"
-                  control={control}
-                  render={({ field }) => (
-                    <FormControl fullWidth error={!!errors.status}>
-                      <InputLabel>Estado</InputLabel>
-                      <Select {...field} label="Estado">
-                        {SESSION_STATUSES.map((status) => (
-                          <MenuItem key={status} value={status}>
-                            {SESSION_STATUS_LABELS[status]}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      {errors.status && (
-                        <Typography variant="caption" color="error">
-                          {errors.status.message}
-                        </Typography>
-                      )}
-                    </FormControl>
-                  )}
-                />
-              </Grid>
+                  <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                      <FormControl error={!!errors.status}>
+                        <InputLabel>Estado</InputLabel>
+                        <Select {...field} label="Estado">
+                          {SESSION_STATUSES.map((status) => (
+                            <MenuItem key={status} value={status}>
+                              {SESSION_STATUS_LABELS[status]}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {errors.status && (
+                          <Typography variant="caption" color="error">
+                            {errors.status.message}
+                          </Typography>
+                        )}
+                      </FormControl>
+                    )}
+                  />
 
-              <Grid item xs={12} md={4}>
-                <Controller
-                  name="duration"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Duración (minutos)"
-                      type="number"
-                      fullWidth
-                      error={!!errors.duration}
-                      helperText={errors.duration?.message}
-                      inputProps={{ min: 15, max: 480 }}
-                    />
-                  )}
-                />
-              </Grid>
+                  <Controller
+                    name="duration"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Duración (minutos)"
+                        type="number"
+                        error={!!errors.duration}
+                        helperText={errors.duration?.message}
+                        inputProps={{ min: 15, max: 480 }}
+                      />
+                    )}
+                  />
+                </Box>
+              </Box>
 
               {/* Notas clínicas */}
-              <Grid item xs={12}>
+              <Box>
                 <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <NotesIcon />
                   Notas Clínicas
                 </Typography>
-              </Grid>
 
-              <Grid item xs={12}>
                 <Controller
                   name="notes"
                   control={control}
@@ -366,117 +372,113 @@ export default function SessionDialog({
                     )}
                   </Box>
                 )}
-              </Grid>
+              </Box>
 
               {/* Secciones adicionales */}
-              <Grid item xs={12}>
-                <Accordion>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography variant="subtitle1">Información Adicional</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <Controller
-                          name="observations"
-                          control={control}
-                          render={({ field }) => (
-                            <TextField
-                              {...field}
-                              label="Observaciones Adicionales"
-                              multiline
-                              rows={3}
-                              fullWidth
-                              placeholder="Observaciones sobre el comportamiento, estado de ánimo, etc."
-                            />
-                          )}
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="subtitle1">Información Adicional</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Controller
+                      name="observations"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Observaciones Adicionales"
+                          multiline
+                          rows={3}
+                          fullWidth
+                          placeholder="Observaciones sobre el comportamiento, estado de ánimo, etc."
                         />
-                      </Grid>
+                      )}
+                    />
 
-                      <Grid item xs={12}>
-                        <Controller
-                          name="interventions"
-                          control={control}
-                          render={({ field }) => (
-                            <TextField
-                              {...field}
-                              label="Intervenciones Realizadas"
-                              multiline
-                              rows={3}
-                              fullWidth
-                              placeholder="Técnicas, estrategias o intervenciones específicas utilizadas..."
-                            />
-                          )}
+                    <Controller
+                      name="interventions"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Intervenciones Realizadas"
+                          multiline
+                          rows={3}
+                          fullWidth
+                          placeholder="Técnicas, estrategias o intervenciones específicas utilizadas..."
                         />
-                      </Grid>
+                      )}
+                    />
 
-                      <Grid item xs={12} md={6}>
-                        <Controller
-                          name="homework"
-                          control={control}
-                          render={({ field }) => (
-                            <TextField
-                              {...field}
-                              label="Tareas para Casa"
-                              multiline
-                              rows={3}
-                              fullWidth
-                              placeholder="Ejercicios o actividades asignadas al paciente..."
-                            />
-                          )}
-                        />
-                      </Grid>
+                    <Box 
+                      sx={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: 2,
+                        '& > *': {
+                          flex: '1 1 300px',
+                          minWidth: '300px'
+                        }
+                      }}
+                    >
+                      <Controller
+                        name="homework"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Tareas para Casa"
+                            multiline
+                            rows={3}
+                            placeholder="Ejercicios o actividades asignadas al paciente..."
+                          />
+                        )}
+                      />
 
-                      <Grid item xs={12} md={6}>
-                        <Controller
-                          name="nextSessionPlan"
-                          control={control}
-                          render={({ field }) => (
-                            <TextField
-                              {...field}
-                              label="Plan para Próxima Sesión"
-                              multiline
-                              rows={3}
-                              fullWidth
-                              placeholder="Objetivos y plan para la siguiente sesión..."
-                            />
-                          )}
-                        />
-                      </Grid>
-                    </Grid>
-                  </AccordionDetails>
-                </Accordion>
-              </Grid>
+                      <Controller
+                        name="nextSessionPlan"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Plan para Próxima Sesión"
+                            multiline
+                            rows={3}
+                            placeholder="Objetivos y plan para la siguiente sesión..."
+                          />
+                        )}
+                      />
+                    </Box>
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
 
               {/* Información de IA */}
               {session?.aiAnalysis && (
-                <Grid item xs={12}>
-                  <Alert severity="info">
-                    <Typography variant="body2" fontWeight="bold" gutterBottom>
-                      Análisis de IA disponible
-                    </Typography>
-                    <Typography variant="body2">
-                      Esta sesión cuenta con análisis automático generado por IA. 
-                      Confianza: {AIUtils.formatConfidence(session.aiAnalysis.confidence)}
-                    </Typography>
-                  </Alert>
-                </Grid>
+                <Alert severity="info">
+                  <Typography variant="body2" fontWeight="bold" gutterBottom>
+                    Análisis de IA disponible
+                  </Typography>
+                  <Typography variant="body2">
+                    Esta sesión cuenta con análisis automático generado por IA. 
+                    Confianza: {AIUtils.formatConfidence(session.aiAnalysis.confidence)}
+                  </Typography>
+                </Alert>
               )}
 
               {/* Indicador de procesamiento de IA */}
               {aiProcessing && (
-                <Grid item xs={12}>
-                  <Alert severity="info">
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <CircularProgress size={20} />
-                      <Typography variant="body2">
-                        Procesando análisis de IA... Esto puede tomar unos momentos.
-                      </Typography>
-                    </Box>
-                  </Alert>
-                </Grid>
+                <Alert severity="info">
+                  <Box display="flex" alignItems="center" gap={2}>
+                    <CircularProgress size={20} />
+                    <Typography variant="body2">
+                      Procesando análisis de IA... Esto puede tomar unos momentos.
+                    </Typography>
+                  </Box>
+                </Alert>
               )}
-            </Grid>
+            </Box>
           </DialogContent>
 
           <DialogActions>
