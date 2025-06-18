@@ -2,7 +2,6 @@
 
 import {
   Box,
-  Grid,
   Card,
   CardContent,
   Typography,
@@ -21,7 +20,6 @@ import {
   Psychology,
 } from '@mui/icons-material';
 import { useAuth } from '@/context/AuthContext';
-import { useRole } from '@/hooks/useRole';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
@@ -37,7 +35,7 @@ function StatCard({
   title: string;
   value: string | number;
   icon: React.ReactNode;
-  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
+  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info';
   trend?: string;
   subtitle?: string;
 }) {
@@ -101,7 +99,7 @@ function RecentSessions() {
     },
   ];
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): 'success' | 'warning' | 'info' | 'default' => {
     switch (status) {
       case 'completed': return 'success';
       case 'in-progress': return 'warning';
@@ -120,7 +118,7 @@ function RecentSessions() {
   };
 
   return (
-    <Card>
+    <Card sx={{ height: '100%' }}>
       <CardContent>
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
           <Typography variant="h6" fontWeight="bold">
@@ -153,7 +151,7 @@ function RecentSessions() {
                   <Chip
                     label={getStatusLabel(session.status)}
                     size="small"
-                    color={getStatusColor(session.status) as any}
+                    color={getStatusColor(session.status)}
                     variant="outlined"
                   />
                 </Box>
@@ -191,7 +189,7 @@ function RecentAlerts() {
   ];
 
   return (
-    <Card>
+    <Card sx={{ height: '100%' }}>
       <CardContent>
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
           <Typography variant="h6" fontWeight="bold">
@@ -234,7 +232,6 @@ function RecentAlerts() {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { role, isPsychologist, isAdmin } = useRole();
 
   return (
     <ProtectedRoute requiredRoles={['admin', 'psychologist']}>
@@ -251,65 +248,75 @@ export default function DashboardPage() {
           </Box>
 
           {/* Estadísticas principales */}
-          <Grid container spacing={3} mb={4}>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                title="Pacientes Activos"
-                value={24}
-                icon={<People />}
-                color="primary"
-                trend="+12% este mes"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                title="Sesiones Hoy"
-                value={8}
-                icon={<EventNote />}
-                color="success"
-                subtitle="3 completadas"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                title="Alertas Pendientes"
-                value={3}
-                icon={<Warning />}
-                color="warning"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                title="Progreso Mensual"
-                value="87%"
-                icon={<Psychology />}
-                color="info"
-                trend="+5% vs mes anterior"
-              />
-            </Grid>
-          </Grid>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 3, 
+              mb: 4,
+              '& > *': {
+                flex: '1 1 250px',
+                minWidth: '250px'
+              }
+            }}
+          >
+            <StatCard
+              title="Pacientes Activos"
+              value={24}
+              icon={<People />}
+              color="primary"
+              trend="+12% este mes"
+            />
+            <StatCard
+              title="Sesiones Hoy"
+              value={8}
+              icon={<EventNote />}
+              color="success"
+              subtitle="3 completadas"
+            />
+            <StatCard
+              title="Alertas Pendientes"
+              value={3}
+              icon={<Warning />}
+              color="warning"
+            />
+            <StatCard
+              title="Progreso Mensual"
+              value="87%"
+              icon={<Psychology />}
+              color="info"
+              trend="+5% vs mes anterior"
+            />
+          </Box>
 
           {/* Contenido principal */}
-          <Grid container spacing={3}>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 3,
+              alignItems: 'stretch'
+            }}
+          >
             {/* Sesiones de hoy */}
-            <Grid item xs={12} lg={8}>
+            <Box sx={{ flex: '2 1 500px', minWidth: '500px' }}>
               <RecentSessions />
-            </Grid>
+            </Box>
 
             {/* Alertas recientes */}
-            <Grid item xs={12} lg={4}>
+            <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
               <RecentAlerts />
-            </Grid>
+            </Box>
 
             {/* Gráfico de progreso semanal */}
-            <Grid item xs={12} md={6}>
-              <Card>
+            <Box sx={{ flex: '1 1 400px', minWidth: '400px' }}>
+              <Card sx={{ height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
                     Progreso Semanal
                   </Typography>
                   <Box mt={2}>
-                    {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day, index) => (
+                    {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day) => (
                       <Box key={day} display="flex" alignItems="center" mb={1}>
                         <Typography variant="body2" sx={{ minWidth: 40 }}>
                           {day}
@@ -329,11 +336,11 @@ export default function DashboardPage() {
                   </Box>
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
 
             {/* Próximas citas */}
-            <Grid item xs={12} md={6}>
-              <Card>
+            <Box sx={{ flex: '1 1 400px', minWidth: '400px' }}>
+              <Card sx={{ height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
                     Próximas Citas
@@ -368,8 +375,8 @@ export default function DashboardPage() {
                   </Box>
                 </CardContent>
               </Card>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Box>
       </DashboardLayout>
     </ProtectedRoute>

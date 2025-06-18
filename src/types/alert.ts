@@ -55,6 +55,7 @@ export interface Alert {
 }
 
 export interface AlertFormData {
+  trigger: string;
   patientId: string;
   type: AlertType;
   title: string;
