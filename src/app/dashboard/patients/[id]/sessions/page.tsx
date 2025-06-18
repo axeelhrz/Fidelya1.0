@@ -12,7 +12,6 @@ import {
   Link,
   Card,
   CardContent,
-  Grid,
   Chip,
   Avatar,
   Divider,
@@ -232,9 +231,18 @@ export default function PatientSessionsPage() {
           </Box>
 
           {/* Resumen del paciente */}
-          <Grid container spacing={3} mb={3}>
-            <Grid item xs={12} md={8}>
-              <Card>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 3, 
+              mb: 3,
+              alignItems: 'stretch'
+            }}
+          >
+            {/* Información principal del paciente */}
+            <Box sx={{ flex: '2 1 400px', minWidth: '400px' }}>
+              <Card sx={{ height: '100%' }}>
                 <CardContent>
                   <Box display="flex" alignItems="center" gap={2} mb={2}>
                     <Avatar sx={{ bgcolor: 'primary.main' }}>
@@ -250,38 +258,46 @@ export default function PatientSessionsPage() {
                   
                   <Divider sx={{ my: 2 }} />
                   
-                  <Grid container spacing={2}>
-                    <Grid item xs={4}>
+                  {/* Estadísticas del paciente */}
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-around',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <Box>
                       <Typography variant="h4" color="primary.main" fontWeight="bold">
                         {patientStats.total}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         Total de sesiones
                       </Typography>
-                    </Grid>
-                    <Grid item xs={4}>
+                    </Box>
+                    <Box>
                       <Typography variant="h4" color="success.main" fontWeight="bold">
                         {patientStats.completed}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         Completadas
                       </Typography>
-                    </Grid>
-                    <Grid item xs={4}>
+                    </Box>
+                    <Box>
                       <Typography variant="h4" color="secondary.main" fontWeight="bold">
                         {patientStats.withAI}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         Con análisis IA
                       </Typography>
-                    </Grid>
-                  </Grid>
+                    </Box>
+                  </Box>
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} md={4}>
-              <Card>
+            {/* Progreso emocional */}
+            <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+              <Card sx={{ height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
                     <TrendingUpIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
@@ -290,7 +306,7 @@ export default function PatientSessionsPage() {
                   
                   {patientStats.emotionalProgress.length > 0 ? (
                     <Box>
-                      {patientStats.emotionalProgress.map((session, index) => (
+                      {patientStats.emotionalProgress.map((session) => (
                         <Box key={session.id} display="flex" alignItems="center" gap={1} mb={1}>
                           <Box
                             sx={{
@@ -320,8 +336,8 @@ export default function PatientSessionsPage() {
                   )}
                 </CardContent>
               </Card>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           {/* Tabla de sesiones */}
           <SessionsTable
