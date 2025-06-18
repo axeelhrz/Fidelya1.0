@@ -7,7 +7,8 @@ import {
   Typography,
   Box,
   Chip,
-  useTheme
+  useTheme,
+  Skeleton,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -28,11 +29,11 @@ export default function DashboardCard({ card, loading = false }: DashboardCardPr
     if (!card.trend) return null;
     
     if (card.trend.value > 0) {
-      return <TrendingUp sx={{ color: theme.palette.success.main }} />;
+      return <TrendingUp sx={{ color: theme.palette.success.main, fontSize: 16 }} />;
     } else if (card.trend.value < 0) {
-      return <TrendingDown sx={{ color: theme.palette.error.main }} />;
+      return <TrendingDown sx={{ color: theme.palette.error.main, fontSize: 16 }} />;
     } else {
-      return <TrendingFlat sx={{ color: theme.palette.grey[500] }} />;
+      return <TrendingFlat sx={{ color: theme.palette.grey[500], fontSize: 16 }} />;
     }
   };
 
@@ -55,34 +56,13 @@ export default function DashboardCard({ card, loading = false }: DashboardCardPr
 
   if (loading) {
     return (
-      <Card sx={{ height: '100%', minHeight: 140 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Box 
-              sx={{ 
-                height: 20, 
-                bgcolor: 'grey.300', 
-                borderRadius: 1,
-                animation: 'pulse 1.5s ease-in-out infinite'
-              }} 
-            />
-            <Box 
-              sx={{ 
-                height: 32, 
-                bgcolor: 'grey.300', 
-                borderRadius: 1,
-                animation: 'pulse 1.5s ease-in-out infinite'
-              }} 
-            />
-            <Box 
-              sx={{ 
-                height: 16, 
-                bgcolor: 'grey.300', 
-                borderRadius: 1,
-                width: '60%',
-                animation: 'pulse 1.5s ease-in-out infinite'
-              }} 
-            />
+      <Card sx={{ height: 160, display: 'flex', flexDirection: 'column' }}>
+        <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
+          <Skeleton variant="text" width="80%" height={20} sx={{ mb: 1 }} />
+          <Skeleton variant="text" width="60%" height={32} sx={{ mb: 1 }} />
+          <Skeleton variant="text" width="70%" height={16} sx={{ mb: 1 }} />
+          <Box sx={{ mt: 'auto' }}>
+            <Skeleton variant="rounded" width={80} height={20} />
           </Box>
         </CardContent>
       </Card>
@@ -92,68 +72,83 @@ export default function DashboardCard({ card, loading = false }: DashboardCardPr
   return (
     <Card 
       sx={{ 
-        height: '100%', 
-        minHeight: 140,
+        height: 160,
+        display: 'flex',
+        flexDirection: 'column',
         borderLeft: `4px solid ${getCardColor()}`,
-        transition: 'all 0.3s ease',
+        transition: 'all 0.2s ease-in-out',
         '&:hover': {
           transform: 'translateY(-2px)',
           boxShadow: theme.shadows[4]
         }
       }}
     >
-      <CardContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {/* Título */}
-          <Typography 
-            variant="subtitle2" 
-            color="text.secondary"
-            sx={{ fontWeight: 500 }}
-          >
-            {card.title}
-          </Typography>
+      <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
+        {/* Título */}
+        <Typography 
+          variant="subtitle2" 
+          color="text.secondary"
+          sx={{ 
+            fontWeight: 500,
+            mb: 1,
+            fontSize: '0.75rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            lineHeight: 1.2,
+          }}
+        >
+          {card.title}
+        </Typography>
 
-          {/* Valor principal */}
+        {/* Valor principal */}
+        <Typography 
+          variant="h4" 
+          component="div"
+          sx={{ 
+            fontWeight: 700,
+            color: getCardColor(),
+            lineHeight: 1,
+            mb: 1,
+            fontSize: '1.75rem',
+          }}
+        >
+          {typeof card.value === 'number' ? card.value.toLocaleString() : card.value}
+        </Typography>
+
+        {/* Subtítulo */}
+        {card.subtitle && (
           <Typography 
-            variant="h4" 
-            component="div"
+            variant="caption" 
+            color="text.secondary"
             sx={{ 
-              fontWeight: 'bold',
-              color: getCardColor(),
-              lineHeight: 1.2
+              fontSize: '0.7rem',
+              lineHeight: 1.2,
+              mb: 'auto',
             }}
           >
-            {typeof card.value === 'number' ? card.value.toLocaleString() : card.value}
+            {card.subtitle}
           </Typography>
+        )}
 
-          {/* Subtítulo */}
-          {card.subtitle && (
-            <Typography 
-              variant="body2" 
-              color="text.secondary"
-              sx={{ fontSize: '0.875rem' }}
-            >
-              {card.subtitle}
-            </Typography>
-          )}
-
-          {/* Tendencia */}
-          {card.trend && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-              {getTrendIcon()}
-              <Chip
-                label={`${card.trend.value > 0 ? '+' : ''}${card.trend.value.toFixed(1)}%`}
-                size="small"
-                color={getTrendColor()}
-                variant="outlined"
-                sx={{ fontSize: '0.75rem', height: 24 }}
-              />
-              <Typography variant="caption" color="text.secondary">
-                vs {card.trend.period}
-              </Typography>
-            </Box>
-          )}
-        </Box>
+        {/* Tendencia */}
+        {card.trend && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1 }}>
+            {getTrendIcon()}
+            <Chip
+              label={`${card.trend.value > 0 ? '+' : ''}${card.trend.value.toFixed(1)}%`}
+              size="small"
+              color={getTrendColor()}
+              variant="outlined"
+              sx={{ 
+                fontSize: '0.65rem', 
+                height: 20,
+                '& .MuiChip-label': {
+                  px: 1,
+                }
+              }}
+            />
+          </Box>
+        )}
       </CardContent>
     </Card>
   );
