@@ -31,6 +31,7 @@ interface MotivesBarChartProps {
 
 interface ChartData {
   name: string;
+  fullName: string;
   value: number;
   percentage: number;
   color: string;
@@ -50,7 +51,7 @@ export default function MotivesBarChart({
     const total = Object.values(data).reduce((sum, value) => sum + value, 0);
     
     return Object.entries(data)
-      .filter(([_, value]) => value > 0)
+      .filter(([, value]) => value > 0)
       .map(([motive, value], index) => ({
         name: motive.length > 20 ? `${motive.substring(0, 20)}...` : motive,
         fullName: motive,
@@ -62,7 +63,7 @@ export default function MotivesBarChart({
       .slice(0, maxItems);
   }, [data, maxItems]);
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: ChartData }> }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

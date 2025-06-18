@@ -52,7 +52,7 @@ export default function SessionsLineChart({
     }));
   }, [data]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload}: { active?: boolean; payload?: Array<{ payload: { fullDate: string; value: number } }> }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
