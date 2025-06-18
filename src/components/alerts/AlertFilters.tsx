@@ -9,7 +9,6 @@ import {
   Select,
   MenuItem,
   Button,
-  Grid,
   Paper,
   Typography,
   Collapse,
@@ -32,13 +31,34 @@ import {
   AlertType,
   AlertUrgency,
   AlertStatus,
-  ALERT_TYPES,
-  ALERT_URGENCIES,
-  ALERT_STATUSES,
-  ALERT_TYPE_LABELS,
-  ALERT_URGENCY_LABELS,
-  ALERT_STATUS_LABELS,
 } from '@/types/alert';
+
+// Constants for alert types, urgencies, and statuses
+const ALERT_TYPES: AlertType[] = ['appointment', 'medication', 'followup', 'emergency', 'custom'];
+const ALERT_URGENCIES: AlertUrgency[] = ['low', 'medium', 'high', 'critical'];
+const ALERT_STATUSES: AlertStatus[] = ['active', 'resolved', 'cancelled', 'expired'];
+
+const ALERT_TYPE_LABELS: Record<AlertType, string> = {
+  appointment: 'Cita',
+  medication: 'Medicación',
+  followup: 'Seguimiento',
+  emergency: 'Emergencia',
+  custom: 'Personalizada',
+};
+
+const ALERT_URGENCY_LABELS: Record<AlertUrgency, string> = {
+  low: 'Baja',
+  medium: 'Media',
+  high: 'Alta',
+  critical: 'Crítica',
+};
+
+const ALERT_STATUS_LABELS: Record<AlertStatus, string> = {
+  active: 'Activa',
+  resolved: 'Resuelta',
+  cancelled: 'Cancelada',
+  expired: 'Expirada',
+};
 
 interface AlertFiltersProps {
   filters: AlertFilters;
@@ -53,23 +73,13 @@ export default function AlertFiltersComponent({
 }: AlertFiltersProps) {
   const [expanded, setExpanded] = useState(false);
 
-  const handleFilterChange = (key: keyof AlertFilters, value: any) => {
+  const handleFilterChange = (key: keyof AlertFilters, value: string | boolean | Date | null | undefined) => {
     onFiltersChange({
       ...filters,
       [key]: value,
     });
   };
 
-  const handleDateRangeChange = (field: 'start' | 'end', date: Date | null) => {
-    const dateRange = filters.dateRange || {};
-    onFiltersChange({
-      ...filters,
-      dateRange: {
-        ...dateRange,
-        [field]: date ? date.toISOString().split('T')[0] : undefined,
-      },
-    });
-  };
 
   const hasActiveFilters = Object.values(filters).some(value => {
     if (typeof value === 'object' && value !== null) {
@@ -107,111 +117,123 @@ export default function AlertFiltersComponent({
         </Box>
 
         {/* Filtros básicos siempre visibles */}
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              label="Buscar"
-              placeholder="Descripción, notas..."
-              value={filters.search || ''}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              size="small"
-            />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Estado</InputLabel>
-              <Select
-                value={filters.status || ''}
-                label="Estado"
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-              >
-                <MenuItem value="">Todos</MenuItem>
-                {ALERT_STATUSES.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {ALERT_STATUS_LABELS[status]}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Urgencia</InputLabel>
-              <Select
-                value={filters.urgency || ''}
-                label="Urgencia"
-                onChange={(e) => handleFilterChange('urgency', e.target.value)}
-              >
-                <MenuItem value="">Todas</MenuItem>
-                {ALERT_URGENCIES.map((urgency) => (
-                  <MenuItem key={urgency} value={urgency}>
-                    {ALERT_URGENCY_LABELS[urgency]}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: 2, 
+            mb: 2,
+            '& > *': {
+              flex: '1 1 250px',
+              minWidth: '250px'
+            }
+          }}
+        >
+          <TextField
+            label="Buscar"
+            placeholder="Descripción, notas..."
+            value={filters.search || ''}
+            onChange={(e) => handleFilterChange('search', e.target.value)}
+            size="small"
+          />
+          
+          <FormControl size="small">
+            <InputLabel>Estado</InputLabel>
+            <Select
+              value={filters.status || ''}
+              label="Estado"
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+            >
+              <MenuItem value="">Todos</MenuItem>
+              {ALERT_STATUSES.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {ALERT_STATUS_LABELS[status]}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
+          <FormControl size="small">
+            <InputLabel>Urgencia</InputLabel>
+            <Select
+              value={filters.urgency || ''}
+              label="Urgencia"
+              onChange={(e) => handleFilterChange('urgency', e.target.value)}
+            >
+              <MenuItem value="">Todas</MenuItem>
+              {ALERT_URGENCIES.map((urgency) => (
+                <MenuItem key={urgency} value={urgency}>
+                  {ALERT_URGENCY_LABELS[urgency]}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
 
         {/* Filtros avanzados colapsables */}
         <Collapse in={expanded}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Tipo de Alerta</InputLabel>
-                <Select
-                  value={filters.type || ''}
-                  label="Tipo de Alerta"
-                  onChange={(e) => handleFilterChange('type', e.target.value)}
-                >
-                  <MenuItem value="">Todos</MenuItem>
-                  {ALERT_TYPES.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {ALERT_TYPE_LABELS[type]}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 2,
+              alignItems: 'center',
+              '& > *': {
+                flex: '1 1 250px',
+                minWidth: '250px'
+              }
+            }}
+          >
+            <FormControl size="small">
+              <InputLabel>Tipo de Alerta</InputLabel>
+              <Select
+                value={filters.type || ''}
+                label="Tipo de Alerta"
+                onChange={(e) => handleFilterChange('type', e.target.value)}
+              >
+                <MenuItem value="">Todos</MenuItem>
+                {ALERT_TYPES.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {ALERT_TYPE_LABELS[type]}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 'auto' }}>
               <FormControlLabel
                 control={
                   <Switch
-                    checked={filters.autoGenerated || false}
-                    onChange={(e) => handleFilterChange('autoGenerated', e.target.checked)}
+                    checked={filters.isAutoGenerated || false}
+                    onChange={(e) => handleFilterChange('isAutoGenerated', e.target.checked)}
                   />
                 }
                 label="Solo alertas automáticas"
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <DatePicker
-                label="Fecha desde"
-                value={filters.dateRange?.start ? new Date(filters.dateRange.start) : null}
-                onChange={(date) => handleDateRangeChange('start', date)}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <DatePicker
-                label="Fecha hasta"
-                value={filters.dateRange?.end ? new Date(filters.dateRange.end) : null}
-                onChange={(date) => handleDateRangeChange('end', date)}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                  },
-                }}
-              />
-            </Grid>
-          </Grid>
+            </Box>
+
+            <DatePicker
+              label="Fecha desde"
+              value={filters.dateFrom ? new Date(filters.dateFrom) : null}
+              onChange={(date) => handleFilterChange('dateFrom', date)}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                },
+              }}
+            />
+
+            <DatePicker
+              label="Fecha hasta"
+              value={filters.dateTo ? new Date(filters.dateTo) : null}
+              onChange={(date) => handleFilterChange('dateTo', date)}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                },
+              }}
+            />
+          </Box>
         </Collapse>
       </Paper>
     </LocalizationProvider>

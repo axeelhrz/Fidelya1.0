@@ -123,7 +123,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             icon={item.icon}
             label={item.label}
             path={item.path}
-            badge={item.badge}
             onClick={() => isMobile && setMobileOpen(false)}
           />
         ))}

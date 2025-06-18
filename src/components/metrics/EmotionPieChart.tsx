@@ -35,6 +35,20 @@ interface ChartData {
   percentage: number;
 }
 
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    payload: ChartData;
+  }>;
+}
+
+interface LegendProps {
+  payload?: Array<{
+    value: string;
+    color: string;
+  }>;
+}
+
 export default function EmotionPieChart({ 
   data, 
   title, 
@@ -46,9 +60,8 @@ export default function EmotionPieChart({
   // Preparar datos para el gráfico
   const chartData: ChartData[] = React.useMemo(() => {
     const total = Object.values(data).reduce((sum, value) => sum + value, 0);
-    
     return Object.entries(data)
-      .filter(([_, value]) => value > 0)
+      .filter(([, value]) => value > 0)
       .map(([emotion, value]) => ({
         name: emotion,
         value,
@@ -60,7 +73,7 @@ export default function EmotionPieChart({
       .sort((a, b) => b.value - a.value);
   }, [data]);
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: TooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -89,9 +102,9 @@ export default function EmotionPieChart({
     return null;
   };
 
-  const CustomLegend = ({ payload }: any) => (
+  const CustomLegend = ({ payload }: LegendProps) => (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', mt: 2 }}>
-      {payload?.map((entry: any, index: number) => (
+      {payload?.map((entry: { value: string; color: string }, index: number) => (
         <Box
           key={index}
           sx={{
