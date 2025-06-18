@@ -2,8 +2,8 @@
 :root {
 /* Colores principales - FONDO MENOS NEGRO */
 --primary-bg: #1a1f2e;        /* Gris azulado oscuro en lugar de Negro */
---secondary-bg: #242938;      /* Gris azulado medio */
---accent-bg: #2d3748;         /* Gris azulado más claro */
+--secondary-bg: #242938;      /* Griz azulado medio */
+--accent-bg: #2d3748;         /* Griz azulado más claro */
 --glass-bg: rgba(26, 31, 46, 0.7);
 --glass-bg-light: rgba(255, 255, 255, 0.05);
 --glass-bg-medium: rgba(255, 255, 255, 0.08);
@@ -97,13 +97,17 @@
 --mobile-menu-width: 100vw;
 --mobile-menu-padding: 2rem;
 
-/* Variables específicas para el botón flotante mejorado */
+/* Variables específicas para el botón flotante mejorado con animaciones espectaculares */
 --floating-widget-z-index: 1001;
 --floating-main-size: 70px;
 --floating-item-size: 60px;
---floating-spacing: 16px;
---floating-animation-duration: 0.6s;
---floating-stagger-delay: 0.1s;
+--floating-spacing: 18px;
+--floating-animation-duration: 0.8s;
+--floating-stagger-delay: 0.12s;
+--floating-bounce-duration: 0.6s;
+--floating-explosion-duration: 1.2s;
+--floating-magnetic-distance: 120px;
+--floating-ripple-duration: 0.8s;
 }
 
 /* ===== RESET MEJORADO ===== */
@@ -3283,7 +3287,7 @@ var(--shadow-lg),
     letter-spacing: 1.5px;
 }
 
-/* ===== BOTÓN FLOTANTE FUTURISTA MEJORADO ===== */
+/* ===== BOTÓN FLOTANTE FUTURISTA CON ANIMACIONES ESPECTACULARES ===== */
 .floating-widget {
     position: fixed;
     bottom: var(--space-2xl);
@@ -3302,26 +3306,102 @@ var(--shadow-lg),
     gap: var(--floating-spacing);
 }
 
-/* ===== MENÚ DESPLEGABLE MEJORADO ===== */
+/* ===== EFECTOS DE FONDO PARA EL BOTÓN FLOTANTE ===== */
+.floating-widget::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, 
+        rgba(255, 69, 105, 0.1) 0%, 
+        rgba(255, 23, 68, 0.05) 40%, 
+        transparent 70%
+    );
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: all var(--floating-explosion-duration) cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(20px);
+}
+
+.floating-widget.explosion-active::before {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(2);
+    animation: floating-explosion-wave var(--floating-explosion-duration) ease-out;
+}
+
+/* ===== ONDAS DE ENERGÍA PARA ACTIVACIÓN ===== */
+.floating-widget::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100px;
+    height: 100px;
+    border: 2px solid var(--starflex-crimson-bright);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.floating-widget.ripple-active::after {
+    animation: floating-ripple-wave var(--floating-ripple-duration) ease-out;
+}
+
+/* ===== MENÚ DESPLEGABLE CON ANIMACIONES ESPECTACULARES ===== */
 .floating-widget__menu {
     display: flex;
     flex-direction: column;
     gap: var(--floating-spacing);
     opacity: 0;
     visibility: hidden;
-    transform: translateY(20px) scale(0.8);
+    transform: translateY(30px) scale(0.7) rotate(-15deg);
     transition: all var(--floating-animation-duration) cubic-bezier(0.34, 1.56, 0.64, 1);
     pointer-events: none;
+    position: relative;
 }
 
 .floating-widget__menu.active {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(1) rotate(0deg);
     pointer-events: auto;
 }
 
-/* ===== ELEMENTOS DEL MENÚ MEJORADOS ===== */
+/* ===== EFECTOS DE PARTÍCULAS PARA EL MENÚ ===== */
+.floating-widget__menu::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, 
+        rgba(255, 69, 105, 0.08) 0%, 
+        transparent 70%
+    );
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: all var(--floating-animation-duration) ease;
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(15px);
+}
+
+.floating-widget__menu.active::before {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.5);
+    animation: floating-menu-glow 3s ease-in-out infinite;
+}
+
+/* ===== ELEMENTOS DEL MENÚ CON ANIMACIONES AVANZADAS ===== */
 .floating-widget__menu-item {
     width: var(--floating-item-size);
     height: var(--floating-item-size);
@@ -3345,26 +3425,26 @@ var(--shadow-lg),
         var(--shadow-lg),
         0 0 0 1px rgba(255, 255, 255, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    transform: translateY(30px) scale(0.7);
+    transform: translateY(50px) scale(0.5) rotate(-20deg);
     opacity: 0;
     cursor: pointer;
     will-change: transform, opacity;
 }
 
-/* Animación escalonada para los elementos del menú */
+/* ===== ANIMACIONES ESCALONADAS ESPECTACULARES ===== */
 .floating-widget__menu.active .floating-widget__menu-item:nth-child(1) {
-    animation: floating-item-appear var(--floating-animation-duration) cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--floating-stagger-delay) * 1) forwards;
+    animation: floating-item-spectacular-appear var(--floating-animation-duration) cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--floating-stagger-delay) * 1) forwards;
 }
 
 .floating-widget__menu.active .floating-widget__menu-item:nth-child(2) {
-    animation: floating-item-appear var(--floating-animation-duration) cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--floating-stagger-delay) * 2) forwards;
+    animation: floating-item-spectacular-appear var(--floating-animation-duration) cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--floating-stagger-delay) * 2) forwards;
 }
 
 .floating-widget__menu.active .floating-widget__menu-item:nth-child(3) {
-    animation: floating-item-appear var(--floating-animation-duration) cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--floating-stagger-delay) * 3) forwards;
+    animation: floating-item-spectacular-appear var(--floating-animation-duration) cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--floating-stagger-delay) * 3) forwards;
 }
 
-/* Efectos de brillo para cada elemento */
+/* ===== EFECTOS DE BRILLO Y ENERGÍA ===== */
 .floating-widget__menu-item::before {
     content: '';
     position: absolute;
@@ -3374,7 +3454,7 @@ var(--shadow-lg),
     height: 100%;
     background: linear-gradient(90deg, 
         transparent, 
-        rgba(255, 255, 255, 0.15), 
+        rgba(255, 255, 255, 0.2), 
         transparent
     );
     transition: left 0.8s ease;
@@ -3384,29 +3464,34 @@ var(--shadow-lg),
 .floating-widget__menu-item::after {
     content: '';
     position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
     background: linear-gradient(45deg, 
         transparent, 
-        rgba(255, 69, 105, 0.3), 
+        rgba(255, 69, 105, 0.4), 
+        transparent,
+        rgba(255, 69, 105, 0.4),
         transparent
     );
+    background-size: 200% 200%;
     border-radius: 50%;
     opacity: 0;
     transition: opacity 0.4s ease;
     z-index: -1;
+    animation: floating-item-energy-flow 3s linear infinite;
 }
 
+/* ===== ESTADOS DE HOVER ESPECTACULARES ===== */
 .floating-widget__menu-item:hover {
-    transform: translateY(-5px) scale(1.15);
+    transform: translateY(-8px) scale(1.2) rotate(10deg);
     border-color: var(--border-accent);
     box-shadow: 
         var(--shadow-xl),
-        0 0 30px rgba(255, 69, 105, 0.3),
-        0 0 60px rgba(255, 69, 105, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        0 0 40px rgba(255, 69, 105, 0.4),
+        0 0 80px rgba(255, 69, 105, 0.2),
+        inset 0 2px 0 rgba(255, 255, 255, 0.3);
     background: linear-gradient(135deg, 
         rgba(36, 41, 56, 0.98) 0%, 
         rgba(45, 55, 72, 0.98) 100%
@@ -3422,69 +3507,78 @@ var(--shadow-lg),
 }
 
 .floating-widget__menu-item:active {
-    transform: translateY(-3px) scale(1.05);
+    transform: translateY(-5px) scale(1.1) rotate(5deg);
+    animation: floating-item-click-burst 0.3s ease-out;
 }
 
-/* ===== ESTILOS ESPECÍFICOS PARA WHATSAPP ===== */
+/* ===== ESTILOS ESPECÍFICOS PARA WHATSAPP CON EFECTOS ===== */
 .floating-widget__whatsapp:hover {
-    border-color: rgba(37, 211, 102, 0.6);
+    border-color: rgba(37, 211, 102, 0.7);
     box-shadow: 
         var(--shadow-xl),
-        0 0 30px rgba(37, 211, 102, 0.4),
-        0 0 60px rgba(37, 211, 102, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        0 0 40px rgba(37, 211, 102, 0.5),
+        0 0 80px rgba(37, 211, 102, 0.3),
+        inset 0 2px 0 rgba(255, 255, 255, 0.3);
 }
 
 .floating-widget__whatsapp:hover .floating-widget__icon {
     color: #25d366;
-    filter: drop-shadow(0 0 10px rgba(37, 211, 102, 0.5));
+    filter: drop-shadow(0 0 15px rgba(37, 211, 102, 0.7));
+    animation: floating-icon-pulse 1s ease-in-out infinite;
 }
 
 .floating-widget__whatsapp::after {
     background: linear-gradient(45deg, 
         transparent, 
-        rgba(37, 211, 102, 0.3), 
+        rgba(37, 211, 102, 0.4), 
+        transparent,
+        rgba(37, 211, 102, 0.4),
         transparent
     );
 }
 
-/* ===== ESTILOS ESPECÍFICOS PARA TELEGRAM ===== */
+/* ===== ESTILOS ESPECÍFICOS PARA TELEGRAM CON EFECTOS ===== */
 .floating-widget__telegram:hover {
-    border-color: rgba(0, 136, 204, 0.6);
+    border-color: rgba(0, 136, 204, 0.7);
     box-shadow: 
         var(--shadow-xl),
-        0 0 30px rgba(0, 136, 204, 0.4),
-        0 0 60px rgba(0, 136, 204, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        0 0 40px rgba(0, 136, 204, 0.5),
+        0 0 80px rgba(0, 136, 204, 0.3),
+        inset 0 2px 0 rgba(255, 255, 255, 0.3);
 }
 
 .floating-widget__telegram:hover .floating-widget__icon {
     color: #0088cc;
-    filter: drop-shadow(0 0 10px rgba(0, 136, 204, 0.5));
+    filter: drop-shadow(0 0 15px rgba(0, 136, 204, 0.7));
+    animation: floating-icon-pulse 1s ease-in-out infinite;
 }
 
 .floating-widget__telegram::after {
     background: linear-gradient(45deg, 
         transparent, 
-        rgba(0, 136, 204, 0.3), 
+        rgba(0, 136, 204, 0.4), 
+        transparent,
+        rgba(0, 136, 204, 0.4),
         transparent
     );
 }
 
-/* ===== ICONOS MEJORADOS ===== */
+/* ===== ICONOS CON EFECTOS MEJORADOS ===== */
 .floating-widget__icon {
     width: 26px;
     height: 26px;
     transition: all var(--transition);
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    position: relative;
+    z-index: 2;
 }
 
-/* ===== TOOLTIPS MEJORADOS ===== */
+/* ===== TOOLTIPS CON ANIMACIONES ESPECTACULARES ===== */
 .floating-widget__tooltip {
     position: absolute;
-    right: calc(100% + 15px);
+    right: calc(100% + 20px);
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%) translateX(20px);
     background: linear-gradient(135deg, 
         var(--primary-bg) 0%, 
         var(--secondary-bg) 100%
@@ -3501,13 +3595,30 @@ var(--shadow-lg),
     border: 1px solid var(--border-subtle);
     box-shadow: 
         var(--shadow-lg),
-        0 0 20px rgba(0, 0, 0, 0.3);
+        0 0 25px rgba(0, 0, 0, 0.4);
     z-index: calc(var(--floating-widget-z-index) + 1);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.floating-widget__tooltip::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.1), 
+        transparent
+    );
+    transition: left 0.6s ease;
 }
 
 .floating-widget__tooltip::after {
@@ -3524,10 +3635,15 @@ var(--shadow-lg),
 .floating-widget__menu-item:hover .floating-widget__tooltip {
     opacity: 1;
     visibility: visible;
-    transform: translateY(-50%) translateX(-8px);
+    transform: translateY(-50%) translateX(0);
+    animation: floating-tooltip-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ===== BOTÓN PRINCIPAL MEJORADO ===== */
+.floating-widget__menu-item:hover .floating-widget__tooltip::before {
+    left: 100%;
+}
+
+/* ===== BOTÓN PRINCIPAL CON ANIMACIONES ULTRA ESPECTACULARES ===== */
 .floating-widget__main-btn {
     width: var(--floating-main-size);
     height: var(--floating-main-size);
@@ -3550,33 +3666,34 @@ var(--shadow-lg),
         var(--neon-crimson),
         0 0 0 2px rgba(255, 255, 255, 0.1),
         inset 0 2px 0 rgba(255, 255, 255, 0.2);
-    animation: floating-main-pulse 4s ease-in-out infinite;
+    animation: floating-main-spectacular-pulse 4s ease-in-out infinite;
     will-change: transform;
     z-index: 2;
 }
 
-/* Anillo exterior animado */
+/* ===== ANILLOS MÚLTIPLES ANIMADOS ===== */
 .floating-widget__main-btn::before {
     content: '';
     position: absolute;
-    top: -4px;
-    left: -4px;
-    right: -4px;
-    bottom: -4px;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
     background: linear-gradient(45deg, 
         var(--starflex-crimson-glow), 
         var(--starflex-crimson-bright), 
         var(--starflex-crimson-glow),
         var(--starflex-crimson-bright)
     );
+    background-size: 200% 200%;
     border-radius: 50%;
     z-index: -1;
     opacity: 0;
     transition: opacity 0.4s ease;
-    animation: floating-ring-pulse 4s ease-in-out infinite;
+    animation: floating-main-energy-ring 4s ease-in-out infinite;
 }
 
-/* Efecto de brillo interno */
+/* ===== EFECTO DE BRILLO INTERNO MEJORADO ===== */
 .floating-widget__main-btn::after {
     content: '';
     position: absolute;
@@ -3586,25 +3703,28 @@ var(--shadow-lg),
     height: 100%;
     background: linear-gradient(90deg, 
         transparent, 
-        rgba(255, 255, 255, 0.3), 
+        rgba(255, 255, 255, 0.4), 
         transparent
     );
     transition: left 0.8s ease;
     border-radius: 50%;
 }
 
+/* ===== ESTADOS DE HOVER ULTRA ESPECTACULARES ===== */
 .floating-widget__main-btn:hover {
-    transform: scale(1.15) rotate(5deg);
+    transform: scale(1.2) rotate(10deg);
     box-shadow: 
         var(--shadow-crimson-hover),
         var(--neon-crimson-strong),
         var(--neon-crimson-ultra),
-        0 0 0 3px rgba(255, 255, 255, 0.15),
-        inset 0 2px 0 rgba(255, 255, 255, 0.3);
+        0 0 0 4px rgba(255, 255, 255, 0.2),
+        inset 0 3px 0 rgba(255, 255, 255, 0.4);
+    animation: floating-main-hover-burst 0.6s ease-out;
 }
 
 .floating-widget__main-btn:hover::before {
     opacity: 1;
+    animation: floating-main-hover-ring 1s ease-out infinite;
 }
 
 .floating-widget__main-btn:hover::after {
@@ -3612,12 +3732,13 @@ var(--shadow-lg),
 }
 
 .floating-widget__main-btn:active {
-    transform: scale(1.05) rotate(2deg);
+    transform: scale(1.1) rotate(5deg);
+    animation: floating-main-click-explosion 0.4s ease-out;
 }
 
-/* Estado activo del botón principal */
+/* ===== ESTADO ACTIVO CON TRANSFORMACIÓN ESPECTACULAR ===== */
 .floating-widget__main-btn.active {
-    transform: rotate(45deg) scale(1.1);
+    transform: rotate(135deg) scale(1.15);
     background: linear-gradient(135deg, 
         var(--starflex-blue) 0%, 
         var(--starflex-cyan) 50%,
@@ -3625,31 +3746,55 @@ var(--shadow-lg),
     );
     box-shadow: 
         var(--shadow-lg),
-        0 0 30px rgba(0, 212, 255, 0.4),
-        0 0 60px rgba(0, 212, 255, 0.2),
-        0 0 0 2px rgba(255, 255, 255, 0.15),
-        inset 0 2px 0 rgba(255, 255, 255, 0.3);
+        0 0 40px rgba(0, 212, 255, 0.5),
+        0 0 80px rgba(0, 212, 255, 0.3),
+        0 0 0 3px rgba(255, 255, 255, 0.2),
+        inset 0 3px 0 rgba(255, 255, 255, 0.4);
+    animation: floating-main-active-transformation 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .floating-widget__main-btn.active::before {
     background: linear-gradient(45deg, 
-        rgba(0, 212, 255, 0.6), 
-        rgba(59, 130, 246, 0.6), 
-        rgba(0, 212, 255, 0.6),
-        rgba(59, 130, 246, 0.6)
+        rgba(0, 212, 255, 0.7), 
+        rgba(59, 130, 246, 0.7), 
+        rgba(0, 212, 255, 0.7),
+        rgba(59, 130, 246, 0.7)
     );
     opacity: 1;
+    animation: floating-main-active-ring 2s ease-in-out infinite;
 }
 
-/* ===== ANIMACIONES MEJORADAS ===== */
-@keyframes floating-item-appear {
+/* ===== ICONO PRINCIPAL CON ANIMACIONES ===== */
+.floating-widget__main-icon {
+    width: 28px;
+    height: 28px;
+    transition: all var(--transition);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    position: relative;
+    z-index: 2;
+}
+
+.floating-widget__main-btn.active .floating-widget__main-icon {
+    transform: rotate(-135deg);
+    color: white;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+}
+
+/* ===== ANIMACIONES ESPECTACULARES PARA EL BOTÓN FLOTANTE ===== */
+
+/* Animación de aparición espectacular de elementos del menú */
+@keyframes floating-item-spectacular-appear {
     0% {
         opacity: 0;
-        transform: translateY(30px) scale(0.7) rotate(-10deg);
+        transform: translateY(50px) scale(0.5) rotate(-20deg);
     }
-    50% {
-        opacity: 0.8;
-        transform: translateY(-5px) scale(1.05) rotate(2deg);
+    30% {
+        opacity: 0.7;
+        transform: translateY(-10px) scale(1.1) rotate(5deg);
+    }
+    60% {
+        opacity: 0.9;
+        transform: translateY(5px) scale(0.95) rotate(-2deg);
     }
     100% {
         opacity: 1;
@@ -3657,7 +3802,8 @@ var(--shadow-lg),
     }
 }
 
-@keyframes floating-main-pulse {
+/* Pulso espectacular del botón principal */
+@keyframes floating-main-spectacular-pulse {
     0%, 100% {
         transform: scale(1);
         box-shadow: 
@@ -3667,32 +3813,185 @@ var(--shadow-lg),
             inset 0 2px 0 rgba(255, 255, 255, 0.2);
     }
     50% {
-        transform: scale(1.05);
+        transform: scale(1.08);
         box-shadow: 
             var(--shadow-crimson-hover),
             var(--neon-crimson-strong),
-            0 0 0 3px rgba(255, 255, 255, 0.15),
-            inset 0 2px 0 rgba(255, 255, 255, 0.25);
+            0 0 0 4px rgba(255, 255, 255, 0.15),
+            inset 0 3px 0 rgba(255, 255, 255, 0.3);
     }
 }
 
-@keyframes floating-ring-pulse {
+/* Anillo de energía del botón principal */
+@keyframes floating-main-energy-ring {
     0%, 100% {
-        transform: scale(1);
+        transform: scale(1) rotate(0deg);
         opacity: 0.3;
     }
     50% {
-        transform: scale(1.2);
-        opacity: 0.7;
+        transform: scale(1.3) rotate(180deg);
+        opacity: 0.8;
     }
 }
 
-/* ===== RESPONSIVE PARA BOTÓN FLOTANTE ===== */
+/* Explosión de hover del botón principal */
+@keyframes floating-main-hover-burst {
+    0% {
+        transform: scale(1.2) rotate(10deg);
+    }
+    50% {
+        transform: scale(1.3) rotate(15deg);
+    }
+    100% {
+        transform: scale(1.2) rotate(10deg);
+    }
+}
+
+/* Anillo de hover del botón principal */
+@keyframes floating-main-hover-ring {
+    0% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Explosión de click del botón principal */
+@keyframes floating-main-click-explosion {
+    0% {
+        transform: scale(1.1) rotate(5deg);
+    }
+    50% {
+        transform: scale(1.25) rotate(8deg);
+        box-shadow: 
+            var(--shadow-crimson-hover),
+            var(--neon-crimson-ultra),
+            0 0 60px rgba(255, 69, 105, 0.8);
+    }
+    100% {
+        transform: scale(1.1) rotate(5deg);
+    }
+}
+
+/* Transformación activa del botón principal */
+@keyframes floating-main-active-transformation {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+    50% {
+        transform: rotate(180deg) scale(1.2);
+    }
+    100% {
+        transform: rotate(135deg) scale(1.15);
+    }
+}
+
+/* Anillo activo del botón principal */
+@keyframes floating-main-active-ring {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.4) rotate(180deg);
+        opacity: 1;
+    }
+}
+
+/* Flujo de energía en elementos del menú */
+@keyframes floating-item-energy-flow {
+    0% {
+        background-position: 0% 0%;
+    }
+    100% {
+        background-position: 200% 200%;
+    }
+}
+
+/* Explosión de click en elementos del menú */
+@keyframes floating-item-click-burst {
+    0% {
+        transform: translateY(-5px) scale(1.1) rotate(5deg);
+    }
+    50% {
+        transform: translateY(-12px) scale(1.3) rotate(10deg);
+        box-shadow: 
+            var(--shadow-xl),
+            0 0 50px rgba(255, 69, 105, 0.6);
+    }
+    100% {
+        transform: translateY(-5px) scale(1.1) rotate(5deg);
+    }
+}
+
+/* Pulso de iconos */
+@keyframes floating-icon-pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Aparición de tooltip */
+@keyframes floating-tooltip-appear {
+    0% {
+        opacity: 0;
+        transform: translateY(-50%) translateX(20px) scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0) scale(1);
+    }
+}
+
+/* Brillo del menú */
+@keyframes floating-menu-glow {
+    0%, 100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.5);
+    }
+    50% {
+        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(1.8);
+    }
+}
+
+/* Onda de explosión */
+@keyframes floating-explosion-wave {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(2);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(4);
+    }
+}
+
+/* Onda de ondulación */
+@keyframes floating-ripple-wave {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(3);
+    }
+}
+
+/* ===== RESPONSIVE PARA BOTÓN FLOTANTE CON ANIMACIONES ===== */
 @media (max-width: 1024px) {
     :root {
         --floating-main-size: 64px;
         --floating-item-size: 56px;
-        --floating-spacing: 14px;
+        --floating-spacing: 16px;
+        --floating-animation-duration: 0.7s;
     }
 
     .floating-widget {
@@ -3701,8 +4000,8 @@ var(--shadow-lg),
     }
 
     .floating-widget__main-icon {
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
     }
 
     .floating-widget__icon {
@@ -3720,7 +4019,8 @@ var(--shadow-lg),
     :root {
         --floating-main-size: 60px;
         --floating-item-size: 52px;
-        --floating-spacing: 12px;
+        --floating-spacing: 14px;
+        --floating-animation-duration: 0.6s;
     }
 
     .floating-widget {
@@ -3729,8 +4029,8 @@ var(--shadow-lg),
     }
 
     .floating-widget__main-icon {
-        width: 26px;
-        height: 26px;
+        width: 24px;
+        height: 24px;
     }
 
     .floating-widget__icon {
@@ -3740,7 +4040,7 @@ var(--shadow-lg),
 
     .floating-widget__tooltip {
         font-size: 0.75rem;
-        right: calc(100% + 12px);
+        right: calc(100% + 15px);
     }
 }
 
@@ -3748,7 +4048,8 @@ var(--shadow-lg),
     :root {
         --floating-main-size: 56px;
         --floating-item-size: 48px;
-        --floating-spacing: 10px;
+        --floating-spacing: 12px;
+        --floating-animation-duration: 0.5s;
     }
 
     .floating-widget {
@@ -3757,8 +4058,8 @@ var(--shadow-lg),
     }
 
     .floating-widget__main-icon {
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 22px;
     }
 
     .floating-widget__icon {
@@ -3768,7 +4069,7 @@ var(--shadow-lg),
 
     .floating-widget__tooltip {
         font-size: 0.7rem;
-        right: calc(100% + 10px);
+        right: calc(100% + 12px);
         padding: 6px 8px;
     }
 
@@ -4123,7 +4424,7 @@ opacity: 0.4;
 }
 }
 
-@keyframes contact-glow-line {
+@keyframes crimson-glow-line {
 0%, 100% {
 opacity: 0.8;
 transform: translateX(-50%) scaleX(1);
@@ -4387,6 +4688,7 @@ transition-duration: 0.01ms !important;
 
 .hero__phone-video,
 .floating-widget__main-btn,
+.floating-widget__menu-item,
 .contact__orb,
 .faq__item,
 .contact__channel {
