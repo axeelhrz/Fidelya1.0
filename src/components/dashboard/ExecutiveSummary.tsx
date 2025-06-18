@@ -109,43 +109,51 @@ export default function ExecutiveSummary({ metrics, comparison, loading = false 
           />
         </Box>
 
-        <Grid container spacing={3}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* Puntuación general del centro */}
-          <Grid item xs={12}>
-            <Box sx={{ mb: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="subtitle1" fontWeight="medium">
-                  Puntuación General del Centro
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Star sx={{ color: getScoreColor(centerEfficiencyScore), fontSize: 20 }} />
-                  <Typography variant="h6" sx={{ color: getScoreColor(centerEfficiencyScore) }}>
-                    {centerEfficiencyScore.toFixed(0)}/100
-                  </Typography>
-                </Box>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={centerEfficiencyScore}
-                sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  bgcolor: alpha(getScoreColor(centerEfficiencyScore), 0.1),
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: getScoreColor(centerEfficiencyScore),
-                    borderRadius: 4
-                  }
-                }}
-              />
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                {getScoreLabel(centerEfficiencyScore)}
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="subtitle1" fontWeight="medium">
+                Puntuación General del Centro
               </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Star sx={{ color: getScoreColor(centerEfficiencyScore), fontSize: 20 }} />
+                <Typography variant="h6" sx={{ color: getScoreColor(centerEfficiencyScore) }}>
+                  {centerEfficiencyScore.toFixed(0)}/100
+                </Typography>
+              </Box>
             </Box>
-          </Grid>
+            <LinearProgress
+              variant="determinate"
+              value={centerEfficiencyScore}
+              sx={{
+                height: 8,
+                borderRadius: 4,
+                bgcolor: alpha(getScoreColor(centerEfficiencyScore), 0.1),
+                '& .MuiLinearProgress-bar': {
+                  bgcolor: getScoreColor(centerEfficiencyScore),
+                  borderRadius: 4
+                }
+              }}
+            />
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+              {getScoreLabel(centerEfficiencyScore)}
+            </Typography>
+          </Box>
 
           {/* Métricas clave */}
-          <Grid item xs={12} sm={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 2,
+              '& > *': {
+                flex: '1 1 250px',
+                minWidth: '250px'
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', mr: 2 }}>
                 <People />
               </Avatar>
@@ -164,10 +172,8 @@ export default function ExecutiveSummary({ metrics, comparison, loading = false 
                 </Box>
               </Box>
             </Box>
-          </Grid>
 
-          <Grid item xs={12} sm={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Avatar sx={{ bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', mr: 2 }}>
                 <EventNote />
               </Avatar>
@@ -186,86 +192,80 @@ export default function ExecutiveSummary({ metrics, comparison, loading = false 
                 </Box>
               </Box>
             </Box>
-          </Grid>
+          </Box>
 
           {/* Tasa de compromiso del paciente */}
-          <Grid item xs={12}>
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="subtitle2">Compromiso del Paciente</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {patientEngagementScore.toFixed(1)}%
-                </Typography>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={patientEngagementScore}
-                sx={{
-                  height: 6,
-                  borderRadius: 3,
-                  bgcolor: alpha(theme.palette.info.main, 0.1),
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: theme.palette.info.main,
-                    borderRadius: 3
-                  }
-                }}
-              />
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="subtitle2">Compromiso del Paciente</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {patientEngagementScore.toFixed(1)}%
+              </Typography>
             </Box>
-          </Grid>
+            <LinearProgress
+              variant="determinate"
+              value={patientEngagementScore}
+              sx={{
+                height: 6,
+                borderRadius: 3,
+                bgcolor: alpha(theme.palette.info.main, 0.1),
+                '& .MuiLinearProgress-bar': {
+                  bgcolor: theme.palette.info.main,
+                  borderRadius: 3
+                }
+              }}
+            />
+          </Box>
 
           {/* Tasa de seguimiento */}
-          <Grid item xs={12}>
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="subtitle2">Tasa de Seguimiento</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    {metrics.followUpRate.toFixed(1)}%
-                  </Typography>
-                  {comparison && (
-                    <>
-                      {getTrendIcon(comparison.followUpRate.change)}
-                      <Typography variant="caption" color="text.secondary">
-                        {comparison.followUpRate.change > 0 ? '+' : ''}{comparison.followUpRate.change.toFixed(1)}%
-                      </Typography>
-                    </>
-                  )}
-                </Box>
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="subtitle2">Tasa de Seguimiento</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {metrics.followUpRate.toFixed(1)}%
+                </Typography>
+                {comparison && (
+                  <>
+                    {getTrendIcon(comparison.followUpRate.change)}
+                    <Typography variant="caption" color="text.secondary">
+                      {comparison.followUpRate.change > 0 ? '+' : ''}{comparison.followUpRate.change.toFixed(1)}%
+                    </Typography>
+                  </>
+                )}
               </Box>
-              <LinearProgress
-                variant="determinate"
-                value={metrics.followUpRate}
-                sx={{
-                  height: 6,
-                  borderRadius: 3,
-                  bgcolor: alpha(theme.palette.secondary.main, 0.1),
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: theme.palette.secondary.main,
-                    borderRadius: 3
-                  }
-                }}
-              />
             </Box>
-          </Grid>
+            <LinearProgress
+              variant="determinate"
+              value={metrics.followUpRate}
+              sx={{
+                height: 6,
+                borderRadius: 3,
+                bgcolor: alpha(theme.palette.secondary.main, 0.1),
+                '& .MuiLinearProgress-bar': {
+                  bgcolor: theme.palette.secondary.main,
+                  borderRadius: 3
+                }
+              }}
+            />
+          </Box>
 
           {/* Tiempo promedio entre sesiones */}
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Avatar sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1), color: 'warning.main', mr: 2 }}>
-                <Psychology />
-              </Avatar>
-              <Box>
-                <Typography variant="subtitle2">Tiempo Promedio Entre Sesiones</Typography>
-                <Typography variant="h6">
-                  {metrics.averageTimeBetweenSessions.toFixed(0)} días
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Promedio de {metrics.averageSessionsPerPatient.toFixed(1)} sesiones por paciente
-                </Typography>
-              </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1), color: 'warning.main', mr: 2 }}>
+              <Psychology />
+            </Avatar>
+            <Box>
+              <Typography variant="subtitle2">Tiempo Promedio Entre Sesiones</Typography>
+              <Typography variant="h6">
+                {metrics.averageTimeBetweenSessions.toFixed(0)} días
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Promedio de {metrics.averageSessionsPerPatient.toFixed(1)} sesiones por paciente
+              </Typography>
             </Box>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </CardContent>
     </Card>
   );
