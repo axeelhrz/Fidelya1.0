@@ -8,7 +8,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Grid,
   Paper,
   Typography,
   Collapse,
@@ -43,7 +42,7 @@ export default function PatientFiltersComponent({
     setLocalFilters(filters);
   }, [filters]);
 
-  const handleFilterChange = (key: keyof PatientFilters, value: any) => {
+  const handleFilterChange = (key: keyof PatientFilters, value: PatientFilters[keyof PatientFilters]) => {
     const newFilters = { ...localFilters, [key]: value };
     setLocalFilters(newFilters);
     onFiltersChange(newFilters);
@@ -120,9 +119,20 @@ export default function PatientFiltersComponent({
 
       {/* Filtros avanzados - colapsables */}
       <Collapse in={expanded}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* Primera fila de filtros */}
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 2,
+              '& > *': {
+                flex: '1 1 200px',
+                minWidth: '200px'
+              }
+            }}
+          >
+            <FormControl>
               <InputLabel>Género</InputLabel>
               <Select
                 value={localFilters.gender || ''}
@@ -137,10 +147,8 @@ export default function PatientFiltersComponent({
                 ))}
               </Select>
             </FormControl>
-          </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth>
+            <FormControl>
               <InputLabel>Estado Emocional</InputLabel>
               <Select
                 value={localFilters.emotionalState || ''}
@@ -155,10 +163,8 @@ export default function PatientFiltersComponent({
                 ))}
               </Select>
             </FormControl>
-          </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth>
+            <FormControl>
               <InputLabel>Psicólogo Asignado</InputLabel>
               <Select
                 value={localFilters.assignedPsychologist || ''}
@@ -173,10 +179,8 @@ export default function PatientFiltersComponent({
                 ))}
               </Select>
             </FormControl>
-          </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth>
+            <FormControl>
               <InputLabel>Estado</InputLabel>
               <Select
                 value={localFilters.status || ''}
@@ -189,30 +193,37 @@ export default function PatientFiltersComponent({
                 <MenuItem value="discharged">Dado de alta</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
+          </Box>
 
-          <Grid item xs={12} sm={6} md={3}>
+          {/* Segunda fila - Rango de edad */}
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 2,
+              '& > *': {
+                flex: '1 1 200px',
+                minWidth: '200px'
+              }
+            }}
+          >
             <TextField
-              fullWidth
               label="Edad mínima"
               type="number"
               value={localFilters.ageRange?.min || ''}
               onChange={(e) => handleAgeRangeChange('min', e.target.value)}
               inputProps={{ min: 0, max: 120 }}
             />
-          </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
             <TextField
-              fullWidth
               label="Edad máxima"
               type="number"
               value={localFilters.ageRange?.max || ''}
               onChange={(e) => handleAgeRangeChange('max', e.target.value)}
               inputProps={{ min: 0, max: 120 }}
             />
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Collapse>
     </Paper>
   );
