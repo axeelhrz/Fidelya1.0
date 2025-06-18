@@ -7,7 +7,6 @@ import {
   Button,
   Card,
   CardContent,
-  Grid,
   Alert,
   Dialog,
   DialogTitle,
@@ -154,7 +153,7 @@ export default function PatientsPage() {
         severity: 'success'
       });
       refresh();
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al eliminar el paciente',
@@ -185,7 +184,7 @@ export default function PatientsPage() {
         patient.emotionalState,
         `"${patient.motivoConsulta}"`,
         psychologists.find(p => p.uid === patient.assignedPsychologist)?.displayName || '',
-        new Date(patient.createdAt).toLocaleDateString()
+        (patient.createdAt instanceof Date ? patient.createdAt : patient.createdAt.toDate()).toLocaleDateString()
       ].join(','))
     ].join('\n');
 
@@ -233,41 +232,44 @@ export default function PatientsPage() {
           </Box>
 
           {/* Estadísticas */}
-          <Grid container spacing={3} mb={4}>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                title="Total Pacientes"
-                value={statsLoading ? '...' : stats?.total || 0}
-                icon={<People />}
-                color="primary"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                title="Pacientes Activos"
-                value={statsLoading ? '...' : stats?.active || 0}
-                icon={<TrendingUp />}
-                color="success"
-                subtitle={`${Math.round(((stats?.active || 0) / (stats?.total || 1)) * 100)}% del total`}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                title="Psicólogos"
-                value={psychologists.length}
-                icon={<Psychology />}
-                color="secondary"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                title="Edad Promedio"
-                value={statsLoading ? '...' : `${stats?.averageAge || 0} años`}
-                icon={<Warning />}
-                color="warning"
-              />
-            </Grid>
-          </Grid>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 3, 
+              mb: 4,
+              '& > *': {
+                flex: '1 1 250px',
+                minWidth: '250px'
+              }
+            }}
+          >
+            <StatCard
+              title="Total Pacientes"
+              value={statsLoading ? '...' : stats?.total || 0}
+              icon={<People />}
+              color="primary"
+            />
+            <StatCard
+              title="Pacientes Activos"
+              value={statsLoading ? '...' : stats?.active || 0}
+              icon={<TrendingUp />}
+              color="success"
+              subtitle={`${Math.round(((stats?.active || 0) / (stats?.total || 1)) * 100)}% del total`}
+            />
+            <StatCard
+              title="Psicólogos"
+              value={psychologists.length}
+              icon={<Psychology />}
+              color="secondary"
+            />
+            <StatCard
+              title="Edad Promedio"
+              value={statsLoading ? '...' : `${stats?.averageAge || 0} años`}
+              icon={<Warning />}
+              color="warning"
+            />
+          </Box>
 
           {/* Filtros */}
           <PatientFilters
