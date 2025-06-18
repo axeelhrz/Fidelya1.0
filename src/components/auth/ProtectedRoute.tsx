@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useAuth } from '@/context/AuthContext';
@@ -23,9 +23,15 @@ export default function ProtectedRoute({
   const { user, loading, authStatus } = useAuth();
   const { hasAnyRole } = useRole();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  // Evitar problemas de hidratación
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    if (loading) return;
+    if (!mounted || loading) return;
 
     // No autenticado
     if (authStatus === 'unauthenticated') {
@@ -57,7 +63,12 @@ export default function ProtectedRoute({
       return;
     }
 
-  }, [authStatus, user, loading, router, hasAnyRole, requiredRoles, requireEmailVerification, fallbackPath]);
+  }, [mounted, authStatus, user, loading, router, hasAnyRole, requiredRoles, requireEmailVerification, fallbackPath]);
+
+  // No renderizar nada hasta que el componente esté montado
+  if (!mounted) {
+    return null;
+  }
 
   // Mostrar loading mientras se verifica la autenticación
   if (loading || authStatus === 'loading') {
@@ -69,6 +80,9 @@ export default function ProtectedRoute({
         alignItems="center" 
         minHeight="100vh"
         gap={2}
+        sx={{
+          background: 'linear-gradient(135deg, #fafbff 0%, #f0f4ff 100%)',
+        }}
       >
         <CircularProgress size={40} />
         <Typography variant="body2" color="text.secondary">
