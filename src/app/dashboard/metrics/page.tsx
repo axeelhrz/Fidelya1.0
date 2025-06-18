@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Grid,
   Typography,
   Alert,
   CircularProgress,
@@ -304,18 +303,36 @@ export default function MetricsPage() {
           {metrics ? (
             <>
               {/* Tarjetas de métricas principales */}
-              <Grid container spacing={3} sx={{ mb: 4 }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 3, 
+                  mb: 4,
+                  '& > *': {
+                    flex: '1 1 200px',
+                    minWidth: '200px',
+                    maxWidth: '300px'
+                  }
+                }}
+              >
                 {dashboardCards.map((card) => (
-                  <Grid item xs={12} sm={6} md={4} lg={2} key={card.id}>
-                    <DashboardCard card={card} loading={loading} />
-                  </Grid>
+                  <DashboardCard key={card.id} card={card} loading={loading} />
                 ))}
-              </Grid>
+              </Box>
 
               {/* Gráficos principales */}
-              <Grid container spacing={3} sx={{ mb: 4 }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 3, 
+                  mb: 4,
+                  alignItems: 'stretch'
+                }}
+              >
                 {/* Gráfico de sesiones en el tiempo */}
-                <Grid item xs={12} lg={8}>
+                <Box sx={{ flex: '2 1 500px', minWidth: '500px' }}>
                   <SessionsLineChart
                     data={metrics.sessionsOverTime}
                     title="Sesiones Registradas por Día"
@@ -323,32 +340,40 @@ export default function MetricsPage() {
                     showArea={true}
                     color="#1976d2"
                   />
-                </Grid>
+                </Box>
 
                 {/* Distribución emocional */}
-                <Grid item xs={12} lg={4}>
+                <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
                   <EmotionPieChart
                     data={metrics.emotionalDistribution}
                     title="Distribución Emocional"
                     loading={loading}
                   />
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
 
               {/* Gráficos secundarios */}
-              <Grid container spacing={3} sx={{ mb: 4 }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 3, 
+                  mb: 4,
+                  alignItems: 'stretch'
+                }}
+              >
                 {/* Motivos de consulta */}
-                <Grid item xs={12} lg={6}>
+                <Box sx={{ flex: '1 1 400px', minWidth: '400px' }}>
                   <MotivesBarChart
                     data={metrics.motivesDistribution}
                     title="Motivos de Consulta Más Frecuentes"
                     loading={loading}
                     maxItems={8}
                   />
-                </Grid>
+                </Box>
 
                 {/* Gráfico de pacientes nuevos */}
-                <Grid item xs={12} lg={6}>
+                <Box sx={{ flex: '1 1 400px', minWidth: '400px' }}>
                   <SessionsLineChart
                     data={metrics.patientsOverTime}
                     title="Pacientes Nuevos por Día"
@@ -356,33 +381,40 @@ export default function MetricsPage() {
                     showArea={false}
                     color="#2e7d32"
                   />
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
 
               {/* Información adicional */}
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                      Período analizado
-                    </Typography>
-                    <Typography variant="body2">
-                      {format(metrics.periodStart, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })} - {' '}
-                      {format(metrics.periodEnd, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })}
-                    </Typography>
-                  </Alert>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Alert severity="success">
-                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                      Última actualización
-                    </Typography>
-                    <Typography variant="body2">
-                      {format(metrics.calculatedAt, 'dd/MM/yyyy \'a las\' HH:mm', { locale: es })}
-                    </Typography>
-                  </Alert>
-                </Grid>
-              </Grid>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 3,
+                  '& > *': {
+                    flex: '1 1 300px',
+                    minWidth: '300px'
+                  }
+                }}
+              >
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                    Período analizado
+                  </Typography>
+                  <Typography variant="body2">
+                    {format(metrics.periodStart, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })} - {' '}
+                    {format(metrics.periodEnd, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })}
+                  </Typography>
+                </Alert>
+
+                <Alert severity="success">
+                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                    Última actualización
+                  </Typography>
+                  <Typography variant="body2">
+                    {format(metrics.calculatedAt, 'dd/MM/yyyy \'a las\' HH:mm', { locale: es })}
+                  </Typography>
+                </Alert>
+              </Box>
             </>
           ) : (
             <Alert severity="info" sx={{ mt: 3 }}>
