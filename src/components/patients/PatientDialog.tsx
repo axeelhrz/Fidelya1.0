@@ -24,13 +24,15 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { es } from 'date-fns/locale';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { 
-  Patient, 
-  PatientFormData, 
-  EMOTIONAL_STATES, 
-  GENDERS, 
+import {
+  Patient,
+  PatientFormData,
+  Gender,
+  EmotionalState,
+  EMOTIONAL_STATES,
+  GENDERS,
   GENDER_LABELS,
-  EMOTIONAL_STATE_COLORS 
+  EMOTIONAL_STATE_COLORS
 } from '@/types/patient';
 import { User } from '@/types/auth';
 import { patientSchema } from '@/lib/validations/patient';
@@ -67,8 +69,8 @@ export default function PatientDialog({
     defaultValues: {
       fullName: '',
       birthDate: '',
-      gender: 'M',
-      emotionalState: 'Estable',
+      gender: 'M' as Gender,
+      emotionalState: 'Estable' as EmotionalState,
       motivoConsulta: '',
       observaciones: '',
       assignedPsychologist: '',
@@ -94,8 +96,8 @@ export default function PatientDialog({
       reset({
         fullName: '',
         birthDate: '',
-        gender: 'M',
-        emotionalState: 'Estable',
+        gender: 'M' as Gender,
+        emotionalState: 'Estable' as EmotionalState,
         motivoConsulta: '',
         observaciones: '',
         assignedPsychologist: '',
@@ -107,13 +109,13 @@ export default function PatientDialog({
   const onSubmit = async (data: PatientFormData) => {
     try {
       setSubmitError(null);
-      
+
       if (isEditing && patient) {
         await updatePatient(patient.id, data);
       } else {
         await createPatient(data);
       }
-      
+
       onSuccess();
       onClose();
     } catch (error) {
@@ -132,16 +134,16 @@ export default function PatientDialog({
     if (!birthDate) return null;
     const birth = new Date(birthDate);
     const today = new Date();
-    const age = today.getFullYear() - birth.getFullYear() - 
-      (today.getMonth() < birth.getMonth() || 
-       (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate()) ? 1 : 0);
+    const age = today.getFullYear() - birth.getFullYear() -
+      (today.getMonth() < birth.getMonth() ||
+        (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate()) ? 1 : 0);
     return age;
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-      <Dialog 
-        open={open} 
+      <Dialog
+        open={open}
         onClose={handleClose}
         maxWidth="md"
         fullWidth
@@ -172,13 +174,13 @@ export default function PatientDialog({
                 <Typography variant="h6" gutterBottom color="primary">
                   Información Personal
                 </Typography>
-                
+
                 {/* Nombre y Género */}
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    flexWrap: 'wrap', 
-                    gap: 2, 
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 2,
                     mb: 2,
                     alignItems: 'flex-start'
                   }}
@@ -199,7 +201,7 @@ export default function PatientDialog({
                       )}
                     />
                   </Box>
-                  
+
                   <Box sx={{ flex: '1 1 150px', minWidth: '150px' }}>
                     <Controller
                       name="gender"
@@ -230,10 +232,10 @@ export default function PatientDialog({
                 </Box>
 
                 {/* Fecha de nacimiento y Edad */}
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    flexWrap: 'wrap', 
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
                     gap: 2,
                     alignItems: 'center'
                   }}
@@ -260,7 +262,7 @@ export default function PatientDialog({
                       )}
                     />
                   </Box>
-                  
+
                   <Box sx={{ flex: '1 1 150px', minWidth: '150px' }}>
                     <Typography variant="body1" sx={{ p: 2, textAlign: 'center' }}>
                       Edad: {watch('birthDate') ? calculateAge(watch('birthDate')) : '--'} años
@@ -274,13 +276,13 @@ export default function PatientDialog({
                 <Typography variant="h6" gutterBottom color="primary">
                   Información Clínica
                 </Typography>
-                
+
                 {/* Estado emocional y chip */}
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    flexWrap: 'wrap', 
-                    gap: 2, 
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 2,
                     mb: 2,
                     alignItems: 'center'
                   }}
@@ -323,7 +325,7 @@ export default function PatientDialog({
                       )}
                     />
                   </Box>
-                  
+
                   <Box sx={{ flex: '0 0 auto' }}>
                     <Chip
                       label={selectedEmotionalState}
@@ -383,11 +385,11 @@ export default function PatientDialog({
                 <Typography variant="h6" gutterBottom color="primary">
                   Asignación y Programación
                 </Typography>
-                
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    flexWrap: 'wrap', 
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
                     gap: 2,
                     alignItems: 'flex-start'
                   }}
@@ -458,15 +460,15 @@ export default function PatientDialog({
           </DialogContent>
 
           <DialogActions sx={{ p: 3, pt: 1 }}>
-            <Button 
-              onClick={handleClose} 
+            <Button
+              onClick={handleClose}
               disabled={loading}
               color="inherit"
             >
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               variant="contained"
               disabled={loading}
               startIcon={loading ? <CircularProgress size={20} /> : null}
