@@ -133,7 +133,7 @@ export default function SessionsTable({
     }
   };
 
-  const getStatusColor = (status: Session['status']) => {
+  const getStatusColor = (status: Session['status']): 'success' | 'info' | 'error' | 'warning' | 'secondary' | 'default' => {
     switch (status) {
       case 'completed':
         return 'success';
@@ -151,8 +151,8 @@ export default function SessionsTable({
   };
 
   const sortedSessions = [...sessions].sort((a, b) => {
-    let aValue: any;
-    let bValue: any;
+    let aValue: string | number | Date;
+    let bValue: string | number | Date;
 
     switch (sortField) {
       case 'date':
@@ -343,7 +343,7 @@ export default function SessionsTable({
                     <Chip
                       icon={getStatusIcon(session.status)}
                       label={SESSION_STATUS_LABELS[session.status]}
-                      color={getStatusColor(session.status) as any}
+                      color={getStatusColor(session.status)}
                       variant="outlined"
                       size="small"
                     />

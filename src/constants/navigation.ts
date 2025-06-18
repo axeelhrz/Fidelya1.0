@@ -12,9 +12,11 @@ export interface NavigationItem {
   id: string;
   label: string;
   path: string;
-  icon: any;
+  icon: React.ComponentType<any>;
   roles: string[];
   children?: NavigationItem[];
+  adminOnly?: boolean;
+
 }
 
 export const navigationItems: NavigationItem[] = [

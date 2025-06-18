@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
-  Grid,
   TextField,
   FormControl,
   InputLabel,
@@ -66,7 +65,7 @@ export default function SessionFilters({
     setLocalFilters(filters);
   }, [filters]);
 
-  const handleFilterChange = (key: keyof SessionFiltersType, value: any) => {
+  const handleFilterChange = (key: keyof SessionFiltersType, value: SessionFiltersType[keyof SessionFiltersType]) => {
     const newFilters = { ...localFilters, [key]: value };
     setLocalFilters(newFilters);
   };
@@ -116,8 +115,19 @@ export default function SessionFilters({
       <Card>
         <CardContent>
           {/* Filtros básicos siempre visibles */}
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={4}>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 2, 
+              alignItems: 'center',
+              '& > *': {
+                flex: '1 1 200px',
+                minWidth: '200px'
+              }
+            }}
+          >
+            <Box sx={{ flex: '2 1 300px', minWidth: '300px' }}>
               <TextField
                 fullWidth
                 label="Buscar sesiones"
@@ -129,57 +139,51 @@ export default function SessionFilters({
                 }}
                 disabled={loading}
               />
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} md={3}>
-              <Autocomplete
-                options={patients}
-                getOptionLabel={(patient) => patient.fullName}
-                value={patients.find(p => p.id === localFilters.patientId) || null}
-                onChange={(_, patient) => handleFilterChange('patientId', patient?.id || '')}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Paciente"
-                    placeholder="Seleccionar paciente"
-                  />
-                )}
+            <Autocomplete
+              options={patients}
+              getOptionLabel={(patient) => patient.fullName}
+              value={patients.find(p => p.id === localFilters.patientId) || null}
+              onChange={(_, patient) => handleFilterChange('patientId', patient?.id || '')}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Paciente"
+                  placeholder="Seleccionar paciente"
+                />
+              )}
+              disabled={loading}
+            />
+
+            <FormControl disabled={loading}>
+              <InputLabel>Estado</InputLabel>
+              <Select
+                value={localFilters.status || ''}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                label="Estado"
+              >
+                <MenuItem value="">Todos</MenuItem>
+                {SESSION_STATUSES.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {SESSION_STATUS_LABELS[status]}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <Box sx={{ flex: '0 0 auto', minWidth: '120px' }}>
+              <Button
+                variant="contained"
+                onClick={applyFilters}
+                startIcon={<FilterListIcon />}
                 disabled={loading}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth disabled={loading}>
-                <InputLabel>Estado</InputLabel>
-                <Select
-                  value={localFilters.status || ''}
-                  onChange={(e) => handleFilterChange('status', e.target.value)}
-                  label="Estado"
-                >
-                  <MenuItem value="">Todos</MenuItem>
-                  {SESSION_STATUSES.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {SESSION_STATUS_LABELS[status]}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} md={2}>
-              <Box display="flex" gap={1}>
-                <Button
-                  variant="contained"
-                  onClick={applyFilters}
-                  startIcon={<FilterListIcon />}
-                  disabled={loading}
-                  fullWidth
-                >
-                  Filtrar
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
+                fullWidth
+              >
+                Filtrar
+              </Button>
+            </Box>
+          </Box>
 
           {/* Filtros avanzados */}
           <Accordion 
@@ -204,8 +208,19 @@ export default function SessionFilters({
             </AccordionSummary>
             
             <AccordionDetails>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={4}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {/* Primera fila de filtros avanzados */}
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: 2,
+                    '& > *': {
+                      flex: '1 1 250px',
+                      minWidth: '250px'
+                    }
+                  }}
+                >
                   <Autocomplete
                     options={professionals}
                     getOptionLabel={(professional) => professional.displayName || professional.email}
@@ -220,10 +235,8 @@ export default function SessionFilters({
                     )}
                     disabled={loading}
                   />
-                </Grid>
 
-                <Grid item xs={12} md={4}>
-                  <FormControl fullWidth disabled={loading}>
+                  <FormControl disabled={loading}>
                     <InputLabel>Tipo de Sesión</InputLabel>
                     <Select
                       value={localFilters.type || ''}
@@ -238,10 +251,8 @@ export default function SessionFilters({
                       ))}
                     </Select>
                   </FormControl>
-                </Grid>
 
-                <Grid item xs={12} md={4}>
-                  <FormControl fullWidth disabled={loading}>
+                  <FormControl disabled={loading}>
                     <InputLabel>Estado Emocional</InputLabel>
                     <Select
                       value={localFilters.emotionalTone || ''}
@@ -256,10 +267,21 @@ export default function SessionFilters({
                       ))}
                     </Select>
                   </FormControl>
-                </Grid>
+                </Box>
 
-                <Grid item xs={12} md={4}>
-                  <FormControl fullWidth disabled={loading}>
+                {/* Segunda fila de filtros avanzados */}
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: 2,
+                    '& > *': {
+                      flex: '1 1 250px',
+                      minWidth: '250px'
+                    }
+                  }}
+                >
+                  <FormControl disabled={loading}>
                     <InputLabel>Nivel de Riesgo</InputLabel>
                     <Select
                       value={localFilters.riskLevel || ''}
@@ -272,37 +294,40 @@ export default function SessionFilters({
                       <MenuItem value="high">{RISK_LEVEL_LABELS.high}</MenuItem>
                     </Select>
                   </FormControl>
-                </Grid>
 
-                <Grid item xs={12} md={4}>
                   <DatePicker
                     label="Fecha desde"
                     value={localFilters.dateRange?.start ? new Date(localFilters.dateRange.start) : null}
                     onChange={(date) => handleDateRangeChange('start', date)}
                     slotProps={{
                       textField: {
-                        fullWidth: true,
                         disabled: loading
                       }
                     }}
                   />
-                </Grid>
 
-                <Grid item xs={12} md={4}>
                   <DatePicker
                     label="Fecha hasta"
                     value={localFilters.dateRange?.end ? new Date(localFilters.dateRange.end) : null}
                     onChange={(date) => handleDateRangeChange('end', date)}
                     slotProps={{
                       textField: {
-                        fullWidth: true,
                         disabled: loading
                       }
                     }}
                   />
-                </Grid>
+                </Box>
 
-                <Grid item xs={12} md={6}>
+                {/* Tercera fila: Switch y botones */}
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: 2,
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                >
                   <FormControlLabel
                     control={
                       <Switch
@@ -313,10 +338,8 @@ export default function SessionFilters({
                     }
                     label="Solo sesiones con análisis de IA"
                   />
-                </Grid>
 
-                <Grid item xs={12}>
-                  <Box display="flex" gap={1} justifyContent="flex-end">
+                  <Box sx={{ display: 'flex', gap: 1 }}>
                     <Button
                       variant="outlined"
                       onClick={clearFilters}
@@ -334,8 +357,8 @@ export default function SessionFilters({
                       Aplicar Filtros
                     </Button>
                   </Box>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
             </AccordionDetails>
           </Accordion>
 
