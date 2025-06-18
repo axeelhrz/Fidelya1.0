@@ -11,7 +11,6 @@ import {
   Alert,
   useTheme,
   alpha,
-  Grid,
 } from '@mui/material';
 import {
   People,
@@ -23,6 +22,7 @@ import {
   TrendingUp,
   Favorite,
   LocalHospital,
+  WavingHand,
 } from '@mui/icons-material';
 import { useAuth } from '@/context/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -36,122 +36,6 @@ import RecentSessions from '@/components/dashboard/RecentSessions';
 import AlertCard from '@/components/dashboard/AlertCard';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-
-// Datos mock para demostración
-const mockEmotionData = {
-  'Ansiedad': 15,
-  'Calma': 25,
-  'Estrés': 12,
-  'Alegría': 18,
-  'Tristeza': 8,
-  'Confianza': 22
-};
-
-const mockMotivesData = {
-  'Ansiedad generalizada': 28,
-  'Depresión': 22,
-  'Trastornos del sueño': 18,
-  'Problemas de pareja': 15,
-  'Estrés laboral': 12,
-  'Autoestima': 10,
-  'Duelo': 8,
-  'Fobias': 6
-};
-
-const mockRecentPatients = [
-  {
-    id: '1',
-    name: 'María González',
-    age: 32,
-    registrationDate: new Date(2024, 0, 15),
-    status: 'active' as const,
-    riskLevel: 'low' as const,
-    lastSession: new Date(2024, 0, 20)
-  },
-  {
-    id: '2',
-    name: 'Carlos Rodríguez',
-    age: 45,
-    registrationDate: new Date(2024, 0, 12),
-    status: 'active' as const,
-    riskLevel: 'medium' as const,
-    lastSession: new Date(2024, 0, 18)
-  },
-  {
-    id: '3',
-    name: 'Ana Martínez',
-    age: 28,
-    registrationDate: new Date(2024, 0, 10),
-    status: 'active' as const,
-    riskLevel: 'high' as const,
-    lastSession: new Date(2024, 0, 19)
-  }
-];
-
-const mockRecentSessions = [
-  {
-    id: '1',
-    patientName: 'María González',
-    date: new Date(2024, 0, 20, 14, 30),
-    duration: 60,
-    type: 'Terapia Cognitivo-Conductual',
-    aiSummary: 'Progreso notable en manejo de ansiedad',
-    emotionalTone: 'positive' as const,
-    status: 'completed' as const,
-    hasAiAnalysis: true
-  },
-  {
-    id: '2',
-    patientName: 'Carlos Rodríguez',
-    date: new Date(2024, 0, 18, 16, 0),
-    duration: 45,
-    type: 'Sesión de seguimiento',
-    aiSummary: 'Necesita refuerzo en técnicas de relajación',
-    emotionalTone: 'neutral' as const,
-    status: 'completed' as const,
-    hasAiAnalysis: true
-  },
-  {
-    id: '3',
-    patientName: 'Ana Martínez',
-    date: new Date(2024, 0, 19, 10, 0),
-    duration: 50,
-    type: 'Evaluación inicial',
-    emotionalTone: 'negative' as const,
-    status: 'completed' as const,
-    hasAiAnalysis: false
-  }
-];
-
-const mockAlerts = [
-  {
-    id: '1',
-    type: 'appointment' as const,
-    urgency: 'high' as const,
-    title: 'Cita urgente pendiente',
-    description: 'Ana Martínez requiere seguimiento inmediato tras evaluación de riesgo',
-    createdAt: new Date(2024, 0, 21, 9, 0),
-    patientName: 'Ana Martínez'
-  },
-  {
-    id: '2',
-    type: 'follow-up' as const,
-    urgency: 'medium' as const,
-    title: 'Seguimiento programado',
-    description: 'Carlos Rodríguez debe practicar técnicas de relajación antes de la próxima sesión',
-    createdAt: new Date(2024, 0, 20, 18, 30),
-    patientName: 'Carlos Rodríguez'
-  },
-  {
-    id: '3',
-    type: 'medication' as const,
-    urgency: 'low' as const,
-    title: 'Recordatorio de medicación',
-    description: 'Revisar adherencia al tratamiento farmacológico en próxima consulta',
-    createdAt: new Date(2024, 0, 19, 12, 0),
-    patientName: 'María González'
-  }
-];
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -207,13 +91,13 @@ export default function DashboardPage() {
             >
               <Box position="relative" zIndex={1}>
                 <Box display="flex" alignItems="center" mb={2}>
-                  <Favorite sx={{ fontSize: 32, mr: 2, color: '#ff6b9d' }} />
+                  <WavingHand sx={{ fontSize: 32, mr: 2, color: '#fbbf24' }} />
                   <Typography 
                     variant="h3" 
                     fontWeight="bold"
                     sx={{ fontFamily: '"Poppins", sans-serif' }}
                   >
-                    {getGreeting()}, {user?.displayName?.split(' ')[0] || 'Doctor'}! 👋
+                    {getGreeting()}, {user?.displayName?.split(' ')[0] || 'Doctor'}!
                   </Typography>
                 </Box>
                 <Typography 
@@ -309,9 +193,9 @@ export default function DashboardPage() {
               color="success"
               subtitle="Total de sesiones completadas"
               trend={{
-                value: 8,
-                isPositive: true,
-                label: "+8% esta semana"
+                value: data.completedSessionsThisWeek,
+                isPositive: data.completedSessionsThisWeek > 0,
+                label: `${data.completedSessionsThisWeek} esta semana`
               }}
               loading={loading}
               delay={1}
@@ -332,14 +216,14 @@ export default function DashboardPage() {
             />
             <DashboardCard
               title="Sesiones con IA"
-              value={Math.floor(data.totalSessions * 0.75)}
+              value={data.aiAnalysisCount}
               icon={<AutoAwesome sx={{ fontSize: 24 }} />}
               color="secondary"
               subtitle="Análisis inteligente aplicado"
               trend={{
-                value: 25,
+                value: data.totalSessions > 0 ? Math.round((data.aiAnalysisCount / data.totalSessions) * 100) : 0,
                 isPositive: true,
-                label: "+25% con IA"
+                label: `${data.totalSessions > 0 ? Math.round((data.aiAnalysisCount / data.totalSessions) * 100) : 0}% con IA`
               }}
               loading={loading}
               delay={3}
@@ -375,7 +259,7 @@ export default function DashboardPage() {
                   Evolución Emocional
                 </Typography>
                 <EmotionPieChart 
-                  data={mockEmotionData}
+                  data={data.emotionalData}
                   title="Estados Emocionales Predominantes"
                   loading={loading}
                   height={350}
@@ -397,11 +281,11 @@ export default function DashboardPage() {
                   }}
                 >
                   <Insights sx={{ color: theme.palette.secondary.main }} />
-                  Motivos de Consulta
+                  Tipos de Sesión
                 </Typography>
                 <MotivesBarChart 
-                  data={mockMotivesData}
-                  title="Distribución por Motivo de Consulta"
+                  data={data.motivesData}
+                  title="Distribución por Tipo de Sesión"
                   loading={loading}
                   height={350}
                   maxItems={8}
@@ -422,8 +306,8 @@ export default function DashboardPage() {
               mb: 6,
             }}
           >
-            <RecentPatients patients={mockRecentPatients} loading={loading} />
-            <RecentSessions sessions={mockRecentSessions} loading={loading} />
+            <RecentPatients patients={data.recentPatients} loading={loading} />
+            <RecentSessions sessions={data.todaySessions.length > 0 ? data.todaySessions : data.upcomingSessions} loading={loading} />
           </Box>
 
           {/* Sección de Notificaciones Importantes */}
@@ -444,7 +328,7 @@ export default function DashboardPage() {
                 Notificaciones Importantes
               </Typography>
               
-              {mockAlerts.length === 0 ? (
+              {data.recentAlerts.length === 0 ? (
                 <Box 
                   display="flex" 
                   flexDirection="column" 
@@ -479,7 +363,7 @@ export default function DashboardPage() {
                     gutterBottom
                     sx={{ fontFamily: '"Poppins", sans-serif' }}
                   >
-                    ¡Excelente trabajo! 🎉
+                    Excelente trabajo!
                   </Typography>
                   <Typography 
                     variant="h6" 
@@ -500,7 +384,7 @@ export default function DashboardPage() {
                 </Box>
               ) : (
                 <Box>
-                  {mockAlerts.map((alert, index) => (
+                  {data.recentAlerts.map((alert, index) => (
                     <AlertCard 
                       key={alert.id} 
                       alert={alert} 
@@ -516,7 +400,7 @@ export default function DashboardPage() {
             </Box>
           </Fade>
 
-          {/* Accesos Rápidos (Opcional) */}
+          {/* Accesos Rápidos */}
           <Fade in timeout={1600}>
             <Box 
               sx={{ 
@@ -543,17 +427,6 @@ export default function DashboardPage() {
               <Stack 
                 direction={{ xs: 'column', sm: 'row' }} 
                 spacing={2}
-                sx={{
-                  '& .MuiButton-root': {
-                    borderRadius: 3,
-                    py: 1.5,
-                    px: 3,
-                    fontFamily: '"Inter", sans-serif',
-                    fontWeight: 500,
-                    textTransform: 'none',
-                    fontSize: '0.95rem',
-                  }
-                }}
               >
                 <Box 
                   component="button"
@@ -569,13 +442,17 @@ export default function DashboardPage() {
                     fontSize: '0.95rem',
                     cursor: 'pointer',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
                     '&:hover': {
                       transform: 'translateY(-2px)',
                       boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.3)}`,
                     }
                   }}
                 >
-                  + Nuevo Paciente
+                  <People sx={{ fontSize: 20 }} />
+                  Nuevo Paciente
                 </Box>
                 <Box 
                   component="button"
@@ -591,13 +468,17 @@ export default function DashboardPage() {
                     fontSize: '0.95rem',
                     cursor: 'pointer',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
                     '&:hover': {
                       transform: 'translateY(-2px)',
                       boxShadow: `0 8px 25px ${alpha(theme.palette.secondary.main, 0.3)}`,
                     }
                   }}
                 >
-                  📅 Programar Sesión
+                  <EventNote sx={{ fontSize: 20 }} />
+                  Programar Sesión
                 </Box>
                 <Box 
                   component="button"
@@ -613,35 +494,17 @@ export default function DashboardPage() {
                     fontSize: '0.95rem',
                     cursor: 'pointer',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
                     '&:hover': {
                       transform: 'translateY(-2px)',
                       boxShadow: `0 8px 25px ${alpha(theme.palette.success.main, 0.3)}`,
                     }
                   }}
                 >
-                  📊 Ver Métricas
-                </Box>
-                <Box 
-                  component="button"
-                  sx={{
-                    background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.light} 100%)`,
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 3,
-                    py: 1.5,
-                    px: 3,
-                    fontFamily: '"Inter", sans-serif',
-                    fontWeight: 500,
-                    fontSize: '0.95rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: `0 8px 25px ${alpha(theme.palette.info.main, 0.3)}`,
-                    }
-                  }}
-                >
-                  📄 Exportar Reporte
+                  <Insights sx={{ fontSize: 20 }} />
+                  Ver Métricas
                 </Box>
               </Stack>
             </Box>

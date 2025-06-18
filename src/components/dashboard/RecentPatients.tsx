@@ -24,6 +24,7 @@ import {
   CalendarToday,
   Psychology,
   TrendingUp,
+  FiberManualRecord,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -214,17 +215,25 @@ export default function RecentPatients({ patients, loading = false }: RecentPati
                   </ListItemAvatar>
                   <ListItemText
                     primary={
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Typography variant="subtitle1" fontWeight="600" sx={{ fontFamily: '"Inter", sans-serif' }}>
+                      <Box display="flex" alignItems="center" gap={1} mb={0.5}>
+                        <Typography 
+                          variant="subtitle1" 
+                          fontWeight="600" 
+                          sx={{ 
+                            fontFamily: '"Inter", sans-serif',
+                            maxWidth: '180px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
                           {patient.name}
                         </Typography>
                         {patient.riskLevel && (
-                          <Box
+                          <FiberManualRecord
                             sx={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              backgroundColor: getRiskColor(patient.riskLevel),
+                              fontSize: 12,
+                              color: getRiskColor(patient.riskLevel),
                             }}
                           />
                         )}
@@ -235,16 +244,44 @@ export default function RecentPatients({ patients, loading = false }: RecentPati
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                           {patient.age} años
                         </Typography>
-                        <Box display="flex" alignItems="center">
-                          <CalendarToday sx={{ fontSize: 14, mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="caption" color="text.secondary">
-                            {format(patient.registrationDate, "dd 'de' MMM", { locale: es })}
+                        <Box display="flex" alignItems="center" mb={0.5}>
+                          <CalendarToday sx={{ fontSize: 12, mr: 0.5, color: 'text.secondary' }} />
+                          <Typography 
+                            variant="caption" 
+                            color="text.secondary"
+                            sx={{ 
+                              fontSize: '0.75rem',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {format(patient.registrationDate, "dd/MM/yy", { locale: es })}
                           </Typography>
                         </Box>
+                        {patient.lastSession && (
+                          <Box display="flex" alignItems="center">
+                            <Psychology sx={{ fontSize: 12, mr: 0.5, color: 'text.secondary' }} />
+                            <Typography 
+                              variant="caption" 
+                              color="text.secondary"
+                              sx={{ 
+                                fontSize: '0.75rem',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              Última: {format(patient.lastSession, "dd/MM", { locale: es })}
+                            </Typography>
+                          </Box>
+                        )}
                       </Box>
                     }
                   />
-                  <Box display="flex" flexDirection="column" alignItems="end" gap={1}>
+                  <Box 
+                    display="flex" 
+                    flexDirection="column" 
+                    alignItems="end" 
+                    gap={1}
+                    sx={{ minWidth: 80 }}
+                  >
                     <Chip
                       label={getStatusLabel(patient.status)}
                       size="small"
@@ -253,17 +290,10 @@ export default function RecentPatients({ patients, loading = false }: RecentPati
                       sx={{
                         borderRadius: 2,
                         fontWeight: 500,
-                        fontSize: '0.75rem',
+                        fontSize: '0.7rem',
+                        height: 24,
                       }}
                     />
-                    {patient.lastSession && (
-                      <Box display="flex" alignItems="center">
-                        <Psychology sx={{ fontSize: 12, mr: 0.5, color: 'text.secondary' }} />
-                        <Typography variant="caption" color="text.secondary">
-                          {format(patient.lastSession, "dd/MM", { locale: es })}
-                        </Typography>
-                      </Box>
-                    )}
                   </Box>
                 </ListItem>
               </Fade>
