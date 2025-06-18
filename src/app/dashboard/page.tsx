@@ -3,7 +3,6 @@
 import React, { useMemo, useState } from 'react';
 import {
   Box,
-  Grid,
   Typography,
   Card,
   CardContent,
@@ -378,8 +377,8 @@ function RecentAlerts() {
             {alerts.slice(0, 5).map((alert) => (
               <ListItem key={alert.id} sx={{ px: 0, alignItems: 'flex-start' }}>
                 <ListItemAvatar>
-                  <Avatar 
-                    sx={{ 
+                  <Avatar
+                    sx={{
                       bgcolor: alpha(getAlertColor(alert.urgency), 0.1),
                       color: getAlertColor(alert.urgency),
                       width: 32,
