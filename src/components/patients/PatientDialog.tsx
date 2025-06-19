@@ -14,12 +14,10 @@ import {
   MenuItem,
   Box,
   Typography,
-  Chip,
   Alert,
   CircularProgress,
   Stack,
   Paper,
-  Divider,
   alpha,
   useTheme,
   Fade,
@@ -27,7 +25,6 @@ import {
 import {
   PersonAdd,
   Edit,
-  Close,
   Save,
   Psychology,
   CalendarToday,
@@ -238,7 +235,7 @@ export default function PatientDialog({
                 }}
               >
                 <Stack spacing={3}>
-                  <Box display="flex" alignItems="center" spacing={2}>
+                  <Box display="flex" alignItems="center">
                     <Typography 
                       variant="h6" 
                       fontWeight={600} 
@@ -375,7 +372,7 @@ export default function PatientDialog({
                 }}
               >
                 <Stack spacing={3}>
-                  <Box display="flex" alignItems="center" spacing={2}>
+                  <Box display="flex" alignItems="center">
                     <Typography 
                       variant="h6" 
                       fontWeight={600} 
@@ -505,7 +502,7 @@ export default function PatientDialog({
                 }}
               >
                 <Stack spacing={3}>
-                  <Box display="flex" alignItems="center" spacing={2}>
+                  <Box display="flex" alignItems="center">
                     <Typography 
                       variant="h6" 
                       fontWeight={600} 

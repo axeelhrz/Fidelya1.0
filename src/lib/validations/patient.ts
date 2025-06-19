@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { EMOTIONAL_STATES, GENDERS } from '@/types/patient';
 
 export const patientSchema = z.object({
   fullName: z
@@ -18,11 +17,20 @@ export const patientSchema = z.object({
       return age >= 0 && age <= 120;
     }, 'La fecha de nacimiento debe ser válida'),
   
-  gender: z.enum(GENDERS as [string, ...string[]], {
+  gender: z.enum(['M', 'F', 'Otro'] as const, {
     required_error: 'El género es requerido',
   }),
   
-  emotionalState: z.enum(EMOTIONAL_STATES as [string, ...string[]], {
+  emotionalState: z.enum([
+    'Estable',
+    'Ansioso/a',
+    'Deprimido/a',
+    'Irritable',
+    'Eufórico/a',
+    'Confundido/a',
+    'Agresivo/a',
+    'Retraído/a'
+  ] as const, {
     required_error: 'El estado emocional es requerido',
   }),
   
@@ -57,8 +65,18 @@ export const patientSchema = z.object({
 
 export const patientFiltersSchema = z.object({
   search: z.string().optional(),
-  gender: z.enum(['', ...GENDERS] as [string, ...string[]]).optional(),
-  emotionalState: z.enum(['', ...EMOTIONAL_STATES] as [string, ...string[]]).optional(),
+  gender: z.enum(['', 'M', 'F', 'Otro'] as const).optional(),
+  emotionalState: z.enum([
+    '',
+    'Estable',
+    'Ansioso/a',
+    'Deprimido/a',
+    'Irritable',
+    'Eufórico/a',
+    'Confundido/a',
+    'Agresivo/a',
+    'Retraído/a'
+  ] as const).optional(),
   assignedPsychologist: z.string().optional(),
   ageRange: z.object({
     min: z.number().min(0).max(120).optional(),
@@ -68,7 +86,7 @@ export const patientFiltersSchema = z.object({
     start: z.string().optional(),
     end: z.string().optional(),
   }).optional(),
-  status: z.enum(['', 'active', 'inactive', 'discharged'] as [string, ...string[]]).optional(),
+  status: z.enum(['', 'active', 'inactive', 'discharged'] as const).optional(),
 });
 
 export type PatientFormData = z.infer<typeof patientSchema>;
