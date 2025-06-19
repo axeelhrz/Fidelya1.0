@@ -11,10 +11,12 @@ import {
   Container,
   Stack,
   Paper,
+  Divider,
   alpha,
   useTheme,
+  useMediaQuery,
 } from '@mui/material';
-import { Analytics, Refresh, Download } from '@mui/icons-material';
+import { Analytics, Refresh } from '@mui/icons-material';
 import { format, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -42,6 +44,8 @@ import { MetricsFilters as MetricsFiltersType, DashboardCard as DashboardCardTyp
 function MetricsPageContent() {
   const { user } = useAuth();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   
   // Estado para filtros
   const [filters, setFilters] = useState<MetricsFiltersType>({
@@ -109,31 +113,31 @@ function MetricsPageContent() {
         id: 'active-patients',
         title: 'Pacientes Activos',
         value: metrics.totalActivePatients,
-        subtitle: 'En tratamiento actual',
+        subtitle: 'En tratamiento',
         icon: 'people',
         color: 'primary',
         trend: comparison?.totalActivePatients ? {
           value: comparison.totalActivePatients.change,
           isPositive: comparison.totalActivePatients.change >= 0,
-          period: 'vs período anterior'
+          period: 'vs anterior'
         } : undefined
       },
       {
         id: 'total-sessions',
-        title: 'Total de Sesiones',
+        title: 'Total Sesiones',
         value: metrics.totalSessions,
-        subtitle: 'Sesiones registradas',
+        subtitle: 'Registradas',
         icon: 'event_note',
         color: 'secondary',
         trend: comparison?.totalSessions ? {
           value: comparison.totalSessions.change,
           isPositive: comparison.totalSessions.change >= 0,
-          period: 'vs período anterior'
+          period: 'vs anterior'
         } : undefined
       },
       {
         id: 'average-sessions',
-        title: 'Promedio por Paciente',
+        title: 'Promedio/Paciente',
         value: metrics.averageSessionsPerPatient,
         subtitle: 'Sesiones por paciente',
         icon: 'trending_up',
@@ -141,7 +145,7 @@ function MetricsPageContent() {
         trend: comparison?.averageSessionsPerPatient ? {
           value: comparison.averageSessionsPerPatient.change,
           isPositive: comparison.averageSessionsPerPatient.change >= 0,
-          period: 'vs período anterior'
+          period: 'vs anterior'
         } : undefined
       },
       {
@@ -154,25 +158,25 @@ function MetricsPageContent() {
         trend: comparison?.activeAlerts ? {
           value: comparison.activeAlerts.change,
           isPositive: comparison.activeAlerts.change <= 0,
-          period: 'vs período anterior'
+          period: 'vs anterior'
         } : undefined
       },
       {
         id: 'follow-up-rate',
-        title: 'Tasa de Seguimiento',
+        title: 'Tasa Seguimiento',
         value: `${metrics.followUpRate}%`,
-        subtitle: 'Pacientes con 2+ sesiones',
+        subtitle: 'Pacientes 2+ sesiones',
         icon: 'assignment_turned_in',
         color: metrics.followUpRate >= 70 ? 'success' : metrics.followUpRate >= 50 ? 'warning' : 'error',
         trend: comparison?.followUpRate ? {
           value: comparison.followUpRate.change,
           isPositive: comparison.followUpRate.change >= 0,
-          period: 'vs período anterior'
+          period: 'vs anterior'
         } : undefined
       },
       {
         id: 'high-risk-patients',
-        title: 'Pacientes Alto Riesgo',
+        title: 'Alto Riesgo',
         value: metrics.highRiskPatients,
         subtitle: 'Atención prioritaria',
         icon: 'priority_high',
@@ -206,7 +210,7 @@ function MetricsPageContent() {
 
       setSnackbar({
         open: true,
-        message: `Generando reporte en formato ${format.toUpperCase()}...`,
+        message: `Generando reporte ${format.toUpperCase()}...`,
         severity: 'info'
       });
 
@@ -256,7 +260,7 @@ function MetricsPageContent() {
 
   if (loading && !metrics) {
     return (
-      <Container maxWidth="xl" sx={{ py: 6 }}>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'center', 
@@ -276,7 +280,7 @@ function MetricsPageContent() {
 
   if (error) {
     return (
-      <Container maxWidth="xl" sx={{ py: 6 }}>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
         <Alert 
           severity="error" 
           sx={{ 
@@ -296,15 +300,20 @@ function MetricsPageContent() {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 6 }}>
-      {/* Encabezado moderno */}
-      <Box sx={{ mb: 6 }}>
-        <Stack direction="row" alignItems="center" spacing={3} sx={{ mb: 2 }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}>
+      {/* Encabezado optimizado */}
+      <Box sx={{ mb: { xs: 4, md: 5 } }}>
+        <Stack 
+          direction={{ xs: 'column', sm: 'row' }} 
+          alignItems={{ xs: 'flex-start', sm: 'center' }} 
+          spacing={{ xs: 2, sm: 3 }} 
+          sx={{ mb: 2 }}
+        >
           <Box
             sx={{
-              width: 64,
-              height: 64,
-              borderRadius: 4,
+              width: { xs: 48, sm: 56 },
+              height: { xs: 48, sm: 56 },
+              borderRadius: 3,
               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
               display: 'flex',
               alignItems: 'center',
@@ -313,11 +322,11 @@ function MetricsPageContent() {
               boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.3)}`,
             }}
           >
-            <Analytics sx={{ fontSize: 32 }} />
+            <Analytics sx={{ fontSize: { xs: 24, sm: 28 } }} />
           </Box>
-          <Box>
+          <Box sx={{ flex: 1 }}>
             <Typography 
-              variant="h3" 
+              variant={isMobile ? "h4" : "h3"}
               component="h1" 
               sx={{ 
                 fontWeight: 700,
@@ -326,13 +335,14 @@ function MetricsPageContent() {
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                mb: 1
+                mb: 0.5,
+                lineHeight: 1.2
               }}
             >
               Métricas Clínicas
             </Typography>
             <Typography 
-              variant="h6" 
+              variant={isMobile ? "body1" : "h6"}
               color="text.secondary"
               sx={{ 
                 fontFamily: '"Inter", sans-serif',
@@ -340,14 +350,14 @@ function MetricsPageContent() {
                 lineHeight: 1.4
               }}
             >
-              Visualizá la evolución emocional, sesiones registradas y alertas activas del centro
+              Análisis y visualización de datos del centro
             </Typography>
           </Box>
         </Stack>
       </Box>
 
       {/* Barra de filtros */}
-      <Box sx={{ mb: 6 }}>
+      <Box sx={{ mb: { xs: 4, md: 5 } }}>
         <MetricsFilters
           filters={filters}
           onFiltersChange={handleFiltersChange}
@@ -360,8 +370,8 @@ function MetricsPageContent() {
       </Box>
 
       {metrics ? (
-        <Stack spacing={6}>
-          {/* Tarjetas de métricas principales */}
+        <Stack spacing={{ xs: 4, md: 5 }}>
+          {/* Tarjetas de métricas principales - Layout optimizado */}
           <Box>
             <Typography 
               variant="h5" 
@@ -375,13 +385,16 @@ function MetricsPageContent() {
             </Typography>
             <Box
               sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 3,
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, 1fr)',
+                  md: 'repeat(3, 1fr)',
+                  lg: 'repeat(6, 1fr)'
+                },
+                gap: { xs: 2, sm: 2.5, md: 3 },
                 '& > *': {
-                  flex: '1 1 300px',
-                  minWidth: 280,
-                  maxWidth: 400,
+                  minWidth: 0, // Permite que las tarjetas se compriman
                 }
               }}
             >
@@ -396,7 +409,7 @@ function MetricsPageContent() {
             </Box>
           </Box>
 
-          {/* Gráficos principales */}
+          {/* Gráficos principales - Layout responsivo */}
           <Box>
             <Typography 
               variant="h5" 
@@ -408,21 +421,30 @@ function MetricsPageContent() {
             >
               Evolución Temporal
             </Typography>
-            <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3}>
-              <Box sx={{ flex: 2, minWidth: 0 }}>
+            <Stack 
+              direction={{ xs: 'column', lg: 'row' }} 
+              spacing={3}
+              sx={{
+                '& > *': {
+                  minWidth: 0,
+                  minHeight: 400
+                }
+              }}
+            >
+              <Box sx={{ flex: { lg: 2 } }}>
                 <SessionsLineChart
                   data={metrics.sessionsOverTime}
-                  title="Sesiones Registradas por Día"
+                  title="Sesiones por Día"
                   loading={loading}
                   showArea={true}
                   color={theme.palette.primary.main}
                   height={350}
                 />
               </Box>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ flex: { lg: 1 } }}>
                 <EmotionPieChart
                   data={metrics.emotionalDistribution}
-                  title="Distribución Emocional"
+                  title="Estados Emocionales"
                   loading={loading}
                   height={350}
                 />
@@ -442,21 +464,30 @@ function MetricsPageContent() {
             >
               Análisis Detallado
             </Typography>
-            <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3}>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Stack 
+              direction={{ xs: 'column', lg: 'row' }} 
+              spacing={3}
+              sx={{
+                '& > *': {
+                  minWidth: 0,
+                  minHeight: 400
+                }
+              }}
+            >
+              <Box sx={{ flex: 1 }}>
                 <MotivesBarChart
                   data={metrics.motivesDistribution}
-                  title="Motivos de Consulta Más Frecuentes"
+                  title="Motivos de Consulta"
                   loading={loading}
                   maxItems={8}
                   height={350}
                 />
               </Box>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ flex: 1 }}>
                 <AlertStatusDonut
                   activeAlerts={metrics.activeAlerts}
                   resolvedAlerts={metrics.resolvedAlerts}
-                  title="Estado de Alertas Clínicas"
+                  title="Estado de Alertas"
                   loading={loading}
                   height={350}
                 />
@@ -474,7 +505,7 @@ function MetricsPageContent() {
                 fontFamily: '"Inter", sans-serif'
               }}
             >
-              Tendencias de Crecimiento
+              Crecimiento
             </Typography>
             <SessionsLineChart
               data={metrics.patientsOverTime}
@@ -486,10 +517,10 @@ function MetricsPageContent() {
             />
           </Box>
 
-          {/* Información del período */}
+          {/* Información del período - Compacta */}
           <Paper 
             sx={{ 
-              p: 4, 
+              p: { xs: 3, md: 4 }, 
               borderRadius: 3,
               background: theme.palette.mode === 'dark' 
                 ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
@@ -497,22 +528,26 @@ function MetricsPageContent() {
               border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
             }}
           >
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={4}>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              spacing={{ xs: 2, sm: 4 }}
+              divider={<Divider orientation={isMobile ? 'horizontal' : 'vertical'} flexItem />}
+            >
+              <Box sx={{ flex: 1, textAlign: { xs: 'left', sm: 'center' } }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 0.5, color: 'primary.main' }}>
                   Período Analizado
                 </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  {format(metrics.periodStart, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })} - {' '}
-                  {format(metrics.periodEnd, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })}
+                <Typography variant="body2" color="text.secondary">
+                  {format(metrics.periodStart, 'dd/MM/yyyy', { locale: es })} - {' '}
+                  {format(metrics.periodEnd, 'dd/MM/yyyy', { locale: es })}
                 </Typography>
               </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'success.main' }}>
+              <Box sx={{ flex: 1, textAlign: { xs: 'left', sm: 'center' } }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 0.5, color: 'success.main' }}>
                   Última Actualización
                 </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  {format(metrics.calculatedAt, 'dd/MM/yyyy \'a las\' HH:mm', { locale: es })}
+                <Typography variant="body2" color="text.secondary">
+                  {format(metrics.calculatedAt, 'dd/MM/yyyy HH:mm', { locale: es })}
                 </Typography>
               </Box>
             </Stack>
@@ -532,7 +567,7 @@ function MetricsPageContent() {
           <Typography variant="h6" sx={{ mb: 1 }}>
             Sin datos disponibles
           </Typography>
-          No hay datos disponibles para el período seleccionado. Ajusta los filtros para ver las métricas.
+          No hay datos para el período seleccionado. Ajusta los filtros para ver las métricas.
         </Alert>
       )}
 

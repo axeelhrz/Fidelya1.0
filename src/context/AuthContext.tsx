@@ -217,34 +217,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser,
   };
 
-  // No renderizar el contexto hasta que esté inicializado
-  if (!initialized) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        fontFamily: 'system-ui, sans-serif'
-      }}>
-        <div style={{
-          textAlign: 'center'
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid #f3f3f3',
-            borderTop: '4px solid #3498db',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px'
-          }} />
-          <p style={{ color: '#666', margin: 0 }}>Inicializando aplicación...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <AuthContext.Provider value={value}>
       {children}
@@ -252,10 +224,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useAuth() {
+// Hook mejorado con mejor manejo de errores
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+// Hook alternativo que no lanza error si no está en el contexto
+export function useSafeAuth(): AuthContextType | null {
+  try {
+    const context = useContext(AuthContext);
+    return context || null;
+  } catch {
+    return null;
+  }
 }
