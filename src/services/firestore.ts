@@ -340,12 +340,28 @@ export class FirestoreService {
 
   // ==================== SESIONES CLÍNICAS ====================
 
+  // Helper function to remove undefined values
+  private static removeUndefinedValues<T extends Record<string, unknown>>(obj: T): Partial<T> {
+    const cleaned: Partial<T> = {};
+    
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        (cleaned as Record<string, unknown>)[key] = value;
+      }
+    }
+    
+    return cleaned;
+  }
+
   // Crear sesión
   static async createSession(centerId: string, sessionData: SessionFormData, createdBy: string): Promise<string> {
     const sessionsRef = collection(db, 'centers', centerId, 'sessions');
     
+    // Remove undefined values to prevent Firestore errors
+    const cleanedSessionData = this.removeUndefinedValues(sessionData as unknown as Record<string, unknown>);
+    
     const docRef = await addDoc(sessionsRef, {
-      ...sessionData,
+      ...cleanedSessionData,
       centerId,
       professionalId: createdBy,
       createdBy,
@@ -383,8 +399,11 @@ export class FirestoreService {
   static async updateSession(centerId: string, sessionId: string, sessionData: Partial<SessionFormData>, updatedBy: string): Promise<void> {
     const sessionRef = doc(db, 'centers', centerId, 'sessions', sessionId);
     
+    // Remove undefined values to prevent Firestore errors
+    const cleanedSessionData = this.removeUndefinedValues(sessionData);
+    
     await updateDoc(sessionRef, {
-      ...sessionData,
+      ...cleanedSessionData,
       lastModifiedBy: updatedBy,
       updatedAt: serverTimestamp(),
     });
