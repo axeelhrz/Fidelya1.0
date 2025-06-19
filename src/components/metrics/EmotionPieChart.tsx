@@ -14,7 +14,8 @@ import {
   ListItemIcon,
   ListItemText,
   Chip,
-  alpha
+  alpha,
+  Stack
 } from '@mui/material';
 import {
   PieChart,
@@ -63,7 +64,7 @@ export default function EmotionPieChart({
   data, 
   title, 
   loading = false, 
-  height = 350 
+  height = 400 
 }: EmotionPieChartProps) {
   const theme = useTheme();
 
@@ -71,21 +72,21 @@ export default function EmotionPieChart({
   const getEmotionIcon = (emotion: string) => {
     const emotionLower = emotion.toLowerCase();
     if (emotionLower.includes('alegr') || emotionLower.includes('feliz') || emotionLower.includes('positiv')) {
-      return <SentimentVerySatisfied sx={{ fontSize: 20 }} />;
+      return <SentimentVerySatisfied sx={{ fontSize: 18 }} />;
     }
     if (emotionLower.includes('calm') || emotionLower.includes('tranquil') || emotionLower.includes('paz')) {
-      return <SentimentSatisfied sx={{ fontSize: 20 }} />;
+      return <SentimentSatisfied sx={{ fontSize: 18 }} />;
     }
     if (emotionLower.includes('ansi') || emotionLower.includes('estrés') || emotionLower.includes('nervios')) {
-      return <MoodBad sx={{ fontSize: 20 }} />;
+      return <MoodBad sx={{ fontSize: 18 }} />;
     }
     if (emotionLower.includes('trist') || emotionLower.includes('depres') || emotionLower.includes('melanc')) {
-      return <SentimentVeryDissatisfied sx={{ fontSize: 20 }} />;
+      return <SentimentVeryDissatisfied sx={{ fontSize: 18 }} />;
     }
     if (emotionLower.includes('neutr') || emotionLower.includes('estable')) {
-      return <SentimentNeutral sx={{ fontSize: 20 }} />;
+      return <SentimentNeutral sx={{ fontSize: 18 }} />;
     }
-    return <Mood sx={{ fontSize: 20 }} />;
+    return <Mood sx={{ fontSize: 18 }} />;
   };
 
   // Preparar datos para el gráfico
@@ -101,7 +102,8 @@ export default function EmotionPieChart({
                CHART_COLORS.emotions[index % CHART_COLORS.emotions.length],
         percentage: total > 0 ? (value / total) * 100 : 0
       }))
-      .sort((a, b) => b.value - a.value);
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6); // Limitar a 6 emociones principales
   }, [data]);
 
   const CustomTooltip = ({ active, payload }: TooltipProps) => {
@@ -136,12 +138,12 @@ export default function EmotionPieChart({
 
   if (loading) {
     return (
-      <Card sx={{ height: height + 150 }}>
+      <Card sx={{ height: height + 100, borderRadius: 3 }}>
         <CardHeader title={title} />
         <CardContent>
-          <Box sx={{ display: 'flex', gap: 3 }}>
-            <Box sx={{ flex: 1 }}>
-              <Skeleton variant="circular" width={200} height={200} sx={{ mx: 'auto' }} />
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} sx={{ height: height - 50 }}>
+            <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <Skeleton variant="circular" width={200} height={200} />
             </Box>
             <Box sx={{ flex: 1 }}>
               {[1, 2, 3, 4, 5].map((item) => (
@@ -152,7 +154,7 @@ export default function EmotionPieChart({
                 </Box>
               ))}
             </Box>
-          </Box>
+          </Stack>
         </CardContent>
       </Card>
     );
@@ -160,12 +162,15 @@ export default function EmotionPieChart({
 
   if (chartData.length === 0) {
     return (
-      <Card sx={{ height: height + 150 }}>
-        <CardHeader title={title} />
+      <Card sx={{ height: height + 100, borderRadius: 3 }}>
+        <CardHeader 
+          title={title}
+          titleTypographyProps={{ variant: 'h6', fontWeight: 'bold' }}
+        />
         <CardContent>
           <Box 
             sx={{ 
-              height: height,
+              height: height - 50,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -190,15 +195,15 @@ export default function EmotionPieChart({
   const mostFrequent = chartData[0];
 
   return (
-    <Card sx={{ height: height + 150 }}>
+    <Card sx={{ height: height + 100, borderRadius: 3 }}>
       <CardHeader 
         title={title}
         titleTypographyProps={{ variant: 'h6', fontWeight: 'bold' }}
       />
-      <CardContent>
-        <Box sx={{ display: 'flex', gap: 3, height: height }}>
+      <CardContent sx={{ height: height + 50 }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} sx={{ height: '100%' }}>
           {/* Gráfico circular */}
-          <Box sx={{ flex: 1, minWidth: 250 }}>
+          <Box sx={{ flex: 1, minHeight: 250 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -220,11 +225,11 @@ export default function EmotionPieChart({
           </Box>
 
           {/* Lista detallada */}
-          <Box sx={{ flex: 1, minWidth: 250 }}>
+          <Box sx={{ flex: 1, minHeight: 250 }}>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2, fontWeight: 600 }}>
               Distribución Detallada
             </Typography>
-            <List sx={{ p: 0, maxHeight: height - 60, overflow: 'auto' }}>
+            <List sx={{ p: 0, maxHeight: 200, overflow: 'auto' }}>
               {chartData.map((item, index) => (
                 <ListItem 
                   key={item.name}
@@ -245,17 +250,14 @@ export default function EmotionPieChart({
                   </ListItemIcon>
                   <ListItemText
                     primary={
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {item.name}
+                      <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
+                        {item.name.length > 15 ? `${item.name.substring(0, 15)}...` : item.name}
                       </Typography>
                     }
                     secondary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                        <Circle sx={{ fontSize: 8, color: item.color }} />
-                        <Typography variant="caption" color="text.secondary">
-                          {item.value} registros
-                        </Typography>
-                      </Box>
+                      <Typography variant="caption" color="text.secondary">
+                        {item.value} registros
+                      </Typography>
                     }
                   />
                   <Chip
@@ -272,65 +274,38 @@ export default function EmotionPieChart({
                 </ListItem>
               ))}
             </List>
-          </Box>
-        </Box>
 
-        {/* Estadísticas resumidas */}
-        <Box 
-          sx={{ 
-            mt: 3, 
-            pt: 2, 
-            borderTop: `1px solid ${theme.palette.divider}`,
-            display: 'flex', 
-            justifyContent: 'space-around',
-            flexWrap: 'wrap',
-            gap: 2
-          }}
-        >
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
-              {chartData.length}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Estados únicos
-            </Typography>
-          </Box>
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
-              {totalRecords}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Total registros
-            </Typography>
-          </Box>
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
-              {mostFrequent?.percentage.toFixed(0)}%
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Más frecuente
-            </Typography>
-          </Box>
-          <Box sx={{ textAlign: 'center', maxWidth: 120 }}>
-            <Typography 
-              variant="body2" 
-              color="primary" 
+            {/* Estadísticas resumidas */}
+            <Box 
               sx={{ 
-                fontWeight: 'bold',
-                fontSize: '0.875rem',
-                lineHeight: 1.2,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
+                mt: 2, 
+                pt: 2, 
+                borderTop: `1px solid ${theme.palette.divider}`,
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: 2,
+                textAlign: 'center'
               }}
             >
-              {mostFrequent?.name || 'N/A'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Estado dominante
-            </Typography>
+              <Box>
+                <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
+                  {chartData.length}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Estados únicos
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
+                  {totalRecords}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Total registros
+                </Typography>
+              </Box>
+            </Box>
           </Box>
-        </Box>
+        </Stack>
       </CardContent>
     </Card>
   );

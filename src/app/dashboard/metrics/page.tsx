@@ -11,7 +11,7 @@ import {
   Container,
   Stack,
   Paper,
-  Divider,
+  Grid,
   alpha,
   useTheme,
   useMediaQuery,
@@ -45,6 +45,7 @@ function MetricsPageContent() {
   const { user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   
   // Estado para filtros
   const [filters, setFilters] = useState<MetricsFiltersType>({
@@ -103,7 +104,7 @@ function MetricsPageContent() {
     loadAuxiliaryData();
   }, [user?.centerId, allPatients]);
 
-  // Preparar tarjetas de métricas principales
+  // Preparar tarjetas de métricas principales con títulos más cortos
   const dashboardCards: DashboardCardType[] = React.useMemo(() => {
     if (!metrics) return [];
 
@@ -136,9 +137,9 @@ function MetricsPageContent() {
       },
       {
         id: 'average-sessions',
-        title: 'Promedio/Paciente',
-        value: metrics.averageSessionsPerPatient,
-        subtitle: 'Sesiones por paciente',
+        title: 'Promedio Sesiones',
+        value: metrics.averageSessionsPerPatient.toFixed(1),
+        subtitle: 'Por paciente',
         icon: 'trending_up',
         color: 'info',
         trend: comparison?.averageSessionsPerPatient ? {
@@ -163,8 +164,8 @@ function MetricsPageContent() {
       {
         id: 'follow-up-rate',
         title: 'Tasa Seguimiento',
-        value: `${metrics.followUpRate}%`,
-        subtitle: 'Pacientes 2+ sesiones',
+        value: `${metrics.followUpRate.toFixed(0)}%`,
+        subtitle: 'Con 2+ sesiones',
         icon: 'assignment_turned_in',
         color: metrics.followUpRate >= 70 ? 'success' : metrics.followUpRate >= 50 ? 'warning' : 'error',
         trend: comparison?.followUpRate ? {
@@ -369,8 +370,8 @@ function MetricsPageContent() {
       </Box>
 
       {metrics ? (
-        <Stack spacing={{ xs: 4, md: 5 }}>
-          {/* Tarjetas de métricas principales - Layout optimizado */}
+        <Stack spacing={{ xs: 4, md: 6 }}>
+          {/* Tarjetas de métricas principales - Grid perfecto */}
           <Box>
             <Typography 
               variant="h5" 
@@ -382,33 +383,33 @@ function MetricsPageContent() {
             >
               Indicadores Clave
             </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: 'repeat(2, 1fr)',
-                  md: 'repeat(3, 1fr)',
-                  lg: 'repeat(6, 1fr)'
-                },
-                gap: { xs: 2, sm: 2.5, md: 3 },
-                '& > *': {
-                  minWidth: 0,
-                }
-              }}
-            >
+            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
               {dashboardCards.map((card, index) => (
-                <MetricCard 
-                  key={card.id} 
-                  card={card} 
-                  loading={loading}
-                  delay={index}
-                />
+                <Grid 
+                  item 
+                  xs={6} 
+                  sm={4} 
+                  md={3} 
+                  lg={2} 
+                  key={card.id}
+                  sx={{
+                    display: 'flex',
+                    '& > *': {
+                      width: '100%'
+                    }
+                  }}
+                >
+                  <MetricCard 
+                    card={card} 
+                    loading={loading}
+                    delay={index}
+                  />
+                </Grid>
               ))}
-            </Box>
+            </Grid>
           </Box>
 
-          {/* Gráficos principales - Layout responsivo */}
+          {/* Gráficos principales - Layout mejorado */}
           <Box>
             <Typography 
               variant="h5" 
@@ -420,35 +421,26 @@ function MetricsPageContent() {
             >
               Evolución Temporal
             </Typography>
-            <Stack 
-              direction={{ xs: 'column', lg: 'row' }} 
-              spacing={3}
-              sx={{
-                '& > *': {
-                  minWidth: 0,
-                  minHeight: 400
-                }
-              }}
-            >
-              <Box sx={{ flex: { lg: 2 } }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} lg={8}>
                 <SessionsLineChart
                   data={metrics.sessionsOverTime}
-                  title="Sesiones por Día"
+                  title="Sesiones Registradas por Día"
                   loading={loading}
                   showArea={true}
                   color={theme.palette.primary.main}
-                  height={350}
+                  height={400}
                 />
-              </Box>
-              <Box sx={{ flex: { lg: 1 } }}>
+              </Grid>
+              <Grid item xs={12} lg={4}>
                 <EmotionPieChart
                   data={metrics.emotionalDistribution}
-                  title="Estados Emocionales"
+                  title="Distribución Emocional"
                   loading={loading}
-                  height={350}
+                  height={400}
                 />
-              </Box>
-            </Stack>
+              </Grid>
+            </Grid>
           </Box>
 
           {/* Gráficos secundarios */}
@@ -463,35 +455,26 @@ function MetricsPageContent() {
             >
               Análisis Detallado
             </Typography>
-            <Stack 
-              direction={{ xs: 'column', lg: 'row' }} 
-              spacing={3}
-              sx={{
-                '& > *': {
-                  minWidth: 0,
-                  minHeight: 400
-                }
-              }}
-            >
-              <Box sx={{ flex: 1 }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} lg={6}>
                 <MotivesBarChart
                   data={metrics.motivesDistribution}
-                  title="Motivos de Consulta"
+                  title="Motivos de Consulta Más Frecuentes"
                   loading={loading}
                   maxItems={8}
-                  height={350}
+                  height={400}
                 />
-              </Box>
-              <Box sx={{ flex: 1 }}>
+              </Grid>
+              <Grid item xs={12} lg={6}>
                 <AlertStatusDonut
                   activeAlerts={metrics.activeAlerts}
                   resolvedAlerts={metrics.resolvedAlerts}
-                  title="Estado de Alertas"
+                  title="Estado de Alertas Clínicas"
                   loading={loading}
-                  height={350}
+                  height={400}
                 />
-              </Box>
-            </Stack>
+              </Grid>
+            </Grid>
           </Box>
 
           {/* Tendencias adicionales */}
@@ -504,7 +487,7 @@ function MetricsPageContent() {
                 fontFamily: '"Inter", sans-serif'
               }}
             >
-              Crecimiento
+              Tendencias de Crecimiento
             </Typography>
             <SessionsLineChart
               data={metrics.patientsOverTime}
@@ -512,11 +495,11 @@ function MetricsPageContent() {
               loading={loading}
               showArea={false}
               color={theme.palette.success.main}
-              height={300}
+              height={350}
             />
           </Box>
 
-          {/* Información del período - Compacta */}
+          {/* Información del período - Mejorada */}
           <Paper 
             sx={{ 
               p: { xs: 3, md: 4 }, 
@@ -527,29 +510,29 @@ function MetricsPageContent() {
               border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
             }}
           >
-            <Stack 
-              direction={{ xs: 'column', sm: 'row' }} 
-              spacing={{ xs: 2, sm: 4 }}
-              divider={<Box sx={{ borderLeft: { sm: 1 }, borderTop: { xs: 1, sm: 0 }, borderColor: 'divider' }} />}
-            >
-              <Box sx={{ flex: 1, textAlign: { xs: 'left', sm: 'center' } }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 0.5, color: 'primary.main' }}>
-                  Período Analizado
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {format(metrics.periodStart, 'dd/MM/yyyy', { locale: es })} - {' '}
-                  {format(metrics.periodEnd, 'dd/MM/yyyy', { locale: es })}
-                </Typography>
-              </Box>
-              <Box sx={{ flex: 1, textAlign: { xs: 'left', sm: 'center' } }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 0.5, color: 'success.main' }}>
-                  Última Actualización
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {format(metrics.calculatedAt, 'dd/MM/yyyy HH:mm', { locale: es })}
-                </Typography>
-              </Box>
-            </Stack>
+            <Grid container spacing={3} alignItems="center">
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>
+                    Período Analizado
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    {format(metrics.periodStart, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })} - {' '}
+                    {format(metrics.periodEnd, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ textAlign: { xs: 'center', sm: 'right' } }}>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'success.main' }}>
+                    Última Actualización
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    {format(metrics.calculatedAt, 'dd/MM/yyyy \'a las\' HH:mm', { locale: es })}
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
           </Paper>
         </Stack>
       ) : (
@@ -566,7 +549,7 @@ function MetricsPageContent() {
           <Typography variant="h6" sx={{ mb: 1 }}>
             Sin datos disponibles
           </Typography>
-          No hay datos para el período seleccionado. Ajusta los filtros para ver las métricas.
+          No hay datos disponibles para el período seleccionado. Ajusta los filtros para ver las métricas.
         </Alert>
       )}
 
