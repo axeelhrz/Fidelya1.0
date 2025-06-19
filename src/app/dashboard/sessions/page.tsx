@@ -34,7 +34,6 @@ import SessionsTable from '@/components/sessions/SessionsTable';
 import SessionFilters from '@/components/sessions/SessionFilters';
 import SessionDialog from '@/components/sessions/SessionDialog';
 import SessionView from '@/components/sessions/SessionView';
-import SessionsDebug from '@/components/debug/SessionsDebug';
 
 import { Session, SessionFilters as SessionFiltersType } from '@/types/session';
 import { User } from '@/types/auth';
@@ -293,9 +292,6 @@ export default function SessionsPage() {
       <DashboardLayout>
         <Container maxWidth={false} sx={{ py: 4, px: 4 }}>
           <Stack spacing={4}>
-            {/* Componente de Debug - TEMPORAL */}
-            <SessionsDebug />
-
             {/* Encabezado profesional */}
             <Fade in timeout={400}>
               <Box>
