@@ -45,7 +45,6 @@ function MetricsPageContent() {
   const { user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   
   // Estado para filtros
   const [filters, setFilters] = useState<MetricsFiltersType>({
@@ -394,7 +393,7 @@ function MetricsPageContent() {
                 },
                 gap: { xs: 2, sm: 2.5, md: 3 },
                 '& > *': {
-                  minWidth: 0, // Permite que las tarjetas se compriman
+                  minWidth: 0,
                 }
               }}
             >
@@ -531,7 +530,7 @@ function MetricsPageContent() {
             <Stack 
               direction={{ xs: 'column', sm: 'row' }} 
               spacing={{ xs: 2, sm: 4 }}
-              divider={<Divider orientation={isMobile ? 'horizontal' : 'vertical'} flexItem />}
+              divider={<Box sx={{ borderLeft: { sm: 1 }, borderTop: { xs: 1, sm: 0 }, borderColor: 'divider' }} />}
             >
               <Box sx={{ flex: 1, textAlign: { xs: 'left', sm: 'center' } }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 0.5, color: 'primary.main' }}>

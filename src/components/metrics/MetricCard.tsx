@@ -11,6 +11,7 @@ import {
   alpha,
   Grow,
   Tooltip,
+  Stack,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -51,7 +52,8 @@ export default function MetricCard({
     return (
       <Card 
         sx={{ 
-          height: 160,
+          aspectRatio: '1',
+          width: '100%',
           borderRadius: 3,
           overflow: 'hidden',
           background: theme.palette.mode === 'dark' 
@@ -59,18 +61,18 @@ export default function MetricCard({
             : 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
         }}
       >
-        <CardContent sx={{ p: 2.5, height: '100%' }}>
-          <Box display="flex" flexDirection="column" height="100%">
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5}>
-              <Skeleton variant="text" width="60%" height={20} />
-              <Skeleton variant="circular" width={40} height={40} />
+        <CardContent sx={{ p: 2, height: '100%' }}>
+          <Stack spacing={1.5} sx={{ height: '100%' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Skeleton variant="text" width="60%" height={16} />
+              <Skeleton variant="circular" width={32} height={32} />
             </Box>
-            <Skeleton variant="text" width="50%" height={36} sx={{ mb: 1 }} />
-            <Skeleton variant="text" width="80%" height={16} sx={{ mb: 1 }} />
-            <Box mt="auto">
-              <Skeleton variant="rectangular" width="100%" height={24} sx={{ borderRadius: 1.5 }} />
+            <Skeleton variant="text" width="50%" height={32} />
+            <Skeleton variant="text" width="80%" height={14} />
+            <Box sx={{ mt: 'auto' }}>
+              <Skeleton variant="rectangular" width="100%" height={20} sx={{ borderRadius: 1 }} />
             </Box>
-          </Box>
+          </Stack>
         </CardContent>
       </Card>
     );
@@ -96,9 +98,9 @@ export default function MetricCard({
 
   const getTrendIcon = () => {
     if (!card.trend) return null;
-    if (card.trend.value > 0) return <TrendingUp sx={{ fontSize: 16, color: theme.palette.success.main }} />;
-    if (card.trend.value < 0) return <TrendingDown sx={{ fontSize: 16, color: theme.palette.error.main }} />;
-    return <TrendingFlat sx={{ fontSize: 16, color: theme.palette.text.secondary }} />;
+    if (card.trend.value > 0) return <TrendingUp sx={{ fontSize: 14, color: theme.palette.success.main }} />;
+    if (card.trend.value < 0) return <TrendingDown sx={{ fontSize: 14, color: theme.palette.error.main }} />;
+    return <TrendingFlat sx={{ fontSize: 14, color: theme.palette.text.secondary }} />;
   };
 
   const getTrendColor = () => {
@@ -117,11 +119,19 @@ export default function MetricCard({
     return value.toLocaleString();
   };
 
+  // Acortar título si es muy largo
+  const getShortTitle = (title: string) => {
+    const words = title.split(' ');
+    if (words.length <= 2) return title;
+    return words.slice(0, 2).join(' ');
+  };
+
   return (
     <Grow in timeout={600 + delay * 100}>
       <Card 
         sx={{ 
-          height: 160,
+          aspectRatio: '1',
+          width: '100%',
           borderRadius: 3,
           overflow: 'hidden',
           position: 'relative',
@@ -151,37 +161,33 @@ export default function MetricCard({
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        <CardContent sx={{ p: 2.5, height: '100%' }}>
-          <Box display="flex" flexDirection="column" height="100%" justifyContent="space-between">
+        <CardContent sx={{ p: 2, height: '100%' }}>
+          <Stack spacing={1} sx={{ height: '100%' }}>
             {/* Header compacto */}
-            <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={1}>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Tooltip title={card.title} placement="top">
-                  <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
-                    sx={{ 
-                      fontWeight: 600,
-                      letterSpacing: '0.05em',
-                      fontSize: '0.7rem',
-                      fontFamily: '"Inter", sans-serif',
-                      textTransform: 'uppercase',
-                      lineHeight: 1.2,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {card.title}
-                  </Typography>
-                </Tooltip>
-              </Box>
+            <Box display="flex" alignItems="flex-start" justifyContent="space-between">
+              <Tooltip title={card.title} placement="top">
+                <Typography 
+                  variant="caption" 
+                  color="text.secondary" 
+                  sx={{ 
+                    fontWeight: 600,
+                    letterSpacing: '0.02em',
+                    fontSize: '0.65rem',
+                    fontFamily: '"Inter", sans-serif',
+                    textTransform: 'uppercase',
+                    lineHeight: 1.2,
+                    flex: 1,
+                    mr: 1
+                  }}
+                >
+                  {getShortTitle(card.title)}
+                </Typography>
+              </Tooltip>
               <Box
                 className="metric-icon"
                 sx={{
-                  width: 40,
-                  height: 40,
+                  width: 32,
+                  height: 32,
                   borderRadius: 2,
                   background: alpha(getColorValue(), 0.1),
                   display: 'flex',
@@ -190,22 +196,21 @@ export default function MetricCard({
                   color: getColorValue(),
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   flexShrink: 0,
-                  ml: 1
                 }}
               >
-                <IconComponent sx={{ fontSize: 20 }} />
+                <IconComponent sx={{ fontSize: 18 }} />
               </Box>
             </Box>
 
-            {/* Value - más compacto */}
-            <Box sx={{ mb: 1 }}>
+            {/* Value - centrado y prominente */}
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Tooltip title={`Valor exacto: ${card.value}`} placement="top">
                 <Typography 
-                  variant="h4" 
+                  variant="h3" 
                   component="div" 
                   className="metric-value"
                   sx={{ 
-                    fontWeight: 700,
+                    fontWeight: 800,
                     background: getGradient(),
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
@@ -213,7 +218,8 @@ export default function MetricCard({
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     fontFamily: '"Inter", "Manrope", sans-serif',
                     lineHeight: 1,
-                    fontSize: '1.75rem'
+                    fontSize: '1.5rem',
+                    textAlign: 'center'
                   }}
                 >
                   {formatValue(card.value)}
@@ -223,15 +229,15 @@ export default function MetricCard({
 
             {/* Subtitle compacto */}
             {card.subtitle && (
-              <Box sx={{ mb: 1.5 }}>
+              <Box sx={{ textAlign: 'center' }}>
                 <Tooltip title={card.subtitle} placement="bottom">
                   <Typography 
                     variant="caption" 
                     color="text.secondary" 
                     sx={{ 
-                      lineHeight: 1.3,
+                      lineHeight: 1.2,
                       fontFamily: '"Inter", sans-serif',
-                      fontSize: '0.75rem',
+                      fontSize: '0.65rem',
                       display: '-webkit-box',
                       WebkitLineClamp: 1,
                       WebkitBoxOrient: 'vertical',
@@ -249,46 +255,31 @@ export default function MetricCard({
               <Box 
                 display="flex" 
                 alignItems="center" 
+                justifyContent="center"
                 sx={{
-                  p: 1,
-                  borderRadius: 2,
+                  p: 0.5,
+                  borderRadius: 1.5,
                   background: alpha(getTrendColor(), 0.08),
                   border: `1px solid ${alpha(getTrendColor(), 0.15)}`,
-                  minHeight: 32
+                  minHeight: 24
                 }}
               >
                 {getTrendIcon()}
-                <Box sx={{ ml: 1, flex: 1, minWidth: 0 }}>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      fontWeight: 600,
-                      color: getTrendColor(),
-                      fontFamily: '"Inter", sans-serif',
-                      fontSize: '0.7rem',
-                      lineHeight: 1.2
-                    }}
-                  >
-                    {card.trend.value > 0 ? '+' : ''}{Math.abs(card.trend.value).toFixed(1)}%
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    color="text.secondary"
-                    sx={{ 
-                      fontFamily: '"Inter", sans-serif',
-                      fontSize: '0.65rem',
-                      display: 'block',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
-                    {card.trend.period}
-                  </Typography>
-                </Box>
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    fontWeight: 600,
+                    color: getTrendColor(),
+                    fontFamily: '"Inter", sans-serif',
+                    fontSize: '0.6rem',
+                    ml: 0.5
+                  }}
+                >
+                  {card.trend.value > 0 ? '+' : ''}{Math.abs(card.trend.value).toFixed(0)}%
+                </Typography>
               </Box>
             )}
-          </Box>
+          </Stack>
         </CardContent>
       </Card>
     </Grow>
