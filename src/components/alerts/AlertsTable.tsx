@@ -44,12 +44,9 @@ import { es } from 'date-fns/locale';
 import { 
   ClinicalAlert, 
   ALERT_TYPE_LABELS, 
-  ALERT_URGENCY_LABELS,
-  ALERT_STATUS_LABELS,
   ALERT_TRIGGER_LABELS,
   ALERT_TYPE_COLORS,
   ALERT_URGENCY_COLORS,
-  ALERT_STATUS_COLORS
 } from '@/types/alert';
 import { Patient } from '@/types/patient';
 import AlertBadge from './AlertBadge';
@@ -138,10 +135,6 @@ export default function AlertsTable({
     return ALERT_URGENCY_COLORS[urgency as keyof typeof ALERT_URGENCY_COLORS] || ALERT_URGENCY_COLORS.media;
   };
 
-  const getStatusColor = (status: string) => {
-    return ALERT_STATUS_COLORS[status as keyof typeof ALERT_STATUS_COLORS] || ALERT_STATUS_COLORS.activa;
-  };
-
   // Loading skeleton
   if (loading) {
     return (
@@ -206,7 +199,6 @@ export default function AlertsTable({
           const TypeIcon = typeConfig.icon;
           const TriggerIcon = getTriggerIcon(alert.trigger);
           const urgencyColor = getUrgencyColor(alert.urgency);
-          const statusColor = getStatusColor(alert.status);
 
           return (
             <Card
@@ -328,10 +320,9 @@ export default function AlertsTable({
                       variant="caption" 
                       color="text.secondary"
                       sx={{ 
-                        display: 'block',
+                        display: '-webkit-box',
                         mt: 1,
                         fontStyle: 'italic',
-                        display: '-webkit-box',
                         WebkitLineClamp: 1,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',

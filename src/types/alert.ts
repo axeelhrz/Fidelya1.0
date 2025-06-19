@@ -1,4 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
 
 // Tipos clínicos específicos
 export type ClinicalAlertType = 
@@ -69,12 +68,12 @@ export interface ClinicalAlert {
     detectedKeywords?: string[];
     aiConfidence?: number;
     daysSinceLastSession?: number;
-    customData?: Record<string, any>;
+    customData?: Record<string, unknown>;
   };
 }
 
 // Compatibilidad con interface anterior
-export interface Alert extends ClinicalAlert {}
+export type Alert = ClinicalAlert;
 
 export interface AlertFormData {
   patientId: string;
@@ -90,7 +89,7 @@ export interface AlertFormData {
     sessionId?: string;
     appointmentId?: string;
     medicationId?: string;
-    customData?: Record<string, any>;
+    customData?: Record<string, unknown>;
   };
 }
 
@@ -349,7 +348,7 @@ export interface AlertActionLog {
   performedBy: string; // 'system' para acciones automáticas
   details: string;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Configuración de automatizaciones

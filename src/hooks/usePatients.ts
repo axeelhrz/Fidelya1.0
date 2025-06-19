@@ -12,7 +12,7 @@ export function usePatients(filters?: PatientFilters) {
   const [hasMore, setHasMore] = useState(true);
   
   const { user } = useAuth();
-  const lastDocRef = useRef<QueryDocumentSnapshot<DocumentData> | undefined>();
+  const lastDocRef = useRef<QueryDocumentSnapshot<DocumentData> | undefined>(undefined);
   const filtersRef = useRef(filters);
 
   // Actualizar refs cuando cambien los valores
@@ -66,9 +66,10 @@ export function usePatients(filters?: PatientFilters) {
   }, [loadPatients]);
 
   // Efecto para cargar pacientes cuando cambien los filtros
+  const filtersString = JSON.stringify(filters);
   useEffect(() => {
     refresh();
-  }, [user?.centerId, JSON.stringify(filters)]);
+  }, [user?.centerId, filtersString, refresh]);
 
   return {
     patients,

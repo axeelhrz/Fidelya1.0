@@ -13,12 +13,9 @@ import {
   Typography,
   Collapse,
   IconButton,
-  FormControlLabel,
-  Switch,
   Chip,
   Stack,
   Autocomplete,
-  useTheme,
 } from '@mui/material';
 import {
   FilterList as FilterIcon,
@@ -37,10 +34,6 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { es } from 'date-fns/locale';
 import {
   AlertFilters,
-  AlertType,
-  AlertTrigger,
-  AlertUrgency,
-  AlertStatus,
   ALERT_TYPES,
   ALERT_TRIGGERS,
   ALERT_URGENCIES,
@@ -65,10 +58,8 @@ export default function AlertFiltersComponent({
   onFiltersChange,
   onClearFilters,
 }: AlertFiltersProps) {
-  const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
-
-  const handleFilterChange = (key: keyof AlertFilters, value: any) => {
+  const handleFilterChange = (key: keyof AlertFilters, value: string | boolean | null | undefined) => {
     onFiltersChange({
       ...filters,
       [key]: value,

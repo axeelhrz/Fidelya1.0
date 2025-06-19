@@ -1,4 +1,4 @@
-import { WhatsAppTemplate, WHATSAPP_TEMPLATES } from '@/types/alert';
+import { WHATSAPP_TEMPLATES } from '@/types/alert';
 
 export interface WhatsAppMessage {
   to: string;
@@ -10,7 +10,7 @@ export interface WhatsAppMessage {
     };
     components: {
       type: string;
-      parameters: { type: string; text: string }[];
+      parameters?: { type: string; text: string }[];
     }[];
   };
 }
@@ -202,7 +202,7 @@ export class WhatsAppService {
   /**
    * Obtiene el estado de un mensaje enviado
    */
-  static async getMessageStatus(messageId: string): Promise<{
+  static async getMessageStatus(): Promise<{
     status: 'sent' | 'delivered' | 'read' | 'failed';
     timestamp: Date;
   } | null> {

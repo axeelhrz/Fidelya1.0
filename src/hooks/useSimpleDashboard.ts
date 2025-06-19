@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useAuth } from '@/context/AuthContext';
-import { format, subDays, isToday, isFuture, startOfWeek, endOfWeek } from 'date-fns';
+import { isToday, isFuture, startOfWeek, endOfWeek } from 'date-fns';
 
 interface Patient {
   id: string;
@@ -179,10 +179,11 @@ export function useSimpleDashboard() {
 
         // Procesar motivos de consulta de los pacientes
         const motivesData: Record<string, number> = {};
-        allPatients.forEach(patient => {
-          // Aquí deberías obtener el motivo de consulta del paciente
-          // Por ahora usamos tipos de sesión como proxy
-        });
+        // TODO: Implementar obtención de motivos de consulta de pacientes
+        // allPatients.forEach(patient => {
+        //   // Aquí deberías obtener el motivo de consulta del paciente
+        //   // Por ahora usamos tipos de sesión como proxy
+        // });
 
         // Si no hay datos emocionales de sesiones, usar datos de pacientes si están disponibles
         if (Object.keys(emotionalData).length === 0) {

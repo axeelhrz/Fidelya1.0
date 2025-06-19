@@ -5,14 +5,13 @@ import {
   Warning,
   Analytics,
   Settings,
-  Psychology
 } from '@mui/icons-material';
 
 export interface NavigationItem {
   id: string;
   label: string;
   path: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string; fontSize?: 'inherit' | 'large' | 'medium' | 'small' }>;
   roles: string[];
   children?: NavigationItem[];
   adminOnly?: boolean;

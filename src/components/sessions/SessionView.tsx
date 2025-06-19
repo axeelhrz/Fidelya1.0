@@ -13,7 +13,6 @@ import {
   CardContent,
   Chip,
   Avatar,
-  Divider,
   Alert,
   Accordion,
   AccordionSummary,
@@ -29,7 +28,6 @@ import {
   Stack,
   useTheme,
   alpha,
-  Fade,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -466,7 +464,7 @@ export default function SessionView({
                     />
                     <Chip
                       label={SESSION_STATUS_LABELS[session.status]}
-                      color={getStatusColor(session.status) as any}
+                      color={getStatusColor(session.status) as 'success' | 'info' | 'error' | 'warning' | 'secondary' | 'default'}
                       variant="outlined"
                       sx={{ borderRadius: 'xl' }}
                     />
@@ -787,7 +785,7 @@ export default function SessionView({
                           </Stack>
                           <Chip
                             label={RISK_LEVEL_LABELS[session.aiAnalysis.riskLevel]}
-                            color={getRiskLevelSeverity(session.aiAnalysis.riskLevel) as any}
+                            color={getRiskLevelSeverity(session.aiAnalysis.riskLevel) as 'success' | 'warning' | 'error' | 'info'}
                             variant="outlined"
                             sx={{ borderRadius: 'xl', fontWeight: 600 }}
                           />

@@ -4,10 +4,7 @@ import {
   onSnapshot, 
   collection, 
   query, 
-  where, 
-  orderBy,
   DocumentData,
-  Query,
   QueryConstraint 
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';

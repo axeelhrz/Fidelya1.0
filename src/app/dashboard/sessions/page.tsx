@@ -22,7 +22,6 @@ import {
 import {
   Add as AddIcon,
   Psychology as PsychologyIcon,
-  TrendingUp as TrendingUpIcon,
   Schedule as ScheduleIcon,
   CheckCircle as CheckCircleIcon,
   SmartToy as SmartToyIcon,

@@ -22,14 +22,13 @@ import {
   Clear,
   ExpandMore,
   ExpandLess,
-  Download,
   Refresh,
   PictureAsPdf,
   TableChart,
   Description
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { MetricsFilters } from '@/types/metrics';
+import type { MetricsFilters } from '@/types/metrics';
 import { format, subDays, subWeeks, subMonths } from 'date-fns';
 
 interface MetricsFiltersProps {

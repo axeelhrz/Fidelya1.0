@@ -20,7 +20,6 @@ import {
   AutoAwesome,
   Insights,
   TrendingUp,
-  Favorite,
   LocalHospital,
   WavingHand,
 } from '@mui/icons-material';

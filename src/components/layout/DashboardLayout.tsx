@@ -14,8 +14,6 @@ import {
   Fab,
   Badge,
   Popover,
-  Paper,
-  ListItem,
   ListItemText,
   ListItemIcon,
   ListItemButton,
@@ -46,7 +44,6 @@ import {
   Event,
   Info,
   CheckCircle,
-  Warning,
 } from '@mui/icons-material';
 import { useAuth } from '@/context/AuthContext';
 import { useRole } from '@/hooks/useRole';
@@ -54,7 +51,7 @@ import { useAlerts, useRecentAlerts } from '@/hooks/useAlerts';
 import SidebarItem from './SidebarItem';
 import EmailVerificationBanner from '@/components/auth/EmailVerificationBanner';
 import { navigationItems } from '@/constants/navigation';
-import { ClinicalAlert, AlertType, AlertUrgency } from '@/types/alert';
+import { AlertType, AlertUrgency } from '@/types/alert';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -67,7 +64,6 @@ interface DashboardLayoutProps {
 // Componente para el botón de notificaciones flotante
 function FloatingNotificationButton() {
   const theme = useTheme();
-  const { user } = useAuth();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const { alerts: recentAlerts, loading } = useRecentAlerts(10);
   const { alerts: activeAlerts } = useAlerts({ status: 'activa' });

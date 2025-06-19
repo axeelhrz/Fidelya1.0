@@ -17,14 +17,8 @@ import {
   Divider
 } from '@mui/material';
 import {
-  Psychology,
-  TrendingUp,
-  TrendingDown,
   Schedule,
-  Group,
   Assessment,
-  CheckCircle,
-  Warning
 } from '@mui/icons-material';
 import { DashboardMetrics } from '@/types/metrics';
 

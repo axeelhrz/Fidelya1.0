@@ -18,24 +18,18 @@ import {
   Paper,
   Skeleton,
   Stack,
-  Divider,
   alpha,
   useTheme,
   Fade,
 } from '@mui/material';
 import {
-  Person,
   Edit,
   CalendarToday,
   Psychology,
   Warning,
   EventNote,
   ArrowBack,
-  Phone,
   Email,
-  LocationOn,
-  AccessTime,
-  TrendingUp,
   Assignment,
   Circle,
 } from '@mui/icons-material';
@@ -80,10 +74,10 @@ export default function PatientView({
     return (
       <Box sx={{ p: 4 }}>
         <Stack spacing={3}>
-          <Box display="flex" alignItems="center" spacing={2}>
+          <Stack direction="row" alignItems="center" spacing={2}>
             <Skeleton variant="circular" width={48} height={48} />
             <Skeleton variant="text" width={200} height={32} />
-          </Box>
+          </Stack>
           
           <Stack 
             direction={{ xs: 'column', lg: 'row' }} 

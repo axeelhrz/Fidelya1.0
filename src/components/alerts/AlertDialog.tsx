@@ -12,8 +12,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormControlLabel,
-  Switch,
   CircularProgress,
   Alert,
   Box,
@@ -47,7 +45,6 @@ import {
   AlertFormData,
   AlertType,
   AlertTrigger,
-  AlertUrgency,
   NotificationChannel,
   ALERT_TYPES,
   ALERT_TRIGGERS,
@@ -57,7 +54,6 @@ import {
   ALERT_URGENCY_LABELS,
 } from '@/types/alert';
 import { usePatients } from '@/hooks/usePatients';
-import { Patient } from '@/types/patient';
 
 interface AlertDialogProps {
   open: boolean;
@@ -145,7 +141,7 @@ export default function AlertDialog({
     }
   }, [alert, preselectedPatientId]);
 
-  const handleInputChange = (field: keyof AlertFormData, value: any) => {
+  const handleInputChange = (field: keyof AlertFormData, value: AlertFormData[keyof AlertFormData]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -153,8 +149,8 @@ export default function AlertDialog({
 
     // Auto-generar título basado en tipo y trigger
     if (field === 'type' || field === 'trigger') {
-      const newType = field === 'type' ? value : formData.type;
-      const newTrigger = field === 'trigger' ? value : formData.trigger;
+      const newType = field === 'type' ? value as AlertType : formData.type;
+      const newTrigger = field === 'trigger' ? value as AlertTrigger : formData.trigger;
       
       if (newType && newTrigger) {
         const autoTitle = generateAutoTitle(newType, newTrigger);
@@ -291,7 +287,7 @@ export default function AlertDialog({
                   <Box>
                     <Typography variant="body2">{option.fullName}</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {option.email}
+                      {option.email || 'Sin contacto'}
                     </Typography>
                   </Box>
                 </Box>

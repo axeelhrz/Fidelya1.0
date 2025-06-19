@@ -14,11 +14,6 @@ import {
   Snackbar,
   Container,
   Stack,
-  Fade,
-  Slide,
-  alpha,
-  useTheme,
-  Skeleton,
 } from '@mui/material';
 import {
   Add,
@@ -27,7 +22,6 @@ import {
   Psychology,
   HealthAndSafety,
   Download,
-  PersonAdd,
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -54,8 +48,6 @@ function StatCard({
   color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info';
   subtitle?: string;
 }) {
-  const theme = useTheme();
-
   return (
     <Paper 
       sx={{ 
@@ -134,7 +126,6 @@ function StatCard({
 
 export default function PatientsPage() {
   const { user } = useAuth();
-  const theme = useTheme();
   const [filters, setFilters] = useState<PatientFiltersType>({});
   const [psychologists, setPsychologists] = useState<User[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);

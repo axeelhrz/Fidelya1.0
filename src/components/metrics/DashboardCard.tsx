@@ -6,7 +6,6 @@ import {
   CardContent,
   Typography,
   Box,
-  Chip,
   useTheme,
   Skeleton,
   alpha,

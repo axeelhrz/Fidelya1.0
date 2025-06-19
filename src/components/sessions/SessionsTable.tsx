@@ -10,7 +10,6 @@ import {
   TableRow,
   TablePagination,
   TableSortLabel,
-  Paper,
   Chip,
   IconButton,
   Menu,
@@ -40,7 +39,6 @@ import {
   Cancel as CancelIcon,
   PersonOff as PersonOffIcon,
   Refresh as RefreshIcon,
-  TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';

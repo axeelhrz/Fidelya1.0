@@ -23,10 +23,8 @@ import {
   LinearProgress,
   Paper,
   Stack,
-  Divider,
   useTheme,
   alpha,
-  Fade,
   IconButton,
 } from '@mui/material';
 import {
@@ -37,9 +35,7 @@ import {
   Notes as NotesIcon,
   Close as CloseIcon,
   SmartToy as SmartToyIcon,
-  Assessment as AssessmentIcon,
   Assignment as AssignmentIcon,
-  NextPlan as NextPlanIcon,
 } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';

@@ -24,8 +24,6 @@ import {
   AccessTime,
   AutoAwesome,
   Mood,
-  TrendingUp,
-  Person,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -267,7 +265,7 @@ export default function RecentSessions({ sessions, loading = false }: RecentSess
                               whiteSpace: 'nowrap'
                             }}
                           >
-                            "{session.aiSummary}"
+                            &ldquo;{session.aiSummary}&rdquo;
                           </Typography>
                         )}
                       </Box>

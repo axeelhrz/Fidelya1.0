@@ -15,7 +15,6 @@ import {
   ListItemText,
   Chip,
   alpha,
-  Stack,
   Paper
 } from '@mui/material';
 import {
@@ -24,7 +23,6 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip,
-  Legend
 } from 'recharts';
 import {
   Mood,
@@ -34,7 +32,6 @@ import {
   SentimentVeryDissatisfied,
   SentimentVerySatisfied,
   Psychology,
-  Circle
 } from '@mui/icons-material';
 import { EMOTIONAL_STATE_COLORS } from '@/types/patient';
 import { EMOTIONAL_TONE_COLORS } from '@/types/session';
@@ -262,7 +259,7 @@ export default function EmotionPieChart({
               Distribución Detallada
             </Typography>
             <List sx={{ p: 0, maxHeight: 220, overflow: 'auto' }}>
-              {chartData.map((item, index) => (
+              {chartData.map((item) => (
                 <ListItem 
                   key={item.name}
                   sx={{ 

@@ -1,4 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
 
 export type UserRole = 'admin' | 'psychologist' | 'patient';
 
@@ -19,6 +18,7 @@ export interface User {
   specialization?: string; // Para psicólogos
   licenseNumber?: string; // Para psicólogos
   emergencyContact?: string; // Para pacientes
+  phoneNumber?: string; // Para pacientes
 }
 
 export interface AuthContextType {

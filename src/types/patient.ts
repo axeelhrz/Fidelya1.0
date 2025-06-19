@@ -24,11 +24,12 @@ export interface Patient {
   observaciones?: string;
   assignedPsychologist: string; // UID del psicólogo
   nextSession?: string; // ISO date string
-  customFields?: Record<string, any>; // Campos personalizados del centro
+  customFields?: Record<string, string | number | boolean | Date>; // Campos personalizados del centro
   status: 'active' | 'inactive' | 'discharged';
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
   createdBy: string; // UID del profesional que lo registró
+  email?: string; // Email del paciente
 }
 
 export interface PatientFormData {
@@ -40,7 +41,7 @@ export interface PatientFormData {
   observaciones?: string;
   assignedPsychologist: string;
   nextSession?: string;
-  customFields?: Record<string, any>;
+  customFields?: Record<string, string | number | boolean | Date>;
 }
 
 export interface PatientFilters {

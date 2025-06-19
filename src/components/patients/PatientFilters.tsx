@@ -21,7 +21,6 @@ import {
   Fade,
 } from '@mui/material';
 import {
-  FilterList,
   ExpandMore,
   ExpandLess,
   Clear,

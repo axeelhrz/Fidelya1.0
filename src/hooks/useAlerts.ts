@@ -4,7 +4,7 @@ import { ClinicalAlert, AlertFilters, AlertFormData, AlertStats } from '@/types/
 import { FirestoreService } from '@/services/firestore';
 import { AlertService } from '@/services/alertService';
 import { useSecureCollection } from './useFirestore';
-import { query, where, orderBy, limit, QueryConstraint } from 'firebase/firestore';
+import { where, orderBy, limit, QueryConstraint } from 'firebase/firestore';
 
 export function useAlerts(filters?: AlertFilters) {
   const { user } = useAuth();
@@ -155,6 +155,43 @@ export function useAlerts(filters?: AlertFilters) {
   };
 }
 
+export function useRecentAlerts(limit: number = 5) {
+  const { user } = useAuth();
+  const [alerts, setAlerts] = useState<ClinicalAlert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRecentAlerts = async () => {
+      if (!user?.centerId) {
+        setLoading(false);
+        setAlerts([]);
+        setError(null);
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        setError(null);
+        const recentAlerts = await FirestoreService.getRecentAlerts(user.centerId, limit);
+        setAlerts(recentAlerts);
+      } catch (err) {
+        console.error('Error loading recent alerts:', err);
+        setError(err instanceof Error ? err.message : 'Error loading recent alerts');
+        setAlerts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Esperar un poco para asegurar que el usuario esté autenticado
+    const timer = setTimeout(fetchRecentAlerts, 200);
+    return () => clearTimeout(timer);
+  }, [user?.centerId, limit]);
+
+  return { alerts, loading, error };
+}
+
 export function useAlertStats() {
   const { user } = useAuth();
   const [stats, setStats] = useState<AlertStats>({
@@ -182,9 +219,9 @@ export function useAlertStats() {
       
       try {
         setLoading(true);
+        setError(null);
         const alertStats = await AlertService.getAlertStats(user.centerId);
         setStats(alertStats);
-        setError(null);
       } catch (err) {
         console.error('Error loading alert stats:', err);
         setError(err instanceof Error ? err.message : 'Error loading stats');
@@ -218,9 +255,9 @@ export function usePatientAlerts(patientId: string) {
       
       try {
         setLoading(true);
+        setError(null);
         const patientAlerts = await FirestoreService.getPatientAlerts(user.centerId, patientId);
         setAlerts(patientAlerts);
-        setError(null);
       } catch (err) {
         console.error('Error loading patient alerts:', err);
         setError(err instanceof Error ? err.message : 'Error loading patient alerts');
@@ -300,41 +337,4 @@ export function useAlertAutomation() {
     processScheduledAlerts,
     loading
   };
-}
-
-export function useRecentAlerts(limit: number = 5) {
-  const { user } = useAuth();
-  const [alerts, setAlerts] = useState<ClinicalAlert[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchRecentAlerts = async () => {
-      if (!user?.centerId) {
-        setLoading(false);
-        setAlerts([]);
-        setError(null);
-        return;
-      }
-      
-      try {
-        setLoading(true);
-        const recentAlerts = await FirestoreService.getRecentAlerts(user.centerId, limit);
-        setAlerts(recentAlerts);
-        setError(null);
-      } catch (err) {
-        console.error('Error loading recent alerts:', err);
-        setError(err instanceof Error ? err.message : 'Error loading recent alerts');
-        setAlerts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Esperar un poco para asegurar que el usuario esté autenticado
-    const timer = setTimeout(fetchRecentAlerts, 200);
-    return () => clearTimeout(timer);
-  }, [user?.centerId, limit]);
-
-  return { alerts, loading, error };
 }
