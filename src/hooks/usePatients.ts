@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Patient, PatientFormData, PatientFilters, PatientStats } from '@/types/patient';
 import { FirestoreService } from '@/services/firestore';
 import { useAuth } from '@/context/AuthContext';
@@ -65,11 +65,17 @@ export function usePatients(filters?: PatientFilters) {
     loadPatients(true);
   }, [loadPatients]);
 
+  // Memoizar la cadena de filtros para evitar re-renders innecesarios
+  const filtersString = useMemo(() => JSON.stringify(filters), [filters]);
+
   // Efecto para cargar pacientes cuando cambien los filtros
-  const filtersString = JSON.stringify(filters);
   useEffect(() => {
-    refresh();
-  }, [user?.centerId, filtersString, refresh]);
+    if (!user?.centerId) return;
+    
+    setLastDoc(undefined);
+    setHasMore(true);
+    loadPatients(true);
+  }, [user?.centerId, filtersString]); // Removemos refresh de las dependencias
 
   return {
     patients,
