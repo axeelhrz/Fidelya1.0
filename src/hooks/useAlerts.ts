@@ -3,16 +3,16 @@ import { useAuth } from '@/context/AuthContext';
 import { ClinicalAlert, AlertFilters, AlertFormData, AlertStats } from '@/types/alert';
 import { FirestoreService } from '@/services/firestore';
 import { AlertService } from '@/services/alertService';
-import { useCollection } from './useFirestore';
-import { query, where, orderBy, limit } from 'firebase/firestore';
+import { useSecureCollection } from './useFirestore';
+import { query, where, orderBy, limit, QueryConstraint } from 'firebase/firestore';
 
 export function useAlerts(filters?: AlertFilters) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Construir query constraints para useCollection
-  const queryConstraints = [];
+  // Construir query constraints para useSecureCollection
+  const queryConstraints: QueryConstraint[] = [];
   
   if (filters?.status) {
     queryConstraints.push(where('status', '==', filters.status));
@@ -47,7 +47,11 @@ export function useAlerts(filters?: AlertFilters) {
     data: alerts, 
     loading: collectionLoading, 
     error: collectionError 
-  } = useCollection<ClinicalAlert>(collectionPath, queryConstraints);
+  } = useSecureCollection<ClinicalAlert>(
+    collectionPath, 
+    queryConstraints,
+    !!user?.centerId // Solo habilitar si hay centerId
+  );
 
   useEffect(() => {
     setLoading(collectionLoading);
@@ -171,20 +175,27 @@ export function useAlertStats() {
 
   useEffect(() => {
     const fetchStats = async () => {
-      if (!user?.centerId) return;
+      if (!user?.centerId) {
+        setLoading(false);
+        return;
+      }
       
       try {
         setLoading(true);
         const alertStats = await AlertService.getAlertStats(user.centerId);
         setStats(alertStats);
+        setError(null);
       } catch (err) {
+        console.error('Error loading alert stats:', err);
         setError(err instanceof Error ? err.message : 'Error loading stats');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStats();
+    // Esperar un poco para asegurar autenticación
+    const timer = setTimeout(fetchStats, 300);
+    return () => clearTimeout(timer);
   }, [user?.centerId]);
 
   return { stats, loading, error };
@@ -198,20 +209,30 @@ export function usePatientAlerts(patientId: string) {
 
   useEffect(() => {
     const fetchPatientAlerts = async () => {
-      if (!user?.centerId || !patientId) return;
+      if (!user?.centerId || !patientId) {
+        setLoading(false);
+        setAlerts([]);
+        setError(null);
+        return;
+      }
       
       try {
         setLoading(true);
         const patientAlerts = await FirestoreService.getPatientAlerts(user.centerId, patientId);
         setAlerts(patientAlerts);
+        setError(null);
       } catch (err) {
+        console.error('Error loading patient alerts:', err);
         setError(err instanceof Error ? err.message : 'Error loading patient alerts');
+        setAlerts([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPatientAlerts();
+    // Esperar un poco para asegurar autenticación
+    const timer = setTimeout(fetchPatientAlerts, 200);
+    return () => clearTimeout(timer);
   }, [user?.centerId, patientId]);
 
   return { alerts, loading, error };
@@ -289,20 +310,30 @@ export function useRecentAlerts(limit: number = 5) {
 
   useEffect(() => {
     const fetchRecentAlerts = async () => {
-      if (!user?.centerId) return;
+      if (!user?.centerId) {
+        setLoading(false);
+        setAlerts([]);
+        setError(null);
+        return;
+      }
       
       try {
         setLoading(true);
         const recentAlerts = await FirestoreService.getRecentAlerts(user.centerId, limit);
         setAlerts(recentAlerts);
+        setError(null);
       } catch (err) {
+        console.error('Error loading recent alerts:', err);
         setError(err instanceof Error ? err.message : 'Error loading recent alerts');
+        setAlerts([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRecentAlerts();
+    // Esperar un poco para asegurar que el usuario esté autenticado
+    const timer = setTimeout(fetchRecentAlerts, 200);
+    return () => clearTimeout(timer);
   }, [user?.centerId, limit]);
 
   return { alerts, loading, error };
