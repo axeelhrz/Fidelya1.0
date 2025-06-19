@@ -40,6 +40,7 @@ import { Patient, EMOTIONAL_STATE_COLORS, GENDER_LABELS } from '@/types/patient'
 import { User } from '@/types/auth';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
 
 interface PatientsTableProps {
   patients: Patient[];
@@ -113,13 +114,32 @@ export default function PatientsTable({
     return colors[index];
   };
 
-  const sortedPatients = [...patients].sort((a, b) => {
-    let aValue: string | number | Date = a[sortField] ?? '';
-    let bValue: string | number | Date = b[sortField] ?? '';
+  const convertTimestampToDate = (value: Date | Timestamp | string | number): Date => {
+    if (value && typeof value === 'object' && 'toDate' in value && typeof value.toDate === 'function') {
+      return value.toDate();
+    }
+    if (value instanceof Date) {
+      return value;
+    }
+    return new Date(value as string | number);
+  };
 
+  const sortedPatients = [...patients].sort((a, b) => {
+    let aValue: string | number | Date | Timestamp = a[sortField] ?? '';
+    let bValue: string | number | Date | Timestamp = b[sortField] ?? '';
+
+    // Convert Timestamp to Date if needed
     if (sortField === 'createdAt') {
-      aValue = new Date(aValue).getTime();
-      bValue = new Date(bValue).getTime();
+      aValue = convertTimestampToDate(aValue).getTime();
+      bValue = convertTimestampToDate(bValue).getTime();
+    } else {
+      // Handle other Timestamp fields
+      if (aValue && typeof aValue === 'object' && 'toDate' in aValue && typeof aValue.toDate === 'function') {
+        aValue = aValue.toDate();
+      }
+      if (bValue && typeof bValue === 'object' && 'toDate' in bValue && typeof bValue.toDate === 'function') {
+        bValue = bValue.toDate();
+      }
     }
 
     if (sortField === 'age') {
@@ -129,7 +149,7 @@ export default function PatientsTable({
 
     if (typeof aValue === 'string') {
       aValue = aValue.toLowerCase();
-      bValue = bValue.toLowerCase();
+      bValue = (bValue as string).toLowerCase();
     }
 
     if (sortDirection === 'asc') {
@@ -143,6 +163,22 @@ export default function PatientsTable({
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
+
+  const formatCreatedAt = (createdAt: Date | Timestamp | string) => {
+    try {
+      let date: Date;
+      if (createdAt instanceof Timestamp) {
+        date = createdAt.toDate();
+      } else if (typeof createdAt === 'string') {
+        date = new Date(createdAt);
+      } else {
+        date = createdAt;
+      }
+      return format(date, 'dd/MM/yyyy', { locale: es });
+    } catch {
+      return 'Fecha inválida';
+    }
+  };
 
   if (error) {
     return (
@@ -235,7 +271,7 @@ export default function PatientsTable({
           Todavía no hay pacientes registrados
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Comienza haciendo clic en "Nuevo Paciente" para registrar tu primer caso clínico.
+          Comienza haciendo clic en &quot;Nuevo Paciente&quot; para registrar tu primer caso clínico.
         </Typography>
       </Paper>
     );
@@ -442,7 +478,7 @@ export default function PatientsTable({
                     <Stack direction="row" spacing={1} alignItems="center">
                       <CalendarToday sx={{ fontSize: 16, color: 'text.secondary' }} />
                       <Typography variant="body2" fontWeight={500}>
-                        {format(new Date(patient.createdAt), 'dd/MM/yyyy', { locale: es })}
+                        {formatCreatedAt(patient.createdAt)}
                       </Typography>
                     </Stack>
                   </TableCell>
