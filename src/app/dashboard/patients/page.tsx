@@ -40,7 +40,7 @@ import { Patient, PatientFilters as PatientFiltersType } from '@/types/patient';
 import { User } from '@/types/auth';
 import { FirestoreService } from '@/services/firestore';
 
-// Componente para tarjetas de estadísticas como el dashboard
+// Componente para tarjetas de estadísticas con tamaño uniforme
 function StatCard({ 
   title, 
   value, 
@@ -56,30 +56,57 @@ function StatCard({
 }) {
   const theme = useTheme();
 
-  const getColorValue = () => {
-    switch (color) {
-      case 'primary': return theme.palette.primary.main;
-      case 'secondary': return theme.palette.secondary.main;
-      case 'success': return theme.palette.success.main;
-      case 'warning': return theme.palette.warning.main;
-      case 'error': return theme.palette.error.main;
-      case 'info': return theme.palette.info.main;
-      default: return theme.palette.primary.main;
-    }
-  };
-
   return (
-    <Paper sx={{ height: '100%', p: 3 }}>
-      <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Box>
-          <Typography color="text.secondary" gutterBottom variant="body2">
+    <Paper 
+      sx={{ 
+        height: 140, // Altura fija para uniformidad
+        p: 3,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between'
+      }}
+    >
+      <Box display="flex" alignItems="flex-start" justifyContent="space-between">
+        <Box flex={1} sx={{ pr: 2 }}>
+          <Typography 
+            color="text.secondary" 
+            gutterBottom 
+            variant="body2"
+            sx={{ 
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              lineHeight: 1.2,
+              mb: 1
+            }}
+          >
             {title}
           </Typography>
-          <Typography variant="h4" component="div" fontWeight="bold">
+          <Typography 
+            variant="h4" 
+            component="div" 
+            fontWeight="bold"
+            sx={{
+              fontSize: { xs: '1.5rem', sm: '2rem' },
+              lineHeight: 1.2,
+              mb: 0.5
+            }}
+          >
             {value}
           </Typography>
           {subtitle && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+              sx={{
+                fontSize: '0.75rem',
+                lineHeight: 1.3,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+              }}
+            >
               {subtitle}
             </Typography>
           )}
@@ -93,6 +120,9 @@ function StatCard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            minWidth: 48,
+            minHeight: 48,
+            flexShrink: 0,
           }}
         >
           {icon}
@@ -221,147 +251,190 @@ export default function PatientsPage() {
   return (
     <ProtectedRoute requiredRoles={['admin', 'psychologist']}>
       <DashboardLayout>
-        <Box>
-          {/* Encabezado */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-            <Box>
-              <Typography variant="h4" fontWeight="bold" gutterBottom>
-                Gestión de Pacientes
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Administra y supervisa la información de tus pacientes
-              </Typography>
+        {/* Container con padding para separar del sidebar y navbar */}
+        <Container maxWidth={false} sx={{ py: 4, px: { xs: 2, sm: 3, md: 4 } }}>
+          <Stack spacing={4}>
+            {/* Encabezado */}
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box>
+                <Typography variant="h4" fontWeight="bold" gutterBottom>
+                  Gestión de Pacientes
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Administra y supervisa la información de tus pacientes
+                </Typography>
+              </Box>
+              <Box display="flex" gap={2}>
+                <Button
+                  variant="outlined"
+                  startIcon={<Download />}
+                  onClick={exportToCSV}
+                  disabled={patients.length === 0}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  Exportar CSV
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={handleCreatePatient}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                  }}
+                >
+                  Nuevo Paciente
+                </Button>
+              </Box>
             </Box>
-            <Box display="flex" gap={2}>
-              <Button
-                variant="outlined"
-                onClick={exportToCSV}
-                disabled={patients.length === 0}
-              >
-                Exportar CSV
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={handleCreatePatient}
-              >
-                Nuevo Paciente
-              </Button>
-            </Box>
-          </Box>
 
-          {/* Estadísticas */}
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: 3, 
-              mb: 4,
-              '& > *': {
-                flex: '1 1 250px',
-                minWidth: '250px'
-              }
-            }}
-          >
-            <StatCard
-              title="Total Pacientes"
-              value={statsLoading ? '...' : stats?.total || 0}
-              icon={<People />}
-              color="primary"
-            />
-            <StatCard
-              title="Pacientes Activos"
-              value={statsLoading ? '...' : stats?.active || 0}
-              icon={<TrendingUp />}
-              color="success"
-              subtitle={`${Math.round(((stats?.active || 0) / (stats?.total || 1)) * 100)}% del total`}
-            />
-            <StatCard
-              title="Psicólogos"
-              value={psychologists.length}
-              icon={<Psychology />}
-              color="secondary"
-            />
-            <StatCard
-              title="Edad Promedio"
-              value={statsLoading ? '...' : `${Math.round(stats?.averageAge || 0)} años`}
-              icon={<HealthAndSafety />}
-              color="warning"
-            />
-          </Box>
-
-          {/* Filtros */}
-          <PatientFilters
-            filters={filters}
-            onFiltersChange={setFilters}
-            psychologists={psychologists}
-          />
-
-          {/* Tabla de pacientes */}
-          <PatientsTable
-            patients={patients}
-            psychologists={psychologists}
-            loading={loading}
-            error={error}
-            onEdit={handleEditPatient}
-            onDelete={handleDeletePatient}
-            onView={handleViewPatient}
-          />
-
-          {/* Diálogo de paciente */}
-          <PatientDialog
-            open={dialogOpen}
-            onClose={() => setDialogOpen(false)}
-            onSuccess={handleDialogSuccess}
-            patient={selectedPatient}
-            psychologists={psychologists}
-          />
-
-          {/* Diálogo de confirmación de eliminación */}
-          <Dialog
-            open={deleteDialogOpen}
-            onClose={() => setDeleteDialogOpen(false)}
-          >
-            <DialogTitle>Confirmar Eliminación</DialogTitle>
-            <DialogContent>
-              <Typography>
-                ¿Estás seguro de que deseas eliminar al paciente{' '}
-                <strong>{patientToDelete?.fullName}</strong>?
-              </Typography>
-              <Alert severity="warning" sx={{ mt: 2 }}>
-                Esta acción marcará al paciente como inactivo. Los datos no se eliminarán permanentemente.
-              </Alert>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setDeleteDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button
-                onClick={confirmDelete}
-                color="error"
-                variant="contained"
-                disabled={actionLoading}
-              >
-                {actionLoading ? 'Eliminando...' : 'Eliminar'}
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Snackbar para notificaciones */}
-          <Snackbar
-            open={snackbar.open}
-            autoHideDuration={6000}
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-          >
-            <Alert
-              onClose={() => setSnackbar({ ...snackbar, open: false })}
-              severity={snackbar.severity}
-              sx={{ width: '100%' }}
+            {/* Estadísticas con tamaño uniforme */}
+            <Box 
+              sx={{ 
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, 1fr)',
+                  lg: 'repeat(4, 1fr)'
+                },
+                gap: 3,
+              }}
             >
-              {snackbar.message}
-            </Alert>
-          </Snackbar>
-        </Box>
+              <StatCard
+                title="Total Pacientes"
+                value={statsLoading ? '...' : stats?.total || 0}
+                icon={<People />}
+                color="primary"
+                subtitle="Registrados en el sistema"
+              />
+              <StatCard
+                title="Pacientes Activos"
+                value={statsLoading ? '...' : stats?.active || 0}
+                icon={<TrendingUp />}
+                color="success"
+                subtitle={`${Math.round(((stats?.active || 0) / (stats?.total || 1)) * 100)}% del total registrado`}
+              />
+              <StatCard
+                title="Profesionales"
+                value={psychologists.length}
+                icon={<Psychology />}
+                color="secondary"
+                subtitle="Psicólogos disponibles"
+              />
+              <StatCard
+                title="Edad Promedio"
+                value={statsLoading ? '...' : `${Math.round(stats?.averageAge || 0)} años`}
+                icon={<HealthAndSafety />}
+                color="warning"
+                subtitle="Promedio de todos los pacientes"
+              />
+            </Box>
+
+            {/* Filtros */}
+            <PatientFilters
+              filters={filters}
+              onFiltersChange={setFilters}
+              psychologists={psychologists}
+            />
+
+            {/* Tabla de pacientes */}
+            <PatientsTable
+              patients={patients}
+              psychologists={psychologists}
+              loading={loading}
+              error={error}
+              onEdit={handleEditPatient}
+              onDelete={handleDeletePatient}
+              onView={handleViewPatient}
+            />
+
+            {/* Diálogo de paciente */}
+            <PatientDialog
+              open={dialogOpen}
+              onClose={() => setDialogOpen(false)}
+              onSuccess={handleDialogSuccess}
+              patient={selectedPatient}
+              psychologists={psychologists}
+            />
+
+            {/* Diálogo de confirmación de eliminación */}
+            <Dialog
+              open={deleteDialogOpen}
+              onClose={() => setDeleteDialogOpen(false)}
+              PaperProps={{
+                sx: {
+                  borderRadius: 3,
+                  minWidth: 400,
+                }
+              }}
+            >
+              <DialogTitle>
+                <Typography variant="h6" fontWeight={600}>
+                  Confirmar Eliminación
+                </Typography>
+              </DialogTitle>
+              <DialogContent>
+                <Typography sx={{ mb: 2 }}>
+                  ¿Estás seguro de que deseas eliminar al paciente{' '}
+                  <strong>{patientToDelete?.fullName}</strong>?
+                </Typography>
+                <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                  Esta acción marcará al paciente como inactivo. Los datos no se eliminarán permanentemente.
+                </Alert>
+              </DialogContent>
+              <DialogActions sx={{ p: 3, pt: 1 }}>
+                <Button 
+                  onClick={() => setDeleteDialogOpen(false)}
+                  sx={{ 
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 500
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={confirmDelete}
+                  color="error"
+                  variant="contained"
+                  disabled={actionLoading}
+                  sx={{ 
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600
+                  }}
+                >
+                  {actionLoading ? 'Eliminando...' : 'Eliminar'}
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            {/* Snackbar para notificaciones */}
+            <Snackbar
+              open={snackbar.open}
+              autoHideDuration={6000}
+              onClose={() => setSnackbar({ ...snackbar, open: false })}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+              <Alert
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                severity={snackbar.severity}
+                sx={{ 
+                  width: '100%',
+                  borderRadius: 3,
+                  fontWeight: 500
+                }}
+              >
+                {snackbar.message}
+              </Alert>
+            </Snackbar>
+          </Stack>
+        </Container>
       </DashboardLayout>
     </ProtectedRoute>
   );
