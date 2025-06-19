@@ -8,11 +8,12 @@ import {
   ListItemText,
   Badge,
   alpha,
+  SvgIconProps,
 } from '@mui/material';
 import React from 'react';
 
 interface SidebarItemProps {
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>> | React.ReactElement;
+  icon: React.ComponentType<SvgIconProps> | React.ReactElement;
   label: string;
   path: string;
   badge?: number;
@@ -38,7 +39,7 @@ export default function SidebarItem({
   // Create the icon element - handle Material-UI icon components
   const iconElement = React.isValidElement(icon) 
     ? icon 
-    : React.createElement(icon as React.ComponentType<React.SVGProps<SVGSVGElement>>);
+    : React.createElement(icon as React.ComponentType<SvgIconProps>);
 
   return (
     <ListItem disablePadding sx={{ mb: 0.5 }}>

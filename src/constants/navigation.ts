@@ -6,16 +6,16 @@ import {
   Analytics,
   Settings,
 } from '@mui/icons-material';
+import { SvgIconProps } from '@mui/material';
 
 export interface NavigationItem {
   id: string;
   label: string;
   path: string;
-  icon: React.ComponentType<{ className?: string; fontSize?: 'inherit' | 'large' | 'medium' | 'small' }>;
+  icon: React.ComponentType<SvgIconProps>;
   roles: string[];
   children?: NavigationItem[];
   adminOnly?: boolean;
-
 }
 
 export const navigationItems: NavigationItem[] = [
