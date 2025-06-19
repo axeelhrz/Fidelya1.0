@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box,
@@ -24,9 +24,12 @@ import { useAuth } from '@/context/AuthContext';
 import { applyActionCode, checkActionCode } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic';
+
 type VerificationState = 'loading' | 'success' | 'error' | 'expired' | 'invalid' | 'pending';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const [verificationState, setVerificationState] = useState<VerificationState>('loading');
   const [error, setError] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
@@ -356,5 +359,49 @@ export default function VerifyEmailPage() {
         </Typography>
       </Box>
     </Container>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <Container maxWidth="sm">
+      <Box
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+        py={4}
+      >
+        <Box display="flex" alignItems="center" mb={4}>
+          <Psychology sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
+          <Typography variant="h4" component="h1" fontWeight="bold">
+            Centro Psicológico
+          </Typography>
+        </Box>
+
+        <Card sx={{ width: '100%', maxWidth: 500 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Box textAlign="center">
+              <CircularProgress size={60} sx={{ mb: 3 }} />
+              <Typography variant="h6" gutterBottom>
+                Cargando...
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Preparando la verificación de email.
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </Container>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
