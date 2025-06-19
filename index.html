@@ -25,7 +25,9 @@
     <link rel="icon" type="image/png" sizes="32x32" href="./assets/icon.png">
     
     <!-- Preload de recursos críticos -->
-    <link rel="preload" href="./assets/Hero.mp4" as="video" type="video/mp4">
+    <link rel="preload" href="./assets/phones/Hero.avif" as="image" type="image/avif">
+    <link rel="preload" href="./assets/phones/Hero.webp" as="image" type="image/webp">
+    <link rel="preload" href="./assets/phones/Hero.jpg" as="image" type="image/jpeg">
     <link rel="preload" href="./assets/logo.avif" as="image" type="image/avif">
     <link rel="preload" href="./assets/logo.webp" as="image" type="image/webp">
     <link rel="preload" href="./assets/logo.png" as="image" type="image/png">
@@ -78,7 +80,7 @@
     <!-- Header Futurista Flotante -->
     <header class="header" id="header">
         <nav class="nav">
-            <!-- Lado izquierdo: Logo -->
+            <!-- Lado izquierdo: Logo y Toggle de idioma -->
             <div class="nav__left">
                 <!-- Logo flotante limpio optimizado -->
                 <div class="nav__brand">
@@ -97,24 +99,9 @@
                 </ul>
             </div>
             
-            <!-- Lado derecho: Toggle de idioma y CTA -->
-            <div class="nav__right">
-                <!-- Toggle de idioma en header -->
-                <div class="nav__language">
-                    <button class="nav__language-toggle" id="nav-language-toggle" aria-label="Cambiar idioma">
-                        <span class="nav__language-text" id="nav-language-text">ES</span>
-                        <div class="nav__language-icon">
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
-                            </svg>
-                        </div>
-                    </button>
-                </div>
-                
-                <!-- Botón CTA flotante -->
-                <div class="nav__cta">
-                    <a href="https://starflex.web.app/" class="btn btn--primary" data-translate="nav-cta">Comienza tu prueba gratuita</a>
-                </div>
+            <!-- Botón CTA flotante (lado derecho) -->
+            <div class="nav__cta">
+                <a href="https://starflex.web.app/" class="btn btn--primary" data-translate="nav-cta">Comienza tu prueba gratuita</a>
             </div>
             
             <!-- Toggle móvil flotante -->
@@ -165,12 +152,12 @@
                         </a>
                         
                         <div class="hero__download">
-                            <a href="https://play.google.com/store/apps/details?id=com.minoka.starflex&pli=1" class="download-btn download-btn--google-play" data-translate-aria="download-google" aria-label="Descargar en Google Play">
-                                <img src="./assets/GooglePlay.avif" class="download-btn__image" data-translate-alt="download-google-alt" alt="Descargar en Google Play" loading="eager">
+                            <a href="https://play.google.com/store/apps/details?id=com.minoka.starflex&pli=1" class="download-btn" data-translate-aria="download-google" aria-label="Descargar en Google Play">
+                                <img class="download-btn__image image-optimized" data-translate-alt="download-google-alt" alt="Descargar en Google Play" loading="eager">
                             </a>
                             
                             <a href="https://starflex.web.app/" class="download-btn download-btn--app-store" data-translate-aria="download-apple" aria-label="Descargar en App Store">
-                                <img src="./assets/AppleStore.avif" class="download-btn__image" data-translate-alt="download-apple-alt" alt="Descargar en App Store" loading="eager">
+                                <img class="download-btn__image image-optimized" data-translate-alt="download-apple-alt" alt="Descargar en App Store" loading="eager">
                             </a>
                         </div>
                         
@@ -180,32 +167,15 @@
                     </div>
                 </div>
 
-                <!-- iPhone Optimizado con Video Hero -->
+                <!-- iPhone Optimizado con Sistema de Imágenes Modernas -->
                 <div class="hero__media">
                     <div class="hero__phone-container">
                         <div class="hero__phone">
                             <!-- Pantalla limpia sin elementos que interfieren -->
                             <div class="hero__phone-screen">
-                                <!-- Contenido de la app optimizado con video -->
+                                <!-- Contenido de la app optimizado -->
                                 <div class="hero__phone-content">
-                                    <video 
-                                        class="hero__phone-video" 
-                                        id="hero-video"
-                                        autoplay 
-                                        muted 
-                                        loop 
-                                        playsinline
-                                        preload="auto"
-                                        poster="./assets/phones/Hero.jpg"
-                                        role="img" 
-                                        aria-label="Video demostrativo de la interfaz principal de StarFlex"
-                                    >
-                                        <source src="./assets/Hero.mp4" type="video/mp4">
-                                        <!-- Fallback para navegadores sin soporte de video -->
-                                        <div class="hero__phone-video-fallback">
-                                            <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex"></div>
-                                        </div>
-                                    </video>
+                                    <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex"></div>
                                 </div>
                             </div>
                         </div>
@@ -366,14 +336,16 @@
                     <div class="feature__content">
                         <h3 class="feature__title" data-translate="feature-referrals-title">REFERIDOS</h3>
                         <p class="feature__description" data-translate="feature-referrals-description">
-                            Comparte StarFlex con otros conductores y ambos ganan. Nuestro sistema de referidos te permite obtener beneficios por cada nuevo usuario que invites a la plataforma.
+                            Puede compartir su enlace de referido o su código QR y por cada usuario que se registre con su enlace, usted y el usuario referido gana 1 semana grátis.
                         </p>
                         <ul class="feature__list">
-                            <li class="feature__list-item" data-translate="feature-referrals-item-1">Enlace único de referido personalizado</li>
-                            <li class="feature__list-item" data-translate="feature-referrals-item-2">Recompensas por referidos exitosos</li>
-                            <li class="feature__list-item" data-translate="feature-referrals-item-3">Código QR para invitaciones rápidas</li>
-                            <li class="feature__list-item" data-translate="feature-referrals-item-4">Gana 1 semana gratis por cada referido</li>
-                            <li class="feature__list-item" data-translate="feature-referrals-item-5">Seguimiento de referidos en tiempo real</li>
+                            <li class="feature__list-item" data-translate="feature-referrals-item-2">Llegar</li>
+                            <li class="feature__list-item" data-translate="feature-referrals-item-3">Saltar selfie</li>
+                            <li class="feature__list-item" data-translate="feature-referrals-item-4">Saltar CAPTCHA-PUZZLE</li>
+                            <li class="feature__list-item" data-translate="feature-referrals-item-5">Filtros personalizables</li>
+                            <li class="feature__list-item" data-translate="feature-referrals-item-6">Auto búsqueda</li>
+                            <li class="feature__list-item" data-translate="feature-referrals-item-7">Notificación persistente</li>
+                            <li class="feature__list-item" data-translate="feature-referrals-item-8">Notificación por Llamada Telefónica</li>
                         </ul>
                     </div>
 
@@ -458,6 +430,7 @@
                                     <div class="videos__progress-fill"></div>
                                 </div>
                                 <div class="videos__time-display">
+                                    <span class="videos__current
                                     <span class="videos__current-time">0:00</span>
                                     <span class="videos__duration">0:00</span>
                                 </div>
@@ -623,6 +596,7 @@
             <!-- Header de contacto -->
             <div class="contact__header">
                 <div class="contact__badge">
+                    <span class="contact__badge-icon">📡</span>
                     <span data-translate="contact-badge">Conecta con el Futuro</span>
                 </div>
                 
@@ -662,7 +636,7 @@
                 <div class="contact__channel" data-channel="instagram">
                     <div class="contact__channel-icon">
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.28-.069-1.645-.069-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.948-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.44-.645 1.44-1.44s-.645-1.44-1.44-1.44z"/>
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                         </svg>
                     </div>
                     <div class="contact__channel-content">
@@ -762,7 +736,7 @@
         </div>
     </section>
 
-    <!-- ===== BOTÓN FLOTANTE FUTURISTA CON WHATSAPP Y TELEGRAM ===== -->
+    <!-- ===== BOTÓN FLOTANTE FUTURISTA CON WHATSAPP, TELEGRAM Y TOGGLE DE IDIOMA ===== -->
     <div class="floating-widget" id="floating-widget">
         <div class="floating-widget__container">
             <!-- Menú desplegable -->
@@ -790,6 +764,14 @@
                     </svg>
                     <div class="floating-widget__tooltip">Telegram</div>
                 </a>
+
+                <!-- Toggle de Idioma -->
+                <button class="floating-widget__menu-item floating-widget__language" 
+                        id="floating-language-toggle"
+                        aria-label="Cambiar idioma">
+                    <span class="floating-widget__language-text" id="floating-language-text">ES</span>
+                    <div class="floating-widget__tooltip">Cambiar idioma</div>
+                </button>
             </div>
 
             <!-- Botón principal -->

@@ -9,11 +9,8 @@ let isReducedMotion = false;
 // Variables para el sistema de idiomas
 let currentLanguage = 'es';
 const translations = {};
-// Variables para el botón flotante mejorado
+// Variables para el botón flotante
 let isFloatingMenuOpen = false;
-let floatingMenuTimeout = null;
-let magneticEffect = false;
-let lastMousePosition = { x: 0, y: 0 };
 // Variables para el control del navbar
 let lastScrollY = 0;
 let isScrollingDown = false;
@@ -22,9 +19,6 @@ let ticking = false;
 let touchStartY = 0;
 let touchEndY = 0;
 let isNavbarVisible = true;
-// Variables para el video hero
-let heroVideo = null;
-let heroVideoLoaded = false;
 
 // ===== CONFIGURACIÓN GLOBAL =====
 const CONFIG = {
@@ -32,66 +26,70 @@ const CONFIG = {
     ANIMATION_DURATION: 300,
     SCROLL_THRESHOLD: 100,
     
-    // Configuración del botón flotante
-    FLOATING_WIDGET: {
-        MAGNETIC_DISTANCE: 100,
-        AUTO_CLOSE_DELAY: 5000,
-        HOVER_DELAY: 200,
-        ANIMATION_DURATION: 800,
-        STAGGER_DELAY: 150
-    },
-    
     // Configuración de imágenes optimizadas
     IMAGE_FORMATS: {
         AVIF: 'image/avif',
+        WEBP: 'image/webp',
+        JPEG: 'image/jpeg',
+        PNG: 'image/png'
     },
     
     // Rutas de imágenes optimizadas
     IMAGE_PATHS: {
         hero: {
             avif: './assets/phones/Hero.avif',
+            webp: './assets/phones/Hero.webp',
+            jpg: './assets/phones/Hero.jpg'
         },
         logo: {
             avif: './assets/logo.avif',
+            webp: './assets/logo.webp',
+            png: './assets/logo.png'
         },
         phones: {
             horario: {
                 avif: './assets/phones/Horario.avif',
+                webp: './assets/phones/Horario.webp',
+                jpg: './assets/phones/Horario.jpg'
             },
             estaciones: {
                 avif: './assets/phones/Estaciones.avif',
+                webp: './assets/phones/Estaciones.webp',
+                jpg: './assets/phones/Estaciones.jpg'
             },
             calendario: {
                 avif: './assets/phones/Calendario.avif',
+                webp: './assets/phones/Calendario.webp',
+                jpg: './assets/phones/Calendario.jpg'
             },
             registro: {
                 avif: './assets/phones/Registro.avif',
+                webp: './assets/phones/Registro.webp',
+                jpg: './assets/phones/Registro.jpg'
             },
             notificaciones: {
                 avif: './assets/phones/Notificaciones.avif',
+                webp: './assets/phones/Notificaciones.webp',
+                jpg: './assets/phones/Notificaciones.jpg'
             },
             referidos: {
                 avif: './assets/phones/Referidos.avif',
+                webp: './assets/phones/Referidos.webp',
+                jpg: './assets/phones/Referidos.jpg'
             }
         },
         downloads: {
             apple: {
                 avif: './assets/AppleStore.avif',
+                webp: './assets/AppleStore.webp',
+                png: './assets/AppleStore.png'
             },
             google: {
                 avif: './assets/GooglePlay.avif',
+                webp: './assets/GooglePlay.webp',
+                png: './assets/GooglePlay.png'
             }
         }
-    },
-    
-    // Configuración del video hero
-    VIDEO_CONFIG: {
-        heroVideoPath: './assets/Hero.mp4',
-        autoplay: true,
-        muted: true,
-        loop: true,
-        playsinline: true,
-        preload: 'auto'
     }
 };
 
@@ -167,12 +165,14 @@ const translationData = {
         'feature-notifications-item-7': 'Filtros avanzados de notificación',
         // Feature 6: Referidos
         'feature-referrals-title': 'REFERIDOS',
-        'feature-referrals-description': 'Comparte StarFlex con otros conductores y ambos ganan. Nuestro sistema de referidos te permite obtener beneficios por cada nuevo usuario que invites a la plataforma.',
-        'feature-referrals-item-1': 'Enlace único de referido personalizado',
-        'feature-referrals-item-2': 'Recompensas por referidos exitosos',
-        'feature-referrals-item-3': 'Código QR para invitaciones rápidas',
-        'feature-referrals-item-4': 'Gana 1 semana gratis por cada referido',
-        'feature-referrals-item-5': 'Seguimiento de referidos en tiempo real',
+        'feature-referrals-description': 'Puede compartir su enlace de referido o su código QR y por cada usuario que se registre con su enlace, usted y el usuario referido gana 1 semana grátis.',
+        'feature-referrals-item-2': 'Llegar',
+        'feature-referrals-item-3': 'Saltar selfie',
+        'feature-referrals-item-4': 'Saltar CAPTCHA-PUZZLE',
+        'feature-referrals-item-5': 'Filtros personalizables',
+        'feature-referrals-item-6': 'Auto búsqueda',
+        'feature-referrals-item-7': 'Notificación persistente',
+        'feature-referrals-item-8': 'Notificación por Llamada Telefónica',
         // Videos Section
         'videos-badge': 'Experiencia Visual Inmersiva',
         'videos-title-main': 'VE STARFLEX',
@@ -303,12 +303,14 @@ const translationData = {
         'feature-notifications-item-7': 'Advanced notification filters',
         // Feature 6: Referrals
         'feature-referrals-title': 'REFERRALS',
-        'feature-referrals-description': 'Share StarFlex with other drivers and both earn. Our referral system allows you to get benefits for each new user you invite to the platform.',
-        'feature-referrals-item-1': 'Unique referral link',
-        'feature-referrals-item-2': 'Referral rewards',
-        'feature-referrals-item-3': 'Referral QR code',
-        'feature-referrals-item-4': 'Earn 1 week free for each referral',
-        'feature-referrals-item-5': 'Track your referrals in real time',
+        'feature-referrals-description': 'You can share your referral link or QR code and for each user who registers with your link, you and the referred user earn 1 free week.',
+        'feature-referrals-item-2': 'Arrive',
+        'feature-referrals-item-3': 'Skip selfie',
+        'feature-referrals-item-4': 'Skip CAPTCHA-PUZZLE',
+        'feature-referrals-item-5': 'Customizable filters',
+        'feature-referrals-item-6': 'Auto search',
+        'feature-referrals-item-7': 'Persistent notification',
+        'feature-referrals-item-8': 'Phone Call notification',
         // Videos Section
         'videos-badge': 'Immersive Visual Experience',
         'videos-title-main': 'SEE STARFLEX',
@@ -391,6 +393,7 @@ class ImageOptimizer {
     async detectFormatSupport() {
         const formats = [
             { type: 'avif', data: 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A=' },
+            { type: 'webp', data: 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA' }
         ];
         
         const promises = formats.map(format => 
@@ -402,6 +405,10 @@ class ImageOptimizer {
         );
         
         await Promise.all(promises);
+        
+        // Siempre agregar JPEG y PNG como fallbacks
+        this.supportedFormats.add('jpeg');
+        this.supportedFormats.add('png');
         
         console.log('Formatos soportados:', Array.from(this.supportedFormats));
     }
@@ -421,6 +428,10 @@ class ImageOptimizer {
         if (this.supportedFormats.has('avif') && imageConfig.avif) {
             return imageConfig.avif;
         }
+        if (this.supportedFormats.has('webp') && imageConfig.webp) {
+            return imageConfig.webp;
+        }
+        return imageConfig.jpg || imageConfig.png;
     }
     
     // Configurar lazy loading con Intersection Observer
@@ -556,683 +567,8 @@ class ImageOptimizer {
     }
 }
 
-// ===== CLASE PARA MANEJO DEL VIDEO HERO =====
-class HeroVideoManager {
-    constructor() {
-        this.video = null;
-        this.fallbackElement = null;
-        this.isLoaded = false;
-        this.isPlaying = false;
-        this.retryCount = 0;
-        this.maxRetries = 3;
-        this.init();
-    }
-    
-    init() {
-        this.video = document.getElementById('hero-video');
-        this.fallbackElement = document.querySelector('.hero__phone-video-fallback');
-        
-        if (!this.video) {
-            console.warn('Video hero no encontrado');
-            return;
-        }
-        
-        this.setupVideoEvents();
-        this.setupVideoAttributes();
-        this.attemptVideoLoad();
-    }
-    
-    setupVideoAttributes() {
-        if (!this.video) return;
-        
-        // Configurar atributos del video
-        this.video.autoplay = CONFIG.VIDEO_CONFIG.autoplay;
-        this.video.muted = CONFIG.VIDEO_CONFIG.muted;
-        this.video.loop = CONFIG.VIDEO_CONFIG.loop;
-        this.video.playsInline = CONFIG.VIDEO_CONFIG.playsinline;
-        this.video.preload = CONFIG.VIDEO_CONFIG.preload;
-        
-        // Asegurar que el video esté silenciado para autoplay
-        this.video.muted = true;
-        this.video.volume = 0;
-        
-        // Configurar poster como fallback
-        if (!this.video.poster) {
-            this.video.poster = './assets/phones/Hero.jpg';
-        }
-    }
-    
-    setupVideoEvents() {
-        if (!this.video) return;
-        
-        // Evento cuando el video puede empezar a reproducirse
-        this.video.addEventListener('canplay', () => {
-            console.log('Video hero: Puede reproducirse');
-            this.handleVideoReady();
-        });
-        
-        // Evento cuando el video está completamente cargado
-        this.video.addEventListener('canplaythrough', () => {
-            console.log('Video hero: Completamente cargado');
-            this.isLoaded = true;
-            this.hideLoadingState();
-        });
-        
-        // Evento cuando el video empieza a reproducirse
-        this.video.addEventListener('play', () => {
-            console.log('Video hero: Reproduciendo');
-            this.isPlaying = true;
-            this.hideLoadingState();
-            this.hideFallback();
-        });
-        
-        // Evento cuando el video se pausa
-        this.video.addEventListener('pause', () => {
-            console.log('Video hero: Pausado');
-            this.isPlaying = false;
-        });
-        
-        // Evento de error
-        this.video.addEventListener('error', (e) => {
-            console.error('Error en video hero:', e);
-            this.handleVideoError();
-        });
-        
-        // Evento cuando el video se carga
-        this.video.addEventListener('loadstart', () => {
-            console.log('Video hero: Iniciando carga');
-            this.showLoadingState();
-        });
-        
-        // Evento cuando hay datos suficientes para reproducir
-        this.video.addEventListener('loadeddata', () => {
-            console.log('Video hero: Datos cargados');
-            this.attemptAutoplay();
-        });
-        
-        // Evento cuando el video está listo para reproducir sin interrupciones
-        this.video.addEventListener('loadedmetadata', () => {
-            console.log('Video hero: Metadatos cargados');
-        });
-        
-        // Evento cuando el video se detiene por falta de datos
-        this.video.addEventListener('waiting', () => {
-            console.log('Video hero: Esperando datos');
-            this.showLoadingState();
-        });
-        
-        // Evento cuando el video puede continuar después de waiting
-        this.video.addEventListener('playing', () => {
-            console.log('Video hero: Continuando reproducción');
-            this.hideLoadingState();
-        });
-    }
-    
-    attemptVideoLoad() {
-        if (!this.video) return;
-        
-        // Mostrar estado de carga
-        this.showLoadingState();
-        
-        // Intentar cargar el video
-        try {
-            this.video.load();
-        } catch (error) {
-            console.error('Error al cargar video hero:', error);
-            this.handleVideoError();
-        }
-    }
-    
-    handleVideoReady() {
-        if (!this.video) return;
-        
-        // Intentar reproducir automáticamente
-        this.attemptAutoplay();
-    }
-    
-    async attemptAutoplay() {
-        if (!this.video || this.isPlaying) return;
-        
-        try {
-            // Asegurar que esté silenciado para autoplay
-            this.video.muted = true;
-            this.video.volume = 0;
-            
-            // Intentar reproducir
-            const playPromise = this.video.play();
-            
-            if (playPromise !== undefined) {
-                await playPromise;
-                console.log('Video hero: Autoplay exitoso');
-                this.isPlaying = true;
-                this.hideLoadingState();
-                this.hideFallback();
-            }
-        } catch (error) {
-            console.warn('Video hero: Autoplay falló:', error);
-            this.handleAutoplayFailure();
-        }
-    }
-    
-    handleAutoplayFailure() {
-        console.log('Video hero: Autoplay no permitido, mostrando fallback');
-        this.showFallback();
-        this.hideLoadingState();
-        
-        // Intentar reproducir cuando el usuario interactúe
-        this.setupUserInteractionHandler();
-    }
-    
-    setupUserInteractionHandler() {
-        const handleUserInteraction = async () => {
-            try {
-                if (this.video && !this.isPlaying) {
-                    await this.video.play();
-                    this.hideFallback();
-                    console.log('Video hero: Reproduciendo después de interacción del usuario');
-                }
-            } catch (error) {
-                console.warn('Video hero: Error al reproducir después de interacción:', error);
-            }
-            
-            // Remover listeners después del primer intento
-            document.removeEventListener('click', handleUserInteraction);
-            document.removeEventListener('touchstart', handleUserInteraction);
-        };
-        
-        document.addEventListener('click', handleUserInteraction, { once: true });
-        document.addEventListener('touchstart', handleUserInteraction, { once: true });
-    }
-    
-    handleVideoError() {
-        console.error('Video hero: Error crítico, mostrando fallback permanente');
-        this.showFallback();
-        this.hideLoadingState();
-        
-        // Marcar el video como error
-        if (this.video) {
-            this.video.classList.add('error');
-        }
-        
-        // Intentar recargar si no hemos excedido los reintentos
-        if (this.retryCount < this.maxRetries) {
-            this.retryCount++;
-            console.log(`Video hero: Reintentando carga (${this.retryCount}/${this.maxRetries})`);
-            setTimeout(() => {
-                this.attemptVideoLoad();
-            }, 2000 * this.retryCount); // Delay incremental
-        }
-    }
-    
-    showLoadingState() {
-        if (this.video) {
-            this.video.classList.add('loading');
-        }
-        
-        const phoneContainer = document.querySelector('.hero__phone');
-        if (phoneContainer) {
-            phoneContainer.setAttribute('data-loading', 'true');
-        }
-    }
-    
-    hideLoadingState() {
-        if (this.video) {
-            this.video.classList.remove('loading');
-        }
-        
-        const phoneContainer = document.querySelector('.hero__phone');
-        if (phoneContainer) {
-            phoneContainer.removeAttribute('data-loading');
-        }
-    }
-    
-    showFallback() {
-        if (this.fallbackElement) {
-            this.fallbackElement.style.display = 'block';
-            this.fallbackElement.style.zIndex = '2';
-        }
-        
-        if (this.video) {
-            this.video.style.zIndex = '0';
-        }
-    }
-    
-    hideFallback() {
-        if (this.fallbackElement) {
-            this.fallbackElement.style.display = 'none';
-            this.fallbackElement.style.zIndex = '0';
-        }
-        
-        if (this.video) {
-            this.video.style.zIndex = '1';
-        }
-    }
-    
-    // Método público para pausar el video
-    pause() {
-        if (this.video && this.isPlaying) {
-            this.video.pause();
-        }
-    }
-    
-    // Método público para reproducir el video
-    async play() {
-        if (this.video && !this.isPlaying) {
-            try {
-                await this.video.play();
-            } catch (error) {
-                console.warn('Error al reproducir video hero:', error);
-            }
-        }
-    }
-    
-    // Método público para verificar si el video está reproduciéndose
-    isVideoPlaying() {
-        return this.isPlaying;
-    }
-    
-    // Método para limpiar recursos
-    destroy() {
-        if (this.video) {
-            this.video.pause();
-            this.video.removeAttribute('src');
-            this.video.load();
-        }
-    }
-}
-
-// ===== CLASE PARA BOTÓN FLOTANTE MEJORADO =====
-class FloatingWidgetManager {
-    constructor() {
-        this.isOpen = false;
-        this.mainBtn = null;
-        this.menu = null;
-        this.menuItems = [];
-        this.autoCloseTimeout = null;
-        this.magneticEffect = false;
-        this.lastMousePosition = { x: 0, y: 0 };
-        this.isAnimating = false;
-        this.init();
-    }
-    
-    init() {
-        this.mainBtn = document.getElementById('floating-main-btn');
-        this.menu = document.getElementById('floating-menu');
-        this.menuItems = Array.from(document.querySelectorAll('.floating-widget__menu-item'));
-        
-        if (!this.mainBtn || !this.menu) {
-            console.warn('Elementos del botón flotante no encontrados');
-            return;
-        }
-        
-        this.setupEventListeners();
-        this.setupMagneticEffect();
-        this.setupAccessibility();
-        
-        console.log('FloatingWidgetManager inicializado');
-    }
-    
-    setupEventListeners() {
-        // Click en el botón principal
-        this.mainBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.toggle();
-        });
-        
-        // Hover en el botón principal
-        this.mainBtn.addEventListener('mouseenter', () => {
-            this.onMainButtonHover(true);
-        });
-        
-        this.mainBtn.addEventListener('mouseleave', () => {
-            this.onMainButtonHover(false);
-        });
-        
-        // Click fuera del widget para cerrar
-        document.addEventListener('click', (e) => {
-            if (this.isOpen && !this.isClickInsideWidget(e.target)) {
-                this.close();
-            }
-        });
-        
-        // Escape para cerrar
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isOpen) {
-                this.close();
-            }
-        });
-        
-        // Eventos en elementos del menú
-        this.menuItems.forEach((item, index) => {
-            item.addEventListener('mouseenter', () => {
-                this.onMenuItemHover(item, true);
-            });
-            
-            item.addEventListener('mouseleave', () => {
-                this.onMenuItemHover(item, false);
-            });
-            
-            item.addEventListener('click', (e) => {
-                this.onMenuItemClick(item, e);
-            });
-        });
-        
-        // Auto-cerrar después de un tiempo
-        this.menu.addEventListener('mouseenter', () => {
-            this.clearAutoCloseTimeout();
-        });
-        
-        this.menu.addEventListener('mouseleave', () => {
-            if (this.isOpen) {
-                this.setAutoCloseTimeout();
-            }
-        });
-    }
-    
-    setupMagneticEffect() {
-        if (isReducedMotion) return;
-        
-        const widget = document.querySelector('.floating-widget');
-        if (!widget) return;
-        
-        document.addEventListener('mousemove', (e) => {
-            if (this.isAnimating) return;
-            
-            this.lastMousePosition = { x: e.clientX, y: e.clientY };
-            
-            const rect = this.mainBtn.getBoundingClientRect();
-            const btnCenterX = rect.left + rect.width / 2;
-            const btnCenterY = rect.top + rect.height / 2;
-            
-            const distance = Math.sqrt(
-                Math.pow(e.clientX - btnCenterX, 2) + 
-                Math.pow(e.clientY - btnCenterY, 2)
-            );
-            
-            if (distance < CONFIG.FLOATING_WIDGET.MAGNETIC_DISTANCE) {
-                this.applyMagneticEffect(e.clientX, e.clientY, btnCenterX, btnCenterY, distance);
-            } else {
-                this.resetMagneticEffect();
-            }
-        });
-    }
-    
-    applyMagneticEffect(mouseX, mouseY, btnCenterX, btnCenterY, distance) {
-        if (!this.magneticEffect) {
-            this.magneticEffect = true;
-            this.mainBtn.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        }
-        
-        const maxOffset = 15;
-        const strength = Math.max(0, 1 - (distance / CONFIG.FLOATING_WIDGET.MAGNETIC_DISTANCE));
-        
-        const offsetX = (mouseX - btnCenterX) * strength * 0.3;
-        const offsetY = (mouseY - btnCenterY) * strength * 0.3;
-        
-        const clampedOffsetX = Math.max(-maxOffset, Math.min(maxOffset, offsetX));
-        const clampedOffsetY = Math.max(-maxOffset, Math.min(maxOffset, offsetY));
-        
-        this.mainBtn.style.transform = `translate(${clampedOffsetX}px, ${clampedOffsetY}px)`;
-    }
-    
-    resetMagneticEffect() {
-        if (this.magneticEffect) {
-            this.magneticEffect = false;
-            this.mainBtn.style.transform = '';
-            setTimeout(() => {
-                this.mainBtn.style.transition = '';
-            }, 300);
-        }
-    }
-    
-    setupAccessibility() {
-        // ARIA labels
-        this.mainBtn.setAttribute('aria-label', 'Abrir menú de contacto');
-        this.mainBtn.setAttribute('aria-expanded', 'false');
-        this.mainBtn.setAttribute('aria-haspopup', 'true');
-        
-        // Roles
-        this.menu.setAttribute('role', 'menu');
-        this.menuItems.forEach(item => {
-            item.setAttribute('role', 'menuitem');
-        });
-        
-        // Navegación por teclado
-        this.mainBtn.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                this.toggle();
-            }
-        });
-        
-        this.menuItems.forEach((item, index) => {
-            item.addEventListener('keydown', (e) => {
-                this.handleMenuKeyNavigation(e, index);
-            });
-        });
-    }
-    
-    handleMenuKeyNavigation(e, currentIndex) {
-        switch (e.key) {
-            case 'ArrowDown':
-                e.preventDefault();
-                const nextIndex = (currentIndex + 1) % this.menuItems.length;
-                this.menuItems[nextIndex].focus();
-                break;
-            case 'ArrowUp':
-                e.preventDefault();
-                const prevIndex = currentIndex === 0 ? this.menuItems.length - 1 : currentIndex - 1;
-                this.menuItems[prevIndex].focus();
-                break;
-            case 'Escape':
-                e.preventDefault();
-                this.close();
-                this.mainBtn.focus();
-                break;
-            case 'Enter':
-            case ' ':
-                e.preventDefault();
-                this.menuItems[currentIndex].click();
-                break;
-        }
-    }
-    
-    toggle() {
-        if (this.isOpen) {
-            this.close();
-        } else {
-            this.open();
-        }
-    }
-    
-    open() {
-        if (this.isOpen || this.isAnimating) return;
-        
-        this.isAnimating = true;
-        this.isOpen = true;
-        
-        // Actualizar estados
-        this.mainBtn.classList.add('active');
-        this.menu.classList.add('active');
-        this.mainBtn.setAttribute('aria-expanded', 'true');
-        
-        // Animar elementos del menú con retraso escalonado
-        this.menuItems.forEach((item, index) => {
-            setTimeout(() => {
-                item.style.opacity = '1';
-                item.style.transform = 'translateY(0) scale(1) rotate(0deg)';
-                
-                // Agregar efecto de rebote
-                setTimeout(() => {
-                    item.style.transform = 'translateY(-3px) scale(1.05) rotate(1deg)';
-                    setTimeout(() => {
-                        item.style.transform = 'translateY(0) scale(1) rotate(0deg)';
-                    }, 150);
-                }, 100);
-            }, index * CONFIG.FLOATING_WIDGET.STAGGER_DELAY);
-        });
-        
-        // Configurar auto-cierre
-        this.setAutoCloseTimeout();
-        
-        // Finalizar animación
-        setTimeout(() => {
-            this.isAnimating = false;
-            // Focus en el primer elemento del menú para accesibilidad
-            if (this.menuItems.length > 0) {
-                this.menuItems[0].focus();
-            }
-        }, CONFIG.FLOATING_WIDGET.ANIMATION_DURATION);
-        
-        console.log('Menú flotante abierto');
-    }
-    
-    close() {
-        if (!this.isOpen || this.isAnimating) return;
-        
-        this.isAnimating = true;
-        this.isOpen = false;
-        
-        // Limpiar timeout
-        this.clearAutoCloseTimeout();
-        
-        // Actualizar estados
-        this.mainBtn.classList.remove('active');
-        this.menu.classList.remove('active');
-        this.mainBtn.setAttribute('aria-expanded', 'false');
-        
-        // Animar cierre de elementos del menú
-        this.menuItems.forEach((item, index) => {
-            setTimeout(() => {
-                item.style.opacity = '0';
-                item.style.transform = 'translateY(30px) scale(0.7) rotate(-10deg)';
-            }, index * 50);
-        });
-        
-        // Finalizar animación
-        setTimeout(() => {
-            this.isAnimating = false;
-            // Resetear estilos
-            this.menuItems.forEach(item => {
-                item.style.opacity = '';
-                item.style.transform = '';
-            });
-        }, CONFIG.FLOATING_WIDGET.ANIMATION_DURATION);
-        
-        console.log('Menú flotante cerrado');
-    }
-    
-    onMainButtonHover(isHovering) {
-        if (isHovering) {
-            // Efecto de hover en el botón principal
-            this.mainBtn.style.transform = this.magneticEffect ? 
-                this.mainBtn.style.transform : 'scale(1.1) rotate(5deg)';
-        } else {
-            if (!this.magneticEffect) {
-                this.mainBtn.style.transform = '';
-            }
-        }
-    }
-    
-    onMenuItemHover(item, isHovering) {
-        if (isHovering) {
-            // Pausar animación flotante durante hover
-            item.style.animationPlayState = 'paused';
-            
-            // Efecto de hover
-            item.style.transform = 'translateY(-8px) scale(1.2) rotate(5deg)';
-            
-            // Mostrar tooltip con retraso
-            setTimeout(() => {
-                const tooltip = item.querySelector('.floating-widget__tooltip');
-                if (tooltip && item.matches(':hover')) {
-                    tooltip.style.opacity = '1';
-                    tooltip.style.visibility = 'visible';
-                    tooltip.style.transform = 'translateY(-50%) translateX(0)';
-                }
-            }, CONFIG.FLOATING_WIDGET.HOVER_DELAY);
-        } else {
-            // Reanudar animación flotante
-            item.style.animationPlayState = 'running';
-            
-            // Resetear transform
-            item.style.transform = '';
-            
-            // Ocultar tooltip
-            const tooltip = item.querySelector('.floating-widget__tooltip');
-            if (tooltip) {
-                tooltip.style.opacity = '0';
-                tooltip.style.visibility = 'hidden';
-                tooltip.style.transform = 'translateY(-50%) translateX(10px)';
-            }
-        }
-    }
-    
-    onMenuItemClick(item, event) {
-        // Efecto de click
-        item.style.transform = 'translateY(-5px) scale(1.1) rotate(2deg)';
-        
-        // Animación de rebote
-        setTimeout(() => {
-            item.style.transform = 'translateY(-12px) scale(1.25) rotate(-2deg)';
-            setTimeout(() => {
-                item.style.transform = 'translateY(-8px) scale(1.2) rotate(5deg)';
-            }, 150);
-        }, 100);
-        
-        // Cerrar menú después del click
-        setTimeout(() => {
-            this.close();
-        }, 300);
-        
-        console.log('Click en elemento del menú:', item.getAttribute('aria-label'));
-    }
-    
-    setAutoCloseTimeout() {
-        this.clearAutoCloseTimeout();
-        this.autoCloseTimeout = setTimeout(() => {
-            if (this.isOpen) {
-                this.close();
-            }
-        }, CONFIG.FLOATING_WIDGET.AUTO_CLOSE_DELAY);
-    }
-    
-    clearAutoCloseTimeout() {
-        if (this.autoCloseTimeout) {
-            clearTimeout(this.autoCloseTimeout);
-            this.autoCloseTimeout = null;
-        }
-    }
-    
-    isClickInsideWidget(target) {
-        const widget = document.querySelector('.floating-widget');
-        return widget && widget.contains(target);
-    }
-    
-    // Método público para obtener el estado
-    getState() {
-        return {
-            isOpen: this.isOpen,
-            isAnimating: this.isAnimating,
-            magneticEffect: this.magneticEffect
-        };
-    }
-    
-    // Método para limpiar recursos
-    destroy() {
-        this.clearAutoCloseTimeout();
-        this.resetMagneticEffect();
-        
-        // Remover event listeners si es necesario
-        // (En este caso, los listeners se limpiarán automáticamente al recargar la página)
-    }
-}
-
 // ===== INICIALIZACIÓN GLOBAL =====
 let imageOptimizer;
-let heroVideoManager;
-let floatingWidgetManager;
 
 // ===== FUNCIONES DE TRADUCCIÓN =====
 function initializeLanguageSystem() {
@@ -1249,19 +585,22 @@ function initializeLanguageSystem() {
     
     applyTranslations();
     updateLanguageButtons();
+    updateFloatingLanguageButton();
     setupLanguageToggle();
 }
 
 function setupLanguageToggle() {
-    const languageBtn = document.getElementById('nav-language-toggle');
+    const languageButtons = document.querySelectorAll('.language-btn');
     
-    if (languageBtn) {
-        languageBtn.addEventListener('click', () => {
-            // Alternar entre español e inglés
-            const newLanguage = currentLanguage === 'es' ? 'en' : 'es';
-            switchLanguage(newLanguage);
+    languageButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const selectedLanguage = button.getAttribute('data-lang');
+            if (selectedLanguage && selectedLanguage !== currentLanguage) {
+                switchLanguage(selectedLanguage);
+            }
         });
-    }
+    });
 }
 
 function switchLanguage(newLanguage) {
@@ -1275,10 +614,10 @@ function switchLanguage(newLanguage) {
     
     applyTranslations();
     updateLanguageButtons();
+    updateFloatingLanguageButton();
     
     document.documentElement.lang = newLanguage;
     
-    // Efecto visual suave al cambiar idioma
     document.body.style.opacity = '0.95';
     setTimeout(() => {
         document.body.style.opacity = '1';
@@ -1336,43 +675,107 @@ function applyTranslations() {
 }
 
 function updateLanguageButtons() {
-    const languageText = document.getElementById('nav-language-text');
+    const languageButtons = document.querySelectorAll('.language-btn');
+    languageButtons.forEach(button => {
+        const buttonLang = button.getAttribute('data-lang');
+        if (buttonLang === currentLanguage) {
+            button.classList.add('active');
+        } else {
+            button.classList.remove('active');
+        }
+    });
+}
+
+function updateFloatingLanguageButton() {
+    const floatingLanguageText = document.getElementById('floating-language-text');
+    const floatingLanguageTooltip = document.querySelector('#floating-language-toggle .floating-widget__tooltip');
     
-    if (languageText) {
-        languageText.textContent = currentLanguage.toUpperCase();
+    if (floatingLanguageText) {
+        floatingLanguageText.textContent = currentLanguage.toUpperCase();
+    }
+    
+    if (floatingLanguageTooltip) {
+        floatingLanguageTooltip.textContent = currentLanguage === 'es' ? 'Cambiar idioma' : 'Change language';
     }
 }
 
-// ===== FUNCIONES DEL BOTÓN FLOTANTE (LEGACY - MANTENIDAS POR COMPATIBILIDAD) =====
+// ===== FUNCIONES DEL BOTÓN FLOTANTE =====
 function initializeFloatingWidget() {
-    // Crear instancia del nuevo manager
-    floatingWidgetManager = new FloatingWidgetManager();
+    const floatingMainBtn = document.getElementById('floating-main-btn');
+    const floatingMenu = document.getElementById('floating-menu');
+    const floatingLanguageToggle = document.getElementById('floating-language-toggle');
     
-    // Mantener variables globales para compatibilidad
-    isFloatingMenuOpen = false;
+    if (!floatingMainBtn || !floatingMenu) return;
     
-    console.log('Sistema de botón flotante inicializado');
+    floatingMainBtn.addEventListener('click', () => {
+        toggleFloatingMenu();
+    });
+    
+    if (floatingLanguageToggle) {
+        floatingLanguageToggle.addEventListener('click', () => {
+            const newLanguage = currentLanguage === 'es' ? 'en' : 'es';
+            switchLanguage(newLanguage);
+        });
+    }
+    
+    document.addEventListener('click', (e) => {
+        const floatingWidget = document.getElementById('floating-widget');
+        if (isFloatingMenuOpen && floatingWidget && !floatingWidget.contains(e.target)) {
+            closeFloatingMenu();
+        }
+    });
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isFloatingMenuOpen) {
+            closeFloatingMenu();
+        }
+    });
 }
 
 function toggleFloatingMenu() {
-    if (floatingWidgetManager) {
-        floatingWidgetManager.toggle();
-        isFloatingMenuOpen = floatingWidgetManager.getState().isOpen;
+    if (isFloatingMenuOpen) {
+        closeFloatingMenu();
+    } else {
+        openFloatingMenu();
     }
 }
 
 function openFloatingMenu() {
-    if (floatingWidgetManager) {
-        floatingWidgetManager.open();
-        isFloatingMenuOpen = true;
-    }
+    const floatingMainBtn = document.getElementById('floating-main-btn');
+    const floatingMenu = document.getElementById('floating-menu');
+    
+    if (!floatingMainBtn || !floatingMenu) return;
+    
+    isFloatingMenuOpen = true;
+    floatingMainBtn.classList.add('active');
+    floatingMenu.classList.add('active');
+    floatingMainBtn.setAttribute('aria-expanded', 'true');
+    
+    const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
+    menuItems.forEach((item, index) => {
+        setTimeout(() => {
+            item.style.transform = 'translateY(0) scale(1)';
+            item.style.opacity = '1';
+        }, index * 100);
+    });
 }
 
 function closeFloatingMenu() {
-    if (floatingWidgetManager) {
-        floatingWidgetManager.close();
-        isFloatingMenuOpen = false;
-    }
+    const floatingMainBtn = document.getElementById('floating-main-btn');
+    const floatingMenu = document.getElementById('floating-menu');
+    
+    if (!floatingMainBtn || !floatingMenu) return;
+    
+    isFloatingMenuOpen = false;
+    floatingMainBtn.classList.remove('active');
+    floatingMenu.classList.remove('active');
+    floatingMainBtn.setAttribute('aria-expanded', 'false');
+    
+    const menuItems = floatingMenu.querySelectorAll('.floating-widget__menu-item');
+    menuItems.forEach(item => {
+        item.style.transform = '';
+        item.style.opacity = '';
+    });
 }
 
 // ===== DETECCIÓN DE PREFERENCIAS DE MOVIMIENTO =====
@@ -1386,12 +789,179 @@ function checkReducedMotion() {
         if (animationId) {
             cancelAnimationFrame(animationId);
         }
+    }
+}
+
+// ===== SISTEMA DE PARTÍCULAS FLOTANTES DELICADAS =====
+class ParticleSystem {
+    constructor(container, options = {}) {
+        this.container = container;
+        this.canvas = null;
+        this.ctx = null;
+        this.particles = [];
+        this.animationId = null;
         
-        // Pausar video hero si está en movimiento reducido
-        if (heroVideoManager) {
-            heroVideoManager.pause();
+        this.config = {
+            particleCount: options.particleCount || 15,
+            particleSize: options.particleSize || 2,
+            particleSpeed: options.particleSpeed || 0.5,
+            particleColor: options.particleColor || 'rgba(255, 69, 105, 0.3)',
+            connectionDistance: options.connectionDistance || 100,
+            connectionOpacity: options.connectionOpacity || 0.1,
+            ...options
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        if (isReducedMotion) return;
+        
+        this.createCanvas();
+        this.createParticles();
+        this.animate();
+        this.setupResize();
+    }
+    
+    createCanvas() {
+        this.canvas = document.createElement('canvas');
+        this.canvas.className = 'particles-canvas';
+        this.ctx = this.canvas.getContext('2d');
+        
+        let particlesContainer = this.container.querySelector('.particles-container');
+        if (!particlesContainer) {
+            particlesContainer = document.createElement('div');
+            particlesContainer.className = 'particles-container';
+            this.container.appendChild(particlesContainer);
+        }
+        
+        particlesContainer.appendChild(this.canvas);
+        this.resizeCanvas();
+    }
+    
+    resizeCanvas() {
+        if (!this.canvas || !this.container) return;
+        
+        const rect = this.container.getBoundingClientRect();
+        this.canvas.width = rect.width;
+        this.canvas.height = rect.height;
+    }
+    
+    createParticles() {
+        this.particles = [];
+        for (let i = 0; i < this.config.particleCount; i++) {
+            this.particles.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * this.canvas.height,
+                vx: (Math.random() - 0.5) * this.config.particleSpeed,
+                vy: (Math.random() - 0.5) * this.config.particleSpeed,
+                size: Math.random() * this.config.particleSize + 1,
+                opacity: Math.random() * 0.5 + 0.2
+            });
         }
     }
+    
+    animate() {
+        if (isReducedMotion) return;
+        
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.particles.forEach(particle => {
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            
+            if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
+            if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
+            
+            particle.x = Math.max(0, Math.min(this.canvas.width, particle.x));
+            particle.y = Math.max(0, Math.min(this.canvas.height, particle.y));
+            
+            this.ctx.beginPath();
+            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            this.ctx.fillStyle = this.config.particleColor.replace('0.3', particle.opacity.toString());
+            this.ctx.fill();
+        });
+        
+        this.drawConnections();
+        this.animationId = requestAnimationFrame(() => this.animate());
+    }
+    
+    drawConnections() {
+        for (let i = 0; i < this.particles.length; i++) {
+            for (let j = i + 1; j < this.particles.length; j++) {
+                const dx = this.particles[i].x - this.particles[j].x;
+                const dy = this.particles[i].y - this.particles[j].y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < this.config.connectionDistance) {
+                    const opacity = (1 - distance / this.config.connectionDistance) * this.config.connectionOpacity;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.particles[i].x, this.particles[i].y);
+                    this.ctx.lineTo(this.particles[j].x, this.particles[j].y);
+                    this.ctx.strokeStyle = `rgba(255, 69, 105, ${opacity})`;
+                    this.ctx.lineWidth = 1;
+                    this.ctx.stroke();
+                }
+            }
+        }
+    }
+    
+    setupResize() {
+        const resizeObserver = new ResizeObserver(() => {
+            this.resizeCanvas();
+            this.createParticles();
+        });
+        resizeObserver.observe(this.container);
+    }
+    
+    destroy() {
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+        }
+        if (this.canvas && this.canvas.parentNode) {
+            this.canvas.parentNode.removeChild(this.canvas);
+        }
+    }
+}
+
+// ===== INICIALIZACIÓN DE SISTEMAS DE PARTÍCULAS =====
+function initializeParticleSystems() {
+    if (isReducedMotion) return;
+    
+    const heroPhone = document.querySelector('.hero__phone');
+    if (heroPhone) {
+        const heroParticleSystem = new ParticleSystem(heroPhone, {
+            particleCount: 12,
+            particleSize: 1.5,
+            particleSpeed: 0.3,
+            particleColor: 'rgba(255, 69, 105, 0.25)',
+            connectionDistance: 80,
+            connectionOpacity: 0.08
+        });
+        particleSystems.push(heroParticleSystem);
+    }
+    
+    const featurePhones = document.querySelectorAll('.feature__phone .phone');
+    featurePhones.forEach((phone, index) => {
+        const colors = [
+            'rgba(255, 69, 105, 0.2)',
+            'rgba(255, 23, 68, 0.2)',
+            'rgba(255, 45, 107, 0.2)',
+            'rgba(184, 0, 46, 0.2)',
+            'rgba(255, 69, 105, 0.2)',
+            'rgba(255, 215, 0, 0.25)'
+        ];
+        
+        const particleSystem = new ParticleSystem(phone, {
+            particleCount: 8,
+            particleSize: 1,
+            particleSpeed: 0.2,
+            particleColor: colors[index % colors.length],
+            connectionDistance: 60,
+            connectionOpacity: 0.06
+        });
+        particleSystems.push(particleSystem);
+    });
 }
 
 // ===== NAVEGACIÓN RESPONSIVE MEJORADA =====
@@ -1499,11 +1069,6 @@ function openMobileMenu() {
     
     isMenuOpen = true;
     
-    // Pausar video hero cuando se abre el menú para mejor rendimiento
-    if (heroVideoManager && heroVideoManager.isVideoPlaying()) {
-        heroVideoManager.pause();
-    }
-    
     // Animaciones de apertura
     navToggle.classList.add('active');
     navMenu.classList.add('active');
@@ -1542,11 +1107,6 @@ function closeMobileMenu() {
     if (!navToggle || !navMenu) return;
     
     isMenuOpen = false;
-    
-    // Reanudar video hero cuando se cierra el menú
-    if (heroVideoManager && !heroVideoManager.isVideoPlaying() && !isReducedMotion) {
-        heroVideoManager.play();
-    }
     
     // Animaciones de cierre
     navToggle.classList.remove('active');
@@ -1714,7 +1274,7 @@ function handleTabTrap(e) {
     }
 }
 
-// ===== EFECTOS DE SCROLL OPTIMIZADOS =====
+// ===== EFECTOS DE SCROLL OPTIMIZADOS (SIN CAMBIOS EN HEADER) =====
 function initializeScrollEffects() {
     // Scroll listener optimizado con throttling para navegación activa
     window.addEventListener('scroll', throttle(() => {
@@ -1722,7 +1282,6 @@ function initializeScrollEffects() {
             requestAnimationFrame(() => {
                 updateActiveNavOnScroll();
                 handleScrollDirection();
-                handleVideoVisibility();
                 ticking = false;
             });
             ticking = true;
@@ -1742,23 +1301,6 @@ function handleScrollDirection() {
     }
     
     lastScrollY = currentScrollY;
-}
-
-function handleVideoVisibility() {
-    if (!heroVideoManager) return;
-    
-    const heroSection = document.querySelector('.hero');
-    if (!heroSection) return;
-    
-    const rect = heroSection.getBoundingClientRect();
-    const isVisible = rect.bottom > 0 && rect.top < window.innerHeight;
-    
-    // Pausar video cuando no está visible para ahorrar recursos
-    if (!isVisible && heroVideoManager.isVideoPlaying()) {
-        heroVideoManager.pause();
-    } else if (isVisible && !heroVideoManager.isVideoPlaying() && !isReducedMotion) {
-        heroVideoManager.play();
-    }
 }
 
 function updateActiveNavOnScroll() {
@@ -1947,9 +1489,9 @@ function initializeFAQ() {
             
             if (noResults) {
                 if (visibleItems === 0 && searchTerm !== '') {
-                    noResults.classList.add('visible');
+                    noResults.classList.add('show');
                 } else {
-                    noResults.classList.remove('visible');
+                    noResults.classList.remove('show');
                 }
             }
         }, 300));
@@ -2033,10 +1575,10 @@ function setupImageLazyLoading() {
             imageOptimizer.loadImageImmediately(navLogo, 'logo');
         }
         
-        // Configurar imagen del hero fallback (crítica - cargar inmediatamente)
-        const heroFallbackImage = document.querySelector('.hero__phone-video-fallback .hero__phone-app-image');
-        if (heroFallbackImage) {
-            imageOptimizer.loadImageImmediately(heroFallbackImage, 'hero');
+        // Configurar imagen del hero (crítica - cargar inmediatamente)
+        const heroImage = document.querySelector('.hero__phone-app-image');
+        if (heroImage) {
+            imageOptimizer.loadImageImmediately(heroImage, 'hero');
         }
         
         // Configurar imágenes de características (lazy loading)
@@ -2055,6 +1597,17 @@ function setupImageLazyLoading() {
                 imageOptimizer.observeImage(img, imageKeys[index]);
             }
         });
+        
+        // Configurar botones de descarga
+        const appleBtn = document.querySelector('.download-btn--app-store .download-btn__image');
+        const googleBtn = document.querySelector('.download-btn:not(.download-btn--app-store) .download-btn__image');
+        
+        if (appleBtn) {
+            imageOptimizer.loadImageImmediately(appleBtn, 'downloads.apple');
+        }
+        if (googleBtn) {
+            imageOptimizer.loadImageImmediately(googleBtn, 'downloads.google');
+        }
     };
     
     waitForOptimizer();
@@ -2118,13 +1671,6 @@ function preloadCriticalResources() {
         link.href = src;
         document.head.appendChild(link);
     });
-    
-    // Precargar video hero
-    const videoLink = document.createElement('link');
-    videoLink.rel = 'preload';
-    videoLink.as = 'video';
-    videoLink.href = CONFIG.VIDEO_CONFIG.heroVideoPath;
-    document.head.appendChild(videoLink);
 }
 
 // ===== ACCESIBILIDAD =====
@@ -2134,8 +1680,8 @@ function initializeAccessibility() {
             if (isMenuOpen) {
                 closeMobileMenu();
             }
-            if (floatingWidgetManager && floatingWidgetManager.getState().isOpen) {
-                floatingWidgetManager.close();
+            if (isFloatingMenuOpen) {
+                closeFloatingMenu();
             }
         }
     });
@@ -2167,15 +1713,10 @@ function initializePerformanceOptimizations() {
     }
     
     // Optimizar imágenes de fondo
-    const phoneImages = document.querySelectorAll('.phone__app-image, .hero__phone-video-fallback .hero__phone-app-image');
+    const phoneImages = document.querySelectorAll('.phone__app-image, .hero__phone-app-image');
     phoneImages.forEach(img => {
         img.style.willChange = 'transform';
     });
-    
-    // Optimizar video hero
-    if (heroVideoManager && heroVideoManager.video) {
-        heroVideoManager.video.style.willChange = 'transform';
-    }
     
     // Limpiar listeners en resize
     let resizeTimeout;
@@ -2194,30 +1735,14 @@ function handleResize() {
     }
     
     // Cerrar menú flotante en resize
-    if (floatingWidgetManager && floatingWidgetManager.getState().isOpen) {
-        floatingWidgetManager.close();
+    if (isFloatingMenuOpen) {
+        closeFloatingMenu();
     }
     
-    // Reinicializar video hero si es necesario
-    if (heroVideoManager && window.innerWidth <= 768) {
-        // En móvil, asegurar que el video esté optimizado
-        heroVideoManager.setupVideoAttributes();
-    }
-}
-
-// ===== MANEJO DE VISIBILIDAD DE PÁGINA =====
-function initializePageVisibilityHandling() {
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            // Página oculta - pausar video para ahorrar recursos
-            if (heroVideoManager && heroVideoManager.isVideoPlaying()) {
-                heroVideoManager.pause();
-            }
-        } else {
-            // Página visible - reanudar video si no está en movimiento reducido
-            if (heroVideoManager && !heroVideoManager.isVideoPlaying() && !isReducedMotion) {
-                heroVideoManager.play();
-            }
+    // Redimensionar canvas de partículas
+    particleSystems.forEach(system => {
+        if (system.resizeCanvas) {
+            system.resizeCanvas();
         }
     });
 }
@@ -2226,9 +1751,6 @@ function initializePageVisibilityHandling() {
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializar optimizador de imágenes
     imageOptimizer = new ImageOptimizer();
-    
-    // Inicializar video hero
-    heroVideoManager = new HeroVideoManager();
     
     // Inicializar sistema de idiomas
     initializeLanguageSystem();
@@ -2242,11 +1764,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeIntersectionObserver();
     
     // Inicializar funcionalidades adicionales
+    initializeParticleSystems();
     initializeLazyLoading();
     preloadCriticalResources();
     initializeAccessibility();
-    initializeFloatingWidget(); // Inicializar el nuevo sistema de botón flotante
-    initializePageVisibilityHandling();
+    initializeFloatingWidget();
     
     // Configurar lazy loading para imágenes
     setupImageLazyLoading();
@@ -2258,20 +1780,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Optimizaciones adicionales
     initializePerformanceOptimizations();
-    
-    console.log('StarFlex Landing Page inicializada con botón flotante mejorado y animaciones espectaculares');
 });
 
 // ===== MANEJO DE ERRORES =====
 window.addEventListener('error', (e) => {
     console.error('Error en la aplicación:', e.error);
-    
-    // Si hay error con el video, mostrar fallback
-    if (e.error && e.error.message && e.error.message.includes('video')) {
-        if (heroVideoManager) {
-            heroVideoManager.handleVideoError();
-        }
-    }
 });
 
 window.addEventListener('unhandledrejection', (e) => {
@@ -2280,14 +1793,10 @@ window.addEventListener('unhandledrejection', (e) => {
 
 // ===== LIMPIEZA AL SALIR =====
 window.addEventListener('beforeunload', () => {
-    // Limpiar video hero
-    if (heroVideoManager) {
-        heroVideoManager.destroy();
-    }
-    
-    // Limpiar botón flotante
-    if (floatingWidgetManager) {
-        floatingWidgetManager.destroy();
+    particleSystems.forEach(system => system.destroy());
+    particleSystems = [];
+    if (animationId) {
+        cancelAnimationFrame(animationId);
     }
 });
 
