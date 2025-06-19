@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   doc, 
   onSnapshot, 
@@ -17,11 +17,15 @@ export function useDocument<T = DocumentData>(path: string) {
   const { user } = useAuth();
 
   useEffect(() => {
+    let isMounted = true;
+    
     // No ejecutar consultas si no hay usuario autenticado
     if (!user || !path) {
-      setLoading(false);
-      setData(null);
-      setError(null);
+      if (isMounted) {
+        setLoading(false);
+        setData(null);
+        setError(null);
+      }
       return;
     }
 
@@ -33,6 +37,8 @@ export function useDocument<T = DocumentData>(path: string) {
     const unsubscribe = onSnapshot(
       docRef,
       (snapshot) => {
+        if (!isMounted) return;
+        
         try {
           if (snapshot.exists()) {
             setData({ id: snapshot.id, ...snapshot.data() } as T);
@@ -47,13 +53,18 @@ export function useDocument<T = DocumentData>(path: string) {
         }
       },
       (err) => {
+        if (!isMounted) return;
+        
         console.error('Firestore document listener error:', err);
         setError(err);
         setLoading(false);
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, [path, user]);
 
   return { data, loading, error };
@@ -68,12 +79,19 @@ export function useCollection<T = DocumentData>(
   const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
+  // Memoizar los constraints para evitar recreaciones innecesarias
+  const memoizedConstraints = useMemo(() => queryConstraints, [queryConstraints]);
+
   useEffect(() => {
+    let isMounted = true;
+    
     // No ejecutar consultas si no hay usuario autenticado o path vacío
     if (!user || !collectionPath) {
-      setLoading(false);
-      setData([]);
-      setError(null);
+      if (isMounted) {
+        setLoading(false);
+        setData([]);
+        setError(null);
+      }
       return;
     }
 
@@ -82,13 +100,15 @@ export function useCollection<T = DocumentData>(
 
     try {
       const collectionRef = collection(db, collectionPath);
-      const q = queryConstraints && queryConstraints.length > 0 
-        ? query(collectionRef, ...queryConstraints) 
+      const q = memoizedConstraints && memoizedConstraints.length > 0 
+        ? query(collectionRef, ...memoizedConstraints) 
         : collectionRef;
       
       const unsubscribe = onSnapshot(
         q,
         (snapshot) => {
+          if (!isMounted) return;
+          
           try {
             const docs = snapshot.docs.map(doc => ({
               id: doc.id,
@@ -103,19 +123,26 @@ export function useCollection<T = DocumentData>(
           }
         },
         (err) => {
+          if (!isMounted) return;
+          
           console.error('Firestore collection listener error:', err);
           setError(err);
           setLoading(false);
         }
       );
 
-      return () => unsubscribe();
+      return () => {
+        isMounted = false;
+        unsubscribe();
+      };
     } catch (err) {
-      console.error('Error setting up Firestore listener:', err);
-      setError(err as Error);
-      setLoading(false);
+      if (isMounted) {
+        console.error('Error setting up Firestore listener:', err);
+        setError(err as Error);
+        setLoading(false);
+      }
     }
-  }, [collectionPath, queryConstraints, user]);
+  }, [collectionPath, memoizedConstraints, user]);
 
   return { data, loading, error };
 }
@@ -131,17 +158,30 @@ export function useSecureCollection<T = DocumentData>(
   const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
+  // Memoizar la query para evitar recreaciones innecesarias
+  const queryKey = useMemo(() => {
+    if (!queryConstraints) return 'no-constraints';
+    return JSON.stringify(queryConstraints.map(constraint => constraint.toString()));
+  }, [queryConstraints]);
+
   useEffect(() => {
+    let isMounted = true;
+    let unsubscribe: (() => void) | undefined;
+    
     // Solo ejecutar si está habilitado, hay usuario y path
     if (!enabled || !user || !collectionPath) {
-      setLoading(false);
-      setData([]);
-      setError(null);
+      if (isMounted) {
+        setLoading(false);
+        setData([]);
+        setError(null);
+      }
       return;
     }
 
     // Esperar un poco para asegurar que el usuario esté completamente autenticado
     const timer = setTimeout(() => {
+      if (!isMounted) return;
+      
       setLoading(true);
       setError(null);
 
@@ -151,9 +191,11 @@ export function useSecureCollection<T = DocumentData>(
           ? query(collectionRef, ...queryConstraints) 
           : collectionRef;
         
-        const unsubscribe = onSnapshot(
+        unsubscribe = onSnapshot(
           q,
           (snapshot) => {
+            if (!isMounted) return;
+            
             try {
               const docs = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -168,22 +210,30 @@ export function useSecureCollection<T = DocumentData>(
             }
           },
           (err) => {
+            if (!isMounted) return;
+            
             console.error('Firestore secure collection listener error:', err);
             setError(err);
             setLoading(false);
           }
         );
-
-        return () => unsubscribe();
       } catch (err) {
-        console.error('Error setting up secure Firestore listener:', err);
-        setError(err as Error);
-        setLoading(false);
+        if (isMounted) {
+          console.error('Error setting up secure Firestore listener:', err);
+          setError(err as Error);
+          setLoading(false);
+        }
       }
     }, 100); // Pequeño delay para asegurar autenticación
 
-    return () => clearTimeout(timer);
-  }, [collectionPath, queryConstraints, user, enabled]);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [collectionPath, queryKey, user, enabled, queryConstraints]);
 
   return { data, loading, error };
 }

@@ -75,7 +75,7 @@ export function usePatients(filters?: PatientFilters) {
     setLastDoc(undefined);
     setHasMore(true);
     loadPatients(true);
-  }, [user?.centerId, filtersString]); // Removemos refresh de las dependencias
+  }, [user?.centerId, filtersString, loadPatients]); // Removemos refresh de las dependencias
 
   return {
     patients,
