@@ -6,7 +6,6 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  Fab,
   Snackbar,
   Container,
   Stack,
@@ -15,7 +14,7 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import { Analytics, Refresh } from '@mui/icons-material';
+import { Analytics } from '@mui/icons-material';
 import { format, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -44,7 +43,6 @@ function MetricsPageContent() {
   const { user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   
   // Estado para filtros
   const [filters, setFilters] = useState<MetricsFiltersType>({
@@ -299,7 +297,7 @@ function MetricsPageContent() {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 } }}>
       {/* Encabezado profesional */}
       <Box sx={{ mb: { xs: 4, md: 6 } }}>
         <Stack 
