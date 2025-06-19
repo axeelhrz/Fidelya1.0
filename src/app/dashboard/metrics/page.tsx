@@ -11,7 +11,6 @@ import {
   Container,
   Stack,
   Paper,
-  Grid,
   alpha,
   useTheme,
   useMediaQuery,
@@ -104,7 +103,7 @@ function MetricsPageContent() {
     loadAuxiliaryData();
   }, [user?.centerId, allPatients]);
 
-  // Preparar tarjetas de métricas principales con títulos más cortos
+  // Preparar tarjetas de métricas principales
   const dashboardCards: DashboardCardType[] = React.useMemo(() => {
     if (!metrics) return [];
 
@@ -301,8 +300,8 @@ function MetricsPageContent() {
 
   return (
     <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}>
-      {/* Encabezado optimizado */}
-      <Box sx={{ mb: { xs: 4, md: 5 } }}>
+      {/* Encabezado profesional */}
+      <Box sx={{ mb: { xs: 4, md: 6 } }}>
         <Stack 
           direction={{ xs: 'column', sm: 'row' }} 
           alignItems={{ xs: 'flex-start', sm: 'center' }} 
@@ -311,18 +310,18 @@ function MetricsPageContent() {
         >
           <Box
             sx={{
-              width: { xs: 48, sm: 56 },
-              height: { xs: 48, sm: 56 },
-              borderRadius: 3,
+              width: { xs: 56, sm: 64 },
+              height: { xs: 56, sm: 64 },
+              borderRadius: 4,
               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.3)}`,
+              boxShadow: `0 12px 40px ${alpha(theme.palette.primary.main, 0.3)}`,
             }}
           >
-            <Analytics sx={{ fontSize: { xs: 24, sm: 28 } }} />
+            <Analytics sx={{ fontSize: { xs: 28, sm: 32 } }} />
           </Box>
           <Box sx={{ flex: 1 }}>
             <Typography 
@@ -350,14 +349,14 @@ function MetricsPageContent() {
                 lineHeight: 1.4
               }}
             >
-              Análisis y visualización de datos del centro
+              Visualización y análisis de datos del centro psicológico
             </Typography>
           </Box>
         </Stack>
       </Box>
 
       {/* Barra de filtros */}
-      <Box sx={{ mb: { xs: 4, md: 5 } }}>
+      <Box sx={{ mb: { xs: 4, md: 6 } }}>
         <MetricsFilters
           filters={filters}
           onFiltersChange={handleFiltersChange}
@@ -370,77 +369,85 @@ function MetricsPageContent() {
       </Box>
 
       {metrics ? (
-        <Stack spacing={{ xs: 4, md: 6 }}>
-          {/* Tarjetas de métricas principales - Grid perfecto */}
+        <Stack spacing={{ xs: 5, md: 7 }}>
+          {/* Tarjetas de métricas principales - Sin Grid */}
           <Box>
             <Typography 
               variant="h5" 
               sx={{ 
-                mb: 3, 
+                mb: 4, 
                 fontWeight: 600,
                 fontFamily: '"Inter", sans-serif'
               }}
             >
               Indicadores Clave
             </Typography>
-            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'repeat(2, 1fr)',
+                  sm: 'repeat(3, 1fr)',
+                  md: 'repeat(4, 1fr)',
+                  lg: 'repeat(6, 1fr)'
+                },
+                gap: { xs: 2, sm: 2.5, md: 3 },
+                '& > *': {
+                  minHeight: 180
+                }
+              }}
+            >
               {dashboardCards.map((card, index) => (
-                <Grid 
-                  item 
-                  xs={6} 
-                  sm={4} 
-                  md={3} 
-                  lg={2} 
+                <MetricCard 
                   key={card.id}
-                  sx={{
-                    display: 'flex',
-                    '& > *': {
-                      width: '100%'
-                    }
-                  }}
-                >
-                  <MetricCard 
-                    card={card} 
-                    loading={loading}
-                    delay={index}
-                  />
-                </Grid>
+                  card={card} 
+                  loading={loading}
+                  delay={index}
+                />
               ))}
-            </Grid>
+            </Box>
           </Box>
 
-          {/* Gráficos principales - Layout mejorado */}
+          {/* Gráficos principales - Layout con flexbox */}
           <Box>
             <Typography 
               variant="h5" 
               sx={{ 
-                mb: 3, 
+                mb: 4, 
                 fontWeight: 600,
                 fontFamily: '"Inter", sans-serif'
               }}
             >
               Evolución Temporal
             </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} lg={8}>
-                <SessionsLineChart
-                  data={metrics.sessionsOverTime}
-                  title="Sesiones Registradas por Día"
-                  loading={loading}
-                  showArea={true}
-                  color={theme.palette.primary.main}
-                  height={400}
-                />
-              </Grid>
-              <Grid item xs={12} lg={4}>
-                <EmotionPieChart
-                  data={metrics.emotionalDistribution}
-                  title="Distribución Emocional"
-                  loading={loading}
-                  height={400}
-                />
-              </Grid>
-            </Grid>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', lg: 'row' },
+                gap: 3,
+                '& > *:first-of-type': {
+                  flex: { lg: '2' }
+                },
+                '& > *:last-of-type': {
+                  flex: { lg: '1' }
+                }
+              }}
+            >
+              <SessionsLineChart
+                data={metrics.sessionsOverTime}
+                title="Sesiones Registradas por Día"
+                loading={loading}
+                showArea={true}
+                color={theme.palette.primary.main}
+                height={400}
+              />
+              <EmotionPieChart
+                data={metrics.emotionalDistribution}
+                title="Distribución Emocional"
+                loading={loading}
+                height={400}
+              />
+            </Box>
           </Box>
 
           {/* Gráficos secundarios */}
@@ -448,33 +455,38 @@ function MetricsPageContent() {
             <Typography 
               variant="h5" 
               sx={{ 
-                mb: 3, 
+                mb: 4, 
                 fontWeight: 600,
                 fontFamily: '"Inter", sans-serif'
               }}
             >
               Análisis Detallado
             </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} lg={6}>
-                <MotivesBarChart
-                  data={metrics.motivesDistribution}
-                  title="Motivos de Consulta Más Frecuentes"
-                  loading={loading}
-                  maxItems={8}
-                  height={400}
-                />
-              </Grid>
-              <Grid item xs={12} lg={6}>
-                <AlertStatusDonut
-                  activeAlerts={metrics.activeAlerts}
-                  resolvedAlerts={metrics.resolvedAlerts}
-                  title="Estado de Alertas Clínicas"
-                  loading={loading}
-                  height={400}
-                />
-              </Grid>
-            </Grid>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', lg: 'row' },
+                gap: 3,
+                '& > *': {
+                  flex: 1
+                }
+              }}
+            >
+              <MotivesBarChart
+                data={metrics.motivesDistribution}
+                title="Motivos de Consulta Más Frecuentes"
+                loading={loading}
+                maxItems={8}
+                height={400}
+              />
+              <AlertStatusDonut
+                activeAlerts={metrics.activeAlerts}
+                resolvedAlerts={metrics.resolvedAlerts}
+                title="Estado de Alertas Clínicas"
+                loading={loading}
+                height={400}
+              />
+            </Box>
           </Box>
 
           {/* Tendencias adicionales */}
@@ -482,7 +494,7 @@ function MetricsPageContent() {
             <Typography 
               variant="h5" 
               sx={{ 
-                mb: 3, 
+                mb: 4, 
                 fontWeight: 600,
                 fontFamily: '"Inter", sans-serif'
               }}
@@ -499,47 +511,51 @@ function MetricsPageContent() {
             />
           </Box>
 
-          {/* Información del período - Mejorada */}
+          {/* Información del período */}
           <Paper 
             sx={{ 
               p: { xs: 3, md: 4 }, 
-              borderRadius: 3,
+              borderRadius: 4,
               background: theme.palette.mode === 'dark' 
                 ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
                 : 'linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%)',
               border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
             }}
           >
-            <Grid container spacing={3} alignItems="center">
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>
-                    Período Analizado
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    {format(metrics.periodStart, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })} - {' '}
-                    {format(metrics.periodEnd, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ textAlign: { xs: 'center', sm: 'right' } }}>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'success.main' }}>
-                    Última Actualización
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    {format(metrics.calculatedAt, 'dd/MM/yyyy \'a las\' HH:mm', { locale: es })}
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: 'center',
+                gap: 3,
+                textAlign: { xs: 'center', sm: 'left' }
+              }}
+            >
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>
+                  Período Analizado
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  {format(metrics.periodStart, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })} - {' '}
+                  {format(metrics.periodEnd, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })}
+                </Typography>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'success.main' }}>
+                  Última Actualización
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  {format(metrics.calculatedAt, 'dd/MM/yyyy \'a las\' HH:mm', { locale: es })}
+                </Typography>
+              </Box>
+            </Box>
           </Paper>
         </Stack>
       ) : (
         <Alert 
           severity="info"
           sx={{ 
-            borderRadius: 3,
+            borderRadius: 4,
             p: 3,
             '& .MuiAlert-message': {
               fontSize: '1rem'
@@ -586,7 +602,7 @@ function MetricsPageContent() {
           severity={snackbar.severity}
           sx={{ 
             width: '100%',
-            borderRadius: 2,
+            borderRadius: 3,
             '& .MuiAlert-message': {
               fontSize: '0.95rem'
             }

@@ -7,7 +7,9 @@ import {
   CardHeader,
   Typography,
   Box,
-  useTheme
+  useTheme,
+  Paper,
+  alpha
 } from '@mui/material';
 import {
   LineChart,
@@ -56,23 +58,21 @@ export default function SessionsLineChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <Box
+        <Paper
           sx={{
-            bgcolor: 'background.paper',
             p: 2,
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: 1,
-            boxShadow: theme.shadows[4]
+            borderRadius: 3,
+            boxShadow: theme.shadows[8],
+            border: `1px solid ${alpha(color, 0.2)}`
           }}
         >
-          <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color }}>
             {data.fullDate}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Sesiones: {data.value}
           </Typography>
-        </Box>
+        </Paper>
       );
     }
     return null;
@@ -80,7 +80,7 @@ export default function SessionsLineChart({
 
   if (loading) {
     return (
-      <Card sx={{ height: height + 100 }}>
+      <Card sx={{ height: height + 100, borderRadius: 4 }}>
         <CardHeader title={title} />
         <CardContent>
           <Box 
@@ -95,8 +95,8 @@ export default function SessionsLineChart({
               sx={{
                 width: '100%',
                 height: '80%',
-                bgcolor: 'grey.300',
-                borderRadius: 1,
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                borderRadius: 2,
                 animation: 'pulse 1.5s ease-in-out infinite'
               }}
             />
@@ -108,8 +108,11 @@ export default function SessionsLineChart({
 
   if (chartData.length === 0) {
     return (
-      <Card sx={{ height: height + 100 }}>
-        <CardHeader title={title} />
+      <Card sx={{ height: height + 100, borderRadius: 4 }}>
+        <CardHeader 
+          title={title}
+          titleTypographyProps={{ variant: 'h6', fontWeight: 'bold', fontFamily: '"Inter", sans-serif' }}
+        />
         <CardContent>
           <Box 
             sx={{ 
@@ -121,7 +124,7 @@ export default function SessionsLineChart({
               gap: 2
             }}
           >
-            <Typography variant="h6" color="text.secondary">
+            <Typography variant="h6" color="text.secondary" sx={{ fontFamily: '"Inter", sans-serif' }}>
               Sin datos disponibles
             </Typography>
             <Typography variant="body2" color="text.secondary" textAlign="center">
@@ -140,24 +143,26 @@ export default function SessionsLineChart({
   const minSessions = Math.min(...chartData.map(item => item.value));
 
   return (
-    <Card sx={{ height: height + 100 }}>
+    <Card sx={{ height: height + 100, borderRadius: 4 }}>
       <CardHeader 
         title={title}
-        titleTypographyProps={{ variant: 'h6', fontWeight: 'bold' }}
+        titleTypographyProps={{ variant: 'h6', fontWeight: 'bold', fontFamily: '"Inter", sans-serif' }}
       />
       <CardContent>
         <ResponsiveContainer width="100%" height={height}>
           {showArea ? (
             <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+              <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
               <XAxis 
                 dataKey="formattedDate" 
                 stroke={theme.palette.text.secondary}
                 fontSize={12}
+                fontFamily='"Inter", sans-serif'
               />
               <YAxis 
                 stroke={theme.palette.text.secondary}
                 fontSize={12}
+                fontFamily='"Inter", sans-serif'
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
@@ -165,39 +170,49 @@ export default function SessionsLineChart({
                 dataKey="value"
                 stroke={color}
                 fill={color}
-                fillOpacity={0.3}
-                strokeWidth={2}
+                fillOpacity={0.2}
+                strokeWidth={3}
               />
             </AreaChart>
           ) : (
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+              <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
               <XAxis 
                 dataKey="formattedDate" 
                 stroke={theme.palette.text.secondary}
                 fontSize={12}
+                fontFamily='"Inter", sans-serif'
               />
               <YAxis 
                 stroke={theme.palette.text.secondary}
                 fontSize={12}
+                fontFamily='"Inter", sans-serif'
               />
               <Tooltip content={<CustomTooltip />} />
               <Line
                 type="monotone"
                 dataKey="value"
                 stroke={color}
-                strokeWidth={2}
-                dot={{ fill: color, strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: color, strokeWidth: 2 }}
+                strokeWidth={3}
+                dot={{ fill: color, strokeWidth: 2, r: 5 }}
+                activeDot={{ r: 7, stroke: color, strokeWidth: 2 }}
               />
             </LineChart>
           )}
         </ResponsiveContainer>
 
         {/* Estadísticas del período */}
-        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-around' }}>
+        <Box 
+          sx={{ 
+            mt: 3,
+            display: 'flex',
+            justifyContent: 'space-around',
+            flexWrap: 'wrap',
+            gap: 2
+          }}
+        >
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
               {totalSessions}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -205,7 +220,7 @@ export default function SessionsLineChart({
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
               {averageSessions.toFixed(1)}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -213,7 +228,7 @@ export default function SessionsLineChart({
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
               {maxSessions}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -221,7 +236,7 @@ export default function SessionsLineChart({
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
               {minSessions}
             </Typography>
             <Typography variant="caption" color="text.secondary">
