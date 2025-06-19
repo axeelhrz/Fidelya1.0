@@ -57,7 +57,7 @@ export function useSessions(filters?: SessionFilters) {
 
   useEffect(() => {
     refresh();
-  }, [filters]);
+  }, [filters, refresh]);
 
   return {
     sessions,
@@ -175,61 +175,6 @@ export function useSessionActions() {
   const [loading, setLoading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
 
-  const createSession = useCallback(async (sessionData: SessionFormData): Promise<string> => {
-    if (!user?.centerId || !user?.uid) {
-      throw new Error('Usuario no autenticado o sin centro asignado');
-    }
-
-    setLoading(true);
-    try {
-      const sessionId = await FirestoreService.createSession(
-        user.centerId,
-        sessionData,
-        user.uid
-      );
-
-      // Procesar con IA si las notas son suficientes
-      if (sessionData.notes && sessionData.notes.trim().length > 50) {
-        processSessionWithAI(sessionId, sessionData.notes);
-      }
-
-      return sessionId;
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const updateSession = useCallback(async (sessionId: string, sessionData: Partial<SessionFormData>): Promise<void> => {
-    if (!user?.centerId || !user?.uid) {
-      throw new Error('Usuario no autenticado o sin centro asignado');
-    }
-
-    setLoading(true);
-    try {
-      await FirestoreService.updateSession(user.centerId, sessionId, sessionData, user.uid);
-
-      // Reprocesar con IA si se actualizaron las notas
-      if (sessionData.notes && sessionData.notes.trim().length > 50) {
-        processSessionWithAI(sessionId, sessionData.notes);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const deleteSession = useCallback(async (sessionId: string): Promise<void> => {
-    if (!user?.centerId) {
-      throw new Error('Usuario no autenticado o sin centro asignado');
-    }
-
-    setLoading(true);
-    try {
-      await FirestoreService.deleteSession(user.centerId, sessionId);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
   const processSessionWithAI = useCallback(async (sessionId: string, notes: string): Promise<void> => {
     if (!user?.centerId) {
       throw new Error('Usuario no autenticado o sin centro asignado');
@@ -283,6 +228,61 @@ export function useSessionActions() {
       );
     } finally {
       setAiProcessing(false);
+    }
+  }, [user]);
+
+  const createSession = useCallback(async (sessionData: SessionFormData): Promise<string> => {
+    if (!user?.centerId || !user?.uid) {
+      throw new Error('Usuario no autenticado o sin centro asignado');
+    }
+
+    setLoading(true);
+    try {
+      const sessionId = await FirestoreService.createSession(
+        user.centerId,
+        sessionData,
+        user.uid
+      );
+
+      // Procesar con IA si las notas son suficientes
+      if (sessionData.notes && sessionData.notes.trim().length > 50) {
+        processSessionWithAI(sessionId, sessionData.notes);
+      }
+
+      return sessionId;
+    } finally {
+      setLoading(false);
+    }
+  }, [user, processSessionWithAI]);
+
+  const updateSession = useCallback(async (sessionId: string, sessionData: Partial<SessionFormData>): Promise<void> => {
+    if (!user?.centerId || !user?.uid) {
+      throw new Error('Usuario no autenticado o sin centro asignado');
+    }
+
+    setLoading(true);
+    try {
+      await FirestoreService.updateSession(user.centerId, sessionId, sessionData, user.uid);
+
+      // Reprocesar con IA si se actualizaron las notas
+      if (sessionData.notes && sessionData.notes.trim().length > 50) {
+        processSessionWithAI(sessionId, sessionData.notes);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user, processSessionWithAI]);
+
+  const deleteSession = useCallback(async (sessionId: string): Promise<void> => {
+    if (!user?.centerId) {
+      throw new Error('Usuario no autenticado o sin centro asignado');
+    }
+
+    setLoading(true);
+    try {
+      await FirestoreService.deleteSession(user.centerId, sessionId);
+    } finally {
+      setLoading(false);
     }
   }, [user]);
 
