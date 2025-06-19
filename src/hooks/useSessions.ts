@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Session, SessionFormData, SessionFilters, SessionStats } from '@/types/session';
+import { Session, SessionFormData, SessionFilters, SessionStats, EmotionalTone } from '@/types/session';
 import { FirestoreService } from '@/services/firestore';
 import { AIService } from '@/services/aiService';
 import { useAuth } from '@/context/AuthContext';
@@ -248,7 +248,29 @@ export function useSessionActions() {
       await FirestoreService.markSessionAsProcessing(user.centerId, sessionId);
 
       // Procesar con IA
-      const aiAnalysis = await AIService.analyzeSessionNotes(sessionId, notes);
+      const aiResult = await AIService.analyzeSessionNotes(sessionId, notes);
+
+      // Validar y normalizar el modelo usado
+      const validateModel = (model: string | undefined): 'gpt-4' | 'gpt-3.5-turbo' => {
+        if (model === 'gpt-4' || model === 'gpt-3.5-turbo') {
+          return model;
+        }
+        // Default to gpt-4 if model is not recognized
+        return 'gpt-4';
+      };
+
+      // Convertir a formato AIAnalysis
+      const aiAnalysis = {
+        summary: aiResult.summary,
+        recommendation: aiResult.recommendations?.[0] || '',
+        emotionalTone: aiResult.emotionalTone as EmotionalTone,
+        keyInsights: aiResult.keyPoints || [],
+        riskLevel: aiResult.riskLevel,
+        suggestedInterventions: aiResult.recommendations || [],
+        generatedAt: new Date(),
+        processedBy: validateModel(aiResult.model),
+        confidence: aiResult.confidence
+      };
 
       // Guardar el análisis
       await FirestoreService.updateSessionAIAnalysis(user.centerId, sessionId, aiAnalysis);
