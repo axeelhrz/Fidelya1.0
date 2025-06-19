@@ -152,7 +152,7 @@ export default function SessionView({
             p: 4,
             borderRadius: 0,
             background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`,
-            color: 'white',
+            color: theme.palette.primary.contrastText,
             position: 'relative',
             overflow: 'hidden',
             '&::before': {
@@ -172,7 +172,7 @@ export default function SessionView({
                 sx={{
                   p: 2,
                   borderRadius: 'xl',
-                  bgcolor: alpha('white', 0.2),
+                  bgcolor: alpha(theme.palette.common.white, 0.2),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -190,15 +190,23 @@ export default function SessionView({
                 <Stack direction="row" spacing={2} mt={1}>
                   <Chip
                     label={SESSION_TYPE_LABELS[session.type]}
-                    color="primary"
-                    variant="outlined"
-                    sx={{ borderRadius: 'xl' }}
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(theme.palette.common.white, 0.2),
+                      color: theme.palette.primary.contrastText,
+                      fontWeight: 600,
+                      borderRadius: 'xl',
+                    }}
                   />
                   <Chip
                     label={SESSION_STATUS_LABELS[session.status]}
-                    color={getStatusColor(session.status) as any}
-                    variant="outlined"
-                    sx={{ borderRadius: 'xl' }}
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(theme.palette.common.white, 0.2),
+                      color: theme.palette.primary.contrastText,
+                      fontWeight: 600,
+                      borderRadius: 'xl',
+                    }}
                   />
                 </Stack>
               </Box>
@@ -209,10 +217,10 @@ export default function SessionView({
                   <IconButton 
                     onClick={onEdit} 
                     sx={{ 
-                      color: 'white',
-                      bgcolor: alpha('white', 0.1),
+                      color: theme.palette.primary.contrastText,
+                      bgcolor: alpha(theme.palette.common.white, 0.1),
                       '&:hover': { 
-                        bgcolor: alpha('white', 0.2),
+                        bgcolor: alpha(theme.palette.common.white, 0.2),
                         transform: 'scale(1.1)',
                       }
                     }}
@@ -227,10 +235,10 @@ export default function SessionView({
                     onClick={onReprocessAI} 
                     disabled={aiProcessing}
                     sx={{ 
-                      color: 'white',
-                      bgcolor: alpha('white', 0.1),
+                      color: theme.palette.primary.contrastText,
+                      bgcolor: alpha(theme.palette.common.white, 0.1),
                       '&:hover': { 
-                        bgcolor: alpha('white', 0.2),
+                        bgcolor: alpha(theme.palette.common.white, 0.2),
                         transform: 'scale(1.1)',
                       }
                     }}
@@ -242,10 +250,10 @@ export default function SessionView({
               <IconButton 
                 onClick={onClose}
                 sx={{ 
-                  color: 'white',
-                  bgcolor: alpha('white', 0.1),
+                  color: theme.palette.primary.contrastText,
+                  bgcolor: alpha(theme.palette.common.white, 0.1),
                   '&:hover': { 
-                    bgcolor: alpha('white', 0.2),
+                    bgcolor: alpha(theme.palette.common.white, 0.2),
                     transform: 'scale(1.1)',
                   }
                 }}
@@ -258,6 +266,7 @@ export default function SessionView({
       </DialogTitle>
 
       <DialogContent sx={{ p: 0 }}>
+        {/* ... resto del contenido sin cambios ... */}
         <Stack spacing={0}>
           {/* Información básica */}
           <Accordion 
@@ -356,7 +365,7 @@ export default function SessionView({
                             sx={{ 
                               borderRadius: 'xl',
                               bgcolor: EMOTIONAL_TONE_COLORS[patient.emotionalState],
-                              color: 'white',
+                              color: theme.palette.common.white,
                               fontWeight: 600,
                             }}
                           />

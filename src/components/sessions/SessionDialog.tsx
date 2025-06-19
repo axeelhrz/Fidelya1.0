@@ -200,7 +200,7 @@ export default function SessionDialog({
               p: 3,
               borderRadius: 0,
               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`,
-              color: 'white',
+              color: theme.palette.primary.contrastText,
               position: 'relative',
               overflow: 'hidden',
               '&::before': {
@@ -220,7 +220,7 @@ export default function SessionDialog({
                   sx={{
                     p: 1.5,
                     borderRadius: 'xl',
-                    bgcolor: alpha('white', 0.2),
+                    bgcolor: alpha(theme.palette.common.white, 0.2),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -240,9 +240,9 @@ export default function SessionDialog({
               <IconButton 
                 onClick={onClose} 
                 sx={{ 
-                  color: 'white',
-                  bgcolor: alpha('white', 0.1),
-                  '&:hover': { bgcolor: alpha('white', 0.2) }
+                  color: theme.palette.primary.contrastText,
+                  bgcolor: alpha(theme.palette.common.white, 0.1),
+                  '&:hover': { bgcolor: alpha(theme.palette.common.white, 0.2) }
                 }}
               >
                 <CloseIcon />
