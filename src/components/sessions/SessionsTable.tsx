@@ -22,6 +22,10 @@ import {
   Alert,
   Skeleton,
   LinearProgress,
+  Stack,
+  useTheme,
+  alpha,
+  Fade,
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
@@ -36,6 +40,7 @@ import {
   Cancel as CancelIcon,
   PersonOff as PersonOffIcon,
   Refresh as RefreshIcon,
+  TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -72,6 +77,7 @@ export default function SessionsTable({
   onDelete,
   onReprocessAI
 }: SessionsTableProps) {
+  const theme = useTheme();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [sortField, setSortField] = useState<SortField>('date');
@@ -111,6 +117,11 @@ export default function SessionsTable({
     return patient?.fullName || 'Paciente no encontrado';
   };
 
+  const getPatientInfo = (patientId: string) => {
+    const patient = patients.find(p => p.id === patientId);
+    return patient || null;
+  };
+
   const getProfessionalName = (professionalId: string) => {
     const professional = professionals.find(p => p.uid === professionalId);
     return professional?.displayName || 'Profesional no encontrado';
@@ -148,6 +159,27 @@ export default function SessionsTable({
       default:
         return 'default';
     }
+  };
+
+  const getPatientInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  };
+
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      theme.palette.primary.main,
+      theme.palette.secondary.main,
+      theme.palette.info.main,
+      theme.palette.success.main,
+      theme.palette.warning.main,
+    ];
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
   };
 
   const sortedSessions = [...sessions].sort((a, b) => {
@@ -198,76 +230,216 @@ export default function SessionsTable({
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ mt: 2 }}>
+      <Alert 
+        severity="error" 
+        sx={{ 
+          mt: 2,
+          borderRadius: 'xl',
+          '& .MuiAlert-message': {
+            fontWeight: 500
+          }
+        }}
+      >
         Error al cargar las sesiones: {error.message}
       </Alert>
     );
   }
 
   return (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-      {loading && <LinearProgress />}
+    <Box>
+      {loading && (
+        <LinearProgress 
+          sx={{ 
+            borderRadius: 'xl',
+            height: 4,
+            bgcolor: alpha(theme.palette.primary.main, 0.1),
+            '& .MuiLinearProgress-bar': {
+              borderRadius: 'xl',
+              background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.main, 0.7)} 100%)`,
+            }
+          }} 
+        />
+      )}
       
-      <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)' }}>
+      <TableContainer 
+        sx={{ 
+          maxHeight: 'calc(100vh - 400px)',
+          '&::-webkit-scrollbar': {
+            width: 8,
+            height: 8,
+          },
+          '&::-webkit-scrollbar-track': {
+            background: alpha(theme.palette.grey[300], 0.2),
+            borderRadius: 'xl',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: alpha(theme.palette.primary.main, 0.3),
+            borderRadius: 'xl',
+            '&:hover': {
+              background: alpha(theme.palette.primary.main, 0.5),
+            },
+          },
+        }}
+      >
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell>
+              <TableCell 
+                sx={{ 
+                  bgcolor: alpha(theme.palette.background.paper, 0.8),
+                  backdropFilter: 'blur(20px)',
+                  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                }}
+              >
                 <TableSortLabel
                   active={sortField === 'date'}
                   direction={sortField === 'date' ? sortDirection : 'asc'}
                   onClick={() => handleSort('date')}
+                  sx={{
+                    '& .MuiTableSortLabel-icon': {
+                      color: `${theme.palette.primary.main} !important`,
+                    },
+                  }}
                 >
                   Fecha y Hora
                 </TableSortLabel>
               </TableCell>
-              <TableCell>
+              <TableCell 
+                sx={{ 
+                  bgcolor: alpha(theme.palette.background.paper, 0.8),
+                  backdropFilter: 'blur(20px)',
+                  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                }}
+              >
                 <TableSortLabel
                   active={sortField === 'patientName'}
                   direction={sortField === 'patientName' ? sortDirection : 'asc'}
                   onClick={() => handleSort('patientName')}
+                  sx={{
+                    '& .MuiTableSortLabel-icon': {
+                      color: `${theme.palette.primary.main} !important`,
+                    },
+                  }}
                 >
                   Paciente
                 </TableSortLabel>
               </TableCell>
-              <TableCell>
+              <TableCell 
+                sx={{ 
+                  bgcolor: alpha(theme.palette.background.paper, 0.8),
+                  backdropFilter: 'blur(20px)',
+                  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                }}
+              >
                 <TableSortLabel
                   active={sortField === 'professionalName'}
                   direction={sortField === 'professionalName' ? sortDirection : 'asc'}
                   onClick={() => handleSort('professionalName')}
+                  sx={{
+                    '& .MuiTableSortLabel-icon': {
+                      color: `${theme.palette.primary.main} !important`,
+                    },
+                  }}
                 >
                   Profesional
                 </TableSortLabel>
               </TableCell>
-              <TableCell>
+              <TableCell 
+                sx={{ 
+                  bgcolor: alpha(theme.palette.background.paper, 0.8),
+                  backdropFilter: 'blur(20px)',
+                  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                }}
+              >
                 <TableSortLabel
                   active={sortField === 'type'}
                   direction={sortField === 'type' ? sortDirection : 'asc'}
                   onClick={() => handleSort('type')}
+                  sx={{
+                    '& .MuiTableSortLabel-icon': {
+                      color: `${theme.palette.primary.main} !important`,
+                    },
+                  }}
                 >
                   Tipo
                 </TableSortLabel>
               </TableCell>
-              <TableCell>
+              <TableCell 
+                sx={{ 
+                  bgcolor: alpha(theme.palette.background.paper, 0.8),
+                  backdropFilter: 'blur(20px)',
+                  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                }}
+              >
                 <TableSortLabel
                   active={sortField === 'duration'}
                   direction={sortField === 'duration' ? sortDirection : 'asc'}
                   onClick={() => handleSort('duration')}
+                  sx={{
+                    '& .MuiTableSortLabel-icon': {
+                      color: `${theme.palette.primary.main} !important`,
+                    },
+                  }}
                 >
                   Duración
                 </TableSortLabel>
               </TableCell>
-              <TableCell>
+              <TableCell 
+                sx={{ 
+                  bgcolor: alpha(theme.palette.background.paper, 0.8),
+                  backdropFilter: 'blur(20px)',
+                  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                }}
+              >
                 <TableSortLabel
                   active={sortField === 'status'}
                   direction={sortField === 'status' ? sortDirection : 'asc'}
                   onClick={() => handleSort('status')}
+                  sx={{
+                    '& .MuiTableSortLabel-icon': {
+                      color: `${theme.palette.primary.main} !important`,
+                    },
+                  }}
                 >
                   Estado
                 </TableSortLabel>
               </TableCell>
-              <TableCell align="center">Análisis IA</TableCell>
-              <TableCell align="center">Acciones</TableCell>
+              <TableCell 
+                align="center"
+                sx={{ 
+                  bgcolor: alpha(theme.palette.background.paper, 0.8),
+                  backdropFilter: 'blur(20px)',
+                  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                }}
+              >
+                Análisis IA
+              </TableCell>
+              <TableCell 
+                align="center"
+                sx={{ 
+                  bgcolor: alpha(theme.palette.background.paper, 0.8),
+                  backdropFilter: 'blur(20px)',
+                  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                }}
+              >
+                Acciones
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -275,154 +447,339 @@ export default function SessionsTable({
               // Skeleton loading
               [...Array(rowsPerPage)].map((_, index) => (
                 <TableRow key={index}>
-                  <TableCell><Skeleton variant="text" width={120} /></TableCell>
-                  <TableCell><Skeleton variant="text" width={150} /></TableCell>
-                  <TableCell><Skeleton variant="text" width={130} /></TableCell>
-                  <TableCell><Skeleton variant="text" width={100} /></TableCell>
-                  <TableCell><Skeleton variant="text" width={80} /></TableCell>
-                  <TableCell><Skeleton variant="rectangular" width={80} height={24} /></TableCell>
-                  <TableCell><Skeleton variant="circular" width={24} height={24} /></TableCell>
-                  <TableCell><Skeleton variant="circular" width={24} height={24} /></TableCell>
+                  <TableCell>
+                    <Stack spacing={1}>
+                      <Skeleton variant="text" width={120} height={20} />
+                      <Skeleton variant="text" width={80} height={16} />
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <Skeleton variant="circular" width={40} height={40} />
+                      <Stack spacing={0.5}>
+                        <Skeleton variant="text" width={140} height={20} />
+                        <Skeleton variant="text" width={100} height={16} />
+                      </Stack>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Skeleton variant="circular" width={20} height={20} />
+                      <Skeleton variant="text" width={120} height={20} />
+                    </Stack>
+                  </TableCell>
+                  <TableCell><Skeleton variant="text" width={100} height={20} /></TableCell>
+                  <TableCell><Skeleton variant="text" width={80} height={20} /></TableCell>
+                  <TableCell><Skeleton variant="rounded" width={90} height={28} /></TableCell>
+                  <TableCell align="center"><Skeleton variant="circular" width={24} height={24} /></TableCell>
+                  <TableCell align="center"><Skeleton variant="circular" width={32} height={32} /></TableCell>
                 </TableRow>
               ))
             ) : paginatedSessions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                  <Typography variant="body1" color="text.secondary">
-                    No se encontraron sesiones
-                  </Typography>
+                <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
+                  <Stack spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        p: 3,
+                        borderRadius: 'xl',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: theme.palette.primary.main,
+                      }}
+                    >
+                      <PsychologyIcon sx={{ fontSize: 48 }} />
+                    </Box>
+                    <Typography variant="h6" color="text.secondary" fontWeight={500}>
+                      No se encontraron sesiones
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Ajusta los filtros o crea una nueva sesión para comenzar
+                    </Typography>
+                  </Stack>
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedSessions.map((session) => (
-                <TableRow key={session.id} hover>
-                  <TableCell>
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium">
-                        {format(new Date(session.date), 'dd/MM/yyyy', { locale: es })}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {format(new Date(session.date), 'HH:mm', { locale: es })}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Box display="flex" alignItems="center">
-                      <Avatar sx={{ mr: 1, width: 32, height: 32, fontSize: '0.875rem' }}>
-                        {getPatientName(session.patientId).split(' ').map(n => n[0]).join('').substring(0, 2)}
-                      </Avatar>
-                      <Typography variant="body2" fontWeight="medium">
-                        {getPatientName(session.patientId)}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Box display="flex" alignItems="center">
-                      <PsychologyIcon sx={{ mr: 1, fontSize: 16, color: 'primary.main' }} />
-                      <Typography variant="body2">
-                        {getProfessionalName(session.professionalId)}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Typography variant="body2">
-                      {SESSION_TYPE_LABELS[session.type]}
-                    </Typography>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Typography variant="body2">
-                      {session.duration ? `${session.duration} min` : '-'}
-                    </Typography>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Chip
-                      icon={getStatusIcon(session.status)}
-                      label={SESSION_STATUS_LABELS[session.status]}
-                      color={getStatusColor(session.status)}
-                      variant="outlined"
-                      size="small"
-                    />
-                  </TableCell>
-                  
-                  <TableCell align="center">
-                    {session.aiProcessingStatus === 'processing' ? (
-                      <Tooltip title="Procesando análisis...">
-                        <Box display="flex" alignItems="center" justifyContent="center">
-                          <SmartToyIcon sx={{ color: 'warning.main', animation: 'pulse 2s infinite' }} />
-                        </Box>
-                      </Tooltip>
-                    ) : session.aiAnalysis ? (
-                      <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
-                        <Tooltip title={`Análisis IA disponible - Confianza: ${AIUtils.formatConfidence(session.aiAnalysis.confidence)}`}>
-                          <SmartToyIcon sx={{ color: 'success.main' }} />
-                        </Tooltip>
-                        {session.aiAnalysis.emotionalTone && (
-                          <Tooltip title={`Estado emocional: ${session.aiAnalysis.emotionalTone}`}>
+              paginatedSessions.map((session, index) => {
+                const patient = getPatientInfo(session.patientId);
+                const patientName = getPatientName(session.patientId);
+                
+                return (
+                  <Fade in timeout={300 + index * 50} key={session.id}>
+                    <TableRow 
+                      hover
+                      sx={{
+                        cursor: 'pointer',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        '&:hover': {
+                          bgcolor: alpha(theme.palette.primary.main, 0.02),
+                          transform: 'translateX(4px)',
+                          '& .MuiTableCell-root': {
+                            borderColor: alpha(theme.palette.primary.main, 0.1),
+                          }
+                        },
+                        '& .MuiTableCell-root': {
+                          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.05)}`,
+                          py: 2,
+                        }
+                      }}
+                      onClick={() => onView?.(session)}
+                    >
+                      <TableCell>
+                        <Stack spacing={0.5}>
+                          <Typography variant="body2" fontWeight={600}>
+                            {format(new Date(session.date), 'dd/MM/yyyy', { locale: es })}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {format(new Date(session.date), 'HH:mm', { locale: es })}
+                          </Typography>
+                        </Stack>
+                      </TableCell>
+                      
+                      <TableCell>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Avatar 
+                            sx={{ 
+                              width: 40, 
+                              height: 40, 
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              bgcolor: getAvatarColor(patientName),
+                              background: `linear-gradient(135deg, ${getAvatarColor(patientName)} 0%, ${alpha(getAvatarColor(patientName), 0.8)} 100%)`,
+                            }}
+                          >
+                            {getPatientInitials(patientName)}
+                          </Avatar>
+                          <Stack spacing={0.5}>
+                            <Typography variant="body2" fontWeight={600}>
+                              {patientName}
+                            </Typography>
+                            {patient && (
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <Typography variant="caption" color="text.secondary">
+                                  {patient.age} años
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: '50%',
+                                    bgcolor: EMOTIONAL_TONE_COLORS[patient.emotionalState] || theme.palette.grey[400],
+                                  }}
+                                />
+                                <Typography variant="caption" color="text.secondary">
+                                  {patient.emotionalState}
+                                </Typography>
+                              </Stack>
+                            )}
+                          </Stack>
+                        </Stack>
+                      </TableCell>
+                      
+                      <TableCell>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <PsychologyIcon 
+                            sx={{ 
+                              fontSize: 16, 
+                              color: theme.palette.primary.main,
+                              opacity: 0.7 
+                            }} 
+                          />
+                          <Typography variant="body2">
+                            {getProfessionalName(session.professionalId)}
+                          </Typography>
+                        </Stack>
+                      </TableCell>
+                      
+                      <TableCell>
+                        <Chip
+                          label={SESSION_TYPE_LABELS[session.type]}
+                          size="small"
+                          variant="outlined"
+                          sx={{
+                            borderRadius: 'xl',
+                            fontWeight: 500,
+                            fontSize: '0.75rem',
+                            borderColor: alpha(theme.palette.primary.main, 0.3),
+                            color: theme.palette.primary.main,
+                            bgcolor: alpha(theme.palette.primary.main, 0.05),
+                          }}
+                        />
+                      </TableCell>
+                      
+                      <TableCell>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography variant="body2" fontWeight={500}>
+                            {session.duration ? `${session.duration} min` : '-'}
+                          </Typography>
+                          {session.duration && (
                             <Box
                               sx={{
-                                width: 8,
-                                height: 8,
+                                width: 4,
+                                height: 4,
                                 borderRadius: '50%',
-                                bgcolor: EMOTIONAL_TONE_COLORS[session.aiAnalysis.emotionalTone],
+                                bgcolor: session.duration >= 60 
+                                  ? theme.palette.success.main 
+                                  : session.duration >= 45 
+                                    ? theme.palette.warning.main 
+                                    : theme.palette.error.main,
                               }}
                             />
+                          )}
+                        </Stack>
+                      </TableCell>
+                      
+                      <TableCell>
+                        <Chip
+                          icon={getStatusIcon(session.status)}
+                          label={SESSION_STATUS_LABELS[session.status]}
+                          color={getStatusColor(session.status)}
+                          variant="outlined"
+                          size="small"
+                          sx={{
+                            borderRadius: 'xl',
+                            fontWeight: 500,
+                            fontSize: '0.75rem',
+                            '& .MuiChip-icon': {
+                              fontSize: '0.875rem',
+                            }
+                          }}
+                        />
+                      </TableCell>
+                      
+                      <TableCell align="center">
+                        {session.aiProcessingStatus === 'processing' ? (
+                          <Tooltip title="Procesando análisis...">
+                            <Box display="flex" alignItems="center" justifyContent="center">
+                              <SmartToyIcon 
+                                sx={{ 
+                                  color: theme.palette.warning.main,
+                                  animation: 'pulse 2s infinite',
+                                  '@keyframes pulse': {
+                                    '0%': { opacity: 1 },
+                                    '50%': { opacity: 0.5 },
+                                    '100%': { opacity: 1 },
+                                  }
+                                }} 
+                              />
+                            </Box>
+                          </Tooltip>
+                        ) : session.aiAnalysis ? (
+                          <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+                            <Tooltip title={`Análisis IA disponible - Confianza: ${AIUtils.formatConfidence(session.aiAnalysis.confidence)}`}>
+                              <SmartToyIcon 
+                                sx={{ 
+                                  color: theme.palette.success.main,
+                                  fontSize: 20,
+                                }} 
+                              />
+                            </Tooltip>
+                            {session.aiAnalysis.emotionalTone && (
+                              <Tooltip title={`Estado emocional: ${session.aiAnalysis.emotionalTone}`}>
+                                <Box
+                                  sx={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    bgcolor: EMOTIONAL_TONE_COLORS[session.aiAnalysis.emotionalTone],
+                                    border: `1px solid ${alpha('white', 0.3)}`,
+                                  }}
+                                />
+                              </Tooltip>
+                            )}
+                            {session.aiAnalysis.riskLevel && session.aiAnalysis.riskLevel !== 'low' && (
+                              <Tooltip title={`Nivel de riesgo: ${session.aiAnalysis.riskLevel}`}>
+                                <WarningIcon 
+                                  sx={{ 
+                                    color: RISK_LEVEL_COLORS[session.aiAnalysis.riskLevel],
+                                    fontSize: 16,
+                                  }} 
+                                />
+                              </Tooltip>
+                            )}
+                          </Stack>
+                        ) : session.aiProcessingStatus === 'failed' ? (
+                          <Tooltip title="Error en el análisis de IA">
+                            <WarningIcon sx={{ color: theme.palette.error.main }} />
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="Sin análisis de IA">
+                            <Box sx={{ color: 'text.disabled', fontSize: '0.875rem' }}>-</Box>
                           </Tooltip>
                         )}
-                        {session.aiAnalysis.riskLevel && session.aiAnalysis.riskLevel !== 'low' && (
-                          <Tooltip title={`Nivel de riesgo: ${session.aiAnalysis.riskLevel}`}>
-                            <WarningIcon 
-                              sx={{ 
-                                color: RISK_LEVEL_COLORS[session.aiAnalysis.riskLevel],
-                                fontSize: 16 
-                              }} 
-                            />
-                          </Tooltip>
-                        )}
-                      </Box>
-                    ) : session.aiProcessingStatus === 'failed' ? (
-                      <Tooltip title="Error en el análisis de IA">
-                        <WarningIcon sx={{ color: 'error.main' }} />
-                      </Tooltip>
-                    ) : (
-                      <Tooltip title="Sin análisis de IA">
-                        <Box sx={{ color: 'text.disabled' }}>-</Box>
-                      </Tooltip>
-                    )}
-                  </TableCell>
-                  
-                  <TableCell align="center">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleMenuOpen(e, session)}
-                    >
-                      <MoreVertIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
+                      </TableCell>
+                      
+                      <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleMenuOpen(e, session)}
+                          sx={{
+                            borderRadius: 'xl',
+                            bgcolor: alpha(theme.palette.primary.main, 0.05),
+                            color: theme.palette.primary.main,
+                            '&:hover': {
+                              bgcolor: alpha(theme.palette.primary.main, 0.1),
+                              transform: 'scale(1.1)',
+                            }
+                          }}
+                        >
+                          <MoreVertIcon fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  </Fade>
+                );
+              })
             )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      <TablePagination
-        rowsPerPageOptions={[10, 25, 50, 100]}
-        component="div"
-        count={sessions.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        labelRowsPerPage="Filas por página:"
-        labelDisplayedRows={({ from, to, count }) => 
-          `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
-        }
-      />
+      <Box 
+        sx={{ 
+          borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          bgcolor: alpha(theme.palette.background.paper, 0.5),
+          backdropFilter: 'blur(20px)',
+        }}
+      >
+        <TablePagination
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          component="div"
+          count={sessions.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Filas por página:"
+          labelDisplayedRows={({ from, to, count }) => 
+            `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+          }
+          sx={{
+            '& .MuiTablePagination-toolbar': {
+              px: 3,
+              py: 2,
+            },
+            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+              fontWeight: 500,
+              color: 'text.secondary',
+            },
+            '& .MuiTablePagination-select': {
+              borderRadius: 'xl',
+              bgcolor: alpha(theme.palette.primary.main, 0.05),
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+              '&:focus': {
+                borderRadius: 'xl',
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+              }
+            },
+            '& .MuiTablePagination-actions button': {
+              borderRadius: 'xl',
+              '&:hover': {
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+              }
+            }
+          }}
+        />
+      </Box>
 
       {/* Menú de acciones */}
       <Menu
@@ -431,22 +788,63 @@ export default function SessionsTable({
         onClose={handleMenuClose}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          sx: {
+            borderRadius: 'xl',
+            mt: 1,
+            minWidth: 200,
+            background: `linear-gradient(145deg, ${theme.palette.background.paper} 0%, ${alpha(theme.palette.background.paper, 0.9)} 100%)`,
+            backdropFilter: 'blur(20px)',
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            boxShadow: `0 20px 25px -5px ${alpha(theme.palette.common.black, 0.1)}, 0 8px 10px -6px ${alpha(theme.palette.common.black, 0.1)}`,
+          }
+        }}
       >
-        <MenuItem onClick={() => { onView?.(selectedSession!); handleMenuClose(); }}>
-          <VisibilityIcon sx={{ mr: 1 }} />
+        <MenuItem 
+          onClick={() => { onView?.(selectedSession!); handleMenuClose(); }}
+          sx={{ 
+            borderRadius: 'xl', 
+            mx: 1, 
+            my: 0.5,
+            '&:hover': {
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+            }
+          }}
+        >
+          <VisibilityIcon sx={{ mr: 2, color: theme.palette.primary.main }} />
           Ver Detalles
         </MenuItem>
         
         {hasPermission('canManagePatients') && (
-          <MenuItem onClick={() => { onEdit?.(selectedSession!); handleMenuClose(); }}>
-            <EditIcon sx={{ mr: 1 }} />
+          <MenuItem 
+            onClick={() => { onEdit?.(selectedSession!); handleMenuClose(); }}
+            sx={{ 
+              borderRadius: 'xl', 
+              mx: 1, 
+              my: 0.5,
+              '&:hover': {
+                bgcolor: alpha(theme.palette.info.main, 0.1),
+              }
+            }}
+          >
+            <EditIcon sx={{ mr: 2, color: theme.palette.info.main }} />
             Editar Sesión
           </MenuItem>
         )}
         
         {selectedSession?.aiAnalysis && onReprocessAI && (
-          <MenuItem onClick={() => { onReprocessAI(selectedSession!); handleMenuClose(); }}>
-            <SmartToyIcon sx={{ mr: 1 }} />
+          <MenuItem 
+            onClick={() => { onReprocessAI(selectedSession!); handleMenuClose(); }}
+            sx={{ 
+              borderRadius: 'xl', 
+              mx: 1, 
+              my: 0.5,
+              '&:hover': {
+                bgcolor: alpha(theme.palette.secondary.main, 0.1),
+              }
+            }}
+          >
+            <SmartToyIcon sx={{ mr: 2, color: theme.palette.secondary.main }} />
             Reprocesar IA
           </MenuItem>
         )}
@@ -454,13 +852,21 @@ export default function SessionsTable({
         {hasPermission('canManagePatients') && (
           <MenuItem 
             onClick={() => { onDelete?.(selectedSession!); handleMenuClose(); }}
-            sx={{ color: 'error.main' }}
+            sx={{ 
+              borderRadius: 'xl', 
+              mx: 1, 
+              my: 0.5,
+              color: theme.palette.error.main,
+              '&:hover': {
+                bgcolor: alpha(theme.palette.error.main, 0.1),
+              }
+            }}
           >
-            <DeleteIcon sx={{ mr: 1 }} />
+            <DeleteIcon sx={{ mr: 2 }} />
             Eliminar
           </MenuItem>
         )}
       </Menu>
-    </Paper>
+    </Box>
   );
 }
