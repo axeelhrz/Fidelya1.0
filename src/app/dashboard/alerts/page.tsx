@@ -12,6 +12,7 @@ import {
   Paper,
   useTheme,
   alpha,
+  SvgIconProps,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -42,7 +43,7 @@ function StatsCard({
   title: string;
   value: number;
   subtitle: string;
-  icon: React.ComponentType<{ sx?: any; fontSize?: number | string; color?: string }>;
+  icon: React.ComponentType<SvgIconProps>;
   color: string;
   loading?: boolean;
 }) {
