@@ -274,6 +274,8 @@ export default function RecentPatients({ patients, loading = false }: RecentPati
                         )}
                       </Box>
                     }
+                    primaryTypographyProps={{ component: 'div' }}
+                    secondaryTypographyProps={{ component: 'div' }}
                   />
                   <Box 
                     display="flex" 

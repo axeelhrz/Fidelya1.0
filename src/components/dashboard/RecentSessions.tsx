@@ -270,6 +270,8 @@ export default function RecentSessions({ sessions, loading = false }: RecentSess
                         )}
                       </Box>
                     }
+                    primaryTypographyProps={{ component: 'div' }}
+                    secondaryTypographyProps={{ component: 'div' }}
                   />
                   <Box display="flex" flexDirection="column" alignItems="end" gap={1}>
                     <Chip
