@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { collection, query, where, getDocs, orderBy, Timestamp, limit } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, limit, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useAuth } from '@/context/AuthContext';
 import { 
@@ -11,9 +11,34 @@ import {
   DEFAULT_CALCULATION_OPTIONS
 } from '@/types/metrics';
 import { Session, EmotionalTone } from '@/types/session';
-import { Patient, EmotionalState } from '@/types/patient';
+import { Patient } from '@/types/patient';
 import { ClinicalAlert } from '@/types/alert';
 import { format, subDays, eachDayOfInterval, parseISO } from 'date-fns';
+
+// Helper function to convert Timestamp to Date
+const convertToDate = (value: Date | Timestamp | string): Date => {
+  if (value instanceof Date) {
+    return value;
+  }
+  if (value && typeof value === 'object' && 'toDate' in value && typeof value.toDate === 'function') {
+    return value.toDate();
+  }
+  if (typeof value === 'string') {
+    return new Date(value);
+  }
+  return new Date();
+};
+
+// Helper function to format date safely
+const formatDateSafely = (value: Date | Timestamp | string, formatStr: string = 'yyyy-MM-dd'): string => {
+  try {
+    const date = convertToDate(value);
+    return format(date, formatStr);
+  } catch (error) {
+    console.warn('Error formatting date:', error);
+    return format(new Date(), formatStr);
+  }
+};
 
 export function useMetrics(
   filters: MetricsFilters,
@@ -107,13 +132,13 @@ export function useMetrics(
         const [sessionsData, patientsData, alertsData] = results;
 
         // Filtrar datos en el cliente para evitar consultas complejas
-        const now = new Date();
         const startDate = parseISO(filters.dateRange.start);
         const endDate = parseISO(filters.dateRange.end);
 
         // Filtrar sesiones
         const filteredSessions = sessionsData.filter(session => {
-          const sessionDate = new Date(session.date || session.createdAt);
+          const sessionDateValue = session.date || session.createdAt;
+          const sessionDate = convertToDate(sessionDateValue);
           if (sessionDate < startDate || sessionDate > endDate) return false;
           if (filters.professionalId && session.professionalId !== filters.professionalId) return false;
           if (filters.patientId && session.patientId !== filters.patientId) return false;
@@ -132,7 +157,7 @@ export function useMetrics(
 
         // Filtrar alertas
         const filteredAlerts = alertsData.filter(alert => {
-          const alertDate = new Date(alert.createdAt);
+          const alertDate = convertToDate(alert.createdAt);
           if (alertDate < startDate || alertDate > endDate) return false;
           if (filters.patientId && alert.patientId !== filters.patientId) return false;
           if (filters.alertType && alert.type !== filters.alertType) return false;
@@ -157,14 +182,24 @@ export function useMetrics(
     };
 
     fetchData();
-  }, [user?.centerId, filters.dateRange.start, filters.dateRange.end]);
+  }, [
+    user?.centerId, 
+    filters.dateRange.start, 
+    filters.dateRange.end,
+    filters.alertType,
+    filters.emotionalTone,
+    filters.includeInactive,
+    filters.patientId,
+    filters.professionalId,
+    filters.sessionType,
+    options.excludeCancelledSessions
+  ]);
 
   // Calcular métricas basadas en los datos con valores por defecto
   const calculatedMetrics = useMemo((): DashboardMetrics => {
     // Métricas básicas con valores por defecto
     const totalActivePatients = patients.filter(p => p.status === 'active').length;
     const totalSessions = sessions.length;
-    const completedSessions = sessions.filter(s => s.status === 'completed');
     const averageSessionsPerPatient = totalActivePatients > 0 ? totalSessions / totalActivePatients : 0;
 
     // Alertas
@@ -228,7 +263,7 @@ export function useMetrics(
     const sessionsOverTime: TimeSeriesData[] = dateRange.map(date => {
       const dateStr = format(date, 'yyyy-MM-dd');
       const daySessions = sessions.filter(s => {
-        const sessionDate = s.date || format(s.createdAt, 'yyyy-MM-dd');
+        const sessionDate = s.date || formatDateSafely(s.createdAt);
         return sessionDate === dateStr;
       });
       return {
@@ -242,7 +277,7 @@ export function useMetrics(
     const patientsOverTime: TimeSeriesData[] = dateRange.map(date => {
       const dateStr = format(date, 'yyyy-MM-dd');
       const dayPatients = patients.filter(p => {
-        const createdDate = format(p.createdAt, 'yyyy-MM-dd');
+        const createdDate = formatDateSafely(p.createdAt);
         return createdDate === dateStr;
       });
       return {
@@ -257,7 +292,7 @@ export function useMetrics(
     dateRange.forEach(date => {
       const dateStr = format(date, 'yyyy-MM-dd');
       const daySessions = sessions.filter(s => {
-        const sessionDate = s.date || format(s.createdAt, 'yyyy-MM-dd');
+        const sessionDate = s.date || formatDateSafely(s.createdAt);
         return sessionDate === dateStr && s.aiAnalysis?.emotionalTone;
       });
       
@@ -324,14 +359,14 @@ export function useMetrics(
     Object.values(sessionsByPatient).forEach(patientSessions => {
       if (patientSessions.length >= 2) {
         const sortedSessions = patientSessions.sort((a, b) => {
-          const dateA = a.date || format(a.createdAt, 'yyyy-MM-dd');
-          const dateB = b.date || format(b.createdAt, 'yyyy-MM-dd');
+          const dateA = a.date || formatDateSafely(a.createdAt);
+          const dateB = b.date || formatDateSafely(b.createdAt);
           return dateA.localeCompare(dateB);
         });
         
         for (let i = 1; i < sortedSessions.length; i++) {
-          const dateA = sortedSessions[i-1].date || format(sortedSessions[i-1].createdAt, 'yyyy-MM-dd');
-          const dateB = sortedSessions[i].date || format(sortedSessions[i].createdAt, 'yyyy-MM-dd');
+          const dateA = sortedSessions[i-1].date || formatDateSafely(sortedSessions[i-1].createdAt);
+          const dateB = sortedSessions[i].date || formatDateSafely(sortedSessions[i].createdAt);
           
           const daysDiff = Math.abs(
             (parseISO(dateB).getTime() - parseISO(dateA).getTime()) 

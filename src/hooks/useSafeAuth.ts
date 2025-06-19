@@ -1,14 +1,6 @@
 'use client';
 
-import { useContext } from 'react';
-import { AuthContext } from '@/context/AuthContext';
+// This file is no longer needed as useSafeAuth is already exported from AuthContext
+// Please use: import { useSafeAuth } from '@/context/AuthContext';
 
-export function useSafeAuth() {
-  try {
-    const context = useContext(AuthContext);
-    return context;
-  } catch (error) {
-    console.warn('Auth context not available:', error);
-    return undefined;
-  }
-}
+export { useSafeAuth } from '@/context/AuthContext';
