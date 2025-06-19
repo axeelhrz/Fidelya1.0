@@ -39,7 +39,7 @@ import {
   Emergency,
   Medication,
   Event,
-  Assignment,
+  AssignmentTurnedIn,
   Custom,
 } from '@mui/icons-material';
 import { useAuth } from '@/context/AuthContext';
@@ -77,7 +77,7 @@ function FloatingNotificationButton() {
       case 'emergency': return <Emergency {...iconProps} sx={{ color: theme.palette.error.main }} />;
       case 'appointment': return <Event {...iconProps} sx={{ color: theme.palette.primary.main }} />;
       case 'medication': return <Medication {...iconProps} sx={{ color: theme.palette.success.main }} />;
-      case 'followup': return <Assignment {...iconProps} sx={{ color: theme.palette.info.main }} />;
+      case 'followup': return <AssignmentTurnedIn {...iconProps} sx={{ color: theme.palette.info.main }} />;
       case 'síntoma': return <Psychology {...iconProps} sx={{ color: theme.palette.warning.main }} />;
       case 'inactividad': return <Schedule {...iconProps} sx={{ color: theme.palette.secondary.main }} />;
       default: return <Info {...iconProps} sx={{ color: theme.palette.text.secondary }} />;
@@ -197,7 +197,7 @@ function FloatingNotificationButton() {
           sx={{
             p: 3,
             background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-            color: 'white',
+            color: theme.palette.primary.contrastText,
             position: 'relative',
           }}
         >
@@ -213,10 +213,10 @@ function FloatingNotificationButton() {
             <IconButton
               onClick={handleClose}
               sx={{
-                color: 'white',
-                background: alpha('white', 0.1),
+                color: theme.palette.primary.contrastText,
+                background: alpha(theme.palette.primary.contrastText, 0.1),
                 '&:hover': {
-                  background: alpha('white', 0.2),
+                  background: alpha(theme.palette.primary.contrastText, 0.2),
                 }
               }}
             >

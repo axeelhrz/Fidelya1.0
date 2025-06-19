@@ -13,8 +13,9 @@ import {
   alpha,
   useTheme,
   useMediaQuery,
+  Fab,
 } from '@mui/material';
-import { Analytics } from '@mui/icons-material';
+import { Analytics, Refresh } from '@mui/icons-material';
 import { format, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 
