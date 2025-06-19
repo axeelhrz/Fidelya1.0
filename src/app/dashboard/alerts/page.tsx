@@ -42,7 +42,7 @@ function StatsCard({
   title: string;
   value: number;
   subtitle: string;
-  icon: any;
+  icon: React.ComponentType<{ sx?: any; fontSize?: number | string; color?: string }>;
   color: string;
   loading?: boolean;
 }) {
@@ -305,7 +305,7 @@ export default function AlertsPage() {
 
             {/* Alerts Table */}
             <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'between', alignItems: 'center', mb: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6" fontWeight={600} color="text.primary">
                   {alerts.length > 0 ? `${alerts.length} alertas encontradas` : 'Lista de Alertas'}
                 </Typography>
@@ -328,7 +328,7 @@ export default function AlertsPage() {
             open={dialogOpen}
             onClose={handleCloseDialog}
             onSave={handleCreateAlert}
-            alert={editingAlert}
+            alert={editingAlert || undefined}
           />
         </Container>
       </DashboardLayout>
