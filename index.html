@@ -25,9 +25,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="./assets/icon.png">
     
     <!-- Preload de recursos críticos -->
-    <link rel="preload" href="./assets/phones/Hero.avif" as="image" type="image/avif">
-    <link rel="preload" href="./assets/phones/Hero.webp" as="image" type="image/webp">
-    <link rel="preload" href="./assets/phones/Hero.jpg" as="image" type="image/jpeg">
+    <link rel="preload" href="./assets/Hero.mp4" as="video" type="video/mp4">
     <link rel="preload" href="./assets/logo.avif" as="image" type="image/avif">
     <link rel="preload" href="./assets/logo.webp" as="image" type="image/webp">
     <link rel="preload" href="./assets/logo.png" as="image" type="image/png">
@@ -167,15 +165,28 @@
                     </div>
                 </div>
 
-                <!-- iPhone Optimizado con Sistema de Imágenes Modernas -->
+                <!-- iPhone Optimizado con Video -->
                 <div class="hero__media">
                     <div class="hero__phone-container">
                         <div class="hero__phone">
-                            <!-- Pantalla limpia sin elementos que interfieren -->
+                            <!-- Pantalla limpia con video -->
                             <div class="hero__phone-screen">
-                                <!-- Contenido de la app optimizado -->
+                                <!-- Contenido de la app con video -->
                                 <div class="hero__phone-content">
-                                    <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex"></div>
+                                    <video 
+                                        class="hero__phone-video" 
+                                        id="hero-video"
+                                        autoplay 
+                                        muted 
+                                        loop 
+                                        playsinline
+                                        preload="metadata"
+                                        poster="./assets/phones/Hero.jpg"
+                                    >
+                                        <source src="./assets/Hero.mp4" type="video/mp4">
+                                        <!-- Fallback para navegadores sin soporte de video -->
+                                        <div class="hero__phone-app-image image-optimized" role="img" aria-label="Interfaz principal de StarFlex"></div>
+                                    </video>
                                 </div>
                             </div>
                         </div>
@@ -430,7 +441,6 @@
                                     <div class="videos__progress-fill"></div>
                                 </div>
                                 <div class="videos__time-display">
-                                    <span class="videos__current
                                     <span class="videos__current-time">0:00</span>
                                     <span class="videos__duration">0:00</span>
                                 </div>
@@ -719,7 +729,6 @@
             </div>
 
             <!-- Footer de contacto -->
-            <div class="contact__footer">
                 <div class="contact__footer-content">
                     <div class="contact__footer-text">
                         <h3 data-translate="footer-legal">Política de Privacidad • Términos y Condiciones</h3>
@@ -790,3 +799,4 @@
     <script src="js/script.js"></script>
 </body>
 </html>
+          

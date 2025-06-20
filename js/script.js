@@ -964,6 +964,122 @@ function initializeParticleSystems() {
     });
 }
 
+// ===== INICIALIZACIÓN DEL VIDEO HERO =====
+function initializeHeroVideo() {
+    const heroVideo = document.getElementById('hero-video');
+    const heroFallbackImage = document.querySelector('.hero__phone-app-image');
+    
+    if (!heroVideo) return;
+    
+    // Configurar el video
+    heroVideo.muted = true;
+    heroVideo.autoplay = true;
+    heroVideo.loop = true;
+    heroVideo.playsInline = true;
+    
+    // Manejar eventos del video
+    heroVideo.addEventListener('loadstart', () => {
+        heroVideo.classList.add('loading');
+        console.log('Hero video: Iniciando carga');
+    });
+    
+    heroVideo.addEventListener('loadeddata', () => {
+        heroVideo.classList.remove('loading');
+        heroVideo.classList.add('loaded');
+        console.log('Hero video: Datos cargados');
+    });
+    
+    heroVideo.addEventListener('canplay', () => {
+        heroVideo.classList.remove('loading');
+        heroVideo.classList.add('loaded');
+        console.log('Hero video: Listo para reproducir');
+        
+        // Intentar reproducir el video
+        const playPromise = heroVideo.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.warn('Hero video: Error al reproducir automáticamente:', error);
+                showVideoFallback();
+            });
+        }
+    });
+    
+    heroVideo.addEventListener('error', (e) => {
+        console.error('Hero video: Error de carga:', e);
+        heroVideo.classList.remove('loading');
+        heroVideo.classList.add('error');
+        showVideoFallback();
+    });
+    
+    heroVideo.addEventListener('stalled', () => {
+        console.warn('Hero video: Reproducción interrumpida');
+    });
+    
+    heroVideo.addEventListener('waiting', () => {
+        console.log('Hero video: Esperando datos');
+    });
+    
+    heroVideo.addEventListener('playing', () => {
+        console.log('Hero video: Reproduciendo');
+        heroVideo.classList.remove('loading');
+        heroVideo.classList.add('loaded');
+    });
+    
+    // Función para mostrar imagen de fallback
+    function showVideoFallback() {
+        if (heroFallbackImage) {
+            heroFallbackImage.style.display = 'block';
+            heroFallbackImage.style.zIndex = '2';
+            console.log('Hero video: Mostrando imagen de fallback');
+        }
+    }
+    
+    // Intentar cargar el video después de un breve delay
+    setTimeout(() => {
+        if (heroVideo.readyState === 0) {
+            heroVideo.load();
+        }
+    }, 100);
+    
+    // Manejar visibilidad de la página para pausar/reanudar video
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            heroVideo.pause();
+        } else if (heroVideo.paused && !heroVideo.ended) {
+            const playPromise = heroVideo.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.warn('Hero video: Error al reanudar:', error);
+                });
+            }
+        }
+    });
+    
+    // Manejar intersección para optimizar rendimiento
+    if ('IntersectionObserver' in window) {
+        const videoObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    if (heroVideo.paused && !heroVideo.ended) {
+                        const playPromise = heroVideo.play();
+                        if (playPromise !== undefined) {
+                            playPromise.catch(error => {
+                                console.warn('Hero video: Error al reproducir en intersección:', error);
+                            });
+                        }
+                    }
+                } else {
+                    heroVideo.pause();
+                }
+            });
+        }, {
+            threshold: 0.5
+        });
+        
+        videoObserver.observe(heroVideo);
+    }
+}
+
 // ===== NAVEGACIÓN RESPONSIVE MEJORADA =====
 function initializeNavigation() {
     const navToggle = document.getElementById('nav-toggle');
@@ -1279,7 +1395,7 @@ function initializeScrollEffects() {
     // Scroll listener optimizado con throttling para navegación activa
     window.addEventListener('scroll', throttle(() => {
         if (!ticking) {
-            requestAnimationFrame(() => {
+            requestAnimationFrame(() =>
                 updateActiveNavOnScroll();
                 handleScrollDirection();
                 ticking = false;
@@ -1575,7 +1691,7 @@ function setupImageLazyLoading() {
             imageOptimizer.loadImageImmediately(navLogo, 'logo');
         }
         
-        // Configurar imagen del hero (crítica - cargar inmediatamente)
+        // Configurar imagen del hero como fallback (crítica - cargar inmediatamente)
         const heroImage = document.querySelector('.hero__phone-app-image');
         if (heroImage) {
             imageOptimizer.loadImageImmediately(heroImage, 'hero');
@@ -1657,19 +1773,31 @@ function initializeLazyLoading() {
 }
 
 function preloadCriticalResources() {
-    const criticalImages = [
+    const criticalResources = [
+        './assets/Hero.mp4',
         './assets/phones/Hero.jpg',
         './assets/phones/Horario.jpg',
         './assets/phones/Estaciones.jpg',
         './assets/logo.png'
     ];
     
-    criticalImages.forEach(src => {
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'image';
-        link.href = src;
-        document.head.appendChild(link);
+    criticalResources.forEach(src => {
+        if (src.endsWith('.mp4')) {
+            // Precargar video
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'video';
+            link.href = src;
+            link.type = 'video/mp4';
+            document.head.appendChild(link);
+        } else {
+            // Precargar imagen
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = src;
+            document.head.appendChild(link);
+        }
     });
 }
 
@@ -1718,6 +1846,12 @@ function initializePerformanceOptimizations() {
         img.style.willChange = 'transform';
     });
     
+    // Optimizar video del hero
+    const heroVideo = document.getElementById('hero-video');
+    if (heroVideo) {
+        heroVideo.style.willChange = 'transform';
+    }
+    
     // Limpiar listeners en resize
     let resizeTimeout;
     window.addEventListener('resize', () => {
@@ -1762,6 +1896,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeFAQ();
     initializeAnimations();
     initializeIntersectionObserver();
+    
+    // Inicializar video del hero
+    initializeHeroVideo();
     
     // Inicializar funcionalidades adicionales
     initializeParticleSystems();
