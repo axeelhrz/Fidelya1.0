@@ -5,7 +5,6 @@ import {
   Box,
   Paper,
   Typography,
-  Grid,
   Button,
   LinearProgress,
   Chip,
@@ -13,11 +12,9 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  IconButton,
   Collapse,
   useTheme,
   alpha,
-  Tooltip,
 } from '@mui/material';
 import {
   AutoAwesome,
@@ -29,7 +26,6 @@ import {
   Security,
   CheckCircle,
   Warning,
-  Error,
   Backup,
   Policy,
   Verified,
@@ -37,7 +33,6 @@ import {
 } from '@mui/icons-material';
 import { AIInsight, ComplianceMetrics } from '@/types/ceo';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 interface FooterInsightsProps {
   aiInsights: AIInsight[];
@@ -45,10 +40,10 @@ interface FooterInsightsProps {
   loading?: boolean;
 }
 
-export default function FooterInsights({ 
-  aiInsights, 
-  complianceMetrics, 
-  loading = false 
+export default function FooterInsights({
+  aiInsights,
+  complianceMetrics,
+  loading = false
 }: FooterInsightsProps) {
   const theme = useTheme();
   const [insightsExpanded, setInsightsExpanded] = useState(false);
@@ -127,7 +122,7 @@ export default function FooterInsights({
         bottom: 0,
         left: 0,
         right: 0,
-        background: theme.palette.mode === 'dark' 
+        background: theme.palette.mode === 'dark'
           ? 'linear-gradient(180deg, #1a1d29 0%, #252a3a 100%)'
           : 'linear-gradient(180deg, #ffffff 0%, #f8faff 100%)',
         backdropFilter: 'blur(20px)',
@@ -138,133 +133,139 @@ export default function FooterInsights({
     >
       {/* Collapsed View */}
       <Box sx={{ p: 2 }}>
-        <Grid container spacing={3} alignItems="center">
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 3,
+            alignItems: 'center',
+            '& > *': {
+              flex: '1 1 300px',
+              minWidth: 300,
+              maxWidth: {
+                xs: '100%',
+                md: 'calc(33.333% - 16px)'
+              }
+            }
+          }}
+        >
           {/* AI Insights Section */}
-          <Grid item xs={12} md={4}>
-            <Paper
-              sx={{
-                p: 2,
-                background: alpha(theme.palette.primary.main, 0.05),
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                borderRadius: 3,
-                cursor: 'pointer',
-              }}
-              onClick={() => setInsightsExpanded(!insightsExpanded)}
-            >
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box display="flex" alignItems="center" gap={1}>
-                  <AutoAwesome sx={{ color: 'primary.main' }} />
-                  <Typography variant="subtitle2" fontWeight="bold">
-                    AI Insights
-                  </Typography>
-                  <Chip
-                    label={aiInsights.length}
-                    size="small"
-                    color="primary"
-                    sx={{ fontSize: '0.7rem' }}
-                  />
-                </Box>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSimulateChanges();
-                    }}
-                    sx={{ fontSize: '0.75rem' }}
-                  >
-                    Simular cambios
-                  </Button>
-                  {insightsExpanded ? <ExpandLess /> : <ExpandMore />}
-                </Box>
-              </Box>
-              
-              {aiInsights.length > 0 && (
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                  {aiInsights[0].titulo}
+          <Paper
+            sx={{
+              p: 2,
+              background: alpha(theme.palette.primary.main, 0.05),
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+              borderRadius: 3,
+              cursor: 'pointer',
+            }}
+            onClick={() => setInsightsExpanded(!insightsExpanded)}
+          >
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Box display="flex" alignItems="center" gap={1}>
+                <AutoAwesome sx={{ color: 'primary.main' }} />
+                <Typography variant="subtitle2" fontWeight="bold">
+                  AI Insights
                 </Typography>
-              )}
-            </Paper>
-          </Grid>
-
-          {/* Compliance Gauge Section */}
-          <Grid item xs={12} md={4}>
-            <Paper
-              sx={{
-                p: 2,
-                background: alpha(theme.palette.info.main, 0.05),
-                border: `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-                borderRadius: 3,
-                cursor: 'pointer',
-              }}
-              onClick={() => setComplianceExpanded(!complianceExpanded)}
-            >
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Security sx={{ color: 'info.main' }} />
-                  <Typography variant="subtitle2" fontWeight="bold">
-                    Compliance Gauge
-                  </Typography>
-                </Box>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography variant="h6" fontWeight="bold" color="info.main">
-                    {overallCompliance.toFixed(0)}%
-                  </Typography>
-                  {complianceExpanded ? <ExpandLess /> : <ExpandMore />}
-                </Box>
+                <Chip
+                  label={aiInsights.length}
+                  size="small"
+                  color="primary"
+                  sx={{ fontSize: '0.7rem' }}
+                />
               </Box>
-              
-              <LinearProgress
-                variant="determinate"
-                value={overallCompliance}
-                sx={{
-                  mt: 1,
-                  height: 6,
-                  borderRadius: 3,
-                  bgcolor: alpha(theme.palette.info.main, 0.1),
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: theme.palette.info.main,
-                    borderRadius: 3
-                  }
-                }}
-              />
-            </Paper>
-          </Grid>
-
-          {/* Daily CEO Brief Section */}
-          <Grid item xs={12} md={4}>
-            <Paper
-              sx={{
-                p: 2,
-                background: alpha(theme.palette.secondary.main, 0.05),
-                border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
-                borderRadius: 3,
-              }}
-            >
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box display="flex" alignItems="center" gap={1}>
-                  <GetApp sx={{ color: 'secondary.main' }} />
-                  <Typography variant="subtitle2" fontWeight="bold">
-                    Daily CEO Brief
-                  </Typography>
-                </Box>
+              <Box display="flex" alignItems="center" gap={1}>
                 <Button
                   size="small"
-                  variant="contained"
-                  onClick={handleExportBrief}
+                  variant="outlined"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSimulateChanges();
+                  }}
                   sx={{ fontSize: '0.75rem' }}
                 >
-                  Descargar PDF
+                  Simular cambios
                 </Button>
+                {insightsExpanded ? <ExpandLess /> : <ExpandMore />}
               </Box>
-              
+            </Box>
+            {aiInsights.length > 0 && (
               <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                Resumen del día con KPIs y alertas
+                {aiInsights[0].titulo}
               </Typography>
-            </Paper>
-          </Grid>
-        </Grid>
+            )}
+          </Paper>
+
+          {/* Compliance Gauge Section */}
+          <Paper
+            sx={{
+              p: 2,
+              background: alpha(theme.palette.info.main, 0.05),
+              border: `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
+              borderRadius: 3,
+              cursor: 'pointer',
+            }}
+            onClick={() => setComplianceExpanded(!complianceExpanded)}
+          >
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Box display="flex" alignItems="center" gap={1}>
+                <Security sx={{ color: 'info.main' }} />
+                <Typography variant="subtitle2" fontWeight="bold">
+                  Compliance Gauge
+                </Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="h6" fontWeight="bold" color="info.main">
+                  {overallCompliance.toFixed(0)}%
+                </Typography>
+                {complianceExpanded ? <ExpandLess /> : <ExpandMore />}
+              </Box>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={overallCompliance}
+              sx={{
+                mt: 1,
+                height: 6,
+                borderRadius: 3,
+                bgcolor: alpha(theme.palette.info.main, 0.1),
+                '& .MuiLinearProgress-bar': {
+                  bgcolor: theme.palette.info.main,
+                  borderRadius: 3
+                }
+              }}
+            />
+          </Paper>
+
+          {/* Daily CEO Brief Section */}
+          <Paper
+            sx={{
+              p: 2,
+              background: alpha(theme.palette.secondary.main, 0.05),
+              border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
+              borderRadius: 3,
+            }}
+          >
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Box display="flex" alignItems="center" gap={1}>
+                <GetApp sx={{ color: 'secondary.main' }} />
+                <Typography variant="subtitle2" fontWeight="bold">
+                  Daily CEO Brief
+                </Typography>
+              </Box>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={handleExportBrief}
+                sx={{ fontSize: '0.75rem' }}
+              >
+                Descargar PDF
+              </Button>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              Resumen del día con KPIs y alertas
+            </Typography>
+          </Paper>
+        </Box>
       </Box>
 
       {/* Expanded AI Insights */}
@@ -275,64 +276,75 @@ export default function FooterInsights({
             Sugerencias de IA
           </Typography>
           
-          <Grid container spacing={2}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 2,
+              '& > *': {
+                flex: '1 1 400px',
+                minWidth: 400,
+                maxWidth: {
+                  xs: '100%',
+                  md: 'calc(50% - 8px)'
+                }
+              }
+            }}
+          >
             {aiInsights.map((insight) => (
-              <Grid item xs={12} md={6} key={insight.id}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    background: alpha(getImpactColor(insight.impacto), 0.05),
-                    border: `1px solid ${alpha(getImpactColor(insight.impacto), 0.2)}`,
-                    borderRadius: 2,
-                  }}
-                >
-                  <Box display="flex" alignItems="start" gap={2}>
-                    {getInsightIcon(insight.tipo)}
-                    <Box sx={{ flex: 1 }}>
-                      <Box display="flex" alignItems="center" gap={1} mb={1}>
-                        <Typography variant="subtitle2" fontWeight="bold">
-                          {insight.titulo}
-                        </Typography>
-                        <Chip
-                          label={`${insight.confianza}% confianza`}
-                          size="small"
-                          sx={{
-                            fontSize: '0.7rem',
-                            backgroundColor: alpha(getImpactColor(insight.impacto), 0.2),
-                            color: getImpactColor(insight.impacto),
-                          }}
-                        />
-                      </Box>
-                      
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        {insight.descripcion}
+              <Paper
+                key={insight.id}
+                sx={{
+                  p: 2,
+                  background: alpha(getImpactColor(insight.impacto), 0.05),
+                  border: `1px solid ${alpha(getImpactColor(insight.impacto), 0.2)}`,
+                  borderRadius: 2,
+                }}
+              >
+                <Box display="flex" alignItems="start" gap={2}>
+                  {getInsightIcon(insight.tipo)}
+                  <Box sx={{ flex: 1 }}>
+                    <Box display="flex" alignItems="center" gap={1} mb={1}>
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        {insight.titulo}
                       </Typography>
-                      
-                      <Typography variant="caption" fontWeight="bold" color="text.secondary">
-                        Acciones recomendadas:
-                      </Typography>
-                      <List dense sx={{ mt: 0.5 }}>
-                        {insight.accionesRecomendadas.slice(0, 2).map((accion, index) => (
-                          <ListItem key={index} sx={{ py: 0.5, px: 0 }}>
-                            <ListItemIcon sx={{ minWidth: 20 }}>
-                              <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={
-                                <Typography variant="caption">
-                                  {accion}
-                                </Typography>
-                              }
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
+                      <Chip
+                        label={`${insight.confianza}% confianza`}
+                        size="small"
+                        sx={{
+                          fontSize: '0.7rem',
+                          backgroundColor: alpha(getImpactColor(insight.impacto), 0.2),
+                          color: getImpactColor(insight.impacto),
+                        }}
+                      />
                     </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {insight.descripcion}
+                    </Typography>
+                    <Typography variant="caption" fontWeight="bold" color="text.secondary">
+                      Acciones recomendadas:
+                    </Typography>
+                    <List dense sx={{ mt: 0.5 }}>
+                      {insight.accionesRecomendadas.slice(0, 2).map((accion, index) => (
+                        <ListItem key={index} sx={{ py: 0.5, px: 0 }}>
+                          <ListItemIcon sx={{ minWidth: 20 }}>
+                            <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={
+                              <Typography variant="caption">
+                                {accion}
+                              </Typography>
+                            }
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
                   </Box>
-                </Paper>
-              </Grid>
+                </Box>
+              </Paper>
             ))}
-          </Grid>
+          </Box>
         </Box>
       </Collapse>
 
@@ -344,87 +356,109 @@ export default function FooterInsights({
             Checklist de Compliance
           </Typography>
           
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={3}>
-              <Paper sx={{ p: 2, textAlign: 'center' }}>
-                <Backup sx={{ 
-                  fontSize: 32, 
-                  color: complianceMetrics.backupsVerificados?.completado ? 'success.main' : 'error.main',
-                  mb: 1 
-                }} />
-                <Typography variant="subtitle2" fontWeight="bold">
-                  Backups Verificados
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 2,
+              '& > *': {
+                flex: '1 1 250px',
+                minWidth: 250,
+                maxWidth: {
+                  xs: '100%',
+                  sm: 'calc(50% - 8px)',
+                  md: 'calc(25% - 12px)'
+                }
+              }
+            }}
+          >
+            <Paper sx={{ p: 2, textAlign: 'center' }}>
+              <Backup sx={{
+                fontSize: 32,
+                color: complianceMetrics.backupsVerificados?.completado ? 'success.main' : 'error.main',
+                mb: 1
+              }} />
+              <Typography variant="subtitle2" fontWeight="bold">
+                Backups Verificados
+              </Typography>
+              <Chip
+                label={complianceMetrics.backupsVerificados?.completado ? 'Completado' : 'Pendiente'}
+                size="small"
+                color={complianceMetrics.backupsVerificados?.completado ? 'success' : 'error'}
+                sx={{ mt: 1 }}
+              />
+              {complianceMetrics.backupsVerificados?.ultimaVerificacion && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                  Último: {format(complianceMetrics.backupsVerificados.ultimaVerificacion, 'dd/MM/yyyy')}
                 </Typography>
-                <Chip
-                  label={complianceMetrics.backupsVerificados?.completado ? 'Completado' : 'Pendiente'}
-                  size="small"
-                  color={complianceMetrics.backupsVerificados?.completado ? 'success' : 'error'}
-                  sx={{ mt: 1 }}
-                />
-                {complianceMetrics.backupsVerificados?.ultimaVerificacion && (
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                    Último: {format(complianceMetrics.backupsVerificados.ultimaVerificacion, 'dd/MM/yyyy')}
-                  </Typography>
-                )}
-              </Paper>
-            </Grid>
+              )}
+            </Paper>
 
-            <Grid item xs={12} md={3}>
-              <Paper sx={{ p: 2, textAlign: 'center' }}>
-                <Policy sx={{ 
-                  fontSize: 32, 
-                  color: (complianceMetrics.politicasFirmadas?.porcentajeCompletado || 0) >= 90 ? 'success.main' : 'warning.main',
-                  mb: 1 
-                }} />
-                <Typography variant="subtitle2" fontWeight="bold">
-                  Políticas Firmadas
-                </Typography>
-                <Typography variant="h6" fontWeight="bold" color="primary">
-                  {complianceMetrics.politicasFirmadas?.porcentajeCompletado || 0}%
-                </Typography>
-                <LinearProgress
-                  variant="determinate"
-                  value={complianceMetrics.politicasFirmadas?.porcentajeCompletado || 0}
-                  sx={{ mt: 1, height: 4, borderRadius: 2 }}
-                />
-              </Paper>
-            </Grid>
+            <Paper sx={{ p: 2, textAlign: 'center' }}>
+              <Policy sx={{
+                fontSize: 32,
+                color: (complianceMetrics.politicasFirmadas?.porcentajeCompletado || 0) >= 90 ? 'success.main' : 'warning.main',
+                mb: 1
+              }} />
+              <Typography variant="subtitle2" fontWeight="bold">
+                Políticas Firmadas
+              </Typography>
+              <Typography variant="h6" fontWeight="bold" color="primary">
+                {complianceMetrics.politicasFirmadas?.porcentajeCompletado || 0}%
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={complianceMetrics.politicasFirmadas?.porcentajeCompletado || 0}
+                sx={{ mt: 1, height: 4, borderRadius: 2 }}
+              />
+            </Paper>
 
-            <Grid item xs={12} md={3}>
-              <Paper sx={{ p: 2, textAlign: 'center' }}>
-                <Verified sx={{ 
-                  fontSize: 32, 
-                  color: complianceMetrics.accesosAuditados?.completado ? 'success.main' : 'warning.main',
-                  mb: 1 
-                }} />
-                <Typography variant="subtitle2" fontWeight="bold">
-                  Accesos Auditados
+            <Paper sx={{ p: 2, textAlign: 'center' }}>
+              <Verified sx={{
+                fontSize: 32,
+                color: complianceMetrics.accesosAuditados?.completado ? 'success.main' : 'warning.main',
+                mb: 1
+              }} />
+              <Typography variant="subtitle2" fontWeight="bold">
+                Accesos Auditados
+              </Typography>
+              <Chip
+                label={complianceMetrics.accesosAuditados?.completado ? 'Completado' : 'Pendiente'}
+                size="small"
+                color={complianceMetrics.accesosAuditados?.completado ? 'success' : 'warning'}
+                sx={{ mt: 1 }}
+              />
+              {complianceMetrics.accesosAuditados?.hallazgos !== undefined && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                  {complianceMetrics.accesosAuditados.hallazgos} hallazgos
                 </Typography>
-                <Chip
-                  label={complianceMetrics.accesosAuditados?.completado ? 'Completado' : 'Pendiente'}
-                  size="small"
-                  color={complianceMetrics.accesosAuditados?.completado ? 'success' : 'warning'}
-                  sx={{ mt: 1 }}
-                />
-                {complianceMetrics.accesosAuditados?.hallazgos !== undefined && (
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                    {complianceMetrics.accesosAuditados.hallazgos} hallazgos
-                  </Typography>
-                )}
-              </Paper>
-            </Grid>
+              )}
+            </Paper>
 
-            <Grid item xs={12} md={3}>
-              <Paper sx={{ p: 2, textAlign: 'center' }}>
-                <Schedule sx={{ 
-                  fontSize: 32, 
-                  color: complianceMetrics.certificacionesMSP?.vigentes ? 'success.main' : 'error.main',
-                  mb: 1 
-                }} />
-                <Typography variant="subtitle2" fontWeight="bold">
-                  Certificaciones MSP
+            <Paper sx={{ p: 2, textAlign: 'center' }}>
+              <Schedule sx={{
+                fontSize: 32,
+                color: complianceMetrics.certificacionesMSP?.vigentes ? 'success.main' : 'error.main',
+                mb: 1
+              }} />
+              <Typography variant="subtitle2" fontWeight="bold">
+                Certificaciones MSP
+              </Typography>
+              <Chip
+                label={complianceMetrics.certificacionesMSP?.vigentes ? 'Vigentes' : 'Vencidas'}
+                size="small"
+                color={complianceMetrics.certificacionesMSP?.vigentes ? 'success' : 'error'}
+                sx={{ mt: 1 }}
+              />
+              {complianceMetrics.certificacionesMSP?.proximoVencimiento && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                  Próximo: {format(complianceMetrics.certificacionesMSP.proximoVencimiento, 'dd/MM/yyyy')}
                 </Typography>
-                <Chip
-                  label={complianceMetrics.certificacionesMSP?.vigentes ? 'Vigentes' : 'Vencidas'}
-                  size="small"
-                  color={complianceMetrics.certificacionesMSP?.
+              )}
+            </Paper>
+          </Box>
+        </Box>
+      </Collapse>
+    </Box>
+  );
+}

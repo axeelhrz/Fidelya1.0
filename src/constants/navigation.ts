@@ -4,9 +4,7 @@ import {
   EventNote,
   Assessment,
   Warning,
-  Psychology,
   BusinessCenter,
-  TrendingUp,
 } from '@mui/icons-material';
 
 export const navigationItems = [
