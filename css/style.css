@@ -96,6 +96,9 @@
 --hamburger-size: 24px;
 --mobile-menu-width: 100vw;
 --mobile-menu-padding: 2rem;
+
+/* Variables para el selector de idioma */
+--language-switcher-z-index: 1200;
 }
 
 /* ===== RESET MEJORADO ===== */
@@ -119,6 +122,307 @@ overflow-x: hidden;
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 position: relative;
+}
+
+/* ===== BOTÓN DE CAMBIO DE IDIOMA INDEPENDIENTE ===== */
+.language-switcher {
+position: fixed;
+top: 20px;
+right: 20px;
+z-index: var(--language-switcher-z-index);
+pointer-events: auto;
+}
+
+.language-switcher__btn {
+display: flex;
+align-items: center;
+gap: var(--space-sm);
+padding: var(--space-md) var(--space-lg);
+background: linear-gradient(135deg, 
+    rgba(21, 25, 34, 0.95) 0%, 
+    rgba(30, 35, 48, 0.95) 100%
+);
+backdrop-filter: blur(25px);
+-webkit-backdrop-filter: blur(25px);
+border: 1px solid var(--border-accent);
+border-radius: 25px;
+color: var(--text-primary);
+font-family: var(--font-mono);
+font-size: 0.85rem;
+font-weight: 600;
+cursor: pointer;
+transition: all var(--transition);
+position: relative;
+overflow: hidden;
+box-shadow: 
+    var(--shadow-lg),
+    var(--glow-subtle),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+animation: language-switcher-float 6s ease-in-out infinite;
+min-width: 120px;
+}
+
+.language-switcher__btn::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 69, 105, 0.1), 
+    transparent
+);
+transition: left 0.6s ease;
+}
+
+.language-switcher__btn:hover {
+transform: translateY(-2px) scale(1.02);
+border-color: var(--starflex-crimson-bright);
+box-shadow: 
+    var(--shadow-xl),
+    var(--neon-crimson),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.language-switcher__btn:hover::before {
+left: 100%;
+}
+
+.language-switcher__btn:focus {
+outline: 2px solid var(--starflex-crimson-bright);
+outline-offset: 3px;
+border-radius: 28px;
+}
+
+.language-switcher__icon {
+width: 20px;
+height: 20px;
+color: var(--starflex-crimson-bright);
+transition: all var(--transition);
+filter: drop-shadow(0 0 8px rgba(255, 69, 105, 0.4));
+}
+
+.language-switcher__btn:hover .language-switcher__icon {
+transform: scale(1.1);
+color: var(--starflex-crimson-glow);
+filter: drop-shadow(0 0 12px rgba(255, 69, 105, 0.6));
+}
+
+.language-switcher__text {
+color: var(--text-primary);
+font-weight: 700;
+text-transform: uppercase;
+letter-spacing: 1px;
+transition: all var(--transition);
+}
+
+.language-switcher__btn:hover .language-switcher__text {
+color: var(--starflex-crimson-bright);
+text-shadow: 0 0 10px rgba(255, 69, 105, 0.5);
+}
+
+.language-switcher__arrow {
+width: 16px;
+height: 16px;
+color: var(--text-muted);
+transition: all var(--transition);
+transform-origin: center;
+}
+
+.language-switcher__btn:hover .language-switcher__arrow {
+color: var(--text-primary);
+transform: rotate(180deg);
+}
+
+.language-switcher.active .language-switcher__arrow {
+transform: rotate(180deg);
+color: var(--starflex-crimson-bright);
+}
+
+/* ===== DROPDOWN DEL SELECTOR DE IDIOMA ===== */
+.language-switcher__dropdown {
+position: absolute;
+top: calc(100% + 10px);
+right: 0;
+min-width: 180px;
+background: linear-gradient(135deg, 
+    rgba(21, 25, 34, 0.98) 0%, 
+    rgba(30, 35, 48, 0.98) 100%
+);
+backdrop-filter: blur(30px);
+-webkit-backdrop-filter: blur(30px);
+border: 1px solid var(--border-accent);
+border-radius: 20px;
+padding: var(--space-sm);
+opacity: 0;
+visibility: hidden;
+transform: translateY(-10px) scale(0.95);
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+box-shadow: 
+    var(--shadow-2xl),
+    var(--glow-medium),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+z-index: 10;
+}
+
+.language-switcher.active .language-switcher__dropdown {
+opacity: 1;
+visibility: visible;
+transform: translateY(0) scale(1);
+}
+
+.language-switcher__option {
+display: flex;
+align-items: center;
+gap: var(--space-md);
+width: 100%;
+padding: var(--space-md) var(--space-lg);
+background: transparent;
+border: none;
+border-radius: 15px;
+color: var(--text-secondary);
+font-family: var(--font-primary);
+font-size: 0.9rem;
+font-weight: 500;
+cursor: pointer;
+transition: all var(--transition);
+position: relative;
+overflow: hidden;
+}
+
+.language-switcher__option::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: linear-gradient(135deg, 
+    rgba(255, 69, 105, 0.08) 0%, 
+    rgba(255, 23, 68, 0.05) 100%
+);
+border-radius: 15px;
+opacity: 0;
+transition: all var(--transition);
+}
+
+.language-switcher__option:hover {
+color: var(--text-primary);
+transform: translateX(3px);
+}
+
+.language-switcher__option:hover::before {
+opacity: 1;
+}
+
+.language-switcher__option.active {
+color: var(--starflex-crimson-bright);
+background: rgba(255, 69, 105, 0.1);
+border: 1px solid rgba(255, 69, 105, 0.2);
+}
+
+.language-switcher__option.active::before {
+opacity: 1;
+background: linear-gradient(135deg, 
+    rgba(255, 69, 105, 0.15) 0%, 
+    rgba(255, 23, 68, 0.1) 100%
+);
+}
+
+.language-switcher__flag {
+font-size: 1.2rem;
+line-height: 1;
+}
+
+.language-switcher__name {
+flex: 1;
+text-align: left;
+font-weight: 600;
+}
+
+/* ===== ANIMACIONES PARA EL SELECTOR DE IDIOMA ===== */
+@keyframes language-switcher-float {
+0%, 100% {
+    transform: translateY(0px);
+}
+50% {
+    transform: translateY(-3px);
+}
+}
+
+/* ===== RESPONSIVE PARA EL SELECTOR DE IDIOMA ===== */
+@media (max-width: 768px) {
+.language-switcher {
+    top: 15px;
+    right: 15px;
+}
+
+.language-switcher__btn {
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.8rem;
+    min-width: 100px;
+    border-radius: 20px;
+}
+
+.language-switcher__icon {
+    width: 18px;
+    height: 18px;
+}
+
+.language-switcher__arrow {
+    width: 14px;
+    height: 14px;
+}
+
+.language-switcher__dropdown {
+    min-width: 160px;
+    top: calc(100% + 8px);
+}
+
+.language-switcher__option {
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.85rem;
+}
+}
+
+@media (max-width: 480px) {
+.language-switcher {
+    top: 10px;
+    right: 10px;
+}
+
+.language-switcher__btn {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.75rem;
+    min-width: 85px;
+    border-radius: 18px;
+}
+
+.language-switcher__icon {
+    width: 16px;
+    height: 16px;
+}
+
+.language-switcher__arrow {
+    width: 12px;
+    height: 12px;
+}
+
+.language-switcher__dropdown {
+    min-width: 140px;
+    right: -10px;
+}
+
+.language-switcher__option {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.8rem;
+}
+
+.language-switcher__flag {
+    font-size: 1rem;
+}
 }
 
 /* ===== OPTIMIZACIÓN DE IMÁGENES - ESTADOS DE CARGA ===== */
@@ -3117,7 +3421,7 @@ text-transform: uppercase;
 letter-spacing: 1.5px;
 }
 
-/* ===== BOTÓN FLOTANTE FUTURISTA CON WHATSAPP, TELEGRAM Y TOGGLE DE IDIOMA ===== */
+/* ===== BOTÓN FLOTANTE FUTURISTA CON WHATSAPP Y TELEGRAM (SIN IDIOMA) ===== */
 .floating-widget {
 position: fixed;
 bottom: 30px;
@@ -3255,7 +3559,6 @@ animation: floating-widget-item-float 6s ease-in-out infinite;
 
 .floating-widget__menu-item:nth-child(1) { animation-delay: 0.2s; }
 .floating-widget__menu-item:nth-child(2) { animation-delay: 0.4s; }
-.floating-widget__menu-item:nth-child(3) { animation-delay: 0.6s; }
 
 .floating-widget__menu-item::before {
 content: '';
@@ -3308,22 +3611,6 @@ box-shadow:
 inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-/* ===== TOGGLE DE IDIOMA FLOTANTE ===== */
-.floating-widget__language {
-background: linear-gradient(135deg, 
-var(--starflex-crimson) 0%, 
-var(--starflex-crimson-bright) 100%
-);
-position: relative;
-}
-
-.floating-widget__language:hover {
-box-shadow: 
-var(--shadow-crimson-hover),
-var(--neon-crimson),
-inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
 /* ===== ICONOS DE LOS BOTONES ===== */
 .floating-widget__icon {
 width: 28px;
@@ -3335,17 +3622,6 @@ filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 
 .floating-widget__menu-item:hover .floating-widget__icon {
 transform: scale(1.1);
-}
-
-/* ===== TEXTO DEL IDIOMA ===== */
-.floating-widget__language-text {
-color: white;
-font-family: var(--font-mono);
-font-size: 0.75rem;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: 1px;
-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* ===== TOOLTIPS ===== */
@@ -4022,10 +4298,6 @@ width: 24px;
 height: 24px;
 }
 
-.floating-widget__language-text {
-font-size: 0.7rem;
-}
-
 .floating-widget__tooltip {
 right: 60px;
 font-size: 0.75rem;
@@ -4192,10 +4464,6 @@ width: 20px;
 height: 20px;
 }
 
-.floating-widget__language-text {
-font-size: 0.65rem;
-}
-
 .floating-widget__tooltip {
 display: none; /* Ocultar tooltips en móviles muy pequeños */
 }
@@ -4220,14 +4488,16 @@ display: none;
 .contact__channel,
 .contact__channel-icon,
 .nav__toggle,
-.floating-widget {
+.floating-widget,
+.language-switcher {
 will-change: transform;
 }
 
 .btn--cta,
 .btn--footer,
 .floating-widget__main-btn,
-.floating-widget__menu-item {
+.floating-widget__menu-item,
+.language-switcher__btn {
 will-change: transform, box-shadow;
 transform: translateZ(0);
 backface-visibility: hidden;
@@ -4258,7 +4528,8 @@ transition-duration: 0.01ms !important;
 .feature-ambient-glow,
 .nav__toggle,
 .floating-widget__main-btn,
-.floating-widget__menu-item {
+.floating-widget__menu-item,
+.language-switcher__btn {
 animation: none !important;
 }
 }
@@ -4350,7 +4621,9 @@ overflow: hidden;
 .faq__search,
 .contact__badge,
 .floating-widget__main-btn,
-.floating-widget__menu-item {
+.floating-widget__menu-item,
+.language-switcher__btn,
+.language-switcher__dropdown {
 background: rgba(21, 25, 34, 0.9);
 }
 }
@@ -4382,7 +4655,8 @@ color: var(--starflex-orange);
 .floating-orb-3,
 .bg-canvas,
 .nav__toggle,
-.floating-widget {
+.floating-widget,
+.language-switcher {
 display: none;
 }
 
