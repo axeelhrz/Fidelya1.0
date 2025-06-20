@@ -1047,7 +1047,7 @@ function initializeHeroVideo() {
             heroVideo.pause();
         } else if (heroVideo.paused && !heroVideo.ended) {
             const playPromise = heroVideo.play();
-            if (playPromise !== undefined) {
+                      if (playPromise !== undefined) {
                 playPromise.catch(error => {
                     console.warn('Hero video: Error al reanudar:', error);
                 });
@@ -1395,7 +1395,7 @@ function initializeScrollEffects() {
     // Scroll listener optimizado con throttling para navegación activa
     window.addEventListener('scroll', throttle(() => {
         if (!ticking) {
-            requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
                 updateActiveNavOnScroll();
                 handleScrollDirection();
                 ticking = false;
@@ -1949,3 +1949,4 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+  
