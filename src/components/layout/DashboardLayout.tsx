@@ -27,6 +27,7 @@ import {
   Slide,
   Zoom,
   Tooltip,
+  Collapse,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -44,18 +45,22 @@ import {
   Event,
   Info,
   CheckCircle,
+  ExpandLess,
+  ExpandMore,
+  BusinessCenter,
+  Work,
 } from '@mui/icons-material';
 import { useAuth } from '@/context/AuthContext';
 import { useRole } from '@/hooks/useRole';
 import { useAlerts, useRecentAlerts } from '@/hooks/useAlerts';
 import SidebarItem from './SidebarItem';
 import EmailVerificationBanner from '@/components/auth/EmailVerificationBanner';
-import { getNavigationItemsForRole } from '@/constants/navigation';
+import { getNavigationItemsForRole, getNavigationItemsByCategory } from '@/constants/navigation';
 import { AlertType, AlertUrgency } from '@/types/alert';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-const drawerWidth = 300;
+const drawerWidth = 320; // Aumentado para acomodar mejor las categorías
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -211,7 +216,7 @@ function FloatingNotificationButton() {
         >
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Box>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: '"Inter", sans-serif' }}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: '"Neris", sans-serif' }}>
                 Notificaciones
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.9 }}>
@@ -274,7 +279,7 @@ function FloatingNotificationButton() {
                               variant="subtitle2" 
                               sx={{ 
                                 fontWeight: 600,
-                                fontFamily: '"Inter", sans-serif',
+                                fontFamily: '"Neris", sans-serif',
                                 flex: 1
                               }}
                             >
@@ -398,6 +403,8 @@ function FloatingNotificationButton() {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [ceoSectionOpen, setCeoSectionOpen] = useState(true);
+  const [operativeSectionOpen, setOperativeSectionOpen] = useState(true);
   
   const { user, signOut } = useAuth();
   const { role } = useRole();
@@ -425,8 +432,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  // Filtrar elementos de navegación basándose en el rol específico del usuario
-  const filteredNavItems = role ? getNavigationItemsForRole(role) : [];
+  // Obtener elementos de navegación por categoría
+  const principalItems = getNavigationItemsByCategory(role || 'patient', 'principal');
+  const ceoItems = getNavigationItemsByCategory(role || 'patient', 'ceo');
+  const operativeItems = getNavigationItemsByCategory(role || 'patient', 'operativo');
 
   const drawer = (
     <Box 
@@ -477,10 +486,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <Psychology sx={{ fontSize: 28, color: 'white' }} />
           </Box>
           <Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ fontFamily: '"Inter", "Poppins", sans-serif' }}>
+            <Typography variant="h6" fontWeight="bold" sx={{ fontFamily: '"Neris", sans-serif' }}>
               Centro
             </Typography>
-            <Typography variant="h6" fontWeight="bold" sx={{ fontFamily: '"Inter", "Poppins", sans-serif', mt: -0.5 }}>
+            <Typography variant="h6" fontWeight="bold" sx={{ fontFamily: '"Neris", sans-serif', mt: -0.5 }}>
               Psicológico
             </Typography>
           </Box>
@@ -522,7 +531,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               {user?.displayName?.charAt(0)}
             </Avatar>
             <Box flexGrow={1}>
-              <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 0.5 }}>
+              <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 0.5, fontFamily: '"Neris", sans-serif' }}>
                 {user?.displayName}
               </Typography>
               <Typography 
@@ -532,9 +541,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   fontWeight: 500,
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
+                  fontFamily: '"Neris", sans-serif',
                 }}
               >
-                {role === 'admin' ? 'Administrador' : 
+                {role === 'admin' ? 'Administrador CEO' : 
                  role === 'psychologist' ? 'Psicólogo' : 'Paciente'}
               </Typography>
             </Box>
@@ -572,6 +582,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 borderRadius: 2, 
                 mx: 1, 
                 my: 0.5,
+                fontFamily: '"Neris", sans-serif',
                 '&:hover': {
                   background: alpha(theme.palette.primary.main, 0.1),
                 }
@@ -586,6 +597,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 borderRadius: 2, 
                 mx: 1, 
                 my: 0.5,
+                fontFamily: '"Neris", sans-serif',
                 '&:hover': {
                   background: alpha(theme.palette.info.main, 0.1),
                 }
@@ -601,6 +613,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 borderRadius: 2, 
                 mx: 1, 
                 my: 0.5,
+                fontFamily: '"Neris", sans-serif',
                 '&:hover': {
                   background: alpha(theme.palette.error.main, 0.1),
                 }
@@ -616,34 +629,159 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <Divider sx={{ mx: 2, opacity: 0.3 }} />
 
       {/* Navegación */}
-      <Box sx={{ px: 2, py: 3, position: 'relative', zIndex: 1 }}>
-        <Typography 
-          variant="overline" 
-          sx={{ 
-            px: 2, 
-            mb: 2, 
-            display: 'block',
-            fontWeight: 600,
-            color: 'text.secondary',
-            letterSpacing: '0.1em',
-          }}
-        >
-          Navegación
-        </Typography>
-        <List sx={{ p: 0 }}>
-          {filteredNavItems.map((item, index) => (
-            <Fade in timeout={600 + index * 100} key={item.path}>
-              <Box>
-                <SidebarItem
-                  icon={item.icon}
-                  label={item.label}
-                  path={item.path}
-                  onClick={() => isMobile && setMobileOpen(false)}
-                />
-              </Box>
-            </Fade>
-          ))}
-        </List>
+      <Box sx={{ px: 2, py: 3, position: 'relative', zIndex: 1, flex: 1, overflow: 'auto' }}>
+        {/* Dashboard Principal */}
+        {principalItems.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <Typography 
+              variant="overline" 
+              sx={{ 
+                px: 2, 
+                mb: 2, 
+                display: 'block',
+                fontWeight: 600,
+                color: 'text.secondary',
+                letterSpacing: '0.1em',
+                fontFamily: '"Neris", sans-serif',
+              }}
+            >
+              Principal
+            </Typography>
+            <List sx={{ p: 0 }}>
+              {principalItems.map((item, index) => (
+                <Fade in timeout={600 + index * 100} key={item.path}>
+                  <Box>
+                    <SidebarItem
+                      icon={item.icon}
+                      label={item.label}
+                      path={item.path}
+                      onClick={() => isMobile && setMobileOpen(false)}
+                      adminOnly={item.adminOnly}
+                      description={item.description}
+                      category={item.category}
+                    />
+                  </Box>
+                </Fade>
+              ))}
+            </List>
+          </Box>
+        )}
+
+        {/* Secciones CEO (solo para admin) */}
+        {role === 'admin' && ceoItems.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <ListItemButton
+              onClick={() => setCeoSectionOpen(!ceoSectionOpen)}
+              sx={{
+                borderRadius: 2,
+                mx: 1,
+                mb: 1,
+                background: alpha('#5D4FB0', 0.05),
+                '&:hover': {
+                  background: alpha('#5D4FB0', 0.1),
+                }
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                <BusinessCenter sx={{ color: '#5D4FB0', fontSize: 20 }} />
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  <Typography 
+                    variant="overline" 
+                    sx={{ 
+                      fontWeight: 600,
+                      color: '#5D4FB0',
+                      letterSpacing: '0.1em',
+                      fontFamily: '"Neris", sans-serif',
+                    }}
+                  >
+                    Panel Ejecutivo CEO
+                  </Typography>
+                }
+              />
+              {ceoSectionOpen ? <ExpandLess sx={{ color: '#5D4FB0' }} /> : <ExpandMore sx={{ color: '#5D4FB0' }} />}
+            </ListItemButton>
+            
+            <Collapse in={ceoSectionOpen} timeout="auto" unmountOnExit>
+              <List sx={{ p: 0, pl: 1 }}>
+                {ceoItems.map((item, index) => (
+                  <Fade in timeout={600 + index * 100} key={item.path}>
+                    <Box>
+                      <SidebarItem
+                        icon={item.icon}
+                        label={item.label}
+                        path={item.path}
+                        onClick={() => isMobile && setMobileOpen(false)}
+                        adminOnly={item.adminOnly}
+                        description={item.description}
+                        category={item.category}
+                      />
+                    </Box>
+                  </Fade>
+                ))}
+              </List>
+            </Collapse>
+          </Box>
+        )}
+
+        {/* Secciones Operativas */}
+        {operativeItems.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <ListItemButton
+              onClick={() => setOperativeSectionOpen(!operativeSectionOpen)}
+              sx={{
+                borderRadius: 2,
+                mx: 1,
+                mb: 1,
+                background: alpha(theme.palette.secondary.main, 0.05),
+                '&:hover': {
+                  background: alpha(theme.palette.secondary.main, 0.1),
+                }
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                <Work sx={{ color: theme.palette.secondary.main, fontSize: 20 }} />
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  <Typography 
+                    variant="overline" 
+                    sx={{ 
+                      fontWeight: 600,
+                      color: theme.palette.secondary.main,
+                      letterSpacing: '0.1em',
+                      fontFamily: '"Neris", sans-serif',
+                    }}
+                  >
+                    Operaciones
+                  </Typography>
+                }
+              />
+              {operativeSectionOpen ? <ExpandLess sx={{ color: theme.palette.secondary.main }} /> : <ExpandMore sx={{ color: theme.palette.secondary.main }} />}
+            </ListItemButton>
+            
+            <Collapse in={operativeSectionOpen} timeout="auto" unmountOnExit>
+              <List sx={{ p: 0, pl: 1 }}>
+                {operativeItems.map((item, index) => (
+                  <Fade in timeout={600 + index * 100} key={item.path}>
+                    <Box>
+                      <SidebarItem
+                        icon={item.icon}
+                        label={item.label}
+                        path={item.path}
+                        onClick={() => isMobile && setMobileOpen(false)}
+                        adminOnly={item.adminOnly}
+                        description={item.description}
+                        category={item.category}
+                      />
+                    </Box>
+                  </Fade>
+                ))}
+              </List>
+            </Collapse>
+          </Box>
+        )}
       </Box>
 
       {/* Footer del sidebar */}
@@ -664,10 +802,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             textAlign: 'center',
           }}
         >
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontFamily: '"Neris", sans-serif' }}>
             Versión 2.0.0
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="text.secondary" sx={{ fontFamily: '"Neris", sans-serif' }}>
             © 2024 Centro Psicológico
           </Typography>
         </Box>

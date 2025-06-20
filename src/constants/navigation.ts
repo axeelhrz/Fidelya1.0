@@ -5,6 +5,11 @@ import {
   Assessment,
   Warning,
   BusinessCenter,
+  TrendingUp,
+  LocalHospital,
+  AccountBalance,
+  Psychology,
+  Security,
 } from '@mui/icons-material';
 import { UserRole } from '@/types/auth';
 
@@ -15,25 +20,69 @@ interface NavigationItem {
   allowedRoles: UserRole[];
   adminOnly?: boolean;
   description?: string;
+  category?: string;
 }
 
 export const navigationItems: NavigationItem[] = [
+  // Dashboard Principal
   {
     label: 'Dashboard',
     path: '/dashboard',
     icon: Dashboard,
     allowedRoles: ['admin', 'psychologist', 'patient'],
     adminOnly: false,
-    description: 'Vista general del sistema',
+    description: 'Vista principal del sistema',
+    category: 'principal',
+  },
+
+  // Secciones CEO (solo para admin)
+  {
+    label: 'KPIs Ejecutivos',
+    path: '/dashboard?section=kpis',
+    icon: TrendingUp,
+    allowedRoles: ['admin'],
+    adminOnly: true,
+    description: 'Métricas clave de rendimiento',
+    category: 'ceo',
   },
   {
-    label: 'Panel Ejecutivo',
-    path: '/dashboard/ceo',
+    label: 'Desempeño Financiero',
+    path: '/dashboard?section=financial',
+    icon: AccountBalance,
+    allowedRoles: ['admin'],
+    adminOnly: true,
+    description: 'Burn & Earn, rentabilidad',
+    category: 'ceo',
+  },
+  {
+    label: 'Salud Clínica',
+    path: '/dashboard?section=clinical',
+    icon: LocalHospital,
+    allowedRoles: ['admin'],
+    adminOnly: true,
+    description: 'Radar de riesgo, adherencia',
+    category: 'ceo',
+  },
+  {
+    label: 'Pipeline Comercial',
+    path: '/dashboard?section=commercial',
     icon: BusinessCenter,
     allowedRoles: ['admin'],
     adminOnly: true,
-    description: 'Dashboard CEO - Solo administradores',
+    description: 'Marketing y captación',
+    category: 'ceo',
   },
+  {
+    label: 'Compliance',
+    path: '/dashboard?section=compliance',
+    icon: Security,
+    allowedRoles: ['admin'],
+    adminOnly: true,
+    description: 'Cumplimiento y auditorías',
+    category: 'ceo',
+  },
+
+  // Secciones Operativas
   {
     label: 'Pacientes',
     path: '/dashboard/patients',
@@ -41,6 +90,7 @@ export const navigationItems: NavigationItem[] = [
     allowedRoles: ['admin', 'psychologist'],
     adminOnly: false,
     description: 'Gestión de pacientes',
+    category: 'operativo',
   },
   {
     label: 'Sesiones',
@@ -49,6 +99,7 @@ export const navigationItems: NavigationItem[] = [
     allowedRoles: ['admin', 'psychologist'],
     adminOnly: false,
     description: 'Gestión de sesiones',
+    category: 'operativo',
   },
   {
     label: 'Métricas',
@@ -57,6 +108,7 @@ export const navigationItems: NavigationItem[] = [
     allowedRoles: ['admin', 'psychologist'],
     adminOnly: false,
     description: 'Análisis y reportes',
+    category: 'operativo',
   },
   {
     label: 'Alertas',
@@ -65,19 +117,25 @@ export const navigationItems: NavigationItem[] = [
     allowedRoles: ['admin', 'psychologist'],
     adminOnly: false,
     description: 'Sistema de alertas',
+    category: 'operativo',
   },
 ];
 
-// Función helper para obtener elementos de navegación por rol
+// Función helper para obtener elementos de navegación por rol y categoría
 export const getNavigationItemsForRole = (role: UserRole): NavigationItem[] => {
   return navigationItems.filter(item => {
-    // Si el item es solo para admin, verificar que el rol sea admin
     if (item.adminOnly && role !== 'admin') {
       return false;
     }
-    // Verificar que el rol esté en la lista de roles permitidos
     return item.allowedRoles.includes(role);
   });
+};
+
+// Función helper para obtener elementos por categoría
+export const getNavigationItemsByCategory = (role: UserRole, category?: string): NavigationItem[] => {
+  const items = getNavigationItemsForRole(role);
+  if (!category) return items;
+  return items.filter(item => item.category === category);
 };
 
 // Función helper para verificar si un usuario puede acceder a una ruta específica
@@ -90,9 +148,4 @@ export const canAccessRoute = (path: string, role: UserRole): boolean => {
   }
   
   return item.allowedRoles.includes(role);
-};
-
-// Función helper para obtener información de una ruta
-export const getRouteInfo = (path: string): NavigationItem | undefined => {
-  return navigationItems.find(item => item.path === path);
 };

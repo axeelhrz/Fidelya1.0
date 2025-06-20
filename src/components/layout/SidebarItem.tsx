@@ -11,7 +11,7 @@ import {
   Box,
   Typography,
 } from '@mui/material';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useRole } from '@/hooks/useRole';
 
 interface SidebarItemProps {
@@ -21,6 +21,7 @@ interface SidebarItemProps {
   onClick?: () => void;
   adminOnly?: boolean;
   description?: string;
+  category?: string;
 }
 
 export default function SidebarItem({ 
@@ -29,19 +30,46 @@ export default function SidebarItem({
   path, 
   onClick,
   adminOnly = false,
-  description 
+  description,
+  category 
 }: SidebarItemProps) {
   const theme = useTheme();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { role } = useRole();
   
-  const isActive = pathname === path || (path !== '/dashboard' && pathname.startsWith(path));
-  const isAdminRoute = path === '/dashboard/ceo';
+  // Determinar si está activo basándose en la ruta y parámetros
+  const isActive = () => {
+    if (path.includes('?section=')) {
+      const [basePath, sectionParam] = path.split('?section=');
+      const currentSection = searchParams.get('section');
+      return pathname === basePath && currentSection === sectionParam;
+    }
+    return pathname === path || (path !== '/dashboard' && pathname.startsWith(path));
+  };
+
+  const active = isActive();
+  const isCEOSection = category === 'ceo';
 
   const handleClick = () => {
     router.push(path);
     onClick?.();
+  };
+
+  // Colores del brand kit para secciones CEO
+  const ceoBrandColors = {
+    primary: '#5D4FB0',
+    secondary: '#A593F3', 
+    accentBlue: '#A5CAE6',
+    accentPink: '#D97DB7',
+  };
+
+  const getActiveColor = () => {
+    if (isCEOSection) {
+      return ceoBrandColors.primary;
+    }
+    return theme.palette.primary.main;
   };
 
   return (
@@ -53,30 +81,36 @@ export default function SidebarItem({
         mx: 1,
         py: 1.5,
         px: 2,
-        background: isActive 
-          ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.15)} 0%, ${alpha(theme.palette.secondary.main, 0.15)} 100%)`
+        background: active 
+          ? isCEOSection
+            ? `linear-gradient(135deg, ${alpha(ceoBrandColors.primary, 0.15)} 0%, ${alpha(ceoBrandColors.secondary, 0.15)} 100%)`
+            : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.15)} 0%, ${alpha(theme.palette.secondary.main, 0.15)} 100%)`
           : 'transparent',
-        border: isActive 
-          ? `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
+        border: active 
+          ? `1px solid ${alpha(getActiveColor(), 0.2)}`
           : '1px solid transparent',
-        color: isActive ? theme.palette.primary.main : theme.palette.text.primary,
+        color: active ? getActiveColor() : theme.palette.text.primary,
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         position: 'relative',
         overflow: 'hidden',
-        '&::before': isActive ? {
+        '&::before': active ? {
           content: '""',
           position: 'absolute',
           left: 0,
           top: 0,
           bottom: 0,
           width: 4,
-          background: `linear-gradient(180deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+          background: isCEOSection 
+            ? `linear-gradient(180deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`
+            : `linear-gradient(180deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: '0 2px 2px 0',
         } : {},
         '&:hover': {
-          background: isActive 
-            ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.2)} 0%, ${alpha(theme.palette.secondary.main, 0.2)} 100%)`
-            : alpha(theme.palette.primary.main, 0.08),
+          background: active 
+            ? isCEOSection
+              ? `linear-gradient(135deg, ${alpha(ceoBrandColors.primary, 0.2)} 0%, ${alpha(ceoBrandColors.secondary, 0.2)} 100%)`
+              : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.2)} 0%, ${alpha(theme.palette.secondary.main, 0.2)} 100%)`
+            : alpha(getActiveColor(), 0.08),
           transform: 'translateX(4px)',
           '& .MuiListItemIcon-root': {
             transform: 'scale(1.1)',
@@ -100,16 +134,16 @@ export default function SidebarItem({
             <Typography
               variant="subtitle2"
               sx={{
-                fontWeight: isActive ? 600 : 500,
-                fontFamily: '"Inter", sans-serif',
+                fontWeight: active ? 600 : 500,
+                fontFamily: '"Neris", sans-serif',
                 flex: 1,
               }}
             >
               {label}
             </Typography>
             
-            {/* Chip especial para Panel Ejecutivo */}
-            {isAdminRoute && role === 'admin' && (
+            {/* Chip especial para secciones CEO */}
+            {isCEOSection && role === 'admin' && (
               <Chip
                 label="CEO"
                 size="small"
@@ -117,7 +151,7 @@ export default function SidebarItem({
                   height: 20,
                   fontSize: '0.65rem',
                   fontWeight: 600,
-                  background: `linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)`,
+                  background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
                   color: 'white',
                   '& .MuiChip-label': {
                     px: 1,
@@ -127,7 +161,7 @@ export default function SidebarItem({
             )}
             
             {/* Chip para rutas solo admin */}
-            {adminOnly && !isAdminRoute && role === 'admin' && (
+            {adminOnly && !isCEOSection && role === 'admin' && (
               <Chip
                 label="Admin"
                 size="small"
@@ -147,12 +181,13 @@ export default function SidebarItem({
           </Box>
         }
         secondary={
-          description && isAdminRoute ? (
+          description && (isCEOSection || active) ? (
             <Typography
               variant="caption"
               sx={{
                 color: alpha(theme.palette.text.secondary, 0.8),
-                fontStyle: 'italic',
+                fontFamily: '"Neris", sans-serif',
+                fontWeight: 300,
                 fontSize: '0.7rem',
                 mt: 0.5,
                 display: 'block',
@@ -164,7 +199,7 @@ export default function SidebarItem({
         }
         sx={{
           '& .MuiListItemText-primary': {
-            mb: description && isAdminRoute ? 0.5 : 0,
+            mb: description && (isCEOSection || active) ? 0.5 : 0,
           },
         }}
       />
