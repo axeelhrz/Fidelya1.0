@@ -5,7 +5,6 @@ import {
   Container,
   Typography,
   Box,
-  Grid,
   Fade,
   useTheme,
   alpha,
@@ -156,17 +155,33 @@ export default function CEODashboardPage() {
               📊 Fila de KPI Cards
             </Typography>
             
-            <Grid container spacing={3}>
+            {/* KPI Cards Flexbox Container */}
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 3,
+                '& > *': {
+                  flex: '1 1 280px', // Flexible basis with minimum width
+                  minWidth: 280,
+                  maxWidth: {
+                    xs: '100%',
+                    sm: 'calc(50% - 12px)',
+                    md: 'calc(33.333% - 16px)',
+                    lg: 'calc(25% - 18px)'
+                  }
+                }
+              }}
+            >
               {ceoMetrics.kpis.map((kpi, index) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={kpi.id}>
-                  <KpiCard
-                    kpi={kpi}
-                    onDetailClick={handleKpiDetailClick}
-                    delay={index}
-                  />
-                </Grid>
+                <KpiCard
+                  key={kpi.id}
+                  kpi={kpi}
+                  onDetailClick={handleKpiDetailClick}
+                  delay={index}
+                />
               ))}
-            </Grid>
+            </Box>
           </Box>
 
           {/* Financial Panel */}
@@ -229,179 +244,197 @@ export default function CEODashboardPage() {
               </AccordionSummary>
               
               <AccordionDetails sx={{ p: 3 }}>
-                <Grid container spacing={4}>
+                {/* Clinical Widgets Flexbox Container */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 4,
+                    '& > *': {
+                      flex: '1 1 350px', // Flexible basis with minimum width
+                      minWidth: 350,
+                      maxWidth: {
+                        xs: '100%',
+                        lg: 'calc(33.333% - 21px)'
+                      }
+                    }
+                  }}
+                >
                   {/* Risk Radar Widget */}
-                  <Grid item xs={12} lg={4}>
-                    <Box
-                      sx={{
-                        p: 3,
-                        borderRadius: 3,
-                        background: alpha(theme.palette.error.main, 0.05),
-                        border: `1px solid ${alpha(theme.palette.error.main, 0.1)}`,
-                        height: '100%',
-                      }}
-                    >
-                      <Box display="flex" alignItems="center" gap={1} mb={3}>
-                        <LocalHospital sx={{ color: 'error.main', fontSize: 24 }} />
-                        <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
-                          Radar de Riesgo Activo
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Pacientes con: alerta suicidio, PHQ alto, sin progreso en 3 sesiones
+                  <Box
+                    sx={{
+                      p: 3,
+                      borderRadius: 3,
+                      background: alpha(theme.palette.error.main, 0.05),
+                      border: `1px solid ${alpha(theme.palette.error.main, 0.1)}`,
+                      height: 'fit-content',
+                    }}
+                  >
+                    <Box display="flex" alignItems="center" gap={1} mb={3}>
+                      <LocalHospital sx={{ color: 'error.main', fontSize: 24 }} />
+                      <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
+                        Radar de Riesgo Activo
                       </Typography>
-                      
-                      {/* Risk Radar Content */}
-                      <Box>
-                        {ceoMetrics.riskRadarData.map((patient, index) => (
-                          <Box
-                            key={patient.pacienteId}
-                            sx={{
-                              p: 2,
-                              mb: 2,
-                              borderRadius: 2,
-                              background: alpha(
-                                patient.nivelRiesgo === 'critico' ? theme.palette.error.main :
-                                patient.nivelRiesgo === 'alto' ? theme.palette.warning.main :
-                                theme.palette.info.main, 
-                                0.1
-                              ),
-                              border: `1px solid ${alpha(
-                                patient.nivelRiesgo === 'critico' ? theme.palette.error.main :
-                                patient.nivelRiesgo === 'alto' ? theme.palette.warning.main :
-                                theme.palette.info.main, 
-                                0.3
-                              )}`,
-                            }}
-                          >
-                            <Typography variant="subtitle2" fontWeight="bold">
-                              {patient.nombre}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {patient.descripcion}
-                            </Typography>
-                            <Box sx={{ mt: 1 }}>
-                              <Typography variant="caption" fontWeight="bold" color="text.secondary">
-                                Acciones: {patient.accionesRecomendadas.join(', ')}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        ))}
-                      </Box>
                     </Box>
-                  </Grid>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                      Pacientes con: alerta suicidio, PHQ alto, sin progreso en 3 sesiones
+                    </Typography>
+                    
+                    {/* Risk Radar Content */}
+                    <Box>
+                      {ceoMetrics.riskRadarData.map((patient) => (
+                        <Box
+                          key={patient.pacienteId}
+                          sx={{
+                            p: 2,
+                            mb: 2,
+                            borderRadius: 2,
+                            background: alpha(
+                              patient.nivelRiesgo === 'critico' ? theme.palette.error.main :
+                              patient.nivelRiesgo === 'alto' ? theme.palette.warning.main :
+                              theme.palette.info.main, 
+                              0.1
+                            ),
+                            border: `1px solid ${alpha(
+                              patient.nivelRiesgo === 'critico' ? theme.palette.error.main :
+                              patient.nivelRiesgo === 'alto' ? theme.palette.warning.main :
+                              theme.palette.info.main, 
+                              0.3
+                            )}`,
+                          }}
+                        >
+                          <Typography variant="subtitle2" fontWeight="bold">
+                            {patient.nombre}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {patient.descripcion}
+                          </Typography>
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="caption" fontWeight="bold" color="text.secondary">
+                              Acciones: {patient.accionesRecomendadas.join(', ')}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
 
                   {/* Capacity Forecast Widget */}
-                  <Grid item xs={12} lg={4}>
+                  <Box
+                    sx={{
+                      p: 3,
+                      borderRadius: 3,
+                      background: alpha(theme.palette.info.main, 0.05),
+                      border: `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
+                      height: 'fit-content',
+                    }}
+                  >
+                    <Box display="flex" alignItems="center" gap={1} mb={3}>
+                      <TrendingUp sx={{ color: 'info.main', fontSize: 24 }} />
+                      <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
+                        Forecast de Capacidad
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                      Heatmap calendario 30 días (verde = libre, rojo = saturado)
+                    </Typography>
+                    
+                    {/* Capacity Forecast Content - Flexbox Calendar Grid */}
                     <Box
                       sx={{
-                        p: 3,
-                        borderRadius: 3,
-                        background: alpha(theme.palette.info.main, 0.05),
-                        border: `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-                        height: '100%',
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 0.5,
+                        justifyContent: 'flex-start',
                       }}
                     >
-                      <Box display="flex" alignItems="center" gap={1} mb={3}>
-                        <TrendingUp sx={{ color: 'info.main', fontSize: 24 }} />
-                        <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
-                          Forecast de Capacidad
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Heatmap calendario 30 días (verde = libre, rojo = saturado)
-                      </Typography>
-                      
-                      {/* Capacity Forecast Content */}
-                      <Grid container spacing={0.5}>
-                        {ceoMetrics.capacityForecast.slice(0, 30).map((day, index) => (
-                          <Grid item xs={1.7} key={day.fecha}>
-                            <Box
-                              sx={{
-                                aspectRatio: '1',
-                                borderRadius: 1,
-                                background: 
-                                  day.disponibilidad === 'libre' ? theme.palette.success.main :
-                                  day.disponibilidad === 'ocupado' ? theme.palette.warning.main :
-                                  theme.palette.error.main,
-                                opacity: 0.8,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '0.7rem',
-                                color: 'white',
-                                fontWeight: 'bold',
-                              }}
-                              title={`${day.fecha}: ${day.porcentajeOcupacion.toFixed(0)}% ocupación`}
-                            >
-                              {new Date(day.fecha).getDate()}
-                            </Box>
-                          </Grid>
-                        ))}
-                      </Grid>
+                      {ceoMetrics.capacityForecast.slice(0, 30).map((day) => (
+                        <Box
+                          key={day.fecha}
+                          sx={{
+                            width: 'calc(14.28% - 4px)', // 7 days per row with gap
+                            aspectRatio: '1',
+                            borderRadius: 1,
+                            background: 
+                              day.disponibilidad === 'libre' ? theme.palette.success.main :
+                              day.disponibilidad === 'ocupado' ? theme.palette.warning.main :
+                              theme.palette.error.main,
+                            opacity: 0.8,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.7rem',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            minWidth: 28,
+                            minHeight: 28,
+                          }}
+                          title={`${day.fecha}: ${day.porcentajeOcupacion.toFixed(0)}% ocupación`}
+                        >
+                          {new Date(day.fecha).getDate()}
+                        </Box>
+                      ))}
                     </Box>
-                  </Grid>
+                  </Box>
 
                   {/* Adherence Widget */}
-                  <Grid item xs={12} lg={4}>
-                    <Box
-                      sx={{
-                        p: 3,
-                        borderRadius: 3,
-                        background: alpha(theme.palette.success.main, 0.05),
-                        border: `1px solid ${alpha(theme.palette.success.main, 0.1)}`,
-                        height: '100%',
-                      }}
-                    >
-                      <Box display="flex" alignItems="center" gap={1} mb={3}>
-                        <Psychology sx={{ color: 'success.main', fontSize: 24 }} />
-                        <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
-                          Adherencia por Programa
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        % de sesiones completadas por tipo de programa
+                  <Box
+                    sx={{
+                      p: 3,
+                      borderRadius: 3,
+                      background: alpha(theme.palette.success.main, 0.05),
+                      border: `1px solid ${alpha(theme.palette.success.main, 0.1)}`,
+                      height: 'fit-content',
+                    }}
+                  >
+                    <Box display="flex" alignItems="center" gap={1} mb={3}>
+                      <Psychology sx={{ color: 'success.main', fontSize: 24 }} />
+                      <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
+                        Adherencia por Programa
                       </Typography>
-                      
-                      {/* Adherence Content */}
-                      <Box>
-                        {ceoMetrics.adherenceData.map((program, index) => (
-                          <Box key={program.programa} sx={{ mb: 2 }}>
-                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                              <Typography variant="body2" fontWeight="medium">
-                                {program.programa}
-                              </Typography>
-                              <Typography variant="body2" fontWeight="bold" color="success.main">
-                                {program.porcentajeAdherencia.toFixed(1)}%
-                              </Typography>
-                            </Box>
-                            <Box
-                              sx={{
-                                width: '100%',
-                                height: 6,
-                                bgcolor: alpha(theme.palette.success.main, 0.1),
-                                borderRadius: 3,
-                                overflow: 'hidden'
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  width: `${program.porcentajeAdherencia}%`,
-                                  height: '100%',
-                                  bgcolor: theme.palette.success.main,
-                                  transition: 'width 0.3s ease'
-                                }}
-                              />
-                            </Box>
-                            <Typography variant="caption" color="text.secondary">
-                              {program.sesionesCompletadas}/{program.sesionesProgramadas} sesiones | {program.pacientesActivos} pacientes
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                      % de sesiones completadas por tipo de programa
+                    </Typography>
+                    
+                    {/* Adherence Content */}
+                    <Box>
+                      {ceoMetrics.adherenceData.map((program) => (
+                        <Box key={program.programa} sx={{ mb: 2 }}>
+                          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                            <Typography variant="body2" fontWeight="medium">
+                              {program.programa}
+                            </Typography>
+                            <Typography variant="body2" fontWeight="bold" color="success.main">
+                              {program.porcentajeAdherencia.toFixed(1)}%
                             </Typography>
                           </Box>
-                        ))}
-                      </Box>
+                          <Box
+                            sx={{
+                              width: '100%',
+                              height: 6,
+                              bgcolor: alpha(theme.palette.success.main, 0.1),
+                              borderRadius: 3,
+                              overflow: 'hidden'
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                width: `${program.porcentajeAdherencia}%`,
+                                height: '100%',
+                                bgcolor: theme.palette.success.main,
+                                transition: 'width 0.3s ease'
+                              }}
+                            />
+                          </Box>
+                          <Typography variant="caption" color="text.secondary">
+                            {program.sesionesCompletadas}/{program.sesionesProgramadas} sesiones | {program.pacientesActivos} pacientes
+                          </Typography>
+                        </Box>
+                      ))}
                     </Box>
-                  </Grid>
-                </Grid>
+                  </Box>
+                </Box>
               </AccordionDetails>
             </Accordion>
           </Box>

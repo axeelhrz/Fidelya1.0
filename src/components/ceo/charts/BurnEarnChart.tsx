@@ -9,7 +9,6 @@ import {
   Skeleton,
 } from '@mui/material';
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -28,6 +27,18 @@ interface BurnEarnChartProps {
   data: BurnEarnData[];
   loading?: boolean;
   height?: number;
+}
+
+interface TooltipPayload {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
 }
 
 export default function BurnEarnChart({ 
@@ -53,8 +64,8 @@ export default function BurnEarnChart({
   const avgDailyEgresos = totalEgresos / data.length;
 
   // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+    if (active && payload && payload.length && label) {
       const date = parseISO(label);
       return (
         <Box
@@ -69,7 +80,7 @@ export default function BurnEarnChart({
           <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
             {format(date, "dd 'de' MMMM", { locale: es })}
           </Typography>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: TooltipPayload, index: number) => (
             <Typography
               key={index}
               variant="body2"
@@ -175,13 +186,13 @@ export default function BurnEarnChart({
               y={avgDailyIngresos} 
               stroke={theme.palette.success.main}
               strokeDasharray="5 5"
-              label={{ value: "Promedio Ingresos", position: "topRight" }}
+              label={{ value: "Promedio Ingresos", position: "insideTopRight" }}
             />
             <ReferenceLine 
               y={avgDailyEgresos} 
               stroke={theme.palette.error.main}
               strokeDasharray="5 5"
-              label={{ value: "Promedio Egresos", position: "bottomRight" }}
+              label={{ value: "Promedio Egresos", position: "insideBottomRight" }}
             />
             
             {/* Projection area */}
