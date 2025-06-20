@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { CEODashboardState, CEOKPIData, FinancialMetrics, AIInsight } from '@/types/ceo';
 import { FirestoreService } from '@/services/firestore';
@@ -144,7 +144,10 @@ function calculateKPIs(sessions: Session[], patients: Patient[], alerts: Clinica
   
   // Calculate monthly revenue (simulated)
   const monthlyRevenue = sessions.filter(s => {
-    const sessionDate = new Date(s.date || s.createdAt);
+    const dateValue = s.date || s.createdAt;
+    const sessionDate = dateValue instanceof Date ? dateValue : 
+                       typeof dateValue === 'string' ? new Date(dateValue) :
+                       new Date(dateValue.toDate());
     return sessionDate >= startMonth && sessionDate <= endMonth;
   }).length * 80; // Assuming $80 per session
 
@@ -369,7 +372,13 @@ function generateBurnEarnData(sessions: Session[]) {
   return last30Days.map(date => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const daySessions = sessions.filter(s => {
-      const sessionDate = format(new Date(s.date || s.createdAt), 'yyyy-MM-dd');
+      const dateValue = s.date || s.createdAt;
+      const sessionDate = format(
+        dateValue instanceof Date ? dateValue : 
+        typeof dateValue === 'string' ? new Date(dateValue) :
+        new Date(dateValue.toDate()), 
+        'yyyy-MM-dd'
+      );
       return sessionDate === dateStr;
     });
 
@@ -589,4 +598,13 @@ function generateSampleTasks() {
     {
       id: 'task-3',
       titulo: 'Actualizar políticas de compliance',
-      descrip
+      descripcion: 'Revisar y actualizar políticas según nuevas regulaciones',
+      prioridad: 'baja' as const,
+      categoria: 'mes' as const,
+      estado: 'pendiente' as const,
+      fechaCreacion: new Date(),
+      etiquetas: ['compliance', 'políticas'],
+      acciones: {}
+    }
+  ];
+}
