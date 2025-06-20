@@ -2,10 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { CEODashboardState, CEOKPIData, FinancialMetrics, AIInsight } from '@/types/ceo';
 import { FirestoreService } from '@/services/firestore';
+import { Session } from '@/types/session';
+import { Patient } from '@/types/patient';
+import { ClinicalAlert } from '@/types/alert';
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 
 export function useCEOMetrics() {
   const { user } = useAuth();
+  
   const [state, setState] = useState<CEODashboardState>({
     kpis: [],
     financialMetrics: {} as FinancialMetrics,
@@ -133,7 +137,7 @@ export function useCEOMetrics() {
 }
 
 // Helper functions for calculations
-function calculateKPIs(sessions: any[], patients: any[], alerts: any[]): CEOKPIData[] {
+function calculateKPIs(sessions: Session[], patients: Patient[], alerts: ClinicalAlert[]): CEOKPIData[] {
   const currentMonth = new Date();
   const startMonth = startOfMonth(currentMonth);
   const endMonth = endOfMonth(currentMonth);
@@ -281,7 +285,7 @@ function calculateKPIs(sessions: any[], patients: any[], alerts: any[]): CEOKPID
   ];
 }
 
-function calculateFinancialMetrics(sessions: any[], patients: any[]): FinancialMetrics {
+function calculateFinancialMetrics(sessions: Session[], patients: Patient[]): FinancialMetrics {
   // Simulated financial calculations
   return {
     ingresosMTD: {
@@ -355,7 +359,7 @@ function calculateFinancialMetrics(sessions: any[], patients: any[]): FinancialM
   };
 }
 
-function generateBurnEarnData(sessions: any[]) {
+function generateBurnEarnData(sessions: Session[]) {
   const last30Days = eachDayOfInterval({
     start: subDays(new Date(), 30),
     end: new Date()
@@ -381,7 +385,7 @@ function generateBurnEarnData(sessions: any[]) {
   });
 }
 
-function calculateProfitabilityData(sessions: any[]) {
+function calculateProfitabilityData(sessions: Session[]) {
   const therapists = ['Dr. García', 'Dra. López', 'Dr. Martínez', 'Dra. Rodríguez', 'Dr. Silva'];
   
   return therapists.map((nombre, index) => {
@@ -402,7 +406,7 @@ function calculateProfitabilityData(sessions: any[]) {
   });
 }
 
-function generateRiskRadarData(patients: any[], sessions: any[]) {
+function generateRiskRadarData(patients: Patient[], sessions: Session[]) {
   // Generate sample high-risk patients
   return [
     {
@@ -435,7 +439,7 @@ function generateRiskRadarData(patients: any[], sessions: any[]) {
   ];
 }
 
-function generateCapacityForecast(sessions: any[]) {
+function generateCapacityForecast(sessions: Session[]) {
   const next30Days = eachDayOfInterval({
     start: new Date(),
     end: subDays(new Date(), -30)
@@ -460,7 +464,7 @@ function generateCapacityForecast(sessions: any[]) {
   });
 }
 
-function calculateAdherenceData(sessions: any[], patients: any[]) {
+function calculateAdherenceData(sessions: Session[], patients: Patient[]) {
   const programas = ['Terapia Individual', 'Terapia Grupal', 'Terapia Familiar', 'Terapia Online'];
   
   return programas.map(programa => {
@@ -478,7 +482,7 @@ function calculateAdherenceData(sessions: any[], patients: any[]) {
   });
 }
 
-function generateAIInsights(sessions: any[], patients: any[], alerts: any[]): AIInsight[] {
+function generateAIInsights(sessions: Session[], patients: Patient[], alerts: ClinicalAlert[]): AIInsight[] {
   return [
     {
       id: 'insight-1',
