@@ -3250,7 +3250,7 @@ background: linear-gradient(135deg, #1877f2 0%, #42a5f5 100%);
 
 .contact__channel[data-channel="facebook"]:hover {
 border-color: rgba(24, 119, 242, 0.3);
-box-shadow: 020px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(24, 119, 242, 0.2);
+box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(24, 119, 242, 0.2);
 }
 
 .contact__channel[data-channel="tiktok"] .contact__channel-icon {
@@ -3258,8 +3258,7 @@ background: linear-gradient(135deg, #ff0050 0%, #000000 100%);
 }
 
 .contact__channel[data-channel="tiktok"]:hover {
-border-color: rgba
-(255, 0, 80, 0.3);
+border-color: rgba(255, 0, 80, 0.3);
 box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(255, 0, 80, 0.2);
 }
 
@@ -3423,7 +3422,7 @@ text-transform: uppercase;
 letter-spacing: 1.5px;
 }
 
-/* ===== BOTÓN FLOTANTE FUTURISTA CON LOGO DE LA EMPRESA ===== */
+/* ===== BOTÓN FLOTANTE FUTURISTA MEJORADO CON LOGO ===== */
 .floating-widget {
 position: fixed;
 bottom: 30px;
@@ -3441,7 +3440,7 @@ position: relative;
 pointer-events: auto;
 }
 
-/* ===== BOTÓN PRINCIPAL FLOTANTE CON LOGO ===== */
+/* ===== BOTÓN PRINCIPAL FLOTANTE CON LOGO CORREGIDO ===== */
 .floating-widget__main-btn {
 width: 80px;
 height: 80px;
@@ -3522,28 +3521,24 @@ animation-duration: 2s;
 transform: rotate(45deg) scale(1.1);
 }
 
-/* ===== LOGO DE LA EMPRESA ===== */
-.floating-widget__main-logo {
-width: 50px;
-height: 50px;
-background-image: url('../assets/splash.png');
-background-size: contain;
-background-repeat: no-repeat;
-background-position: center;
+/* ===== ICONO PRINCIPAL CORREGIDO (REEMPLAZA EL LOGO) ===== */
+.floating-widget__main-icon {
+width: 40px;
+height: 40px;
+color: white;
 transition: all var(--transition);
-filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4)) brightness(1.1);
-animation: floating-widget-logo-spin 8s linear infinite;
+filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+z-index: 1;
 }
 
-.floating-widget__main-btn:hover .floating-widget__main-logo {
+.floating-widget__main-btn:hover .floating-widget__main-icon {
 transform: scale(1.1) rotate(-5deg);
-filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6)) brightness(1.2) saturate(1.2);
-animation-duration: 4s;
+filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
 }
 
-.floating-widget__main-btn.active .floating-widget__main-logo {
+.floating-widget__main-btn.active .floating-widget__main-icon {
 transform: rotate(-45deg) scale(0.9);
-filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4)) brightness(1.1) hue-rotate(15deg);
+filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
 }
 
 /* ===== MENÚ DESPLEGABLE ===== */
@@ -3744,15 +3739,6 @@ opacity: 0;
 }
 }
 
-@keyframes floating-widget-logo-spin {
-0% {
-transform: rotate(0deg);
-}
-100% {
-transform: rotate(360deg);
-}
-}
-
 @keyframes floating-widget-item-float {
 0%, 100% {
 transform: translateY(0px);
@@ -3774,9 +3760,9 @@ width: 70px;
 height: 70px;
 }
 
-.floating-widget__main-logo {
-width: 45px;
-height: 45px;
+.floating-widget__main-icon {
+width: 35px;
+height: 35px;
 }
 
 .floating-widget__menu-item {
@@ -3807,9 +3793,9 @@ width: 65px;
 height: 65px;
 }
 
-.floating-widget__main-logo {
-width: 40px;
-height: 40px;
+.floating-widget__main-icon {
+width: 30px;
+height: 30px;
 }
 
 .floating-widget__menu-item {
@@ -4596,7 +4582,7 @@ transition-duration: 0.01ms !important;
 .nav__toggle,
 .floating-widget__main-btn,
 .floating-widget__menu-item,
-.floating-widget__main-logo,
+.floating-widget__main-icon,
 .language-switcher__btn {
 animation: none !important;
 }
