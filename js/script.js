@@ -11,6 +11,8 @@ let currentLanguage = 'es';
 const translations = {};
 // Variables para el botón flotante
 let isFloatingMenuOpen = false;
+// Variables para el selector de idioma independiente
+let isLanguageSwitcherOpen = false;
 // Variables para el control del navbar
 let lastScrollY = 0;
 let isScrollingDown = false;
@@ -49,7 +51,7 @@ const CONFIG = {
         phones: {
             horario: {
                 avif: './assets/phones/Horario.avif',
-                webp: './assets/phones/Horario.webp',
+                     webp: './assets/phones/Horario.webp',
                 jpg: './assets/phones/Horario.jpg'
             },
             estaciones: {
@@ -585,7 +587,6 @@ function initializeLanguageSystem() {
     
     applyTranslations();
     updateLanguageButtons();
-    updateFloatingLanguageButton();
     setupLanguageToggle();
 }
 
@@ -614,7 +615,6 @@ function switchLanguage(newLanguage) {
     
     applyTranslations();
     updateLanguageButtons();
-    updateFloatingLanguageButton();
     
     document.documentElement.lang = newLanguage;
     
@@ -684,39 +684,125 @@ function updateLanguageButtons() {
             button.classList.remove('active');
         }
     });
+    
+    // Actualizar el selector de idioma independiente
+    updateLanguageSwitcher();
 }
 
-function updateFloatingLanguageButton() {
-    const floatingLanguageText = document.getElementById('floating-language-text');
-    const floatingLanguageTooltip = document.querySelector('#floating-language-toggle .floating-widget__tooltip');
+// ===== FUNCIONES DEL SELECTOR DE IDIOMA INDEPENDIENTE =====
+function initializeLanguageSwitcher() {
+    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+    const languageSwitcherDropdown = document.getElementById('language-switcher-dropdown');
+    const languageSwitcher = document.getElementById('language-switcher');
+    const languageOptions = document.querySelectorAll('.language-switcher__option');
     
-    if (floatingLanguageText) {
-        floatingLanguageText.textContent = currentLanguage.toUpperCase();
-    }
+    if (!languageSwitcherBtn || !languageSwitcherDropdown || !languageSwitcher) return;
     
-    if (floatingLanguageTooltip) {
-        floatingLanguageTooltip.textContent = currentLanguage === 'es' ? 'Cambiar idioma' : 'Change language';
+    // Toggle del dropdown
+    languageSwitcherBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleLanguageSwitcher();
+    });
+    
+    // Opciones de idioma
+    languageOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.preventDefault();
+            const selectedLanguage = option.getAttribute('data-lang');
+            if (selectedLanguage && selectedLanguage !== currentLanguage) {
+                switchLanguage(selectedLanguage);
+                closeLanguageSwitcher();
+            }
+        });
+    });
+    
+    // Cerrar al hacer click fuera
+    document.addEventListener('click', (e) => {
+        if (isLanguageSwitcherOpen && languageSwitcher && !languageSwitcher.contains(e.target)) {
+            closeLanguageSwitcher();
+        }
+    });
+    
+    // Cerrar con Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isLanguageSwitcherOpen) {
+            closeLanguageSwitcher();
+        }
+    });
+    
+    // Inicializar estado
+    updateLanguageSwitcher();
+}
+
+function toggleLanguageSwitcher() {
+    if (isLanguageSwitcherOpen) {
+        closeLanguageSwitcher();
+    } else {
+        openLanguageSwitcher();
     }
 }
 
-// ===== FUNCIONES DEL BOTÓN FLOTANTE =====
+function openLanguageSwitcher() {
+    const languageSwitcher = document.getElementById('language-switcher');
+    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+    
+    if (!languageSwitcher || !languageSwitcherBtn) return;
+    
+    isLanguageSwitcherOpen = true;
+    languageSwitcher.classList.add('active');
+    languageSwitcherBtn.setAttribute('aria-expanded', 'true');
+    
+    // Focus en la primera opción
+    setTimeout(() => {
+        const firstOption = languageSwitcher.querySelector('.language-switcher__option');
+        if (firstOption) {
+            firstOption.focus();
+        }
+    }, 100);
+}
+
+function closeLanguageSwitcher() {
+    const languageSwitcher = document.getElementById('language-switcher');
+    const languageSwitcherBtn = document.getElementById('language-switcher-btn');
+    
+    if (!languageSwitcher || !languageSwitcherBtn) return;
+    
+    isLanguageSwitcherOpen = false;
+    languageSwitcher.classList.remove('active');
+    languageSwitcherBtn.setAttribute('aria-expanded', 'false');
+}
+
+function updateLanguageSwitcher() {
+    const languageSwitcherText = document.getElementById('language-switcher-text');
+    const languageOptions = document.querySelectorAll('.language-switcher__option');
+    
+    // Actualizar texto del botón
+    if (languageSwitcherText) {
+        languageSwitcherText.textContent = currentLanguage.toUpperCase();
+    }
+    
+    // Actualizar opciones activas
+    languageOptions.forEach(option => {
+        const optionLang = option.getAttribute('data-lang');
+        if (optionLang === currentLanguage) {
+            option.classList.add('active');
+        } else {
+            option.classList.remove('active');
+        }
+    });
+}
+
+// ===== FUNCIONES DEL BOTÓN FLOTANTE (ACTUALIZADO SIN IDIOMA) =====
 function initializeFloatingWidget() {
     const floatingMainBtn = document.getElementById('floating-main-btn');
     const floatingMenu = document.getElementById('floating-menu');
-    const floatingLanguageToggle = document.getElementById('floating-language-toggle');
     
     if (!floatingMainBtn || !floatingMenu) return;
     
     floatingMainBtn.addEventListener('click', () => {
         toggleFloatingMenu();
     });
-    
-    if (floatingLanguageToggle) {
-        floatingLanguageToggle.addEventListener('click', () => {
-            const newLanguage = currentLanguage === 'es' ? 'en' : 'es';
-            switchLanguage(newLanguage);
-        });
-    }
     
     document.addEventListener('click', (e) => {
         const floatingWidget = document.getElementById('floating-widget');
@@ -1012,7 +1098,7 @@ function initializeHeroVideo() {
     });
     
     heroVideo.addEventListener('stalled', () => {
-        console.warn('Hero video: Reproducción interrumpida');
+                   console.warn('Hero video: Reproducción interrumpida');
     });
     
     heroVideo.addEventListener('waiting', () => {
@@ -1047,7 +1133,7 @@ function initializeHeroVideo() {
             heroVideo.pause();
         } else if (heroVideo.paused && !heroVideo.ended) {
             const playPromise = heroVideo.play();
-                      if (playPromise !== undefined) {
+            if (playPromise !== undefined) {
                 playPromise.catch(error => {
                     console.warn('Hero video: Error al reanudar:', error);
                 });
@@ -1811,6 +1897,9 @@ function initializeAccessibility() {
             if (isFloatingMenuOpen) {
                 closeFloatingMenu();
             }
+            if (isLanguageSwitcherOpen) {
+                closeLanguageSwitcher();
+            }
         }
     });
     
@@ -1873,6 +1962,11 @@ function handleResize() {
         closeFloatingMenu();
     }
     
+    // Cerrar selector de idioma en resize
+    if (isLanguageSwitcherOpen) {
+        closeLanguageSwitcher();
+    }
+    
     // Redimensionar canvas de partículas
     particleSystems.forEach(system => {
         if (system.resizeCanvas) {
@@ -1888,6 +1982,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Inicializar sistema de idiomas
     initializeLanguageSystem();
+    
+    // Inicializar selector de idioma independiente
+    initializeLanguageSwitcher();
     
     // Inicializar funcionalidades principales
     initializeNavigation();
@@ -1949,4 +2046,4 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-  
+
