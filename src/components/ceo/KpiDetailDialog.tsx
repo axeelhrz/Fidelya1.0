@@ -9,7 +9,6 @@ import {
   Button,
   Typography,
   Box,
-  Grid,
   Card,
   CardContent,
   Table,
@@ -136,111 +135,135 @@ export default function KpiDetailDialog({ open, onClose, kpi }: KpiDetailDialogP
 
       <DialogContent sx={{ p: 3 }}>
         {/* Summary Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Typography variant="overline" color="text.secondary">
-                  Valor Actual
-                </Typography>
-                <Typography variant="h4" fontWeight="bold" color="primary">
-                  {formatValue(kpi.value, kpi.unit)}
-                </Typography>
-                {kpi.target && (
-                  <Typography variant="caption" color="text.secondary">
-                    Meta: {formatValue(kpi.target, kpi.unit)}
-                  </Typography>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Typography variant="overline" color="text.secondary">
-                  Tendencia
-                </Typography>
-                <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-                  {kpi.trend.value > 0 ? (
-                    <TrendingUp sx={{ color: 'success.main' }} />
-                  ) : (
-                    <TrendingDown sx={{ color: 'error.main' }} />
-                  )}
-                  <Typography 
-                    variant="h5" 
-                    fontWeight="bold"
-                    color={kpi.trend.isPositive ? 'success.main' : 'error.main'}
-                  >
-                    {kpi.trend.value > 0 ? '+' : ''}{kpi.trend.value.toFixed(1)}%
-                  </Typography>
-                </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 3,
+            mb: 4,
+            '& > *': {
+              flex: '1 1 200px',
+              minWidth: 200,
+              maxWidth: {
+                xs: '100%',
+                sm: 'calc(50% - 12px)',
+                md: 'calc(25% - 18px)'
+              }
+            }
+          }}
+        >
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="overline" color="text.secondary">
+                Valor Actual
+              </Typography>
+              <Typography variant="h4" fontWeight="bold" color="primary">
+                {formatValue(kpi.value, kpi.unit)}
+              </Typography>
+              {kpi.target && (
                 <Typography variant="caption" color="text.secondary">
-                  {kpi.trend.period}
+                  Meta: {formatValue(kpi.target, kpi.unit)}
                 </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+              )}
+            </CardContent>
+          </Card>
 
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Typography variant="overline" color="text.secondary">
-                  Estado
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="overline" color="text.secondary">
+                Tendencia
+              </Typography>
+              <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+                {kpi.trend.value > 0 ? (
+                  <TrendingUp sx={{ color: 'success.main' }} />
+                ) : (
+                  <TrendingDown sx={{ color: 'error.main' }} />
+                )}
+                <Typography 
+                  variant="h5" 
+                  fontWeight="bold"
+                  color={kpi.trend.isPositive ? 'success.main' : 'error.main'}
+                >
+                  {kpi.trend.value > 0 ? '+' : ''}{kpi.trend.value.toFixed(1)}%
                 </Typography>
-                <Box display="flex" justifyContent="center" mb={1}>
-                  <Chip
-                    label={kpi.semaphore.toUpperCase()}
+              </Box>
+              <Typography variant="caption" color="text.secondary">
+                {kpi.trend.period}
+              </Typography>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="overline" color="text.secondary">
+                Estado
+              </Typography>
+              <Box display="flex" justifyContent="center" mb={1}>
+                <Chip
+                  label={kpi.semaphore.toUpperCase()}
+                  sx={{
+                    backgroundColor: alpha(getSemaphoreColor(), 0.1),
+                    color: getSemaphoreColor(),
+                    fontWeight: 'bold',
+                  }}
+                />
+              </Box>
+              <Typography variant="caption" color="text.secondary">
+                Semáforo de control
+              </Typography>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="overline" color="text.secondary">
+                Progreso vs Meta
+              </Typography>
+              {kpi.target && (
+                <>
+                  <Typography variant="h5" fontWeight="bold">
+                    {Math.round((kpi.value / kpi.target) * 100)}%
+                  </Typography>
+                  <LinearProgress
+                    variant="determinate"
+                    value={Math.min(100, (kpi.value / kpi.target) * 100)}
                     sx={{
-                      backgroundColor: alpha(getSemaphoreColor(), 0.1),
-                      color: getSemaphoreColor(),
-                      fontWeight: 'bold',
+                      mt: 1,
+                      height: 8,
+                      borderRadius: 4,
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: theme.palette.primary.main,
+                        borderRadius: 4
+                      }
                     }}
                   />
-                </Box>
-                <Typography variant="caption" color="text.secondary">
-                  Semáforo de control
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Typography variant="overline" color="text.secondary">
-                  Progreso vs Meta
-                </Typography>
-                {kpi.target && (
-                  <>
-                    <Typography variant="h5" fontWeight="bold">
-                      {Math.round((kpi.value / kpi.target) * 100)}%
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={Math.min(100, (kpi.value / kpi.target) * 100)}
-                      sx={{
-                        mt: 1,
-                        height: 8,
-                        borderRadius: 4,
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                        '& .MuiLinearProgress-bar': {
-                          bgcolor: theme.palette.primary.main,
-                          borderRadius: 4
-                        }
-                      }}
-                    />
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
 
         {/* Charts Section */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 3,
+            mb: 4,
+          }}
+        >
           {/* Historical Trend */}
-          <Grid item xs={12} md={8}>
+          <Box
+            sx={{
+              flex: '2 1 500px',
+              minWidth: 500,
+              maxWidth: {
+                xs: '100%',
+                md: 'calc(66.67% - 12px)'
+              }
+            }}
+          >
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" gap={1} mb={2}>
@@ -293,10 +316,19 @@ export default function KpiDetailDialog({ open, onClose, kpi }: KpiDetailDialogP
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* Comparative Analysis */}
-          <Grid item xs={12} md={4}>
+          <Box
+            sx={{
+              flex: '1 1 300px',
+              minWidth: 300,
+              maxWidth: {
+                xs: '100%',
+                md: 'calc(33.33% - 12px)'
+              }
+            }}
+          >
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" gap={1} mb={2}>
@@ -334,8 +366,8 @@ export default function KpiDetailDialog({ open, onClose, kpi }: KpiDetailDialogP
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
         {/* Detailed Table */}
         <Card>
