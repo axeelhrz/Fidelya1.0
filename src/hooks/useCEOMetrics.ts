@@ -285,8 +285,9 @@ function calculateKPIs(sessions: Session[], patients: Patient[], alerts: Clinica
   ];
 }
 
-function calculateFinancialMetrics(sessions: Session[], patients: Patient[]): FinancialMetrics {
+function calculateFinancialMetrics(_sessions: Session[], _patients: Patient[]): FinancialMetrics {
   // Simulated financial calculations
+  // Note: Using underscore prefix to indicate intentionally unused parameters
   return {
     ingresosMTD: {
       actual: 42500,
@@ -385,7 +386,8 @@ function generateBurnEarnData(sessions: Session[]) {
   });
 }
 
-function calculateProfitabilityData(sessions: Session[]) {
+function calculateProfitabilityData(_sessions: Session[]) {
+  // Note: Using underscore prefix to indicate intentionally unused parameter
   const therapists = ['Dr. García', 'Dra. López', 'Dr. Martínez', 'Dra. Rodríguez', 'Dr. Silva'];
   
   return therapists.map((nombre, index) => {
@@ -406,7 +408,8 @@ function calculateProfitabilityData(sessions: Session[]) {
   });
 }
 
-function generateRiskRadarData(patients: Patient[], sessions: Session[]) {
+function generateRiskRadarData(_patients: Patient[], _sessions: Session[]) {
+  // Note: Using underscore prefix to indicate intentionally unused parameters
   // Generate sample high-risk patients
   return [
     {
@@ -439,7 +442,8 @@ function generateRiskRadarData(patients: Patient[], sessions: Session[]) {
   ];
 }
 
-function generateCapacityForecast(sessions: Session[]) {
+function generateCapacityForecast(_sessions: Session[]) {
+  // Note: Using underscore prefix to indicate intentionally unused parameter
   const next30Days = eachDayOfInterval({
     start: new Date(),
     end: subDays(new Date(), -30)
@@ -464,7 +468,8 @@ function generateCapacityForecast(sessions: Session[]) {
   });
 }
 
-function calculateAdherenceData(sessions: Session[], patients: Patient[]) {
+function calculateAdherenceData(_sessions: Session[], _patients: Patient[]) {
+  // Note: Using underscore prefix to indicate intentionally unused parameters
   const programas = ['Terapia Individual', 'Terapia Grupal', 'Terapia Familiar', 'Terapia Online'];
   
   return programas.map(programa => {
@@ -482,7 +487,8 @@ function calculateAdherenceData(sessions: Session[], patients: Patient[]) {
   });
 }
 
-function generateAIInsights(sessions: Session[], patients: Patient[], alerts: ClinicalAlert[]): AIInsight[] {
+function generateAIInsights(_sessions: Session[], _patients: Patient[], _alerts: ClinicalAlert[]): AIInsight[] {
+  // Note: Using underscore prefix to indicate intentionally unused parameters
   return [
     {
       id: 'insight-1',
@@ -583,13 +589,4 @@ function generateSampleTasks() {
     {
       id: 'task-3',
       titulo: 'Actualizar políticas de compliance',
-      descripcion: 'Revisar y actualizar políticas según nuevas regulaciones',
-      prioridad: 'baja' as const,
-      categoria: 'mes' as const,
-      estado: 'en_progreso' as const,
-      fechaCreacion: subDays(new Date(), 5),
-      etiquetas: ['compliance', 'políticas'],
-      acciones: { asignarAlguien: true }
-    }
-  ];
-}
+      descrip
