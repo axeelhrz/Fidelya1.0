@@ -207,8 +207,7 @@ filter: drop-shadow(0 0 8px rgba(255, 69, 105, 0.4));
 .language-switcher__btn:hover .language-switcher__icon {
 transform: scale(1.1);
 color: var(--starflex-crimson-glow);
-filter: drop-shadow(0 0 12px rgba(255,
-69, 105, 0.6));
+filter: drop-shadow(0 0 12px rgba(255, 69, 105, 0.6));
 }
 
 .language-switcher__text {
@@ -516,7 +515,6 @@ padding: 0;
 transition: all var(--transition-slow);
 will-change: transform;
 }
-
 
 /* ===== NAVBAR FUTURISTA ULTRA RESPONSIVE ===== */
 .nav {
@@ -1488,7 +1486,7 @@ position: relative;
 z-index: 2;
 }
 
-/* ===== BOTONES DE DESCARGA OPTIMIZADOS ===== */
+/* ===== BOTONES DE DESCARGA OPTIMIZADOS SIN BORDER-RADIUS ===== */
 .hero__download {
 display: flex;
 gap: var(--space-xl);
@@ -1501,12 +1499,12 @@ justify-content: flex-start;
 display: inline-block;
 transition: all var(--transition);
 position: relative;
-border-radius: 15px;
-overflow: hidden;
+overflow: visible; /* Cambiado de hidden a visible para mostrar logos completos */
 text-decoration: none;
 cursor: pointer;
 filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
 animation: download-float 6s ease-in-out infinite;
+/* REMOVIDO: border-radius para evitar cortar las esquinas de los logos */
 }
 
 .download-btn:hover {
@@ -1519,27 +1517,26 @@ height: 60px;
 width: auto;
 display: block;
 transition: all var(--transition);
-border-radius: 20px;
-box-shadow: 
-0 4px 15px rgba(0, 0, 0, 0.2),
-0 0 0 1px rgba(255, 255, 255, 0.05);
+/* REMOVIDO: border-radius para mostrar los logos completos */
+/* REMOVIDO: box-shadow que podría interferir con la forma original */
 /* Optimización de imágenes con múltiples formatos */
 image-rendering: -webkit-optimize-contrast;
 image-rendering: crisp-edges;
+/* Asegurar que la imagen mantenga su forma original */
+object-fit: contain;
+object-position: center;
 }
 
 .download-btn--app-store .download-btn__image {
 height: 60px;
 width: auto;
 min-width: 180px;
-border-radius: 20px;
+/* REMOVIDO: border-radius para mostrar el logo completo */
 }
 
 .download-btn:hover .download-btn__image {
-box-shadow: 
-0 8px 25px rgba(0, 0, 0, 0.3),
-0 0 0 1px rgba(255, 255, 255, 0.1),
-0 0 20px rgba(0, 212, 255, 0.2);
+/* Sombra sutil que no interfiera con la forma del logo */
+filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3)) brightness(1.05);
 }
 
 .hero__trust {
@@ -1570,8 +1567,7 @@ display: flex;
 justify-content: center;
 align-items: center;
 position: relative;
-animation: fadeInRight 1s ease-out 
-0.3s both;
+animation: fadeInRight 1s ease-out 0.3s both;
 }
 
 .hero__phone-container {
@@ -1907,8 +1903,7 @@ animation: pulse-gentle 3s infinite;
 }
 
 .feature__list-item:hover {
-color: var(--
-text-primary);
+color: var(--text-primary);
 transform: translateX(5px);
 }
 
@@ -3531,8 +3526,7 @@ background-size: contain;
 background-repeat: no-repeat;
 background-position: center;
 transition: all var(--transition);
-filter: drop-shadow(0 2px 8px rgba(0, 
-0, 0, 0.4)) brightness(1.1);
+filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4)) brightness(1.1);
 animation: floating-widget-logo-breathe 6s ease-in-out infinite;
 z-index: 1;
 /* Fallback para navegadores sin soporte de formatos modernos */
@@ -4345,13 +4339,13 @@ border-radius: 14px;
 
 .download-btn__image {
 height: 50px;
-border-radius: 18px;
+/* REMOVIDO: border-radius para mantener forma original */
 }
 
 .download-btn--app-store .download-btn__image {
 height: 50px;
 min-width: 150px;
-border-radius: 18px;
+/* REMOVIDO: border-radius para mantener forma original */
 }
 
 .features__title {
@@ -4493,13 +4487,13 @@ border-radius: 30px;
 
 .download-btn__image {
 height: 45px;
-border-radius: 16px;
+/* REMOVIDO: border-radius para mantener forma original */
 }
 
 .download-btn--app-store .download-btn__image {
 height: 45px;
 min-width: 135px;
-border-radius: 16px;
+/* REMOVIDO: border-radius para mantener forma original */
 }
 
 .features__title {
