@@ -50,7 +50,7 @@ import { useRole } from '@/hooks/useRole';
 import { useAlerts, useRecentAlerts } from '@/hooks/useAlerts';
 import SidebarItem from './SidebarItem';
 import EmailVerificationBanner from '@/components/auth/EmailVerificationBanner';
-import { navigationItems } from '@/constants/navigation';
+import { getNavigationItemsForRole } from '@/constants/navigation';
 import { AlertType, AlertUrgency } from '@/types/alert';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -400,7 +400,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   
   const { user, signOut } = useAuth();
-  const { role, canAccessAdminFeatures } = useRole();
+  const { role } = useRole();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -425,12 +425,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const filteredNavItems = navigationItems.filter(item => {
-    if (item.adminOnly && !canAccessAdminFeatures()) {
-      return false;
-    }
-    return true;
-  });
+  // Filtrar elementos de navegación basándose en el rol específico del usuario
+  const filteredNavItems = role ? getNavigationItemsForRole(role) : [];
 
   const drawer = (
     <Box 
