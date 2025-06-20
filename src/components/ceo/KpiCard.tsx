@@ -42,7 +42,7 @@ export default function KpiCard({ kpi, onDetailClick, delay = 0 }: KpiCardProps)
   const [isHovered, setIsHovered] = useState(false);
 
   const getIcon = (iconName: string) => {
-    const iconProps = { fontSize: 28 };
+    const iconProps = { sx: { fontSize: 28 } };
     switch (iconName) {
       case 'TrendingUp': return <TrendingUpRounded {...iconProps} />;
       case 'Assessment': return <Assessment {...iconProps} />;

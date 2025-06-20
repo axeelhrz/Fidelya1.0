@@ -83,7 +83,7 @@ export default function ProfitabilityHeatmap({
           gap: 1,
         }}
       >
-        {sortedData.map((therapist, index) => (
+        {sortedData.map((therapist) => (
           <Card
             key={therapist.terapeutaId}
             sx={{
