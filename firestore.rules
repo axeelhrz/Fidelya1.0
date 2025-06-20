@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Usuarios
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && 
+        resource.data.centerId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.centerId &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'psychologist'];
+    }
+
+    // Centros
+    match /centers/{centerId} {
+      allow read, write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.centerId == centerId &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.centerId == centerId;
+
+      // Pacientes del centro
+      match /patients/{patientId} {
+        allow read, write: if request.auth != null && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.centerId == centerId &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'psychologist'];
+        
+        // Los pacientes solo pueden leer sus propios datos
+        allow read: if request.auth != null && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.centerId == centerId &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'patient' &&
+          resource.data.assignedPsychologist == request.auth.uid;
+      }
+    }
+  }
+}
