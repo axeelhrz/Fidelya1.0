@@ -1,7 +1,7 @@
 import { createTheme, Theme } from '@mui/material/styles';
 import { CenterTheme } from '@/types/center';
 
-// Official CEO Dashboard Colors
+// Official CEO Dashboard Colors - Exact as specified
 export const ceoBrandColors = {
   primary: '#5D4FB0',
   secondary: '#A593F3', 
@@ -179,7 +179,7 @@ export function createCenterTheme(centerTheme: CenterTheme, mode: 'light' | 'dar
       '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
       '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
       '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
-      '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+      '0 25px 50px -12px rgb(0 25 50 / 0.25)',
       '0 35px 60px -12px rgb(0 0 0 / 0.3)',
       '0 45px 70px -12px rgb(0 0 0 / 0.35)',
       '0 55px 80px -12px rgb(0 0 0 / 0.4)',
@@ -202,37 +202,9 @@ export function createCenterTheme(centerTheme: CenterTheme, mode: 'light' | 'dar
     components: {
       MuiCssBaseline: {
         styleOverrides: {
-          '@font-face': [
-            {
-              fontFamily: 'Neris',
-              fontStyle: 'normal',
-              fontWeight: 300,
-              src: `url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap')`,
-            },
-            {
-              fontFamily: 'Neris',
-              fontStyle: 'normal', 
-              fontWeight: 400,
-              src: `url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap')`,
-            },
-            {
-              fontFamily: 'Neris',
-              fontStyle: 'normal',
-              fontWeight: 600,
-              src: `url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap')`,
-            },
-            {
-              fontFamily: 'Neris',
-              fontStyle: 'normal',
-              fontWeight: 700,
-              src: `url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap')`,
-            },
-            {
-              fontFamily: 'Neris',
-              fontStyle: 'normal',
-              fontWeight: 800,
-              src: `url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap')`,
-            },
+          '@import': [
+            'url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap")',
+            'url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap")'
           ],
           body: {
             fontFeatureSettings: '"cv02", "cv03", "cv04", "cv11"',

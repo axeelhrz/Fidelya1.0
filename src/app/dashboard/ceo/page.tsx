@@ -24,8 +24,10 @@ import CEODashboardLayout from '@/components/layout/CEODashboardLayout';
 import KpiCard from '@/components/ceo/KpiCard';
 import KpiDetailDialog from '@/components/ceo/KpiDetailDialog';
 import FinancialPanel from '@/components/ceo/panels/FinancialPanel';
+import RightDock from '@/components/layout/RightDock';
+import VoiceCommandInterface from '@/components/ceo/VoiceCommandInterface';
 import { useCEOMetrics } from '@/hooks/useCEOMetrics';
-import { CEOKPIData } from '@/types/ceo';
+import { CEOKPIData, CEOTask, CEOAlert } from '@/types/ceo';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -35,6 +37,7 @@ export default function CEODashboardPage() {
   const ceoMetrics = useCEOMetrics();
   const [selectedKpi, setSelectedKpi] = useState<CEOKPIData | null>(null);
   const [clinicalPanelExpanded, setClinicalPanelExpanded] = useState(false);
+  const [voiceCommandOpen, setVoiceCommandOpen] = useState(false);
 
   const handleKpiDetailClick = (kpi: CEOKPIData) => {
     setSelectedKpi(kpi);
@@ -42,6 +45,21 @@ export default function CEODashboardPage() {
 
   const handleCloseKpiDialog = () => {
     setSelectedKpi(null);
+  };
+
+  const handleTaskUpdate = (taskId: string, updates: Partial<CEOTask>) => {
+    console.log('Updating task:', taskId, updates);
+    // Here you would implement the actual task update logic
+  };
+
+  const handleTaskCreate = () => {
+    console.log('Creating new task...');
+    // Here you would implement the task creation logic
+  };
+
+  const handleAlertDismiss = (alertId: string) => {
+    console.log('Dismissing alert:', alertId);
+    // Here you would implement the alert dismissal logic
   };
 
   const getGreeting = () => {
@@ -65,421 +83,451 @@ export default function CEODashboardPage() {
   return (
     <ProtectedRoute requiredRoles={['admin']}>
       <CEODashboardLayout>
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          {/* Hero Section - CEO Header */}
-          <Fade in timeout={400}>
-            <Box 
-              sx={{ 
-                mb: 6,
-                p: 4,
-                borderRadius: 4,
-                background: theme.palette.mode === 'dark' 
-                  ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)'
-                  : 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
-                color: 'white',
-                position: 'relative',
-                overflow: 'hidden',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  width: '50%',
-                  height: '100%',
-                  background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="4"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-                  opacity: 0.3,
-                }
-              }}
-            >
-              <Box position="relative" zIndex={1}>
-                <Box display="flex" alignItems="center" mb={2}>
-                  <TrendingUp sx={{ fontSize: 32, mr: 2, color: '#A5CAE6' }} />
-                  <Typography 
-                    variant="h3" 
-                    fontWeight="bold"
-                    sx={{ fontFamily: '"Neris", sans-serif' }}
-                  >
-                    {getGreeting()}, {user?.displayName?.split(' ')[0] || 'CEO'}!
-                  </Typography>
-                </Box>
-                <Typography 
-                  variant="h6" 
+        {/* Main Content with Right Dock Space */}
+        <Box sx={{ 
+          display: 'flex',
+          minHeight: '100vh',
+          position: 'relative'
+        }}>
+          {/* Main Dashboard Content */}
+          <Box sx={{ 
+            flex: 1,
+            pr: { xs: 0, lg: '400px' }, // Space for right dock on large screens
+            transition: 'padding-right 0.3s ease'
+          }}>
+            <Container maxWidth="xl" sx={{ py: 4 }}>
+              {/* Hero Section - CEO Header */}
+              <Fade in timeout={400}>
+                <Box 
                   sx={{ 
-                    opacity: 0.9, 
-                    mb: 2,
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 600
+                    mb: 6,
+                    p: 4,
+                    borderRadius: 4,
+                    background: theme.palette.mode === 'dark' 
+                      ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)'
+                      : 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
+                    color: 'white',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      width: '50%',
+                      height: '100%',
+                      background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="4"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+                      opacity: 0.3,
+                    }
                   }}
                 >
-                  Dashboard Ejecutivo - Centro Psicológico Digital
-                </Typography>
-                <Typography 
-                  variant="body1" 
-                  sx={{ 
-                    opacity: 0.8, 
-                    maxWidth: '60%',
-                    fontFamily: '"Neris", sans-serif',
-                    fontSize: '1.1rem',
-                    lineHeight: 1.6
-                  }}
-                >
-                  {getCEOMessage()}
-                </Typography>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    opacity: 0.7, 
-                    mt: 2,
-                    fontFamily: '"Neris", sans-serif'
-                  }}
-                >
-                  Hoy es {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es })}
-                </Typography>
-              </Box>
-            </Box>
-          </Fade>
-
-          {/* KPI Cards Row */}
-          <Box sx={{ mb: 6 }}>
-            <Typography 
-              variant="h5" 
-              fontWeight="bold" 
-              sx={{ 
-                mb: 3,
-                fontFamily: '"Neris", sans-serif',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1
-              }}
-            >
-              📊 Fila de KPI Cards
-            </Typography>
-            
-            {/* KPI Cards Flexbox Container */}
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 3,
-                '& > *': {
-                  flex: '1 1 280px', // Flexible basis with minimum width
-                  minWidth: 280,
-                  maxWidth: {
-                    xs: '100%',
-                    sm: 'calc(50% - 12px)',
-                    md: 'calc(33.333% - 16px)',
-                    lg: 'calc(25% - 18px)'
-                  }
-                }
-              }}
-            >
-              {ceoMetrics.kpis.map((kpi, index) => (
-                <KpiCard
-                  key={kpi.id}
-                  kpi={kpi}
-                  onDetailClick={handleKpiDetailClick}
-                  delay={index}
-                />
-              ))}
-            </Box>
-          </Box>
-
-          {/* Financial Panel */}
-          <Box sx={{ mb: 4 }}>
-            <FinancialPanel
-              burnEarnData={ceoMetrics.burnEarnData}
-              profitabilityData={ceoMetrics.profitabilityData}
-              loading={ceoMetrics.loading}
-            />
-          </Box>
-
-          {/* Clinical & Operational Health Panel */}
-          <Box sx={{ mb: 4 }}>
-            <Accordion 
-              expanded={clinicalPanelExpanded} 
-              onChange={(event, isExpanded) => setClinicalPanelExpanded(isExpanded)}
-              sx={{
-                background: theme.palette.mode === 'dark' 
-                  ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
-                  : 'linear-gradient(145deg, #ffffff 0%, #fafbff 100%)',
-                borderRadius: 4,
-                border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
-                boxShadow: theme.shadows[4],
-                '&:before': {
-                  display: 'none',
-                },
-                '&.Mui-expanded': {
-                  margin: 0,
-                },
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMore />}
-                sx={{
-                  background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
-                  color: 'white',
-                  borderRadius: '16px 16px 0 0',
-                  '&.Mui-expanded': {
-                    minHeight: 64,
-                  },
-                  '& .MuiAccordionSummary-content': {
-                    margin: '16px 0',
-                    '&.Mui-expanded': {
-                      margin: '16px 0',
-                    },
-                  },
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Psychology sx={{ fontSize: 28 }} />
-                  <Box>
-                    <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
-                      🧠 Panel B: Salud Clínica & Operativa
+                  <Box position="relative" zIndex={1}>
+                    <Box display="flex" alignItems="center" mb={2}>
+                      <TrendingUp sx={{ fontSize: 32, mr: 2, color: '#A5CAE6' }} />
+                      <Typography 
+                        variant="h3" 
+                        fontWeight="bold"
+                        sx={{ fontFamily: '"Neris", sans-serif' }}
+                      >
+                        {getGreeting()}, {user?.displayName?.split(' ')[0] || 'CEO'}!
+                      </Typography>
+                    </Box>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        opacity: 0.9, 
+                        mb: 2,
+                        fontFamily: '"Neris", sans-serif',
+                        fontWeight: 600
+                      }}
+                    >
+                      Dashboard Ejecutivo - Centro Psicológico Digital
                     </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                      Radar de riesgo, forecast de capacidad y adherencia por programa
+                    <Typography 
+                      variant="body1" 
+                      sx={{ 
+                        opacity: 0.8, 
+                        maxWidth: '60%',
+                        fontFamily: '"Neris", sans-serif',
+                        fontSize: '1.1rem',
+                        lineHeight: 1.6
+                      }}
+                    >
+                      {getCEOMessage()}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        opacity: 0.7, 
+                        mt: 2,
+                        fontFamily: '"Neris", sans-serif'
+                      }}
+                    >
+                      Hoy es {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es })}
                     </Typography>
                   </Box>
                 </Box>
-              </AccordionSummary>
-              
-              <AccordionDetails sx={{ p: 3 }}>
-                {/* Clinical Widgets Flexbox Container */}
+              </Fade>
+
+              {/* KPI Cards Row */}
+              <Box sx={{ mb: 6 }}>
+                <Typography 
+                  variant="h5" 
+                  fontWeight="bold" 
+                  sx={{ 
+                    mb: 3,
+                    fontFamily: '"Neris", sans-serif',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }}
+                >
+                  📊 KPI Cards - Métricas Ejecutivas
+                </Typography>
+                
+                {/* KPI Cards Flexbox Container */}
                 <Box
                   sx={{
                     display: 'flex',
                     flexWrap: 'wrap',
-                    gap: 4,
+                    gap: 3,
                     '& > *': {
-                      flex: '1 1 350px', // Flexible basis with minimum width
-                      minWidth: 350,
+                      flex: '1 1 280px',
+                      minWidth: 280,
                       maxWidth: {
                         xs: '100%',
-                        lg: 'calc(33.333% - 21px)'
+                        sm: 'calc(50% - 12px)',
+                        md: 'calc(33.333% - 16px)',
+                        lg: 'calc(25% - 18px)'
                       }
                     }
                   }}
                 >
-                  {/* Risk Radar Widget */}
-                  <Box
-                    sx={{
-                      p: 3,
-                      borderRadius: 3,
-                      background: alpha(theme.palette.error.main, 0.05),
-                      border: `1px solid ${alpha(theme.palette.error.main, 0.1)}`,
-                      height: 'fit-content',
-                    }}
-                  >
-                    <Box display="flex" alignItems="center" gap={1} mb={3}>
-                      <LocalHospital sx={{ color: 'error.main', fontSize: 24 }} />
-                      <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
-                        Radar de Riesgo Activo
-                      </Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                      Pacientes con: alerta suicidio, PHQ alto, sin progreso en 3 sesiones
-                    </Typography>
-                    
-                    {/* Risk Radar Content */}
-                    <Box>
-                      {ceoMetrics.riskRadarData.map((patient) => (
-                        <Box
-                          key={patient.pacienteId}
-                          sx={{
-                            p: 2,
-                            mb: 2,
-                            borderRadius: 2,
-                            background: alpha(
-                              patient.nivelRiesgo === 'critico' ? theme.palette.error.main :
-                              patient.nivelRiesgo === 'alto' ? theme.palette.warning.main :
-                              theme.palette.info.main, 
-                              0.1
-                            ),
-                            border: `1px solid ${alpha(
-                              patient.nivelRiesgo === 'critico' ? theme.palette.error.main :
-                              patient.nivelRiesgo === 'alto' ? theme.palette.warning.main :
-                              theme.palette.info.main, 
-                              0.3
-                            )}`,
-                          }}
-                        >
-                          <Typography variant="subtitle2" fontWeight="bold">
-                            {patient.nombre}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {patient.descripcion}
-                          </Typography>
-                          <Box sx={{ mt: 1 }}>
-                            <Typography variant="caption" fontWeight="bold" color="text.secondary">
-                              Acciones: {patient.accionesRecomendadas.join(', ')}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      ))}
-                    </Box>
-                  </Box>
+                  {ceoMetrics.kpis.map((kpi, index) => (
+                    <KpiCard
+                      key={kpi.id}
+                      kpi={kpi}
+                      onDetailClick={handleKpiDetailClick}
+                      delay={index}
+                    />
+                  ))}
+                </Box>
+              </Box>
 
-                  {/* Capacity Forecast Widget */}
-                  <Box
+              {/* Financial Panel */}
+              <Box sx={{ mb: 4 }}>
+                <FinancialPanel
+                  burnEarnData={ceoMetrics.burnEarnData}
+                  profitabilityData={ceoMetrics.profitabilityData}
+                  loading={ceoMetrics.loading}
+                />
+              </Box>
+
+              {/* Clinical & Operational Health Panel */}
+              <Box sx={{ mb: 4 }}>
+                <Accordion 
+                  expanded={clinicalPanelExpanded} 
+                  onChange={(event, isExpanded) => setClinicalPanelExpanded(isExpanded)}
+                  sx={{
+                    background: theme.palette.mode === 'dark' 
+                      ? 'linear-gradient(145deg, #1e293b 0%, #334155 100%)'
+                      : 'linear-gradient(145deg, #ffffff 0%, #fafbff 100%)',
+                    borderRadius: 4,
+                    border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
+                    boxShadow: theme.shadows[4],
+                    '&:before': {
+                      display: 'none',
+                    },
+                    '&.Mui-expanded': {
+                      margin: 0,
+                    },
+                  }}
+                >
+                  <AccordionSummary
+                    expandIcon={<ExpandMore />}
                     sx={{
-                      p: 3,
-                      borderRadius: 3,
-                      background: alpha(theme.palette.info.main, 0.05),
-                      border: `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-                      height: 'fit-content',
+                      background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
+                      color: 'white',
+                      borderRadius: '16px 16px 0 0',
+                      '&.Mui-expanded': {
+                        minHeight: 64,
+                      },
+                      '& .MuiAccordionSummary-content': {
+                        margin: '16px 0',
+                        '&.Mui-expanded': {
+                          margin: '16px 0',
+                        },
+                      },
                     }}
                   >
-                    <Box display="flex" alignItems="center" gap={1} mb={3}>
-                      <TrendingUp sx={{ color: 'info.main', fontSize: 24 }} />
-                      <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
-                        Forecast de Capacidad
-                      </Typography>
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Psychology sx={{ fontSize: 28 }} />
+                      <Box>
+                        <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
+                          🧠 Panel B: Salud Clínica & Operativa
+                        </Typography>
+                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                          Radar de riesgo, forecast de capacidad y adherencia por programa
+                        </Typography>
+                      </Box>
                     </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                      Heatmap calendario 30 días (verde = libre, rojo = saturado)
-                    </Typography>
-                    
-                    {/* Capacity Forecast Content - Flexbox Calendar Grid */}
+                  </AccordionSummary>
+                  
+                  <AccordionDetails sx={{ p: 3 }}>
+                    {/* Clinical Widgets Flexbox Container */}
                     <Box
                       sx={{
                         display: 'flex',
                         flexWrap: 'wrap',
-                        gap: 0.5,
-                        justifyContent: 'flex-start',
+                        gap: 4,
+                        '& > *': {
+                          flex: '1 1 350px',
+                          minWidth: 350,
+                          maxWidth: {
+                            xs: '100%',
+                            lg: 'calc(33.333% - 21px)'
+                          }
+                        }
                       }}
                     >
-                      {ceoMetrics.capacityForecast.slice(0, 30).map((day) => (
-                        <Box
-                          key={day.fecha}
-                          sx={{
-                            width: 'calc(14.28% - 4px)', // 7 days per row with gap
-                            aspectRatio: '1',
-                            borderRadius: 1,
-                            background: 
-                              day.disponibilidad === 'libre' ? theme.palette.success.main :
-                              day.disponibilidad === 'ocupado' ? theme.palette.warning.main :
-                              theme.palette.error.main,
-                            opacity: 0.8,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '0.7rem',
-                            color: 'white',
-                            fontWeight: 'bold',
-                            minWidth: 28,
-                            minHeight: 28,
-                          }}
-                          title={`${day.fecha}: ${day.porcentajeOcupacion.toFixed(0)}% ocupación`}
-                        >
-                          {new Date(day.fecha).getDate()}
-                        </Box>
-                      ))}
-                    </Box>
-                  </Box>
-
-                  {/* Adherence Widget */}
-                  <Box
-                    sx={{
-                      p: 3,
-                      borderRadius: 3,
-                      background: alpha(theme.palette.success.main, 0.05),
-                      border: `1px solid ${alpha(theme.palette.success.main, 0.1)}`,
-                      height: 'fit-content',
-                    }}
-                  >
-                    <Box display="flex" alignItems="center" gap={1} mb={3}>
-                      <Psychology sx={{ color: 'success.main', fontSize: 24 }} />
-                      <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
-                        Adherencia por Programa
-                      </Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                      % de sesiones completadas por tipo de programa
-                    </Typography>
-                    
-                    {/* Adherence Content */}
-                    <Box>
-                      {ceoMetrics.adherenceData.map((program) => (
-                        <Box key={program.programa} sx={{ mb: 2 }}>
-                          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                            <Typography variant="body2" fontWeight="medium">
-                              {program.programa}
-                            </Typography>
-                            <Typography variant="body2" fontWeight="bold" color="success.main">
-                              {program.porcentajeAdherencia.toFixed(1)}%
-                            </Typography>
-                          </Box>
-                          <Box
-                            sx={{
-                              width: '100%',
-                              height: 6,
-                              bgcolor: alpha(theme.palette.success.main, 0.1),
-                              borderRadius: 3,
-                              overflow: 'hidden'
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                width: `${program.porcentajeAdherencia}%`,
-                                height: '100%',
-                                bgcolor: theme.palette.success.main,
-                                transition: 'width 0.3s ease'
-                              }}
-                            />
-                          </Box>
-                          <Typography variant="caption" color="text.secondary">
-                            {program.sesionesCompletadas}/{program.sesionesProgramadas} sesiones | {program.pacientesActivos} pacientes
+                      {/* Risk Radar Widget */}
+                      <Box
+                        sx={{
+                          p: 3,
+                          borderRadius: 3,
+                          background: alpha(theme.palette.error.main, 0.05),
+                          border: `1px solid ${alpha(theme.palette.error.main, 0.1)}`,
+                          height: 'fit-content',
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap={1} mb={3}>
+                          <LocalHospital sx={{ color: 'error.main', fontSize: 24 }} />
+                          <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
+                            Radar de Riesgo Activo
                           </Typography>
                         </Box>
-                      ))}
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                          Pacientes con: alerta suicidio, PHQ alto, sin progreso en 3 sesiones
+                        </Typography>
+                        
+                        {/* Risk Radar Content */}
+                        <Box>
+                          {ceoMetrics.riskRadarData.map((patient) => (
+                            <Box
+                              key={patient.pacienteId}
+                              sx={{
+                                p: 2,
+                                mb: 2,
+                                borderRadius: 2,
+                                background: alpha(
+                                  patient.nivelRiesgo === 'critico' ? theme.palette.error.main :
+                                  patient.nivelRiesgo === 'alto' ? theme.palette.warning.main :
+                                  theme.palette.info.main, 
+                                  0.1
+                                ),
+                                border: `1px solid ${alpha(
+                                  patient.nivelRiesgo === 'critico' ? theme.palette.error.main :
+                                  patient.nivelRiesgo === 'alto' ? theme.palette.warning.main :
+                                  theme.palette.info.main, 
+                                  0.3
+                                )}`,
+                              }}
+                            >
+                              <Typography variant="subtitle2" fontWeight="bold">
+                                {patient.nombre}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {patient.descripcion}
+                              </Typography>
+                              <Box sx={{ mt: 1 }}>
+                                <Typography variant="caption" fontWeight="bold" color="text.secondary">
+                                  Acciones: {patient.accionesRecomendadas.join(', ')}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
+
+                      {/* Capacity Forecast Widget */}
+                      <Box
+                        sx={{
+                          p: 3,
+                          borderRadius: 3,
+                          background: alpha(theme.palette.info.main, 0.05),
+                          border: `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
+                          height: 'fit-content',
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap={1} mb={3}>
+                          <TrendingUp sx={{ color: 'info.main', fontSize: 24 }} />
+                          <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
+                            Forecast de Capacidad
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                          Heatmap calendario 30 días (verde = libre, rojo = saturado)
+                        </Typography>
+                        
+                        {/* Capacity Forecast Content - Flexbox Calendar Grid */}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: 0.5,
+                            justifyContent: 'flex-start',
+                          }}
+                        >
+                          {ceoMetrics.capacityForecast.slice(0, 30).map((day) => (
+                            <Box
+                              key={day.fecha}
+                              sx={{
+                                width: 'calc(14.28% - 4px)',
+                                aspectRatio: '1',
+                                borderRadius: 1,
+                                background: 
+                                  day.disponibilidad === 'libre' ? theme.palette.success.main :
+                                  day.disponibilidad === 'ocupado' ? theme.palette.warning.main :
+                                  theme.palette.error.main,
+                                opacity: 0.8,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.7rem',
+                                color: 'white',
+                                fontWeight: 'bold',
+                                minWidth: 28,
+                                minHeight: 28,
+                              }}
+                              title={`${day.fecha}: ${day.porcentajeOcupacion.toFixed(0)}% ocupación`}
+                            >
+                              {new Date(day.fecha).getDate()}
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
+
+                      {/* Adherence Widget */}
+                      <Box
+                        sx={{
+                          p: 3,
+                          borderRadius: 3,
+                          background: alpha(theme.palette.success.main, 0.05),
+                          border: `1px solid ${alpha(theme.palette.success.main, 0.1)}`,
+                          height: 'fit-content',
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap={1} mb={3}>
+                          <Psychology sx={{ color: 'success.main', fontSize: 24 }} />
+                          <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
+                            Adherencia por Programa
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                          % de sesiones completadas por tipo de programa
+                        </Typography>
+                        
+                        {/* Adherence Content */}
+                        <Box>
+                          {ceoMetrics.adherenceData.map((program) => (
+                            <Box key={program.programa} sx={{ mb: 2 }}>
+                              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                                <Typography variant="body2" fontWeight="medium">
+                                  {program.programa}
+                                </Typography>
+                                <Typography variant="body2" fontWeight="bold" color="success.main">
+                                  {program.porcentajeAdherencia.toFixed(1)}%
+                                </Typography>
+                              </Box>
+                              <Box
+                                sx={{
+                                  width: '100%',
+                                  height: 6,
+                                  bgcolor: alpha(theme.palette.success.main, 0.1),
+                                  borderRadius: 3,
+                                  overflow: 'hidden'
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    width: `${program.porcentajeAdherencia}%`,
+                                    height: '100%',
+                                    bgcolor: theme.palette.success.main,
+                                    transition: 'width 0.3s ease'
+                                  }}
+                                />
+                              </Box>
+                              <Typography variant="caption" color="text.secondary">
+                                {program.sesionesCompletadas}/{program.sesionesProgramadas} sesiones | {program.pacientesActivos} pacientes
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
                     </Box>
-                  </Box>
-                </Box>
-              </AccordionDetails>
-            </Accordion>
+                  </AccordionDetails>
+                </Accordion>
+              </Box>
+
+              {/* Commercial Pipeline Panel - Reserved for future phases */}
+              <Box sx={{ mb: 4 }}>
+                <Accordion 
+                  disabled
+                  sx={{
+                    background: alpha(theme.palette.text.secondary, 0.05),
+                    borderRadius: 4,
+                    border: `1px solid ${alpha(theme.palette.text.secondary, 0.1)}`,
+                    '&:before': {
+                      display: 'none',
+                    },
+                  }}
+                >
+                  <AccordionSummary
+                    sx={{
+                      background: alpha(theme.palette.text.secondary, 0.1),
+                      color: theme.palette.text.secondary,
+                      borderRadius: '16px 16px 0 0',
+                    }}
+                  >
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <TrendingUp sx={{ fontSize: 28 }} />
+                      <Box>
+                        <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
+                          📈 Panel C: Pipeline Comercial & Marketing
+                        </Typography>
+                        <Typography variant="body2" sx={{ opacity: 0.7 }}>
+                          Reservado para fases posteriores: campañas activas, funnels de captación, costo por lead
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </AccordionSummary>
+                </Accordion>
+              </Box>
+            </Container>
           </Box>
 
-          {/* Commercial Pipeline Panel - Reserved for future phases */}
-          <Box sx={{ mb: 4 }}>
-            <Accordion 
-              disabled
-              sx={{
-                background: alpha(theme.palette.text.secondary, 0.05),
-                borderRadius: 4,
-                border: `1px solid ${alpha(theme.palette.text.secondary, 0.1)}`,
-                '&:before': {
-                  display: 'none',
-                },
-              }}
-            >
-              <AccordionSummary
-                sx={{
-                  background: alpha(theme.palette.text.secondary, 0.1),
-                  color: theme.palette.text.secondary,
-                  borderRadius: '16px 16px 0 0',
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2}>
-                  <TrendingUp sx={{ fontSize: 28 }} />
-                  <Box>
-                    <Typography variant="h6" fontWeight="bold" fontFamily='"Neris", sans-serif'>
-                      📈 Panel C: Pipeline Comercial & Marketing
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.7 }}>
-                      Reservado para fases posteriores: campañas activas, funnels de captación, costo por lead
-                    </Typography>
-                  </Box>
-                </Box>
-              </AccordionSummary>
-            </Accordion>
-          </Box>
-        </Container>
+          {/* Right Dock - Sticky Alerts & Tasks */}
+          <RightDock
+            criticalAlerts={ceoMetrics.criticalAlerts}
+            importantAlerts={ceoMetrics.importantAlerts}
+            tasks={ceoMetrics.tasks}
+            onTaskUpdate={handleTaskUpdate}
+            onTaskCreate={handleTaskCreate}
+            onAlertDismiss={handleAlertDismiss}
+          />
+        </Box>
 
         {/* KPI Detail Dialog */}
         <KpiDetailDialog
           open={!!selectedKpi}
           onClose={handleCloseKpiDialog}
           kpi={selectedKpi}
+        />
+
+        {/* Voice Command Interface */}
+        <VoiceCommandInterface
+          open={voiceCommandOpen}
+          onClose={() => setVoiceCommandOpen(false)}
         />
       </CEODashboardLayout>
     </ProtectedRoute>
