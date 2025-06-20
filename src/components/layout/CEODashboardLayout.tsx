@@ -4,10 +4,8 @@ import React, { useState } from 'react';
 import { Box, useTheme } from '@mui/material';
 import DashboardLayout from './DashboardLayout';
 import CEOTopbar from './CEOTopbar';
-import RightDock from './RightDock';
 import FooterInsights from './FooterInsights';
 import { useCEOMetrics } from '@/hooks/useCEOMetrics';
-import { CEOTask } from '@/types/ceo';
 
 interface CEODashboardLayoutProps {
   children: React.ReactNode;
@@ -28,20 +26,6 @@ export default function CEODashboardLayout({ children }: CEODashboardLayoutProps
     setSelectedCenter(centerId);
   };
 
-  const handleTaskUpdate = (taskId: string, updates: Partial<CEOTask>) => {
-    console.log('Updating task:', taskId, updates);
-    // Here you would implement the actual task update logic
-  };
-
-  const handleTaskCreate = () => {
-    console.log('Creating new task');
-    // Here you would implement the task creation logic
-  };
-
-  const handleAlertDismiss = (alertId: string) => {
-    console.log('Dismissing alert:', alertId);
-    // Here you would implement the alert dismissal logic
-  };
 
   if (currentMode === 'therapist') {
     // Return regular dashboard layout for therapist mode
@@ -65,9 +49,8 @@ export default function CEODashboardLayout({ children }: CEODashboardLayoutProps
           <Box
             sx={{
               flex: 1,
-              mr: '380px', // Make room for right dock
               minHeight: 'calc(100vh - 80px)',
-              background: theme.palette.mode === 'dark' 
+              background: theme.palette.mode === 'dark'
                 ? 'linear-gradient(135deg, #0f0f23 0%, #1a1d29 100%)'
                 : 'linear-gradient(135deg, #fafbff 0%, #f0f4ff 100%)',
               position: 'relative',
@@ -90,19 +73,7 @@ export default function CEODashboardLayout({ children }: CEODashboardLayoutProps
             </Box>
           </Box>
         </DashboardLayout>
-
-        {/* Right Dock */}
-        <RightDock
-          criticalAlerts={ceoMetrics.criticalAlerts}
-          importantAlerts={ceoMetrics.importantAlerts}
-          tasks={ceoMetrics.tasks}
-          onTaskUpdate={handleTaskUpdate}
-          onTaskCreate={handleTaskCreate}
-          onAlertDismiss={handleAlertDismiss}
-        />
       </Box>
-
-      {/* Footer Insights */}
       <FooterInsights
         aiInsights={ceoMetrics.aiInsights}
         complianceMetrics={ceoMetrics.complianceMetrics}
