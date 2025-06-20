@@ -15,7 +15,7 @@ export interface CEOKPIData {
     period: string;
   };
   semaphore: 'green' | 'amber' | 'red';
-  subtitle?: string;
+  subtitle: string;
   icon: string;
   color: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info';
 }
@@ -52,7 +52,11 @@ export interface FinancialMetrics {
     cac: number;
     ltv: number;
     ratio: number;
-    ultimos90Dias: { fecha: string; cac: number; ltv: number }[];
+    ultimos90Dias: Array<{
+      fecha: string;
+      cac: number;
+      ltv: number;
+    }>;
   };
   inventarioTests: {
     diasRestantes: number;
@@ -71,8 +75,8 @@ export interface BurnEarnData {
   fecha: string;
   ingresos: number;
   egresos: number;
-  proyeccionIngresos?: number;
-  proyeccionEgresos?: number;
+  proyeccionIngresos: number;
+  proyeccionEgresos: number;
 }
 
 // Profitability Heatmap Data
@@ -90,7 +94,7 @@ export interface ProfitabilityData {
 export interface RiskRadarData {
   pacienteId: string;
   nombre: string;
-  tipoRiesgo: 'suicidio' | 'phq_alto' | 'sin_progreso' | 'abandono';
+  tipoRiesgo: 'suicidio' | 'phq_alto' | 'sin_progreso';
   nivelRiesgo: 'critico' | 'alto' | 'medio';
   ultimaSesion: Date;
   descripcion: string;
@@ -120,11 +124,11 @@ export interface AdherenceData {
 // AI Insights
 export interface AIInsight {
   id: string;
-  tipo: 'oportunidad' | 'riesgo' | 'optimizacion' | 'tendencia';
+  tipo: 'oportunidad' | 'riesgo' | 'optimizacion';
   titulo: string;
   descripcion: string;
   impacto: 'alto' | 'medio' | 'bajo';
-  confianza: number; // 0-100
+  confianza: number;
   accionesRecomendadas: string[];
   datosRespaldo: Record<string, any>;
   fechaGeneracion: Date;
@@ -158,34 +162,29 @@ export interface ComplianceMetrics {
 export interface CEOTask {
   id: string;
   titulo: string;
-  descripcion?: string;
+  descripcion: string;
   prioridad: 'alta' | 'media' | 'baja';
   categoria: 'hoy' | 'semana' | 'mes';
-  estado: 'pendiente' | 'en_progreso' | 'completada';
+  estado: 'pendiente' | 'en_proceso' | 'completada';
   fechaCreacion: Date;
   fechaVencimiento?: Date;
-  asignadoA?: string;
   etiquetas: string[];
   acciones: {
     enviarCorreo?: boolean;
     crearReunion?: boolean;
-    asignarAlguien?: boolean;
+    asignarResponsable?: boolean;
   };
 }
 
 // Alert Extensions for CEO
 export interface CEOAlert {
   id: string;
-  tipo: AlertType | 'financiero' | 'operativo' | 'compliance';
-  urgencia: AlertUrgency;
+  tipo: 'clinica' | 'financiera' | 'operativa' | 'compliance';
+  urgencia: 'crítica' | 'alta' | 'media';
   titulo: string;
   descripcion: string;
-  impactoFinanciero?: number;
   accionesRequeridas: string[];
-  responsable?: string;
-  fechaLimite?: Date;
   estado: 'activa' | 'en_proceso' | 'resuelta';
-  metricas?: Record<string, number>;
 }
 
 // Export Configuration
@@ -217,7 +216,7 @@ export interface CEODashboardState {
   capacityForecast: CapacityForecastData[];
   adherenceData: AdherenceData[];
   aiInsights: AIInsight[];
-  complianceMetrics: ComplianceMetrics;
+  complianceMetrics: any;
   criticalAlerts: CEOAlert[];
   importantAlerts: CEOAlert[];
   tasks: CEOTask[];
