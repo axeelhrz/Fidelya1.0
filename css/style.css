@@ -3258,7 +3258,8 @@ background: linear-gradient(135deg, #ff0050 0%, #000000 100%);
 }
 
 .contact__channel[data-channel="tiktok"]:hover {
-border-color: rgba(255, 0, 80, 0.3);
+border-color: rgba
+(255, 0, 80, 0.3);
 box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(255, 0, 80, 0.2);
 }
 
@@ -3422,7 +3423,7 @@ text-transform: uppercase;
 letter-spacing: 1.5px;
 }
 
-/* ===== BOTÓN FLOTANTE FUTURISTA CON WHATSAPP Y TELEGRAM (SIN IDIOMA) ===== */
+/* ===== BOTÓN FLOTANTE FUTURISTA CON LOGO DE LA EMPRESA ===== */
 .floating-widget {
 position: fixed;
 bottom: 30px;
@@ -3440,10 +3441,10 @@ position: relative;
 pointer-events: auto;
 }
 
-/* ===== BOTÓN PRINCIPAL FLOTANTE ===== */
+/* ===== BOTÓN PRINCIPAL FLOTANTE CON LOGO ===== */
 .floating-widget__main-btn {
-width: 70px;
-height: 70px;
+width: 80px;
+height: 80px;
 border-radius: 50%;
 background: linear-gradient(135deg, 
 var(--starflex-crimson-dark) 0%, 
@@ -3467,17 +3468,19 @@ animation: floating-widget-pulse 4s ease-in-out infinite;
 overflow: hidden;
 }
 
+/* ===== ANILLO EXTERIOR ANIMADO ===== */
 .floating-widget__main-btn::before {
 content: '';
 position: absolute;
-top: -2px;
-left: -2px;
-right: -2px;
-bottom: -2px;
+top: -4px;
+left: -4px;
+right: -4px;
+bottom: -4px;
 background: linear-gradient(45deg, 
 var(--starflex-crimson-glow), 
 var(--starflex-crimson-bright), 
-var(--starflex-crimson-glow)
+var(--starflex-crimson-glow),
+var(--starflex-crimson-bright)
 );
 border-radius: 50%;
 z-index: -1;
@@ -3486,8 +3489,23 @@ transition: opacity 0.4s ease;
 animation: floating-widget-ring 4s ease-in-out infinite;
 }
 
+/* ===== ANILLO PULSANTE ADICIONAL ===== */
+.floating-widget__main-btn::after {
+content: '';
+position: absolute;
+top: -8px;
+left: -8px;
+right: -8px;
+bottom: -8px;
+border: 2px solid var(--starflex-crimson-bright);
+border-radius: 50%;
+opacity: 0;
+animation: floating-widget-pulse-ring 3s ease-in-out infinite;
+z-index: -2;
+}
+
 .floating-widget__main-btn:hover {
-transform: scale(1.1);
+transform: scale(1.15) rotate(5deg);
 box-shadow: 
 var(--shadow-crimson-hover),
 var(--neon-crimson-strong),
@@ -3497,33 +3515,45 @@ inset 0 2px 0 rgba(255, 255, 255, 0.25);
 
 .floating-widget__main-btn:hover::before {
 opacity: 1;
+animation-duration: 2s;
 }
 
 .floating-widget__main-btn.active {
-transform: rotate(45deg) scale(1.05);
+transform: rotate(45deg) scale(1.1);
 }
 
-/* ===== ICONO PRINCIPAL ===== */
-.floating-widget__main-icon {
-width: 32px;
-height: 32px;
-color: white;
+/* ===== LOGO DE LA EMPRESA ===== */
+.floating-widget__main-logo {
+width: 50px;
+height: 50px;
+background-image: url('../assets/splash.png');
+background-size: contain;
+background-repeat: no-repeat;
+background-position: center;
 transition: all var(--transition);
-filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4)) brightness(1.1);
+animation: floating-widget-logo-spin 8s linear infinite;
 }
 
-.floating-widget__main-btn.active .floating-widget__main-icon {
-transform: rotate(-45deg);
+.floating-widget__main-btn:hover .floating-widget__main-logo {
+transform: scale(1.1) rotate(-5deg);
+filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6)) brightness(1.2) saturate(1.2);
+animation-duration: 4s;
+}
+
+.floating-widget__main-btn.active .floating-widget__main-logo {
+transform: rotate(-45deg) scale(0.9);
+filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4)) brightness(1.1) hue-rotate(15deg);
 }
 
 /* ===== MENÚ DESPLEGABLE ===== */
 .floating-widget__menu {
 position: absolute;
-bottom: 80px;
+bottom: 90px;
 right: 0;
 display: flex;
 flex-direction: column;
-gap: var(--space-sm);
+gap: var(--space-md);
 opacity: 0;
 visibility: hidden;
 transform: translateY(20px) scale(0.8);
@@ -3540,8 +3570,8 @@ pointer-events: auto;
 
 /* ===== BOTONES DEL MENÚ ===== */
 .floating-widget__menu-item {
-width: 60px;
-height: 60px;
+width: 65px;
+height: 65px;
 border-radius: 50%;
 border: none;
 cursor: pointer;
@@ -3561,6 +3591,7 @@ animation: floating-widget-item-float 6s ease-in-out infinite;
 .floating-widget__menu-item:nth-child(1) { animation-delay: 0.2s; }
 .floating-widget__menu-item:nth-child(2) { animation-delay: 0.4s; }
 
+/* ===== EFECTO SHIMMER ===== */
 .floating-widget__menu-item::before {
 content: '';
 position: absolute;
@@ -3570,7 +3601,7 @@ width: 100%;
 height: 100%;
 background: linear-gradient(90deg, 
 transparent, 
-rgba(255, 255, 255, 0.2), 
+rgba(255, 255, 255, 0.3), 
 transparent
 );
 transition: left 0.6s ease;
@@ -3582,7 +3613,7 @@ left: 100%;
 }
 
 .floating-widget__menu-item:hover {
-transform: scale(1.1);
+transform: scale(1.15) rotate(5deg);
 box-shadow: 
 0 12px 35px rgba(0, 0, 0, 0.4),
 inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -3614,37 +3645,42 @@ inset 0 1px 0 rgba(255, 255, 255, 0.2);
 
 /* ===== ICONOS DE LOS BOTONES ===== */
 .floating-widget__icon {
-width: 28px;
-height: 28px;
+width: 32px;
+height: 32px;
 color: white;
 transition: all var(--transition);
 filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .floating-widget__menu-item:hover .floating-widget__icon {
-transform: scale(1.1);
+transform: scale(1.1) rotate(-5deg);
 }
 
-/* ===== TOOLTIPS ===== */
+/* ===== TOOLTIPS MEJORADOS ===== */
 .floating-widget__tooltip {
 position: absolute;
-right: 70px;
+right: 75px;
 top: 50%;
 transform: translateY(-50%);
-background: rgba(0, 0, 0, 0.9);
+background: linear-gradient(135deg, 
+rgba(0, 0, 0, 0.95) 0%, 
+rgba(21, 25, 34, 0.95) 100%
+);
 color: white;
-padding: var(--space-xs) var(--space-md);
-border-radius: 8px;
-font-size: 0.8rem;
+padding: var(--space-sm) var(--space-lg);
+border-radius: 12px;
+font-size: 0.85rem;
 font-weight: 600;
 white-space: nowrap;
 opacity: 0;
 visibility: hidden;
 transition: all var(--transition);
 pointer-events: none;
-backdrop-filter: blur(10px);
+backdrop-filter: blur(15px);
 border: 1px solid rgba(255, 255, 255, 0.1);
-box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+box-shadow: 
+0 8px 25px rgba(0, 0, 0, 0.4),
+0 0 15px rgba(255, 69, 105, 0.2);
 z-index: 10;
 }
 
@@ -3654,14 +3690,141 @@ position: absolute;
 left: 100%;
 top: 50%;
 transform: translateY(-50%);
-border: 6px solid transparent;
-border-left-color: rgba(0, 0, 0, 0.9);
+border: 8px solid transparent;
+border-left-color: rgba(0, 0, 0, 0.95);
 }
 
 .floating-widget__menu-item:hover .floating-widget__tooltip {
 opacity: 1;
 visibility: visible;
-transform: translateY(-50%) translateX(-5px);
+transform: translateY(-50%) translateX(-8px);
+}
+
+/* ===== ANIMACIONES OPTIMIZADAS ===== */
+@keyframes floating-widget-pulse {
+0%, 100% {
+transform: scale(1);
+box-shadow: 
+var(--shadow-crimson),
+var(--neon-crimson),
+inset 0 2px 0 rgba(255, 255, 255, 0.15);
+}
+50% {
+transform: scale(1.05);
+box-shadow: 
+var(--shadow-crimson-hover),
+var(--neon-crimson-strong),
+inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+}
+
+@keyframes floating-widget-ring {
+0%, 100% {
+opacity: 0;
+transform: scale(1);
+}
+50% {
+opacity: 0.4;
+transform: scale(1.1);
+}
+}
+
+@keyframes floating-widget-pulse-ring {
+0% {
+transform: scale(1);
+opacity: 0.8;
+}
+50% {
+transform: scale(1.3);
+opacity: 0.4;
+}
+100% {
+transform: scale(1.6);
+opacity: 0;
+}
+}
+
+@keyframes floating-widget-logo-spin {
+0% {
+transform: rotate(0deg);
+}
+100% {
+transform: rotate(360deg);
+}
+}
+
+@keyframes floating-widget-item-float {
+0%, 100% {
+transform: translateY(0px);
+}
+50% {
+transform: translateY(-4px);
+}
+}
+
+/* ===== RESPONSIVE PARA EL BOTÓN FLOTANTE ===== */
+@media (max-width: 768px) {
+.floating-widget {
+bottom: 20px;
+right: 20px;
+}
+
+.floating-widget__main-btn {
+width: 70px;
+height: 70px;
+}
+
+.floating-widget__main-logo {
+width: 45px;
+height: 45px;
+}
+
+.floating-widget__menu-item {
+width: 60px;
+height: 60px;
+}
+
+.floating-widget__icon {
+width: 28px;
+height: 28px;
+}
+
+.floating-widget__tooltip {
+right: 70px;
+font-size: 0.8rem;
+padding: var(--space-xs) var(--space-md);
+}
+}
+
+@media (max-width: 480px) {
+.floating-widget {
+bottom: 15px;
+right: 15px;
+}
+
+.floating-widget__main-btn {
+width: 65px;
+height: 65px;
+}
+
+.floating-widget__main-logo {
+width: 40px;
+height: 40px;
+}
+
+.floating-widget__menu-item {
+width: 55px;
+height: 55px;
+}
+
+.floating-widget__icon {
+width: 24px;
+height: 24px;
+}
+
+.floating-widget__tooltip {
+display: none; /* Ocultar tooltips en móviles muy pequeños */
+}
 }
 
 /* ===== ANIMACIONES OPTIMIZADAS ===== */
@@ -4017,43 +4180,6 @@ transform: scale(1.02);
 }
 }
 
-@keyframes floating-widget-pulse {
-0%, 100% {
-transform: scale(1);
-box-shadow: 
-var(--shadow-crimson),
-var(--neon-crimson),
-inset 0 2px 0 rgba(255, 255, 255, 0.15);
-}
-50% {
-transform: scale(1.05);
-box-shadow: 
-var(--shadow-crimson-hover),
-var(--neon-crimson-strong),
-inset 0 2px 0 rgba(255, 255, 255, 0.2);
-}
-}
-
-@keyframes floating-widget-ring {
-0%, 100% {
-opacity: 0;
-transform: scale(1);
-}
-50% {
-opacity: 0.3;
-transform: scale(1.1);
-}
-}
-
-@keyframes floating-widget-item-float {
-0%, 100% {
-transform: translateY(0px);
-}
-50% {
-transform: translateY(-3px);
-}
-}
-
 /* ===== RESPONSIVE OPTIMIZADO PARA MÓVIL ===== */
 @media (max-width: 1024px) {
 :root {
@@ -4273,37 +4399,6 @@ min-width: 160px;
 padding: var(--space-sm) var(--space-lg);
 font-size: 0.9rem;
 }
-
-.floating-widget {
-bottom: 20px;
-right: 20px;
-}
-
-.floating-widget__main-btn {
-width: 60px;
-height: 60px;
-}
-
-.floating-widget__main-icon {
-width: 28px;
-height: 28px;
-}
-
-.floating-widget__menu-item {
-width: 50px;
-height: 50px;
-}
-
-.floating-widget__icon {
-width: 24px;
-height: 24px;
-}
-
-.floating-widget__tooltip {
-right: 60px;
-font-size: 0.75rem;
-padding: var(--space-xs) var(--space-sm);
-}
 }
 
 @media (max-width: 480px) {
@@ -4440,35 +4535,6 @@ padding: var(--space-xs) var(--space-md);
 font-size: 0.85rem;
 }
 
-.floating-widget {
-bottom: 15px;
-right: 15px;
-}
-
-.floating-widget__main-btn {
-width: 55px;
-height: 55px;
-}
-
-.floating-widget__main-icon {
-width: 24px;
-height: 24px;
-}
-
-.floating-widget__menu-item {
-width: 45px;
-height: 45px;
-}
-
-.floating-widget__icon {
-width: 20px;
-height: 20px;
-}
-
-.floating-widget__tooltip {
-display: none; /* Ocultar tooltips en móviles muy pequeños */
-}
-
 /* Ocultar algunos elementos decorativos en pantallas muy pequeñas */
 .hero .floating-orb-3 {
 display: none;
@@ -4530,6 +4596,7 @@ transition-duration: 0.01ms !important;
 .nav__toggle,
 .floating-widget__main-btn,
 .floating-widget__menu-item,
+.floating-widget__main-logo,
 .language-switcher__btn {
 animation: none !important;
 }
@@ -4837,4 +4904,3 @@ border-radius: 20px;
 border-radius: 20px;
 }
 }
-
