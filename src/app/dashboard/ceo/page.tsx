@@ -61,7 +61,6 @@ import {
   Database
 } from 'lucide-react';
 
-import Topbar from '@/components/dashboard/Topbar';
 import TabNavigation from '@/components/dashboard/TabNavigation';
 import KPIGrid from '@/components/dashboard/KPIGrid';
 import FinancialPanel from '@/components/dashboard/FinancialPanel';
@@ -70,7 +69,7 @@ import CommercialPanel from '@/components/dashboard/CommercialPanel';
 import AlertsTasksDock from '@/components/dashboard/AlertsTasksDock';
 import AIInsightsFooter from '@/components/dashboard/AIInsightsFooter';
 
-// Interfaces para el nuevo dashboard ultra profesional
+// Interfaces para el dashboard
 interface SystemStatus {
   cpu: number;
   memory: number;
@@ -101,17 +100,6 @@ interface SmartInsight {
   actionable: boolean;
 }
 
-interface PerformanceMetric {
-  id: string;
-  name: string;
-  current: number;
-  target: number;
-  trend: 'up' | 'down' | 'stable';
-  change: number;
-  unit: string;
-  category: 'financial' | 'clinical' | 'operational' | 'commercial';
-}
-
 export default function CEODashboard() {
   const [activeTab, setActiveTab] = useState('executive');
   const [systemStatus, setSystemStatus] = useState<SystemStatus>({
@@ -125,7 +113,7 @@ export default function CEODashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isAIAssistantActive, setIsAIAssistantActive] = useState(true);
   const [notifications, setNotifications] = useState(12);
-  const [hasMetrics, setHasMetrics] = useState(false); // Para simular estado sin métricas
+  const [hasMetrics, setHasMetrics] = useState(false);
 
   // Usuario mock mejorado
   const mockUser = {
@@ -163,7 +151,7 @@ export default function CEODashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Pestañas mejoradas según especificaciones
+  // Pestañas actualizadas según especificaciones
   const tabs = [
     {
       id: 'executive',
@@ -199,7 +187,7 @@ export default function CEODashboard() {
     }
   ];
 
-  // Acciones rápidas según especificaciones
+  // Acciones rápidas
   const quickActions: QuickAction[] = [
     {
       id: 'generate-report',
@@ -233,7 +221,7 @@ export default function CEODashboard() {
     }
   ];
 
-  // Insights inteligentes según especificaciones
+  // Insights inteligentes
   const smartInsights: SmartInsight[] = [
     {
       id: '1',
@@ -269,14 +257,6 @@ export default function CEODashboard() {
       actionable: true
     }
   ];
-
-  const handleSearch = (query: string) => {
-    console.log('Searching for:', query);
-  };
-
-  const handleCenterChange = (centerId: string) => {
-    console.log('Changing to center:', centerId);
-  };
 
   const handleDownloadBrief = () => {
     console.log('Downloading executive brief...');
@@ -433,7 +413,7 @@ export default function CEODashboard() {
     </motion.div>
   );
 
-  // Estado del sistema según especificaciones
+  // Estado del sistema
   const renderSystemStatus = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -612,7 +592,7 @@ export default function CEODashboard() {
     </motion.div>
   );
 
-  // Acciones rápidas según especificaciones
+  // Acciones rápidas
   const renderQuickActions = () => (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -693,7 +673,7 @@ export default function CEODashboard() {
     </motion.div>
   );
 
-  // Insights inteligentes según especificaciones
+  // Insights inteligentes
   const renderSmartInsights = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -850,7 +830,7 @@ export default function CEODashboard() {
     </motion.div>
   );
 
-  // Placeholder para "No hay métricas disponibles" según especificaciones
+  // Placeholder para "No hay métricas disponibles"
   const renderNoMetricsPlaceholder = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -893,7 +873,6 @@ export default function CEODashboard() {
         Los datos de KPI se cargarán automáticamente cuando estén disponibles.
       </p>
       
-      {/* Ilustración sutil opcional */}
       <div style={{
         position: 'absolute',
         bottom: '1rem',
@@ -1129,26 +1108,24 @@ export default function CEODashboard() {
         `
       }} />
 
-      {/* Topbar mejorado */}
-      <Topbar onSearch={handleSearch} onCenterChange={handleCenterChange} />
-      
-      {/* Contenido principal */}
+      {/* Contenido principal - Layout mejorado sin duplicación */}
       <div style={{ 
         maxWidth: '1400px', 
         margin: '0 auto', 
-        padding: '3rem 2rem',
+        padding: '2rem',
         display: 'grid',
         gridTemplateColumns: '1fr 320px',
-        gap: '3rem'
+        gap: '2rem',
+        minHeight: 'calc(100vh - 72px)' // Ajustar por altura del Topbar
       }}>
         {/* Columna principal */}
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {/* Navegación de pestañas mejorada */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            style={{ marginBottom: '3rem' }}
+            style={{ marginBottom: '2rem' }}
           >
             <TabNavigation 
               tabs={tabs} 
@@ -1160,18 +1137,19 @@ export default function CEODashboard() {
           </motion.div>
 
           {/* Contenido de pestañas */}
-          <AnimatePresence mode="wait">
-            {renderTabContent()}
-          </AnimatePresence>
+          <div style={{ flex: 1 }}>
+            <AnimatePresence mode="wait">
+              {renderTabContent()}
+            </AnimatePresence>
+          </div>
         </div>
 
-        {/* Columna lateral mejorada */}
-        <div>
+        {/* Columna lateral - AlertsTasksDock fijo */}
+        <div style={{ position: 'sticky', top: '90px', height: 'fit-content' }}>
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            style={{ position: 'sticky', top: '120px' }}
           >
             <AlertsTasksDock />
           </motion.div>

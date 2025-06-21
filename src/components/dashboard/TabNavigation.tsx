@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LucideIcon, ChevronDown } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface Tab {
   id: string;
@@ -11,6 +12,7 @@ interface Tab {
   badge?: number;
   description?: string;
   disabled?: boolean;
+  route?: string; // Nueva propiedad para rutas específicas
 }
 
 interface TabNavigationProps {
@@ -22,6 +24,7 @@ interface TabNavigationProps {
   orientation?: 'horizontal' | 'vertical';
   showDescriptions?: boolean;
   allowMobile?: boolean;
+  enableRouting?: boolean; // Nueva propiedad para habilitar navegación por rutas
 }
 
 export default function TabNavigation({ 
@@ -32,15 +35,30 @@ export default function TabNavigation({
   size = 'lg',
   orientation = 'horizontal',
   showDescriptions = true,
-  allowMobile = true
+  allowMobile = true,
+  enableRouting = false
 }: TabNavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
 
   const activeTabData = tabs.find(tab => tab.id === activeTab);
 
   const isTabActive = (tabId: string) => activeTab === tabId;
   const isTabHovered = (tabId: string) => hoveredTab === tabId;
+
+  const handleTabClick = (tab: Tab) => {
+    if (tab.disabled) return;
+
+    if (enableRouting && tab.route) {
+      // Navegar a la ruta específica
+      router.push(tab.route);
+    } else {
+      // Usar el callback tradicional
+      onTabChange(tab.id);
+    }
+  };
 
   const renderTabButton = (tab: Tab, isMobile = false) => {
     const isActive = isTabActive(tab.id);
@@ -51,10 +69,8 @@ export default function TabNavigation({
       <motion.button
         key={tab.id}
         onClick={() => {
-          if (!tab.disabled) {
-            onTabChange(tab.id);
-            if (isMobile) setIsMobileMenuOpen(false);
-          }
+          handleTabClick(tab);
+          if (isMobile) setIsMobileMenuOpen(false);
         }}
         onMouseEnter={() => setHoveredTab(tab.id)}
         onMouseLeave={() => setHoveredTab(null)}
@@ -303,12 +319,7 @@ export default function TabNavigation({
                   {tabs.map((tab, index) => (
                     <motion.div
                       key={tab.id}
-                      onClick={() => {
-                        if (!tab.disabled) {
-                          onTabChange(tab.id);
-                          setIsMobileMenuOpen(false);
-                        }
-                      }}
+                      onClick={() => handleTabClick(tab)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -363,7 +374,7 @@ export default function TabNavigation({
             </AnimatePresence>
           </div>
         ) : (
-          // Vista Desktop - Navegación horizontal minimalista con 5 botones grandes
+          // Vista Desktop - Navegación horizontal
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
