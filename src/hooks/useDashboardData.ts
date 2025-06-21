@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, doc, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, where, orderBy, limit, getDocs, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { KPIMetric, Alert, Task, FinancialMetrics, ClinicalMetrics } from '@/types/dashboard';
@@ -204,189 +204,507 @@ export function useKPIMetrics() {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<KPIMetric[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.centerId) {
       setLoading(false);
+      setError('No hay centro asignado');
       return;
     }
 
-    // Intentar conectar con Firebase, pero usar datos mock si falla
-    const tryFirebaseConnection = async () => {
-      try {
-        // Simular intento de conexión con Firebase
-        const unsubscribe = onSnapshot(
-          doc(db, 'centers', user.centerId, 'metrics', 'kpis'),
-          (doc) => {
-            if (doc.exists()) {
-              setMetrics(doc.data().metrics || []);
-            } else {
-              // Si no hay datos en Firebase, usar mock
-              setMetrics(mockKPIMetrics);
-            }
-            setLoading(false);
-          },
-          (error) => {
-            console.warn('Firebase connection failed, using mock data:', error.message);
-            // En caso de error, usar datos mock
-            setMetrics(mockKPIMetrics);
-            setLoading(false);
-          }
-        );
-
-        return () => unsubscribe();
-      } catch (error) {
-        console.warn('Firebase initialization failed, using mock data:', error);
-        setMetrics(mockKPIMetrics);
+    const unsubscribe = onSnapshot(
+      doc(db, 'centers', user.centerId, 'metrics', 'kpis'),
+      (doc) => {
+        if (doc.exists()) {
+          setMetrics(doc.data().metrics || []);
+          setError(null);
+        } else {
+          setMetrics([]);
+          setError('No hay métricas KPI configuradas');
+        }
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error loading KPI metrics:', error);
+        setError(`Error de conexión: ${error.message}`);
+        setMetrics([]);
         setLoading(false);
       }
-    };
+    );
 
-    tryFirebaseConnection();
+    return () => unsubscribe();
   }, [user?.centerId]);
 
-  return { metrics, loading };
+  return { metrics, loading, error };
 }
 
 export function useAlerts() {
   const { user } = useAuth();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.centerId) {
       setLoading(false);
+      setError('No hay centro asignado');
       return;
     }
 
-    // Intentar conectar con Firebase, pero usar datos mock si falla
-    const tryFirebaseConnection = async () => {
-      try {
-        const q = query(
-          collection(db, 'centers', user.centerId, 'alerts'),
-          orderBy('timestamp', 'desc'),
-          limit(20)
-        );
+    const q = query(
+      collection(db, 'centers', user.centerId, 'alerts'),
+      orderBy('timestamp', 'desc'),
+      limit(20)
+    );
 
-        const unsubscribe = onSnapshot(q, 
-          (snapshot) => {
-            const alertsData = snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data(),
-              timestamp: doc.data().timestamp.toDate()
-            })) as Alert[];
-            
-            setAlerts(alertsData.length > 0 ? alertsData : mockAlerts);
-            setLoading(false);
-          },
-          (error) => {
-            console.warn('Firebase alerts connection failed, using mock data:', error.message);
-            setAlerts(mockAlerts);
-            setLoading(false);
-          }
-        );
-
-        return () => unsubscribe();
-      } catch (error) {
-        console.warn('Firebase alerts initialization failed, using mock data:', error);
-        setAlerts(mockAlerts);
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        const alertsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          timestamp: doc.data().timestamp.toDate()
+        })) as Alert[];
+        
+        setAlerts(alertsData);
+        setError(null);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error loading alerts:', error);
+        setError(`Error cargando alertas: ${error.message}`);
+        setAlerts([]);
         setLoading(false);
       }
-    };
+    );
 
-    tryFirebaseConnection();
+    return () => unsubscribe();
   }, [user?.centerId]);
 
-  return { alerts, loading };
+  return { alerts, loading, error };
 }
 
 export function useTasks() {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.centerId) {
       setLoading(false);
+      setError('No hay centro asignado');
       return;
     }
 
-    // Intentar conectar con Firebase, pero usar datos mock si falla
-    const tryFirebaseConnection = async () => {
-      try {
-        const q = query(
-          collection(db, 'centers', user.centerId, 'tasks'),
-          orderBy('createdAt', 'desc')
-        );
+    const q = query(
+      collection(db, 'centers', user.centerId, 'tasks'),
+      orderBy('createdAt', 'desc')
+    );
 
-        const unsubscribe = onSnapshot(q,
-          (snapshot) => {
-            const tasksData = snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data(),
-              dueDate: doc.data().dueDate.toDate(),
-              createdAt: doc.data().createdAt.toDate()
-            })) as Task[];
-            
-            setTasks(tasksData.length > 0 ? tasksData : mockTasks);
-            setLoading(false);
-          },
-          (error) => {
-            console.warn('Firebase tasks connection failed, using mock data:', error.message);
-            setTasks(mockTasks);
-            setLoading(false);
-          }
-        );
-
-        return () => unsubscribe();
-      } catch (error) {
-        console.warn('Firebase tasks initialization failed, using mock data:', error);
-        setTasks(mockTasks);
+    const unsubscribe = onSnapshot(q,
+      (snapshot) => {
+        const tasksData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          dueDate: doc.data().dueDate.toDate(),
+          createdAt: doc.data().createdAt.toDate()
+        })) as Task[];
+        
+        setTasks(tasksData);
+        setError(null);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error loading tasks:', error);
+        setError(`Error cargando tareas: ${error.message}`);
+        setTasks([]);
         setLoading(false);
       }
-    };
+    );
 
-    tryFirebaseConnection();
+    return () => unsubscribe();
   }, [user?.centerId]);
 
-  return { tasks, loading };
+  return { tasks, loading, error };
 }
 
 export function useFinancialMetrics() {
   const { user } = useAuth();
-  const { data: metrics, loading } = useSimulatedData(mockFinancialMetrics, 800);
+  const [metrics, setMetrics] = useState<FinancialMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  return { metrics, loading };
+  useEffect(() => {
+    if (!user?.centerId) {
+      setLoading(false);
+      setError('No hay centro asignado');
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      doc(db, 'centers', user.centerId, 'metrics', 'financial'),
+      (doc) => {
+        if (doc.exists()) {
+          setMetrics(doc.data() as FinancialMetrics);
+          setError(null);
+        } else {
+          setMetrics(null);
+          setError('No hay métricas financieras configuradas');
+        }
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error loading financial metrics:', error);
+        setError(`Error cargando métricas financieras: ${error.message}`);
+        setMetrics(null);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user?.centerId]);
+
+  return { metrics, loading, error };
 }
 
 export function useClinicalMetrics() {
   const { user } = useAuth();
-  const { data: metrics, loading } = useSimulatedData(mockClinicalMetrics, 600);
+  const [metrics, setMetrics] = useState<ClinicalMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  return { metrics, loading };
+  useEffect(() => {
+    if (!user?.centerId) {
+      setLoading(false);
+      setError('No hay centro asignado');
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      doc(db, 'centers', user.centerId, 'metrics', 'clinical'),
+      (doc) => {
+        if (doc.exists()) {
+          setMetrics(doc.data() as ClinicalMetrics);
+          setError(null);
+        } else {
+          setMetrics(null);
+          setError('No hay métricas clínicas configuradas');
+        }
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error loading clinical metrics:', error);
+        setError(`Error cargando métricas clínicas: ${error.message}`);
+        setMetrics(null);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user?.centerId]);
+
+  return { metrics, loading, error };
 }
 
-// Funciones para manipular datos (simuladas)
+// Hook personalizado para datos financieros detallados calculados desde Firebase
+export function useFinancialData() {
+  const { user } = useAuth();
+  const [data, setData] = useState({
+    monthlyData: [] as any[],
+    paymentsData: [] as any[],
+    expensesBreakdown: [] as any[],
+    totalStats: {
+      totalRevenue: 0,
+      totalExpenses: 0,
+      totalProfit: 0,
+      averageGrowth: 0,
+      pendingPayments: 0,
+      overduePayments: 0,
+      totalSessions: 0,
+      avgSessionValue: 0
+    }
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadFinancialData = async () => {
+      if (!user?.centerId) {
+        setLoading(false);
+        setError('No hay centro asignado');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Cargar sesiones completadas
+        const sessionsQuery = query(
+          collection(db, 'centers', user.centerId, 'sessions'),
+          where('status', '==', 'completed'),
+          orderBy('date', 'desc'),
+          limit(200)
+        );
+
+        const sessionsSnapshot = await getDocs(sessionsQuery);
+        const sessions = sessionsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().date.toDate()
+        }));
+
+        // Cargar pagos
+        const paymentsQuery = query(
+          collection(db, 'centers', user.centerId, 'payments'),
+          orderBy('date', 'desc'),
+          limit(100)
+        );
+
+        const paymentsSnapshot = await getDocs(paymentsQuery);
+        const payments = paymentsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().date.toDate()
+        }));
+
+        // Cargar gastos
+        const expensesQuery = query(
+          collection(db, 'centers', user.centerId, 'expenses'),
+          orderBy('date', 'desc'),
+          limit(100)
+        );
+
+        const expensesSnapshot = await getDocs(expensesQuery);
+        const expenses = expensesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().date.toDate()
+        }));
+
+        // Procesar datos
+        const monthlyData = processMonthlyData(sessions, expenses);
+        const totalStats = calculateStats(sessions, payments, expenses);
+        const expensesBreakdown = processExpensesBreakdown(expenses);
+
+        setData({
+          monthlyData,
+          paymentsData: payments,
+          expensesBreakdown,
+          totalStats
+        });
+
+      } catch (error: any) {
+        console.error('Error loading financial data:', error);
+        setError(`Error cargando datos financieros: ${error.message}`);
+        setData({
+          monthlyData: [],
+          paymentsData: [],
+          expensesBreakdown: [],
+          totalStats: {
+            totalRevenue: 0,
+            totalExpenses: 0,
+            totalProfit: 0,
+            averageGrowth: 0,
+            pendingPayments: 0,
+            overduePayments: 0,
+            totalSessions: 0,
+            avgSessionValue: 0
+          }
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFinancialData();
+  }, [user?.centerId]);
+
+  const processMonthlyData = (sessions: any[], expenses: any[]) => {
+    const monthlyMap = new Map();
+    
+    // Procesar sesiones por mes
+    sessions.forEach(session => {
+      const month = session.date.toLocaleDateString('es-ES', { month: 'short' });
+      const monthKey = `${session.date.getFullYear()}-${session.date.getMonth()}`;
+      
+      if (!monthlyMap.has(monthKey)) {
+        monthlyMap.set(monthKey, {
+          period: month,
+          revenue: 0,
+          expenses: 0,
+          profit: 0,
+          growth: 0,
+          sessions: 0,
+          avgSessionCost: 0
+        });
+      }
+      
+      const monthData = monthlyMap.get(monthKey);
+      monthData.revenue += session.cost || 0;
+      monthData.sessions += 1;
+    });
+
+    // Procesar gastos por mes
+    expenses.forEach(expense => {
+      const monthKey = `${expense.date.getFullYear()}-${expense.date.getMonth()}`;
+      
+      if (monthlyMap.has(monthKey)) {
+        const monthData = monthlyMap.get(monthKey);
+        monthData.expenses += expense.amount || 0;
+      }
+    });
+
+    // Calcular promedios y beneficios
+    const result = Array.from(monthlyMap.values()).map(monthData => {
+      monthData.avgSessionCost = monthData.sessions > 0 ? monthData.revenue / monthData.sessions : 0;
+      monthData.profit = monthData.revenue - monthData.expenses;
+      return monthData;
+    });
+
+    // Calcular crecimiento
+    for (let i = 1; i < result.length; i++) {
+      const current = result[i];
+      const previous = result[i - 1];
+      current.growth = previous.revenue > 0 ? 
+        ((current.revenue - previous.revenue) / previous.revenue) * 100 : 0;
+    }
+
+    return result.sort((a, b) => a.period.localeCompare(b.period));
+  };
+
+  const processExpensesBreakdown = (expenses: any[]) => {
+    const categoryMap = new Map();
+    let totalExpenses = 0;
+
+    expenses.forEach(expense => {
+      const category = expense.category || 'Otros';
+      const amount = expense.amount || 0;
+      
+      if (!categoryMap.has(category)) {
+        categoryMap.set(category, 0);
+      }
+      
+      categoryMap.set(category, categoryMap.get(category) + amount);
+      totalExpenses += amount;
+    });
+
+    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16'];
+    let colorIndex = 0;
+
+    return Array.from(categoryMap.entries()).map(([category, amount]) => ({
+      category,
+      amount,
+      percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0,
+      color: colors[colorIndex++ % colors.length]
+    }));
+  };
+
+  const calculateStats = (sessions: any[], payments: any[], expenses: any[]) => {
+    const totalRevenue = sessions.reduce((sum, session) => sum + (session.cost || 0), 0);
+    const totalExpenses = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+    const totalProfit = totalRevenue - totalExpenses;
+    
+    const pendingPayments = payments
+      .filter(p => p.status === 'pending')
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
+    
+    const overduePayments = payments
+      .filter(p => p.status === 'overdue')
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+    // Calcular crecimiento promedio de los últimos 6 meses
+    const recentSessions = sessions.filter(session => {
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      return session.date >= sixMonthsAgo;
+    });
+
+    const monthlyRevenues = new Map();
+    recentSessions.forEach(session => {
+      const monthKey = `${session.date.getFullYear()}-${session.date.getMonth()}`;
+      if (!monthlyRevenues.has(monthKey)) {
+        monthlyRevenues.set(monthKey, 0);
+      }
+      monthlyRevenues.set(monthKey, monthlyRevenues.get(monthKey) + (session.cost || 0));
+    });
+
+    const revenueArray = Array.from(monthlyRevenues.values());
+    let averageGrowth = 0;
+    if (revenueArray.length > 1) {
+      let totalGrowth = 0;
+      for (let i = 1; i < revenueArray.length; i++) {
+        if (revenueArray[i - 1] > 0) {
+          totalGrowth += ((revenueArray[i] - revenueArray[i - 1]) / revenueArray[i - 1]) * 100;
+        }
+      }
+      averageGrowth = totalGrowth / (revenueArray.length - 1);
+    }
+    
+    return {
+      totalRevenue,
+      totalExpenses,
+      totalProfit,
+      averageGrowth,
+      pendingPayments,
+      overduePayments,
+      totalSessions: sessions.length,
+      avgSessionValue: sessions.length > 0 ? totalRevenue / sessions.length : 0
+    };
+  };
+
+  return { data, loading, error };
+}
+
+// Funciones para manipular datos en Firebase
 export const updateAlert = async (alertId: string, updates: Partial<Alert>) => {
-  // Simular actualización
-  console.log('Updating alert:', alertId, updates);
-  return Promise.resolve();
+  const { user } = useAuth();
+  if (!user?.centerId) throw new Error('No hay centro asignado');
+  
+  try {
+    await updateDoc(doc(db, 'centers', user.centerId, 'alerts', alertId), updates);
+  } catch (error) {
+    console.error('Error updating alert:', error);
+    throw error;
+  }
 };
 
 export const createTask = async (task: Omit<Task, 'id' | 'createdAt'>) => {
-  // Simular creación
-  console.log('Creating task:', task);
-  return Promise.resolve();
+  const { user } = useAuth();
+  if (!user?.centerId) throw new Error('No hay centro asignado');
+  
+  try {
+    await addDoc(collection(db, 'centers', user.centerId, 'tasks'), {
+      ...task,
+      createdAt: new Date()
+    });
+  } catch (error) {
+    console.error('Error creating task:', error);
+    throw error;
+  }
 };
 
 export const updateTask = async (taskId: string, updates: Partial<Task>) => {
-  // Simular actualización
-  console.log('Updating task:', taskId, updates);
-  return Promise.resolve();
+  const { user } = useAuth();
+  if (!user?.centerId) throw new Error('No hay centro asignado');
+  
+  try {
+    await updateDoc(doc(db, 'centers', user.centerId, 'tasks', taskId), updates);
+  } catch (error) {
+    console.error('Error updating task:', error);
+    throw error;
+  }
 };
 
 export const deleteTask = async (taskId: string) => {
-  // Simular eliminación
-  console.log('Deleting task:', taskId);
-  return Promise.resolve();
+  const { user } = useAuth();
+  if (!user?.centerId) throw new Error('No hay centro asignado');
+  
+  try {
+    await deleteDoc(doc(db, 'centers', user.centerId, 'tasks', taskId));
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    throw error;
+  }
 };
