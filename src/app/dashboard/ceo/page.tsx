@@ -9,77 +9,15 @@ import ClinicalPanel from '@/components/dashboard/ClinicalPanel';
 import CommercialPanel from '@/components/dashboard/CommercialPanel';
 import AlertsTasksDock from '@/components/dashboard/AlertsTasksDock';
 import AIInsightsFooter from '@/components/dashboard/AIInsightsFooter';
-import { useAuth } from '@/contexts/AuthContext';
 import { Sparkles, TrendingUp, Zap } from 'lucide-react';
 
 export default function CEODashboard() {
-  const { user, loading } = useAuth();
-
-  // Verificar que el usuario tenga rol de admin
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-surface">
-        <motion.div 
-          className="text-center"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="w-16 h-16 gradient-accent rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow-strong animate-pulse-glow">
-            <Sparkles className="w-8 h-8 text-inverse" />
-          </div>
-          <h2 className="text-xl font-bold text-primary font-space-grotesk mb-2">
-            Inicializando Dashboard Ejecutivo
-          </h2>
-          <p className="text-sm text-secondary font-medium">
-            Cargando métricas en tiempo real...
-          </p>
-          <div className="mt-4 w-48 h-1 bg-surface-elevated rounded-full mx-auto overflow-hidden">
-            <motion.div
-              className="h-full gradient-accent"
-              initial={{ width: 0 }}
-              animate={{ width: "100%" }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (!user || user.role !== 'admin') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-surface">
-        <motion.div 
-          className="text-center max-w-md mx-auto p-8"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <motion.div 
-            className="w-20 h-20 gradient-error rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow-strong"
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <span className="text-3xl text-inverse">⚠</span>
-          </motion.div>
-          <h1 className="text-2xl font-bold mb-4 font-space-grotesk text-primary">
-            Acceso Denegado
-          </h1>
-          <p className="text-secondary font-medium">
-            No tienes permisos para acceder a esta vista del dashboard ejecutivo.
-          </p>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="mt-6 btn-futuristic"
-          >
-            Contactar Administrador
-          </motion.button>
-        </motion.div>
-      </div>
-    );
-  }
+  // Usuario mock para desarrollo
+  const mockUser = {
+    name: 'Dr. Carlos Mendoza',
+    email: 'carlos.mendoza@centropsicologico.com',
+    role: 'admin'
+  };
 
   const handleSearch = (query: string) => {
     console.log('Searching for:', query);
@@ -123,7 +61,7 @@ export default function CEODashboard() {
                       className="w-3 h-3 gradient-accent rounded-full"
                     />
                     <h1 className="text-4xl font-bold font-space-grotesk text-gradient-accent">
-                      Buenos días, {user.name}
+                      Buenos días, {mockUser.name}
                     </h1>
                     <motion.div
                       animate={{ scale: [1, 1.2, 1] }}
