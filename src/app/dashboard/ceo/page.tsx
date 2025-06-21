@@ -17,10 +17,10 @@ export default function CEODashboard() {
   // Verificar que el usuario tenga rol de admin
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-background)' }}>
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-text-secondary text-sm">Cargando dashboard...</p>
+          <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-4" style={{ borderColor: 'var(--color-accent)' }} />
+          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Cargando dashboard...</p>
         </div>
       </div>
     );
@@ -28,15 +28,15 @@ export default function CEODashboard() {
 
   if (!user || user.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-background)' }}>
         <div className="text-center max-w-md mx-auto p-8">
-          <div className="w-16 h-16 bg-error-bg rounded-full flex items-center justify-center mx-auto mb-4 shadow-card">
-            <span className="text-error text-2xl">⚠</span>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg" style={{ backgroundColor: 'var(--color-error-bg)' }}>
+            <span className="text-2xl" style={{ color: 'var(--color-error)' }}>⚠</span>
           </div>
-          <h1 className="text-xl font-semibold text-primary mb-2 font-space-grotesk">
+          <h1 className="text-xl font-semibold mb-2" style={{ fontFamily: 'var(--font-family-space-grotesk)', color: 'var(--color-text-primary)' }}>
             Acceso Denegado
           </h1>
-          <p className="text-text-secondary">
+          <p style={{ color: 'var(--color-text-secondary)' }}>
             No tienes permisos para acceder a esta vista.
           </p>
         </div>
@@ -53,7 +53,7 @@ export default function CEODashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
       {/* Topbar */}
       <Topbar onSearch={handleSearch} onCenterChange={handleCenterChange} />
       
@@ -68,10 +68,10 @@ export default function CEODashboard() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-2"
             >
-              <h1 className="text-3xl font-bold font-space-grotesk text-primary">
+              <h1 className="text-3xl font-bold" style={{ fontFamily: 'var(--font-family-space-grotesk)', color: 'var(--color-text-primary)' }}>
                 Buenos días, {user.name}
               </h1>
-              <p className="text-text-secondary text-lg">
+              <p className="text-lg" style={{ color: 'var(--color-text-secondary)' }}>
                 Resumen ejecutivo del estado actual de tu centro psicológico
               </p>
             </motion.section>
