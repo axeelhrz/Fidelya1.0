@@ -557,6 +557,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           : 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFF 100%)',
         position: 'relative',
         overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -593,6 +595,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           px={4}
           position="relative"
           zIndex={1}
+          flexShrink={0}
         >
           <Box
             sx={{
@@ -656,11 +659,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </Box>
       </Fade>
 
-      <Divider sx={{ mx: 3, opacity: 0.2 }} />
+      <Divider sx={{ mx: 3, opacity: 0.2, flexShrink: 0 }} />
 
       {/* Información del usuario mejorada */}
       <Slide direction="right" in timeout={800}>
-        <Box p={4} position="relative" zIndex={1}>
+        <Box p={4} position="relative" zIndex={1} flexShrink={0}>
           <Paper 
             elevation={0}
             sx={{
@@ -828,312 +831,354 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </Box>
       </Slide>
 
-      <Divider sx={{ mx: 3, opacity: 0.2 }} />
+      <Divider sx={{ mx: 3, opacity: 0.2, flexShrink: 0 }} />
 
-      {/* Navegación mejorada */}
-      <Box sx={{ px: 3, py: 2, position: 'relative', zIndex: 1, flex: 1, overflow: 'auto' }}>
-        {/* Dashboard Principal */}
-        {principalItems.length > 0 && (
-          <Box sx={{ mb: 4 }}>
-            <Typography 
-              variant="overline" 
-              sx={{ 
-                px: 2, 
-                mb: 3, 
-                display: 'block',
-                fontWeight: 700,
-                color: 'text.primary',
-                letterSpacing: '0.1em',
-                fontFamily: '"Outfit", sans-serif',
-                fontSize: '0.8rem',
-              }}
-            >
-              Dashboard Principal
-            </Typography>
-            <List sx={{ p: 0 }}>
-              {principalItems.map((item, index) => (
-                <Fade in timeout={600 + index * 100} key={item.path}>
-                  <Box>
-                    <SidebarItem
-                      icon={item.icon}
-                      label={item.label}
-                      path={item.path}
-                      onClick={() => isMobile && setMobileOpen(false)}
-                      adminOnly={item.adminOnly}
-                      description={item.description}
-                      category={item.category}
+      {/* Navegación mejorada con scroll personalizado */}
+      <Box 
+        sx={{ 
+          px: 3, 
+          py: 2, 
+          position: 'relative', 
+          zIndex: 1, 
+          flex: 1, 
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <Box
+          sx={{
+            flex: 1,
+            overflow: 'auto',
+            pr: 1,
+            // Scrollbar personalizado
+            '&::-webkit-scrollbar': {
+              width: 8,
+            },
+            '&::-webkit-scrollbar-track': {
+              background: alpha(theme.palette.primary.main, 0.05),
+              borderRadius: 4,
+              margin: '8px 0',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.3)} 0%, ${alpha(theme.palette.secondary.main, 0.3)} 100%)`,
+              borderRadius: 4,
+              border: `2px solid ${theme.palette.mode === 'dark' ? '#1A1B2E' : '#FFFFFF'}`,
+              '&:hover': {
+                background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.5)} 0%, ${alpha(theme.palette.secondary.main, 0.5)} 100%)`,
+              },
+            },
+            '&::-webkit-scrollbar-thumb:active': {
+              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.7)} 0%, ${alpha(theme.palette.secondary.main, 0.7)} 100%)`,
+            },
+            // Para Firefox
+            scrollbarWidth: 'thin',
+            scrollbarColor: `${alpha(theme.palette.primary.main, 0.3)} ${alpha(theme.palette.primary.main, 0.05)}`,
+          }}
+        >
+          {/* Dashboard Principal */}
+          {principalItems.length > 0 && (
+            <Box sx={{ mb: 4 }}>
+              <Typography 
+                variant="overline" 
+                sx={{ 
+                  px: 2, 
+                  mb: 3, 
+                  display: 'block',
+                  fontWeight: 700,
+                  color: 'text.primary',
+                  letterSpacing: '0.1em',
+                  fontFamily: '"Outfit", sans-serif',
+                  fontSize: '0.8rem',
+                }}
+              >
+                Dashboard Principal
+              </Typography>
+              <List sx={{ p: 0 }}>
+                {principalItems.map((item, index) => (
+                  <Fade in timeout={600 + index * 100} key={item.path}>
+                    <Box>
+                      <SidebarItem
+                        icon={item.icon}
+                        label={item.label}
+                        path={item.path}
+                        onClick={() => isMobile && setMobileOpen(false)}
+                        adminOnly={item.adminOnly}
+                        description={item.description}
+                        category={item.category}
+                      />
+                    </Box>
+                  </Fade>
+                ))}
+              </List>
+            </Box>
+          )}
+
+          {/* Secciones CEO (solo para admin) - MEJORADO */}
+          {role === 'admin' && ceoItems.length > 0 && (
+            <Box sx={{ mb: 4 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  borderRadius: 4,
+                  background: theme.palette.mode === 'dark'
+                    ? 'linear-gradient(135deg, rgba(93, 79, 176, 0.15) 0%, rgba(165, 147, 243, 0.08) 100%)'
+                    : 'linear-gradient(135deg, rgba(93, 79, 176, 0.08) 0%, rgba(165, 147, 243, 0.04) 100%)',
+                  border: `1px solid ${alpha('#5D4FB0', 0.2)}`,
+                  overflow: 'hidden',
+                  position: 'relative',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 4,
+                    background: 'linear-gradient(90deg, #5D4FB0 0%, #A593F3 50%, #A5CAE6 100%)',
+                  },
+                }}
+              >
+                <ListItemButton
+                  onClick={() => setCeoSectionOpen(!ceoSectionOpen)}
+                  sx={{
+                    py: 3,
+                    px: 4,
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, rgba(93, 79, 176, 0.12) 0%, rgba(165, 147, 243, 0.06) 100%)',
+                    }
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 48 }}>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 3,
+                        background: 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 6px 20px rgba(93, 79, 176, 0.4)',
+                        position: 'relative',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: -1,
+                          left: -1,
+                          right: -1,
+                          bottom: -1,
+                          background: 'linear-gradient(135deg, #5D4FB0, #A593F3, #A5CAE6)',
+                          borderRadius: 4,
+                          zIndex: -1,
+                          opacity: 0.3,
+                        },
+                      }}
+                    >
+                      <BusinessCenter sx={{ color: 'white', fontSize: 22 }} />
+                    </Box>
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Typography 
+                          variant="subtitle1" 
+                          sx={{ 
+                            fontWeight: 800,
+                            color: '#5D4FB0',
+                            fontFamily: '"Outfit", sans-serif',
+                            fontSize: '1rem',
+                          }}
+                        >
+                          Panel Ejecutivo CEO
+                        </Typography>
+                        <Star sx={{ color: '#FFD700', fontSize: 16 }} />
+                      </Box>
+                    }
+                    secondary={
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          color: alpha('#5D4FB0', 0.8),
+                          fontFamily: '"Inter", sans-serif',
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        Métricas estratégicas y análisis ejecutivo
+                      </Typography>
+                    }
+                  />
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Chip
+                      label={ceoItems.length}
+                      size="small"
+                      sx={{
+                        background: 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
+                        color: 'white',
+                        fontWeight: 700,
+                        fontSize: '0.7rem',
+                        minWidth: 24,
+                        height: 24,
+                      }}
                     />
+                    {ceoSectionOpen ? 
+                      <ExpandLess sx={{ color: '#5D4FB0', fontSize: 24 }} /> : 
+                      <ExpandMore sx={{ color: '#5D4FB0', fontSize: 24 }} />
+                    }
                   </Box>
-                </Fade>
-              ))}
-            </List>
-          </Box>
-        )}
+                </ListItemButton>
+                
+                <Collapse in={ceoSectionOpen} timeout="auto" unmountOnExit>
+                  <Box sx={{ pb: 2 }}>
+                    <List sx={{ p: 0, pl: 2 }}>
+                      {ceoItems.map((item, index) => (
+                        <Fade in timeout={600 + index * 100} key={item.path}>
+                          <Box>
+                            <SidebarItem
+                              icon={item.icon}
+                              label={item.label}
+                              path={item.path}
+                              onClick={() => isMobile && setMobileOpen(false)}
+                              adminOnly={item.adminOnly}
+                              description={item.description}
+                              category={item.category}
+                            />
+                          </Box>
+                        </Fade>
+                      ))}
+                    </List>
+                  </Box>
+                </Collapse>
+              </Paper>
+            </Box>
+          )}
 
-        {/* Secciones CEO (solo para admin) - MEJORADO */}
-        {role === 'admin' && ceoItems.length > 0 && (
-          <Box sx={{ mb: 4 }}>
-            <Paper
-              elevation={0}
-              sx={{
-                borderRadius: 4,
-                background: theme.palette.mode === 'dark'
-                  ? 'linear-gradient(135deg, rgba(93, 79, 176, 0.15) 0%, rgba(165, 147, 243, 0.08) 100%)'
-                  : 'linear-gradient(135deg, rgba(93, 79, 176, 0.08) 0%, rgba(165, 147, 243, 0.04) 100%)',
-                border: `1px solid ${alpha('#5D4FB0', 0.2)}`,
-                overflow: 'hidden',
-                position: 'relative',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 4,
-                  background: 'linear-gradient(90deg, #5D4FB0 0%, #A593F3 50%, #A5CAE6 100%)',
-                },
-              }}
-            >
-              <ListItemButton
-                onClick={() => setCeoSectionOpen(!ceoSectionOpen)}
+          {/* Secciones Operativas */}
+          {operativeItems.length > 0 && (
+            <Box sx={{ mb: 4 }}>
+              <Paper
+                elevation={0}
                 sx={{
-                  py: 3,
-                  px: 4,
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, rgba(93, 79, 176, 0.12) 0%, rgba(165, 147, 243, 0.06) 100%)',
-                  }
+                  borderRadius: 4,
+                  background: theme.palette.mode === 'dark'
+                    ? 'linear-gradient(135deg, rgba(165, 147, 243, 0.12) 0%, rgba(165, 202, 230, 0.06) 100%)'
+                    : 'linear-gradient(135deg, rgba(165, 147, 243, 0.08) 0%, rgba(165, 202, 230, 0.04) 100%)',
+                  border: `1px solid ${alpha(theme.palette.secondary.main, 0.15)}`,
+                  overflow: 'hidden',
+                  position: 'relative',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 4,
+                    background: 'linear-gradient(90deg, #A593F3 0%, #A5CAE6 50%, #D97DB7 100%)',
+                  },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 48 }}>
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 3,
-                      background: 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 6px 20px rgba(93, 79, 176, 0.4)',
-                      position: 'relative',
-                      '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        top: -1,
-                        left: -1,
-                        right: -1,
-                        bottom: -1,
-                        background: 'linear-gradient(135deg, #5D4FB0, #A593F3, #A5CAE6)',
-                        borderRadius: 4,
-                        zIndex: -1,
-                        opacity: 0.3,
-                      },
-                    }}
-                  >
-                    <BusinessCenter sx={{ color: 'white', fontSize: 22 }} />
-                  </Box>
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography 
-                        variant="subtitle1" 
-                        sx={{ 
-                          fontWeight: 800,
-                          color: '#5D4FB0',
-                          fontFamily: '"Outfit", sans-serif',
-                          fontSize: '1rem',
-                        }}
-                      >
-                        Panel Ejecutivo CEO
-                      </Typography>
-                      <Star sx={{ color: '#FFD700', fontSize: 16 }} />
-                    </Box>
-                  }
-                  secondary={
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: alpha('#5D4FB0', 0.8),
-                        fontFamily: '"Inter", sans-serif',
-                        fontWeight: 600,
-                        fontSize: '0.75rem',
+                <ListItemButton
+                  onClick={() => setOperativeSectionOpen(!operativeSectionOpen)}
+                  sx={{
+                    py: 3,
+                    px: 4,
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, rgba(165, 147, 243, 0.12) 0%, rgba(165, 202, 230, 0.06) 100%)',
+                    }
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 48 }}>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 3,
+                        background: 'linear-gradient(135deg, #A593F3 0%, #A5CAE6 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 6px 20px rgba(165, 147, 243, 0.4)',
                       }}
                     >
-                      Métricas estratégicas y análisis ejecutivo
-                    </Typography>
-                  }
-                />
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Chip
-                    label={ceoItems.length}
-                    size="small"
-                    sx={{
-                      background: 'linear-gradient(135deg, #5D4FB0 0%, #A593F3 100%)',
-                      color: 'white',
-                      fontWeight: 700,
-                      fontSize: '0.7rem',
-                      minWidth: 24,
-                      height: 24,
-                    }}
-                  />
-                  {ceoSectionOpen ? 
-                    <ExpandLess sx={{ color: '#5D4FB0', fontSize: 24 }} /> : 
-                    <ExpandMore sx={{ color: '#5D4FB0', fontSize: 24 }} />
-                  }
-                </Box>
-              </ListItemButton>
-              
-              <Collapse in={ceoSectionOpen} timeout="auto" unmountOnExit>
-                <Box sx={{ pb: 2 }}>
-                  <List sx={{ p: 0, pl: 2 }}>
-                    {ceoItems.map((item, index) => (
-                      <Fade in timeout={600 + index * 100} key={item.path}>
-                        <Box>
-                          <SidebarItem
-                            icon={item.icon}
-                            label={item.label}
-                            path={item.path}
-                            onClick={() => isMobile && setMobileOpen(false)}
-                            adminOnly={item.adminOnly}
-                            description={item.description}
-                            category={item.category}
-                          />
-                        </Box>
-                      </Fade>
-                    ))}
-                  </List>
-                </Box>
-              </Collapse>
-            </Paper>
-          </Box>
-        )}
-
-        {/* Secciones Operativas */}
-        {operativeItems.length > 0 && (
-          <Box sx={{ mb: 4 }}>
-            <Paper
-              elevation={0}
-              sx={{
-                borderRadius: 4,
-                background: theme.palette.mode === 'dark'
-                  ? 'linear-gradient(135deg, rgba(165, 147, 243, 0.12) 0%, rgba(165, 202, 230, 0.06) 100%)'
-                  : 'linear-gradient(135deg, rgba(165, 147, 243, 0.08) 0%, rgba(165, 202, 230, 0.04) 100%)',
-                border: `1px solid ${alpha(theme.palette.secondary.main, 0.15)}`,
-                overflow: 'hidden',
-                position: 'relative',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 4,
-                  background: 'linear-gradient(90deg, #A593F3 0%, #A5CAE6 50%, #D97DB7 100%)',
-                },
-              }}
-            >
-              <ListItemButton
-                onClick={() => setOperativeSectionOpen(!operativeSectionOpen)}
-                sx={{
-                  py: 3,
-                  px: 4,
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, rgba(165, 147, 243, 0.12) 0%, rgba(165, 202, 230, 0.06) 100%)',
-                  }
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 48 }}>
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 3,
-                      background: 'linear-gradient(135deg, #A593F3 0%, #A5CAE6 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 6px 20px rgba(165, 147, 243, 0.4)',
-                    }}
-                  >
-                    <Work sx={{ color: 'white', fontSize: 22 }} />
-                  </Box>
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Box display="flex" alignItems="center" gap={1}>
+                      <Work sx={{ color: 'white', fontSize: 22 }} />
+                    </Box>
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Typography 
+                          variant="subtitle1" 
+                          sx={{ 
+                            fontWeight: 800,
+                            color: theme.palette.secondary.main,
+                            fontFamily: '"Outfit", sans-serif',
+                            fontSize: '1rem',
+                          }}
+                        >
+                          Operaciones Clínicas
+                        </Typography>
+                        <AutoAwesome sx={{ color: theme.palette.secondary.main, fontSize: 16 }} />
+                      </Box>
+                    }
+                    secondary={
                       <Typography 
-                        variant="subtitle1" 
+                        variant="caption" 
                         sx={{ 
-                          fontWeight: 800,
-                          color: theme.palette.secondary.main,
-                          fontFamily: '"Outfit", sans-serif',
-                          fontSize: '1rem',
+                          color: alpha(theme.palette.secondary.main, 0.8),
+                          fontFamily: '"Inter", sans-serif',
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
                         }}
                       >
-                        Operaciones Clínicas
+                        Gestión diaria del centro psicológico
                       </Typography>
-                      <AutoAwesome sx={{ color: theme.palette.secondary.main, fontSize: 16 }} />
-                    </Box>
-                  }
-                  secondary={
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: alpha(theme.palette.secondary.main, 0.8),
-                        fontFamily: '"Inter", sans-serif',
-                        fontWeight: 600,
-                        fontSize: '0.75rem',
-                      }}
-                    >
-                      Gestión diaria del centro psicológico
-                    </Typography>
-                  }
-                />
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Chip
-                    label={operativeItems.length}
-                    size="small"
-                    sx={{
-                      background: 'linear-gradient(135deg, #A593F3 0%, #A5CAE6 100%)',
-                      color: 'white',
-                      fontWeight: 700,
-                      fontSize: '0.7rem',
-                      minWidth: 24,
-                      height: 24,
-                    }}
+                    }
                   />
-                  {operativeSectionOpen ? 
-                    <ExpandLess sx={{ color: theme.palette.secondary.main, fontSize: 24 }} /> : 
-                    <ExpandMore sx={{ color: theme.palette.secondary.main, fontSize: 24 }} />
-                  }
-                </Box>
-              </ListItemButton>
-              
-              <Collapse in={operativeSectionOpen} timeout="auto" unmountOnExit>
-                <Box sx={{ pb: 2 }}>
-                  <List sx={{ p: 0, pl: 2 }}>
-                    {operativeItems.map((item, index) => (
-                      <Fade in timeout={600 + index * 100} key={item.path}>
-                        <Box>
-                          <SidebarItem
-                            icon={item.icon}
-                            label={item.label}
-                            path={item.path}
-                            onClick={() => isMobile && setMobileOpen(false)}
-                            adminOnly={item.adminOnly}
-                            description={item.description}
-                            category={item.category}
-                          />
-                        </Box>
-                      </Fade>
-                    ))}
-                  </List>
-                </Box>
-              </Collapse>
-            </Paper>
-          </Box>
-        )}
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Chip
+                      label={operativeItems.length}
+                      size="small"
+                      sx={{
+                        background: 'linear-gradient(135deg, #A593F3 0%, #A5CAE6 100%)',
+                        color: 'white',
+                        fontWeight: 700,
+                        fontSize: '0.7rem',
+                        minWidth: 24,
+                        height: 24,
+                      }}
+                    />
+                    {operativeSectionOpen ? 
+                      <ExpandLess sx={{ color: theme.palette.secondary.main, fontSize: 24 }} /> : 
+                      <ExpandMore sx={{ color: theme.palette.secondary.main, fontSize: 24 }} />
+                    }
+                  </Box>
+                </ListItemButton>
+                
+                <Collapse in={operativeSectionOpen} timeout="auto" unmountOnExit>
+                  <Box sx={{ pb: 2 }}>
+                    <List sx={{ p: 0, pl: 2 }}>
+                      {operativeItems.map((item, index) => (
+                        <Fade in timeout={600 + index * 100} key={item.path}>
+                          <Box>
+                            <SidebarItem
+                              icon={item.icon}
+                              label={item.label}
+                              path={item.path}
+                              onClick={() => isMobile && setMobileOpen(false)}
+                              adminOnly={item.adminOnly}
+                              description={item.description}
+                              category={item.category}
+                            />
+                          </Box>
+                        </Fade>
+                      ))}
+                    </List>
+                  </Box>
+                </Collapse>
+              </Paper>
+            </Box>
+          )}
+        </Box>
       </Box>
 
       {/* Footer del sidebar mejorado */}
@@ -1143,6 +1188,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           p: 4, 
           position: 'relative', 
           zIndex: 1,
+          flexShrink: 0,
         }}
       >
         <Paper
