@@ -159,7 +159,7 @@ export default function SidebarItem({
                 variant="subtitle2" 
                 sx={{ 
                   fontWeight: isActive ? 700 : 600,
-                  color: isActive ? colors.primary : 'text.primary',
+                  color: isActive ? colors.primary : theme.palette.text.primary,
                   fontFamily: '"Outfit", sans-serif',
                   fontSize: '0.9rem',
                   transition: 'all 0.3s ease',
@@ -220,7 +220,7 @@ export default function SidebarItem({
               <Typography 
                 variant="caption" 
                 sx={{ 
-                  color: alpha('text.secondary', 0.8),
+                  color: theme.palette.text.secondary,
                   fontFamily: '"Inter", sans-serif',
                   fontSize: '0.7rem',
                   fontWeight: 500,
