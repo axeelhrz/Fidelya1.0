@@ -93,33 +93,6 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Preload critical fonts */}
-        <link
-          rel="preload"
-          href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
-          as="style"
-          onLoad="this.onload=null;this.rel='stylesheet'"
-        />
-        <noscript>
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
-          />
-        </noscript>
-        
-        <link
-          rel="preload"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-          as="style"
-          onLoad="this.onload=null;this.rel='stylesheet'"
-        />
-        <noscript>
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-          />
-        </noscript>
-
         {/* Favicon and app icons */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -178,13 +151,12 @@ export default function RootLayout({
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 9999,
-          transition: 'opacity 0.5s ease-out',
         }}>
           <div style={{
-            width: '60px',
-            height: '60px',
-            border: '4px solid #A593F3',
-            borderTop: '4px solid #5D4FB0',
+            width: '40px',
+            height: '40px',
+            border: '4px solid #5D4FB0',
+            borderTop: '4px solid transparent',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
           }}></div>
