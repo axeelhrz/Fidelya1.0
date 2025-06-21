@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   Typography,
@@ -8,17 +8,14 @@ import {
   Grid,
   Card,
   CardContent,
-  useTheme,
-  alpha,
-  Chip,
   LinearProgress,
-  IconButton,
-  Tooltip,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -30,25 +27,23 @@ import {
   AccountBalance,
   Inventory,
   Receipt,
-  Info,
-  Lightbulb,
   Warning,
-  CheckCircle,
-  ExpandMore,
-  Refresh,
+  Lightbulb,
 } from '@mui/icons-material';
 import { LineChart, Line, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from 'recharts';
-import { motion } from 'framer-motion';
 import { CEODashboardState } from '@/types/ceo';
 
-// CEO Brand Colors
-const ceoBrandColors = {
-  primary: '#5D4FB0',         // púrpura profesional
-  secondary: '#A593F3',       // lavanda claro
-  accentBlue: '#A5CAE6',      // azul suave
-  accentPink: '#D97DB7',      // rosa emocional
-  background: '#F2EDEA',      // fondo claro suave
-  text: '#2E2E2E',            // gris oscuro elegante
+// Minimalist color palette
+const colors = {
+  primary: '#2563eb',
+  secondary: '#64748b',
+  success: '#059669',
+  warning: '#d97706',
+  error: '#dc2626',
+  background: '#f8fafc',
+  surface: '#ffffff',
+  text: '#1e293b',
+  textSecondary: '#64748b',
 };
 
 interface ResumenTabProps {
@@ -56,12 +51,8 @@ interface ResumenTabProps {
 }
 
 export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
-  const theme = useTheme();
-  const [selectedKPI, setSelectedKPI] = useState<string | null>(null);
-  const [kpiDialogOpen, setKpiDialogOpen] = useState(false);
-
   const getIcon = (iconName: string) => {
-    const iconProps = { sx: { fontSize: 32 } };
+    const iconProps = { sx: { fontSize: 24, color: colors.primary } };
     switch (iconName) {
       case 'TrendingUp': return <TrendingUp {...iconProps} />;
       case 'Assessment': return <Assessment {...iconProps} />;
@@ -77,10 +68,10 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
 
   const getSemaphoreColor = (semaphore: string) => {
     switch (semaphore) {
-      case 'green': return '#10b981';
-      case 'amber': return '#f59e0b';
-      case 'red': return '#ef4444';
-      default: return ceoBrandColors.text;
+      case 'green': return colors.success;
+      case 'amber': return colors.warning;
+      case 'red': return colors.error;
+      default: return colors.secondary;
     }
   };
 
@@ -97,18 +88,6 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
     return value.toLocaleString();
   };
 
-  const handleKPIClick = (kpiId: string) => {
-    setSelectedKPI(kpiId);
-    setKpiDialogOpen(true);
-  };
-
-  const handleCloseKPIDialog = () => {
-    setKpiDialogOpen(false);
-    setSelectedKPI(null);
-  };
-
-  const selectedKPIData = ceoMetrics.kpis.find(kpi => kpi.id === selectedKPI);
-
   // Prepare burn & earn chart data
   const burnEarnChartData = ceoMetrics.burnEarnData.slice(-14).map(item => ({
     fecha: new Date(item.fecha).getDate(),
@@ -118,704 +97,443 @@ export default function ResumenTab({ ceoMetrics }: ResumenTabProps) {
 
   return (
     <Box>
-      {/* Welcome Message */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Paper
-          sx={{
-            p: 4,
-            mb: 4,
-            background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
-            color: 'white',
-            borderRadius: 4,
-            position: 'relative',
-            overflow: 'hidden',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              width: '40%',
-              height: '100%',
-              background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="4"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-              opacity: 0.3,
-            }
-          }}
-        >
-          <Box position="relative" zIndex={1}>
-            <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography 
-                  variant="h4" 
-                  sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 600,
-                    mb: 1,
-                  }}
-                >
-                  📊 Resumen Ejecutivo
-                </Typography>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 300,
-                    opacity: 0.9,
-                    mb: 2,
-                  }}
-                >
-                  Vista general de métricas clave y rendimiento del centro
-                </Typography>
-                <Typography 
-                  variant="body1" 
-                  sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 300,
-                    opacity: 0.8,
-                    maxWidth: '60%',
-                  }}
-                >
-                  Su liderazgo impulsa la excelencia en salud mental. Cada métrica refleja el impacto de su visión estratégica.
-                </Typography>
-              </Box>
-              
-              <Box display="flex" gap={1}>
-                <Tooltip title="Actualizar métricas">
-                  <IconButton
-                    sx={{
-                      background: 'rgba(255, 255, 255, 0.2)',
-                      color: 'white',
-                      '&:hover': {
-                        background: 'rgba(255, 255, 255, 0.3)',
-                      },
-                    }}
-                  >
-                    <Refresh />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
-          </Box>
-        </Paper>
-      </motion.div>
-
-      {/* KPI Grid - 6 tarjetas principales */}
-      <Box sx={{ mb: 6 }}>
+      {/* KPI Grid - Clean and minimal */}
+      <Box sx={{ mb: 4 }}>
         <Typography 
           variant="h5" 
           sx={{ 
-            fontFamily: '"Neris", sans-serif',
+            fontFamily: '"Inter", sans-serif',
             fontWeight: 600,
-            color: ceoBrandColors.text,
+            color: colors.text,
             mb: 3,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
           }}
         >
-          🎯 KPI Dashboard - Métricas Ejecutivas
+          Métricas Principales
         </Typography>
         
         <Grid container spacing={3}>
-          {ceoMetrics.kpis.slice(0, 6).map((kpi, index) => (
-            <Grid key={kpi.id} xs={12} sm={6} lg={4}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+          {ceoMetrics.kpis.slice(0, 6).map((kpi) => (
+            <Grid item xs={12} sm={6} lg={4} key={kpi.id}>
+              <Card
+                sx={{
+                  height: '100%',
+                  backgroundColor: colors.surface,
+                  border: `1px solid #e2e8f0`,
+                  borderRadius: 2,
+                  boxShadow: 'none',
+                  '&:hover': {
+                    borderColor: colors.primary,
+                    boxShadow: `0 4px 12px rgba(37, 99, 235, 0.1)`,
+                  },
+                  transition: 'all 0.2s ease-in-out',
+                }}
               >
-                <Card
-                  onClick={() => handleKPIClick(kpi.id)}
-                  sx={{
-                    height: '100%',
-                    minHeight: 280,
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    border: `1px solid ${alpha(getSemaphoreColor(kpi.semaphore), 0.2)}`,
-                    borderRadius: 4,
-                    position: 'relative',
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: 4,
-                      background: getSemaphoreColor(kpi.semaphore),
-                    },
-                    '&:hover': {
-                      transform: 'translateY(-8px)',
-                      boxShadow: `0 20px 25px -5px ${alpha(getSemaphoreColor(kpi.semaphore), 0.15)}`,
-                    },
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  }}
-                >
-                  <CardContent sx={{ p: 3, height: '100%' }}>
-                    <Box display="flex" flexDirection="column" height="100%">
-                      {/* Header */}
-                      <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                        <Typography 
-                          variant="overline" 
-                          sx={{ 
-                            fontFamily: '"Neris", sans-serif',
-                            fontWeight: 600,
-                            color: alpha(ceoBrandColors.text, 0.7),
-                            letterSpacing: '0.1em',
-                          }}
-                        >
-                          {kpi.title}
-                        </Typography>
-                        
-                        <Box
-                          sx={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 3,
-                            background: alpha(getSemaphoreColor(kpi.semaphore), 0.1),
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: getSemaphoreColor(kpi.semaphore),
-                          }}
-                        >
-                          {getIcon(kpi.icon)}
-                        </Box>
-                      </Box>
+                <CardContent sx={{ p: 3 }}>
+                  {/* Header */}
+                  <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                    <Typography 
+                      variant="overline" 
+                      sx={{ 
+                        fontFamily: '"Inter", sans-serif',
+                        fontWeight: 500,
+                        color: colors.textSecondary,
+                        fontSize: '0.75rem',
+                        letterSpacing: '0.05em',
+                      }}
+                    >
+                      {kpi.title}
+                    </Typography>
+                    
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 2,
+                        backgroundColor: `${getSemaphoreColor(kpi.semaphore)}15`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {getIcon(kpi.icon)}
+                    </Box>
+                  </Box>
 
-                      {/* Value */}
-                      <Typography 
-                        variant="h3" 
-                        sx={{ 
-                          fontFamily: '"Neris", sans-serif',
-                          fontWeight: 600,
-                          color: ceoBrandColors.text,
-                          mb: 1,
-                        }}
-                      >
-                        {formatValue(kpi.value, kpi.unit)}
-                      </Typography>
+                  {/* Value */}
+                  <Typography 
+                    variant="h4" 
+                    sx={{ 
+                      fontFamily: '"Inter", sans-serif',
+                      fontWeight: 700,
+                      color: colors.text,
+                      mb: 1,
+                    }}
+                  >
+                    {formatValue(kpi.value, kpi.unit)}
+                  </Typography>
 
-                      {/* Target Progress */}
-                      {kpi.target && (
-                        <Box sx={{ mb: 2 }}>
-                          <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
-                            <Typography 
-                              variant="caption" 
-                              sx={{ 
-                                fontFamily: '"Neris", sans-serif',
-                                fontWeight: 300,
-                                color: alpha(ceoBrandColors.text, 0.6),
-                              }}
-                            >
-                              Meta: {formatValue(kpi.target, kpi.unit)}
-                            </Typography>
-                            <Typography 
-                              variant="caption" 
-                              sx={{ 
-                                fontFamily: '"Neris", sans-serif',
-                                fontWeight: 600,
-                                color: getSemaphoreColor(kpi.semaphore),
-                              }}
-                            >
-                              {Math.round((kpi.value / kpi.target) * 100)}%
-                            </Typography>
-                          </Box>
-                          <LinearProgress
-                            variant="determinate"
-                            value={Math.min(100, (kpi.value / kpi.target) * 100)}
-                            sx={{
-                              height: 6,
-                              borderRadius: 3,
-                              bgcolor: alpha(getSemaphoreColor(kpi.semaphore), 0.1),
-                              '& .MuiLinearProgress-bar': {
-                                bgcolor: getSemaphoreColor(kpi.semaphore),
-                                borderRadius: 3,
-                              }
-                            }}
-                          />
-                        </Box>
-                      )}
-
-                      {/* Subtitle */}
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          fontFamily: '"Neris", sans-serif',
-                          fontWeight: 300,
-                          color: alpha(ceoBrandColors.text, 0.6),
-                          mb: 2,
-                          flex: 1,
-                        }}
-                      >
-                        {kpi.subtitle}
-                      </Typography>
-
-                      {/* Sparkline */}
-                      <Box sx={{ height: 40, mb: 2 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={kpi.sparklineData.map((value, idx) => ({ index: idx, value }))}>
-                            <Line 
-                              type="monotone" 
-                              dataKey="value" 
-                              stroke={getSemaphoreColor(kpi.semaphore)}
-                              strokeWidth={2}
-                              dot={false}
-                              activeDot={{ r: 3, fill: getSemaphoreColor(kpi.semaphore) }}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </Box>
-
-                      {/* Trend */}
-                      <Box 
-                        display="flex" 
-                        alignItems="center" 
-                        sx={{
-                          p: 1.5,
-                          borderRadius: 2,
-                          background: alpha(kpi.trend.isPositive ? '#10b981' : '#ef4444', 0.1),
-                        }}
-                      >
-                        {kpi.trend.isPositive ? (
-                          <TrendingUp sx={{ fontSize: 16, color: '#10b981', mr: 1 }} />
-                        ) : (
-                          <TrendingDown sx={{ fontSize: 16, color: '#ef4444', mr: 1 }} />
-                        )}
+                  {/* Target Progress */}
+                  {kpi.target && (
+                    <Box sx={{ mb: 2 }}>
+                      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                         <Typography 
                           variant="caption" 
                           sx={{ 
-                            fontFamily: '"Neris", sans-serif',
-                            fontWeight: 600,
-                            color: kpi.trend.isPositive ? '#10b981' : '#ef4444',
+                            fontFamily: '"Inter", sans-serif',
+                            fontWeight: 400,
+                            color: colors.textSecondary,
                           }}
                         >
-                          {kpi.trend.value > 0 ? '+' : ''}{kpi.trend.value.toFixed(1)}% {kpi.trend.period}
+                          Meta: {formatValue(kpi.target, kpi.unit)}
+                        </Typography>
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            fontFamily: '"Inter", sans-serif',
+                            fontWeight: 600,
+                            color: getSemaphoreColor(kpi.semaphore),
+                          }}
+                        >
+                          {Math.round((kpi.value / kpi.target) * 100)}%
                         </Typography>
                       </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={Math.min(100, (kpi.value / kpi.target) * 100)}
+                        sx={{
+                          height: 4,
+                          borderRadius: 2,
+                          backgroundColor: '#f1f5f9',
+                          '& .MuiLinearProgress-bar': {
+                            backgroundColor: getSemaphoreColor(kpi.semaphore),
+                            borderRadius: 2,
+                          }
+                        }}
+                      />
                     </Box>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  )}
+
+                  {/* Subtitle */}
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontFamily: '"Inter", sans-serif',
+                      fontWeight: 400,
+                      color: colors.textSecondary,
+                      mb: 2,
+                    }}
+                  >
+                    {kpi.subtitle}
+                  </Typography>
+
+                  {/* Trend */}
+                  <Box 
+                    display="flex" 
+                    alignItems="center" 
+                    sx={{
+                      p: 1,
+                      borderRadius: 1,
+                      backgroundColor: kpi.trend.isPositive ? `${colors.success}15` : `${colors.error}15`,
+                    }}
+                  >
+                    {kpi.trend.isPositive ? (
+                      <TrendingUp sx={{ fontSize: 16, color: colors.success, mr: 1 }} />
+                    ) : (
+                      <TrendingDown sx={{ fontSize: 16, color: colors.error, mr: 1 }} />
+                    )}
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        fontFamily: '"Inter", sans-serif',
+                        fontWeight: 600,
+                        color: kpi.trend.isPositive ? colors.success : colors.error,
+                      }}
+                    >
+                      {kpi.trend.value > 0 ? '+' : ''}{kpi.trend.value.toFixed(1)}% {kpi.trend.period}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
             </Grid>
           ))}
         </Grid>
       </Box>
 
-      {/* Burn & Earn Trend Chart */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.7 }}
-      >
-        <Paper
-          sx={{
-            p: 4,
-            mb: 4,
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: 4,
-            border: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
-          }}
-        >
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-            <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 600,
-                  color: ceoBrandColors.text,
-                  mb: 1,
-                }}
-              >
-                📈 Tendencia Ingresos vs Egresos (Últimos 14 días)
-              </Typography>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 300,
-                  color: alpha(ceoBrandColors.text, 0.6),
-                }}
-              >
-                Análisis diario de flujo de caja y rentabilidad operativa
-              </Typography>
-            </Box>
-            
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{
-                borderColor: ceoBrandColors.primary,
-                color: ceoBrandColors.primary,
-                fontFamily: '"Neris", sans-serif',
-                fontWeight: 600,
-              }}
-            >
-              Ver Detalle
-            </Button>
-          </Box>
-          
-          <Box sx={{ height: 300 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={burnEarnChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={alpha(ceoBrandColors.text, 0.1)} />
-                <XAxis 
-                  dataKey="fecha" 
-                  stroke={alpha(ceoBrandColors.text, 0.6)}
-                  fontSize={12}
-                  fontFamily='"Neris", sans-serif'
-                />
-                <YAxis 
-                  stroke={alpha(ceoBrandColors.text, 0.6)}
-                  fontSize={12}
-                  fontFamily='"Neris", sans-serif'
-                />
-                <RechartsTooltip 
-                  contentStyle={{
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    border: `1px solid ${alpha(ceoBrandColors.primary, 0.2)}`,
-                    borderRadius: 8,
-                    fontFamily: '"Neris", sans-serif',
-                  }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="ingresos" 
-                  stackId="1"
-                  stroke={ceoBrandColors.primary}
-                  fill={alpha(ceoBrandColors.primary, 0.3)}
-                  name="Ingresos"
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="egresos" 
-                  stackId="2"
-                  stroke={ceoBrandColors.accentPink}
-                  fill={alpha(ceoBrandColors.accentPink, 0.3)}
-                  name="Egresos"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Box>
-        </Paper>
-      </motion.div>
-
-      {/* Alertas Críticas y AI Insights */}
-      <Grid container spacing={4}>
-        {/* Alertas Críticas */}
-        <Grid xs={12} lg={6}>
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-          >
-            <Paper
-              sx={{
-                p: 4,
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: 4,
-                border: `1px solid ${alpha('#ef4444', 0.2)}`,
-                height: '100%',
-              }}
-            >
-              <Box display="flex" alignItems="center" gap={2} mb={3}>
-                <Warning sx={{ color: '#ef4444', fontSize: 28 }} />
-                <Box>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
-                      color: ceoBrandColors.text,
-                    }}
-                  >
-                    🚨 Alertas Críticas
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300,
-                      color: alpha(ceoBrandColors.text, 0.6),
-                    }}
-                  >
-                    Requieren atención inmediata
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Box>
-                {ceoMetrics.criticalAlerts.slice(0, 3).map((alert, index) => (
-                  <Box
-                    key={alert.id}
-                    sx={{
-                      p: 2,
-                      mb: 2,
-                      borderRadius: 3,
-                      background: alpha('#ef4444', 0.05),
-                      border: `1px solid ${alpha('#ef4444', 0.1)}`,
-                      cursor: 'pointer',
-                      '&:hover': {
-                        background: alpha('#ef4444', 0.08),
-                      },
-                      transition: 'background 0.2s',
-                    }}
-                  >
-                    <Typography 
-                      variant="subtitle2" 
-                      sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600,
-                        color: ceoBrandColors.text,
-                        mb: 0.5,
-                      }}
-                    >
-                      {alert.titulo}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 300,
-                        color: alpha(ceoBrandColors.text, 0.7),
-                        mb: 1,
-                      }}
-                    >
-                      {alert.descripcion}
-                    </Typography>
-                    <Chip
-                      label={alert.urgencia}
-                      size="small"
-                      sx={{
-                        background: '#ef4444',
-                        color: 'white',
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Box>
-                ))}
-              </Box>
-            </Paper>
-          </motion.div>
-        </Grid>
-
-        {/* AI Insight Destacado */}
-        <Grid xs={12} lg={6}>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.9 }}
-          >
-            <Paper
-              sx={{
-                p: 4,
-                background: `linear-gradient(135deg, ${alpha(ceoBrandColors.accentBlue, 0.1)} 0%, ${alpha(ceoBrandColors.secondary, 0.1)} 100%)`,
-                backdropFilter: 'blur(10px)',
-                borderRadius: 4,
-                border: `1px solid ${alpha(ceoBrandColors.accentBlue, 0.2)}`,
-                height: '100%',
-              }}
-            >
-              <Box display="flex" alignItems="center" gap={2} mb={3}>
-                <Lightbulb sx={{ color: ceoBrandColors.accentBlue, fontSize: 28 }} />
-                <Box>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
-                      color: ceoBrandColors.text,
-                    }}
-                  >
-                    🤖 AI Insight del Día
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300,
-                      color: alpha(ceoBrandColors.text, 0.6),
-                    }}
-                  >
-                    Sugerencia inteligente basada en datos
-                  </Typography>
-                </Box>
-              </Box>
-
-              {ceoMetrics.aiInsights.length > 0 && (
-                <Box>
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
-                      color: ceoBrandColors.text,
-                      mb: 2,
-                    }}
-                  >
-                    {ceoMetrics.aiInsights[0].titulo}
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300,
-                      color: alpha(ceoBrandColors.text, 0.8),
-                      mb: 3,
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    {ceoMetrics.aiInsights[0].descripcion}
-                  </Typography>
-                  
-                  <Box display="flex" alignItems="center" gap={2} mb={2}>
-                    <Chip
-                      label={`Confianza: ${ceoMetrics.aiInsights[0].confianza}%`}
-                      size="small"
-                      sx={{
-                        background: ceoBrandColors.accentBlue,
-                        color: 'white',
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600,
-                      }}
-                    />
-                    <Chip
-                      label={`Impacto: ${ceoMetrics.aiInsights[0].impacto}`}
-                      size="small"
-                      variant="outlined"
-                      sx={{
-                        borderColor: ceoBrandColors.accentBlue,
-                        color: ceoBrandColors.accentBlue,
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Box>
-
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300,
-                      color: alpha(ceoBrandColors.text, 0.6),
-                    }}
-                  >
-                    💡 Acciones recomendadas: {ceoMetrics.aiInsights[0].accionesRecomendadas.join(', ')}
-                  </Typography>
-                </Box>
-              )}
-            </Paper>
-          </motion.div>
-        </Grid>
-      </Grid>
-
-      {/* KPI Detail Dialog */}
-      <Dialog
-        open={kpiDialogOpen}
-        onClose={handleCloseKPIDialog}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 4,
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-          }
+      {/* Burn & Earn Trend Chart - Clean design */}
+      <Paper
+        sx={{
+          p: 4,
+          mb: 4,
+          backgroundColor: colors.surface,
+          border: `1px solid #e2e8f0`,
+          borderRadius: 2,
+          boxShadow: 'none',
         }}
       >
-        {selectedKPIData && (
-          <>
-            <DialogTitle sx={{ 
-              fontFamily: '"Neris", sans-serif',
-              fontWeight: 600,
-              color: ceoBrandColors.text,
-              borderBottom: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
-            }}>
-              <Box display="flex" alignItems="center" gap={2}>
-                {getIcon(selectedKPIData.icon)}
-                <Box>
-                  <Typography variant="h6" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                    {selectedKPIData.title}
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300, color: alpha(ceoBrandColors.text, 0.6) }}>
-                    Análisis detallado de la métrica
-                  </Typography>
-                </Box>
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+          <Box>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 600,
+                color: colors.text,
+                mb: 1,
+              }}
+            >
+              Ingresos vs Egresos (Últimos 14 días)
+            </Typography>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 400,
+                color: colors.textSecondary,
+              }}
+            >
+              Análisis diario de flujo de caja
+            </Typography>
+          </Box>
+        </Box>
+        
+        <Box sx={{ height: 300 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={burnEarnChartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis 
+                dataKey="fecha" 
+                stroke={colors.textSecondary}
+                fontSize={12}
+                fontFamily='"Inter", sans-serif'
+              />
+              <YAxis 
+                stroke={colors.textSecondary}
+                fontSize={12}
+                fontFamily='"Inter", sans-serif'
+              />
+              <RechartsTooltip 
+                contentStyle={{
+                  backgroundColor: colors.surface,
+                  border: `1px solid #e2e8f0`,
+                  borderRadius: 8,
+                  fontFamily: '"Inter", sans-serif',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="ingresos" 
+                stackId="1"
+                stroke={colors.primary}
+                fill={`${colors.primary}30`}
+                name="Ingresos"
+              />
+              <Area 
+                type="monotone" 
+                dataKey="egresos" 
+                stackId="2"
+                stroke={colors.error}
+                fill={`${colors.error}30`}
+                name="Egresos"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </Box>
+      </Paper>
+
+      {/* Alertas y AI Insights - Clean layout */}
+      <Grid container spacing={4}>
+        {/* Alertas Críticas */}
+        <Grid item xs={12} lg={6}>
+          <Paper
+            sx={{
+              p: 4,
+              backgroundColor: colors.surface,
+              border: `1px solid #e2e8f0`,
+              borderRadius: 2,
+              boxShadow: 'none',
+              height: '100%',
+            }}
+          >
+            <Box display="flex" alignItems="center" gap={2} mb={3}>
+              <Warning sx={{ color: colors.error, fontSize: 24 }} />
+              <Box>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 600,
+                    color: colors.text,
+                  }}
+                >
+                  Alertas Críticas
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 400,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  Requieren atención inmediata
+                </Typography>
               </Box>
-            </DialogTitle>
-            <DialogContent sx={{ p: 4 }}>
-              <Grid container spacing={3}>
-                <Grid xs={12} md={6}>
-                  <Box sx={{ p: 3, background: alpha(getSemaphoreColor(selectedKPIData.semaphore), 0.1), borderRadius: 3 }}>
-                    <Typography variant="h3" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600, color: getSemaphoreColor(selectedKPIData.semaphore), mb: 1 }}>
-                      {formatValue(selectedKPIData.value, selectedKPIData.unit)}
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300, color: ceoBrandColors.text }}>
-                      {selectedKPIData.subtitle}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid xs={12} md={6}>
-                  <Box sx={{ height: 200 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={selectedKPIData.sparklineData.map((value, idx) => ({ index: idx, value, label: `Día ${idx + 1}` }))}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={alpha(ceoBrandColors.text, 0.1)} />
-                        <XAxis dataKey="index" stroke={alpha(ceoBrandColors.text, 0.6)} fontSize={12} />
-                        <YAxis stroke={alpha(ceoBrandColors.text, 0.6)} fontSize={12} />
-                        <RechartsTooltip 
-                          contentStyle={{
-                            background: 'rgba(255, 255, 255, 0.95)',
-                            border: `1px solid ${alpha(ceoBrandColors.primary, 0.2)}`,
-                            borderRadius: 8,
-                            fontFamily: '"Neris", sans-serif',
-                          }}
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="value" 
-                          stroke={getSemaphoreColor(selectedKPIData.semaphore)}
-                          strokeWidth={3}
-                          dot={{ fill: getSemaphoreColor(selectedKPIData.semaphore), r: 4 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </Box>
-                </Grid>
-              </Grid>
-            </DialogContent>
-            <DialogActions sx={{ p: 3, borderTop: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}` }}>
-              <Button 
-                onClick={handleCloseKPIDialog}
-                sx={{
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 600,
-                  color: ceoBrandColors.primary,
-                }}
-              >
-                Cerrar
-              </Button>
-              <Button 
-                variant="contained"
-                sx={{
-                  background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 600,
-                }}
-              >
-                Exportar Datos
-              </Button>
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
+            </Box>
+
+            <Box>
+              {ceoMetrics.criticalAlerts.slice(0, 3).map((alert) => (
+                <Box
+                  key={alert.id}
+                  sx={{
+                    p: 3,
+                    mb: 2,
+                    borderRadius: 2,
+                    backgroundColor: `${colors.error}08`,
+                    border: `1px solid ${colors.error}20`,
+                  }}
+                >
+                  <Typography 
+                    variant="subtitle2" 
+                    sx={{ 
+                      fontFamily: '"Inter", sans-serif',
+                      fontWeight: 600,
+                      color: colors.text,
+                      mb: 1,
+                    }}
+                  >
+                    {alert.titulo}
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontFamily: '"Inter", sans-serif',
+                      fontWeight: 400,
+                      color: colors.textSecondary,
+                      mb: 2,
+                    }}
+                  >
+                    {alert.descripcion}
+                  </Typography>
+                  <Chip
+                    label={alert.urgencia}
+                    size="small"
+                    sx={{
+                      backgroundColor: colors.error,
+                      color: 'white',
+                      fontFamily: '"Inter", sans-serif',
+                      fontWeight: 500,
+                    }}
+                  />
+                </Box>
+              ))}
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* AI Insight */}
+        <Grid item xs={12} lg={6}>
+          <Paper
+            sx={{
+              p: 4,
+              backgroundColor: colors.surface,
+              border: `1px solid #e2e8f0`,
+              borderRadius: 2,
+              boxShadow: 'none',
+              height: '100%',
+            }}
+          >
+            <Box display="flex" alignItems="center" gap={2} mb={3}>
+              <Lightbulb sx={{ color: colors.primary, fontSize: 24 }} />
+              <Box>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 600,
+                    color: colors.text,
+                  }}
+                >
+                  AI Insight del Día
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 400,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  Sugerencia inteligente basada en datos
+                </Typography>
+              </Box>
+            </Box>
+
+            {ceoMetrics.aiInsights.length > 0 && (
+              <Box>
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 600,
+                    color: colors.text,
+                    mb: 2,
+                  }}
+                >
+                  {ceoMetrics.aiInsights[0].titulo}
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 400,
+                    color: colors.textSecondary,
+                    mb: 3,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {ceoMetrics.aiInsights[0].descripcion}
+                </Typography>
+                
+                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                  <Chip
+                    label={`Confianza: ${ceoMetrics.aiInsights[0].confianza}%`}
+                    size="small"
+                    sx={{
+                      backgroundColor: colors.primary,
+                      color: 'white',
+                      fontFamily: '"Inter", sans-serif',
+                      fontWeight: 500,
+                    }}
+                  />
+                  <Chip
+                    label={`Impacto: ${ceoMetrics.aiInsights[0].impacto}`}
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                      borderColor: colors.primary,
+                      color: colors.primary,
+                      fontFamily: '"Inter", sans-serif',
+                      fontWeight: 500,
+                    }}
+                  />
+                </Box>
+
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 400,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  Acciones recomendadas: {ceoMetrics.aiInsights[0].accionesRecomendadas.join(', ')}
+                </Typography>
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
     </Box>
   );
 }

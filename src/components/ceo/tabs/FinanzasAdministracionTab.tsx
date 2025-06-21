@@ -6,13 +6,8 @@ import {
   Typography,
   Paper,
   Grid,
-  Card,
-  CardContent,
-  useTheme,
-  alpha,
   Chip,
   Button,
-  TextField,
   Slider,
   Table,
   TableBody,
@@ -24,29 +19,26 @@ import {
   Tooltip,
 } from '@mui/material';
 import {
-  AccountBalance,
   TrendingUp,
-  Receipt,
-  Assessment,
   Download,
   Calculate,
   CheckCircle,
-  Warning,
-  Error,
   Refresh,
 } from '@mui/icons-material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, ComposedChart } from 'recharts';
-import { motion } from 'framer-motion';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ComposedChart, Line } from 'recharts';
 import { CEODashboardState } from '@/types/ceo';
 
-// CEO Brand Colors
-const ceoBrandColors = {
-  primary: '#5D4FB0',
-  secondary: '#A593F3', 
-  accentBlue: '#A5CAE6',
-  accentPink: '#D97DB7',
-  background: '#F2EDEA',
-  text: '#2E2E2E',
+// Minimalist color palette
+const colors = {
+  primary: '#2563eb',
+  secondary: '#64748b',
+  success: '#059669',
+  warning: '#d97706',
+  error: '#dc2626',
+  background: '#f8fafc',
+  surface: '#ffffff',
+  text: '#1e293b',
+  textSecondary: '#64748b',
 };
 
 interface FinanzasAdministracionTabProps {
@@ -54,7 +46,6 @@ interface FinanzasAdministracionTabProps {
 }
 
 export default function FinanzasAdministracionTab({ ceoMetrics }: FinanzasAdministracionTabProps) {
-  const theme = useTheme();
   const [tarifaSimulacion, setTarifaSimulacion] = useState(5);
 
   // Sample financial comparison data
@@ -87,25 +78,25 @@ export default function FinanzasAdministracionTab({ ceoMetrics }: FinanzasAdmini
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case 'vigente':
-      case 'completado': return '#10b981';
+      case 'completado': return colors.success;
       case 'pendiente':
-      case 'en_proceso': return '#f59e0b';
-      case 'vencido': return '#ef4444';
-      default: return ceoBrandColors.text;
+      case 'en_proceso': return colors.warning;
+      case 'vencido': return colors.error;
+      default: return colors.secondary;
     }
   };
 
   const getCriticidadColor = (criticidad: string) => {
     switch (criticidad) {
-      case 'alta': return '#ef4444';
-      case 'media': return '#f59e0b';
-      case 'baja': return '#10b981';
-      default: return ceoBrandColors.text;
+      case 'alta': return colors.error;
+      case 'media': return colors.warning;
+      case 'baja': return colors.success;
+      default: return colors.secondary;
     }
   };
 
   const calcularImpactoTarifa = () => {
-    const ingresoActual = 55000; // Ingreso base mensual
+    const ingresoActual = 55000;
     const incremento = (tarifaSimulacion / 100) * ingresoActual;
     return {
       nuevoIngreso: ingresoActual + incremento,
@@ -118,976 +109,724 @@ export default function FinanzasAdministracionTab({ ceoMetrics }: FinanzasAdmini
 
   return (
     <Box>
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+      <Typography 
+        variant="h5" 
+        sx={{ 
+          fontFamily: '"Inter", sans-serif',
+          fontWeight: 600,
+          color: colors.text,
+          mb: 4,
+        }}
       >
-        <Paper
-          sx={{
-            p: 4,
-            mb: 4,
-            background: `linear-gradient(135deg, ${ceoBrandColors.accentPink} 0%, ${ceoBrandColors.secondary} 100%)`,
-            color: 'white',
-            borderRadius: 4,
-          }}
-        >
-          <Typography 
-            variant="h4" 
-            sx={{ 
-              fontFamily: '"Neris", sans-serif',
-              fontWeight: 600, // Semibold
-              mb: 1,
-            }}
-          >
-            💰 Finanzas & Administración
-          </Typography>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              fontFamily: '"Neris", sans-serif',
-              fontWeight: 300, // Light
-              opacity: 0.9,
-            }}
-          >
-            Métricas financieras, compliance y herramientas de simulación
-          </Typography>
-        </Paper>
-      </motion.div>
+        Finanzas & Administración
+      </Typography>
 
       <Grid container spacing={4}>
         {/* Gráfico Comparativo Ingresos vs Egresos */}
         <Grid item xs={12} lg={8}>
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+          <Paper
+            sx={{
+              p: 4,
+              backgroundColor: colors.surface,
+              border: `1px solid #e2e8f0`,
+              borderRadius: 2,
+              boxShadow: 'none',
+              height: '100%',
+            }}
           >
-            <Paper
-              sx={{
-                p: 4,
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: 4,
-                border: `1px solid ${alpha(ceoBrandColors.primary, 0.2)}`,
-                height: '100%',
-              }}
-            >
-              <Box display="flex" alignItems="center" justifyContent="between" mb={3}>
-                <Box display="flex" alignItems="center" gap={2}>
-                  <TrendingUp sx={{ color: ceoBrandColors.primary, fontSize: 32 }} />
-                  <Box>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600, // Semibold
-                        color: ceoBrandColors.text,
-                      }}
-                    >
-                      📊 Ingresos vs Egresos (6 meses)
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 300, // Light
-                        color: alpha(ceoBrandColors.text, 0.6),
-                      }}
-                    >
-                      Análisis comparativo de flujo de caja mensual
-                    </Typography>
-                  </Box>
-                </Box>
-                
-                <Button
-                  variant="outlined"
-                  startIcon={<Download />}
-                  sx={{
-                    borderColor: ceoBrandColors.primary,
-                    color: ceoBrandColors.primary,
-                    fontFamily: '"Neris", sans-serif',
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+              <Box>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
                     fontWeight: 600,
+                    color: colors.text,
                   }}
                 >
-                  Exportar
-                </Button>
+                  Ingresos vs Egresos (6 meses)
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 400,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  Análisis comparativo de flujo de caja mensual
+                </Typography>
               </Box>
+              
+              <Button
+                variant="outlined"
+                startIcon={<Download />}
+                sx={{
+                  borderColor: colors.primary,
+                  color: colors.primary,
+                  fontFamily: '"Inter", sans-serif',
+                  fontWeight: 500,
+                  textTransform: 'none',
+                }}
+              >
+                Exportar
+              </Button>
+            </Box>
 
-              <Box sx={{ height: 350 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={financialComparisonData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={alpha(ceoBrandColors.text, 0.1)} />
-                    <XAxis 
-                      dataKey="mes" 
-                      stroke={alpha(ceoBrandColors.text, 0.6)}
-                      fontSize={12}
-                      fontFamily='"Neris", sans-serif'
-                    />
-                    <YAxis 
-                      stroke={alpha(ceoBrandColors.text, 0.6)}
-                      fontSize={12}
-                      fontFamily='"Neris", sans-serif'
-                    />
-                    <RechartsTooltip 
-                      contentStyle={{
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        border: `1px solid ${alpha(ceoBrandColors.primary, 0.2)}`,
-                        borderRadius: 8,
-                        fontFamily: '"Neris", sans-serif',
-                      }}
-                    />
-                    <Bar 
-                      dataKey="ingresos" 
-                      fill={ceoBrandColors.primary}
-                      name="Ingresos"
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar 
-                      dataKey="egresos" 
-                      fill={ceoBrandColors.accentPink}
-                      name="Egresos"
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="ingresos" 
-                      stroke={ceoBrandColors.accentBlue}
-                      strokeWidth={3}
-                      dot={{ fill: ceoBrandColors.accentBlue, r: 4 }}
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </Box>
-            </Paper>
-          </motion.div>
+            <Box sx={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={financialComparisonData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis 
+                    dataKey="mes" 
+                    stroke={colors.textSecondary}
+                    fontSize={12}
+                    fontFamily='"Inter", sans-serif'
+                  />
+                  <YAxis 
+                    stroke={colors.textSecondary}
+                    fontSize={12}
+                    fontFamily='"Inter", sans-serif'
+                  />
+                  <RechartsTooltip 
+                    contentStyle={{
+                      backgroundColor: colors.surface,
+                      border: `1px solid #e2e8f0`,
+                      borderRadius: 8,
+                      fontFamily: '"Inter", sans-serif',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    }}
+                  />
+                  <Bar 
+                    dataKey="ingresos" 
+                    fill={colors.primary}
+                    name="Ingresos"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar 
+                    dataKey="egresos" 
+                    fill={colors.error}
+                    name="Egresos"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </Box>
+          </Paper>
         </Grid>
 
         {/* Simulador de Tarifas */}
         <Grid item xs={12} lg={4}>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+          <Paper
+            sx={{
+              p: 4,
+              backgroundColor: colors.surface,
+              border: `1px solid #e2e8f0`,
+              borderRadius: 2,
+              boxShadow: 'none',
+              height: '100%',
+            }}
           >
-            <Paper
-              sx={{
-                p: 4,
-                background: `linear-gradient(135deg, ${alpha(ceoBrandColors.accentBlue, 0.1)} 0%, ${alpha(ceoBrandColors.secondary, 0.1)} 100%)`,
-                backdropFilter: 'blur(10px)',
-                borderRadius: 4,
-                border: `1px solid ${alpha(ceoBrandColors.accentBlue, 0.2)}`,
-                height: '100%',
-              }}
-            >
-              <Box display="flex" alignItems="center" gap={2} mb={3}>
-                <Calculate sx={{ color: ceoBrandColors.accentBlue, fontSize: 32 }} />
-                <Box>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: ceoBrandColors.text,
-                    }}
-                  >
-                    🧮 Simulador de Tarifas
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.6),
-                    }}
-                  >
-                    ¿Qué pasa si aumento tarifas?
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Box sx={{ mb: 3 }}>
+            <Box display="flex" alignItems="center" gap={2} mb={3}>
+              <Calculate sx={{ color: colors.primary, fontSize: 24 }} />
+              <Box>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 600,
+                    color: colors.text,
+                  }}
+                >
+                  Simulador de Tarifas
+                </Typography>
                 <Typography 
                   variant="body2" 
                   sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 600, // Semibold
-                    color: ceoBrandColors.text,
-                    mb: 2,
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 400,
+                    color: colors.textSecondary,
                   }}
                 >
-                  Incremento de tarifas: {tarifaSimulacion}%
+                  ¿Qué pasa si aumento tarifas?
                 </Typography>
-                
-                <Slider
-                  value={tarifaSimulacion}
-                  onChange={(_, newValue) => setTarifaSimulacion(newValue as number)}
-                  min={0}
-                  max={20}
-                  step={0.5}
-                  marks={[
-                    { value: 0, label: '0%' },
-                    { value: 5, label: '5%' },
-                    { value: 10, label: '10%' },
-                    { value: 15, label: '15%' },
-                    { value: 20, label: '20%' },
-                  ]}
-                  sx={{
-                    color: ceoBrandColors.accentBlue,
-                    '& .MuiSlider-markLabel': {
-                      fontFamily: '"Neris", sans-serif',
-                      fontSize: '0.7rem',
-                    },
-                  }}
-                />
               </Box>
+            </Box>
 
-              <Box sx={{ mb: 3 }}>
-                <Box display="flex" justifyContent="between" alignItems="center" mb={1}>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.7),
-                    }}
-                  >
-                    Ingreso actual mensual:
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: ceoBrandColors.text,
-                    }}
-                  >
-                    $55,000
-                  </Typography>
-                </Box>
-                
-                <Box display="flex" justifyContent="between" alignItems="center" mb={1}>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.7),
-                    }}
-                  >
-                    Nuevo ingreso mensual:
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: ceoBrandColors.accentBlue,
-                    }}
-                  >
-                    ${impactoTarifa.nuevoIngreso.toLocaleString()}
-                  </Typography>
-                </Box>
-                
-                <Box display="flex" justifyContent="between" alignItems="center" mb={1}>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.7),
-                    }}
-                  >
-                    Incremento mensual:
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: '#10b981',
-                    }}
-                  >
-                    +${impactoTarifa.incrementoMensual.toLocaleString()}
-                  </Typography>
-                </Box>
-                
-                <Box display="flex" justifyContent="between" alignItems="center">
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.7),
-                    }}
-                  >
-                    Impacto anual:
-                  </Typography>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: '#10b981',
-                    }}
-                  >
-                    +${impactoTarifa.incrementoAnual.toLocaleString()}
-                  </Typography>
-                </Box>
-              </Box>
-
+            <Box sx={{ mb: 3 }}>
               <Typography 
-                variant="caption" 
+                variant="body2" 
                 sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 300, // Light
-                  color: alpha(ceoBrandColors.text, 0.6),
-                  fontStyle: 'italic',
+                  fontFamily: '"Inter", sans-serif',
+                  fontWeight: 500,
+                  color: colors.text,
+                  mb: 2,
                 }}
               >
-                💡 Considera el impacto en la demanda y competitividad antes de implementar cambios
+                Incremento de tarifas: {tarifaSimulacion}%
               </Typography>
-            </Paper>
-          </motion.div>
+              
+              <Slider
+                value={tarifaSimulacion}
+                onChange={(_, newValue) => setTarifaSimulacion(newValue as number)}
+                min={0}
+                max={20}
+                step={0.5}
+                marks={[
+                  { value: 0, label: '0%' },
+                  { value: 5, label: '5%' },
+                  { value: 10, label: '10%' },
+                  { value: 15, label: '15%' },
+                  { value: 20, label: '20%' },
+                ]}
+                sx={{
+                  color: colors.primary,
+                  '& .MuiSlider-markLabel': {
+                    fontFamily: '"Inter", sans-serif',
+                    fontSize: '0.7rem',
+                  },
+                }}
+              />
+            </Box>
+
+            <Box sx={{ mb: 3 }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 400,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  Ingreso actual mensual:
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 600,
+                    color: colors.text,
+                  }}
+                >
+                  $55,000
+                </Typography>
+              </Box>
+              
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 400,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  Nuevo ingreso mensual:
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 600,
+                    color: colors.primary,
+                  }}
+                >
+                  ${impactoTarifa.nuevoIngreso.toLocaleString()}
+                </Typography>
+              </Box>
+              
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 400,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  Incremento mensual:
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 600,
+                    color: colors.success,
+                  }}
+                >
+                  +${impactoTarifa.incrementoMensual.toLocaleString()}
+                </Typography>
+              </Box>
+              
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 400,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  Impacto anual:
+                </Typography>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 600,
+                    color: colors.success,
+                  }}
+                >
+                  +${impactoTarifa.incrementoAnual.toLocaleString()}
+                </Typography>
+              </Box>
+            </Box>
+
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 400,
+                color: colors.textSecondary,
+                fontStyle: 'italic',
+              }}
+            >
+              Considera el impacto en la demanda y competitividad antes de implementar cambios
+            </Typography>
+          </Paper>
         </Grid>
 
         {/* Rentabilidad por Terapeuta */}
         <Grid item xs={12} lg={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+          <Paper
+            sx={{
+              p: 4,
+              backgroundColor: colors.surface,
+              border: `1px solid #e2e8f0`,
+              borderRadius: 2,
+              boxShadow: 'none',
+              height: '100%',
+            }}
           >
-            <Paper
-              sx={{
-                p: 4,
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: 4,
-                border: `1px solid ${alpha(ceoBrandColors.secondary, 0.2)}`,
-                height: '100%',
-              }}
-            >
-              <Box display="flex" alignItems="center" gap={2} mb={3}>
-                <Assessment sx={{ color: ceoBrandColors.secondary, fontSize: 32 }} />
-                <Box>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: ceoBrandColors.text,
-                    }}
-                  >
-                    👥 Rentabilidad por Terapeuta
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.6),
-                    }}
-                  >
-                    Mapa de calor de rendimiento individual
-                  </Typography>
-                </Box>
+            <Box display="flex" alignItems="center" gap={2} mb={3}>
+              <TrendingUp sx={{ color: colors.primary, fontSize: 24 }} />
+              <Box>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 600,
+                    color: colors.text,
+                  }}
+                >
+                  Rentabilidad por Terapeuta
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 400,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  Rendimiento individual
+                </Typography>
               </Box>
+            </Box>
 
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={ceoMetrics.profitabilityData} layout="horizontal">
-                    <CartesianGrid strokeDasharray="3 3" stroke={alpha(ceoBrandColors.text, 0.1)} />
-                    <XAxis 
-                      type="number"
-                      stroke={alpha(ceoBrandColors.text, 0.6)}
-                      fontSize={12}
-                      fontFamily='"Neris", sans-serif'
-                    />
-                    <YAxis 
-                      type="category"
-                      dataKey="nombre"
-                      stroke={alpha(ceoBrandColors.text, 0.6)}
-                      fontSize={12}
-                      fontFamily='"Neris", sans-serif'
-                      width={100}
-                    />
-                    <RechartsTooltip 
-                      contentStyle={{
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        border: `1px solid ${alpha(ceoBrandColors.secondary, 0.2)}`,
-                        borderRadius: 8,
-                        fontFamily: '"Neris", sans-serif',
-                      }}
-                    />
-                    <Bar 
-                      dataKey="rentabilidad" 
-                      fill={ceoBrandColors.secondary}
-                      radius={[0, 4, 4, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Box>
-            </Paper>
-          </motion.div>
+            <Box sx={{ height: 250 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={ceoMetrics.profitabilityData} layout="horizontal">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis 
+                    type="number"
+                    stroke={colors.textSecondary}
+                    fontSize={12}
+                    fontFamily='"Inter", sans-serif'
+                  />
+                  <YAxis 
+                    type="category"
+                    dataKey="nombre"
+                    stroke={colors.textSecondary}
+                    fontSize={12}
+                    fontFamily='"Inter", sans-serif'
+                    width={100}
+                  />
+                  <RechartsTooltip 
+                    contentStyle={{
+                      backgroundColor: colors.surface,
+                      border: `1px solid #e2e8f0`,
+                      borderRadius: 8,
+                      fontFamily: '"Inter", sans-serif',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    }}
+                  />
+                  <Bar 
+                    dataKey="rentabilidad" 
+                    fill={colors.primary}
+                    radius={[0, 4, 4, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          </Paper>
         </Grid>
 
         {/* Backlog Cuentas por Cobrar */}
         <Grid item xs={12} lg={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-          >
-            <Paper
-              sx={{
-                p: 4,
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: 4,
-                border: `1px solid ${alpha('#f59e0b', 0.2)}`,
-                height: '100%',
-              }}
-            >
-              <Box display="flex" alignItems="center" gap={2} mb={3}>
-                <Receipt sx={{ color: '#f59e0b', fontSize: 32 }} />
-                <Box>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: ceoBrandColors.text,
-                    }}
-                  >
-                    📋 Backlog Cuentas por Cobrar
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.6),
-                    }}
-                  >
-                    Seguimiento de pagos pendientes
-                  </Typography>
-                </Box>
-              </Box>
-
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                        Cliente
-                      </TableCell>
-                      <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                        Monto
-                      </TableCell>
-                      <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                        Días
-                      </TableCell>
-                      <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                        Estado
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {cuentasPorCobrar.map((cuenta, index) => (
-                      <TableRow key={index}>
-                        <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300 }}>
-                          {cuenta.cliente}
-                        </TableCell>
-                        <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                          ${cuenta.monto.toLocaleString()}
-                        </TableCell>
-                        <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300 }}>
-                          {cuenta.dias}
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={cuenta.estado}
-                            size="small"
-                            sx={{
-                              background: getEstadoColor(cuenta.estado),
-                              color: 'white',
-                              fontFamily: '"Neris", sans-serif',
-                              fontWeight: 600,
-                            }}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-
-              <Box sx={{ mt: 2, p: 2, background: alpha('#f59e0b', 0.1), borderRadius: 2 }}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 600, // Semibold
-                    color: ceoBrandColors.text,
-                  }}
-                >
-                  Total pendiente: ${cuentasPorCobrar.reduce((sum, cuenta) => sum + cuenta.monto, 0).toLocaleString()}
-                </Typography>
-              </Box>
-            </Paper>
-          </motion.div>
-        </Grid>
-      </Grid>
-
-      {/* Cumplimiento Legal y Daily CEO Brief */}
-      <Grid container spacing={4} sx={{ mt: 2 }}>
-        {/* Cumplimiento Legal */}
-        <Grid item xs={12} lg={8}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-          >
-            <Paper
-              sx={{
-                p: 4,
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: 4,
-                border: `1px solid ${alpha(ceoBrandColors.primary, 0.2)}`,
-              }}
-            >
-              <Box display="flex" alignItems="center" gap={2} mb={3}>
-                <CheckCircle sx={{ color: ceoBrandColors.primary, fontSize: 32 }} />
-                <Box>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: ceoBrandColors.text,
-                    }}
-                  >
-                    ⚖️ Cumplimiento Legal & Compliance
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.6),
-                    }}
-                      >
-                    Certificados, MSP, auditorías y políticas vigentes
-                  </Typography>
-                </Box>
-              </Box>
-
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                        Item de Compliance
-                      </TableCell>
-                      <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                        Estado
-                      </TableCell>
-                      <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                        Vencimiento
-                      </TableCell>
-                      <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                        Criticidad
-                      </TableCell>
-                      <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 600 }}>
-                        Acciones
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {complianceItems.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300 }}>
-                          {item.item}
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={item.estado}
-                            size="small"
-                            sx={{
-                              background: getEstadoColor(item.estado),
-                              color: 'white',
-                              fontFamily: '"Neris", sans-serif',
-                              fontWeight: 600,
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell sx={{ fontFamily: '"Neris", sans-serif', fontWeight: 300 }}>
-                          {item.vencimiento}
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={item.criticidad}
-                            size="small"
-                            variant="outlined"
-                            sx={{
-                              borderColor: getCriticidadColor(item.criticidad),
-                              color: getCriticidadColor(item.criticidad),
-                              fontFamily: '"Neris", sans-serif',
-                              fontWeight: 600,
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Tooltip title="Actualizar estado">
-                            <IconButton size="small">
-                              <Refresh sx={{ fontSize: 18, color: ceoBrandColors.primary }} />
-                            </IconButton>
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-
-              {/* Compliance Summary */}
-              <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-                <Box 
-                  sx={{ 
-                    p: 2, 
-                    background: alpha('#10b981', 0.1), 
-                    borderRadius: 2,
-                    flex: 1,
-                  }}
-                >
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: '#10b981',
-                    }}
-                  >
-                    3
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.7),
-                    }}
-                  >
-                    Vigentes
-                  </Typography>
-                </Box>
-                
-                <Box 
-                  sx={{ 
-                    p: 2, 
-                    background: alpha('#f59e0b', 0.1), 
-                    borderRadius: 2,
-                    flex: 1,
-                  }}
-                >
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: '#f59e0b',
-                    }}
-                  >
-                    1
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.7),
-                    }}
-                  >
-                    Pendientes
-                  </Typography>
-                </Box>
-                
-                <Box 
-                  sx={{ 
-                    p: 2, 
-                    background: alpha('#ef4444', 0.1), 
-                    borderRadius: 2,
-                    flex: 1,
-                  }}
-                >
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: '#ef4444',
-                    }}
-                  >
-                    0
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.7),
-                    }}
-                  >
-                    Vencidos
-                  </Typography>
-                </Box>
-              </Box>
-            </Paper>
-          </motion.div>
-        </Grid>
-
-        {/* Daily CEO Brief */}
-        <Grid item xs={12} lg={4}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-          >
-            <Paper
-              sx={{
-                p: 4,
-                background: `linear-gradient(135deg, ${alpha(ceoBrandColors.primary, 0.1)} 0%, ${alpha(ceoBrandColors.secondary, 0.1)} 100%)`,
-                backdropFilter: 'blur(10px)',
-                borderRadius: 4,
-                border: `1px solid ${alpha(ceoBrandColors.primary, 0.2)}`,
-                height: '100%',
-              }}
-            >
-              <Box display="flex" alignItems="center" gap={2} mb={3}>
-                <Download sx={{ color: ceoBrandColors.primary, fontSize: 32 }} />
-                <Box>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: ceoBrandColors.text,
-                    }}
-                  >
-                    📄 Daily CEO Brief
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 300, // Light
-                      color: alpha(ceoBrandColors.text, 0.6),
-                    }}
-                  >
-                    Resumen ejecutivo diario
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Box sx={{ mb: 3 }}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 300, // Light
-                    color: alpha(ceoBrandColors.text, 0.8),
-                    mb: 2,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  Genera un reporte PDF completo con todas las métricas, alertas críticas, insights de IA y recomendaciones estratégicas del día.
-                </Typography>
-
-                <Box sx={{ mb: 2 }}>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600, // Semibold
-                      color: ceoBrandColors.text,
-                      display: 'block',
-                      mb: 1,
-                    }}
-                  >
-                    Incluye:
-                  </Typography>
-                  <Box component="ul" sx={{ pl: 2, m: 0 }}>
-                    <Typography 
-                      component="li" 
-                      variant="caption" 
-                      sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 300, // Light
-                        color: alpha(ceoBrandColors.text, 0.7),
-                        mb: 0.5,
-                      }}
-                    >
-                      KPIs y métricas financieras
-                    </Typography>
-                    <Typography 
-                      component="li" 
-                      variant="caption" 
-                      sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 300, // Light
-                        color: alpha(ceoBrandColors.text, 0.7),
-                        mb: 0.5,
-                      }}
-                    >
-                      Alertas críticas y riesgos
-                    </Typography>
-                    <Typography 
-                      component="li" 
-                      variant="caption" 
-                      sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 300, // Light
-                        color: alpha(ceoBrandColors.text, 0.7),
-                        mb: 0.5,
-                      }}
-                    >
-                      Insights de IA y recomendaciones
-                    </Typography>
-                    <Typography 
-                      component="li" 
-                      variant="caption" 
-                      sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 300, // Light
-                        color: alpha(ceoBrandColors.text, 0.7),
-                      }}
-                    >
-                      Estado de compliance
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-
-              <Button
-                variant="contained"
-                fullWidth
-                startIcon={<Download />}
-                sx={{
-                  background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
-                  color: 'white',
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 600, // Semibold
-                  py: 1.5,
-                  borderRadius: 3,
-                  '&:hover': {
-                    background: `linear-gradient(135deg, ${ceoBrandColors.secondary} 0%, ${ceoBrandColors.primary} 100%)`,
-                    transform: 'translateY(-2px)',
-                    boxShadow: `0 8px 25px ${alpha(ceoBrandColors.primary, 0.3)}`,
-                  },
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
-              >
-                Descargar CEO Brief
-              </Button>
-
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 300, // Light
-                  color: alpha(ceoBrandColors.text, 0.6),
-                  display: 'block',
-                  textAlign: 'center',
-                  mt: 2,
-                }}
-              >
-                Último reporte: Hoy 08:00 AM
-              </Typography>
-            </Paper>
-          </motion.div>
-        </Grid>
-      </Grid>
-
-      {/* Widget de Evolución */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.8 }}
-      >
-        <Paper
-          sx={{
-            p: 4,
-            mt: 4,
-            background: `linear-gradient(135deg, ${alpha(ceoBrandColors.secondary, 0.1)} 0%, ${alpha(ceoBrandColors.accentBlue, 0.1)} 100%)`,
-            backdropFilter: 'blur(10px)',
-            borderRadius: 4,
-            border: `1px solid ${alpha(ceoBrandColors.secondary, 0.2)}`,
-          }}
-        >
-          <Box display="flex" alignItems="center" gap={2} mb={2}>
-            <TrendingUp sx={{ color: ceoBrandColors.secondary, fontSize: 32 }} />
-            <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 600, // Semibold
-                  color: ceoBrandColors.text,
-                }}
-              >
-                📈 Insight de Evolución Financiera
-              </Typography>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 300, // Light
-                  color: alpha(ceoBrandColors.text, 0.6),
-                }}
-              >
-                Widget inteligente con análisis de tendencias
-              </Typography>
-            </Box>
-          </Box>
-
-          <Box 
-            sx={{ 
-              p: 3, 
-              background: 'rgba(255, 255, 255, 0.7)',
-              borderRadius: 3,
-              border: `1px solid ${alpha(ceoBrandColors.secondary, 0.2)}`,
+          <Paper
+            sx={{
+              p: 4,
+              backgroundColor: colors.surface,
+              border: `1px solid #e2e8f0`,
+              borderRadius: 2,
+              boxShadow: 'none',
+              height: '100%',
             }}
           >
             <Typography 
-              variant="body1" 
+              variant="h6" 
               sx={{ 
-                fontFamily: '"Neris", sans-serif',
-                fontWeight: 600, // Semibold
-                color: ceoBrandColors.text,
-                mb: 1,
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 600,
+                color: colors.text,
+                mb: 3,
               }}
             >
-              🎉 Este mes se mejoró un 12% la rentabilidad frente al anterior
+              Cuentas por Cobrar
+            </Typography>
+
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 600, color: colors.text }}>
+                      Cliente
+                    </TableCell>
+                    <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 600, color: colors.text }}>
+                      Monto
+                    </TableCell>
+                    <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 600, color: colors.text }}>
+                      Días
+                    </TableCell>
+                    <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 600, color: colors.text }}>
+                      Estado
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {cuentasPorCobrar.map((cuenta, index) => (
+                    <TableRow key={index}>
+                      <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 400, color: colors.text }}>
+                        {cuenta.cliente}
+                      </TableCell>
+                      <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 600, color: colors.text }}>
+                        ${cuenta.monto.toLocaleString()}
+                      </TableCell>
+                      <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 400, color: colors.text }}>
+                        {cuenta.dias}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={cuenta.estado}
+                          size="small"
+                          sx={{
+                            backgroundColor: getEstadoColor(cuenta.estado),
+                            color: 'white',
+                            fontFamily: '"Inter", sans-serif',
+                            fontWeight: 500,
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            <Box sx={{ mt: 2, p: 2, backgroundColor: '#f8fafc', borderRadius: 2 }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  fontFamily: '"Inter", sans-serif',
+                  fontWeight: 600,
+                  color: colors.text,
+                }}
+              >
+                Total pendiente: ${cuentasPorCobrar.reduce((sum, cuenta) => sum + cuenta.monto, 0).toLocaleString()}
+              </Typography>
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Cumplimiento Legal */}
+      <Paper
+        sx={{
+          p: 4,
+          mt: 4,
+          backgroundColor: colors.surface,
+          border: `1px solid #e2e8f0`,
+          borderRadius: 2,
+          boxShadow: 'none',
+        }}
+      >
+        <Box display="flex" alignItems="center" gap={2} mb={3}>
+          <CheckCircle sx={{ color: colors.primary, fontSize: 24 }} />
+          <Box>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 600,
+                color: colors.text,
+              }}
+            >
+              Cumplimiento Legal & Compliance
             </Typography>
             <Typography 
               variant="body2" 
               sx={{ 
-                fontFamily: '"Neris", sans-serif',
-                fontWeight: 300, // Light
-                color: alpha(ceoBrandColors.text, 0.8),
-                lineHeight: 1.6,
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 400,
+                color: colors.textSecondary,
               }}
             >
-              El incremento se debe principalmente a la optimización de horarios (reducción 8% en cancelaciones) 
-              y el aumento en la adherencia de terapias grupales (+15%). La implementación de recordatorios 
-              automáticos ha sido clave en este resultado.
+              Certificados, auditorías y políticas vigentes
             </Typography>
           </Box>
-        </Paper>
-      </motion.div>
+        </Box>
+
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 600, color: colors.text }}>
+                  Item de Compliance
+                </TableCell>
+                <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 600, color: colors.text }}>
+                  Estado
+                </TableCell>
+                <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 600, color: colors.text }}>
+                  Vencimiento
+                </TableCell>
+                <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 600, color: colors.text }}>
+                  Criticidad
+                </TableCell>
+                <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 600, color: colors.text }}>
+                  Acciones
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {complianceItems.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 400, color: colors.text }}>
+                    {item.item}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={item.estado}
+                      size="small"
+                      sx={{
+                        backgroundColor: getEstadoColor(item.estado),
+                        color: 'white',
+                        fontFamily: '"Inter", sans-serif',
+                        fontWeight: 500,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 400, color: colors.text }}>
+                    {item.vencimiento}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={item.criticidad}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        borderColor: getCriticidadColor(item.criticidad),
+                        color: getCriticidadColor(item.criticidad),
+                        fontFamily: '"Inter", sans-serif',
+                        fontWeight: 500,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip title="Actualizar estado">
+                      <IconButton size="small">
+                        <Refresh sx={{ fontSize: 18, color: colors.primary }} />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Compliance Summary */}
+        <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+          <Box 
+            sx={{ 
+              p: 2, 
+              backgroundColor: `${colors.success}15`, 
+              borderRadius: 2,
+              flex: 1,
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 600,
+                color: colors.success,
+              }}
+            >
+              3
+            </Typography>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 400,
+                color: colors.textSecondary,
+              }}
+            >
+              Vigentes
+            </Typography>
+          </Box>
+          
+          <Box 
+            sx={{ 
+              p: 2, 
+              backgroundColor: `${colors.warning}15`, 
+              borderRadius: 2,
+              flex: 1,
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 600,
+                color: colors.warning,
+              }}
+            >
+              1
+            </Typography>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 400,
+                color: colors.textSecondary,
+              }}
+            >
+              Pendientes
+            </Typography>
+          </Box>
+          
+          <Box 
+            sx={{ 
+              p: 2, 
+              backgroundColor: `${colors.error}15`, 
+              borderRadius: 2,
+              flex: 1,
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 600,
+                color: colors.error,
+              }}
+            >
+              0
+            </Typography>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 400,
+                color: colors.textSecondary,
+              }}
+            >
+              Vencidos
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Daily CEO Brief */}
+      <Paper
+        sx={{
+          p: 4,
+          mt: 4,
+          backgroundColor: colors.surface,
+          border: `1px solid #e2e8f0`,
+          borderRadius: 2,
+          boxShadow: 'none',
+        }}
+      >
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+          <Box>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 600,
+                color: colors.text,
+              }}
+            >
+              Daily CEO Brief
+            </Typography>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 400,
+                color: colors.textSecondary,
+              }}
+            >
+              Resumen ejecutivo diario completo
+            </Typography>
+          </Box>
+
+          <Button
+            variant="contained"
+            startIcon={<Download />}
+            sx={{
+              backgroundColor: colors.primary,
+              color: 'white',
+              fontFamily: '"Inter", sans-serif',
+              fontWeight: 500,
+              textTransform: 'none',
+              '&:hover': {
+                backgroundColor: colors.primary,
+                opacity: 0.9,
+              },
+            }}
+          >
+            Descargar CEO Brief
+          </Button>
+        </Box>
+
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontFamily: '"Inter", sans-serif',
+            fontWeight: 400,
+            color: colors.textSecondary,
+            lineHeight: 1.6,
+          }}
+        >
+          Genera un reporte PDF completo con todas las métricas, alertas críticas, insights de IA y recomendaciones estratégicas del día.
+          Incluye KPIs financieros, alertas de riesgo, estado de compliance y análisis de tendencias.
+        </Typography>
+      </Paper>
     </Box>
   );
 }
