@@ -29,6 +29,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import AdminRoute from '@/components/auth/AdminRoute';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useCEOMetrics } from '@/hooks/useCEOMetrics';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -136,15 +137,19 @@ function CEODashboardContent() {
     <Box 
       sx={{ 
         minHeight: '100vh',
-        background: ceoBrandColors.background,
-        fontFamily: '"Neris", sans-serif',
+        background: theme.palette.mode === 'dark'
+          ? 'linear-gradient(135deg, #0F0F1A 0%, #1A1B2E 100%)'
+          : 'linear-gradient(135deg, #F2EDEA 0%, #F8F6F4 100%)',
+        fontFamily: '"Outfit", sans-serif',
       }}
     >
       {/* Header / Topbar */}
       <Paper 
         elevation={0}
         sx={{
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: theme.palette.mode === 'dark'
+            ? 'rgba(26, 27, 46, 0.95)'
+            : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(20px)',
           borderBottom: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
           position: 'sticky',
@@ -153,46 +158,64 @@ function CEODashboardContent() {
         }}
       >
         <Container maxWidth="xl">
-          <Box sx={{ py: 3 }}>
+          <Box sx={{ py: 4 }}>
             {/* Top Row - Logo, Title, Date, Actions */}
-            <Grid container spacing={3} alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+            <Grid container spacing={3} alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
               <Grid item>
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" alignItems="center" gap={3}>
                   <Box
                     sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 3,
+                      width: 56,
+                      height: 56,
+                      borderRadius: 4,
                       background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: 'white',
+                      boxShadow: '0 8px 32px rgba(93, 79, 176, 0.3)',
+                      position: 'relative',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: -2,
+                        left: -2,
+                        right: -2,
+                        bottom: -2,
+                        background: 'linear-gradient(135deg, #5D4FB0, #A593F3, #A5CAE6)',
+                        borderRadius: 5,
+                        zIndex: -1,
+                        opacity: 0.3,
+                      },
                     }}
                   >
-                    <Business sx={{ fontSize: 24 }} />
+                    <Business sx={{ fontSize: 28 }} />
                   </Box>
                   <Box>
                     <Typography 
-                      variant="h4" 
+                      variant="h3" 
                       sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600,
-                        color: ceoBrandColors.text,
+                        fontFamily: '"Outfit", sans-serif',
+                        fontWeight: 800,
+                        background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
                         lineHeight: 1.2,
+                        mb: 0.5,
                       }}
                     >
                       Panel Ejecutivo
                     </Typography>
                     <Typography 
-                      variant="body2" 
+                      variant="body1" 
                       sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 300,
-                        color: alpha(ceoBrandColors.text, 0.7),
+                        fontFamily: '"Inter", sans-serif',
+                        fontWeight: 500,
+                        color: 'text.secondary',
                       }}
                     >
-                      Centro Psicológico Digital
+                      Centro Psicológico Digital • Dashboard CEO
                     </Typography>
                   </Box>
                 </Box>
@@ -205,9 +228,9 @@ function CEODashboardContent() {
                     <Typography 
                       variant="subtitle1" 
                       sx={{ 
-                        fontFamily: '"Neris", sans-serif',
+                        fontFamily: '"Outfit", sans-serif',
                         fontWeight: 600,
-                        color: ceoBrandColors.text,
+                        color: 'text.primary',
                       }}
                     >
                       {local}
@@ -215,9 +238,9 @@ function CEODashboardContent() {
                     <Typography 
                       variant="caption" 
                       sx={{ 
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 300,
-                        color: alpha(ceoBrandColors.text, 0.6),
+                        fontFamily: '"Inter", sans-serif',
+                        fontWeight: 500,
+                        color: 'text.secondary',
                       }}
                     >
                       {utc}
@@ -225,7 +248,7 @@ function CEODashboardContent() {
                   </Box>
 
                   {/* Actions */}
-                  <Box display="flex" alignItems="center" gap={1}>
+                  <Box display="flex" alignItems="center" gap={2}>
                     <Tooltip title="Actualizar datos">
                       <IconButton
                         onClick={handleRefreshData}
@@ -233,7 +256,9 @@ function CEODashboardContent() {
                           background: alpha(ceoBrandColors.primary, 0.1),
                           '&:hover': {
                             background: alpha(ceoBrandColors.primary, 0.2),
+                            transform: 'scale(1.1)',
                           },
+                          transition: 'all 0.3s ease',
                         }}
                       >
                         <Refresh sx={{ color: ceoBrandColors.primary }} />
@@ -247,7 +272,9 @@ function CEODashboardContent() {
                           background: alpha(ceoBrandColors.accentBlue, 0.1),
                           '&:hover': {
                             background: alpha(ceoBrandColors.accentBlue, 0.2),
+                            transform: 'scale(1.1)',
                           },
+                          transition: 'all 0.3s ease',
                         }}
                       >
                         <Download sx={{ color: ceoBrandColors.accentBlue }} />
@@ -259,8 +286,13 @@ function CEODashboardContent() {
                       sx={{
                         background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
                         color: 'white',
-                        fontFamily: '"Neris", sans-serif',
-                        fontWeight: 600,
+                        fontFamily: '"Outfit", sans-serif',
+                        fontWeight: 700,
+                        fontSize: '0.85rem',
+                        height: 36,
+                        '& .MuiChip-label': {
+                          px: 2,
+                        },
                       }}
                     />
                   </Box>
@@ -276,8 +308,8 @@ function CEODashboardContent() {
                 sx={{
                   '& .MuiTabs-indicator': {
                     background: `linear-gradient(90deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
-                    height: 3,
-                    borderRadius: '3px 3px 0 0',
+                    height: 4,
+                    borderRadius: '4px 4px 0 0',
                   },
                 }}
               >
@@ -291,9 +323,10 @@ function CEODashboardContent() {
                         <Typography 
                           variant="subtitle1" 
                           sx={{ 
-                            fontFamily: '"Neris", sans-serif',
-                            fontWeight: 600,
+                            fontFamily: '"Outfit", sans-serif',
+                            fontWeight: 700,
                             textTransform: 'none',
+                            fontSize: '0.95rem',
                           }}
                         >
                           {tab.label}
@@ -301,10 +334,11 @@ function CEODashboardContent() {
                         <Typography 
                           variant="caption" 
                           sx={{ 
-                            fontFamily: '"Neris", sans-serif',
-                            fontWeight: 300,
-                            opacity: 0.7,
+                            fontFamily: '"Inter", sans-serif',
+                            fontWeight: 500,
+                            opacity: 0.8,
                             display: 'block',
+                            fontSize: '0.75rem',
                           }}
                         >
                           {tab.description}
@@ -312,9 +346,9 @@ function CEODashboardContent() {
                       </Box>
                     }
                     sx={{
-                      minHeight: 80,
+                      minHeight: 88,
                       textTransform: 'none',
-                      color: alpha(ceoBrandColors.text, 0.7),
+                      color: 'text.secondary',
                       '&.Mui-selected': {
                         color: ceoBrandColors.primary,
                       },
@@ -322,6 +356,7 @@ function CEODashboardContent() {
                         background: alpha(ceoBrandColors.primary, 0.05),
                       },
                       px: 4,
+                      transition: 'all 0.3s ease',
                     }}
                   />
                 ))}
@@ -352,7 +387,9 @@ function CEODashboardContent() {
 export default function CEODashboardPage() {
   return (
     <AdminRoute fallbackPath="/dashboard">
-      <CEODashboardContent />
+      <DashboardLayout>
+        <CEODashboardContent />
+      </DashboardLayout>
     </AdminRoute>
   );
 }

@@ -14,6 +14,7 @@ import {
   alpha,
   Breadcrumbs,
   Link,
+  Stack,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -23,14 +24,14 @@ import {
   CheckCircle,
   Warning,
   Error,
+  Gavel,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import AdminRoute from '@/components/auth/AdminRoute';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useCEOMetrics } from '@/hooks/useCEOMetrics';
 import ComplianceGauge from '@/components/ceo/compliance/ComplianceGauge';
-import ComplianceChecklist from '@/components/ceo/compliance/ComplianceChecklist';
-import ExpirationAlerts from '@/components/ceo/compliance/ExpirationAlerts';
 
 // CEO Brand Colors
 const ceoBrandColors = {
@@ -54,15 +55,19 @@ function ComplianceContent() {
     <Box 
       sx={{ 
         minHeight: '100vh',
-        background: ceoBrandColors.background,
-        fontFamily: '"Neris", sans-serif',
+        background: theme.palette.mode === 'dark'
+          ? 'linear-gradient(135deg, #0F0F1A 0%, #1A1B2E 100%)'
+          : 'linear-gradient(135deg, #F2EDEA 0%, #F8F6F4 100%)',
+        fontFamily: '"Outfit", sans-serif',
       }}
     >
       {/* Header */}
       <Paper 
         elevation={0}
-        sx={{
-          background: 'rgba(255, 255, 255, 0.95)',
+            sx={{
+          background: theme.palette.mode === 'dark'
+            ? 'rgba(26, 27, 46, 0.95)'
+            : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(20px)',
           borderBottom: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
           position: 'sticky',
@@ -71,17 +76,19 @@ function ComplianceContent() {
         }}
       >
         <Container maxWidth="xl">
-          <Box sx={{ py: 3 }}>
+          <Box sx={{ py: 4 }}>
             {/* Navigation */}
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-              <Box display="flex" alignItems="center" gap={2}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+              <Box display="flex" alignItems="center" gap={3}>
                 <IconButton
                   onClick={() => router.push('/dashboard/ceo')}
                   sx={{
                     background: alpha(ceoBrandColors.primary, 0.1),
                     '&:hover': {
                       background: alpha(ceoBrandColors.primary, 0.2),
+                      transform: 'scale(1.1)',
                     },
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   <ArrowBack sx={{ color: ceoBrandColors.primary }} />
@@ -93,12 +100,21 @@ function ComplianceContent() {
                     href="/dashboard/ceo"
                     sx={{ 
                       textDecoration: 'none',
-                      '&:hover': { textDecoration: 'underline' }
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 600,
+                      '&:hover': { 
+                        textDecoration: 'underline',
+                        color: ceoBrandColors.primary,
+                      }
                     }}
                   >
                     Panel Ejecutivo
                   </Link>
-                  <Typography color="text.primary" fontWeight={600}>
+                  <Typography 
+                    color="text.primary" 
+                    fontWeight={700}
+                    sx={{ fontFamily: '"Outfit", sans-serif' }}
+                  >
                     Cumplimiento y Seguridad
                   </Typography>
                 </Breadcrumbs>
@@ -111,7 +127,9 @@ function ComplianceContent() {
                       background: alpha(ceoBrandColors.primary, 0.1),
                       '&:hover': {
                         background: alpha(ceoBrandColors.primary, 0.2),
+                        transform: 'scale(1.1)',
                       },
+                      transition: 'all 0.3s ease',
                     }}
                   >
                     <Refresh sx={{ color: ceoBrandColors.primary }} />
@@ -124,7 +142,9 @@ function ComplianceContent() {
                       background: alpha(ceoBrandColors.accentPink, 0.1),
                       '&:hover': {
                         background: alpha(ceoBrandColors.accentPink, 0.2),
+                        transform: 'scale(1.1)',
                       },
+                      transition: 'all 0.3s ease',
                     }}
                   >
                     <Download sx={{ color: ceoBrandColors.accentPink }} />
@@ -135,42 +155,62 @@ function ComplianceContent() {
 
             {/* Title Section */}
             <Box>
-              <Typography 
-                variant="h3" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 600,
-                  color: ceoBrandColors.text,
-                  mb: 1,
-                }}
-              >
-                Cumplimiento y Seguridad
-              </Typography>
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 300,
-                  color: alpha(ceoBrandColors.text, 0.7),
-                  mb: 2,
-                }}
-              >
-                Seguimiento del estado legal, técnico y de protocolos internos
-              </Typography>
+              <Stack direction="row" alignItems="center" gap={2} mb={2}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 3,
+                    background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 6px 20px rgba(93, 79, 176, 0.3)',
+                  }}
+                >
+                  <Gavel sx={{ color: 'white', fontSize: 24 }} />
+                </Box>
+                <Box>
+                  <Typography 
+                    variant="h3" 
+                    sx={{ 
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 800,
+                      background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    Cumplimiento y Seguridad
+                  </Typography>
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      fontFamily: '"Inter", sans-serif',
+                      fontWeight: 500,
+                      color: 'text.secondary',
+                    }}
+                  >
+                    Seguimiento del estado legal, técnico y de protocolos internos
+                  </Typography>
+                </Box>
+              </Stack>
               
-              <Box display="flex" gap={1}>
+              <Box display="flex" gap={1} flexWrap="wrap">
                 <Chip
                   label={`${complianceScore}% Cumplimiento`}
                   size="small"
                   sx={{
                     background: complianceScore >= 90 
-                      ? 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)'
+                      ? 'linear-gradient(135deg, #10b981 0%, #34d399 100%)'
                       : complianceScore >= 70
-                      ? 'linear-gradient(135deg, #FF9800 0%, #FFB74D 100%)'
-                      : 'linear-gradient(135deg, #F44336 0%, #EF5350 100%)',
+                      ? 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)'
+                      : 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)',
                     color: 'white',
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 600,
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 700,
                   }}
                 />
                 <Chip
@@ -178,9 +218,9 @@ function ComplianceContent() {
                   size="small"
                   variant="outlined"
                   sx={{
-                    borderColor: '#FF9800',
-                    color: '#FF9800',
-                    fontFamily: '"Neris", sans-serif',
+                    borderColor: '#f59e0b',
+                    color: '#f59e0b',
+                    fontFamily: '"Outfit", sans-serif',
                     fontWeight: 600,
                   }}
                 />
@@ -189,9 +229,9 @@ function ComplianceContent() {
                   size="small"
                   variant="outlined"
                   sx={{
-                    borderColor: '#F44336',
-                    color: '#F44336',
-                    fontFamily: '"Neris", sans-serif',
+                    borderColor: '#ef4444',
+                    color: '#ef4444',
+                    fontFamily: '"Outfit", sans-serif',
                     fontWeight: 600,
                   }}
                 />
@@ -215,19 +255,27 @@ function ComplianceContent() {
                 elevation={0}
                 sx={{
                   p: 3,
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: 3,
-                  border: `1px solid ${alpha('#4CAF50', 0.1)}`,
+                  background: theme.palette.mode === 'dark'
+                    ? 'rgba(26, 27, 46, 0.8)'
+                    : 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 4,
+                  border: `1px solid ${alpha('#10b981', 0.1)}`,
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: theme.shadows[8],
+                  },
                 }}
               >
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
-                  <CheckCircle sx={{ color: '#4CAF50', fontSize: 32 }} />
+                  <CheckCircle sx={{ color: '#10b981', fontSize: 32 }} />
                   <Typography 
                     variant="h6" 
                     sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
-                      color: ceoBrandColors.text,
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 700,
+                      color: 'text.primary',
                     }}
                   >
                     Backups
@@ -236,9 +284,9 @@ function ComplianceContent() {
                 <Typography 
                   variant="h4" 
                   sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 700,
-                    color: '#4CAF50',
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 800,
+                    color: '#10b981',
                     mb: 1,
                   }}
                 >
@@ -247,8 +295,9 @@ function ComplianceContent() {
                 <Typography 
                   variant="body2" 
                   sx={{ 
-                    color: alpha(ceoBrandColors.text, 0.7),
-                    fontFamily: '"Neris", sans-serif',
+                    color: 'text.secondary',
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500,
                   }}
                 >
                   Verificados ayer
@@ -267,19 +316,27 @@ function ComplianceContent() {
                 elevation={0}
                 sx={{
                   p: 3,
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: 3,
-                  border: `1px solid ${alpha('#FF9800', 0.1)}`,
+                  background: theme.palette.mode === 'dark'
+                    ? 'rgba(26, 27, 46, 0.8)'
+                    : 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 4,
+                  border: `1px solid ${alpha('#f59e0b', 0.1)}`,
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: theme.shadows[8],
+                  },
                 }}
               >
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
-                  <Warning sx={{ color: '#FF9800', fontSize: 32 }} />
+                  <Warning sx={{ color: '#f59e0b', fontSize: 32 }} />
                   <Typography 
                     variant="h6" 
                     sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
-                      color: ceoBrandColors.text,
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 700,
+                      color: 'text.primary',
                     }}
                   >
                     Políticas
@@ -288,9 +345,9 @@ function ComplianceContent() {
                 <Typography 
                   variant="h4" 
                   sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 700,
-                    color: '#FF9800',
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 800,
+                    color: '#f59e0b',
                     mb: 1,
                   }}
                 >
@@ -299,8 +356,9 @@ function ComplianceContent() {
                 <Typography 
                   variant="body2" 
                   sx={{ 
-                    color: alpha(ceoBrandColors.text, 0.7),
-                    fontFamily: '"Neris", sans-serif',
+                    color: 'text.secondary',
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500,
                   }}
                 >
                   Firmadas
@@ -319,19 +377,27 @@ function ComplianceContent() {
                 elevation={0}
                 sx={{
                   p: 3,
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: 3,
-                  border: `1px solid ${alpha('#F44336', 0.1)}`,
+                  background: theme.palette.mode === 'dark'
+                    ? 'rgba(26, 27, 46, 0.8)'
+                    : 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 4,
+                  border: `1px solid ${alpha('#ef4444', 0.1)}`,
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: theme.shadows[8],
+                  },
                 }}
               >
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
-                  <Error sx={{ color: '#F44336', fontSize: 32 }} />
+                  <Error sx={{ color: '#ef4444', fontSize: 32 }} />
                   <Typography 
                     variant="h6" 
                     sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
-                      color: ceoBrandColors.text,
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 700,
+                      color: 'text.primary',
                     }}
                   >
                     Auditorías
@@ -340,9 +406,9 @@ function ComplianceContent() {
                 <Typography 
                   variant="h4" 
                   sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 700,
-                    color: '#F44336',
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 800,
+                    color: '#ef4444',
                     mb: 1,
                   }}
                 >
@@ -351,8 +417,9 @@ function ComplianceContent() {
                 <Typography 
                   variant="body2" 
                   sx={{ 
-                    color: alpha(ceoBrandColors.text, 0.7),
-                    fontFamily: '"Neris", sans-serif',
+                    color: 'text.secondary',
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500,
                   }}
                 >
                   Hallazgos pendientes
@@ -371,19 +438,27 @@ function ComplianceContent() {
                 elevation={0}
                 sx={{
                   p: 3,
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: 3,
-                  border: `1px solid ${alpha('#4CAF50', 0.1)}`,
+                  background: theme.palette.mode === 'dark'
+                    ? 'rgba(26, 27, 46, 0.8)'
+                    : 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 4,
+                  border: `1px solid ${alpha('#10b981', 0.1)}`,
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: theme.shadows[8],
+                  },
                 }}
               >
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
-                  <Security sx={{ color: '#4CAF50', fontSize: 32 }} />
+                  <Security sx={{ color: '#10b981', fontSize: 32 }} />
                   <Typography 
                     variant="h6" 
                     sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
-                      color: ceoBrandColors.text,
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 700,
+                      color: 'text.primary',
                     }}
                   >
                     Certificados
@@ -392,9 +467,9 @@ function ComplianceContent() {
                 <Typography 
                   variant="h4" 
                   sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 700,
-                    color: '#4CAF50',
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 800,
+                    color: '#10b981',
                     mb: 1,
                   }}
                 >
@@ -403,8 +478,9 @@ function ComplianceContent() {
                 <Typography 
                   variant="body2" 
                   sx={{ 
-                    color: alpha(ceoBrandColors.text, 0.7),
-                    fontFamily: '"Neris", sans-serif',
+                    color: 'text.secondary',
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500,
                   }}
                 >
                   Vigentes
@@ -424,25 +500,203 @@ function ComplianceContent() {
             </motion.div>
           </Grid>
 
-          {/* Compliance Checklist */}
+          {/* Compliance Details */}
           <Grid item xs={12} lg={8}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.5 }}
             >
-              <ComplianceChecklist />
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 4,
+                  background: theme.palette.mode === 'dark'
+                    ? 'rgba(26, 27, 46, 0.8)'
+                    : 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 4,
+                  border: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
+                  backdropFilter: 'blur(10px)',
+                  height: '100%',
+                }}
+              >
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 700,
+                    color: 'text.primary',
+                    mb: 3,
+                  }}
+                >
+                  Estado de Cumplimiento
+                </Typography>
+                
+                <Grid container spacing={3}>
+                  {[
+                    { category: 'Protección de Datos', status: 'completo', score: 95 },
+                    { category: 'Políticas Internas', status: 'pendiente', score: 85 },
+                    { category: 'Certificaciones', status: 'completo', score: 100 },
+                    { category: 'Auditorías', status: 'revision', score: 60 },
+                    { category: 'Backups y Seguridad', status: 'completo', score: 98 },
+                    { category: 'Documentación Legal', status: 'pendiente', score: 75 },
+                  ].map((item, index) => (
+                    <Grid item xs={12} sm={6} key={index}>
+                      <Box
+                        sx={{
+                          p: 2,
+                          borderRadius: 3,
+                          background: alpha(
+                            item.status === 'completo' ? '#10b981' :
+                            item.status === 'pendiente' ? '#f59e0b' : '#ef4444',
+                            0.1
+                          ),
+                          border: `1px solid ${alpha(
+                            item.status === 'completo' ? '#10b981' :
+                            item.status === 'pendiente' ? '#f59e0b' : '#ef4444',
+                            0.2
+                          )}`,
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+                          <Typography 
+                            variant="subtitle2" 
+                            sx={{ 
+                              fontFamily: '"Outfit", sans-serif',
+                              fontWeight: 600,
+                              color: 'text.primary',
+                            }}
+                          >
+                            {item.category}
+                          </Typography>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              fontFamily: '"Outfit", sans-serif',
+                              fontWeight: 700,
+                              color: item.status === 'completo' ? '#10b981' :
+                                     item.status === 'pendiente' ? '#f59e0b' : '#ef4444',
+                            }}
+                          >
+                            {item.score}%
+                          </Typography>
+                        </Box>
+                        <Box
+                          sx={{
+                            width: '100%',
+                            height: 6,
+                            borderRadius: 3,
+                            background: alpha(
+                              item.status === 'completo' ? '#10b981' :
+                              item.status === 'pendiente' ? '#f59e0b' : '#ef4444',
+                              0.2
+                            ),
+                            position: 'relative',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: `${item.score}%`,
+                              height: '100%',
+                              background: item.status === 'completo' ? '#10b981' :
+                                         item.status === 'pendiente' ? '#f59e0b' : '#ef4444',
+                              borderRadius: 3,
+                              transition: 'width 1s ease',
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Paper>
             </motion.div>
           </Grid>
 
-          {/* Expiration Alerts */}
+          {/* Recent Compliance Activities */}
           <Grid item xs={12}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.6 }}
             >
-              <ExpirationAlerts />
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 4,
+                  background: theme.palette.mode === 'dark'
+                    ? 'rgba(26, 27, 46, 0.8)'
+                    : 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 4,
+                  border: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
+                  backdropFilter: 'blur(10px)',
+                }}
+              >
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 700,
+                    color: 'text.primary',
+                    mb: 3,
+                  }}
+                >
+                  Actividades Recientes
+                </Typography>
+                
+                <Grid container spacing={2}>
+                  {[
+                    { activity: 'Backup automático completado', time: 'Hace 2 horas', status: 'success' },
+                    { activity: 'Política de privacidad actualizada', time: 'Hace 1 día', status: 'info' },
+                    { activity: 'Certificado SSL renovado', time: 'Hace 3 días', status: 'success' },
+                    { activity: 'Auditoría de seguridad pendiente', time: 'Hace 1 semana', status: 'warning' },
+                  ].map((item, index) => (
+                    <Grid item xs={12} sm={6} md={3} key={index}>
+                      <Box
+                        sx={{
+                          p: 2,
+                          borderRadius: 3,
+                          background: alpha(
+                            item.status === 'success' ? '#10b981' :
+                            item.status === 'warning' ? '#f59e0b' :
+                            item.status === 'info' ? ceoBrandColors.accentBlue : '#ef4444',
+                            0.1
+                          ),
+                          border: `1px solid ${alpha(
+                            item.status === 'success' ? '#10b981' :
+                            item.status === 'warning' ? '#f59e0b' :
+                            item.status === 'info' ? ceoBrandColors.accentBlue : '#ef4444',
+                            0.2
+                          )}`,
+                          textAlign: 'center',
+                        }}
+                      >
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontFamily: '"Outfit", sans-serif',
+                            fontWeight: 600,
+                            color: 'text.primary',
+                            mb: 1,
+                          }}
+                        >
+                          {item.activity}
+                        </Typography>
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            fontFamily: '"Inter", sans-serif',
+                            color: 'text.secondary',
+                          }}
+                        >
+                          {item.time}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Paper>
             </motion.div>
           </Grid>
         </Grid>
@@ -454,7 +708,10 @@ function ComplianceContent() {
 export default function CompliancePage() {
   return (
     <AdminRoute fallbackPath="/dashboard">
-      <ComplianceContent />
+      <DashboardLayout>
+        <ComplianceContent />
+      </DashboardLayout>
     </AdminRoute>
   );
 }
+    

@@ -18,6 +18,7 @@ import {
   Select,
   MenuItem,
   InputLabel,
+  Stack,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -27,10 +28,12 @@ import {
   TrendingUp,
   TrendingDown,
   AccountBalance,
+  MonetizationOn,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import AdminRoute from '@/components/auth/AdminRoute';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useCEOMetrics } from '@/hooks/useCEOMetrics';
 import BurnEarnChart from '@/components/ceo/charts/BurnEarnChart';
 import ProfitabilityHeatmap from '@/components/ceo/charts/ProfitabilityHeatmap';
@@ -57,15 +60,19 @@ function FinanzasContent() {
     <Box 
       sx={{ 
         minHeight: '100vh',
-        background: ceoBrandColors.background,
-        fontFamily: '"Neris", sans-serif',
+        background: theme.palette.mode === 'dark'
+          ? 'linear-gradient(135deg, #0F0F1A 0%, #1A1B2E 100%)'
+          : 'linear-gradient(135deg, #F2EDEA 0%, #F8F6F4 100%)',
+        fontFamily: '"Outfit", sans-serif',
       }}
     >
       {/* Header */}
       <Paper 
         elevation={0}
         sx={{
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: theme.palette.mode === 'dark'
+            ? 'rgba(26, 27, 46, 0.95)'
+            : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(20px)',
           borderBottom: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
           position: 'sticky',
@@ -74,17 +81,19 @@ function FinanzasContent() {
         }}
       >
         <Container maxWidth="xl">
-          <Box sx={{ py: 3 }}>
+          <Box sx={{ py: 4 }}>
             {/* Navigation */}
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-              <Box display="flex" alignItems="center" gap={2}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+              <Box display="flex" alignItems="center" gap={3}>
                 <IconButton
                   onClick={() => router.push('/dashboard/ceo')}
                   sx={{
                     background: alpha(ceoBrandColors.primary, 0.1),
                     '&:hover': {
                       background: alpha(ceoBrandColors.primary, 0.2),
+                      transform: 'scale(1.1)',
                     },
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   <ArrowBack sx={{ color: ceoBrandColors.primary }} />
@@ -96,12 +105,21 @@ function FinanzasContent() {
                     href="/dashboard/ceo"
                     sx={{ 
                       textDecoration: 'none',
-                      '&:hover': { textDecoration: 'underline' }
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 600,
+                      '&:hover': { 
+                        textDecoration: 'underline',
+                        color: ceoBrandColors.primary,
+                      }
                     }}
                   >
                     Panel Ejecutivo
                   </Link>
-                  <Typography color="text.primary" fontWeight={600}>
+                  <Typography 
+                    color="text.primary" 
+                    fontWeight={700}
+                    sx={{ fontFamily: '"Outfit", sans-serif' }}
+                  >
                     Desempeño Financiero
                   </Typography>
                 </Breadcrumbs>
@@ -109,11 +127,12 @@ function FinanzasContent() {
 
               <Box display="flex" alignItems="center" gap={2}>
                 <FormControl size="small" sx={{ minWidth: 150 }}>
-                  <InputLabel>Escenario</InputLabel>
+                  <InputLabel sx={{ fontFamily: '"Outfit", sans-serif' }}>Escenario</InputLabel>
                   <Select
                     value={scenario}
                     onChange={(e) => setScenario(e.target.value as any)}
                     label="Escenario"
+                    sx={{ fontFamily: '"Outfit", sans-serif' }}
                   >
                     <MenuItem value="pesimista">Pesimista</MenuItem>
                     <MenuItem value="base">Base</MenuItem>
@@ -127,7 +146,9 @@ function FinanzasContent() {
                       background: alpha(ceoBrandColors.primary, 0.1),
                       '&:hover': {
                         background: alpha(ceoBrandColors.primary, 0.2),
+                        transform: 'scale(1.1)',
                       },
+                      transition: 'all 0.3s ease',
                     }}
                   >
                     <Refresh sx={{ color: ceoBrandColors.primary }} />
@@ -140,7 +161,9 @@ function FinanzasContent() {
                       background: alpha(ceoBrandColors.accentPink, 0.1),
                       '&:hover': {
                         background: alpha(ceoBrandColors.accentPink, 0.2),
+                        transform: 'scale(1.1)',
                       },
+                      transition: 'all 0.3s ease',
                     }}
                   >
                     <Download sx={{ color: ceoBrandColors.accentPink }} />
@@ -151,38 +174,58 @@ function FinanzasContent() {
 
             {/* Title Section */}
             <Box>
-              <Typography 
-                variant="h3" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 600,
-                  color: ceoBrandColors.text,
-                  mb: 1,
-                }}
-              >
-                Desempeño Financiero
-              </Typography>
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 300,
-                  color: alpha(ceoBrandColors.text, 0.7),
-                  mb: 2,
-                }}
-              >
-                Análisis profundo de rentabilidad, flujo de caja y performance por terapeuta
-              </Typography>
+              <Stack direction="row" alignItems="center" gap={2} mb={2}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 3,
+                    background: `linear-gradient(135deg, ${ceoBrandColors.accentPink} 0%, ${ceoBrandColors.secondary} 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 6px 20px rgba(217, 125, 183, 0.3)',
+                  }}
+                >
+                  <MonetizationOn sx={{ color: 'white', fontSize: 24 }} />
+                </Box>
+                <Box>
+                  <Typography 
+                    variant="h3" 
+                    sx={{ 
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 800,
+                      background: `linear-gradient(135deg, ${ceoBrandColors.accentPink} 0%, ${ceoBrandColors.secondary} 100%)`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    Desempeño Financiero
+                  </Typography>
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      fontFamily: '"Inter", sans-serif',
+                      fontWeight: 500,
+                      color: 'text.secondary',
+                    }}
+                  >
+                    Análisis profundo de rentabilidad, flujo de caja y performance por terapeuta
+                  </Typography>
+                </Box>
+              </Stack>
               
-              <Box display="flex" gap={1}>
+              <Box display="flex" gap={1} flexWrap="wrap">
                 <Chip
                   label="Flujo de Caja"
                   size="small"
                   sx={{
                     background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
                     color: 'white',
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 600,
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 700,
                   }}
                 />
                 <Chip
@@ -192,7 +235,7 @@ function FinanzasContent() {
                   sx={{
                     borderColor: ceoBrandColors.accentPink,
                     color: ceoBrandColors.accentPink,
-                    fontFamily: '"Neris", sans-serif',
+                    fontFamily: '"Outfit", sans-serif',
                     fontWeight: 600,
                   }}
                 />
@@ -203,7 +246,7 @@ function FinanzasContent() {
                   sx={{
                     borderColor: ceoBrandColors.accentBlue,
                     color: ceoBrandColors.accentBlue,
-                    fontFamily: '"Neris", sans-serif',
+                    fontFamily: '"Outfit", sans-serif',
                     fontWeight: 600,
                   }}
                 />
@@ -227,9 +270,17 @@ function FinanzasContent() {
                 elevation={0}
                 sx={{
                   p: 3,
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: 3,
+                  background: theme.palette.mode === 'dark'
+                    ? 'rgba(26, 27, 46, 0.8)'
+                    : 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 4,
                   border: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: theme.shadows[8],
+                  },
                 }}
               >
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
@@ -237,9 +288,9 @@ function FinanzasContent() {
                   <Typography 
                     variant="h6" 
                     sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
-                      color: ceoBrandColors.text,
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 700,
+                      color: 'text.primary',
                     }}
                   >
                     Ingresos MTD
@@ -248,8 +299,8 @@ function FinanzasContent() {
                 <Typography 
                   variant="h4" 
                   sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 700,
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 800,
                     color: ceoBrandColors.primary,
                     mb: 1,
                   }}
@@ -257,13 +308,13 @@ function FinanzasContent() {
                   ${ceoMetrics.financialMetrics.ingresosMTD?.actual.toLocaleString() || '0'}
                 </Typography>
                 <Box display="flex" alignItems="center" gap={1}>
-                  <TrendingUp sx={{ color: '#4CAF50', fontSize: 16 }} />
+                  <TrendingUp sx={{ color: '#10b981', fontSize: 16 }} />
                   <Typography 
                     variant="body2" 
                     sx={{ 
-                      color: '#4CAF50',
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
+                      color: '#10b981',
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 700,
                     }}
                   >
                     +{ceoMetrics.financialMetrics.ingresosMTD?.variacion || 0}%
@@ -283,9 +334,17 @@ function FinanzasContent() {
                 elevation={0}
                 sx={{
                   p: 3,
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: 3,
+                  background: theme.palette.mode === 'dark'
+                    ? 'rgba(26, 27, 46, 0.8)'
+                    : 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 4,
                   border: `1px solid ${alpha(ceoBrandColors.accentPink, 0.1)}`,
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: theme.shadows[8],
+                  },
                 }}
               >
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
@@ -293,9 +352,9 @@ function FinanzasContent() {
                   <Typography 
                     variant="h6" 
                     sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
-                      color: ceoBrandColors.text,
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 700,
+                      color: 'text.primary',
                     }}
                   >
                     EBITDA R-12
@@ -304,8 +363,8 @@ function FinanzasContent() {
                 <Typography 
                   variant="h4" 
                   sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 700,
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 800,
                     color: ceoBrandColors.accentPink,
                     mb: 1,
                   }}
@@ -315,8 +374,9 @@ function FinanzasContent() {
                 <Typography 
                   variant="body2" 
                   sx={{ 
-                    color: alpha(ceoBrandColors.text, 0.7),
-                    fontFamily: '"Neris", sans-serif',
+                    color: 'text.secondary',
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500,
                   }}
                 >
                   Progreso: {ceoMetrics.financialMetrics.ebitdaRolling12?.progreso || 0}%
@@ -335,9 +395,17 @@ function FinanzasContent() {
                 elevation={0}
                 sx={{
                   p: 3,
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: 3,
+                  background: theme.palette.mode === 'dark'
+                    ? 'rgba(26, 27, 46, 0.8)'
+                    : 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 4,
                   border: `1px solid ${alpha(ceoBrandColors.accentBlue, 0.1)}`,
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: theme.shadows[8],
+                  },
                 }}
               >
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
@@ -345,9 +413,9 @@ function FinanzasContent() {
                   <Typography 
                     variant="h6" 
                     sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
-                      color: ceoBrandColors.text,
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 700,
+                      color: 'text.primary',
                     }}
                   >
                     CAC vs LTV
@@ -356,8 +424,8 @@ function FinanzasContent() {
                 <Typography 
                   variant="h4" 
                   sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 700,
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 800,
                     color: ceoBrandColors.accentBlue,
                     mb: 1,
                   }}
@@ -367,8 +435,9 @@ function FinanzasContent() {
                 <Typography 
                   variant="body2" 
                   sx={{ 
-                    color: alpha(ceoBrandColors.text, 0.7),
-                    fontFamily: '"Neris", sans-serif',
+                    color: 'text.secondary',
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500,
                   }}
                 >
                   Ratio saludable
@@ -387,19 +456,27 @@ function FinanzasContent() {
                 elevation={0}
                 sx={{
                   p: 3,
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: 3,
-                  border: `1px solid ${alpha('#F44336', 0.1)}`,
+                  background: theme.palette.mode === 'dark'
+                    ? 'rgba(26, 27, 46, 0.8)'
+                    : 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 4,
+                  border: `1px solid ${alpha('#ef4444', 0.1)}`,
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: theme.shadows[8],
+                  },
                 }}
               >
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
-                  <TrendingDown sx={{ color: '#F44336', fontSize: 32 }} />
+                  <TrendingDown sx={{ color: '#ef4444', fontSize: 32 }} />
                   <Typography 
                     variant="h6" 
                     sx={{ 
-                      fontFamily: '"Neris", sans-serif',
-                      fontWeight: 600,
-                      color: ceoBrandColors.text,
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 700,
+                      color: 'text.primary',
                     }}
                   >
                     Cuentas x Cobrar
@@ -408,9 +485,9 @@ function FinanzasContent() {
                 <Typography 
                   variant="h4" 
                   sx={{ 
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 700,
-                    color: '#F44336',
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 800,
+                    color: '#ef4444',
                     mb: 1,
                   }}
                 >
@@ -419,8 +496,9 @@ function FinanzasContent() {
                 <Typography 
                   variant="body2" 
                   sx={{ 
-                    color: alpha(ceoBrandColors.text, 0.7),
-                    fontFamily: '"Neris", sans-serif',
+                    color: 'text.secondary',
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 500,
                   }}
                 >
                   >30 días
@@ -486,7 +564,9 @@ function FinanzasContent() {
 export default function FinanzasPage() {
   return (
     <AdminRoute fallbackPath="/dashboard">
-      <FinanzasContent />
+      <DashboardLayout>
+        <FinanzasContent />
+      </DashboardLayout>
     </AdminRoute>
   );
 }

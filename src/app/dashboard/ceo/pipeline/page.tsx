@@ -14,6 +14,7 @@ import {
   alpha,
   Breadcrumbs,
   Link,
+  Stack,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -22,10 +23,12 @@ import {
   TrendingUp,
   BusinessCenter,
   Construction,
+  Campaign,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import AdminRoute from '@/components/auth/AdminRoute';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import ComingSoonCard from '@/components/ceo/pipeline/ComingSoonCard';
 
 // CEO Brand Colors
@@ -91,15 +94,19 @@ function PipelineContent() {
     <Box 
       sx={{ 
         minHeight: '100vh',
-        background: ceoBrandColors.background,
-        fontFamily: '"Neris", sans-serif',
+        background: theme.palette.mode === 'dark'
+          ? 'linear-gradient(135deg, #0F0F1A 0%, #1A1B2E 100%)'
+          : 'linear-gradient(135deg, #F2EDEA 0%, #F8F6F4 100%)',
+        fontFamily: '"Outfit", sans-serif',
       }}
     >
       {/* Header */}
       <Paper 
         elevation={0}
         sx={{
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: theme.palette.mode === 'dark'
+            ? 'rgba(26, 27, 46, 0.95)'
+            : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(20px)',
           borderBottom: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
           position: 'sticky',
@@ -108,17 +115,19 @@ function PipelineContent() {
         }}
       >
         <Container maxWidth="xl">
-          <Box sx={{ py: 3 }}>
+          <Box sx={{ py: 4 }}>
             {/* Navigation */}
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-              <Box display="flex" alignItems="center" gap={2}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+              <Box display="flex" alignItems="center" gap={3}>
                 <IconButton
                   onClick={() => router.push('/dashboard/ceo')}
                   sx={{
                     background: alpha(ceoBrandColors.primary, 0.1),
                     '&:hover': {
                       background: alpha(ceoBrandColors.primary, 0.2),
+                      transform: 'scale(1.1)',
                     },
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   <ArrowBack sx={{ color: ceoBrandColors.primary }} />
@@ -130,25 +139,36 @@ function PipelineContent() {
                     href="/dashboard/ceo"
                     sx={{ 
                       textDecoration: 'none',
-                      '&:hover': { textDecoration: 'underline' }
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 600,
+                      '&:hover': { 
+                        textDecoration: 'underline',
+                        color: ceoBrandColors.primary,
+                      }
                     }}
                   >
                     Panel Ejecutivo
                   </Link>
-                  <Typography color="text.primary" fontWeight={600}>
+                  <Typography 
+                    color="text.primary" 
+                    fontWeight={700}
+                    sx={{ fontFamily: '"Outfit", sans-serif' }}
+                  >
                     Pipeline Comercial & Marketing
                   </Typography>
                 </Breadcrumbs>
               </Box>
 
               <Box display="flex" alignItems="center" gap={2}>
-                <Tooltip title="Actualizar datos">
+                <Tooltip title="Actualizar roadmap">
                   <IconButton
                     sx={{
                       background: alpha(ceoBrandColors.primary, 0.1),
                       '&:hover': {
                         background: alpha(ceoBrandColors.primary, 0.2),
+                        transform: 'scale(1.1)',
                       },
+                      transition: 'all 0.3s ease',
                     }}
                   >
                     <Refresh sx={{ color: ceoBrandColors.primary }} />
@@ -161,7 +181,9 @@ function PipelineContent() {
                       background: alpha(ceoBrandColors.accentPink, 0.1),
                       '&:hover': {
                         background: alpha(ceoBrandColors.accentPink, 0.2),
+                        transform: 'scale(1.1)',
                       },
+                      transition: 'all 0.3s ease',
                     }}
                   >
                     <Download sx={{ color: ceoBrandColors.accentPink }} />
@@ -172,48 +194,68 @@ function PipelineContent() {
 
             {/* Title Section */}
             <Box>
-              <Typography 
-                variant="h3" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 600,
-                  color: ceoBrandColors.text,
-                  mb: 1,
-                }}
-              >
-                Pipeline Comercial & Marketing
-              </Typography>
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  fontFamily: '"Neris", sans-serif',
-                  fontWeight: 300,
-                  color: alpha(ceoBrandColors.text, 0.7),
-                  mb: 2,
-                }}
-              >
-                Futuro panel para seguimiento del crecimiento, marketing y oportunidades
-              </Typography>
+              <Stack direction="row" alignItems="center" gap={2} mb={2}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 3,
+                    background: `linear-gradient(135deg, ${ceoBrandColors.accentPink} 0%, ${ceoBrandColors.primary} 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 6px 20px rgba(217, 125, 183, 0.3)',
+                  }}
+                >
+                  <Campaign sx={{ color: 'white', fontSize: 24 }} />
+                </Box>
+                <Box>
+                  <Typography 
+                    variant="h3" 
+                    sx={{ 
+                      fontFamily: '"Outfit", sans-serif',
+                      fontWeight: 800,
+                      background: `linear-gradient(135deg, ${ceoBrandColors.accentPink} 0%, ${ceoBrandColors.primary} 100%)`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    Pipeline Comercial & Marketing
+                  </Typography>
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      fontFamily: '"Inter", sans-serif',
+                      fontWeight: 500,
+                      color: 'text.secondary',
+                    }}
+                  >
+                    Futuro panel para seguimiento del crecimiento, marketing y oportunidades
+                  </Typography>
+                </Box>
+              </Stack>
               
-              <Box display="flex" gap={1}>
+              <Box display="flex" gap={1} flexWrap="wrap">
                 <Chip
                   label="En Desarrollo"
                   size="small"
                   sx={{
                     background: `linear-gradient(135deg, ${ceoBrandColors.primary} 0%, ${ceoBrandColors.secondary} 100%)`,
                     color: 'white',
-                    fontFamily: '"Neris", sans-serif',
-                    fontWeight: 600,
+                    fontFamily: '"Outfit", sans-serif',
+                    fontWeight: 700,
                   }}
                 />
                 <Chip
-                  label="6 Funcionalidades Planeadas"
+                  label={`${plannedFeatures.length} Funcionalidades Planeadas`}
                   size="small"
                   variant="outlined"
                   sx={{
                     borderColor: ceoBrandColors.accentBlue,
                     color: ceoBrandColors.accentBlue,
-                    fontFamily: '"Neris", sans-serif',
+                    fontFamily: '"Outfit", sans-serif',
                     fontWeight: 600,
                   }}
                 />
@@ -224,7 +266,7 @@ function PipelineContent() {
                   sx={{
                     borderColor: ceoBrandColors.accentPink,
                     color: ceoBrandColors.accentPink,
-                    fontFamily: '"Neris", sans-serif',
+                    fontFamily: '"Outfit", sans-serif',
                     fontWeight: 600,
                   }}
                 />
@@ -247,25 +289,28 @@ function PipelineContent() {
             sx={{
               p: 6,
               mb: 4,
-              background: `linear-gradient(135deg, ${alpha(ceoBrandColors.primary, 0.1)} 0%, ${alpha(ceoBrandColors.secondary, 0.05)} 100%)`,
-              borderRadius: 3,
+              background: theme.palette.mode === 'dark'
+                ? `linear-gradient(135deg, ${alpha(ceoBrandColors.primary, 0.15)} 0%, ${alpha(ceoBrandColors.secondary, 0.08)} 100%)`
+                : `linear-gradient(135deg, ${alpha(ceoBrandColors.primary, 0.1)} 0%, ${alpha(ceoBrandColors.secondary, 0.05)} 100%)`,
+              borderRadius: 4,
               border: `1px solid ${alpha(ceoBrandColors.primary, 0.2)}`,
               textAlign: 'center',
+              backdropFilter: 'blur(10px)',
             }}
           >
             <Construction 
               sx={{ 
                 fontSize: 80, 
                 color: ceoBrandColors.primary,
-                mb: 2,
+                mb: 3,
               }} 
             />
             <Typography 
               variant="h4" 
               sx={{ 
-                fontFamily: '"Neris", sans-serif',
-                fontWeight: 600,
-                color: ceoBrandColors.text,
+                fontFamily: '"Outfit", sans-serif',
+                fontWeight: 800,
+                color: 'text.primary',
                 mb: 2,
               }}
             >
@@ -274,11 +319,12 @@ function PipelineContent() {
             <Typography 
               variant="body1" 
               sx={{ 
-                fontFamily: '"Neris", sans-serif',
-                color: alpha(ceoBrandColors.text, 0.7),
-                mb: 3,
-                maxWidth: 600,
+                fontFamily: '"Inter", sans-serif',
+                color: 'text.secondary',
+                mb: 4,
+                maxWidth: 700,
                 mx: 'auto',
+                lineHeight: 1.6,
               }}
             >
               Estamos construyendo un sistema completo de seguimiento comercial y marketing que incluirá 
@@ -290,11 +336,12 @@ function PipelineContent() {
               sx={{
                 background: `linear-gradient(135deg, ${ceoBrandColors.accentPink} 0%, ${ceoBrandColors.secondary} 100%)`,
                 color: 'white',
-                fontFamily: '"Neris", sans-serif',
-                fontWeight: 600,
+                fontFamily: '"Outfit", sans-serif',
+                fontWeight: 700,
                 fontSize: '1rem',
-                px: 2,
+                px: 3,
                 py: 1,
+                height: 40,
               }}
             />
           </Paper>
@@ -304,9 +351,9 @@ function PipelineContent() {
         <Typography 
           variant="h5" 
           sx={{ 
-            fontFamily: '"Neris", sans-serif',
-            fontWeight: 600,
-            color: ceoBrandColors.text,
+            fontFamily: '"Outfit", sans-serif',
+            fontWeight: 700,
+            color: 'text.primary',
             mb: 3,
           }}
         >
@@ -338,9 +385,9 @@ function PipelineContent() {
           <Typography 
             variant="h5" 
             sx={{ 
-              fontFamily: '"Neris", sans-serif',
-              fontWeight: 600,
-              color: ceoBrandColors.text,
+              fontFamily: '"Outfit", sans-serif',
+              fontWeight: 700,
+              color: 'text.primary',
               mb: 3,
             }}
           >
@@ -351,9 +398,12 @@ function PipelineContent() {
             elevation={0}
             sx={{
               p: 4,
-              background: 'rgba(255, 255, 255, 0.9)',
-              borderRadius: 3,
+              background: theme.palette.mode === 'dark'
+                ? 'rgba(26, 27, 46, 0.8)'
+                : 'rgba(255, 255, 255, 0.9)',
+              borderRadius: 4,
               border: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
+              backdropFilter: 'blur(10px)',
             }}
           >
             <Grid container spacing={4}>
@@ -365,7 +415,7 @@ function PipelineContent() {
                     <Box
                       sx={{
                         p: 3,
-                        borderRadius: 2,
+                        borderRadius: 3,
                         background: alpha(ceoBrandColors.primary, 0.05),
                         border: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
                       }}
@@ -373,8 +423,8 @@ function PipelineContent() {
                       <Typography 
                         variant="h6" 
                         sx={{ 
-                          fontFamily: '"Neris", sans-serif',
-                          fontWeight: 600,
+                          fontFamily: '"Outfit", sans-serif',
+                          fontWeight: 700,
                           color: ceoBrandColors.primary,
                           mb: 2,
                         }}
@@ -388,17 +438,19 @@ function PipelineContent() {
                             key={feature.title}
                             sx={{
                               p: 2,
-                              borderRadius: 1,
-                              background: 'rgba(255, 255, 255, 0.8)',
+                              borderRadius: 2,
+                              background: theme.palette.mode === 'dark'
+                                ? 'rgba(255, 255, 255, 0.05)'
+                                : 'rgba(255, 255, 255, 0.8)',
                               border: `1px solid ${alpha(ceoBrandColors.primary, 0.1)}`,
                             }}
                           >
                             <Typography 
                               variant="body2" 
                               sx={{ 
-                                fontFamily: '"Neris", sans-serif',
+                                fontFamily: '"Outfit", sans-serif',
                                 fontWeight: 600,
-                                color: ceoBrandColors.text,
+                                color: 'text.primary',
                                 mb: 0.5,
                               }}
                             >
@@ -409,17 +461,17 @@ function PipelineContent() {
                               size="small"
                               sx={{
                                 backgroundColor: feature.priority === 'alta' 
-                                  ? alpha('#F44336', 0.1)
+                                  ? alpha('#ef4444', 0.1)
                                   : feature.priority === 'media'
-                                  ? alpha('#FF9800', 0.1)
-                                  : alpha('#4CAF50', 0.1),
+                                  ? alpha('#f59e0b', 0.1)
+                                  : alpha('#10b981', 0.1),
                                 color: feature.priority === 'alta' 
-                                  ? '#F44336'
+                                  ? '#ef4444'
                                   : feature.priority === 'media'
-                                  ? '#FF9800'
-                                  : '#4CAF50',
-                                fontFamily: '"Neris", sans-serif',
-                                fontWeight: 600,
+                                  ? '#f59e0b'
+                                  : '#10b981',
+                                fontFamily: '"Outfit", sans-serif',
+                                fontWeight: 700,
                                 fontSize: '0.7rem',
                               }}
                             />
@@ -441,7 +493,9 @@ function PipelineContent() {
 export default function PipelinePage() {
   return (
     <AdminRoute fallbackPath="/dashboard">
-      <PipelineContent />
+      <DashboardLayout>
+        <PipelineContent />
+      </DashboardLayout>
     </AdminRoute>
   );
 }
